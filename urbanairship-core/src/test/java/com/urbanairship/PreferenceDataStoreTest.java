@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -105,6 +106,7 @@ public class PreferenceDataStoreTest extends BaseTestCase {
         final JsonValue value = JsonValue.wrap(map);
 
         JsonSerializable testObject = new JsonSerializable() {
+            @NonNull
             @Override
             public JsonValue toJsonValue() {
                 return value;
@@ -124,6 +126,7 @@ public class PreferenceDataStoreTest extends BaseTestCase {
     @Test
     public void testJsonSerializableNullJsonValue() throws JsonException {
         JsonSerializable testObject = new JsonSerializable() {
+            @NonNull
             @Override
             public JsonValue toJsonValue() {
                 return null;

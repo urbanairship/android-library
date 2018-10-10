@@ -3,6 +3,7 @@
 package com.urbanairship.wallet;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestRequest;
@@ -132,7 +133,7 @@ public class PassRequestTest extends BaseTestCase {
         final CountDownLatch latch = new CountDownLatch(1);
         Callback callback = new Callback() {
             @Override
-            public void onResult(Pass pass) {
+            public void onResult(@NonNull Pass pass) {
                 assertEquals("5", pass.getId());
                 assertEquals(Uri.parse("https://goo.gl/app/pay?link=https://www.android.com/payapp/savetoandroidpay/555"), pass.getPublicUri());
                 latch.countDown();
@@ -173,7 +174,7 @@ public class PassRequestTest extends BaseTestCase {
         final CountDownLatch latch = new CountDownLatch(1);
         Callback callback = new Callback() {
             @Override
-            public void onResult(Pass pass) {
+            public void onResult(@NonNull Pass pass) {
                 throw new RuntimeException();
             }
 
@@ -223,7 +224,7 @@ public class PassRequestTest extends BaseTestCase {
 
         Callback callback = new Callback() {
             @Override
-            public void onResult(Pass pass) {
+            public void onResult(@NonNull Pass pass) {
                 throw new RuntimeException();
             }
 

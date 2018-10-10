@@ -3,6 +3,7 @@
 package com.urbanairship.iam;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
@@ -17,16 +18,19 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     /**
      * Display handler intent extra key.
      */
+    @NonNull
     public static final String DISPLAY_HANDLER_EXTRA_KEY = "display_handler";
 
     /**
      * In-app message extra key.
      */
+    @NonNull
     public static final String IN_APP_MESSAGE_KEY = "in_app_message";
 
     /**
      * Cache intent extra key.
      */
+    @NonNull
     public static final String IN_APP_CACHE_KEY = "cache";
 
     /**
@@ -42,7 +46,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     private long displayTime = 0;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         Autopilot.automaticTakeOff(this.getApplicationContext());
 
         super.onCreate(savedInstanceState);
@@ -84,7 +88,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     protected abstract void onCreateMessage(@Nullable Bundle savedInstanceState);
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(DISPLAY_TIME_KEY, displayTime);
     }
@@ -139,6 +143,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
      *
      * @return The in-app message.
      */
+    @Nullable
     protected InAppMessage getMessage() {
         return inAppMessage;
     }
@@ -148,6 +153,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
      *
      * @return The display handler.
      */
+    @Nullable
     protected DisplayHandler getDisplayHandler() {
         return displayHandler;
     }

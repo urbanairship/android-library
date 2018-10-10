@@ -2,6 +2,9 @@
 
 package com.urbanairship;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Config parser interface.
  */
@@ -20,6 +23,7 @@ interface ConfigParser {
      * @param index The index of the config element.
      * @return The name of the config element at the given index.
      */
+    @Nullable
     String getName(int index);
 
     /**
@@ -28,7 +32,18 @@ interface ConfigParser {
      * @param index The index of the config element.
      * @return The string value of the config element at the given index.
      */
+    @Nullable
     String getString(int index);
+
+    /**
+     * Gets the string value of the config element.
+     *
+     * @param index The index of the config element.
+     * @param defaultValue The default value if the string value does not exist at that index.
+     * @return The string value of the config element at the given index or the default value.
+     */
+    @NonNull
+    String getString(int index, String defaultValue);
 
     /**
      * Gets the boolean value of the config element.
@@ -44,6 +59,7 @@ interface ConfigParser {
      * @param index The index of the config element.
      * @return The string array value of the config element at the given index.
      */
+    @Nullable
     String[] getStringArray(int index);
 
     /**

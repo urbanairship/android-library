@@ -2,6 +2,7 @@
 
 package com.urbanairship.push;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -39,6 +40,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
     /**
      * The rich push extra that contains the rich push message ID.
      */
+    @NonNull
     public static final String EXTRA_RICH_PUSH_ID = "_uamid";
 
     /**
@@ -50,6 +52,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * The alert extra holds the string sent in the "alert" field of an Urban Airship
      * Push Notification.
      */
+    @NonNull
     public static final String EXTRA_ALERT = "com.urbanairship.push.ALERT";
 
     /**
@@ -57,77 +60,91 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * Push Notification. This is most commonly referred to as the "Send ID"
      * at Urban Airship.
      */
+    @NonNull
     public static final String EXTRA_SEND_ID = "com.urbanairship.push.PUSH_ID";
 
     /**
      * The push metadata extra holds the encrypted push identifiers sent in an
      * Urban Airship Push Notification. Possible data includes send, push, and group IDs.
      */
+    @NonNull
     public static final String EXTRA_METADATA = "com.urbanairship.metadata";
 
     /**
      * The actions extra key holds the payload of actions to be performed with the
      * push.
      */
+    @NonNull
     public static final String EXTRA_ACTIONS = "com.urbanairship.actions";
 
     /**
      * The extra key for the payload of Urban Airship actions to be run when an
      * interactive notification action button is opened.
      */
+    @NonNull
     public static final String EXTRA_INTERACTIVE_ACTIONS = "com.urbanairship.interactive_actions";
 
     /**
      * The extra key for the interactive notification group that will be displayed with a push.
      */
+    @NonNull
     public static final String EXTRA_INTERACTIVE_TYPE = "com.urbanairship.interactive_type";
 
     /**
      * The extra key for the title of the notification.
      */
+    @NonNull
     public static final String EXTRA_TITLE = "com.urbanairship.title";
 
     /**
      * The extra key for the summary of the notification.
      */
+    @NonNull
     public static final String EXTRA_SUMMARY = "com.urbanairship.summary";
 
     /**
      * The extra key for the wearable payload.
      */
+    @NonNull
     public static final String EXTRA_WEARABLE = "com.urbanairship.wearable";
 
     /**
      * The extra key for the style of the notification.
      */
+    @NonNull
     public static final String EXTRA_STYLE = "com.urbanairship.style";
 
     /**
      * The extra key indicates if the notification should only be displayed on the device.
      */
+    @NonNull
     public static final String EXTRA_LOCAL_ONLY = "com.urbanairship.local_only";
 
     /**
      * The extra key indicates the icon color.
      */
+    @NonNull
     public static final String EXTRA_ICON_COLOR = "com.urbanairship.icon_color";
 
     /**
      * The extra key indicates the name of an icon to use from an app's drawable resources.
      */
+    @NonNull
     public static final String EXTRA_ICON = "com.urbanairship.icon";
 
     /**
      * The extra key for the priority of the notification. Acceptable values range from PRIORITY_MIN
      * (-2) to PRIORITY_MAX (2).
-     * <p/>
+     * <p>
      * Defaults to 0.
      */
+    @NonNull
     public static final String EXTRA_PRIORITY = "com.urbanairship.priority";
 
     /**
      * The extra key for the sound of the notification.
      */
+    @NonNull
     public static final String EXTRA_SOUND = "com.urbanairship.sound";
 
     /**
@@ -144,6 +161,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * The extra key for the notification's visibility in the lockscreen. Acceptable values are:
      * VISIBILITY_PUBLIC (1), VISIBILITY_PRIVATE (0) or VISIBILITY_SECRET (-1).
      */
+    @NonNull
     public static final String EXTRA_VISIBILITY = "com.urbanairship.visibility";
 
     /**
@@ -164,11 +182,13 @@ public class PushMessage implements Parcelable, JsonSerializable {
     /**
      * The extra key for the public notification payload.
      */
+    @NonNull
     public static final String EXTRA_PUBLIC_NOTIFICATION = "com.urbanairship.public_notification";
 
     /**
      * The extra key for the category of the notification.
      */
+    @NonNull
     public static final String EXTRA_CATEGORY = "com.urbanairship.category";
 
     /**
@@ -176,6 +196,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * Each API call will result in a unique push ID, so all notifications that are part of a
      * multicast push will have the same push ID.
      */
+    @NonNull
     public static final String EXTRA_PUSH_ID = "com.urbanairship.push.CANONICAL_PUSH_ID";
 
     /**
@@ -183,31 +204,37 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * notification should not be delivered. It is removed from the notification before delivery to the
      * client. If not present, notifications may be delivered arbitrarily late.
      */
+    @NonNull
     public static final String EXTRA_EXPIRATION = "com.urbanairship.push.EXPIRATION";
 
     /**
      * The extra key for the the legacy in-app message payload.
      */
+    @NonNull
     public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
     /**
      * The extra key for the tag to be used when posting a notification.
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_TAG = "com.urbanairship.notification_tag";
 
     /**
      * The extra key for the channel to be used when posting a notification.
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_CHANNEL = "com.urbanairship.notification_channel";
 
     /**
      * The extra key for the delivery priority.
      */
+    @NonNull
     public static final String EXTRA_DELIVERY_PRIORITY = "com.urbanairship.priority";
 
     /**
      * Constant for the extra {@link #EXTRA_DELIVERY_PRIORITY} that indicates the push is high priority.
      */
+    @NonNull
     public static final String PRIORITY_HIGH = "high";
 
     /**
@@ -244,7 +271,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      *
      * @param data The push data.
      */
-    public PushMessage(Map<String, String> data) {
+    public PushMessage(@NonNull Map<String, String> data) {
         this.data = new HashMap<>(data);
     }
 
@@ -293,15 +320,24 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * Gets an extra from the push bundle.
      *
      * @param key The extra key.
+     * @return The extra.
+     */
+    @Nullable
+    public String getExtra(@NonNull String key) {
+        return data.get(key);
+    }
+
+    /**
+     * Gets an extra from the push bundle.
+     *
+     * @param key The extra key.
      * @param defaultValue Default value if the value does not exist.
      * @return The extra or the default value if the extra does not exist.
      */
-    public String getExtra(String key, String defaultValue) {
-        if (data.get(key) != null) {
-            return data.get(key);
-        }
-
-        return defaultValue;
+    @NonNull
+    public String getExtra(@NonNull String key, @NonNull String defaultValue) {
+        String value = getExtra(key);
+        return value == null ? defaultValue : value;
     }
 
     /**
@@ -482,7 +518,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      *
      * @return <code>true</code> if the notification should only be displayed on the device,
      * otherwise <code>false</code>
-     * <p/>
+     * <p>
      * Defaults to false.
      */
     public boolean isLocalOnly() {
@@ -492,7 +528,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * Gets the priority of the notification.
-     * <p/>
+     * <p>
      * Defaults to 0.
      *
      * @return The priority of the notification.
@@ -508,7 +544,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * Gets the visibility of the notification for the lockscreen.
-     * <p/>
+     * <p>
      * Defaults to 1 (VISIBILITY_PUBLIC).
      *
      * @return The visibility of the notification for the lockscreen.
@@ -590,7 +626,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * @return The integer resource of the icon image.
      */
     @DrawableRes
-    public int getIcon(Context context, int defaultIcon) {
+    public int getIcon(@NonNull Context context, int defaultIcon) {
         String resourceString = data.get(EXTRA_ICON);
         if (resourceString != null) {
             int iconId = context.getResources().getIdentifier(resourceString, "drawable", context.getPackageName());
@@ -627,7 +663,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -653,7 +689,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * @hide
      */
     @Nullable
-    public static PushMessage fromIntent(Intent intent) {
+    public static PushMessage fromIntent(@Nullable Intent intent) {
         if (intent == null) {
             return null;
         }
@@ -671,6 +707,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return data.toString();
@@ -682,26 +719,32 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeBundle(getPushBundle());
     }
 
     /**
      * Parcel Creator for push messages.
+     *
+     * @hide
      */
+    @NonNull
     public static final Parcelable.Creator<PushMessage> CREATOR = new Parcelable.Creator<PushMessage>() {
 
+        @NonNull
         @Override
-        public PushMessage createFromParcel(Parcel in) {
+        public PushMessage createFromParcel(@NonNull Parcel in) {
             return new PushMessage(in.readBundle(PushMessage.class.getClassLoader()));
         }
 
+        @NonNull
         @Override
         public PushMessage[] newArray(int size) {
             return new PushMessage[size];
         }
     };
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonValue.wrapOpt(data);
@@ -713,7 +756,8 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * @param jsonValue The json value.
      * @return The push message.
      */
-    public static PushMessage fromJsonValue(JsonValue jsonValue) {
+    @NonNull
+    public static PushMessage fromJsonValue(@NonNull JsonValue jsonValue) {
         Map<String, String> data = new HashMap<>();
         for (Map.Entry<String, JsonValue> entry : jsonValue.optMap().entrySet()) {
             if (entry.getValue().isString()) {
@@ -732,7 +776,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * @param key The key to check.
      * @return {@code true} if the push message contains a value at the key, otherwise {@code false}.
      */
-    public boolean containsKey(String key) {
+    public boolean containsKey(@NonNull String key) {
         return this.data.containsKey(key);
     }
 }

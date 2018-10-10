@@ -2,10 +2,12 @@
 
 package com.urbanairship;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
  * Operation scheduler.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -17,5 +19,5 @@ public interface OperationScheduler {
      * @param delay The delay.
      * @param operation The operation.
      */
-    void schedule(long delay, final CancelableOperation operation);
+    void schedule(long delay, @NonNull CancelableOperation operation);
 }

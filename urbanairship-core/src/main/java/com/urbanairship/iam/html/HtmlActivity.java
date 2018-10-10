@@ -49,6 +49,11 @@ public class HtmlActivity extends InAppMessageActivity {
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
+        if (getMessage() == null) {
+            finish();
+            return;
+        }
+
         final HtmlDisplayContent displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
             Logger.error("HtmlActivity - Invalid display type: " + getMessage().getDisplayContent());
@@ -140,7 +145,9 @@ public class HtmlActivity extends InAppMessageActivity {
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                if (getDisplayHandler() != null) {
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                }
                 finish();
             }
         });
@@ -178,7 +185,7 @@ public class HtmlActivity extends InAppMessageActivity {
      * @param in The view to fade in
      * @param out The view to fade out
      */
-    private void crossFade(final View in, final View out) {
+    private void crossFade(@Nullable final View in, @Nullable final View out) {
         if (in != null) {
             in.animate().alpha(1f).setDuration(200);
         }

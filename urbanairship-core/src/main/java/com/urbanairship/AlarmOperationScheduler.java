@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.RestrictTo;
 import android.util.SparseArray;
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Alarm scheduler.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -35,7 +38,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
      *
      * @param context The application context.
      */
-    AlarmOperationScheduler(Context context) {
+    AlarmOperationScheduler(@NonNull Context context) {
         this.context = context.getApplicationContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -51,7 +54,8 @@ public class AlarmOperationScheduler implements OperationScheduler {
      * @param context The application context.
      * @return The shared alarm scheduler instance.
      */
-    public static AlarmOperationScheduler shared(Context context) {
+    @NonNull
+    public static AlarmOperationScheduler shared(@NonNull Context context) {
         synchronized (AlarmOperationScheduler.class) {
             if (shared == null) {
                 shared = new AlarmOperationScheduler(context);
@@ -62,7 +66,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
     }
 
     @Override
-    public void schedule(long delay, final CancelableOperation operation) {
+    public void schedule(long delay, @NonNull final CancelableOperation operation) {
         scheduler.schedule(context, delay, operation);
     }
 
@@ -78,7 +82,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
          * @param delay The delay in milliseconds.
          * @param operation The operation.
          */
-        void schedule(Context context, long delay, CancelableOperation operation);
+        void schedule(@NonNull Context context, long delay, @NonNull CancelableOperation operation);
     }
 
     /**
@@ -86,7 +90,9 @@ public class AlarmOperationScheduler implements OperationScheduler {
      */
     private static class JellyBeanScheduler implements InternalScheduler {
 
+        @NonNull
         private static final String ACTION = "com.urbanairship.alarmhelper";
+        @NonNull
         private static final String ID_EXRA = "ID";
 
         private final SparseArray<CancelableOperation> operations = new SparseArray<>();
@@ -95,7 +101,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
 
         private final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(@NonNull Context context, @Nullable Intent intent) {
                 if (intent == null || !ACTION.equals(intent.getAction())) {
                     return;
                 }
@@ -107,7 +113,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
         };
 
         @Override
-        public void schedule(Context context, long delay, CancelableOperation operation) {
+        public void schedule(@NonNull Context context, long delay, @NonNull CancelableOperation operation) {
             synchronized (receiver) {
                 if (!isRegistered) {
                     IntentFilter intentFilter = new IntentFilter();
@@ -147,7 +153,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
     private static class NougatScheduler implements InternalScheduler {
 
         @Override
-        public void schedule(Context context, long delay, CancelableOperation operation) {
+        public void schedule(@NonNull Context context, long delay, @NonNull CancelableOperation operation) {
             final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             AlarmListener listener = new AlarmListener(alarmManager, operation);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, UAirship.getPackageName(), listener, operation.getHandler());

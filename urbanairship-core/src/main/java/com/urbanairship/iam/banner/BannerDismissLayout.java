@@ -107,7 +107,7 @@ public class BannerDismissLayout extends FrameLayout {
         init(context);
     }
 
-    private void init(Context context) {
+    private void init(@NonNull Context context) {
         if (isInEditMode()) {
             return;
         }
@@ -121,7 +121,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Sets the minimum velocity needed to initiate a fling, as measured in pixels per second.
-     * <p/>
+     * <p>
      * The default value is loaded from the {@code ViewConfiguration.getScaledMinimumFlingVelocity()}.
      *
      * @param minFlingVelocity The minimum fling velocity in pixels per second.
@@ -132,7 +132,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Gets the minimum velocity needed to initiate a fling, as measured in pixels per second.
-     * <p/>
+     * <p>
      * The default value is loaded from the {@code ViewConfiguration.getScaledMinimumFlingVelocity()}.
      *
      * @return The minimum fling velocity in pixels per second.
@@ -146,7 +146,7 @@ public class BannerDismissLayout extends FrameLayout {
      *
      * @param listener The dismiss listener.
      */
-    public void setListener(Listener listener) {
+    public void setListener(@Nullable Listener listener) {
         synchronized (this) {
             this.listener = listener;
         }
@@ -155,7 +155,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Gets the view's y translation as a fraction of its height.
-     * <p/>
+     * <p>
      * Used to animate a view into the screen with a ObjectAnimator.
      *
      * @return The view's y translation as a fraction of its height.
@@ -172,7 +172,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Sets the view's y translation as a fraction of its height.
-     * <p/>
+     * <p>
      * Used to animate a view into the screen with a ObjectAnimator.
      */
     @Keep
@@ -199,7 +199,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Gets the view's x translation as a fraction of its width.
-     * <p/>
+     * <p>
      * Used to animate a view into the screen with a ObjectAnimator.
      *
      * @return The view's x translation as a fraction of its width.
@@ -216,7 +216,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     /**
      * Sets the view's x translation as a fraction of its width.
-     * <p/>
+     * <p>
      * Used to animate a view into the screen with a ObjectAnimator.
      */
     @Keep
@@ -250,7 +250,7 @@ public class BannerDismissLayout extends FrameLayout {
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
+    public boolean onInterceptTouchEvent(@NonNull MotionEvent event) {
         if (dragHelper.shouldInterceptTouchEvent(event) || super.onInterceptTouchEvent(event)) {
             return true;
         }
@@ -275,7 +275,7 @@ public class BannerDismissLayout extends FrameLayout {
 
     @Override
     @SuppressLint("ClickableViewAccessibility")
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
         dragHelper.processTouchEvent(event);
 
         if (dragHelper.getCapturedView() == null) {
@@ -379,14 +379,14 @@ public class BannerDismissLayout extends FrameLayout {
         public void onViewReleased(@NonNull final View view, float xv, float yv) {
 
             float absYv = Math.abs(yv);
-            if (BannerDisplayContent.PLACEMENT_TOP.equals(placement) ?  startTop >= view.getTop() : startTop <= view.getTop()) {
+            if (BannerDisplayContent.PLACEMENT_TOP.equals(placement) ? startTop >= view.getTop() : startTop <= view.getTop()) {
                 isDismissed = dragPercent >= IDLE_MIN_DRAG_PERCENT ||
                         absYv > minFlingVelocity ||
                         dragPercent > FLING_MIN_DRAG_PERCENT;
             }
 
             if (isDismissed) {
-                int top = BannerDisplayContent.PLACEMENT_TOP.equals(placement) ?  - view.getHeight() : getHeight() + view.getHeight();
+                int top = BannerDisplayContent.PLACEMENT_TOP.equals(placement) ? -view.getHeight() : getHeight() + view.getHeight();
                 dragHelper.settleCapturedViewAt(startLeft, top);
             } else {
                 dragHelper.settleCapturedViewAt(startLeft, startTop);

@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.ResultCallback;
@@ -15,6 +16,7 @@ import com.urbanairship.ResultCallback;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface LocationAdapter {
 
     /**
@@ -26,7 +28,8 @@ public interface LocationAdapter {
      * @return PendingLocationResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback);
+    @NonNull
+    Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull ResultCallback<Location> resultCallback);
 
     /**
      * Cancels location updates.

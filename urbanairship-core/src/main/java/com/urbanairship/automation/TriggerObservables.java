@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonSerializable;
@@ -28,10 +30,11 @@ class TriggerObservables {
      * @param monitor An instance of ActivityMonitor.
      * @return An Observable of JsonSerializable.
      */
-    public static Observable<JsonSerializable> foregrounded(final ActivityMonitor monitor) {
+    public static Observable<JsonSerializable> foregrounded(@NonNull final ActivityMonitor monitor) {
         return Observable.create(new Function<Observer<JsonSerializable>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(Observer<JsonSerializable> observer) {
+            public Subscription apply(@NonNull Observer<JsonSerializable> observer) {
                 if (monitor.isAppForegrounded()) {
                     observer.onNext(JsonValue.NULL);
                 }
@@ -47,10 +50,11 @@ class TriggerObservables {
      * @param monitor An instance of ActivityMonitor.
      * @return An Observable of JsonSerializable.
      */
-    public static Observable<JsonSerializable> newSession(final ActivityMonitor monitor) {
+    public static Observable<JsonSerializable> newSession(@NonNull final ActivityMonitor monitor) {
         return Observable.create(new Function<Observer<JsonSerializable>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<JsonSerializable> observer) {
+            public Subscription apply(@NonNull final Observer<JsonSerializable> observer) {
                 final ActivityMonitor.SimpleListener listener = new ActivityMonitor.SimpleListener() {
                     @Override
                     public void onForeground(long time) {
@@ -72,7 +76,7 @@ class TriggerObservables {
 
     /**
      * Creates a state observable that sends onNext if the app version is currently updated, and then completes.
-     *
+     * <p>
      * The JSON payload contains a key value pair of the device platform (android or amazon) and
      * the current app version, e.g. <code>{"android": {"version": 123}}</code>.
      *
@@ -80,6 +84,7 @@ class TriggerObservables {
      */
     public static Observable<JsonSerializable> appVersionUpdated() {
         return Observable.defer(new Supplier<Observable<JsonSerializable>>() {
+            @NonNull
             @Override
             public Observable<JsonSerializable> apply() {
                 if (UAirship.shared().getApplicationMetrics().getAppVersionUpdated()) {

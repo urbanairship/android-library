@@ -77,7 +77,7 @@ public interface AutomationDriver<T extends Schedule> {
      * @param callback The callback to continue execution.
      */
     @WorkerThread
-    void onPrepareSchedule(T schedule, @NonNull PrepareScheduleCallback callback);
+    void onPrepareSchedule(@NonNull T schedule, @NonNull PrepareScheduleCallback callback);
 
     /**
      * Checks if the schedule is ready to execute. Will be called before executing the schedule
@@ -87,7 +87,7 @@ public interface AutomationDriver<T extends Schedule> {
      * @return {@code true} if the schedule is ready, otherwise {@code false}.
      */
     @MainThread
-    boolean isScheduleReadyToExecute(T schedule);
+    boolean isScheduleReadyToExecute(@NonNull T schedule);
 
 
     /**
@@ -109,5 +109,5 @@ public interface AutomationDriver<T extends Schedule> {
      * the schedule.
      */
     @NonNull
-    T createSchedule(String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException;
+    T createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException;
 }

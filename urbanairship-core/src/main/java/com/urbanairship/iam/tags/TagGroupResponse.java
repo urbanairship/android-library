@@ -2,7 +2,9 @@
 
 package com.urbanairship.iam.tags;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.http.Response;
@@ -72,12 +74,13 @@ class TagGroupResponse implements JsonSerializable {
         JsonMap body = JsonValue.parseString(response.getResponseBody()).optMap();
 
         int status = response.getStatus();
-        String lastModified = body.get(LAST_MODIFIED_KEY).getString();
-        Map<String, Set<String>> tags = TagGroupUtils.parseTags(body.get(TAG_GROUPS_KEY));
+        String lastModified = body.opt(LAST_MODIFIED_KEY).getString();
+        Map<String, Set<String>> tags = TagGroupUtils.parseTags(body.opt(TAG_GROUPS_KEY));
 
         return new TagGroupResponse(status, tags, lastModified);
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -89,7 +92,7 @@ class TagGroupResponse implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -118,6 +121,7 @@ class TagGroupResponse implements JsonSerializable {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "TagGroupResponse{" +

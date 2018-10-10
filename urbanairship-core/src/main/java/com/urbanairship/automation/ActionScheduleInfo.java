@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
@@ -28,12 +29,16 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     /**
      * @hide
      */
+    @NonNull
     public static final Creator<ActionScheduleInfo> CREATOR = new Creator<ActionScheduleInfo>() {
+
+        @NonNull
         @Override
-        public ActionScheduleInfo createFromParcel(Parcel in) {
+        public ActionScheduleInfo createFromParcel(@NonNull Parcel in) {
             return new ActionScheduleInfo(in);
         }
 
+        @NonNull
         @Override
         public ActionScheduleInfo[] newArray(int size) {
             return new ActionScheduleInfo[size];
@@ -48,6 +53,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     /**
      * Actions json key.
      */
+    @NonNull
     public static final String ACTIONS_KEY = "actions";
 
     private final List<Trigger> triggers;
@@ -61,7 +67,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     private final long editGracePeriod;
     private final long interval;
 
-    private ActionScheduleInfo(Builder builder) {
+    private ActionScheduleInfo(@NonNull Builder builder) {
         this.triggers = builder.triggers;
         this.actions = builder.actions;
         this.limit = builder.limit;
@@ -74,7 +80,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.interval = builder.interval;
     }
 
-    protected ActionScheduleInfo(Parcel in) {
+    protected ActionScheduleInfo(@NonNull Parcel in) {
         this.triggers = in.createTypedArrayList(Trigger.CREATOR);
         this.limit = in.readInt();
         this.priority = in.readInt();
@@ -92,7 +98,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeTypedList(triggers);
         dest.writeInt(limit);
         dest.writeInt(priority);
@@ -115,19 +121,21 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      *
      * @return The Builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
 
-
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public List<Trigger> getTriggers() {
         return triggers;
     }
 
+    @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getData() {
@@ -139,6 +147,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      *
      * @return A map of action names to action values.
      */
+    @NonNull
     public Map<String, JsonValue> getActions() {
         return actions;
     }
@@ -160,6 +169,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     /**
      * {@inheritDoc}
      */
+    @Nullable
     @Override
     public String getGroup() {
         return group;
@@ -184,6 +194,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     /**
      * {@inheritDoc}
      */
+    @Nullable
     @Override
     public ScheduleDelay getDelay() {
         return delay;
@@ -207,7 +218,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
 
     /**
      * Parses an ActionScheduleInfo from a JsonValue.
-     * </p>
+     * <p>
      * The expected JsonValue is a map containing:
      * <pre>
      * - "group": Optional. Group identifier. Useful to cancel schedules for a specific campaign.
@@ -224,6 +235,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * @return The parsed ActionScheduleInfo.
      * @throws JsonException If the JsonValue does not produce a valid ActionScheduleInfo.
      */
+    @NonNull
     public static ActionScheduleInfo parseJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
@@ -231,14 +243,14 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
                 .addAllActions(jsonMap.opt(ACTIONS_KEY).optMap())
                 .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                 .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
-                .setGroup(jsonMap.opt(GROUP_KEY).getString(null));
+                .setGroup(jsonMap.opt(GROUP_KEY).getString());
 
         if (jsonMap.containsKey(END_KEY)) {
-            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString(), -1));
+            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).optString(), -1));
         }
 
         if (jsonMap.containsKey(START_KEY)) {
-            builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString(), -1));
+            builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).optString(), -1));
         }
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
@@ -285,7 +297,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param trigger A trigger instance.
          * @return The Builder instance.
          */
-        public Builder addTrigger(Trigger trigger) {
+        @NonNull
+        public Builder addTrigger(@NonNull Trigger trigger) {
             this.triggers.add(trigger);
             return this;
         }
@@ -296,7 +309,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param triggers A list of trigger instances.
          * @return The Builder instance.
          */
-        public Builder addTriggers(List<Trigger> triggers) {
+        @NonNull
+        public Builder addTriggers(@NonNull List<Trigger> triggers) {
             this.triggers.addAll(triggers);
             return this;
         }
@@ -308,7 +322,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param actionValue The action value.
          * @return The Builder instance.
          */
-        public Builder addAction(String actionName, JsonSerializable actionValue) {
+        @NonNull
+        public Builder addAction(@NonNull String actionName, @NonNull JsonSerializable actionValue) {
             actions.put(actionName, actionValue.toJsonValue());
             return this;
         }
@@ -319,6 +334,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param actionMap A map of action names to action values.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder addAllActions(@NonNull JsonMap actionMap) {
             actions.putAll(actionMap.getMap());
             return this;
@@ -330,6 +346,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param limit The limit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setLimit(int limit) {
             this.limit = limit;
             return this;
@@ -337,9 +354,11 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
 
         /**
          * Sets the priority level, in ascending order.
+         *
          * @param priority The priority level.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setPriority(int priority) {
             this.priority = priority;
             return this;
@@ -351,7 +370,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param group The group.
          * @return The Builder instance.
          */
-        public Builder setGroup(String group) {
+        @NonNull
+        public Builder setGroup(@Nullable String group) {
             this.group = group;
             return this;
         }
@@ -362,6 +382,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param start The start time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setStart(long start) {
             this.start = start;
             return this;
@@ -373,6 +394,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param end The end time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEnd(long end) {
             this.end = end;
             return this;
@@ -384,7 +406,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param delay A ScheduleDelay object.
          * @return The Builder instance.
          */
-        public Builder setDelay(ScheduleDelay delay) {
+        @NonNull
+        public Builder setDelay(@Nullable ScheduleDelay delay) {
             this.delay = delay;
             return this;
         }
@@ -396,6 +419,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
@@ -408,6 +432,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
             return this;
@@ -420,6 +445,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          * @throws IllegalArgumentException if either no actions are set, no triggers or more than
          * {@link #TRIGGER_LIMIT} triggers are set, or the start time is set after the end time.
          */
+        @NonNull
         public ActionScheduleInfo build() {
             if (actions.isEmpty()) {
                 throw new IllegalArgumentException("Actions required.");

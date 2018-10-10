@@ -201,7 +201,7 @@ public class ActionRunRequestTest extends BaseTestCase {
         // Set a predicate that rejects all arguments
         entry.setPredicate(new ActionRegistry.Predicate() {
             @Override
-            public boolean apply(ActionArguments arguments) {
+            public boolean apply(@NonNull ActionArguments arguments) {
                 return false;
             }
         });

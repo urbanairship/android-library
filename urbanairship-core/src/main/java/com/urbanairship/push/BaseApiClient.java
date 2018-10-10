@@ -37,6 +37,7 @@ abstract class BaseApiClient {
      * @param jsonPayload JSON payload as a string
      * @return response or null if an error occurred
      */
+    @Nullable
     protected Response performRequest(@Nullable URL url, @NonNull String requestMethod, @NonNull String jsonPayload) {
         if (url == null) {
             Logger.error("Unable to perform request, invalid URL.");

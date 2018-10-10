@@ -102,6 +102,7 @@ public class PendingResult<T> implements Cancelable, Future<T> {
      *
      * @return The result if set, otherwise {@code null}.
      */
+    @Nullable
     public T getResult() {
         synchronized (this) {
             return result;
@@ -124,6 +125,7 @@ public class PendingResult<T> implements Cancelable, Future<T> {
         }
     }
 
+    @Nullable
     @Override
     public T get() throws InterruptedException, ExecutionException {
         synchronized (this) {
@@ -135,6 +137,7 @@ public class PendingResult<T> implements Cancelable, Future<T> {
         }
     }
 
+    @Nullable
     @Override
     public T get(long l, @NonNull TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
         synchronized (this) {
@@ -155,6 +158,7 @@ public class PendingResult<T> implements Cancelable, Future<T> {
      *
      * @param cancelable The instance that implements the {@link Cancelable} interface.
      */
+    @NonNull
     public PendingResult<T> addCancelable(@NonNull Cancelable cancelable) {
         synchronized (this) {
             if (isCancelled()) {
@@ -175,6 +179,7 @@ public class PendingResult<T> implements Cancelable, Future<T> {
      * @param resultCallback The result callback.
      * @return The pending result.
      */
+    @NonNull
     public PendingResult<T> addResultCallback(@NonNull final ResultCallback<T> resultCallback) {
         return addResultCallback(Looper.myLooper(), resultCallback);
     }
@@ -186,7 +191,8 @@ public class PendingResult<T> implements Cancelable, Future<T> {
      * @param resultCallback The result callback.
      * @return The pending result.
      */
-    public PendingResult<T> addResultCallback(Looper looper, @NonNull final ResultCallback<T> resultCallback) {
+    @NonNull
+    public PendingResult<T> addResultCallback(@Nullable Looper looper, @NonNull final ResultCallback<T> resultCallback) {
         synchronized (this) {
             if (isCancelled() || !runCallbacks) {
                 return this;

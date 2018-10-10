@@ -7,6 +7,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Build;
 import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.TypedValue;
 import android.view.View;
@@ -53,7 +54,7 @@ class ClippableViewDelegate {
      *
      * @param canvas The view's canvas.
      */
-    void onDraw(Canvas canvas) {
+    void onDraw(@NonNull Canvas canvas) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && borderRadius != 0) {
             canvas.clipPath(this.clipPath);
         }
@@ -66,7 +67,7 @@ class ClippableViewDelegate {
      */
     @MainThread
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    void setClipPathBorderRadius(View view, final float borderRadius) {
+    void setClipPathBorderRadius(@NonNull View view, final float borderRadius) {
         final float borderRadiusPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, borderRadius, view.getResources().getDisplayMetrics());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -78,7 +79,7 @@ class ClippableViewDelegate {
                 view.setOutlineProvider(new ViewOutlineProvider() {
                     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
-                    public void getOutline(View view, Outline outline) {
+                    public void getOutline(@NonNull View view, @NonNull Outline outline) {
                         outline.setRoundRect(0,
                                 0,
                                 view.getRight() - view.getLeft(),

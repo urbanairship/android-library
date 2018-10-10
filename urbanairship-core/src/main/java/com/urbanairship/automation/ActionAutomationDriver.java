@@ -34,14 +34,14 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                             .setValue(entry.getValue())
                             .setSituation(Action.SITUATION_AUTOMATION)
                             .setMetadata(metadata)
-                            .run(actionCallback, Looper.getMainLooper());
+                            .run(Looper.getMainLooper(), actionCallback);
         }
     }
 
 
     @NonNull
     @Override
-    public ActionSchedule createSchedule(String scheduleId, @NonNull ScheduleInfo info) {
+    public ActionSchedule createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) {
         ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                             .setEnd(info.getEnd())
                                                             .setStart(info.getStart())
@@ -57,12 +57,12 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
     }
 
     @Override
-    public void onPrepareSchedule(ActionSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+    public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback callback) {
         callback.onFinish(RESULT_CONTINUE);
     }
 
     @Override
-    public boolean isScheduleReadyToExecute(ActionSchedule schedule) {
+    public boolean isScheduleReadyToExecute(@NonNull ActionSchedule schedule) {
         return true;
     }
 

@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
@@ -37,7 +39,6 @@ import java.util.List;
 public class MessageCenterFragment extends Fragment {
 
     private static final String START_MESSAGE_ID = "START_MESSAGE_ID";
-
     private static final String STATE_CURRENT_MESSAGE_ID = "STATE_CURRENT_MESSAGE_ID";
     private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
     private static final String STATE_ABS_LIST_VIEW = "STATE_ABS_LIST_VIEW";
@@ -66,7 +67,8 @@ public class MessageCenterFragment extends Fragment {
      * @param messageId The message's ID to display.
      * @return {@link MessageCenterFragment} instance.
      */
-    public static MessageCenterFragment newInstance(String messageId) {
+    @NonNull
+    public static MessageCenterFragment newInstance(@Nullable String messageId) {
         MessageCenterFragment message = new MessageCenterFragment();
         Bundle arguments = new Bundle();
         arguments.putString(START_MESSAGE_ID, messageId);
@@ -75,7 +77,7 @@ public class MessageCenterFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
@@ -97,10 +99,11 @@ public class MessageCenterFragment extends Fragment {
      * but this can be used to generate the LayoutParams of the view.
      * @param savedInstanceState If non-null, this fragment is being re-constructed
      * from a previous saved state as given here.
-     * @return Return the View for the fragment's UI, or null.
+     * @return Return the View for the fragment's UI.
      */
+    @NonNull
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_mc, container, false);
         configureView(view);
         return view;
@@ -108,7 +111,7 @@ public class MessageCenterFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(@NonNull View view, final Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         configureView(view);
 
@@ -122,7 +125,7 @@ public class MessageCenterFragment extends Fragment {
         if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW)) {
             messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
                 @Override
-                public void onListViewReady(AbsListView absListView) {
+                public void onListViewReady(@NonNull AbsListView absListView) {
                     absListView.onRestoreInstanceState(savedInstanceState.getParcelable(STATE_ABS_LIST_VIEW));
                 }
             });
@@ -134,7 +137,11 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param view The content view.
      */
-    private void configureView(View view) {
+    private void configureView(@NonNull View view) {
+        if (getActivity() == null) {
+            return;
+        }
+
         if (isViewConfigured) {
             return;
         }
@@ -202,11 +209,11 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param messageListFragment The message list fragment.
      */
-    protected void configureMessageListFragment(final MessageListFragment messageListFragment) {
+    protected void configureMessageListFragment(@NonNull final MessageListFragment messageListFragment) {
 
         messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
             @Override
-            public void onListViewReady(AbsListView absListView) {
+            public void onListViewReady(@NonNull AbsListView absListView) {
                 absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -253,6 +260,7 @@ public class MessageCenterFragment extends Fragment {
      *
      * @return The filtered list of messages.
      */
+    @NonNull
     private List<RichPushMessage> getMessages() {
         return UAirship.shared().getInbox().getMessages(predicate);
     }
@@ -262,7 +270,7 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param messageId The message ID.
      */
-    public void setMessageID(String messageId) {
+    public void setMessageID(@Nullable String messageId) {
         if (isResumed()) {
             showMessage(messageId);
         } else {
@@ -275,7 +283,11 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param messageId The message ID.
      */
-    protected void showMessage(String messageId) {
+    protected void showMessage(@Nullable String messageId) {
+        if (getContext() == null) {
+            return;
+        }
+
         RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
             currentMessagePosition = -1;
@@ -346,7 +358,7 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param predicate A predicate for filtering messages.
      */
-    public void setPredicate(RichPushInbox.Predicate predicate) {
+    public void setPredicate(@Nullable RichPushInbox.Predicate predicate) {
         this.predicate = predicate;
     }
 
@@ -355,22 +367,24 @@ public class MessageCenterFragment extends Fragment {
      */
     public static class NoMessageSelectedFragment extends Fragment {
 
+        @NonNull
         @Override
-        public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            Context context = inflater.getContext();
+
             View view = inflater.inflate(R.layout.ua_fragment_no_message_selected, container, false);
             View emptyListView = view.findViewById(android.R.id.empty);
 
-
             if (emptyListView instanceof TextView) {
-                TypedArray attributes = getContext()
+                TypedArray attributes = context
                         .getTheme()
                         .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
 
                 TextView textView = (TextView) emptyListView;
                 int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageNotSelectedTextAppearance, -1);
-                Typeface typeface = ViewUtils.createTypeface(getContext(), textAppearance);
+                Typeface typeface = ViewUtils.createTypeface(inflater.getContext(), textAppearance);
 
-                ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
+                ViewUtils.applyTextStyle(context, textView, textAppearance, typeface);
 
                 String text = attributes.getString(R.styleable.MessageCenter_messageNotSelectedText);
                 textView.setText(text);

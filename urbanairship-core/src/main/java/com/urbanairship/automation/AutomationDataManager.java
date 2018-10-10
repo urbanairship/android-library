@@ -354,7 +354,7 @@ public class AutomationDataManager extends DataManager {
 
     @Override
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected void onConfigure(SQLiteDatabase db) {
+    protected void onConfigure(@NonNull SQLiteDatabase db) {
         super.onConfigure(db);
         db.setForeignKeyConstraintsEnabled(true);
     }
@@ -424,6 +424,7 @@ public class AutomationDataManager extends DataManager {
 
     /**
      * Saves a single schedule entry.
+     *
      * @param entry The entry to save.
      */
     void saveSchedule(@NonNull ScheduleEntry entry) {
@@ -445,7 +446,7 @@ public class AutomationDataManager extends DataManager {
      *
      * @param triggerEntries Collection of trigger entries.
      */
-    void saveTriggers(Collection<TriggerEntry> triggerEntries) {
+    void saveTriggers(@NonNull Collection<TriggerEntry> triggerEntries) {
         if (triggerEntries.isEmpty()) {
             return;
         }
@@ -481,7 +482,7 @@ public class AutomationDataManager extends DataManager {
 
         performSubSetOperations(groups, new SetOperation<String>() {
             @Override
-            public void perform(List<String> subset) {
+            public void perform(@NonNull List<String> subset) {
                 String inStatement = repeat("?", subset.size(), ", ");
                 delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " IN ( " + inStatement + " )", subset.toArray(new String[0]));
             }
@@ -500,7 +501,7 @@ public class AutomationDataManager extends DataManager {
 
         performSubSetOperations(schedulesToDelete, new SetOperation<String>() {
             @Override
-            public void perform(List<String> subset) {
+            public void perform(@NonNull List<String> subset) {
                 String inStatement = repeat("?", subset.size(), ", ");
                 delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + inStatement + " )", subset.toArray(new String[0]));
             }
@@ -513,7 +514,8 @@ public class AutomationDataManager extends DataManager {
      * @param group The schedule group.
      * @return The list of {@link ScheduleEntry} instances.
      */
-    List<ScheduleEntry> getScheduleEntries(String group) {
+    @NonNull
+    List<ScheduleEntry> getScheduleEntries(@NonNull String group) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_GROUP + "=?" + ORDER_SCHEDULES_STATEMENT;
         Cursor cursor = rawQuery(query, new String[] { String.valueOf(group) });
         if (cursor == null) {
@@ -530,6 +532,7 @@ public class AutomationDataManager extends DataManager {
      *
      * @return The list of {@link ScheduleEntry} instances.
      */
+    @NonNull
     List<ScheduleEntry> getScheduleEntries() {
         String query = GET_SCHEDULES_QUERY + ORDER_SCHEDULES_STATEMENT;
         Cursor cursor = rawQuery(query, null);
@@ -549,7 +552,7 @@ public class AutomationDataManager extends DataManager {
      * @return A schedule entry or null if the schedule is unavailable.
      */
     @Nullable
-    ScheduleEntry getScheduleEntry(String scheduleId) {
+    ScheduleEntry getScheduleEntry(@NonNull String scheduleId) {
         Set<String> hashSet = new HashSet<>();
         hashSet.add(scheduleId);
         List<ScheduleEntry> scheduleEntries = getScheduleEntries(hashSet);
@@ -562,12 +565,13 @@ public class AutomationDataManager extends DataManager {
      * @param ids The set of schedule IDs.
      * @return The list of {@link ScheduleEntry} instances.
      */
-    List<ScheduleEntry> getScheduleEntries(Set<String> ids) {
+    @NonNull
+    List<ScheduleEntry> getScheduleEntries(@NonNull Set<String> ids) {
         final List<ScheduleEntry> schedules = new ArrayList<>(ids.size());
 
         performSubSetOperations(ids, new SetOperation<String>() {
             @Override
-            public void perform(List<String> subset) {
+            public void perform(@NonNull List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
 
                 Cursor cursor = rawQuery(query, subset.toArray(new String[0]));
@@ -588,6 +592,7 @@ public class AutomationDataManager extends DataManager {
      * @param executionState The execution state.
      * @return A list of schedules.
      */
+    @NonNull
     List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int executionState) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = ?";
         Cursor cursor = rawQuery(query, new String[] { String.valueOf(executionState) });
@@ -607,7 +612,8 @@ public class AutomationDataManager extends DataManager {
      * @param executionStates The execution state.
      * @return A list of schedules.
      */
-    List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int... executionStates) {
+    @NonNull
+    List<ScheduleEntry> getScheduleEntries(@NonNull @ScheduleEntry.State int... executionStates) {
         String[] states = new String[executionStates.length];
         for (int i = 0; i < executionStates.length; i++) {
             states[i] = String.valueOf(executionStates[i]);
@@ -630,6 +636,7 @@ public class AutomationDataManager extends DataManager {
      *
      * @return The list of expired schedules.
      */
+    @NonNull
     List<ScheduleEntry> getActiveExpiredScheduleEntries() {
         String query = GET_SCHEDULES_QUERY +
                 " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " != " + ScheduleEntry.STATE_FINISHED +
@@ -652,6 +659,7 @@ public class AutomationDataManager extends DataManager {
      * @param type The trigger type.
      * @return THe list of {@link TriggerEntry} instances.
      */
+    @NonNull
     List<TriggerEntry> getActiveTriggerEntries(int type) {
         return getActiveTriggerEntries(type, "%");
     }
@@ -663,6 +671,7 @@ public class AutomationDataManager extends DataManager {
      * @param scheduleId The ID of the schedule containing the trigger
      * @return THe list of {@link TriggerEntry} instances.
      */
+    @NonNull
     List<TriggerEntry> getActiveTriggerEntries(int type, @NonNull String scheduleId) {
         List<TriggerEntry> triggers = new ArrayList<>();
         Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId });
@@ -727,7 +736,7 @@ public class AutomationDataManager extends DataManager {
      * @param <T> The list element type.
      */
     interface SetOperation<T> {
-        void perform(List<T> subset);
+        void perform(@NonNull List<T> subset);
     }
 
     /**
@@ -737,7 +746,7 @@ public class AutomationDataManager extends DataManager {
      * @param ids The list of IDs.
      * @param operation The operation to perform.
      */
-    private static <T> void performSubSetOperations(Collection<T> ids, SetOperation<T> operation) {
+    private static <T> void performSubSetOperations(@NonNull Collection<T> ids, @NonNull SetOperation<T> operation) {
         List<T> remaining = new ArrayList<>(ids);
 
         while (!remaining.isEmpty()) {

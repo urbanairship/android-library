@@ -2,8 +2,10 @@
 
 package com.urbanairship.messagecenter;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.view.MenuItem;
@@ -33,7 +35,7 @@ public class MessageActivity extends ThemedActivity {
     };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
@@ -61,13 +63,13 @@ public class MessageActivity extends ThemedActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("messageId", messageId);
     }
 
     @Nullable
-    private String parseMessageId(Intent intent) {
+    private String parseMessageId(@Nullable Intent intent) {
         if (intent == null || intent.getData() == null || intent.getAction() == null) {
             return null;
         }
@@ -126,7 +128,7 @@ public class MessageActivity extends ThemedActivity {
      *
      * @param messageId The message Id.
      */
-    private void updateTitle(String messageId) {
+    private void updateTitle(@Nullable String messageId) {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
             setTitle(null);
@@ -135,10 +137,9 @@ public class MessageActivity extends ThemedActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
         String newMessageId = parseMessageId(intent);
         if (newMessageId != null) {
             messageId = newMessageId;
@@ -147,6 +148,7 @@ public class MessageActivity extends ThemedActivity {
     }
 
     @Override
+    @SuppressLint("UnknownNullness")
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:

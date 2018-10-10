@@ -55,7 +55,7 @@ public class CoreReceiver extends BroadcastReceiver {
     }
 
     @Override
-    public void onReceive(final Context context, final Intent intent) {
+    public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
@@ -92,7 +92,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void onNotificationOpenedProxy(Context context, Intent intent) {
+    private void onNotificationOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -127,7 +127,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void onNotificationButtonOpenedProxy(Context context, Intent intent) {
+    private void onNotificationButtonOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -187,7 +187,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void onNotificationDismissedProxy(Context context, Intent intent) {
+    private void onNotificationDismissedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -222,7 +222,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void onNotificationOpened(Context context, Intent intent) {
+    private void onNotificationOpened(@NonNull Context context, @NonNull Intent intent) {
         AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
 
         PushMessage message = PushMessage.fromIntent(intent);
@@ -301,7 +301,7 @@ public class CoreReceiver extends BroadcastReceiver {
      *
      * @param context The application context.
      */
-    private boolean launchApplication(Context context) {
+    private boolean launchApplication(@NonNull Context context) {
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(UAirship.getPackageName());
         if (launchIntent != null) {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -338,15 +338,15 @@ public class CoreReceiver extends BroadcastReceiver {
 
                 for (Map.Entry<String, ActionValue> entry : actions.entrySet()) {
                     ActionRunRequest.createRequest(entry.getKey())
-                            .setMetadata(metadata)
-                            .setSituation(situation)
-                            .setValue(entry.getValue())
-                            .run(new ActionCompletionCallback() {
-                                @Override
-                                public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
-                                    countDownLatch.countDown();
-                                }
-                            });
+                                    .setMetadata(metadata)
+                                    .setSituation(situation)
+                                    .setValue(entry.getValue())
+                                    .run(new ActionCompletionCallback() {
+                                        @Override
+                                        public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
+                                            countDownLatch.countDown();
+                                        }
+                                    });
                 }
 
                 try {
@@ -368,7 +368,8 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param payload The payload.
      * @return The parsed actions.
      */
-    private Map<String, ActionValue> parseActionValues(String payload) {
+    @NonNull
+    private Map<String, ActionValue> parseActionValues(@NonNull String payload) {
         Map<String, ActionValue> actionValueMap = new HashMap<>();
 
         try {

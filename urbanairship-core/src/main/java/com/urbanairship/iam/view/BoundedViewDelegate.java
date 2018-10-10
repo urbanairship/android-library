@@ -4,6 +4,8 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -27,7 +29,7 @@ class BoundedViewDelegate {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
-    BoundedViewDelegate(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    BoundedViewDelegate(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         if (attrs != null) {
             TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.UrbanAirshipLayout, defStyle, defResStyle);
             maxWidth = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipLayout_urbanAirshipMaxWidth, 0);

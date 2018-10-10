@@ -44,6 +44,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public static final String ACTION_SEND = "ACTION_SEND";
 
     /**
@@ -52,6 +53,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public static final String ACTION_UPDATE_ADVERTISING_ID = "ACTION_UPDATE_ADVERTISING_ID";
 
 
@@ -94,7 +96,7 @@ public class Analytics extends AirshipComponent {
      *
      * @param builder The builder instance.
      */
-    private Analytics(Builder builder) {
+    private Analytics(@NonNull Builder builder) {
         super(builder.preferenceDataStore);
         this.context = builder.context.getApplicationContext();
         this.preferenceDataStore = builder.preferenceDataStore;
@@ -142,7 +144,7 @@ public class Analytics extends AirshipComponent {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JobInfo.JobResult
-    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
+    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (analyticsJobHandler == null) {
             analyticsJobHandler = new AnalyticsJobHandler(context, airship, eventManager);
         }
@@ -229,8 +231,8 @@ public class Analytics extends AirshipComponent {
      * Returns the last stored send Id from when a push conversion was detected.
      *
      * @return A send Id String.
-     * @hide
      */
+    @Nullable
     public String getConversionSendId() {
         return conversionSendId;
     }
@@ -242,6 +244,7 @@ public class Analytics extends AirshipComponent {
      * @param sendId The associated send Id String.
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void setConversionSendId(@Nullable String sendId) {
         Logger.debug("Analytics - Setting conversion send ID: " + sendId);
         this.conversionSendId = sendId;
@@ -253,6 +256,8 @@ public class Analytics extends AirshipComponent {
      * @return A metadata String.
      * @hide
      */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String getConversionMetadata() {
         return conversionMetadata;
     }
@@ -322,7 +327,7 @@ public class Analytics extends AirshipComponent {
 
     /**
      * Sets analytics enabled. When disabling analytics, any locally stored events will be deleted.
-     * </p>
+     * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
@@ -350,7 +355,7 @@ public class Analytics extends AirshipComponent {
     /**
      * Returns {@code true} if analytics is enabled and {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
      * is set to {@code true}, otherwise {@code false}.
-     * </p>
+     * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
@@ -399,10 +404,11 @@ public class Analytics extends AirshipComponent {
      *
      * @return The AssociatedIdentifiers.Editor
      */
+    @NonNull
     public AssociatedIdentifiers.Editor editAssociatedIdentifiers() {
         return new AssociatedIdentifiers.Editor() {
             @Override
-            void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove) {
+            void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
                     Map<String, String> ids = new HashMap<>();
                     if (!clear) {
@@ -429,6 +435,7 @@ public class Analytics extends AirshipComponent {
      *
      * @return The current associated identifiers.
      */
+    @NonNull
     public AssociatedIdentifiers getAssociatedIdentifiers() {
         synchronized (associatedIdentifiersLock) {
             try {
@@ -488,7 +495,7 @@ public class Analytics extends AirshipComponent {
      *
      * @param analyticsListener The {@link AnalyticsListener}.
      */
-    public void addAnalyticsListener(AnalyticsListener analyticsListener) {
+    public void addAnalyticsListener(@NonNull AnalyticsListener analyticsListener) {
         synchronized (analyticsListeners) {
             analyticsListeners.add(analyticsListener);
         }
@@ -499,7 +506,7 @@ public class Analytics extends AirshipComponent {
      *
      * @param analyticsListener The {@link AnalyticsListener}.
      */
-    public void removeAnalyticsListener(AnalyticsListener analyticsListener) {
+    public void removeAnalyticsListener(@NonNull AnalyticsListener analyticsListener) {
         synchronized (analyticsListeners) {
             analyticsListeners.remove(analyticsListener);
         }
@@ -510,7 +517,7 @@ public class Analytics extends AirshipComponent {
      *
      * @param event The event.
      */
-    private void applyListeners(Event event) {
+    private void applyListeners(@NonNull Event event) {
         for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
             switch (event.getType()) {
                 case CustomEvent.TYPE:
@@ -544,7 +551,6 @@ public class Analytics extends AirshipComponent {
         private AirshipConfigOptions configOptions;
         private Executor executor;
 
-
         /**
          * Builder constructor.
          *
@@ -560,6 +566,7 @@ public class Analytics extends AirshipComponent {
          * @param preferenceDataStore The {@link PreferenceDataStore}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setPreferenceDataStore(@NonNull PreferenceDataStore preferenceDataStore) {
             this.preferenceDataStore = preferenceDataStore;
             return this;
@@ -571,6 +578,7 @@ public class Analytics extends AirshipComponent {
          * @param jobDispatcher The {@link JobDispatcher}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
             this.jobDispatcher = jobDispatcher;
             return this;
@@ -582,6 +590,7 @@ public class Analytics extends AirshipComponent {
          * @param activityMonitor The {@link ActivityMonitor}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
             this.activityMonitor = activityMonitor;
             return this;
@@ -593,6 +602,7 @@ public class Analytics extends AirshipComponent {
          * @param eventManager The {@link EventManager}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setEventManager(@NonNull EventManager eventManager) {
             this.eventManager = eventManager;
             return this;
@@ -604,6 +614,7 @@ public class Analytics extends AirshipComponent {
          * @param platform The device's platform.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setPlatform(@UAirship.Platform int platform) {
             this.platform = platform;
             return this;
@@ -615,6 +626,7 @@ public class Analytics extends AirshipComponent {
          * @param configOptions The {@link AirshipConfigOptions}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setConfigOptions(@NonNull AirshipConfigOptions configOptions) {
             this.configOptions = configOptions;
             return this;
@@ -626,6 +638,7 @@ public class Analytics extends AirshipComponent {
          * @param executor The analytics executor.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setExecutor(@NonNull Executor executor) {
             this.executor = executor;
             return this;
@@ -636,6 +649,7 @@ public class Analytics extends AirshipComponent {
          *
          * @return The analytics instance.
          */
+        @NonNull
         public Analytics build() {
             Checks.checkNotNull(context, "Missing context.");
             Checks.checkNotNull(jobDispatcher, "Missing job dispatcher.");

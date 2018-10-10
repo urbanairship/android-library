@@ -21,10 +21,12 @@ import java.util.List;
 
 /**
  * Manages access to Urban Airship Preferences and Rich Push Message data.
+ *
  * @hide
  */
 public final class UrbanAirshipProvider extends ContentProvider {
 
+    @NonNull
     public static final String QUERY_PARAMETER_LIMIT = "limit";
 
     /**
@@ -72,7 +74,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The rich push content URI.
      */
-    public static Uri getRichPushContentUri(Context context) {
+    @NonNull
+    public static Uri getRichPushContentUri(@NonNull Context context) {
         return Uri.parse("content://" + getAuthorityString(context) + "/richpush");
     }
 
@@ -81,7 +84,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The preferences URI.
      */
-    public static Uri getPreferencesContentUri(Context context) {
+    @NonNull
+    public static Uri getPreferencesContentUri(@NonNull Context context) {
         return Uri.parse("content://" + getAuthorityString(context) + "/preferences");
     }
 
@@ -90,7 +94,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The events URI.
      */
-    public static Uri getEventsContentUri(Context context) {
+    @NonNull
+    public static Uri getEventsContentUri(@NonNull Context context) {
         return Uri.parse("content://" + getAuthorityString(context) + "/events");
     }
 
@@ -99,7 +104,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The authority string.
      */
-    public static String getAuthorityString(Context context) {
+    @NonNull
+    public static String getAuthorityString(@NonNull Context context) {
         if (authorityString == null) {
             String packageName = context.getPackageName();
             authorityString = packageName + ".urbanairship.provider";
@@ -130,7 +136,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
+    public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
             return -1;
@@ -139,6 +145,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
         return model.dataManager.delete(model.table, selection, selectionArgs);
     }
 
+    @NonNull
     @Override
     public String getType(@NonNull Uri uri) {
         int type = matcher.match(uri);
@@ -168,17 +175,14 @@ public final class UrbanAirshipProvider extends ContentProvider {
         }
 
         List<ContentValues> inserted = model.dataManager.bulkInsert(model.table, values);
-        if (inserted == null) {
-            return -1;
-        }
-
         return inserted.size();
     }
 
     @Override
-    public Uri insert(@NonNull  Uri uri, ContentValues values) {
+    @Nullable
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         DatabaseModel model = getDatabaseModel(uri);
-        if (model == null || getContext() == null) {
+        if (model == null || getContext() == null || values == null) {
             return null;
         }
 
@@ -192,7 +196,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    @Nullable
+    public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
             return null;
@@ -215,7 +220,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public int update(@NonNull  Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
             return -1;
@@ -256,7 +261,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
         }
 
         UAirship airship = UAirship.sharedAirship;
-        if (airship == null || airship.getAirshipConfigOptions() == null || airship.getAirshipConfigOptions().getAppKey() == null) {
+        if (airship == null) {
             return null;
         }
 
@@ -313,7 +318,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
             this.dataManager = dataManager;
             this.table = table;
             this.notificationColumnId = notificationColumnId;
-         }
+        }
 
         /**
          * Creates a rich push database model.
@@ -322,7 +327,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param appKey The current appKey.
          * @return A database model configured for rich push messages.
          */
-        static DatabaseModel createRichPushModel(@NonNull Context context, String appKey) {
+        static DatabaseModel createRichPushModel(@NonNull Context context, @NonNull String appKey) {
             DataManager model = new RichPushDataManager(context, appKey);
             return new DatabaseModel(model, RichPushTable.TABLE_NAME, RichPushTable.COLUMN_NAME_MESSAGE_ID);
         }
@@ -334,13 +339,13 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param appKey The current appKey.
          * @return DatabaseModel.
          */
-        static DatabaseModel createPreferencesModel(@NonNull Context context, String appKey) {
+        static DatabaseModel createPreferencesModel(@NonNull Context context, @NonNull String appKey) {
             DataManager model = new PreferencesDataManager(context, appKey);
             return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, PreferencesDataManager.COLUMN_NAME_KEY);
         }
 
 
-        static DatabaseModel createEventsDataModel(Context context, String appKey) {
+        static DatabaseModel createEventsDataModel(@NonNull Context context, @NonNull String appKey) {
             DataManager model = new EventsStorage(context, appKey);
             return new DatabaseModel(model, EventsStorage.Events.TABLE_NAME, EventsStorage.Events._ID);
         }

@@ -1,9 +1,11 @@
 /* Copyright 2018 Urban Airship and Contributors */
 
 package com.urbanairship.location;
+
 import android.support.annotation.FloatRange;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 
@@ -79,8 +81,8 @@ public class ProximityRegion {
      * @param latitude The proximity region's latitude.
      * @param longitude The proximity region's longitude.
      */
-    public void setCoordinates(@FloatRange(from = RegionEvent.MIN_LATITUDE, to = RegionEvent.MAX_LATITUDE) Double latitude,
-                               @FloatRange(from = RegionEvent.MIN_LONGITUDE, to = RegionEvent.MAX_LONGITUDE) Double longitude) {
+    public void setCoordinates(@Nullable @FloatRange(from = RegionEvent.MIN_LATITUDE, to = RegionEvent.MAX_LATITUDE) Double latitude,
+                               @Nullable @FloatRange(from = RegionEvent.MIN_LONGITUDE, to = RegionEvent.MAX_LONGITUDE) Double longitude) {
 
         if (latitude == null || longitude == null) {
             this.latitude = null;
@@ -111,7 +113,7 @@ public class ProximityRegion {
      *
      * @param rssi The proximity region's received signal strength indication.
      */
-    public void setRssi(@IntRange(from = MIN_RSSI, to = MAX_RSSI) Integer rssi) {
+    public void setRssi(@Nullable @IntRange(from = MIN_RSSI, to = MAX_RSSI) Integer rssi) {
         if (rssi == null) {
             this.rssi = null;
             return;
@@ -132,6 +134,7 @@ public class ProximityRegion {
      *
      * @return The proximity ID.
      */
+    @NonNull
     public String getProximityId() {
         return this.proximityId;
     }
@@ -159,6 +162,7 @@ public class ProximityRegion {
      *
      * @return The latitude.
      */
+    @Nullable
     public Double getLatitude() {
         return this.latitude;
     }
@@ -168,6 +172,7 @@ public class ProximityRegion {
      *
      * @return The longitude.
      */
+    @Nullable
     public Double getLongitude() {
         return this.longitude;
     }
@@ -177,6 +182,7 @@ public class ProximityRegion {
      *
      * @return The RSSI.
      */
+    @Nullable
     public Integer getRssi() {
         return this.rssi;
     }

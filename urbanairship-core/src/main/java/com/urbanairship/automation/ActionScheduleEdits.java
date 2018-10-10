@@ -29,7 +29,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
     private final Long interval;
     private final Long editGracePeriod;
 
-    private ActionScheduleEdits(Builder builder) {
+    private ActionScheduleEdits(@NonNull Builder builder) {
         this.limit = builder.limit;
         this.start = builder.start;
         this.end = builder.end;
@@ -93,7 +93,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
         return editGracePeriod;
     }
 
-
+    @Nullable
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getData() {
@@ -105,6 +105,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
      *
      * @return A map of action names to action values.
      */
+    @NonNull
     public Map<String, JsonValue> getActions() {
         return actions;
     }
@@ -115,6 +116,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -126,6 +128,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
      * @return The edit info.
      * @throws JsonException If the json is invalid.
      */
+    @NonNull
     public static ActionScheduleEdits fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
@@ -192,6 +195,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param actionMap A map of action names to action values.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setActions(@NonNull Map<String, JsonValue> actionMap) {
             actions = new HashMap<>(actionMap);
             return this;
@@ -203,6 +207,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param limit The display limit.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setLimit(int limit) {
             this.limit = limit;
             return this;
@@ -214,6 +219,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param start The start time in MS.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setStart(long start) {
             this.start = start;
             return this;
@@ -225,6 +231,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param end The end time in MS.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEnd(long end) {
             this.end = end;
             return this;
@@ -236,6 +243,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param priority The priority level.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setPriority(int priority) {
             this.priority = priority;
             return this;
@@ -248,6 +256,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
@@ -260,6 +269,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
             return this;
@@ -270,6 +280,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
          *
          * @return The schedule edit.
          */
+        @NonNull
         public ActionScheduleEdits build() {
             return new ActionScheduleEdits(this);
         }

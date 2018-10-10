@@ -4,6 +4,7 @@ package com.urbanairship.analytics;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.Size;
 
 import com.urbanairship.Logger;
@@ -25,6 +26,7 @@ import java.util.Map;
  * A class that represents a custom event for the application.
  */
 public class CustomEvent extends Event implements JsonSerializable {
+
     /**
      * The event type.
      */
@@ -33,56 +35,67 @@ public class CustomEvent extends Event implements JsonSerializable {
     /**
      * The interaction ID key.
      */
+    @NonNull
     public static final String INTERACTION_ID = "interaction_id";
 
     /**
      * The interaction type key.
      */
+    @NonNull
     public static final String INTERACTION_TYPE = "interaction_type";
 
     /**
      * The event name key.
      */
+    @NonNull
     public static final String EVENT_NAME = "event_name";
 
     /**
      * The event value key.
      */
+    @NonNull
     public static final String EVENT_VALUE = "event_value";
 
     /**
      * The event transaction id key.
      */
+    @NonNull
     public static final String TRANSACTION_ID = "transaction_id";
 
     /**
      * Rich Push Message interaction type.
      */
+    @NonNull
     public static final String MCRAP_TRANSACTION_TYPE = "ua_mcrap";
 
     /**
      * Hard conversion send id key.
      */
+    @NonNull
     public static final String CONVERSION_SEND_ID = "conversion_send_id";
 
     /**
      * Hard conversion send metadata key.
      */
+    @NonNull
     public static final String CONVERSION_METADATA = "conversion_metadata";
 
     /**
      * Last send metadata key.
      */
+    @NonNull
     public static final String LAST_RECEIVED_METADATA = "last_received_metadata";
 
     /**
      * The template type key.
      */
+    @NonNull
     public static final String TEMPLATE_TYPE = "template_type";
 
     /**
      * The custom properties key.
      */
+    @NonNull
     public static final String PROPERTIES = "properties";
 
     /**
@@ -110,19 +123,34 @@ public class CustomEvent extends Event implements JsonSerializable {
      */
     public static final int MAX_PROPERTY_COLLECTION_SIZE = 20;
 
-
+    @NonNull
     private final String eventName;
+
+    @Nullable
     private final BigDecimal eventValue;
+
+    @Nullable
     private final String transactionId;
+
+    @Nullable
     private final String interactionType;
+
+    @Nullable
     private final String interactionId;
+
+    @Nullable
     private final String sendId;
+
+    @Nullable
     private final String metadata;
+
+    @Nullable
     private final String templateType;
+
+    @NonNull
     private final Map<String, Object> properties;
 
-
-    private CustomEvent(Builder builder) {
+    private CustomEvent(@NonNull Builder builder) {
         this.eventName = builder.eventName;
         this.eventValue = builder.value;
         this.transactionId = UAStringUtil.isEmpty(builder.transactionId) ? null : builder.transactionId;
@@ -136,11 +164,13 @@ public class CustomEvent extends Event implements JsonSerializable {
 
     /**
      * Creates a new CustomEvent builder.
+     *
      * @param name The event name
      * @return The CustomEvent builder.
      */
-    public static CustomEvent.Builder newBuilder(String name) {
-        return new CustomEvent.Builder(name);
+    @NonNull
+    public static Builder newBuilder(@NonNull String name) {
+        return new Builder(name);
     }
 
     /**
@@ -148,6 +178,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The event name.
      */
+    @NonNull
     public String getEventName() {
         return eventName;
     }
@@ -157,6 +188,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The event value.
      */
+    @Nullable
     public BigDecimal getEventValue() {
         return eventValue;
     }
@@ -166,6 +198,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The transaction ID.
      */
+    @Nullable
     public String getTransactionId() {
         return transactionId;
     }
@@ -175,6 +208,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The interaction type.
      */
+    @Nullable
     public String getInteractionType() {
         return interactionType;
     }
@@ -184,6 +218,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The interaction ID.
      */
+    @Nullable
     public String getInteractionId() {
         return interactionId;
     }
@@ -193,15 +228,18 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The properties.
      */
+    @NonNull
     public Map<String, Object> getProperties() {
         return properties;
     }
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
         JsonMap.Builder data = JsonMap.newBuilder();
@@ -252,6 +290,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         return data.build();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         JsonMap.Builder data = JsonMap.newBuilder()
@@ -349,6 +388,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      *
      * @return The tracked custom event.
      */
+    @NonNull
     public CustomEvent track() {
         UAirship.shared().getAnalytics().addEvent(this);
         return this;
@@ -359,19 +399,36 @@ public class CustomEvent extends Event implements JsonSerializable {
      */
     public static class Builder {
 
+        @NonNull
         private final String eventName;
+
+        @Nullable
         private BigDecimal value;
+
+        @Nullable
         private String transactionId;
+
+        @Nullable
         private String interactionType;
+
+        @Nullable
         private String interactionId;
+
+        @Nullable
         private String pushSendId;
+
+        @Nullable
         private String pushMetadata;
+
+        @Nullable
         private String templateType;
+
+        @NonNull
         private final Map<String, Object> properties = new HashMap<>();
 
         /**
          * Creates a new custom event builder
-         * <p/>
+         * <p>
          * The event name must be between 1 and 255 characters or the event will be invalid.
          *
          * @param eventName The name of the event.
@@ -384,13 +441,14 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Sets the event value.
-         * <p/>
+         * <p>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
          * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
          * @param value The event's value as a BigDecimal.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder setEventValue(@Nullable BigDecimal value) {
             if (value == null) {
                 this.value = null;
@@ -403,7 +461,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Sets the event value.
-         * <p/>
+         * <p>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
          * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
@@ -411,13 +469,14 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @return The custom event builder.
          * @throws java.lang.NumberFormatException if the value is infinity or not a number.
          */
+        @NonNull
         public Builder setEventValue(double value) {
             return setEventValue(BigDecimal.valueOf(value));
         }
 
         /**
          * Sets the event value from a String.
-         * <p/>
+         * <p>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
          * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
@@ -426,6 +485,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @throws java.lang.NumberFormatException if the event value does not contain a valid string representation
          * of a big decimal.
          */
+        @NonNull
         public Builder setEventValue(@Nullable String value) {
             if (UAStringUtil.isEmpty(value)) {
                 this.value = null;
@@ -441,19 +501,21 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The event's value as an int.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder setEventValue(int value) {
             return setEventValue(new BigDecimal(value));
         }
 
         /**
          * Sets the transaction ID.
-         * <p/>
+         * <p>
          * If the transaction ID exceeds 255 characters it will cause the event to be invalid.
          *
          * @param transactionId The event's transaction ID.
          * @return The custom event builder.
          */
-        public Builder setTransactionId(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String transactionId) {
+        @NonNull
+        public Builder setTransactionId(@Nullable @Size(min = 1, max = MAX_CHARACTER_LENGTH) String transactionId) {
             this.transactionId = transactionId;
             return this;
         }
@@ -464,25 +526,25 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param message The rich push message that created the custom event.
          * @return The custom event builder.
          */
-        public Builder setInteraction(RichPushMessage message) {
-            if (message != null) {
-                this.interactionType = MCRAP_TRANSACTION_TYPE;
-                this.interactionId = message.getMessageId();
-            }
+        @NonNull
+        public Builder setInteraction(@NonNull RichPushMessage message) {
+            this.interactionType = MCRAP_TRANSACTION_TYPE;
+            this.interactionId = message.getMessageId();
             return this;
         }
 
         /**
          * Sets the interaction type and ID for the event.
-         * <p/>
+         * <p>
          * If any field exceeds 255 characters it will cause the event to be invalid.
          *
          * @param interactionType The event's interaction type.
          * @param interactionId The event's interaction ID.
          * @return The custom event builder.
          */
-        public Builder setInteraction(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String interactionType,
-                                      @Size(min = 1, max = MAX_CHARACTER_LENGTH) String interactionId) {
+        @NonNull
+        public Builder setInteraction(@Nullable @Size(min = 1, max = MAX_CHARACTER_LENGTH) String interactionType,
+                                      @Nullable @Size(min = 1, max = MAX_CHARACTER_LENGTH) String interactionId) {
 
             this.interactionId = interactionId;
             this.interactionType = interactionType;
@@ -496,7 +558,8 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @return The custom event builder.
          * @hide
          */
-        public Builder setAttribution(PushMessage pushMessage) {
+        @NonNull
+        public Builder setAttribution(@Nullable PushMessage pushMessage) {
             if (pushMessage != null) {
                 pushSendId = pushMessage.getSendId();
                 pushMetadata = pushMessage.getMetadata();
@@ -509,7 +572,10 @@ public class CustomEvent extends Event implements JsonSerializable {
          *
          * @param templateType The event's template type.
          * @return The custom event builder.
+         * @hide
          */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         Builder setTemplateType(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String templateType) {
             this.templateType = templateType;
             return this;
@@ -517,7 +583,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name or value
          * of the property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
          *
@@ -525,6 +591,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
                                    @NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String value) {
             properties.put(name, value);
@@ -533,7 +600,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
          * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
          *
@@ -541,6 +608,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, int value) {
             properties.put(name, value);
             return this;
@@ -548,7 +616,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
          * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
          *
@@ -556,6 +624,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, long value) {
             properties.put(name, value);
             return this;
@@ -563,7 +632,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
          * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
          *
@@ -572,6 +641,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @return The custom event builder.
          * @throws java.lang.NumberFormatException if the value is infinite or not a number
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, double value) {
             if (Double.isNaN(value) || Double.isInfinite(value)) {
                 throw new NumberFormatException("Infinity or NaN: " + value);
@@ -583,7 +653,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
          * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
          *
@@ -591,6 +661,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, boolean value) {
             properties.put(name, value);
             return this;
@@ -598,7 +669,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         /**
          * Adds a custom property to the event.
-         * <p/>
+         * <p>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, if the name of the
          * property, or any of the Strings within its value exceeds {@link #MAX_CHARACTER_LENGTH}, or
          * if the value contains more than {@link #MAX_PROPERTY_COLLECTION_SIZE} it will cause the event
@@ -608,6 +679,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value The property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
                                    @NonNull @Size(min = 1, max = MAX_PROPERTY_COLLECTION_SIZE) Collection<String> value) {
 
@@ -620,6 +692,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          *
          * @return The built custom event.
          */
+        @NonNull
         public CustomEvent build() { return new CustomEvent(this); }
 
         /**
@@ -629,6 +702,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @deprecated Use `build` instead.
          */
         @Deprecated
+        @NonNull
         public CustomEvent create() {
             return build();
         }

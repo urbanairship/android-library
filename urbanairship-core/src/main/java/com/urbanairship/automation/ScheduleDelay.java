@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -22,18 +23,24 @@ import java.util.Locale;
  */
 public class ScheduleDelay implements Parcelable {
 
-    public static final String SECONDS_KEY = "seconds";
+    private static final String SECONDS_KEY = "seconds";
 
     // JSON Keys
     private static final String APP_STATE_KEY = "app_state";
+
     private static final String APP_STATE_ANY_NAME = "any";
+
     private static final String APP_STATE_FOREGROUND_NAME = "foreground";
+
     private static final String APP_STATE_BACKGROUND_NAME = "background";
+
     private static final String SCREEN_KEY = "screen";
+
     private static final String REGION_ID_KEY = "region_id";
+
     private static final String CANCELLATION_TRIGGERS_KEY = "cancellation_triggers";
 
-    @IntDef({ APP_STATE_ANY, APP_STATE_FOREGROUND, APP_STATE_BACKGROUND})
+    @IntDef({ APP_STATE_ANY, APP_STATE_FOREGROUND, APP_STATE_BACKGROUND })
     @Retention(RetentionPolicy.SOURCE)
     public @interface AppState {}
 
@@ -52,9 +59,13 @@ public class ScheduleDelay implements Parcelable {
      */
     public static final int APP_STATE_BACKGROUND = 3;
 
+    /**
+     * @hide
+     */
+    @NonNull
     public static final Creator<ScheduleDelay> CREATOR = new Creator<ScheduleDelay>() {
         @Override
-        public ScheduleDelay createFromParcel(Parcel in) {
+        public ScheduleDelay createFromParcel(@NonNull Parcel in) {
             return new ScheduleDelay(in);
         }
 
@@ -70,7 +81,8 @@ public class ScheduleDelay implements Parcelable {
     private final String regionId;
     private final List<Trigger> cancellationTriggers;
 
-    ScheduleDelay(Builder builder) {
+
+    ScheduleDelay(@NonNull Builder builder) {
         this.seconds = builder.seconds;
         this.screens = builder.screens;
         this.appState = builder.appState;
@@ -78,7 +90,7 @@ public class ScheduleDelay implements Parcelable {
         this.cancellationTriggers = builder.cancellationTriggers;
     }
 
-    protected ScheduleDelay(Parcel in) {
+    protected ScheduleDelay(@NonNull Parcel in) {
         this.seconds = in.readLong();
         this.screens = new ArrayList<>();
         in.readList(this.screens, String.class.getClassLoader());
@@ -103,7 +115,7 @@ public class ScheduleDelay implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeLong(seconds);
         dest.writeList(screens);
         dest.writeInt(appState);
@@ -121,6 +133,7 @@ public class ScheduleDelay implements Parcelable {
      *
      * @return The Builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -139,6 +152,7 @@ public class ScheduleDelay implements Parcelable {
      *
      * @return The execution screens.
      */
+    @Nullable
     public List<String> getScreens() {
         return screens;
     }
@@ -158,6 +172,7 @@ public class ScheduleDelay implements Parcelable {
      *
      * @return The execution region ID.
      */
+    @Nullable
     public String getRegionId() {
         return regionId;
     }
@@ -167,13 +182,14 @@ public class ScheduleDelay implements Parcelable {
      *
      * @return The list of cancellation triggers.
      */
+    @NonNull
     public List<Trigger> getCancellationTriggers() {
         return cancellationTriggers;
     }
 
     /**
      * Parses a ScheduleDelay from JSON.
-     * </p>
+     * <p>
      * <pre>
      * - "seconds": Optional. The minimum time in seconds that is needed to pass before running the actions.
      * - "screen": Optional string or array of strings. Specifies the name of an app screen that the user must
@@ -190,11 +206,12 @@ public class ScheduleDelay implements Parcelable {
      * @return The parsed ScheduleDelay.
      * @throws JsonException If the json does not produce a valid ScheduleDelay.
      */
+    @NonNull
     public static ScheduleDelay parseJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         Builder builder = ScheduleDelay.newBuilder()
-                .setSeconds(jsonMap.opt(SECONDS_KEY).getLong(0));
+                                       .setSeconds(jsonMap.opt(SECONDS_KEY).getLong(0));
 
         @AppState int appState;
         String appStateString = jsonMap.opt(APP_STATE_KEY).getString(APP_STATE_ANY_NAME).toLowerCase(Locale.ROOT);
@@ -216,15 +233,14 @@ public class ScheduleDelay implements Parcelable {
         if (jsonMap.containsKey(SCREEN_KEY)) {
             JsonValue screenValue = jsonMap.opt(SCREEN_KEY);
             if (screenValue.isString()) {
-                String screenString = screenValue.getString();
-                builder.setScreen(screenString);
+                builder.setScreen(screenValue.optString());
             } else {
                 builder.setScreens(screenValue.optList());
             }
         }
 
         if (jsonMap.containsKey(REGION_ID_KEY)) {
-            builder.setRegionId(jsonMap.opt(REGION_ID_KEY).getString(""));
+            builder.setRegionId(jsonMap.opt(REGION_ID_KEY).optString());
         }
 
         for (JsonValue triggerJson : jsonMap.opt(CANCELLATION_TRIGGERS_KEY).optList()) {
@@ -243,7 +259,7 @@ public class ScheduleDelay implements Parcelable {
      */
     public static class Builder {
         private long seconds;
-        private List<String> screens = new ArrayList<>();
+        private List<String> screens;
         private int appState = APP_STATE_ANY;
         private String regionId = null;
         private final List<Trigger> cancellationTriggers = new ArrayList<>();
@@ -254,6 +270,7 @@ public class ScheduleDelay implements Parcelable {
          * @param seconds The delay in seconds.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setSeconds(long seconds) {
             this.seconds = seconds;
             return this;
@@ -265,7 +282,8 @@ public class ScheduleDelay implements Parcelable {
          * @param screen The app screen.
          * @return The Builder instance.
          */
-        public Builder setScreen(String screen) {
+        @NonNull
+        public Builder setScreen(@NonNull String screen) {
             this.screens = Collections.singletonList(screen);
             return this;
         }
@@ -276,7 +294,8 @@ public class ScheduleDelay implements Parcelable {
          * @param screens The app screens.
          * @return The Builder instance.
          */
-        public Builder setScreens(List<String> screens) {
+        @NonNull
+        public Builder setScreens(@NonNull List<String> screens) {
             this.screens = screens;
             return this;
         }
@@ -287,7 +306,8 @@ public class ScheduleDelay implements Parcelable {
          * @param screens
          * @return The Builder instance.
          */
-        public Builder setScreens(JsonList screens) {
+        @NonNull
+        public Builder setScreens(@NonNull JsonList screens) {
             this.screens = new ArrayList<>();
             for (JsonValue value : screens) {
                 if (value.getString() != null) {
@@ -303,6 +323,7 @@ public class ScheduleDelay implements Parcelable {
          * @param appState The app state.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setAppState(@AppState int appState) {
             this.appState = appState;
             return this;
@@ -314,7 +335,8 @@ public class ScheduleDelay implements Parcelable {
          * @param regionId The region ID.
          * @return The Builder instance.
          */
-        public Builder setRegionId(String regionId) {
+        @NonNull
+        public Builder setRegionId(@Nullable String regionId) {
             this.regionId = regionId;
             return this;
         }
@@ -325,7 +347,8 @@ public class ScheduleDelay implements Parcelable {
          * @param cancellationTrigger The cancellation trigger.
          * @return The Builder instance.
          */
-        public Builder addCancellationTrigger(Trigger cancellationTrigger) {
+        @NonNull
+        public Builder addCancellationTrigger(@NonNull Trigger cancellationTrigger) {
             this.cancellationTriggers.add(cancellationTrigger);
             return this;
         }
@@ -335,6 +358,7 @@ public class ScheduleDelay implements Parcelable {
          *
          * @return The ScheduleDelay instance.
          */
+        @NonNull
         public ScheduleDelay build() {
             if (cancellationTriggers.size() > ActionScheduleInfo.TRIGGER_LIMIT) {
                 throw new IllegalArgumentException("No more than " + ActionScheduleInfo.TRIGGER_LIMIT + " cancellation triggers allowed.");

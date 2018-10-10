@@ -9,16 +9,16 @@ import com.urbanairship.UAirship;
 
 /**
  * Action for opening Android Pay deep links.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument value types: URL as string
- * <p/>
+ * <p>
  * Result value: The URI that was opened.
- * <p/>
+ * <p>
  * Default Registration Names: ^w, wallet_action
- * <p/>
+ * <p>
  * Default Registration Predicate: none
  */
 public class WalletAction extends OpenExternalUrlAction {
@@ -26,11 +26,13 @@ public class WalletAction extends OpenExternalUrlAction {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "wallet_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^w";
 
     @Override

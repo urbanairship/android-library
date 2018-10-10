@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
@@ -54,7 +55,8 @@ class TagUtils {
      * @param jsonValue The value to convert.
      * @return A tag group map.
      */
-    static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
+    @Nullable
+    static Map<String, Set<String>> convertToTagsMap(@Nullable JsonValue jsonValue) {
         if (jsonValue == null || jsonValue.isNull()) {
             return null;
         }
@@ -62,9 +64,9 @@ class TagUtils {
         Map<String, Set<String>> tagGroups = new HashMap<>();
 
         if (jsonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> groupEntry : jsonValue.getMap()) {
+            for (Map.Entry<String, JsonValue> groupEntry : jsonValue.optMap()) {
                 Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
+                for (JsonValue tag : groupEntry.getValue().optList()) {
                     if (tag.isString()) {
                         tags.add(tag.getString());
                     }

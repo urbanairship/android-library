@@ -7,6 +7,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
@@ -201,15 +202,15 @@ public class AutomationEngine<T extends Schedule> {
 
     private final AnalyticsListener analyticsListener = new AnalyticsListener() {
         @Override
-        public void onRegionEventAdded(RegionEvent regionEvent) {
-            regionId = regionEvent.toJsonValue().getMap().opt("region_id").getString();
+        public void onRegionEventAdded(@NonNull RegionEvent regionEvent) {
+            regionId = regionEvent.toJsonValue().optMap().opt("region_id").getString();
             int type = regionEvent.getBoundaryEvent() == RegionEvent.BOUNDARY_EVENT_ENTER ? Trigger.REGION_ENTER : Trigger.REGION_EXIT;
             onEventAdded(regionEvent.toJsonValue(), type, 1.00);
             onScheduleConditionsChanged();
         }
 
         @Override
-        public void onCustomEventAdded(CustomEvent customEvent) {
+        public void onCustomEventAdded(@NonNull CustomEvent customEvent) {
             onEventAdded(customEvent.toJsonValue(), Trigger.CUSTOM_EVENT_COUNT, 1.00);
 
             BigDecimal eventValue = customEvent.getEventValue();
@@ -219,7 +220,7 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         @Override
-        public void onScreenTracked(String screenName) {
+        public void onScreenTracked(@NonNull String screenName) {
             screen = screenName;
             onEventAdded(JsonValue.wrap(screenName), Trigger.SCREEN_VIEW, 1.00);
             onScheduleConditionsChanged();
@@ -235,7 +236,7 @@ public class AutomationEngine<T extends Schedule> {
          *
          * @param schedule The expired schedule.
          */
-        void onScheduleExpired(T schedule);
+        void onScheduleExpired(@NonNull T schedule);
     }
 
     /**
@@ -243,7 +244,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @param builder The builder instance.
      */
-    private AutomationEngine(Builder<T> builder) {
+    private AutomationEngine(@NonNull Builder<T> builder) {
         this.dataManager = builder.dataManager;
         this.activityMonitor = builder.activityMonitor;
         this.analytics = builder.analytics;
@@ -324,6 +325,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleInfo The {@link ScheduleInfo} instance.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<T> schedule(@NonNull final ScheduleInfo scheduleInfo) {
         final PendingResult<T> pendingResult = new PendingResult<>();
 
@@ -360,6 +362,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleInfos A list of {@link ScheduleInfo}.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<List<T>> schedule(@NonNull final List<? extends ScheduleInfo> scheduleInfos) {
         final PendingResult<List<T>> pendingResult = new PendingResult<>();
 
@@ -401,6 +404,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param ids A collection of schedule Ids to cancel.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Void> cancel(@NonNull final Collection<String> ids) {
         final PendingResult<Void> pendingResult = new PendingResult<>();
 
@@ -425,6 +429,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param group The schedule group.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Boolean> cancelGroup(@NonNull final String group) {
         final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
@@ -452,6 +457,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param groups A collection of groups.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Void> cancelGroups(@NonNull final Collection<String> groups) {
         final PendingResult<Void> pendingResult = new PendingResult<>();
 
@@ -473,6 +479,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Void> cancelAll() {
         final PendingResult<Void> pendingResult = new PendingResult<>();
 
@@ -496,6 +503,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleId The schedule ID.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<T> getSchedule(@NonNull final String scheduleId) {
         final PendingResult<T> pendingResult = new PendingResult<>();
 
@@ -518,6 +526,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleIds A collection of schedule IDs.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Collection<T>> getSchedules(@NonNull final Set<String> scheduleIds) {
         final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
@@ -538,7 +547,8 @@ public class AutomationEngine<T extends Schedule> {
      * @param group The schedule group.
      * @return A pending result.
      */
-    public PendingResult<Collection<T>> getSchedules(final String group) {
+    @NonNull
+    public PendingResult<Collection<T>> getSchedules(@NonNull final String group) {
         final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -559,6 +569,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param edits The schedule edits.
      * @return Pending result with the updated schedule.
      */
+    @NonNull
     public PendingResult<T> editSchedule(@NonNull final String scheduleId, @NonNull final ScheduleEdits edits) {
         final PendingResult<T> pendingResult = new PendingResult<>();
 
@@ -619,6 +630,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Collection<T>> getSchedules() {
         final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
@@ -637,7 +649,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @param expiryListener The listener.
      */
-    public void setScheduleExpiryListener(ScheduleExpiryListener<T> expiryListener) {
+    public void setScheduleExpiryListener(@Nullable ScheduleExpiryListener<T> expiryListener) {
         synchronized (this) {
             this.expiryListener = expiryListener;
         }
@@ -649,6 +661,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param type The trigger type
      * @return The corresponding observable, or an empty observable in case no match was found.
      */
+    @NonNull
     private Observable<JsonSerializable> createEventObservable(@Trigger.TriggerType int type) {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
@@ -673,6 +686,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param type The trigger type
      * @return The corresponding observable, or an empty observable in case no match was found.
      */
+    @NonNull
     private Observable<JsonSerializable> createStateObservable(@Trigger.TriggerType int type) {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
@@ -702,8 +716,9 @@ public class AutomationEngine<T extends Schedule> {
         for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
             Observable<TriggerUpdate> observable = createEventObservable(type).observeOn(backgroundScheduler)
                                                                               .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                                                                  @NonNull
                                                                                   @Override
-                                                                                  public TriggerUpdate apply(JsonSerializable json) {
+                                                                                  public TriggerUpdate apply(@NonNull JsonSerializable json) {
                                                                                       stateChangeTimeStamps.put(type, System.currentTimeMillis());
                                                                                       return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
                                                                                   }
@@ -717,7 +732,7 @@ public class AutomationEngine<T extends Schedule> {
         this.compoundTriggerSubscription = Observable.merge(eventStream, stateObservableUpdates)
                                                      .subscribe(new Subscriber<TriggerUpdate>() {
                                                          @Override
-                                                         public void onNext(TriggerUpdate update) {
+                                                         public void onNext(@NonNull TriggerUpdate update) {
                                                              updateTriggers(update.triggerEntries, update.json, update.value);
                                                          }
                                                      });
@@ -737,13 +752,13 @@ public class AutomationEngine<T extends Schedule> {
      * @param entries The schedule entries.
      */
     @WorkerThread
-    private void sortSchedulesByPriority(List<ScheduleEntry> entries) {
+    private void sortSchedulesByPriority(@NonNull List<ScheduleEntry> entries) {
         // Collections.singletonList and Collections.emptyList will throw an UnsupportedOperationException
         // if you try to sort the entries. Make sure we have more than 1 element (ArrayList) before sorting.
         if (entries.size() > 1) {
             Collections.sort(entries, new Comparator<ScheduleEntry>() {
                 @Override
-                public int compare(ScheduleEntry lh, ScheduleEntry rh) {
+                public int compare(@NonNull ScheduleEntry lh, @NonNull ScheduleEntry rh) {
                     return lh.getPriority() - rh.getPriority();
                 }
             });
@@ -756,7 +771,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param entries The schedule entries.
      */
     @WorkerThread
-    private void subscribeStateObservables(List<ScheduleEntry> entries) {
+    private void subscribeStateObservables(@NonNull List<ScheduleEntry> entries) {
         sortSchedulesByPriority(entries);
 
         for (final ScheduleEntry scheduleEntry : entries) {
@@ -772,7 +787,7 @@ public class AutomationEngine<T extends Schedule> {
      * after the lastStateChangeTime will update the entry's triggers.
      */
     @WorkerThread
-    private void subscribeStateObservables(final ScheduleEntry entry, final long lastStateChangeTime) {
+    private void subscribeStateObservables(@NonNull final ScheduleEntry entry, final long lastStateChangeTime) {
         Observable.from(COMPOUND_TRIGGER_TYPES)
                   .filter(new Predicate<Integer>() {
                       @Override
@@ -790,13 +805,15 @@ public class AutomationEngine<T extends Schedule> {
                       }
                   })
                   .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
+                      @NonNull
                       @Override
-                      public Observable<TriggerUpdate> apply(final Integer type) {
+                      public Observable<TriggerUpdate> apply(@NonNull final Integer type) {
                           return createStateObservable(type)
                                   .observeOn(backgroundScheduler)
                                   .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                      @NonNull
                                       @Override
-                                      public TriggerUpdate apply(JsonSerializable json) {
+                                      public TriggerUpdate apply(@NonNull JsonSerializable json) {
                                           return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
                                       }
                                   });
@@ -804,7 +821,7 @@ public class AutomationEngine<T extends Schedule> {
                   })
                   .subscribe(new Subscriber<TriggerUpdate>() {
                       @Override
-                      public void onNext(TriggerUpdate value) {
+                      public void onNext(@NonNull TriggerUpdate value) {
                           stateObservableUpdates.onNext(value);
                       }
                   });
@@ -864,7 +881,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleIds A set of identifiers to cancel.
      */
     @WorkerThread
-    private void cancelScheduleAlarms(Collection<String> scheduleIds) {
+    private void cancelScheduleAlarms(@NonNull Collection<String> scheduleIds) {
         for (ScheduleOperation alarmOperation : new ArrayList<>(pendingAlarmOperations)) {
             if (scheduleIds.contains(alarmOperation.scheduleId)) {
                 alarmOperation.cancel();
@@ -879,7 +896,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param groups A schedule identifier.
      */
     @WorkerThread
-    private void cancelGroupAlarms(Collection<String> groups) {
+    private void cancelGroupAlarms(@NonNull Collection<String> groups) {
         for (ScheduleOperation alarmOperation : new ArrayList<>(pendingAlarmOperations)) {
             if (groups.contains(alarmOperation.group)) {
                 alarmOperation.cancel();
@@ -996,7 +1013,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param type The event type.
      * @param value The trigger value to increment by.
      */
-    private void onEventAdded(final JsonSerializable json, final int type, final double value) {
+    private void onEventAdded(@NonNull final JsonSerializable json, final int type, final double value) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -1019,7 +1036,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param json The relevant event or state data.
      * @param value The trigger value to increment by.
      */
-    private void updateTriggers(@NonNull final List<TriggerEntry> triggerEntries, final JsonSerializable json, final double value) {
+    private void updateTriggers(@NonNull final List<TriggerEntry> triggerEntries, @NonNull final JsonSerializable json, final double value) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -1033,7 +1050,7 @@ public class AutomationEngine<T extends Schedule> {
                 List<TriggerEntry> triggersToUpdate = new ArrayList<>();
 
                 for (TriggerEntry trigger : triggerEntries) {
-                    if ((json != null && (trigger.jsonPredicate != null && !trigger.jsonPredicate.apply(json)))) {
+                    if (trigger.jsonPredicate != null && !trigger.jsonPredicate.apply(json)) {
                         continue;
                     }
 
@@ -1072,7 +1089,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleEntries A list of cancelled schedule entries.
      */
     @WorkerThread
-    private void handleCancelledSchedules(final List<ScheduleEntry> scheduleEntries) {
+    private void handleCancelledSchedules(@NonNull final List<ScheduleEntry> scheduleEntries) {
         if (scheduleEntries.isEmpty()) {
             return;
         }
@@ -1090,7 +1107,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleEntries A list of triggered schedule entries.
      */
     @WorkerThread
-    private void handleTriggeredSchedules(final List<ScheduleEntry> scheduleEntries) {
+    private void handleTriggeredSchedules(@NonNull final List<ScheduleEntry> scheduleEntries) {
         if (isPaused.get() || scheduleEntries.isEmpty()) {
             return;
         }
@@ -1298,7 +1315,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleEntry The schedule entry.
      */
     @WorkerThread
-    private void onScheduleFinishedExecuting(final ScheduleEntry scheduleEntry) {
+    private void onScheduleFinishedExecuting(@Nullable final ScheduleEntry scheduleEntry) {
         if (scheduleEntry == null) {
             return;
         }
@@ -1344,7 +1361,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleEntry The schedule entry.
      * @param delay The delay in milliseconds.
      */
-    private void scheduleDelayAlarm(final ScheduleEntry scheduleEntry, long delay) {
+    private void scheduleDelayAlarm(@NonNull final ScheduleEntry scheduleEntry, long delay) {
         final ScheduleOperation operation = new ScheduleOperation(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
             protected void onRun() {
@@ -1383,7 +1400,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param interval The interval in milliseconds.
      */
     @WorkerThread
-    private void scheduleIntervalAlarm(ScheduleEntry scheduleEntry, long interval) {
+    private void scheduleIntervalAlarm(@NonNull ScheduleEntry scheduleEntry, long interval) {
         final ScheduleOperation operation = new ScheduleOperation(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
             protected void onRun() {
@@ -1425,7 +1442,8 @@ public class AutomationEngine<T extends Schedule> {
      * @param entries The list of entries to convert.
      * @return The list of converted entries.
      */
-    private List<T> convertEntries(Collection<ScheduleEntry> entries) {
+    @NonNull
+    private List<T> convertEntries(@NonNull Collection<ScheduleEntry> entries) {
         List<T> schedules = new ArrayList<>();
         for (ScheduleEntry entry : entries) {
             try {
@@ -1447,7 +1465,7 @@ public class AutomationEngine<T extends Schedule> {
      * @return {@code true} if the conditions are met, otherwise {@code false}.
      */
     @MainThread
-    private boolean isScheduleConditionsSatisfied(ScheduleEntry scheduleEntry) {
+    private boolean isScheduleConditionsSatisfied(@NonNull ScheduleEntry scheduleEntry) {
         if (scheduleEntry.screens != null && !scheduleEntry.screens.isEmpty()) {
             if (!scheduleEntry.screens.contains(screen)) {
                 return false;
@@ -1579,7 +1597,7 @@ public class AutomationEngine<T extends Schedule> {
         private ActivityMonitor activityMonitor;
         private AutomationDriver<T> driver;
         private AutomationDataManager dataManager;
-        public Analytics analytics;
+        private Analytics analytics;
         private OperationScheduler scheduler;
 
         /**
@@ -1588,6 +1606,7 @@ public class AutomationEngine<T extends Schedule> {
          * @param limit The schedule limit.
          * @return The builder instance.
          */
+        @NonNull
         public Builder<T> setScheduleLimit(long limit) {
             this.limit = limit;
             return this;
@@ -1599,6 +1618,7 @@ public class AutomationEngine<T extends Schedule> {
          * @param activityMonitor The {@link ActivityMonitor}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder<T> setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
             this.activityMonitor = activityMonitor;
             return this;
@@ -1610,7 +1630,8 @@ public class AutomationEngine<T extends Schedule> {
          * @param analytics The {@link Analytics} instance..
          * @return The builder instance.
          */
-        public Builder<T> setAnalytics(Analytics analytics) {
+        @NonNull
+        public Builder<T> setAnalytics(@NonNull Analytics analytics) {
             this.analytics = analytics;
             return this;
         }
@@ -1621,7 +1642,8 @@ public class AutomationEngine<T extends Schedule> {
          * @param driver The engine's driver.
          * @return The builder instance.
          */
-        public Builder<T> setDriver(AutomationDriver<T> driver) {
+        @NonNull
+        public Builder<T> setDriver(@NonNull AutomationDriver<T> driver) {
             this.driver = driver;
             return this;
         }
@@ -1632,7 +1654,8 @@ public class AutomationEngine<T extends Schedule> {
          * @param dataManager The data manager.
          * @return The builder instance.
          */
-        public Builder<T> setDataManager(AutomationDataManager dataManager) {
+        @NonNull
+        public Builder<T> setDataManager(@NonNull AutomationDataManager dataManager) {
             this.dataManager = dataManager;
             return this;
         }
@@ -1643,7 +1666,8 @@ public class AutomationEngine<T extends Schedule> {
          * @param scheduler The operation scheduler.
          * @return The builder instance.
          */
-        public Builder<T> setOperationScheduler(OperationScheduler scheduler) {
+        @NonNull
+        public Builder<T> setOperationScheduler(@NonNull OperationScheduler scheduler) {
             this.scheduler = scheduler;
             return this;
         }
@@ -1653,6 +1677,7 @@ public class AutomationEngine<T extends Schedule> {
          *
          * @return An automation engine.
          */
+        @NonNull
         public AutomationEngine<T> build() {
             Checks.checkNotNull(dataManager, "Missing data manager");
             Checks.checkNotNull(analytics, "Missing analytics");

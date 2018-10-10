@@ -2,6 +2,7 @@
 
 package com.urbanairship.push.adm;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -38,6 +39,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
     }
 
     @Override
+    @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         String admId = AdmWrapper.getRegistrationId(context);
 
@@ -105,6 +107,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         return message.containsAirshipKeys();
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "Adm Push Provider";

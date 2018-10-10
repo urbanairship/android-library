@@ -12,16 +12,16 @@ import com.urbanairship.util.UriUtils;
 
 /**
  * Action for opening a deep link.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument value types: URL as string
- * <p/>
+ * <p>
  * Result value: The URI that was opened.
- * <p/>
+ * <p>
  * Default Registration Names: ^d, deep_link_action
- * <p/>
+ * <p>
  * Default Registration Predicate: none
  */
 public class DeepLinkAction extends Action {
@@ -29,11 +29,13 @@ public class DeepLinkAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "deep_link_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^d";
 
     @NonNull

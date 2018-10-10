@@ -2,6 +2,8 @@
 
 package com.urbanairship.sample.utils;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -95,6 +97,7 @@ public class PushPayload implements JsonSerializable {
         return new Builder();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         JsonMap payload = JsonMap.newBuilder()

@@ -23,16 +23,18 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
      * @param displayContent The display content.
      * @param message The in-app message.
      */
-    protected FullScreenAdapter(InAppMessage message, FullScreenDisplayContent displayContent) {
+    protected FullScreenAdapter(@NonNull InAppMessage message, @NonNull FullScreenDisplayContent displayContent) {
         super(message, displayContent.getMedia());
     }
 
     /**
      * Creates a new full screen adapter.
+     *
      * @param message The in-app message.
      * @return The full screen adapter.
      */
-    public static FullScreenAdapter newAdapter(InAppMessage message) {
+    @NonNull
+    public static FullScreenAdapter newAdapter(@NonNull InAppMessage message) {
         FullScreenDisplayContent displayContent = message.getDisplayContent();
         if (displayContent == null) {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
@@ -43,7 +45,7 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
 
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
             return false;
         }

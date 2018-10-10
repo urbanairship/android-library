@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import java.util.ArrayList;
@@ -26,9 +27,10 @@ public class CompoundSubscription extends Subscription {
 
     /**
      * Adds a Subscription
+     *
      * @param subscription The subscription.
      */
-    public synchronized void add(Subscription subscription) {
+    public synchronized void add(@NonNull Subscription subscription) {
         if (subscription.isCancelled()) {
             return;
         }
@@ -41,9 +43,10 @@ public class CompoundSubscription extends Subscription {
 
     /**
      * Removes a Subscription
+     *
      * @param subscription The subscription.
      */
-    public synchronized void remove(Subscription subscription) {
+    public synchronized void remove(@NonNull Subscription subscription) {
         if (!isCancelled()) {
             subscriptions.remove(subscription);
         }

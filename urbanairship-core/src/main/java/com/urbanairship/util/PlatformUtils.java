@@ -2,6 +2,7 @@
 
 package com.urbanairship.util;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
@@ -58,6 +59,7 @@ public class PlatformUtils {
      * @param platform The platform.
      * @return The string representing the platform.
      */
+    @NonNull
     public static String asString(@UAirship.Platform int platform) {
         switch (platform) {
             case UAirship.AMAZON_PLATFORM:

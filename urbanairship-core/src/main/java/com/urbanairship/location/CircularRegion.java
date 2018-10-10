@@ -86,8 +86,8 @@ public class CircularRegion {
         }
 
         if (!RegionEvent.regionEventLatitudeIsValid(this.latitude)) {
-          Logger.error("The latitude must be greater than or equal to " + RegionEvent.MIN_LATITUDE +
-                  " and less than or equal to " + RegionEvent.MAX_LATITUDE + " degrees.");
+            Logger.error("The latitude must be greater than or equal to " + RegionEvent.MIN_LATITUDE +
+                    " and less than or equal to " + RegionEvent.MAX_LATITUDE + " degrees.");
             return false;
         }
 

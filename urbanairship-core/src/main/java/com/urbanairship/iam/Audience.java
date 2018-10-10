@@ -7,13 +7,13 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.StringDef;
 
-import com.urbanairship.util.VersionUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
+import com.urbanairship.util.VersionUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -43,16 +43,19 @@ public class Audience implements JsonSerializable {
     /**
      * Cancel the message's schedule when the audience check fails.
      */
+    @NonNull
     public static final String MISS_BEHAVIOR_CANCEL = "cancel";
 
     /**
      * Skip the message's schedule when the audience check fails.
      */
+    @NonNull
     public static final String MISS_BEHAVIOR_SKIP = "skip";
 
     /**
      * Skip and penalize the message's schedule when the audience check fails.
      */
+    @NonNull
     public static final String MISS_BEHAVIOR_PENALIZE = "penalize";
 
     private final Boolean newUser;
@@ -64,11 +67,11 @@ public class Audience implements JsonSerializable {
     private final JsonPredicate versionPredicate;
     private final String missBehavior;
 
-    /***
+    /**
      * Default constructor.
      * @param builder The builder.
      */
-    private Audience(Builder builder) {
+    private Audience(@NonNull Builder builder) {
         this.newUser = builder.newUser;
         this.notificationsOptIn = builder.notificationsOptIn;
         this.locationOptIn = builder.locationOptIn;
@@ -79,6 +82,7 @@ public class Audience implements JsonSerializable {
         this.missBehavior = builder.missBehavior;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -89,7 +93,7 @@ public class Audience implements JsonSerializable {
                       .put(TEST_DEVICES_KEY, testDevices.isEmpty() ? null : JsonValue.wrapOpt(testDevices))
                       .put(TAGS_KEY, tagSelector)
                       .put(APP_VERSION_KEY, versionPredicate)
-                      .put(MISS_BEHAVIOR_KEY,missBehavior)
+                      .put(MISS_BEHAVIOR_KEY, missBehavior)
                       .build().toJsonValue();
     }
 
@@ -100,47 +104,49 @@ public class Audience implements JsonSerializable {
      * @return The audience condition.
      * @throws JsonException If the json is invalid.
      */
-    public static Audience parseJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static Audience parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap content = jsonValue.optMap();
 
         Builder builder = newBuilder();
 
         // New User
         if (content.containsKey(NEW_USER_KEY)) {
-            if (!content.get(NEW_USER_KEY).isBoolean()) {
+            if (!content.opt(NEW_USER_KEY).isBoolean()) {
                 throw new JsonException("new_user must be a boolean: " + content.get(NEW_USER_KEY));
             }
-            builder.setNewUser(content.get(NEW_USER_KEY).getBoolean(false));
+            builder.setNewUser(content.opt(NEW_USER_KEY).getBoolean(false));
         }
 
         // Push Opt-in
         if (content.containsKey(NOTIFICATION_OPT_IN_KEY)) {
-            if (!content.get(NOTIFICATION_OPT_IN_KEY).isBoolean()) {
+            if (!content.opt(NOTIFICATION_OPT_IN_KEY).isBoolean()) {
                 throw new JsonException("notification_opt_in must be a boolean: " + content.get(NOTIFICATION_OPT_IN_KEY));
             }
-            builder.setNotificationsOptIn(content.get(NOTIFICATION_OPT_IN_KEY).getBoolean(false));
+            builder.setNotificationsOptIn(content.opt(NOTIFICATION_OPT_IN_KEY).getBoolean(false));
         }
 
         // Location Opt-in
         if (content.containsKey(LOCATION_OPT_IN_KEY)) {
-            if (!content.get(LOCATION_OPT_IN_KEY).isBoolean()) {
+            if (!content.opt(LOCATION_OPT_IN_KEY).isBoolean()) {
                 throw new JsonException("location_opt_in must be a boolean: " + content.get(LOCATION_OPT_IN_KEY));
             }
-            builder.setLocationOptIn(content.get(LOCATION_OPT_IN_KEY).getBoolean(false));
+            builder.setLocationOptIn(content.opt(LOCATION_OPT_IN_KEY).getBoolean(false));
         }
 
         // Locale
         if (content.containsKey(LOCALE_KEY)) {
-            if (!content.get(LOCALE_KEY).isJsonList()) {
+            if (!content.opt(LOCALE_KEY).isJsonList()) {
                 throw new JsonException("locales must be an array: " + content.get(LOCALE_KEY));
             }
 
             for (JsonValue value : content.opt(LOCALE_KEY).optList()) {
-                if (!value.isString()) {
+                String tag = value.getString();
+                if (tag == null) {
                     throw new JsonException("Invalid locale: " + value);
                 }
 
-                builder.addLanguageTag(value.getString());
+                builder.addLanguageTag(tag);
             }
         }
 
@@ -151,12 +157,12 @@ public class Audience implements JsonSerializable {
 
         // Tags
         if (content.containsKey(TAGS_KEY)) {
-            builder.setTagSelector(TagSelector.parseJson(content.get(TAGS_KEY)));
+            builder.setTagSelector(TagSelector.parseJson(content.opt(TAGS_KEY)));
         }
 
         // Test devices
         if (content.containsKey(TEST_DEVICES_KEY)) {
-            if (!content.get(TEST_DEVICES_KEY).isJsonList()) {
+            if (!content.opt(TEST_DEVICES_KEY).isJsonList()) {
                 throw new JsonException("test devices must be an array: " + content.get(LOCALE_KEY));
             }
 
@@ -171,12 +177,12 @@ public class Audience implements JsonSerializable {
 
         // Miss Behavior
         if (content.containsKey(MISS_BEHAVIOR_KEY)) {
-            if (!content.get(MISS_BEHAVIOR_KEY).isString()) {
+            if (!content.opt(MISS_BEHAVIOR_KEY).isString()) {
                 throw new JsonException("miss_behavior must be a string: " + content.get(MISS_BEHAVIOR_KEY));
             }
 
-            String missBehavior = content.get(MISS_BEHAVIOR_KEY).getString();
-            switch (missBehavior) {
+
+            switch (content.opt(MISS_BEHAVIOR_KEY).optString()) {
                 case MISS_BEHAVIOR_CANCEL:
                     builder.setMissBehavior(MISS_BEHAVIOR_CANCEL);
                     break;
@@ -187,7 +193,7 @@ public class Audience implements JsonSerializable {
                     builder.setMissBehavior(MISS_BEHAVIOR_PENALIZE);
                     break;
                 default:
-                    throw new JsonException("Invalid miss behavior: " + missBehavior);
+                    throw new JsonException("Invalid miss behavior: " + content.opt(MISS_BEHAVIOR_KEY));
             }
 
         }
@@ -280,7 +286,7 @@ public class Audience implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -328,6 +334,7 @@ public class Audience implements JsonSerializable {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -356,6 +363,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         Builder setNewUser(boolean newUser) {
             this.newUser = newUser;
@@ -364,10 +372,12 @@ public class Audience implements JsonSerializable {
 
         /**
          * Adds a test device.
+         *
          * @param hash The hashed channel.
          * @return THe builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         Builder addTestDevice(String hash) {
             this.testDevices.add(hash);
@@ -381,6 +391,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         public Builder setLocationOptIn(boolean optIn) {
             this.locationOptIn = optIn;
             return this;
@@ -393,6 +404,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         public Builder setNotificationsOptIn(boolean optIn) {
             this.notificationsOptIn = optIn;
             return this;
@@ -405,6 +417,7 @@ public class Audience implements JsonSerializable {
          * @param languageTag A BCP 47 language tag.
          * @return The builder.
          */
+        @NonNull
         public Builder addLanguageTag(@NonNull String languageTag) {
             languageTags.add(languageTag);
             return this;
@@ -416,7 +429,8 @@ public class Audience implements JsonSerializable {
          * @param predicate Json predicate to match the version object.
          * @return The builder.
          */
-        private Builder setVersionPredicate(JsonPredicate predicate) {
+        @NonNull
+        private Builder setVersionPredicate(@Nullable JsonPredicate predicate) {
             this.versionPredicate = predicate;
             return this;
         }
@@ -427,8 +441,9 @@ public class Audience implements JsonSerializable {
          * @param valueMatcher Value matcher to be applied to the app's version int.
          * @return The builder.
          */
-        public Builder setVersionMatcher(ValueMatcher valueMatcher) {
-            return setVersionPredicate(VersionUtils.createVersionPredicate(valueMatcher));
+        @NonNull
+        public Builder setVersionMatcher(@Nullable ValueMatcher valueMatcher) {
+            return setVersionPredicate(valueMatcher == null ? null : VersionUtils.createVersionPredicate(valueMatcher));
         }
 
         /**
@@ -438,7 +453,8 @@ public class Audience implements JsonSerializable {
          * @param tagSelector The tag selector.
          * @return The builder.
          */
-        public Builder setTagSelector(TagSelector tagSelector) {
+        @NonNull
+        public Builder setTagSelector(@Nullable TagSelector tagSelector) {
             this.tagSelector = tagSelector;
             return this;
         }
@@ -450,6 +466,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         public Builder setMissBehavior(@NonNull @MissBehavior String missBehavior) {
             this.missBehavior = missBehavior;
             return this;
@@ -460,6 +477,7 @@ public class Audience implements JsonSerializable {
          *
          * @return The audience.
          */
+        @NonNull
         public Audience build() {
             return new Audience(this);
         }

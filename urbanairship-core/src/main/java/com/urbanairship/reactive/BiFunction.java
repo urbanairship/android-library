@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -10,7 +11,6 @@ import android.support.annotation.RestrictTo;
  * @param <T> The fist source type.
  * @param <U> The second source type.
  * @param <R> The return type.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -22,5 +22,6 @@ public interface BiFunction<T, U, R> {
      * @param u The second source value.
      * @return The return value.
      */
-    R apply(T t, U u);
+    @NonNull
+    R apply(@NonNull T t, @NonNull U u);
 }

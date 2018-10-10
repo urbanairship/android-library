@@ -34,14 +34,27 @@ import java.util.concurrent.Executors;
 /**
  * Notification factory that provides a pathway for customizing the display of push notifications
  * in the Android <code>NotificationManager</code>.
- * <p/>
+ * <p>
  * {@link DefaultNotificationFactory} is used by default and applies the big text style. For custom
  * layouts, see {@link CustomLayoutNotificationFactory}.
  */
 public class NotificationFactory {
 
+    /**
+     * Default Notification ID when the {@link PushMessage} defines a notification tag.
+     */
+    public static final int TAG_NOTIFICATION_ID = 100;
+
+    /**
+     * Default notification channel ID.
+     */
+    @NonNull
     public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
 
+    /**
+     * Executor used to fetch notification resources.
+     */
+    @NonNull
     public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     private int titleId;
@@ -51,12 +64,6 @@ public class NotificationFactory {
     private int constantNotificationId = -1;
     private int accentColor = NotificationCompat.COLOR_DEFAULT;
     private int notificationDefaults = NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE;
-
-    /**
-     * Default Notification ID when the {@link PushMessage} defines a notification tag.
-     */
-    public static final int TAG_NOTIFICATION_ID = 100;
-
 
     /**
      * A container for a NotificationFactory result, containing a nullable
@@ -96,7 +103,7 @@ public class NotificationFactory {
          * @param notification The Notification.
          * @param status The status.
          */
-        private Result(Notification notification, @Status int status) {
+        private Result(@Nullable Notification notification, @Status int status) {
             this.notification = notification;
 
             if (notification == null && status == OK) {
@@ -112,6 +119,7 @@ public class NotificationFactory {
          * @param notification The notification.
          * @return An instance of NotificationFactory.Result.
          */
+        @NonNull
         public static Result notification(@NonNull Notification notification) {
             return new Result(notification, OK);
         }
@@ -121,6 +129,7 @@ public class NotificationFactory {
          *
          * @return An instance of NotificationFactory.Result.
          */
+        @NonNull
         public static Result cancel() {
             return new Result(null, CANCEL);
         }
@@ -130,6 +139,7 @@ public class NotificationFactory {
          *
          * @return An instance of NotificationFactory.Result.
          */
+        @NonNull
         public static Result retry() {
             return new Result(null, RETRY);
         }
@@ -139,6 +149,7 @@ public class NotificationFactory {
          *
          * @return The Notification.
          */
+        @Nullable
         public Notification getNotification() { return notification; }
 
         /**
@@ -175,6 +186,7 @@ public class NotificationFactory {
      *
      * @param id The integer ID as an int.
      */
+    @NonNull
     public NotificationFactory setConstantNotificationId(int id) {
         constantNotificationId = id;
         return this;
@@ -234,7 +246,7 @@ public class NotificationFactory {
      *
      * @param sound The sound as a Uri.
      */
-    public void setSound(Uri sound) {
+    public void setSound(@Nullable Uri sound) {
         this.sound = sound;
     }
 
@@ -243,6 +255,7 @@ public class NotificationFactory {
      *
      * @return The sound as a Uri.
      */
+    @Nullable
     public Uri getSound() {
         return sound;
     }
@@ -307,9 +320,9 @@ public class NotificationFactory {
     /**
      * Sets the default notification channel.
      *
-     * @param channel THe default notification channel.
+     * @param channel The default notification channel.
      */
-    public void setNotificationChannel(String channel) {
+    public void setNotificationChannel(@Nullable String channel) {
         this.notificationChannel = channel;
     }
 
@@ -318,6 +331,7 @@ public class NotificationFactory {
      *
      * @return The default notification channel.
      */
+    @Nullable
     public String getNotificationChannel() {
         return this.notificationChannel;
     }
@@ -329,6 +343,7 @@ public class NotificationFactory {
      *
      * @return The default notification title.
      */
+    @NonNull
     protected String getTitle(@NonNull PushMessage message) {
         if (message.getTitle() != null) {
             return message.getTitle();
@@ -353,7 +368,7 @@ public class NotificationFactory {
 
     /**
      * Creates a <code>Notification</code> for an incoming push message.
-     * <p/>
+     * <p>
      * In order to handle notification opens, the application should register a broadcast receiver
      * that extends {@link AirshipReceiver}. When the notification is opened
      * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
@@ -377,7 +392,7 @@ public class NotificationFactory {
 
     /**
      * Creates a <code>Notification</code> for an incoming push message.
-     * <p/>
+     * <p>
      * In order to handle notification opens, the application should register a broadcast receiver
      * that extends {@link AirshipReceiver}. When the notification is opened
      * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
@@ -404,7 +419,7 @@ public class NotificationFactory {
 
     /**
      * Creates a <code>Notification</code> for an incoming push message.
-     * <p/>
+     * <p>
      * In order to handle notification opens, the application should register a broadcast receiver
      * that extends {@link AirshipReceiver}. When the notification is opened
      * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
@@ -435,6 +450,7 @@ public class NotificationFactory {
      * @param defaultStyle The default notification style.
      * @return A NotificationCompat.Builder.
      */
+    @NonNull
     protected NotificationCompat.Builder createNotificationBuilder(@NonNull PushMessage message, int notificationId, @Nullable NotificationCompat.Style defaultStyle) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext())
                 .setContentTitle(getTitle(message))
@@ -501,7 +517,7 @@ public class NotificationFactory {
 
     /**
      * Creates a notification ID based on the message and payload.
-     * <p/>
+     * <p>
      * This method could return a constant (to always replace the existing ID)
      * or a payload/message specific ID (to replace in cases where there are duplicates, for example)
      * or a random/sequential (to always add a new notification).
@@ -534,7 +550,8 @@ public class NotificationFactory {
      * @return The active notification channel from the message, factory, or the default channel.
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    String getActiveNotificationChannel(PushMessage message) {
+    @NonNull
+    String getActiveNotificationChannel(@NonNull PushMessage message) {
         NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (message.getNotificationChannel() != null) {
@@ -580,7 +597,7 @@ public class NotificationFactory {
      * @param message The push message.
      * @return {@code true} to require long running task, otherwise {@code false}.
      */
-    public boolean requiresLongRunningTask(PushMessage message) {
+    public boolean requiresLongRunningTask(@NonNull PushMessage message) {
         return false;
     }
 

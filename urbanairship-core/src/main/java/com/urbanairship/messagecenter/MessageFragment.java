@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -54,6 +55,7 @@ public class MessageFragment extends Fragment {
     protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
 
     private static final String MESSAGE_ID_KEY = "com.urbanairship.richpush.URL_KEY";
+
     private UAWebView webView;
     private View progressBar;
     private RichPushMessage message;
@@ -71,7 +73,8 @@ public class MessageFragment extends Fragment {
      * @param messageId The message's ID to display
      * @return messageFragment new MessageFragment
      */
-    public static MessageFragment newInstance(String messageId) {
+    @NonNull
+    public static MessageFragment newInstance(@Nullable String messageId) {
         MessageFragment message = new MessageFragment();
         Bundle arguments = new Bundle();
         arguments.putString(MESSAGE_ID_KEY, messageId);
@@ -95,8 +98,9 @@ public class MessageFragment extends Fragment {
      * from a previous saved state as given here.
      * @return Return the View for the fragment's UI, or null.
      */
+    @NonNull
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message, container, false);
         ensureView(view);
         return view;
@@ -104,7 +108,7 @@ public class MessageFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureView(view);
     }
@@ -114,7 +118,7 @@ public class MessageFragment extends Fragment {
      *
      * @param view The content view.
      */
-    private void ensureView(View view) {
+    private void ensureView(@NonNull View view) {
         if (webView != null) {
             return;
         }
@@ -151,7 +155,7 @@ public class MessageFragment extends Fragment {
             }
 
             @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+            public void onReceivedError(WebView view, int errorCode, String description, @Nullable String failingUrl) {
                 if (message != null && failingUrl != null && failingUrl.equals(message.getMessageBodyUrl())) {
                     error = errorCode;
                 }
@@ -346,6 +350,7 @@ public class MessageFragment extends Fragment {
      *
      * @return The {@link RichPushMessage} ID.
      */
+    @Nullable
     public String getMessageId() {
         if (getArguments() == null) {
             return null;

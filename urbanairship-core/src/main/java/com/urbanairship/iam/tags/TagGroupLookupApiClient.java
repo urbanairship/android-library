@@ -3,6 +3,8 @@
 package com.urbanairship.iam.tags;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -31,11 +33,15 @@ class TagGroupLookupApiClient {
 
     // Request keys
     private static final String CHANNEL_ID_KEY = "channel_id";
+
     private static final String DEVICE_TYPE_KEY = "device_type";
+
     private static final String TAG_GROUPS_KEY = "tag_groups";
+
     private static final String IF_MODIFIED_SINCE_KEY = "if_modified_since";
 
     private static final String ANDROID_PLATFORM = "android";
+
     private static final String AMAZON_PLATFORM = "amazon";
 
     private final RequestFactory requestFactory;
@@ -47,12 +53,12 @@ class TagGroupLookupApiClient {
      *
      * @param configOptions The config options.
      */
-    TagGroupLookupApiClient(AirshipConfigOptions configOptions) {
+    TagGroupLookupApiClient(@NonNull AirshipConfigOptions configOptions) {
         this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    TagGroupLookupApiClient(AirshipConfigOptions configOptions, RequestFactory requestFactory) {
+    TagGroupLookupApiClient(@NonNull AirshipConfigOptions configOptions, RequestFactory requestFactory) {
         this.configOptions = configOptions;
         this.requestFactory = requestFactory;
         this.url = getUrl(configOptions);
@@ -77,8 +83,9 @@ class TagGroupLookupApiClient {
      * @param cachedResponse Optional cached response.
      * @return A tag group response.
      */
+    @Nullable
     TagGroupResponse lookupTagGroups(String channelId, @UAirship.Platform int platform,
-                                     Map<String, Set<String>> requestedTags, TagGroupResponse cachedResponse) {
+                                     Map<String, Set<String>> requestedTags, @Nullable TagGroupResponse cachedResponse) {
 
         if (url == null) {
             Logger.error("No URL, unable to process request.");

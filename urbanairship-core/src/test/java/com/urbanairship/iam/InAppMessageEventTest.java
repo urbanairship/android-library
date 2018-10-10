@@ -2,6 +2,8 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.EventTestUtils;
@@ -137,6 +139,7 @@ public class InAppMessageEventTest extends BaseTestCase {
         }
 
 
+        @NonNull
         @Override
         public String getType() {
             return "test";

@@ -57,7 +57,8 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * @return An ivy version matcher.
      * @throws IllegalArgumentException If the constraint is invalid.
      */
-    public static IvyVersionMatcher newMatcher(String constraint) {
+    @NonNull
+    public static IvyVersionMatcher newMatcher(@NonNull String constraint) {
         constraint = constraint.replaceAll(WHITESPACE, "");
 
         Predicate<String> predicate = parseExactVersionConstraint(constraint);
@@ -79,7 +80,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     }
 
     @Override
-    public boolean apply(String versionString) {
+    public boolean apply(@Nullable String versionString) {
         if (versionString == null) {
             return false;
         }
@@ -112,7 +113,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         final String number = matcher.groupCount() >= 1 ? matcher.group(1) : null;
         return new Predicate<String>() {
             @Override
-            public boolean apply(String version) {
+            public boolean apply(@NonNull String version) {
                 if (number == null) {
                     return false;
                 }
@@ -168,7 +169,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
         return new Predicate<String>() {
             @Override
-            public boolean apply(String object) {
+            public boolean apply(@NonNull String object) {
 
                 Version version;
                 try {
@@ -219,7 +220,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * @return A predicate or null if the constraint is not a exact version constraint
      */
     @Nullable
-    private static Predicate<String> parseExactVersionConstraint(final String constraint) {
+    private static Predicate<String> parseExactVersionConstraint(@NonNull final String constraint) {
         if (!EXACT_VERSION.matcher(constraint).matches()) {
             return null;
         }
@@ -232,6 +233,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         };
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonValue.wrap(constraint);
@@ -271,7 +273,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

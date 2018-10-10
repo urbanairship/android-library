@@ -3,6 +3,7 @@
 package com.urbanairship.location;
 
 import android.location.Location;
+import android.support.annotation.NonNull;
 
 /**
  * A location change listener. Used to listen for location updates by adding
@@ -15,5 +16,5 @@ public interface LocationListener {
      *
      * @param location The new location.
      */
-    void onLocationChanged(Location location);
+    void onLocationChanged(@NonNull Location location);
 }

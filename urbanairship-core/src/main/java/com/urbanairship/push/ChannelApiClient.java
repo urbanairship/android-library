@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -21,12 +22,12 @@ class ChannelApiClient extends BaseApiClient {
     static final String CHANNEL_CREATION_PATH = "api/channels/";
 
 
-    ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
+    ChannelApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+    ChannelApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         super(platform, configOptions, requestFactory);
     }
 
@@ -36,6 +37,7 @@ class ChannelApiClient extends BaseApiClient {
      * @param channelPayload An instance of ChannelRegistrationPayload
      * @return response or null if an error occurred
      */
+    @Nullable
     Response createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Creating channel with payload: " + payload);
@@ -49,6 +51,7 @@ class ChannelApiClient extends BaseApiClient {
      * @param channelPayload An instance of ChannelRegistrationPayload
      * @return response or null if an error occurred
      */
+    @Nullable
     Response updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);

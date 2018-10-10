@@ -13,15 +13,15 @@ import com.urbanairship.util.UAStringUtil;
 /**
  * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
  * either {@link RichPushInbox#startInboxActivity()} or {@link RichPushInbox#startMessageActivity(String)}.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument values: {@code null} to launch the inbox, the specified message ID, or {@code "auto"}
  * to look for the message ID in the {@link ActionArguments#getMetadata()}.
- * <p/>
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Names: ^mc, open_mc_action
  */
 public class OpenRichPushInboxAction extends Action {
@@ -29,13 +29,19 @@ public class OpenRichPushInboxAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "open_mc_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mc";
 
+    /**
+     * Message ID place holder. Will pull the message ID from the push metadata.
+     */
+    @NonNull
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
     @Override

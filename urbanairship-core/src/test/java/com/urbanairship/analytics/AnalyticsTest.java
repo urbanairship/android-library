@@ -247,7 +247,7 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
             public boolean matches(Event argument) {
-                return argument.getEventData().opt("screen").getString("").equals("test_screen");
+                return argument.getEventData().opt("screen").optString().equals("test_screen");
             }
         }), Mockito.anyString());
     }
@@ -266,7 +266,7 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
             public boolean matches(Event argument) {
-                return argument.getEventData().opt("screen").getString("").equals("test_screen_1");
+                return argument.getEventData().opt("screen").optString().equals("test_screen_1");
             }
         }), Mockito.anyString());
     }

@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
@@ -60,7 +61,7 @@ public class RemoteDataJobHandler {
      * @return The job result.
      */
     @JobInfo.JobResult
-    protected int performJob(JobInfo jobInfo) {
+    protected int performJob(@NonNull JobInfo jobInfo) {
         switch (jobInfo.getAction()) {
             case ACTION_REFRESH:
                 return onRefresh();
@@ -104,7 +105,7 @@ public class RemoteDataJobHandler {
                 JsonValue json = JsonValue.parseString(body);
                 JsonMap map = json.optMap();
                 if (map.containsKey("payloads")) {
-                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.get("payloads"));
+                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.opt("payloads"));
                     remoteData.handleRefreshResponse(payloads);
                     remoteData.onRefreshFinished();
                     return JobInfo.JOB_FINISHED;

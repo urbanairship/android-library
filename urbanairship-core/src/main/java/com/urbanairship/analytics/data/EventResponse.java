@@ -2,6 +2,8 @@
 
 package com.urbanairship.analytics.data;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAMathUtil;
 
@@ -21,9 +23,10 @@ class EventResponse {
     static final int MIN_BATCH_INTERVAL_MS = 60 * 1000;             // 60 seconds
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
 
+    @NonNull
     private final Response response;
 
-    public EventResponse(Response response) {
+    public EventResponse(@NonNull Response response) {
         this.response = response;
     }
 

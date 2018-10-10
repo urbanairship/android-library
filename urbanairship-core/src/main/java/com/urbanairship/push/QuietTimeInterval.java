@@ -2,7 +2,10 @@
 
 package com.urbanairship.push;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -12,8 +15,6 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Model object representing a quiet time interval.
@@ -45,7 +46,7 @@ class QuietTimeInterval implements JsonSerializable {
      * @param now Reference time for determining if interval is in quiet time.
      * @return A boolean indicating whether it is currently "Quiet Time".
      */
-    boolean isInQuietTime(Calendar now) {
+    boolean isInQuietTime(@NonNull Calendar now) {
         Calendar start = Calendar.getInstance();
         start.set(Calendar.HOUR_OF_DAY, startHour);
         start.set(Calendar.MINUTE, startMin);
@@ -86,6 +87,7 @@ class QuietTimeInterval implements JsonSerializable {
      *
      * @return An array of two Date instances, representing the start and end of Quiet Time.
      */
+    @Nullable
     Date[] getQuietTimeIntervalDateArray() {
         if (startHour == NOT_SET_VAL || startMin == NOT_SET_VAL ||
                 endHour == NOT_SET_VAL || endMin == NOT_SET_VAL) {
@@ -111,21 +113,16 @@ class QuietTimeInterval implements JsonSerializable {
         return new Date[] { startDate, endDate };
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
-        Map<String, Integer> quietTimeInterval = new HashMap<>();
-
-        quietTimeInterval.put(START_HOUR_KEY, startHour);
-        quietTimeInterval.put(START_MIN_KEY, startMin);
-        quietTimeInterval.put(END_HOUR_KEY, endHour);
-        quietTimeInterval.put(END_MIN_KEY, endMin);
-
-        try {
-            return JsonValue.wrap(quietTimeInterval);
-        } catch (JsonException e) {
-            Logger.error("QuietTimeInterval - Failed to create quiet time interval as json", e);
-            return JsonValue.NULL;
-        }
+        return JsonMap.newBuilder()
+               .put(START_HOUR_KEY, startHour)
+               .put(START_MIN_KEY, startMin)
+               .put(END_HOUR_KEY, endHour)
+               .put(END_MIN_KEY, endMin)
+               .build()
+               .toJsonValue();
     }
 
     /**
@@ -134,7 +131,7 @@ class QuietTimeInterval implements JsonSerializable {
      * @param json The JSON as a string.
      * @return The deserialized QuietTimeInterval instance.
      */
-    public static QuietTimeInterval parseJson(String json) {
+    public static QuietTimeInterval parseJson(@Nullable String json) {
 
         JsonMap jsonMap;
         try {
@@ -149,13 +146,14 @@ class QuietTimeInterval implements JsonSerializable {
         }
 
         return new Builder()
-                .setStartHour(jsonMap.get(START_HOUR_KEY).getInt(NOT_SET_VAL))
-                .setStartMin(jsonMap.get(START_MIN_KEY).getInt(NOT_SET_VAL))
-                .setEndHour(jsonMap.get(END_HOUR_KEY).getInt(NOT_SET_VAL))
-                .setEndMin(jsonMap.get(END_MIN_KEY).getInt(NOT_SET_VAL))
+                .setStartHour(jsonMap.opt(START_HOUR_KEY).getInt(NOT_SET_VAL))
+                .setStartMin(jsonMap.opt(START_MIN_KEY).getInt(NOT_SET_VAL))
+                .setEndHour(jsonMap.opt(END_HOUR_KEY).getInt(NOT_SET_VAL))
+                .setEndMin(jsonMap.opt(END_MIN_KEY).getInt(NOT_SET_VAL))
                 .build();
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "QuietTimeInterval{" +
@@ -167,7 +165,7 @@ class QuietTimeInterval implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -215,7 +213,8 @@ class QuietTimeInterval implements JsonSerializable {
          * @param endTime The interval end time as a Date.
          * @return The builder with the interval set.
          */
-        public Builder setQuietTimeInterval(Date startTime, Date endTime) {
+        @NonNull
+        public Builder setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
             Calendar startCal = Calendar.getInstance();
             startCal.setTime(startTime);
             this.startHour = startCal.get(Calendar.HOUR_OF_DAY);
@@ -234,6 +233,7 @@ class QuietTimeInterval implements JsonSerializable {
          * @param startHour The start hour as an int.
          * @return The builder with the start hour set.
          */
+        @NonNull
         public Builder setStartHour(@IntRange(from = 0, to = 23) int startHour) {
             this.startHour = startHour;
             return this;
@@ -245,6 +245,7 @@ class QuietTimeInterval implements JsonSerializable {
          * @param startMin The start min as an int.
          * @return The builder with the start min set.
          */
+        @NonNull
         public Builder setStartMin(@IntRange(from = 0, to = 59) int startMin) {
             this.startMin = startMin;
             return this;
@@ -256,6 +257,7 @@ class QuietTimeInterval implements JsonSerializable {
          * @param endHour The end hour as an int.
          * @return The builder with the end hour set.
          */
+        @NonNull
         public Builder setEndHour(@IntRange(from = 0, to = 23) int endHour) {
             this.endHour = endHour;
             return this;
@@ -267,6 +269,7 @@ class QuietTimeInterval implements JsonSerializable {
          * @param endMin The end min as an int.
          * @return The builder with the end min set.
          */
+        @NonNull
         public Builder setEndMin(@IntRange(from = 0, to = 59) int endMin) {
             this.endMin = endMin;
             return this;
@@ -277,6 +280,7 @@ class QuietTimeInterval implements JsonSerializable {
          *
          * @return The QuietTimeInterval instance.
          */
+        @NonNull
         public QuietTimeInterval build() {
             return new QuietTimeInterval(this);
         }

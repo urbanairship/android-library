@@ -23,10 +23,8 @@ public class Schedulers {
      * @param looper The looper to schedule on.
      * @return A Scheduler.
      */
-    public static LooperScheduler looper(Looper looper) {
-        if (looper == null) {
-            throw new IllegalArgumentException("Looper cannot be null");
-        }
+    @NonNull
+    public static LooperScheduler looper(@NonNull Looper looper) {
         return new LooperScheduler(looper);
     }
 
@@ -35,6 +33,7 @@ public class Schedulers {
      *
      * @return A Scheduler.
      */
+    @NonNull
     public static LooperScheduler main() {
         if (main == null) {
             main = looper(Looper.getMainLooper());
@@ -59,7 +58,8 @@ public class Schedulers {
             this.looper = looper;
         }
 
-        public Subscription schedule(final Runnable runnable) {
+        @NonNull
+        public Subscription schedule(@NonNull final Runnable runnable) {
             final Subscription subscription = Subscription.empty();
 
             new Handler(looper).post(new Runnable() {
@@ -74,7 +74,8 @@ public class Schedulers {
             return subscription;
         }
 
-        public Subscription schedule(final Runnable runnable, long delayTimeMs) {
+        @NonNull
+        public Subscription schedule(long delayTimeMs, @NonNull final Runnable runnable) {
             final Subscription subscription = Subscription.empty();
 
             new Handler(looper).postDelayed(new Runnable() {

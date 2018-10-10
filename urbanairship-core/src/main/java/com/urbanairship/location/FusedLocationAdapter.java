@@ -7,13 +7,12 @@ import android.location.Location;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-
-import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
@@ -36,8 +35,9 @@ class FusedLocationAdapter implements LocationAdapter {
         this.client = LocationServices.getFusedLocationProviderClient(context);
     }
 
+    @NonNull
     @Override
-    public Cancelable requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
+    public Cancelable requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, @NonNull final ResultCallback<Location> resultCallback) {
         CancelableOperation cancelableOperation = new SingleLocationRequest(options, resultCallback);
         cancelableOperation.run();
         return cancelableOperation;
@@ -133,11 +133,11 @@ class FusedLocationAdapter implements LocationAdapter {
          * @param resultCallback The result callback.
          * @param options LocationRequestOptions options.
          */
-        SingleLocationRequest(LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
+        SingleLocationRequest(@NonNull LocationRequestOptions options, @NonNull final ResultCallback<Location> resultCallback) {
             super(Looper.getMainLooper());
             this.locationCallback = new LocationCallback() {
                 @Override
-                public void onLocationResult(LocationResult locationResult) {
+                public void onLocationResult(@NonNull LocationResult locationResult) {
                     resultCallback.onResult(locationResult.getLastLocation());
                 }
             };

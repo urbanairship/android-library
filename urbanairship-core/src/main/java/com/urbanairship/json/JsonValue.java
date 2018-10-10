@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * A JsonValue is a representation of any value that can be described using JSON. It can contain one
  * of the following: a JsonMap, a JsonList, a Number, a Boolean, String, or it can contain null.
- * </p>
+ * <p>
  * JsonValues can be created from Java Objects by calling {@link #wrap(Object)} or from a JSON
  * String by calling{@link #parseString(String)}. The JsonValue {@link #toString()} returns the
  * JSON String representation of the object.
@@ -37,6 +37,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
     /**
      * A null representation of the JsonValue.
      */
+    @NonNull
     public final static JsonValue NULL = new JsonValue(null);
 
     private final Object value;
@@ -46,7 +47,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @param value The wrapped value.
      */
-    private JsonValue(Object value) {
+    private JsonValue(@Nullable Object value) {
         this.value = value;
     }
 
@@ -56,6 +57,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The raw value.
      */
+    @Nullable
     public Object getValue() {
         return value;
     }
@@ -65,8 +67,17 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as a String, or null if the value is not a String.
      */
+    @Nullable
     public String getString() {
-        return getString(null);
+        if (value == null) {
+            return null;
+        }
+
+        if (isString()) {
+            return (String) value;
+        }
+
+        return null;
     }
 
     /**
@@ -75,18 +86,21 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @param defaultValue The default value if the contained value is not a String.
      * @return The value as a String, or the defaultValue if the value is not a String.
      */
-    public String getString(String defaultValue) {
-        if (isNull()) {
-            return defaultValue;
-        }
-
-        if (isString()) {
-            return (String) value;
-        }
-
-        return defaultValue;
+    @NonNull
+    public String getString(@NonNull String defaultValue) {
+        String value = getString();
+        return value == null ? defaultValue : value;
     }
 
+    /**
+     * Returns the String value or an empty String.
+     *
+     * @return The string value or an empty String.
+     */
+    @NonNull
+    public String optString() {
+        return getString("");
+    }
 
     /**
      * Gets the contained values as an int.
@@ -95,7 +109,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The value as an int, or the defaultValue if the value is not a number.
      */
     public int getInt(int defaultValue) {
-        if (isNull()) {
+        if (value == null) {
             return defaultValue;
         }
 
@@ -111,13 +125,35 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Gets the contained values as a float.
+     *
+     * @param defaultValue The default value if the contained value is not a number.
+     * @return The value as a float, or the defaultValue if the value is not a number.
+     */
+    public float getFloat(float defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+
+        if (isFloat()) {
+            return (Float) value;
+        }
+
+        if (isNumber()) {
+            return ((Number) value).floatValue();
+        }
+
+        return defaultValue;
+    }
+
+    /**
      * Gets the contained values as an double.
      *
      * @param defaultValue The default value if the contained value is not a number.
      * @return The value as a double, or the defaultValue if the value is not a number.
      */
     public double getDouble(double defaultValue) {
-        if (isNull()) {
+        if (value == null) {
             return defaultValue;
         }
 
@@ -139,7 +175,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The value as a long, or the defaultValue if the value is not a number.
      */
     public long getLong(long defaultValue) {
-        if (isNull()) {
+        if (value == null) {
             return defaultValue;
         }
 
@@ -159,12 +195,17 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as a number or null if the value is null or not a number.
      */
+    @Nullable
     public Number getNumber() {
-        if (isNull() || !isNumber()) {
+        if (value == null) {
             return null;
         }
 
-        return (Number) value;
+        if (isNumber()) {
+            return (Number) value;
+        }
+
+        return null;
     }
 
     /**
@@ -174,7 +215,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The value as a boolean, or the defaultValue if the value is not a boolean.
      */
     public boolean getBoolean(boolean defaultValue) {
-        if (isNull()) {
+        if (value == null) {
             return defaultValue;
         }
 
@@ -190,12 +231,17 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as a JsonList, or null if the value is not a JsonList.
      */
+    @Nullable
     public JsonList getList() {
-        if (isNull() || !isJsonList()) {
+        if (value == null) {
             return null;
         }
 
-        return (JsonList) value;
+        if (isJsonList()) {
+            return (JsonList) value;
+        }
+
+        return null;
     }
 
     /**
@@ -203,12 +249,10 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as JsonList, or an empty JsonList if the value is not a JsonList.
      */
+    @NonNull
     public JsonList optList() {
-        if (isNull() || !isJsonList()) {
-            return JsonList.EMPTY_LIST;
-        }
-
-        return getList();
+        JsonList value = getList();
+        return value == null ? JsonList.EMPTY_LIST : value;
     }
 
     /**
@@ -216,12 +260,17 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as JsonMap, or null if the value is not a JsonMap.
      */
+    @Nullable
     public JsonMap getMap() {
-        if (isNull() || !isJsonMap()) {
+        if (value == null) {
             return null;
         }
 
-        return (JsonMap) value;
+        if (isJsonMap()) {
+            return (JsonMap) value;
+        }
+
+        return null;
     }
 
     /**
@@ -229,12 +278,10 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as JsonMap, or an empty JsonMap if the value is not a JsonMap.
      */
+    @NonNull
     public JsonMap optMap() {
-        if (isNull() || !isJsonMap()) {
-            return JsonMap.EMPTY_MAP;
-        }
-
-        return getMap();
+        JsonMap value = getMap();
+        return value == null ? JsonMap.EMPTY_MAP : value;
     }
 
     /**
@@ -271,6 +318,15 @@ public class JsonValue implements Parcelable, JsonSerializable {
      */
     public boolean isDouble() {
         return value instanceof Double;
+    }
+
+    /**
+     * Checks if the value is a Float.
+     *
+     * @return {@code true} if the value is a Float, otherwise {@code false}.
+     */
+    public boolean isFloat() {
+        return value instanceof Float;
     }
 
     /**
@@ -325,7 +381,8 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return A JsonValue from the encoded String.
      * @throws JsonException If the JSON was unable to be parsed.
      */
-    public static JsonValue parseString(String jsonString) throws JsonException {
+    @NonNull
+    public static JsonValue parseString(@Nullable String jsonString) throws JsonException {
         if (UAStringUtil.isEmpty(jsonString)) {
             return JsonValue.NULL;
         }
@@ -340,19 +397,24 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@NonNull Object object) {
         if (!(object instanceof JsonValue)) {
             return false;
         }
 
         JsonValue o = (JsonValue) object;
 
-        if (isNull()) {
+        if (value == null) {
             return o.isNull();
         }
 
+
+        if (isFloat() && o.isFloat()) {
+            return Float.compare(getFloat(0), o.getFloat(0)) == 0;
+        }
+
         if ((isNumber() && o.isNumber()) && (isDouble() || o.isDouble())) {
-            return Double.compare(getNumber().doubleValue(), o.getNumber().doubleValue()) == 0;
+            return Double.compare(getDouble(0), o.getDouble(0)) == 0;
         }
 
         return value.equals(o.value);
@@ -372,6 +434,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      *
      * @return The value as a JSON encoded String.
      */
+    @NonNull
     @Override
     public String toString() {
         if (isNull()) {
@@ -405,7 +468,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @param stringer The JSONStringer object.
      * @throws JSONException If the value is unable to be written as JSON.
      */
-    void write(JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer) throws JSONException {
         if (isNull()) {
             stringer.value(null);
             return;
@@ -427,7 +490,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The JsonValue object.
      */
     @NonNull
-    public static JsonValue wrap(String value) {
+    public static JsonValue wrap(@Nullable String value) {
         return JsonValue.wrapOpt(value);
     }
 
@@ -465,7 +528,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
-     *
      * Wraps a boolean as a JsonValue.
      *
      * @param value The value as a boolean.
@@ -477,7 +539,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
-     *
      * Wraps a double as a JsonValue.
      *
      * @param value The value as a double.
@@ -501,7 +562,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The JsonValue object.
      */
     @NonNull
-    public static JsonValue wrap(JsonSerializable value) {
+    public static JsonValue wrap(@Nullable JsonSerializable value) {
         return JsonValue.wrapOpt(value);
     }
 
@@ -512,7 +573,8 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @param object The object to wrap.
      * @return The object wrapped in a JsonValue or {@link JsonValue#NULL}.
      */
-    public static JsonValue wrapOpt(Object object) {
+    @NonNull
+    public static JsonValue wrapOpt(@Nullable Object object) {
         return wrap(object, JsonValue.NULL);
     }
 
@@ -524,7 +586,8 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @param defaultValue The default value if the object is unable to be wrapped.
      * @return The object wrapped in a JsonValue or the default value if the object is unable to be wrapped.
      */
-    public static JsonValue wrap(Object object, JsonValue defaultValue) {
+    @NonNull
+    public static JsonValue wrap(@Nullable Object object, @NonNull JsonValue defaultValue) {
         try {
             return wrap(object);
         } catch (JsonException ex) {
@@ -534,7 +597,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
 
     /**
      * Wraps any valid object into a JsonValue.
-     * <p/>
+     * <p>
      * Objects will be wrapped with the following rules:
      * <ul>
      * <li>JSONObject.NULL or null will result in {@link JsonValue#NULL}.</li>
@@ -569,8 +632,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
         }
 
         if (object instanceof JsonSerializable) {
-            JsonValue jsonValue = ((JsonSerializable) object).toJsonValue();
-            return jsonValue == null ? JsonValue.NULL : jsonValue;
+            return ((JsonSerializable) object).toJsonValue();
         }
 
         if (object instanceof Byte || object instanceof Short) {
@@ -631,7 +693,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The wrapped array.
      * @throws JsonException If the array contains an unwrappable object.
      */
-    @NonNull
     private static JsonValue wrapArray(@NonNull Object array) throws JsonException {
         final int length = Array.getLength(array);
         List<JsonValue> list = new ArrayList<>(length);
@@ -654,7 +715,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The wrapped array.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    @NonNull
     private static JsonValue wrapCollection(@NonNull Collection collection) throws JsonException {
         List<JsonValue> list = new ArrayList<>();
 
@@ -674,7 +734,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The wrapped map.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    @NonNull
     private static JsonValue wrapMap(@NonNull Map<?, ?> map) throws JsonException {
         Map<String, JsonValue> jsonValueMap = new HashMap<>();
 
@@ -698,7 +757,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The wrapped JSONArray.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    @NonNull
     private static JsonValue wrapJSONArray(@NonNull JSONArray jsonArray) throws JsonException {
         List<JsonValue> list = new ArrayList<>(jsonArray.length());
 
@@ -719,7 +777,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @return The wrapped JSONObject.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    @NonNull
     private static JsonValue wrapJSONObject(@NonNull JSONObject jsonObject) throws JsonException {
         Map<String, JsonValue> jsonValueMap = new HashMap<>();
 
@@ -742,31 +799,36 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeString(this.toString());
     }
 
     /**
      * JsonValue parcel creator.
+     * @hide
      */
+    @NonNull
     public static final Parcelable.Creator<JsonValue> CREATOR = new Parcelable.Creator<JsonValue>() {
 
+        @NonNull
         @Override
-        public JsonValue createFromParcel(Parcel in) {
+        public JsonValue createFromParcel(@NonNull Parcel in) {
             try {
                 return JsonValue.parseString(in.readString());
             } catch (JsonException e) {
                 Logger.error("JsonValue - Unable to create JsonValue from parcel.", e);
-                return null;
+                return JsonValue.NULL;
             }
         }
 
+        @NonNull
         @Override
         public JsonValue[] newArray(int size) {
             return new JsonValue[size];
         }
     };
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return this;

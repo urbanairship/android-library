@@ -182,7 +182,9 @@ class IncomingPushRunnable implements Runnable {
 
         switch (result.getStatus()) {
             case NotificationFactory.Result.OK:
-                postNotification(airship, result.getNotification(), notificationId);
+                if (result.getNotification() != null) {
+                    postNotification(airship, result.getNotification(), notificationId);
+                }
                 sendPushResultBroadcast(notificationId);
                 break;
             case NotificationFactory.Result.CANCEL:
@@ -202,7 +204,7 @@ class IncomingPushRunnable implements Runnable {
      * @param notification The notification.
      * @param notificationId The notification ID.
      */
-    private void postNotification(UAirship airship, Notification notification, int notificationId) {
+    private void postNotification(@NonNull UAirship airship, @NonNull Notification notification, int notificationId) {
 
         if (Build.VERSION.SDK_INT < 26) {
             if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
@@ -366,6 +368,7 @@ class IncomingPushRunnable implements Runnable {
          * @param message The push message.
          * @return The builder instance.
          */
+        @NonNull
         Builder setMessage(@NonNull PushMessage message) {
             this.message = message;
             return this;
@@ -377,6 +380,7 @@ class IncomingPushRunnable implements Runnable {
          * @param providerClass The provider class.
          * @return The builder instance.
          */
+        @NonNull
         Builder setProviderClass(@NonNull String providerClass) {
             this.providerClass = providerClass;
             return this;
@@ -388,6 +392,7 @@ class IncomingPushRunnable implements Runnable {
          * @param longRunning If the runnable is long running or not.
          * @return The builder instance.
          */
+        @NonNull
         Builder setLongRunning(boolean longRunning) {
             isLongRunning = longRunning;
             return this;
@@ -401,6 +406,7 @@ class IncomingPushRunnable implements Runnable {
          * <code>false</code>.
          * @return The builder instance.
          */
+        @NonNull
         Builder setProcessed(boolean processed) {
             isProcessed = processed;
             return this;
@@ -412,6 +418,7 @@ class IncomingPushRunnable implements Runnable {
          * @param notificationManager The notification manager.
          * @return The builder instance.
          */
+        @NonNull
         Builder setNotificationManager(@NonNull NotificationManagerCompat notificationManager) {
             this.notificationManager = notificationManager;
             return this;
@@ -423,6 +430,7 @@ class IncomingPushRunnable implements Runnable {
          * @param jobDispatcher The job dispatcher.
          * @return The builder instance.
          */
+        @NonNull
         Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
             this.jobDispatcher = jobDispatcher;
             return this;
@@ -434,6 +442,7 @@ class IncomingPushRunnable implements Runnable {
          * @return A {@link IncomingPushRunnable}.
          * @throws IllegalArgumentException if provider and/or push message is missing.
          */
+        @NonNull
         IncomingPushRunnable build() {
             Checks.checkNotNull(providerClass, "Provider class missing");
             Checks.checkNotNull(message, "Push Message missing");

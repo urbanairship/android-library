@@ -31,11 +31,17 @@ import com.urbanairship.widget.UAWebChromeClient;
  */
 public class FullScreenActivity extends InAppMessageActivity implements InAppButtonLayout.ButtonClickListener {
 
+    @Nullable
     protected FullScreenDisplayContent displayContent;
     private MediaView mediaView;
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
+        if (getMessage() == null) {
+            finish();
+            return;
+        }
+
         displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
             finish();
@@ -91,7 +97,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
             InAppViewUtils.applyButtonInfo(footer, displayContent.getFooter(), 0);
             footer.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onClick(@NonNull View view) {
                     onButtonClicked(view, displayContent.getFooter());
                 }
             });
@@ -107,7 +113,9 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                if (getDisplayHandler() != null) {
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                }
                 finish();
             }
         });
@@ -120,7 +128,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         if (ViewCompat.getFitsSystemWindows(contentHolder)) {
             ViewCompat.setOnApplyWindowInsetsListener(contentHolder, new OnApplyWindowInsetsListener() {
                 @Override
-                public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                public WindowInsetsCompat onApplyWindowInsets(@NonNull View v, WindowInsetsCompat insets) {
                     ViewCompat.onApplyWindowInsets(v, insets);
                     return insets;
                 }
@@ -129,7 +137,11 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
     }
 
     @Override
-    public void onButtonClicked(View view, ButtonInfo buttonInfo) {
+    public void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo) {
+        if (getDisplayHandler() == null) {
+            return;
+        }
+
         InAppActionUtils.runActions(buttonInfo);
         if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
             getDisplayHandler().cancelFutureDisplays();
@@ -181,7 +193,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
      */
     @NonNull
     @FullScreenDisplayContent.Template
-    protected String normalizeTemplate(FullScreenDisplayContent displayContent) {
+    protected String normalizeTemplate(@NonNull FullScreenDisplayContent displayContent) {
         String template = displayContent.getTemplate();
 
         // If we do not have media use TEMPLATE_HEADER_BODY_MEDIA

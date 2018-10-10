@@ -5,13 +5,15 @@ package com.urbanairship;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 /**
  * An activity that forwards the notification proxy intents to the CoreReceiver.
  */
 public class CoreActivity extends Activity {
 
-    public final void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected final void onCreate(@NonNull Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Autopilot.automaticTakeOff(getApplication());

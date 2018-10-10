@@ -26,13 +26,15 @@ import java.util.List;
  * An abstract class to manage a SQLiteDatabase.
  */
 public abstract class DataManager {
-    private static final int MAX_ATTEMPTS = 3;
-    private final SQLiteOpenHelper openHelper;
 
     private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";
 
+    private static final int MAX_ATTEMPTS = 3;
+    private final SQLiteOpenHelper openHelper;
+
     /**
      * Default Constructor for DataManager
+     *
      * @param context The context used for opening and creating databases
      * @param appKey The application key. Used to prefix the database file.
      * @param name The name of the database
@@ -44,30 +46,30 @@ public abstract class DataManager {
         openHelper = new SQLiteOpenHelper(context, name, null, version) {
 
             @Override
-            public void onCreate(SQLiteDatabase db) {
+            public void onCreate(@NonNull SQLiteDatabase db) {
                 DataManager.this.onCreate(db);
             }
 
             @Override
-            public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
                 Logger.debug("DataManager - Upgrading database " + db + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
-            public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            public void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
                 Logger.debug("DataManager - Downgrading database " + db + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
 
             @Override
-            public void onConfigure(SQLiteDatabase db) {
+            public void onConfigure(@NonNull SQLiteDatabase db) {
                 super.onConfigure(db);
                 DataManager.this.onConfigure(db);
             }
 
             @Override
-            public void onOpen(SQLiteDatabase db) {
+            public void onOpen(@NonNull SQLiteDatabase db) {
                 super.onOpen(db);
                 DataManager.this.onOpen(db);
 
@@ -80,7 +82,7 @@ public abstract class DataManager {
      *
      * @param db The database.
      */
-    protected void onOpen(SQLiteDatabase db) {}
+    protected void onOpen(@NonNull SQLiteDatabase db) {}
 
     /**
      * Called when the database connection is configured.
@@ -88,7 +90,7 @@ public abstract class DataManager {
      * @param db The database.
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected  void onConfigure(SQLiteDatabase db) {}
+    protected void onConfigure(@NonNull SQLiteDatabase db) {}
 
     /**
      * Called when the database is created for the first time.
@@ -201,6 +203,7 @@ public abstract class DataManager {
      * @param values An array of values to insert into the database
      * @return A list of the values inserted into the database
      */
+    @NonNull
     public List<ContentValues> bulkInsert(@NonNull String table, @NonNull ContentValues[] values) {
         SQLiteDatabase db = getWritableDatabase();
         List<ContentValues> inserted = new ArrayList<>();
@@ -232,7 +235,7 @@ public abstract class DataManager {
      * @param values The values to insert into the database
      * @return Row id of the inserted values
      */
-    public long insert(@NonNull String table, ContentValues values) {
+    public long insert(@NonNull String table, @Nullable ContentValues values) {
         SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
             return -1;
@@ -258,8 +261,8 @@ public abstract class DataManager {
      * @param selectionArgs arguments to the WHERE clause
      * @return number of rows updated
      */
-    public int update(@NonNull String table, ContentValues values, String selection,
-                      String[] selectionArgs) {
+    public int update(@NonNull String table, @Nullable ContentValues values, @Nullable String selection,
+                      @Nullable String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
             return -1;
@@ -286,11 +289,13 @@ public abstract class DataManager {
      * @param sortOrder How to sort the rows
      * @return A cursor with the query results, or null if anything went wrong
      */
-    public Cursor query(@NonNull String table, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
+    @Nullable
+    public Cursor query(@NonNull String table, @Nullable String[] columns, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         return query(table, columns, selection, selectionArgs, sortOrder, null);
     }
 
-    public Cursor query(@NonNull String table, String[] columns, String selection, String[] selectionArgs, String sortOrder, String limit) {
+    @Nullable
+    public Cursor query(@NonNull String table, @Nullable String[] columns, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder, @Nullable String limit) {
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             return null;
@@ -315,7 +320,8 @@ public abstract class DataManager {
      * @param selectionArgs Arguments to the WHERE clause
      * @return A cursor with the query results, or null if anything went wrong
      */
-    public Cursor rawQuery(@NonNull String query, String[] selectionArgs) {
+    @Nullable
+    public Cursor rawQuery(@NonNull String query, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             return null;
@@ -350,10 +356,9 @@ public abstract class DataManager {
      * @param context The application context.
      * @param appKey The appKey.
      * @param name The database name.
-     *
      * @return The name of the database.
      */
-    private String migrateDatabase(Context context, String appKey, String name) {
+    private String migrateDatabase(@NonNull Context context, String appKey, String name) {
         String targetName = appKey + "_" + name;
         File target;
         File[] sources;

@@ -2,12 +2,15 @@
 
 package com.urbanairship;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -27,6 +30,7 @@ import java.util.concurrent.Executors;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class PreferenceDataStore {
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
@@ -35,6 +39,7 @@ public final class PreferenceDataStore {
 
     private final Map<String, Preference> preferences = new HashMap<>();
     private final UrbanAirshipResolver resolver;
+    @NonNull
     private final Context context;
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
@@ -50,7 +55,7 @@ public final class PreferenceDataStore {
          *
          * @param key The key of the preference.
          */
-        void onPreferenceChange(String key);
+        void onPreferenceChange(@NonNull String key);
     }
 
     /**
@@ -58,11 +63,11 @@ public final class PreferenceDataStore {
      *
      * @param context The application context.
      */
-    PreferenceDataStore(Context context) {
+    PreferenceDataStore(@NonNull Context context) {
         this(context, new UrbanAirshipResolver(context));
     }
 
-    PreferenceDataStore(Context context, UrbanAirshipResolver resolver) {
+    PreferenceDataStore(@NonNull Context context, @NonNull UrbanAirshipResolver resolver) {
         this.context = context;
         this.resolver = resolver;
     }
@@ -141,6 +146,7 @@ public final class PreferenceDataStore {
      * @param defaultValue The value to return if the preference doesn't exist.
      * @return The String value for the preference or defaultValue if it doesn't exist.
      */
+    @SuppressLint("UnknownNullness")
     public String getString(@NonNull String key, String defaultValue) {
         String value = getPreference(key).get();
         return value == null ? defaultValue : value;
@@ -195,6 +201,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @return The value for the preference if available or {@link JsonValue#NULL} if it doesn't exist.
      */
+    @NonNull
     public JsonValue getJsonValue(@NonNull String key) {
         try {
             return JsonValue.parseString(getPreference(key).get());
@@ -229,8 +236,12 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(@NonNull String key, String value) {
-        getPreference(key).put(value);
+    public void put(@NonNull String key, @Nullable String value) {
+        if (value == null) {
+            remove(key);
+        } else {
+            getPreference(key).put(value);
+        }
     }
 
     /**
@@ -269,7 +280,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(@NonNull String key, JsonValue value) {
+    public void put(@NonNull String key, @Nullable JsonValue value) {
         if (value == null) {
             remove(key);
         } else {
@@ -283,7 +294,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(@NonNull String key, JsonSerializable value) {
+    public void put(@NonNull String key, @Nullable JsonSerializable value) {
         if (value == null) {
             remove(key);
         } else {
@@ -300,7 +311,7 @@ public final class PreferenceDataStore {
      * @return <code>true</code> if the preference was successfully saved to
      * the database, otherwise <code>false</code>
      */
-    public boolean putSync(@NonNull String key, String value) {
+    public boolean putSync(@NonNull String key, @Nullable String value) {
         String stringValue = value == null ? null : String.valueOf(value);
         return getPreference(key).putSync(stringValue);
     }
@@ -324,6 +335,7 @@ public final class PreferenceDataStore {
      * @param key The preference key.
      * @return A preference for the key.
      */
+    @NonNull
     private Preference getPreference(@NonNull String key) {
         Preference preference;
 
@@ -356,7 +368,7 @@ public final class PreferenceDataStore {
 
             @Override
             public void onChange(boolean selfChange) {
-                Logger.verbose("PreferenceDataStore - Preference updated: " + Preference.this.key);
+                Logger.verbose("PreferenceDataStore - Preference updated: " + key);
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -405,7 +417,7 @@ public final class PreferenceDataStore {
 
         /**
          * Puts the preferences value.
-         * <p/>
+         * <p>
          * The preference will save its value with the UrbanAirship provider.
          *
          * @param value Value of the preference.
@@ -448,7 +460,7 @@ public final class PreferenceDataStore {
          * @return <code>true</code> if the preference was successfully written to
          * the database, otherwise <code>false</code>
          */
-        private boolean writeValue(String value) {
+        private boolean writeValue(@Nullable String value) {
             synchronized (this) {
                 if (value == null) {
                     Logger.verbose("PreferenceDataStore - Removing preference: " + key);

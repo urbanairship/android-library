@@ -28,7 +28,8 @@ public interface InAppMessageAdapter {
          * @param message The in-app message.
          * @return A InAppMessageAdapter.
          */
-        InAppMessageAdapter createAdapter(InAppMessage message);
+        @NonNull
+        InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
     }
 
     @IntDef({ RETRY, OK, CANCEL })
@@ -84,7 +85,7 @@ public interface InAppMessageAdapter {
      * try again later.
      */
     @MainThread
-    boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler);
+    boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
 
     /**
      * Called after the in-app message is finished displaying.

@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
  * {@link com.urbanairship.actions.Action}.
  */
 public interface ActionCompletionCallback {
+
     /**
      * Signals completion of the action.
      *

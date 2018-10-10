@@ -10,18 +10,21 @@ import com.urbanairship.util.DataManager;
 /**
  * A database manager to help create, open, and modify the rich push
  * database
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RichPushDataManager extends DataManager {
 
-
+    @NonNull
     public static final String TABLE_NAME = "richpush";
 
+    @NonNull
     private static final String DATABASE_NAME = "ua_richpush.db";
+
     private static final int DATABASE_VERSION = 3;
 
-    public RichPushDataManager(Context context, String appKey) {
+    public RichPushDataManager(@NonNull Context context, @NonNull String appKey) {
         super(context, appKey, DATABASE_NAME, DATABASE_VERSION);
     }
 

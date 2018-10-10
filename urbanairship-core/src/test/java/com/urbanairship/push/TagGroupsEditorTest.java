@@ -2,6 +2,8 @@
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
@@ -76,7 +78,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
     public void testAllowTagGroupChanges() {
         editor = new TestTagGroupsEditor() {
             @Override
-            protected boolean allowTagGroupChange(String tagGroup) {
+            protected boolean allowTagGroupChange(@NonNull String tagGroup) {
                 if (tagGroup.equals("ignore")) {
                     return false;
                 }
@@ -99,7 +101,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
         List<TagGroupsMutation> collapsedMutations;
 
         @Override
-        protected void onApply(List<TagGroupsMutation> collapsedMutations) {
+        protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
             this.collapsedMutations = collapsedMutations;
         }
     }

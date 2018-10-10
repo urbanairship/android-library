@@ -73,7 +73,7 @@ public class EventManager {
      *
      * @param builder The builder instance.
      */
-    private EventManager(Builder builder) {
+    private EventManager(@NonNull Builder builder) {
         this.preferenceDataStore = builder.preferenceDataStore;
         this.jobDispatcher = builder.jobDispatcher;
         this.activityMonitor = builder.activityMonitor;
@@ -89,7 +89,7 @@ public class EventManager {
      * @param delay The initial delay.
      * @param timeUnit The time unit of the delay.
      */
-    public void scheduleEventUpload(final long delay, TimeUnit timeUnit) {
+    public void scheduleEventUpload(final long delay, @NonNull TimeUnit timeUnit) {
         long milliseconds = timeUnit.toMillis(delay);
         Logger.verbose("EventManager - Requesting to schedule event upload with delay " + milliseconds + "ms.");
 
@@ -126,7 +126,7 @@ public class EventManager {
      * @param sessionId The event's session ID.
      */
     @WorkerThread
-    public void addEvent(Event event, String sessionId) {
+    public void addEvent(@NonNull Event event, @NonNull String sessionId) {
         eventResolver.insertEvent(event, sessionId);
 
         // Handle database max size exceeded
@@ -167,7 +167,7 @@ public class EventManager {
     /**
      * Gets the next upload delay in milliseconds. The next upload delay is calculated by the following:
      * Max(0, (Last Send Time + MIN_BATCH_INTERVAL) - Current Time)
-     *
+     * <p>
      * This delay is used to schedule an upload for low and normal priority events.
      *
      * @return A delay in ms.
@@ -184,7 +184,7 @@ public class EventManager {
      * @return {@code true} if the events uploaded, otherwise {@code false}.
      */
     @WorkerThread
-    public boolean uploadEvents(UAirship airship) {
+    public boolean uploadEvents(@NonNull UAirship airship) {
         isScheduled = false;
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
@@ -243,6 +243,7 @@ public class EventManager {
          * @param preferenceDataStore The {@link PreferenceDataStore}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setPreferenceDataStore(@NonNull PreferenceDataStore preferenceDataStore) {
             this.preferenceDataStore = preferenceDataStore;
             return this;
@@ -254,6 +255,7 @@ public class EventManager {
          * @param jobDispatcher The {@link JobDispatcher}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
             this.jobDispatcher = jobDispatcher;
             return this;
@@ -265,6 +267,7 @@ public class EventManager {
          * @param activityMonitor The {@link ActivityMonitor}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
             this.activityMonitor = activityMonitor;
             return this;
@@ -276,7 +279,8 @@ public class EventManager {
          * @param eventResolver The {@link EventResolver}.
          * @return The builder instance.
          */
-        public Builder setEventResolver(EventResolver eventResolver) {
+        @NonNull
+        public Builder setEventResolver(@NonNull EventResolver eventResolver) {
             this.eventResolver = eventResolver;
             return this;
         }
@@ -287,7 +291,8 @@ public class EventManager {
          * @param apiClient The {@link EventApiClient}.
          * @return The builder instance.
          */
-        public Builder setApiClient(EventApiClient apiClient) {
+        @NonNull
+        public Builder setApiClient(@NonNull EventApiClient apiClient) {
             this.apiClient = apiClient;
             return this;
         }
@@ -298,7 +303,8 @@ public class EventManager {
          * @param jobAction The job action.
          * @return The builder instance.
          */
-        public Builder setJobAction(String jobAction) {
+        @NonNull
+        public Builder setJobAction(@NonNull String jobAction) {
             this.jobAction = jobAction;
             return this;
         }
@@ -309,6 +315,7 @@ public class EventManager {
          * @param backgroundReportingIntervalMS The background reporting interval in milliseconds.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setBackgroundReportingIntervalMS(long backgroundReportingIntervalMS) {
             this.backgroundReportingIntervalMS = backgroundReportingIntervalMS;
             return this;
@@ -319,6 +326,7 @@ public class EventManager {
          *
          * @return An event manager instance.
          */
+        @NonNull
         public EventManager build() {
             Checks.checkNotNull(jobDispatcher, "Missing job dispatcher.");
             Checks.checkNotNull(activityMonitor, "Missing activity monitor.");

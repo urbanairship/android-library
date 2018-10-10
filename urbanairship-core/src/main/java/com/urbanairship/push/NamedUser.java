@@ -89,7 +89,7 @@ public class NamedUser extends AirshipComponent {
     @WorkerThread
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
+    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (namedUserJobHandler == null) {
             namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore, tagGroupRegistrar);
         }
@@ -102,6 +102,7 @@ public class NamedUser extends AirshipComponent {
      *
      * @return The named user ID as a string or null if it does not exist.
      */
+    @Nullable
     public String getId() {
         return preferenceDataStore.getString(NAMED_USER_ID_KEY, null);
     }
@@ -117,7 +118,7 @@ public class NamedUser extends AirshipComponent {
 
     /**
      * Sets the named user ID.
-     * </p>
+     * <p>
      * To associate the named user ID, its length must be greater than 0 and less than 129 characters.
      * To disassociate the named user ID, its value must be null.
      *
@@ -160,10 +161,11 @@ public class NamedUser extends AirshipComponent {
      *
      * @return The TagGroupsEditor.
      */
+    @NonNull
     public TagGroupsEditor editTagGroups() {
         return new TagGroupsEditor() {
             @Override
-            protected void onApply(List<TagGroupsMutation> collapsedMutations) {
+            protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
                 if (!collapsedMutations.isEmpty()) {
                     tagGroupRegistrar.addMutations(TagGroupRegistrar.NAMED_USER, collapsedMutations);
                     dispatchUpdateTagGroupsJob();
@@ -211,7 +213,6 @@ public class NamedUser extends AirshipComponent {
 
         jobDispatcher.dispatch(jobInfo);
     }
-
 
 
     /**

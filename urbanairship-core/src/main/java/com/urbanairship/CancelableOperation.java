@@ -5,6 +5,7 @@ package com.urbanairship;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
      */
-    public CancelableOperation(Looper looper) {
+    public CancelableOperation(@Nullable Looper looper) {
         if (looper != null) {
             this.handler = new Handler(looper);
         } else {
@@ -131,6 +132,7 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
      *
      * @param runnable A runnable.
      */
+    @NonNull
     public CancelableOperation addOnRun(@NonNull Runnable runnable) {
         synchronized (this) {
             if (isFinished) {
@@ -149,6 +151,7 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
      *
      * @param cancelable The instance that implements the {@link Cancelable} interface.
      */
+    @NonNull
     public CancelableOperation addOnCancel(@NonNull Cancelable cancelable) {
         synchronized (this) {
             if (isCancelled()) {

@@ -73,7 +73,8 @@ public class ImageLoader {
      * @return The shared image loader.
      */
     @MainThread
-    public static ImageLoader shared(Context context) {
+    @NonNull
+    public static ImageLoader shared(@NonNull Context context) {
         if (sharedInstance == null) {
             sharedInstance = new ImageLoader(context);
         }
@@ -86,7 +87,7 @@ public class ImageLoader {
      *
      * @param context The application context.
      */
-    private ImageLoader(Context context) {
+    private ImageLoader(@NonNull Context context) {
         this.context = context.getApplicationContext();
         this.requestMap = new WeakHashMap<>();
         this.executor = Executors.newFixedThreadPool(2);
@@ -95,7 +96,7 @@ public class ImageLoader {
         int memCacheSize = (int) Math.min(MAX_MEM_CACHE_SIZE, Runtime.getRuntime().maxMemory() / 8);
         this.memoryCache = new LruCache<String, BitmapDrawable>(memCacheSize) {
             @Override
-            protected int sizeOf(String key, BitmapDrawable bitmapDrawable) {
+            protected int sizeOf(String key, @NonNull BitmapDrawable bitmapDrawable) {
                 return bitmapDrawable.getBitmap().getByteCount();
             }
         };
@@ -106,7 +107,7 @@ public class ImageLoader {
      *
      * @param imageView The imageView.
      */
-    public void cancelRequest(ImageView imageView) {
+    public void cancelRequest(@Nullable ImageView imageView) {
         if (imageView == null) {
             return;
         }
@@ -124,7 +125,7 @@ public class ImageLoader {
      * @param placeHolder The optional placeholder.
      * @param imageView The image view.
      */
-    public void load(String imageUrl, @DrawableRes int placeHolder, @NonNull ImageView imageView) {
+    public void load(@Nullable String imageUrl, @DrawableRes int placeHolder, @NonNull ImageView imageView) {
         cancelRequest(imageView);
 
         Request request = new Request(imageUrl, placeHolder, imageView) {
@@ -158,7 +159,7 @@ public class ImageLoader {
          * @param placeHolder The optional placeholder.
          * @param imageView The ImageView.
          */
-        Request(String imageUrl, int placeHolder, ImageView imageView) {
+        Request(String imageUrl, int placeHolder, @NonNull ImageView imageView) {
             this.placeHolder = placeHolder;
             this.imageUrl = imageUrl;
             this.imageViewReference = new WeakReference<>(imageView);
@@ -255,6 +256,7 @@ public class ImageLoader {
          *
          * @return The memory cache key.
          */
+        @NonNull
         String getCacheKey() {
             return imageUrl + ",size(" + width + "x" + height + ")";
         }
@@ -298,7 +300,7 @@ public class ImageLoader {
         }
 
         @Override
-        protected void onPostExecute(BitmapDrawable bitmapDrawable) {
+        protected void onPostExecute(@Nullable BitmapDrawable bitmapDrawable) {
             final ImageView imageView = request.getImageView();
             if (bitmapDrawable != null && imageView != null) {
                 // Transition drawable with a transparent drawable and the final drawable

@@ -29,16 +29,19 @@ public class AirshipConfigOptions {
     /**
      * The ADM transport type for Push.
      */
+    @NonNull
     public static final String ADM_TRANSPORT = "ADM";
 
     /**
      * The GCM transport type for Push.
      */
+    @NonNull
     public static final String GCM_TRANSPORT = "GCM";
 
     /**
      * The FCM transport type for Push.
      */
+    @NonNull
     public static final String FCM_TRANSPORT = "FCM";
 
     // Logs a warning message if the backgroundReportingIntervalSeconds is below this minimum value
@@ -52,54 +55,62 @@ public class AirshipConfigOptions {
 
     /**
      * The application's production app key.
-     * <p/>
+     * <p>
      * This string is generated automatically when you create an app in the Urban Airship
      * dashboard, which you can manually copy into your app configuration.
      */
+    @Nullable
     public final String productionAppKey;
 
     /**
      * The application's production app secret.
-     * <p/>
+     * <p>
      * This string is generated automatically when you create an app in the Urban Airship
      * dashboard, which you can manually copy into your app configuration.
      */
+    @Nullable
     public final String productionAppSecret;
 
     /**
      * The application's development app key.
-     * <p/>
+     * <p>
      * This string is generated automatically when you create an app in the Urban Airship
      * dashboard, which you can manually copy into your app configuration.
      */
+    @Nullable
     public final String developmentAppKey;
 
     /**
      * The application's development app secret.
-     * <p/>
+     * <p>
      * This string is generated automatically when you create an app in the Urban Airship
      * dashboard, which you can manually copy into your app configuration.
      */
+    @Nullable
     public final String developmentAppSecret;
 
     /**
      * The Urban Airship URL. This will always be set to http://device-api.urbanairship.com/
      */
+    @NonNull
     public final String hostURL;
 
     /**
      * The Analytics Server. This will always be set to https://combine.urbanairship.com/
      */
+    @NonNull
     public final String analyticsServer;
 
     /**
      * The landing page content URL. This will always be set to https://dl.urbanairship.com/aaa/
      */
+    @NonNull
     public final String landingPageContentURL;
 
     /**
      * The remote data server URL.
      */
+    @NonNull
     public final String remoteDataURL;
 
     /**
@@ -109,6 +120,7 @@ public class AirshipConfigOptions {
      *
      * @deprecated Use FCM sender ID instead. To be removed in SDK 10.0.
      */
+    @Nullable
     @Deprecated
     public final String gcmSender;
 
@@ -121,6 +133,7 @@ public class AirshipConfigOptions {
      * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
      * main Firebase application's sender ID.
      */
+    @Nullable
     public final String fcmSenderId;
 
     /**
@@ -130,6 +143,7 @@ public class AirshipConfigOptions {
      * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
      * main Firebase application's sender ID.
      */
+    @Nullable
     public final String developmentFcmSenderId;
 
     /**
@@ -139,11 +153,12 @@ public class AirshipConfigOptions {
      * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
      * main Firebase application's sender ID.
      */
+    @Nullable
     public final String productionFcmSenderId;
 
     /**
      * The transport types allowed for Push.
-     * <p/>
+     * <p>
      * Defaults to ADM, GCM, FCM.
      */
     @Nullable
@@ -164,7 +179,7 @@ public class AirshipConfigOptions {
      * and landing pages. Urban Airship https URLs are included by default.
      * <p>
      * See {@link com.urbanairship.js.Whitelist#addEntry(String)} for valid url patterns.
-     * <p/>
+     * <p>
      * Defaults null.
      */
     @Nullable
@@ -181,14 +196,14 @@ public class AirshipConfigOptions {
 
     /**
      * Flag indicating whether the application is in production or development.
-     * <p/>
+     * <p>
      * Defaults to <code>false</code>.
      */
     public final boolean inProduction;
 
     /**
      * Flag indicating whether the application will use analytics.
-     * <p/>
+     * <p>
      * The flag defaults to true.
      */
     public final boolean analyticsEnabled;
@@ -196,14 +211,14 @@ public class AirshipConfigOptions {
     /**
      * Minimum delta in milliseconds between analytics uploads when
      * adding location events while in the background.
-     * <p/>
+     * <p>
      * Defaults to 15 minutes.
      */
     public final long backgroundReportingIntervalMS;
 
     /**
      * Flag indicating whether to clear an existing named user during a re-install.
-     * <p/>
+     * <p>
      * Defaults to <code>false</code>.
      */
     public final boolean clearNamedUser;
@@ -241,21 +256,21 @@ public class AirshipConfigOptions {
     /**
      * Flag indicating whether or not to launch the launcher activity when a push notification or push
      * notification button is opened and the application intent receiver did not launch an activity.
-     * <p/>
+     * <p>
      * Defaults to true.
      */
     public final boolean autoLaunchApplication;
 
     /**
      * Flag indicating whether channel creation delay is enabled or not.
-     * <p/>
+     * <p>
      * The flag defaults to false.
      */
     public final boolean channelCreationDelayEnabled;
 
     /**
      * Flag indicating whether channel capture feature is enabled or not.
-     * <p/>
+     * <p>
      * The flag defaults to true.
      */
     public final boolean channelCaptureEnabled;
@@ -269,6 +284,7 @@ public class AirshipConfigOptions {
     /**
      * The Wallet URL. This will always be set to https://wallet-api.urbanairship.com
      */
+    @NonNull
     public final String walletUrl;
 
     /**
@@ -280,6 +296,7 @@ public class AirshipConfigOptions {
     /**
      * The default notification channel.
      */
+    @Nullable
     public final String notificationChannel;
 
     /**
@@ -288,9 +305,10 @@ public class AirshipConfigOptions {
      * <p>
      * Example: "market://details?id=com.example.android"
      */
+    @Nullable
     public final Uri appStoreUri;
 
-    private AirshipConfigOptions(Builder builder) {
+    private AirshipConfigOptions(@NonNull Builder builder) {
         this.productionAppKey = builder.productionAppKey;
         this.productionAppSecret = builder.productionAppSecret;
         this.developmentAppKey = builder.developmentAppKey;
@@ -328,7 +346,9 @@ public class AirshipConfigOptions {
      *
      * @return The application key
      */
+    @NonNull
     public String getAppKey() {
+        //noinspection ConstantConditions
         return inProduction ? productionAppKey : developmentAppKey;
     }
 
@@ -337,7 +357,9 @@ public class AirshipConfigOptions {
      *
      * @return The application secret
      */
+    @NonNull
     public String getAppSecret() {
+        //noinspection ConstantConditions
         return inProduction ? productionAppSecret : developmentAppSecret;
     }
 
@@ -350,12 +372,12 @@ public class AirshipConfigOptions {
         return inProduction ? productionLogLevel : developmentLogLevel;
     }
 
-
     /**
      * Returns the development or production FCM sender ID.
      *
      * @return The FCM sender ID.
      */
+    @Nullable
     public String getFcmSenderId() {
         String senderId = inProduction ? productionFcmSenderId : developmentFcmSenderId;
 
@@ -380,7 +402,7 @@ public class AirshipConfigOptions {
      * @param transport The transport type.
      * @return <code>true</code> if the transport type is allowed, otherwise <code>false</code>.
      */
-    public boolean isTransportAllowed(String transport) {
+    public boolean isTransportAllowed(@Nullable String transport) {
         if (allowedTransports == null || transport == null) {
             return false;
         }
@@ -465,12 +487,13 @@ public class AirshipConfigOptions {
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
-         * <p/>
+         * <p>
          * See {@link #applyProperties(Context, String)}.
          *
          * @param context The application context
          * @return The config option builder.
          */
+        @NonNull
         public Builder applyDefaultProperties(@NonNull Context context) {
             return applyProperties(context, DEFAULT_PROPERTIES_FILENAME);
         }
@@ -508,6 +531,7 @@ public class AirshipConfigOptions {
          * @param propertiesFile The name of the properties file in the assets directory.
          * @return The config option builder.
          */
+        @NonNull
         public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
                 ConfigParser configParser = PropertiesConfigParser.fromAssets(context, propertiesFile);
@@ -527,6 +551,7 @@ public class AirshipConfigOptions {
          * @param properties The properties
          * @return The config option builder.
          */
+        @NonNull
         public Builder applyProperties(@NonNull Context context, @NonNull Properties properties) {
             try {
                 ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
@@ -562,6 +587,7 @@ public class AirshipConfigOptions {
          * @param xmlResourceId The xml resource ID.
          * @return The config option builder.
          */
+        @NonNull
         public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
             try {
                 XmlConfigParser configParser = new XmlConfigParser(context, xmlResourceId);
@@ -582,7 +608,11 @@ public class AirshipConfigOptions {
         private void applyConfigParser(Context context, ConfigParser configParser) {
             for (int i = 0; i < configParser.getCount(); i++) {
                 try {
-                    switch (configParser.getName(i)) {
+                    String name = configParser.getName(i);
+                    if (name == null) {
+                        continue;
+                    }
+                    switch (name) {
                         case FIELD_PRODUCTION_APP_KEY:
                             this.setProductionAppKey(configParser.getString(i));
                             break;
@@ -600,15 +630,15 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_HOST_URL:
-                            this.setHostURL(configParser.getString(i));
+                            this.setHostURL(configParser.getString(i, hostURL));
                             break;
 
                         case FIELD_ANALYTICS_SERVER:
-                            this.setAnalyticsServer(configParser.getString(i));
+                            this.setAnalyticsServer(configParser.getString(i, analyticsServer));
                             break;
 
                         case FIELD_LANDING_PAGE_CONTENT_URL:
-                            this.setLandingPageContentURL(configParser.getString(i));
+                            this.setLandingPageContentURL(configParser.getString(i, landingPageContentURL));
                             break;
 
                         case FIELD_REMOTE_DATA_URL:
@@ -672,7 +702,7 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_WALLET_URL:
-                            this.setWalletUrl(configParser.getString(i));
+                            this.setWalletUrl(configParser.getString(i, walletUrl));
                             break;
 
                         case FIELD_NOTIFICATION_CHANNEL:
@@ -718,25 +748,27 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the default notification channel.
-         * <p/>
+         * <p>
          * See {@link com.urbanairship.push.notifications.NotificationFactory#setNotificationChannel(String)}.
          *
          * @param channel The notification channel.
          * @return The config options builder.
          */
-        public Builder setNotificationChannel(String channel) {
+        @NonNull
+        public Builder setNotificationChannel(@Nullable String channel) {
             this.notificationChannel = channel;
             return this;
         }
 
         /**
          * Sets the default notification Icon.
-         * <p/>
+         * <p>
          * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
          *
          * @param notificationIcon The notification icon.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setNotificationIcon(@DrawableRes int notificationIcon) {
             this.notificationIcon = notificationIcon;
             return this;
@@ -744,12 +776,13 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the default notification accent color.
-         * <p/>
+         * <p>
          * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setColor(int)}.
          *
          * @param notificationAccentColor The notification accent color.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setNotificationAccentColor(@ColorInt int notificationAccentColor) {
             this.notificationAccentColor = notificationAccentColor;
             return this;
@@ -761,7 +794,8 @@ public class AirshipConfigOptions {
          * @param productionAppKey The application's production app key.
          * @return The config options builder.
          */
-        public Builder setProductionAppKey(String productionAppKey) {
+        @NonNull
+        public Builder setProductionAppKey(@Nullable String productionAppKey) {
             this.productionAppKey = productionAppKey;
             return this;
         }
@@ -772,7 +806,8 @@ public class AirshipConfigOptions {
          * @param productionAppSecret The application's production app secret.
          * @return The config options builder.
          */
-        public Builder setProductionAppSecret(String productionAppSecret) {
+        @NonNull
+        public Builder setProductionAppSecret(@Nullable String productionAppSecret) {
             this.productionAppSecret = productionAppSecret;
             return this;
         }
@@ -783,7 +818,8 @@ public class AirshipConfigOptions {
          * @param developmentAppKey The application's development app key.
          * @return The config options builder.
          */
-        public Builder setDevelopmentAppKey(String developmentAppKey) {
+        @NonNull
+        public Builder setDevelopmentAppKey(@Nullable String developmentAppKey) {
             this.developmentAppKey = developmentAppKey;
             return this;
         }
@@ -794,7 +830,8 @@ public class AirshipConfigOptions {
          * @param developmentAppSecret The application's development app secret.
          * @return The config options builder.
          */
-        public Builder setDevelopmentAppSecret(String developmentAppSecret) {
+        @NonNull
+        public Builder setDevelopmentAppSecret(@Nullable String developmentAppSecret) {
             this.developmentAppSecret = developmentAppSecret;
             return this;
         }
@@ -805,7 +842,8 @@ public class AirshipConfigOptions {
          * @param hostURL The Urban Airship URL.
          * @return The config options builder.
          */
-        public Builder setHostURL(String hostURL) {
+        @NonNull
+        public Builder setHostURL(@NonNull String hostURL) {
             this.hostURL = hostURL;
             return this;
         }
@@ -816,7 +854,8 @@ public class AirshipConfigOptions {
          * @param analyticsServer The analytics server URL.
          * @return The config options builder.
          */
-        public Builder setAnalyticsServer(String analyticsServer) {
+        @NonNull
+        public Builder setAnalyticsServer(@NonNull String analyticsServer) {
             this.analyticsServer = analyticsServer;
             return this;
         }
@@ -827,7 +866,8 @@ public class AirshipConfigOptions {
          * @param landingPageContentURL The landing page content URL.
          * @return The config options builder.
          */
-        public Builder setLandingPageContentURL(String landingPageContentURL) {
+        @NonNull
+        public Builder setLandingPageContentURL(@NonNull String landingPageContentURL) {
             this.landingPageContentURL = landingPageContentURL;
             return this;
         }
@@ -838,7 +878,8 @@ public class AirshipConfigOptions {
          * @param remoteDataURL The remote data URL.
          * @return The config options builder.
          */
-        public Builder setRemoteDataURL(String remoteDataURL) {
+        @NonNull
+        public Builder setRemoteDataURL(@Nullable String remoteDataURL) {
             this.remoteDataURL = remoteDataURL;
             return this;
         }
@@ -850,8 +891,9 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          * @deprecated Set the FCM sender ID instead.
          */
+        @NonNull
         @Deprecated
-        public Builder setGcmSender(String gcmSender) {
+        public Builder setGcmSender(@Nullable String gcmSender) {
             this.gcmSender = gcmSender;
             return this;
         }
@@ -865,7 +907,8 @@ public class AirshipConfigOptions {
          * @param senderId The production FCM sender ID.
          * @return The config options builder.
          */
-        public Builder setProductionFcmSenderId(String senderId) {
+        @NonNull
+        public Builder setProductionFcmSenderId(@Nullable String senderId) {
             this.productionFcmSenderId = senderId;
             return this;
         }
@@ -879,7 +922,8 @@ public class AirshipConfigOptions {
          * @param senderId The development FCM sender ID.
          * @return The config options builder.
          */
-        public Builder setDevelopmentFcmSenderId(String senderId) {
+        @NonNull
+        public Builder setDevelopmentFcmSenderId(@Nullable String senderId) {
             this.developmentFcmSenderId = senderId;
             return this;
         }
@@ -893,7 +937,8 @@ public class AirshipConfigOptions {
          * @param senderId The FCM sender ID.
          * @return The config options builder.
          */
-        public Builder setFcmSenderId(String senderId) {
+        @NonNull
+        public Builder setFcmSenderId(@Nullable String senderId) {
             this.fcmSenderId = senderId;
             return this;
         }
@@ -904,7 +949,8 @@ public class AirshipConfigOptions {
          * @param allowedTransports The transport types allowed for Push.
          * @return The config options builder.
          */
-        public Builder setAllowedTransports(String[] allowedTransports) {
+        @NonNull
+        public Builder setAllowedTransports(@Nullable String[] allowedTransports) {
             this.allowedTransports = allowedTransports;
             return this;
         }
@@ -917,7 +963,8 @@ public class AirshipConfigOptions {
          * @param whitelist The whitelist.
          * @return The config options builder.
          */
-        public Builder setWhitelist(String[] whitelist) {
+        @NonNull
+        public Builder setWhitelist(@Nullable String[] whitelist) {
             this.whitelist = whitelist;
             return this;
         }
@@ -928,6 +975,7 @@ public class AirshipConfigOptions {
          * @param inProduction The flag indicating whether the application is in production or development.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setInProduction(boolean inProduction) {
             this.inProduction = inProduction;
             return this;
@@ -939,7 +987,8 @@ public class AirshipConfigOptions {
          * @param context The application context.
          * @return The config options builder.
          */
-        public Builder detectProvisioningMode(Context context) {
+        @NonNull
+        public Builder detectProvisioningMode(@NonNull Context context) {
             try {
                 Class<?> clazz = Class.forName(context.getPackageName() + ".BuildConfig");
                 Field field = clazz.getField("DEBUG");
@@ -958,6 +1007,7 @@ public class AirshipConfigOptions {
          * @param analyticsEnabled The flag indicating whether the application will use analytics.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setAnalyticsEnabled(boolean analyticsEnabled) {
             this.analyticsEnabled = analyticsEnabled;
             return this;
@@ -969,6 +1019,7 @@ public class AirshipConfigOptions {
          * @param backgroundReportingIntervalMS The background reporting interval.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setBackgroundReportingIntervalMS(long backgroundReportingIntervalMS) {
             this.backgroundReportingIntervalMS = backgroundReportingIntervalMS;
             return this;
@@ -980,6 +1031,7 @@ public class AirshipConfigOptions {
          * @param clearNamedUser The flag whether to clear an existing named user during a re-install.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setClearNamedUser(boolean clearNamedUser) {
             this.clearNamedUser = clearNamedUser;
             return this;
@@ -991,6 +1043,7 @@ public class AirshipConfigOptions {
          * @param developmentLogLevel The logger level.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setDevelopmentLogLevel(int developmentLogLevel) {
             this.developmentLogLevel = developmentLogLevel;
             return this;
@@ -1002,6 +1055,7 @@ public class AirshipConfigOptions {
          * @param productionLogLevel The logger level.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setProductionLogLevel(int productionLogLevel) {
             this.productionLogLevel = productionLogLevel;
             return this;
@@ -1014,6 +1068,7 @@ public class AirshipConfigOptions {
          * @param autoLaunchApplication The auto launch flag.
          * @return The config options builder.
          */
+        @NonNull
         public Builder setAutoLaunchApplication(boolean autoLaunchApplication) {
             this.autoLaunchApplication = autoLaunchApplication;
             return this;
@@ -1025,6 +1080,7 @@ public class AirshipConfigOptions {
          * @param channelCreationDelayEnabled The flag indicating whether channel creation delay is enabled or not.
          * @return The config option builder.
          */
+        @NonNull
         public Builder setChannelCreationDelayEnabled(boolean channelCreationDelayEnabled) {
             this.channelCreationDelayEnabled = channelCreationDelayEnabled;
             return this;
@@ -1036,6 +1092,7 @@ public class AirshipConfigOptions {
          * @param channelCaptureEnabled The flag indicating whether channel capture feature is enabled or not.
          * @return The config option builder.
          */
+        @NonNull
         public Builder setChannelCaptureEnabled(boolean channelCaptureEnabled) {
             this.channelCaptureEnabled = channelCaptureEnabled;
             return this;
@@ -1047,7 +1104,8 @@ public class AirshipConfigOptions {
          * @param walletUrl The Wallet URL.
          * @return The config options builder.
          */
-        public Builder setWalletUrl(String walletUrl) {
+        @NonNull
+        public Builder setWalletUrl(@NonNull String walletUrl) {
             this.walletUrl = walletUrl;
             return this;
         }
@@ -1059,6 +1117,7 @@ public class AirshipConfigOptions {
          *
          * @return The config options builder.
          */
+        @NonNull
         public Builder setEnableUrlWhitelisting(boolean enableUrlWhitelisting) {
             this.enableUrlWhitelisting = enableUrlWhitelisting;
             return this;
@@ -1071,7 +1130,8 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          * @hide
          */
-        public Builder setCustomPushProvider(PushProvider customPushProvider) {
+        @NonNull
+        public Builder setCustomPushProvider(@Nullable PushProvider customPushProvider) {
             this.customPushProvider = customPushProvider;
             return this;
         }
@@ -1087,14 +1147,15 @@ public class AirshipConfigOptions {
          * @param appStoreUri The app store URI.
          * @return The config options builder.
          */
-        public Builder setAppStoreUri(Uri appStoreUri) {
+        @NonNull
+        public Builder setAppStoreUri(@Nullable Uri appStoreUri) {
             this.appStoreUri = appStoreUri;
             return this;
         }
 
         /**
          * Builds the config options. Will fail if any of the following preconditions are not met.
-         * <p/>
+         * <p>
          * <pre>
          * 1. If inProduction is <code>false</code>, development app key and secret must be set.
          * 2. If inProduction is <code>true</code>, production app key and secret must be set.
@@ -1104,6 +1165,7 @@ public class AirshipConfigOptions {
          *
          * @return The built config options.
          */
+        @NonNull
         public AirshipConfigOptions build() {
             if (inProduction == null) {
                 inProduction = false;

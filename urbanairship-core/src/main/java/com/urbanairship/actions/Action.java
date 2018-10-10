@@ -12,30 +12,30 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * The base action class that describes an operation to perform.
- * <p/>
+ * <p>
  * An action is an abstraction over a unary function, which takes
  * {@link com.urbanairship.actions.ActionArguments} and performs a defined task,
  * producing an optional {@link com.urbanairship.actions.ActionResult}. Actions
  * may restrict or vary the work they perform depending on the arguments they
  * receive, which may include type introspection and runtime context.
- * <p/>
+ * <p>
  * In the larger view, the Actions framework provides a convenient way to
  * automatically perform tasks by name in response to push notifications,
  * Rich App Page interactions and JavaScript.
- * <p/>
+ * <p>
  * The UA library comes with pre-made actions for common tasks such as setting
  * tags and opening URLs out of the box, but this class can also be extended to
  * enable custom app behaviors and engagement experiences.
- * <p/>
+ * <p>
  * While actions can be run manually, typically they are associated with names
  * in the {@link com.urbanairship.actions.ActionRegistry}, and run
  * on their own threads with the {@link com.urbanairship.actions.ActionRunRequest}.
- * <p/>
+ * <p>
  * Actions that are either long lived or are unable to be interrupted by the device
  * going to sleep should request a wake lock before performing. This is especially
  * important for actions that are performing in SITUATION_PUSH_RECEIVED, when a
  * push is delivered when the device is not active.
- * <p/>
+ * <p>
  * The value returned by {@link #shouldRunOnMainThread()} determines which thread should
  * run the action if executed asynchronously. If an action involves a UI interaction, this
  * method should be overridden to return true so that the action definitely runs before the
@@ -43,7 +43,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public abstract class Action {
 
-    @IntDef(value={
+    @IntDef(value = {
             SITUATION_MANUAL_INVOCATION,
             SITUATION_PUSH_RECEIVED,
             SITUATION_PUSH_OPENED,
@@ -97,6 +97,7 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @return The result of the action.
      */
+    @NonNull
     final ActionResult run(@NonNull ActionArguments arguments) {
         try {
             if (!acceptsArguments(arguments)) {
@@ -138,9 +139,7 @@ public abstract class Action {
      *
      * @param arguments The action arguments.
      */
-    public void onStart(@NonNull ActionArguments arguments) {
-
-    }
+    public void onStart(@NonNull ActionArguments arguments) {}
 
     /**
      * Performs the action.
@@ -157,9 +156,7 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
-
-    }
+    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {}
 
     /**
      * Determines which thread runs the action.

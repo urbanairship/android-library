@@ -2,8 +2,11 @@
 
 package com.urbanairship.util;
 
+import android.support.annotation.NonNull;
+
 public class Clock {
 
+    @NonNull
     public static final Clock DEFAULT_CLOCK = new Clock();
 
     public long currentTimeMillis() {

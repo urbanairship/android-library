@@ -2,6 +2,8 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Predicate;
@@ -16,13 +18,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Observable implementation for creating push-based sequences.
  *
  * @param <T> The type of the value under observation.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Observable<T> {
 
-    private Function<Observer<T>, Subscription> onSubscribe;
+    @Nullable
+    protected final Function<Observer<T>, Subscription> onSubscribe;
+
+    protected Observable() {
+        this(null);
+    }
+
+    protected Observable(@Nullable Function<Observer<T>, Subscription> onSubscribe) {
+        this.onSubscribe = onSubscribe;
+    }
 
     /**
      * Factory method for creating Observables.
@@ -31,10 +41,9 @@ public class Observable<T> {
      * @param <T> The type of the value.
      * @return An Observable of the underlying type.
      */
-    public static <T> Observable<T> create(Function<Observer<T>, Subscription> func) {
-        Observable<T> observable = new Observable<>();
-        observable.onSubscribe = func;
-        return observable;
+    @NonNull
+    public static <T> Observable<T> create(@NonNull Function<Observer<T>, Subscription> func) {
+        return new Observable<>(func);
     }
 
     /**
@@ -44,10 +53,12 @@ public class Observable<T> {
      * @param <T> The type of the value under observation.
      * @return An Observable of the underlying type.
      */
-    public static <T> Observable<T> just(final T value) {
+    @NonNull
+    public static <T> Observable<T> just(@NonNull final T value) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 observer.onNext(value);
                 observer.onCompleted();
                 return Subscription.empty();
@@ -61,10 +72,12 @@ public class Observable<T> {
      * @param <T> The type of the value under observation.
      * @return An Observable of the underlying type.
      */
+    @NonNull
     public static <T> Observable<T> empty() {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 observer.onCompleted();
                 return Subscription.empty();
             }
@@ -77,10 +90,12 @@ public class Observable<T> {
      * @param <T> The type of the value under observation.
      * @return An Observable of the underlying type.
      */
+    @NonNull
     public static <T> Observable<T> never() {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(Observer<T> observer) {
+            public Subscription apply(@NonNull Observer<T> observer) {
                 return Subscription.empty();
             }
         });
@@ -93,10 +108,12 @@ public class Observable<T> {
      * @param <T> The type of the value under observation.
      * @return An Observable of the underlying type.
      */
-    public static <T> Observable<T> error(final Exception e) {
+    @NonNull
+    public static <T> Observable<T> error(@NonNull final Exception e) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 observer.onError(e);
                 return Subscription.empty();
             }
@@ -110,10 +127,12 @@ public class Observable<T> {
      * @param <T> The type of the value under observation.
      * @return An Observable of the underlying type.
      */
-    public static <T> Observable<T> from(final Collection<T> collection) {
+    @NonNull
+    public static <T> Observable<T> from(@NonNull final Collection<T> collection) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 for (final T value : collection) {
                     observer.onNext(value);
                 }
@@ -131,8 +150,13 @@ public class Observable<T> {
      * @param observer The Observer.
      * @return A Cancellable that unsubscribes the Observer when canceled.
      */
-    public Subscription subscribe(Observer<T> observer) {
-        return this.onSubscribe.apply(observer);
+    @NonNull
+    public Subscription subscribe(@NonNull Observer<T> observer) {
+        if (onSubscribe != null) {
+            return this.onSubscribe.apply(observer);
+        } else {
+            return Subscription.empty();
+        }
     }
 
     /**
@@ -142,10 +166,12 @@ public class Observable<T> {
      * @param <R> The type under observation of the result observable
      * @return A mapped Observable.
      */
-    public <R> Observable<R> flatMap(final Function<T, Observable<R>> func) {
+    @NonNull
+    public <R> Observable<R> flatMap(@NonNull final Function<T, Observable<R>> func) {
         return bind(new Function<T, Observable<R>>() {
+            @NonNull
             @Override
-            public Observable<R> apply(T value) {
+            public Observable<R> apply(@NonNull T value) {
                 return func.apply(value);
             }
         });
@@ -158,10 +184,12 @@ public class Observable<T> {
      * @param <R> The type under observation of the result Observable.
      * @return A mapped Observable.
      */
-    public <R> Observable<R> map(final Function<T, R> func) {
+    @NonNull
+    public <R> Observable<R> map(@NonNull final Function<T, R> func) {
         return flatMap(new Function<T, Observable<R>>() {
+            @NonNull
             @Override
-            public Observable<R> apply(T value) {
+            public Observable<R> apply(@NonNull T value) {
                 return just(func.apply(value));
             }
         });
@@ -173,10 +201,12 @@ public class Observable<T> {
      * @param pred The predicate.
      * @return A filtered Observable.
      */
-    public Observable<T> filter(final Predicate<T> pred) {
+    @NonNull
+    public Observable<T> filter(@NonNull final Predicate<T> pred) {
         return flatMap(new Function<T, Observable<T>>() {
+            @NonNull
             @Override
-            public Observable<T> apply(T value) {
+            public Observable<T> apply(@NonNull T value) {
                 if (pred.apply(value)) {
                     return just(value);
                 } else {
@@ -191,11 +221,13 @@ public class Observable<T> {
      *
      * @return A transformed Observable.
      */
+    @NonNull
     public Observable<T> distinctUntilChanged() {
         final Holder<T> lastValue = new Holder<>();
         return bind(new Function<T, Observable<T>>() {
+            @NonNull
             @Override
-            public Observable<T> apply(T value) {
+            public Observable<T> apply(@NonNull T value) {
                 if (lastValue.getValue() != null && value.equals(lastValue.getValue())) {
                     return empty();
                 }
@@ -213,14 +245,16 @@ public class Observable<T> {
      * @param defaultValue The default value.
      * @return A transformed Observable.
      */
-    public Observable<T> defaultIfEmpty(final T defaultValue) {
+    @NonNull
+    public Observable<T> defaultIfEmpty(@NonNull final T defaultValue) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 final AtomicBoolean empty = new AtomicBoolean(true);
                 return subscribe(new Observer<T>() {
                     @Override
-                    public void onNext(T value) {
+                    public void onNext(@NonNull T value) {
                         observer.onNext(value);
                         empty.set(false);
                     }
@@ -234,7 +268,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         observer.onCompleted();
                     }
                 });
@@ -248,15 +282,17 @@ public class Observable<T> {
      * @param scheduler The scheduler.
      * @return A transformed Observable whose callbacks are delivered on the supplied scheduler.
      */
-    public Observable<T> observeOn(final Scheduler scheduler) {
+    @NonNull
+    public Observable<T> observeOn(@NonNull final Scheduler scheduler) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 final SerialSubscription subscription = new SerialSubscription();
 
                 subscription.setSubscription(subscribe(new Observer<T>() {
                     @Override
-                    public void onNext(final T value) {
+                    public void onNext(@NonNull final T value) {
                         scheduler.schedule(new Runnable() {
                             @Override
                             public void run() {
@@ -280,7 +316,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(final Exception e) {
+                    public void onError(@NonNull final Exception e) {
                         scheduler.schedule(new Runnable() {
                             @Override
                             public void run() {
@@ -303,10 +339,12 @@ public class Observable<T> {
      * @param scheduler The scheduler.
      * @return A transformed Observable that performs its subscription work on the supplied scheduler.
      */
-    public Observable<T>subscribeOn(final Scheduler scheduler) {
+    @NonNull
+    public Observable<T> subscribeOn(@NonNull final Scheduler scheduler) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
                 compoundSubscription.add(scheduler.schedule(new Runnable() {
@@ -329,16 +367,18 @@ public class Observable<T> {
      * @param <T> The type under observation
      * @return A merged Observable.
      */
-    public static <T> Observable<T> merge(final Observable<T> lh, final Observable<T> rh) {
+    @NonNull
+    public static <T> Observable<T> merge(@NonNull final Observable<T> lh, @NonNull final Observable<T> rh) {
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 final AtomicInteger completed = new AtomicInteger(0);
                 final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
                 final Observer<T> innerObserver = new Observer<T>() {
                     @Override
-                    public void onNext(T value) {
+                    public void onNext(@NonNull T value) {
                         synchronized (observer) {
                             observer.onNext(value);
                         }
@@ -354,7 +394,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         synchronized (observer) {
                             compoundSubscription.cancel();
                             observer.onError(e);
@@ -377,7 +417,8 @@ public class Observable<T> {
      * @param <T> The type under observation.
      * @return A merged Observable
      */
-    public static <T> Observable<T> merge(Collection<Observable<T>> observables) {
+    @NonNull
+    public static <T> Observable<T> merge(@NonNull Collection<Observable<T>> observables) {
         Observable<T> next = empty();
         for (Observable<T> observable : observables) {
             next = merge(next, observable);
@@ -394,15 +435,17 @@ public class Observable<T> {
      * @param <T> The type under observation.
      * @return The concatenated observable.
      */
-    public static <T> Observable<T> concat(final Observable<T> lh, final Observable<T> rh) {
+    @NonNull
+    public static <T> Observable<T> concat(@NonNull final Observable<T> lh, @NonNull final Observable<T> rh) {
         final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
         return create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<T> observer) {
+            public Subscription apply(@NonNull final Observer<T> observer) {
                 compoundSubscription.add(lh.subscribe(new Observer<T>() {
                     @Override
-                    public void onNext(T value) {
+                    public void onNext(@NonNull T value) {
                         observer.onNext(value);
                     }
 
@@ -412,7 +455,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         observer.onError(e);
                     }
                 }));
@@ -435,10 +478,12 @@ public class Observable<T> {
      * @param <T> The type under observation.
      * @return A deferred Observable.
      */
-    public static <T> Observable<T> defer(final Supplier<Observable<T>> func) {
+    @NonNull
+    public static <T> Observable<T> defer(@NonNull final Supplier<Observable<T>> func) {
         return Observable.create(new Function<Observer<T>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(Observer<T> observer) {
+            public Subscription apply(@NonNull Observer<T> observer) {
                 return func.apply().subscribe(observer);
             }
         });
@@ -455,10 +500,12 @@ public class Observable<T> {
      * @param <R> The composite type.
      * @return A transformed Observable.
      */
-    public static <T, R> Observable<R> zip(final Observable<T> lh, final Observable<T> rh, final BiFunction<T, T, R> func) {
+    @NonNull
+    public static <T, R> Observable<R> zip(@NonNull final Observable<T> lh, @NonNull final Observable<T> rh, @NonNull final BiFunction<T, T, R> func) {
         return create(new Function<Observer<R>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<R> observer) {
+            public Subscription apply(@NonNull final Observer<R> observer) {
                 final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
                 final ArrayList<T> lhValues = new ArrayList<>();
@@ -505,7 +552,7 @@ public class Observable<T> {
 
                 compoundSubscription.add(lh.subscribe(new Subscriber<T>() {
                     @Override
-                    public void onNext(T value) {
+                    public void onNext(@NonNull T value) {
                         synchronized (observer) {
                             lhValues.add(value);
                             emitNextIfNeeded.run();
@@ -521,7 +568,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         synchronized (observer) {
                             compoundSubscription.cancel();
                             observer.onError(e);
@@ -531,7 +578,7 @@ public class Observable<T> {
 
                 compoundSubscription.add(rh.subscribe(new Subscriber<T>() {
                     @Override
-                    public void onNext(T value) {
+                    public void onNext(@NonNull T value) {
                         synchronized (observer) {
                             rhValues.add(value);
                             emitNextIfNeeded.run();
@@ -547,7 +594,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         synchronized (observer) {
                             compoundSubscription.cancel();
                             observer.onError(e);
@@ -567,13 +614,15 @@ public class Observable<T> {
      * @param <R> The return type
      * @return An observable of the return type
      */
-    private <R> Observable<R> bind(final Function<T, Observable<R>> binding) {
+    @NonNull
+    private <R> Observable<R> bind(@NonNull final Function<T, Observable<R>> binding) {
         final WeakReference<Observable<T>> weakThis = new WeakReference<>(this);
         final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
         return Observable.create(new Function<Observer<R>, Subscription>() {
+            @NonNull
             @Override
-            public Subscription apply(final Observer<R> observer) {
+            public Subscription apply(@NonNull final Observer<R> observer) {
                 final ObservableTracker<R> tracker = new ObservableTracker<>(observer, compoundSubscription);
 
                 Observable<T> originalObservable = weakThis.get();
@@ -586,11 +635,11 @@ public class Observable<T> {
                 final SerialSubscription thisSubscription = new SerialSubscription();
                 compoundSubscription.add(thisSubscription);
 
-                thisSubscription.setSubscription(originalObservable.subscribe(new Subscriber<T>(){
+                thisSubscription.setSubscription(originalObservable.subscribe(new Subscriber<T>() {
                     @Override
-                    public void onNext(T value) {
-                        final Observable<R> bound = binding.apply(value);
-                        if (bound != null & !compoundSubscription.isCancelled()) {
+                    public void onNext(@NonNull T value) {
+                        if (!compoundSubscription.isCancelled()) {
+                            Observable<R> bound = binding.apply(value);
                             tracker.addObservable(bound);
                         } else {
                             // Early termination
@@ -605,7 +654,7 @@ public class Observable<T> {
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(@NonNull Exception e) {
                         compoundSubscription.cancel();
                         observer.onError(e);
                     }
@@ -617,7 +666,8 @@ public class Observable<T> {
     }
 
     /**
-     *  Generic value holder class.
+     * Generic value holder class.
+     *
      * @param <T> The type contained.
      */
     private static class Holder<T> {
@@ -630,6 +680,7 @@ public class Observable<T> {
         }
 
         T getValue() { return value; }
+
         void setValue(T v) { value = v; }
     }
 
@@ -648,13 +699,13 @@ public class Observable<T> {
             this.compoundSubscription = compoundSubscription;
         }
 
-        void addObservable(final Observable<T> observable) {
+        void addObservable(@NonNull final Observable<T> observable) {
             observableCount.getAndIncrement();
 
             final SerialSubscription thisSubscription = new SerialSubscription();
             thisSubscription.setSubscription(observable.subscribe(new Observer<T>() {
                 @Override
-                public void onNext(T value) {
+                public void onNext(@NonNull T value) {
                     observer.onNext(value);
                 }
 
@@ -664,14 +715,14 @@ public class Observable<T> {
                 }
 
                 @Override
-                public void onError(Exception e) {
+                public void onError(@NonNull Exception e) {
                     compoundSubscription.cancel();
                     observer.onError(e);
                 }
             }));
         }
 
-        void completeObservable(Subscription subscription) {
+        void completeObservable(@NonNull Subscription subscription) {
             if (observableCount.decrementAndGet() == 0) {
                 observer.onCompleted();
                 compoundSubscription.cancel();

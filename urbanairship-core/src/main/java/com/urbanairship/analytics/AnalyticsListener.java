@@ -1,5 +1,7 @@
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.location.RegionEvent;
 
 /**
@@ -12,19 +14,19 @@ public interface AnalyticsListener {
      *
      * @param screenName The screen name.
      */
-    void onScreenTracked(String screenName);
+    void onScreenTracked(@NonNull String screenName);
 
     /**
      * Called when a new custom event is tracked.
      *
      * @param event The custom event.
      */
-    void onCustomEventAdded(CustomEvent event);
+    void onCustomEventAdded(@NonNull CustomEvent event);
 
     /**
      * Called when a new region event is generated.
      *
      * @param event The region event.
      */
-    void onRegionEventAdded(RegionEvent event);
+    void onRegionEventAdded(@NonNull RegionEvent event);
 }

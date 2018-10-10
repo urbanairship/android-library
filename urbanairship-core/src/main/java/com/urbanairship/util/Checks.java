@@ -1,5 +1,7 @@
 package com.urbanairship.util;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -16,7 +18,7 @@ public class Checks {
      * @param value The object to check.
      * @param message The exception message if the value is null.
      */
-    public static void checkNotNull(Object value, String message) {
+    public static void checkNotNull(@Nullable Object value, @NonNull String message) {
         if (value == null) {
             throw new IllegalArgumentException(message);
         }
@@ -28,7 +30,7 @@ public class Checks {
      * @param expression The expression to test.
      * @param message The exception message if the expression is false.
      */
-    public static void checkArgument(boolean expression, String message) {
+    public static void checkArgument(boolean expression, @NonNull String message) {
         if (!expression) {
             throw new IllegalArgumentException(message);
         }

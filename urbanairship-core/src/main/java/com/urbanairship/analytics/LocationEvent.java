@@ -19,7 +19,7 @@ import java.util.Locale;
  */
 public class LocationEvent extends Event {
 
-    @IntDef(value={
+    @IntDef(value = {
             UPDATE_TYPE_CONTINUOUS,
             UPDATE_TYPE_SINGLE
     })
@@ -37,18 +37,35 @@ public class LocationEvent extends Event {
      */
     public final static int UPDATE_TYPE_SINGLE = 1;
 
+    @NonNull
     static final String TYPE = "location";
 
+    @NonNull
     static final String LATITUDE_KEY = "lat";
-    static final String LONGITUDE_KEY = "long";
-    static final String REQUESTED_ACCURACY_KEY = "requested_accuracy";
-    static final String UPDATE_TYPE_KEY = "update_type";
-    static final String PROVIDER_KEY = "provider";
-    static final String H_ACCURACY_KEY = "h_accuracy";
-    static final String V_ACCURACY_KEY = "v_accuracy";
-    static final String FOREGROUND_KEY = "foreground";
-    static final String UPDATE_DISTANCE_KEY = "update_dist";
 
+    @NonNull
+    static final String LONGITUDE_KEY = "long";
+
+    @NonNull
+    static final String REQUESTED_ACCURACY_KEY = "requested_accuracy";
+
+    @NonNull
+    static final String UPDATE_TYPE_KEY = "update_type";
+
+    @NonNull
+    static final String PROVIDER_KEY = "provider";
+
+    @NonNull
+    static final String H_ACCURACY_KEY = "h_accuracy";
+
+    @NonNull
+    static final String V_ACCURACY_KEY = "v_accuracy";
+
+    @NonNull
+    static final String FOREGROUND_KEY = "foreground";
+
+    @NonNull
+    static final String UPDATE_DISTANCE_KEY = "update_dist";
 
     private final String provider;
     private final String latitude;
@@ -57,7 +74,8 @@ public class LocationEvent extends Event {
     private final String requestedAccuracy;
     private final String updateDistance;
     private final String foreground;
-    private final @UpdateType int updateType;
+    private final @UpdateType
+    int updateType;
 
     /**
      * Constructor for LocationEvent.
@@ -87,24 +105,26 @@ public class LocationEvent extends Event {
         updateType = type;
     }
 
+    @NonNull
     @Override
     public String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
         return JsonMap.newBuilder()
-                .put(LATITUDE_KEY, latitude)
-                .put(LONGITUDE_KEY, longitude)
-                .put(REQUESTED_ACCURACY_KEY, requestedAccuracy)
-                .put(UPDATE_TYPE_KEY, updateType == UPDATE_TYPE_CONTINUOUS ? "CONTINUOUS" : "SINGLE")
-                .put(PROVIDER_KEY, provider)
-                .put(H_ACCURACY_KEY, accuracy)
-                .put(V_ACCURACY_KEY, "NONE")
-                .put(FOREGROUND_KEY, foreground)
-                .put(UPDATE_DISTANCE_KEY, updateDistance)
-                .build();
+                      .put(LATITUDE_KEY, latitude)
+                      .put(LONGITUDE_KEY, longitude)
+                      .put(REQUESTED_ACCURACY_KEY, requestedAccuracy)
+                      .put(UPDATE_TYPE_KEY, updateType == UPDATE_TYPE_CONTINUOUS ? "CONTINUOUS" : "SINGLE")
+                      .put(PROVIDER_KEY, provider)
+                      .put(H_ACCURACY_KEY, accuracy)
+                      .put(V_ACCURACY_KEY, "NONE")
+                      .put(FOREGROUND_KEY, foreground)
+                      .put(UPDATE_DISTANCE_KEY, updateDistance)
+                      .build();
     }
 
     @Override

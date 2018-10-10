@@ -5,6 +5,7 @@ package com.urbanairship;
 import android.app.Application;
 import android.content.Intent;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +66,7 @@ public class UAirshipTest extends BaseTestCase {
 
         TestCallback takeOffCallback = new TestCallback() {
             @Override
-            public void onAirshipReady(UAirship airship) {
+            public void onAirshipReady(@NonNull UAirship airship) {
                 super.onAirshipReady(airship);
                 assertFalse("Take off callback should be called first", testCallback.onReadyCalled);
             }
@@ -117,7 +118,7 @@ public class UAirshipTest extends BaseTestCase {
         volatile boolean onReadyCalled = false;
 
         @Override
-        public void onAirshipReady(UAirship airship) {
+        public void onAirshipReady(@NonNull UAirship airship) {
             onReadyCalled = true;
         }
     }

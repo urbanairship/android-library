@@ -3,6 +3,7 @@
 package com.urbanairship.messagecenter;
 
 
+import android.support.annotation.NonNull;
 import android.view.View;
 
 import com.urbanairship.BaseTestCase;
@@ -26,7 +27,7 @@ public class MessageViewAdapterTest extends BaseTestCase {
     public void setup() {
         messageViewAdapter = new MessageViewAdapter(TestApplication.getApplication(), 0) {
             @Override
-            protected void bindView(View view, RichPushMessage message, int position) {
+            protected void bindView(@NonNull View view, @NonNull RichPushMessage message, int position) {
 
             }
         };

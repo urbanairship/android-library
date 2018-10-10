@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import java.util.ArrayList;
@@ -15,16 +16,11 @@ import java.util.ArrayList;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Subject<T> extends Observable<T> implements Observer<T> {
 
-    private final ArrayList<Observer<T>> observers;
+    private final ArrayList<Observer<T>> observers = new ArrayList<>();
     private boolean completed = false;
     private Exception error;
 
-    /**
-     * Subject constructor.
-     */
-    Subject() {
-        this.observers = new ArrayList<>();
-    }
+    protected Subject() {}
 
     /**
      * Creates a new Subject.
@@ -32,6 +28,7 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
      * @param <T> The type under observation
      * @return A Subject of the underlying type.
      */
+    @NonNull
     public static <T> Subject<T> create() {
         return new Subject<>();
     }
@@ -65,7 +62,7 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
 
     @Override
     synchronized
-    public void onNext(T value) {
+    public void onNext(@NonNull T value) {
         for (Observer<T> observer : new ArrayList<>(observers)) {
             observer.onNext(value);
         }
@@ -82,16 +79,17 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
 
     @Override
     synchronized
-    public void onError(Exception e) {
+    public void onError(@NonNull Exception e) {
         error = e;
         for (Observer<T> observer : new ArrayList<>(observers)) {
             observer.onError(e);
         }
     }
 
+    @NonNull
     @Override
     synchronized
-    public Subscription subscribe(final Observer<T> observer) {
+    public Subscription subscribe(@NonNull final Observer<T> observer) {
         if (!isCompleted() && !hasError()) {
             observers.add(observer);
         }

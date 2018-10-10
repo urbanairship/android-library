@@ -45,7 +45,7 @@ public class ApplicationMetrics extends AirshipComponent {
     /**
      * Gets the time of the last open in milliseconds since
      * January 1, 1970 00:00:00.0 UTC.
-     * <p/>
+     * <p>
      * An application "open" is determined in {@link com.urbanairship.analytics.Analytics}
      * by tracking activity start and stops.  This ensures that background services or
      * broadcast receivers do not affect this number.  This number could be inaccurate

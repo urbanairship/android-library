@@ -67,19 +67,19 @@ class InAppRemoteDataObserver {
      * @param remoteData The remote data.
      * @param scheduler Scheduler.
      */
-    void subscribe(final RemoteData remoteData, final InAppMessageScheduler scheduler) {
+    void subscribe(@NonNull final RemoteData remoteData, @NonNull final InAppMessageScheduler scheduler) {
         cancel();
 
         this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
                                       .filter(new Predicate<RemoteDataPayload>() {
                                           @Override
-                                          public boolean apply(RemoteDataPayload payload) {
+                                          public boolean apply(@NonNull RemoteDataPayload payload) {
                                               return payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
                                           }
                                       })
                                       .subscribe(new Subscriber<RemoteDataPayload>() {
                                           @Override
-                                          public void onNext(RemoteDataPayload payload) {
+                                          public void onNext(@NonNull RemoteDataPayload payload) {
                                               try {
                                                   processPayload(payload, scheduler);
                                                   Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
@@ -141,13 +141,13 @@ class InAppRemoteDataObserver {
             if (!scheduleIdMap.containsKey(messageId)) {
                 Collection<InAppMessageSchedule> schedules = scheduler.getSchedules(messageId).get();
 
-                // Make sure we only have a single schedule for the message ID
-                if (schedules.size() > 1) {
-                    Logger.error("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
-                    continue;
-                }
+                if (schedules != null && !schedules.isEmpty()) {
+                    // Make sure we only have a single schedule for the message ID
+                    if (schedules.size() > 1) {
+                        Logger.error("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
+                        continue;
+                    }
 
-                if (!schedules.isEmpty()) {
                     scheduleIdMap.put(messageId, schedules.iterator().next().getId());
                 }
             }
@@ -188,9 +188,11 @@ class InAppRemoteDataObserver {
         // Schedule new in-app messages
         if (!newSchedules.isEmpty()) {
             List<InAppMessageSchedule> schedules = scheduler.schedule(newSchedules).get();
-            for (InAppMessageSchedule schedule : schedules) {
-                String messageId = schedule.getInfo().getInAppMessage().getId();
-                scheduleIdMap.put(messageId, schedule.getId());
+            if (schedules != null) {
+                for (InAppMessageSchedule schedule : schedules) {
+                    String messageId = schedule.getInfo().getInAppMessage().getId();
+                    scheduleIdMap.put(messageId, schedule.getId());
+                }
             }
         }
 
@@ -238,6 +240,7 @@ class InAppRemoteDataObserver {
      *
      * @return The ID map.
      */
+    @NonNull
     private Map<String, String> getScheduleIdMap() {
         JsonMap jsonMap = preferenceDataStore.getJsonValue(SCHEDULED_MESSAGES_KEY).optMap();
 

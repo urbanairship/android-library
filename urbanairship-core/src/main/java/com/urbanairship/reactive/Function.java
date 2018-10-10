@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -9,15 +10,16 @@ import android.support.annotation.RestrictTo;
  *
  * @param <T> The source type.
  * @param <R> The return type.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Function<T, R> {
     /**
      * Applies the function.
+     *
      * @param v The source value.
      * @return The return value.
      */
-    R apply(T v);
+    @NonNull
+    R apply(@NonNull T v);
 }

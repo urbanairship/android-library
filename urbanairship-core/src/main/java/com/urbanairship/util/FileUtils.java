@@ -29,7 +29,7 @@ public abstract class FileUtils {
      * @param file The file to delete.
      * @return {@code true} if the file was deleted, otherwise {@code false}.
      */
-    public static boolean deleteRecursively(File file) {
+    public static boolean deleteRecursively(@NonNull File file) {
         if (!file.exists()) {
             return false;
         }

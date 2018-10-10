@@ -3,6 +3,8 @@
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
@@ -36,7 +38,7 @@ public class AssociatedIdentifiersTest extends BaseTestCase {
 
         editor = new AssociatedIdentifiers.Editor() {
             @Override
-            void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove) {
+            void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 AssociatedIdentifiersTest.this.clear = clear;
                 AssociatedIdentifiersTest.this.idsToAdd = idsToAdd;
                 AssociatedIdentifiersTest.this.idsToRemove = idsToRemove;

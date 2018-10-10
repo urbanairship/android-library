@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
+import android.support.annotation.NonNull;
 import android.support.annotation.XmlRes;
 import android.util.AttributeSet;
 import android.util.Xml;
@@ -42,7 +43,8 @@ class ActionButtonGroupsParser {
      * @param resource The xml resource.
      * @return A map of NotificationActionButtonGroups.
      */
-    public static Map<String, NotificationActionButtonGroup> fromXml(Context context, @XmlRes int resource) {
+    @NonNull
+    public static Map<String, NotificationActionButtonGroup> fromXml(@NonNull Context context, @XmlRes int resource) {
 
         XmlResourceParser parser;
         try {
@@ -64,7 +66,7 @@ class ActionButtonGroupsParser {
      * @throws IOException
      * @throws XmlPullParserException
      */
-    private static Map<String, NotificationActionButtonGroup> parseGroups(Context context, XmlResourceParser parser) throws IOException, XmlPullParserException {
+    private static Map<String, NotificationActionButtonGroup> parseGroups(@NonNull Context context, XmlResourceParser parser) throws IOException, XmlPullParserException {
         Map<String, NotificationActionButtonGroup> groups = new HashMap<>();
 
         String groupId = null;

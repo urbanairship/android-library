@@ -31,7 +31,7 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public AirshipComponent(PreferenceDataStore dataStore) {
+    public AirshipComponent(@NonNull PreferenceDataStore dataStore) {
         this.dataStore = dataStore;
         this.enableKey = ENABLE_KEY_PREFIX + getClass().getName();
     }
@@ -52,7 +52,7 @@ public abstract class AirshipComponent {
     protected void init() {
         dataStore.addListener(new PreferenceDataStore.PreferenceChangeListener() {
             @Override
-            public void onPreferenceChange(String key) {
+            public void onPreferenceChange(@NonNull String key) {
                 if (key.equals(enableKey)) {
                     onComponentEnableChange(isComponentEnabled());
                 }
@@ -78,7 +78,7 @@ public abstract class AirshipComponent {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Executor getJobExecutor(JobInfo jobInfo) {
+    public Executor getJobExecutor(@NonNull JobInfo jobInfo) {
         return jobExecutor;
     }
 
@@ -93,7 +93,7 @@ public abstract class AirshipComponent {
     @WorkerThread
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
+    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         return JobInfo.JOB_FINISHED;
     }
 
@@ -105,7 +105,7 @@ public abstract class AirshipComponent {
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onAirshipReady(UAirship airship) {}
+    protected void onAirshipReady(@NonNull UAirship airship) {}
 
     /**
      * Called when the component is enabled or disabled.
@@ -146,6 +146,7 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     protected PreferenceDataStore getDataStore() {
         return dataStore;
     }

@@ -38,6 +38,11 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
+        if (getMessage() == null) {
+            finish();
+            return;
+        }
+
         final ModalDisplayContent displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
             finish();
@@ -113,7 +118,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             InAppViewUtils.applyButtonInfo(footer, displayContent.getFooter(), 0);
             footer.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onClick(@NonNull View view) {
                     onButtonClicked(view, displayContent.getFooter());
                 }
             });
@@ -140,14 +145,20 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                if (getDisplayHandler() != null) {
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                }
                 finish();
             }
         });
     }
 
     @Override
-    public void onButtonClicked(View view, ButtonInfo buttonInfo) {
+    public void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo) {
+        if (getDisplayHandler() == null) {
+            return;
+        }
+
         InAppActionUtils.runActions(buttonInfo);
         if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
             getDisplayHandler().cancelFutureDisplays();
@@ -199,7 +210,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
      */
     @NonNull
     @ModalDisplayContent.Template
-    protected String normalizeTemplate(ModalDisplayContent displayContent) {
+    protected String normalizeTemplate(@NonNull ModalDisplayContent displayContent) {
         String template = displayContent.getTemplate();
 
         // If we do not have media use TEMPLATE_HEADER_BODY_MEDIA

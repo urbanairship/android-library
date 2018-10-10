@@ -50,6 +50,7 @@ public final class ViewUtils {
 
     /**
      * Creates a typeface defined by the attribute {@code urbanAirshipFontPath} from the textAppearance style.
+     *
      * @param context The application context.
      * @param textAppearance The text appearance style.
      * @return The defined Typeface or null if the text appearance does not define the {@code urbanAirshipFontPath} or

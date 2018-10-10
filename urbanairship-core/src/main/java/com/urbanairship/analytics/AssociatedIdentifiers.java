@@ -3,6 +3,7 @@
 package com.urbanairship.analytics;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 
 import com.urbanairship.json.JsonException;
@@ -20,6 +21,7 @@ import java.util.Map;
  * {@link Analytics#editAssociatedIdentifiers()}.
  */
 public class AssociatedIdentifiers implements JsonSerializable {
+
     /**
      * Max character count for an ID or key.
      */
@@ -31,9 +33,9 @@ public class AssociatedIdentifiers implements JsonSerializable {
     public static final int MAX_IDS = 100;
 
     private static final String ADVERTISING_ID_KEY = "com.urbanairship.aaid";
-
     private static final String LIMITED_AD_TRACKING_ENABLED_KEY = "com.urbanairship.limited_ad_tracking_enabled";
 
+    @NonNull
     private final Map<String, String> ids;
 
     /**
@@ -57,6 +59,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
      *
      * @return The associated identifiers.
      */
+    @NonNull
     public Map<String, String> getIds() {
         return Collections.unmodifiableMap(ids);
     }
@@ -66,6 +69,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
      *
      * @return The advertising ID or null if not found.
      */
+    @Nullable
     public String getAdvertisingId() {
         return ids.get(ADVERTISING_ID_KEY);
     }
@@ -80,18 +84,20 @@ public class AssociatedIdentifiers implements JsonSerializable {
         return enabled != null && enabled.equalsIgnoreCase("true");
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonValue.wrapOpt(ids);
     }
 
-    public static AssociatedIdentifiers fromJson(String json) throws JsonException {
+    @NonNull
+    public static AssociatedIdentifiers fromJson(@Nullable String json) throws JsonException {
 
         Map<String, String> ids = new HashMap<>();
 
         JsonValue idsJasonValue = JsonValue.parseString(json);
-        if (idsJasonValue != null && idsJasonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> entry : idsJasonValue.getMap()) {
+        if (idsJasonValue.isJsonMap()) {
+            for (Map.Entry<String, JsonValue> entry : idsJasonValue.optMap()) {
                 ids.put(entry.getKey(), entry.getValue().getString());
             }
         }
@@ -116,6 +122,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @param limitAdTrackingEnabled A boolean indicating whether the user has limit ad tracking enabled or not.
          * @return The editor object.
          */
+        @NonNull
         public Editor setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId,
                                        boolean limitAdTrackingEnabled) {
             addIdentifier(ADVERTISING_ID_KEY, adId);
@@ -128,6 +135,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
          *
          * @return The editor object.
          */
+        @NonNull
         public Editor removeAdvertisingId() {
             removeIdentifier(ADVERTISING_ID_KEY);
             removeIdentifier(LIMITED_AD_TRACKING_ENABLED_KEY);
@@ -141,6 +149,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @param value The custom ID's value.
          * @return The editor object.
          */
+        @NonNull
         public Editor addIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key,
                                     @NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String value) {
             idsToRemove.remove(key);
@@ -154,6 +163,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @param key The custom ID's key.
          * @return The editor object.
          */
+        @NonNull
         public Editor removeIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key) {
             idsToAdd.remove(key);
             idsToRemove.add(key);
@@ -162,11 +172,12 @@ public class AssociatedIdentifiers implements JsonSerializable {
 
         /**
          * Clears all the identifiers.
-         * </p>
+         * <p>
          * Identifiers will be cleared first during apply, then the other operations will be applied.
          *
          * @return The editor object.
          */
+        @NonNull
         public Editor clear() {
             clear = true;
             return this;
@@ -186,6 +197,6 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @param idsToAdd Identifiers to add.
          * @param idsToRemove Identifiers to remove.
          */
-        abstract void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove);
+        abstract void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove);
     }
 }

@@ -114,6 +114,7 @@ class UALocationProvider {
      * @param options The request options.
      * @return A pending location result.
      */
+    @Nullable
     @WorkerThread
     Cancelable requestSingleLocation(@NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback) {
         connect();

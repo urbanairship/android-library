@@ -1,5 +1,6 @@
 package com.urbanairship.automation;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -263,6 +264,7 @@ class ScheduleEntry implements ScheduleInfo {
 
     /**
      * Edits the schedule entry.
+     *
      * @param edits The schedule edits.
      */
     void applyEdits(@NonNull ScheduleEdits edits) {
@@ -312,7 +314,7 @@ class ScheduleEntry implements ScheduleInfo {
      * @return {code} true if the entry was saved, otherwise {@code false}.
      */
     @WorkerThread
-    boolean save(SQLiteDatabase database) {
+    boolean save(@NonNull SQLiteDatabase database) {
         if (id == -1) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_NAME_SCHEDULE_ID, scheduleId);
@@ -410,6 +412,7 @@ class ScheduleEntry implements ScheduleInfo {
         return scheduleEntry;
     }
 
+    @NonNull
     @Override
     public List<Trigger> getTriggers() {
         List<Trigger> triggers = new ArrayList<>();
@@ -423,6 +426,7 @@ class ScheduleEntry implements ScheduleInfo {
         return triggers;
     }
 
+    @NonNull
     @Override
     public JsonSerializable getData() {
         return this.data;
@@ -479,6 +483,7 @@ class ScheduleEntry implements ScheduleInfo {
         return delayBuilder.build();
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return scheduleId;

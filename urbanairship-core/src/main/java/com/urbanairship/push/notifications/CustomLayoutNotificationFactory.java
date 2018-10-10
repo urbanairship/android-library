@@ -17,11 +17,11 @@ import com.urbanairship.util.UAStringUtil;
 /**
  * A notification factory that allows the use of layout XML. The default binding will
  * bind the following:
- *  - small icon to {@code android.R.id.icon}
- *  - title to {@code android.R.id.title}
- *  - summary/subtitle to {@code android.R.id.summary}
- *  - alert/message to {@code android.R.id.message}
- *
+ * - small icon to {@code android.R.id.icon}
+ * - title to {@code android.R.id.title}
+ * - summary/subtitle to {@code android.R.id.summary}
+ * - alert/message to {@code android.R.id.message}
+ * <p>
  * Custom binding can be applied by overriding {@link #onBindContentView(RemoteViews, PushMessage, int)}. To
  * customize the builder, override {@link #extendBuilder(NotificationCompat.Builder, PushMessage, int)}.
  */
@@ -31,6 +31,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
 
     /**
      * Default constructor.
+     *
      * @param context The application context.
      * @param layoutId The custom content view.
      */
@@ -63,6 +64,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
      * @param notificationId The notification ID.
      * @return The notification builder.
      */
+    @NonNull
     public NotificationCompat.Builder extendBuilder(@NonNull NotificationCompat.Builder builder, @NonNull PushMessage message, int notificationId) {
         return builder;
     }

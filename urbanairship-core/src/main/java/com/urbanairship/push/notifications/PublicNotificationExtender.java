@@ -37,7 +37,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param context The application context.
      * @param message The push message.
      */
-    public PublicNotificationExtender(@NonNull  Context context, @NonNull PushMessage message) {
+    public PublicNotificationExtender(@NonNull Context context, @NonNull PushMessage message) {
         this.context = context;
         this.message = message;
         this.smallIconId = context.getApplicationInfo().icon;
@@ -49,6 +49,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param accentColor The notification's accent color.
      * @return The PublicNotificationExtender to chain calls.
      */
+    @NonNull
     public PublicNotificationExtender setAccentColor(@ColorInt int accentColor) {
         this.accentColor = accentColor;
         return this;
@@ -60,6 +61,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param smallIcon The small icon.
      * @return The PublicNotificationExtender to chain calls.
      */
+    @NonNull
     public PublicNotificationExtender setSmallIcon(@DrawableRes int smallIcon) {
         this.smallIconId = smallIcon;
         return this;
@@ -71,13 +73,15 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param largeIcon The large icon.
      * @return The PublicNotificationExtender to chain calls.
      */
+    @NonNull
     public PublicNotificationExtender setLargeIcon(@DrawableRes int largeIcon) {
         this.largeIconId = largeIcon;
         return this;
     }
 
+    @NonNull
     @Override
-    public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
+    public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
 
         if (UAStringUtil.isEmpty(message.getPublicNotificationPayload())) {
             return builder;
@@ -87,8 +91,8 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
             JsonMap jsonMap = JsonValue.parseString(message.getPublicNotificationPayload()).optMap();
 
             NotificationCompat.Builder publicBuilder = new NotificationCompat.Builder(context)
-                    .setContentTitle(jsonMap.opt(TITLE_KEY).getString(""))
-                    .setContentText(jsonMap.opt(ALERT_KEY).getString(""))
+                    .setContentTitle(jsonMap.opt(TITLE_KEY).optString())
+                    .setContentText(jsonMap.opt(ALERT_KEY).optString())
                     .setColor(accentColor)
                     .setAutoCancel(true)
                     .setSmallIcon(smallIconId);
@@ -98,7 +102,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
             }
 
             if (jsonMap.containsKey(SUMMARY_KEY)) {
-                publicBuilder.setSubText(jsonMap.opt(SUMMARY_KEY).getString(""));
+                publicBuilder.setSubText(jsonMap.opt(SUMMARY_KEY).optString());
             }
 
             builder.setPublicVersion(publicBuilder.build());

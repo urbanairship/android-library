@@ -5,6 +5,8 @@ package com.urbanairship.widget;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,17 +30,18 @@ public class UAWebChromeClient extends WebChromeClient {
      *
      * @param activity The activity.
      */
-    public UAWebChromeClient(Activity activity) {
+    public UAWebChromeClient(@Nullable Activity activity) {
         this.weakActivity = new WeakReference<>(activity);
     }
 
+    @Nullable
     @Override
     public Bitmap getDefaultVideoPoster() {
         return Bitmap.createBitmap(new int[] { Color.TRANSPARENT }, 1, 1, Bitmap.Config.ARGB_8888);
     }
 
     @Override
-    public void onShowCustomView(View view, final CustomViewCallback callback) {
+    public void onShowCustomView(@NonNull View view, @NonNull final CustomViewCallback callback) {
         Activity activity = weakActivity.get();
         if (activity == null) {
             return;

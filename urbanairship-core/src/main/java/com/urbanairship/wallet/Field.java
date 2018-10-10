@@ -2,7 +2,9 @@
 
 package com.urbanairship.wallet;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.text.TextUtils;
 
@@ -27,7 +29,7 @@ public class Field implements JsonSerializable {
      *
      * @param builder The field builder instance.
      */
-    Field(Builder builder) {
+    Field(@NonNull Builder builder) {
         this.name = builder.name;
         this.label = builder.label;
         this.value = builder.value;
@@ -38,7 +40,8 @@ public class Field implements JsonSerializable {
      *
      * @return The new Builder instance.
      */
-    static Builder newBuilder() {
+    @NonNull
+    public static Builder newBuilder() {
         return new Builder();
     }
 
@@ -47,22 +50,25 @@ public class Field implements JsonSerializable {
      *
      * @return The field's name.
      */
+    @NonNull
     String getName() {
         return name;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                .putOpt(LABEL_KEY, label)
-                .putOpt(VALUE_KEY, value)
-                .build()
-                .toJsonValue();
+                      .putOpt(LABEL_KEY, label)
+                      .putOpt(VALUE_KEY, value)
+                      .build()
+                      .toJsonValue();
     }
 
     /**
@@ -80,6 +86,7 @@ public class Field implements JsonSerializable {
          * @param name The field's name.
          * @return Builder object.
          */
+        @NonNull
         public Builder setName(@NonNull @Size(min = 1) String name) {
             this.name = name;
             return this;
@@ -91,7 +98,8 @@ public class Field implements JsonSerializable {
          * @param label The field's label.
          * @return Builder object.
          */
-        public Builder setLabel(String label) {
+        @NonNull
+        public Builder setLabel(@Nullable String label) {
             this.label = label;
             return this;
         }
@@ -102,7 +110,8 @@ public class Field implements JsonSerializable {
          * @param value The field's value.
          * @return Builder object.
          */
-        public Builder setValue(String value) {
+        @NonNull
+        public Builder setValue(@Nullable String value) {
             this.value = value;
             return this;
         }
@@ -113,6 +122,7 @@ public class Field implements JsonSerializable {
          * @param value The field's value.
          * @return Builder object.
          */
+        @NonNull
         public Builder setValue(int value) {
             this.value = value;
             return this;
@@ -124,6 +134,7 @@ public class Field implements JsonSerializable {
          * @return A field instance.
          * @throws IllegalStateException if the name or both the value and label are missing.
          */
+        @NonNull
         public Field build() {
             if (TextUtils.isEmpty(name) || (value == null && TextUtils.isEmpty(label))) {
                 throw new IllegalStateException("The field must have a name and either a value or label.");

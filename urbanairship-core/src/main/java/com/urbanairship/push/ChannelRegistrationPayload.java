@@ -2,7 +2,9 @@
 
 package com.urbanairship.push;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -94,7 +96,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with alias value set
          */
         @NonNull
-        Builder setAlias(String alias) {
+        Builder setAlias(@Nullable String alias) {
             if (alias != null) {
                 alias = alias.trim();
             }
@@ -109,7 +111,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with device type set
          */
         @NonNull
-        Builder setDeviceType(@NonNull String deviceType) {
+        Builder setDeviceType(@Nullable String deviceType) {
             this.deviceType = deviceType;
             return this;
         }
@@ -121,7 +123,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with timezone ID set
          */
         @NonNull
-        Builder setTimezone(@NonNull String timezone) {
+        Builder setTimezone(@Nullable String timezone) {
             this.timezone = timezone;
             return this;
         }
@@ -133,7 +135,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with language ID set
          */
         @NonNull
-        Builder setLanguage(@NonNull String language) {
+        Builder setLanguage(@Nullable String language) {
             this.language = language;
             return this;
         }
@@ -145,7 +147,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with country ID set
          */
         @NonNull
-        Builder setCountry(@NonNull String country) {
+        Builder setCountry(@Nullable String country) {
             this.country = country;
             return this;
         }
@@ -157,7 +159,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with push address set
          */
         @NonNull
-        Builder setPushAddress(String registrationId) {
+        Builder setPushAddress(@Nullable String registrationId) {
             this.pushAddress = registrationId;
             return this;
         }
@@ -170,7 +172,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with channelTagRegistrationEnabled and tags set
          */
         @NonNull
-        Builder setTags(boolean channelTagRegistrationEnabled, Set<String> tags) {
+        Builder setTags(boolean channelTagRegistrationEnabled, @Nullable Set<String> tags) {
             this.setTags = channelTagRegistrationEnabled;
             this.tags = tags;
             return this;
@@ -183,7 +185,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with userId value set
          */
         @NonNull
-        Builder setUserId(String userId) {
+        Builder setUserId(@Nullable String userId) {
             this.userId = UAStringUtil.isEmpty(userId) ? null : userId;
             return this;
         }
@@ -196,7 +198,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with apid value set
          */
         @NonNull
-        Builder setApid(String apid) {
+        Builder setApid(@Nullable String apid) {
             this.apid = apid;
             return this;
         }
@@ -222,6 +224,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
         this.country = builder.country;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         // Channel Payload
@@ -265,13 +268,14 @@ class ChannelRegistrationPayload implements JsonSerializable {
      *
      * @return The JSON formatted payload as a string
      */
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return this.toJsonValue().toString();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

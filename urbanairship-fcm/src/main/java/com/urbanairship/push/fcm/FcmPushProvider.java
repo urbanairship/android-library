@@ -42,6 +42,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     // but the lint warning does not seem to check for the new method.
     @SuppressLint("MissingFirebaseInstanceTokenRefresh")
     @Override
+    @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
 
         String token;

@@ -11,8 +11,9 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.Logger;
 
@@ -26,12 +27,14 @@ public class AirshipService extends Service {
     /**
      * Action to run a job.
      */
+    @NonNull
     public static final String ACTION_RUN_JOB = "RUN_JOB";
 
     /**
      * JobInfo bundle extra. See {@link JobInfo#toBundle()}.
      */
     static final String EXTRA_JOB_INFO_BUNDLE = "EXTRA_JOB_INFO_BUNDLE";
+
     static final String EXTRA_RESCHEDULE_EXTRAS = "EXTRA_RESCHEDULE_EXTRAS";
 
     private static final int MSG_INTENT_RECEIVED = 1;
@@ -74,7 +77,7 @@ public class AirshipService extends Service {
     }
 
     @Override
-    public int onStartCommand(final Intent intent, int flags, final int startId) {
+    public int onStartCommand(@Nullable final Intent intent, int flags, final int startId) {
         Message msg = handler.obtainMessage();
         msg.what = MSG_INTENT_RECEIVED;
         msg.arg1 = startId;
@@ -91,13 +94,14 @@ public class AirshipService extends Service {
         looper.quit();
     }
 
+    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(@Nullable Intent intent) {
         return null;
     }
 
     @WorkerThread
-    private void onHandleIntent(final Intent intent, int startId) {
+    private void onHandleIntent(@Nullable final Intent intent, int startId) {
         this.lastStartId = startId;
 
         final Message msg = handler.obtainMessage();
@@ -121,7 +125,7 @@ public class AirshipService extends Service {
         Job job = new Job.Builder(jobInfo)
                 .setCallback(new Job.Callback() {
                     @Override
-                    public void onFinish(Job job, @JobInfo.JobResult int result) {
+                    public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
                         handler.sendMessage(msg);
                         if (result == JobInfo.JOB_RETRY) {
                             JobDispatcher.shared(getApplicationContext()).reschedule(jobInfo, intent.getBundleExtra(EXTRA_RESCHEDULE_EXTRAS));
@@ -142,14 +146,10 @@ public class AirshipService extends Service {
      * @param startId The intent's startId.
      */
     @WorkerThread
-    private void onJobFinished(Intent intent, int startId) {
+    private void onJobFinished(@NonNull Intent intent, int startId) {
         Logger.verbose("AirshipService - Component finished job with startId: " + startId);
 
         runningJobs--;
-
-        if (intent != null) {
-            WakefulBroadcastReceiver.completeWakefulIntent(intent);
-        }
 
         if (runningJobs <= 0) {
             runningJobs = 0;
@@ -166,7 +166,8 @@ public class AirshipService extends Service {
      * @param rescheduleExtras Extras to pass to {@link JobDispatcher#reschedule(JobInfo, Bundle)} if the job needs to be retried.
      * @return A service intent.
      */
-    public static Intent createIntent(Context context, JobInfo jobInfo, Bundle rescheduleExtras) {
+    @NonNull
+    public static Intent createIntent(@NonNull Context context, @Nullable JobInfo jobInfo, @Nullable Bundle rescheduleExtras) {
         Intent intent = new Intent(context, AirshipService.class)
                 .setAction(AirshipService.ACTION_RUN_JOB);
 

@@ -85,7 +85,7 @@ public abstract class InAppViewGroup extends FrameLayout {
     protected void onResume(@NonNull Activity activity) {
         isResumed = true;
 
-        if (displayHandler != null && !displayHandler.requestDisplayLock(activity)) {
+        if (!displayHandler.requestDisplayLock(activity)) {
             dismiss(true);
         }
     }
@@ -146,14 +146,14 @@ public abstract class InAppViewGroup extends FrameLayout {
         if (visibility == VISIBLE && !isDismissed) {
             ActivityMonitor.shared(getContext()).addListener(new ActivityMonitor.SimpleListener() {
                 @Override
-                public void onActivityPaused(Activity activity) {
+                public void onActivityPaused(@NonNull Activity activity) {
                     if (getContext() == activity && !isDismissed) {
                         onPause(activity);
                     }
                 }
 
                 @Override
-                public void onActivityResumed(Activity activity) {
+                public void onActivityResumed(@NonNull Activity activity) {
                     if (getContext() == activity && !isDismissed) {
                         if (!displayHandler.requestDisplayLock(activity)) {
                             dismiss(false);
@@ -164,7 +164,7 @@ public abstract class InAppViewGroup extends FrameLayout {
                 }
 
                 @Override
-                public void onActivityStopped(Activity activity) {
+                public void onActivityStopped(@NonNull Activity activity) {
                     if (getContext() == activity && !isDismissed) {
                         isDismissed = true;
                         displayHandler.continueOnNextActivity();
@@ -191,6 +191,7 @@ public abstract class InAppViewGroup extends FrameLayout {
 
     /**
      * Sets the animation.
+     *
      * @param in The animation in.
      * @param out The animation out.
      */
@@ -215,6 +216,7 @@ public abstract class InAppViewGroup extends FrameLayout {
 
     /**
      * Gets the display handler.
+     *
      * @return The display handler
      */
     @NonNull

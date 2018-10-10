@@ -5,15 +5,14 @@ package com.urbanairship.remoteconfig;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.json.JsonSerializable;
-import com.urbanairship.util.VersionUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.IvyVersionMatcher;
-
+import com.urbanairship.util.VersionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +32,6 @@ class DisableInfo implements JsonSerializable {
     private static final String MODULES_KEY = "modules";
     private static final String SDK_VERSIONS_KEY = "sdk_versions";
     private static final String APP_VERSIONS_KEY = "app_versions";
-
     private static final String REMOTE_DATA_REFRESH_INTERVAL_KEY = "remote_data_refresh_interval";
     private static final String MODULES_ALL_KEY = "all";
 
@@ -47,7 +45,7 @@ class DisableInfo implements JsonSerializable {
      * Default constructor.
      * @param builder The builder.
      */
-    private DisableInfo(Builder builder) {
+    private DisableInfo(@NonNull Builder builder) {
         this.disabledModules = builder.disabledModules;
         this.remoteDataInterval = builder.remoteDataInterval;
         this.sdkVersionConstraints = builder.sdkVersionConstraints;
@@ -60,7 +58,6 @@ class DisableInfo implements JsonSerializable {
      * @param disableInfos The collection of disable infos.
      * @param sdkVersion The sdk version to filter disable infos.
      * @param appVersion The app version.
-     *
      * @return A list of matching disable infos.
      */
     @NonNull
@@ -94,6 +91,7 @@ class DisableInfo implements JsonSerializable {
         return filtered;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -107,7 +105,7 @@ class DisableInfo implements JsonSerializable {
 
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -131,13 +129,14 @@ class DisableInfo implements JsonSerializable {
 
     /**
      * Parses a disable info from the json value.
-     *
+     * <p>
      * Note: This method has the side effect of multiplying the refresh interval by a factor of 1000.
      *
      * @param jsonValue The json value.
      * @return The disable info.
      * @throws JsonException If the json value is invalid.
      */
+    @NonNull
     public static DisableInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap jsonMap = jsonValue.optMap();
 
@@ -174,11 +173,11 @@ class DisableInfo implements JsonSerializable {
         }
 
         if (jsonMap.containsKey(REMOTE_DATA_REFRESH_INTERVAL_KEY)) {
-            if (!jsonMap.get(REMOTE_DATA_REFRESH_INTERVAL_KEY).isNumber()) {
+            if (!jsonMap.opt(REMOTE_DATA_REFRESH_INTERVAL_KEY).isNumber()) {
                 throw new IllegalArgumentException("Remote data refresh interval must be a number: " + jsonMap.get(REMOTE_DATA_REFRESH_INTERVAL_KEY));
             }
 
-            long remoteDataInterval = TimeUnit.SECONDS.toMillis(jsonMap.get(REMOTE_DATA_REFRESH_INTERVAL_KEY).getLong(0));
+            long remoteDataInterval = TimeUnit.SECONDS.toMillis(jsonMap.opt(REMOTE_DATA_REFRESH_INTERVAL_KEY).getLong(0));
             builder.setRemoteDataInterval(remoteDataInterval);
         }
 
@@ -275,19 +274,25 @@ class DisableInfo implements JsonSerializable {
          * @param disabledModules The modules to be disabled.
          * @return The builder.
          */
-        public Builder setDisabledModules(@NonNull Collection<String> disabledModules) {
-            this.disabledModules.addAll(disabledModules);
+        @NonNull
+        public Builder setDisabledModules(@Nullable Collection<String> disabledModules) {
+            this.disabledModules.clear();
+            if (disabledModules != null) {
+                this.disabledModules.addAll(disabledModules);
+            }
+
             return this;
         }
 
         /**
          * Remote data interval.
-         *
+         * <p>
          * Note: The remote data interval is converted from seconds to milliseconds when parsed.
          *
          * @param remoteDataInterval The remote data interval in milliseconds.
          * @return The builder.
          */
+        @NonNull
         public Builder setRemoteDataInterval(long remoteDataInterval) {
             this.remoteDataInterval = remoteDataInterval;
             return this;
@@ -299,7 +304,8 @@ class DisableInfo implements JsonSerializable {
          * @param sdkVersionConstraints The SDK version constraints to be applied.
          * @return The builder.
          */
-        public Builder setSDKVersionConstraints(@NonNull Collection<String> sdkVersionConstraints) {
+        @NonNull
+        public Builder setSDKVersionConstraints(@Nullable Collection<String> sdkVersionConstraints) {
             this.sdkVersionConstraints = new HashSet<>(sdkVersionConstraints);
             return this;
         }
@@ -310,7 +316,8 @@ class DisableInfo implements JsonSerializable {
          * @param predicate JSON predicate to match the app version object.
          * @return The builder.
          */
-        public Builder setAppVersionPredicate(JsonPredicate predicate) {
+        @NonNull
+        public Builder setAppVersionPredicate(@Nullable JsonPredicate predicate) {
             this.appVersionPredicate = predicate;
             return this;
         }
@@ -320,6 +327,7 @@ class DisableInfo implements JsonSerializable {
          *
          * @return The DisableInfo.
          */
+        @NonNull
         public DisableInfo build() {
             return new DisableInfo(this);
         }

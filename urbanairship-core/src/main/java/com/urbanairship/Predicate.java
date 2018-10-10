@@ -2,6 +2,8 @@
 
 package com.urbanairship;
 
+import android.annotation.SuppressLint;
+
 /**
  * Predicate interface.
  *
@@ -15,5 +17,6 @@ public interface Predicate<T> {
      * @param object The object.
      * @return {@code true} if the predicate matches the object, otherwise {@code false}.
      */
+    @SuppressLint("UnknownNullness")
     boolean apply(T object);
 }

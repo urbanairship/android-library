@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class PushManagerJobHandlerTest extends BaseTestCase {
+
     private static final String CHANNEL_LOCATION_KEY = "Location";
 
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";

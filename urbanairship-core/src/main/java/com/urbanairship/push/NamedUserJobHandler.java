@@ -69,7 +69,7 @@ class NamedUserJobHandler {
      * @return The job result.
      */
     @JobInfo.JobResult
-    protected int performJob(JobInfo jobInfo) {
+    protected int performJob(@NonNull JobInfo jobInfo) {
         switch (jobInfo.getAction()) {
             case ACTION_UPDATE_NAMED_USER:
                 return onUpdateNamedUser();

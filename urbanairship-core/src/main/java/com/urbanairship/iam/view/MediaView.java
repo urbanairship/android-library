@@ -48,7 +48,7 @@ public class MediaView extends FrameLayout {
      *
      * @param context A Context object used to access application assets.
      */
-    public MediaView(Context context) {
+    public MediaView(@NonNull Context context) {
         this(context, null);
     }
 
@@ -58,7 +58,7 @@ public class MediaView extends FrameLayout {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public MediaView(Context context, AttributeSet attrs) {
+    public MediaView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
@@ -69,7 +69,7 @@ public class MediaView extends FrameLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public MediaView(Context context, AttributeSet attrs, int defStyle) {
+    public MediaView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
 
@@ -93,7 +93,7 @@ public class MediaView extends FrameLayout {
      *
      * @param chromeClient The web chrome client.
      */
-    public void setChromeClient(WebChromeClient chromeClient) {
+    public void setChromeClient(@Nullable WebChromeClient chromeClient) {
         this.chromeClient = chromeClient;
         if (webView != null) {
             webView.setWebChromeClient(chromeClient);
@@ -205,7 +205,7 @@ public class MediaView extends FrameLayout {
         webView.setVisibility(View.INVISIBLE);
         webView.setWebViewClient(new MediaWebViewClient() {
             @Override
-            protected void onPageFinished(WebView webView) {
+            protected void onPageFinished(@NonNull WebView webView) {
                 webView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(GONE);
             }
@@ -233,7 +233,7 @@ public class MediaView extends FrameLayout {
         long retry = START_RETRY_DELAY;
 
         @Override
-        public void onPageFinished(WebView view, final String url) {
+        public void onPageFinished(@NonNull WebView view, final String url) {
             super.onPageFinished(view, url);
             if (error) {
                 final WeakReference<WebView> weakReference = new WeakReference<WebView>(view);

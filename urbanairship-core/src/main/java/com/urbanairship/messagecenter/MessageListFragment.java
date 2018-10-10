@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
@@ -48,7 +49,7 @@ public class MessageListFragment extends Fragment {
          *
          * @param absListView The abstract list view.
          */
-        void onListViewReady(AbsListView absListView);
+        void onListViewReady(@NonNull AbsListView absListView);
     }
 
     private SwipeRefreshLayout refreshLayout;
@@ -59,7 +60,6 @@ public class MessageListFragment extends Fragment {
     private String currentMessageId;
     private RichPushInbox.Predicate predicate;
     private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
-
 
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
@@ -73,6 +73,7 @@ public class MessageListFragment extends Fragment {
 
     /**
      * Gets messages from the inbox filtered by the local predicate
+     *
      * @return The filtered list of messages.
      */
     private List<RichPushMessage> getMessages() {
@@ -80,14 +81,15 @@ public class MessageListFragment extends Fragment {
     }
 
     private void updateAdapterMessages() {
-        adapter.set(getMessages());
+        if (getAdapter() != null) {
+            getAdapter().set(getMessages());
+        }
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.richPushInbox = UAirship.shared().getInbox();
-        this.adapter = createMessageViewAdapter();
         updateAdapterMessages();
     }
 
@@ -106,9 +108,14 @@ public class MessageListFragment extends Fragment {
      * @return Return the View for the fragment's UI, or null.
      */
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    @Nullable
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message_list, container, false);
         ensureList(view);
+
+        if (getAbsListView() == null) {
+            return view;
+        }
 
         // Item click listener
         getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -132,7 +139,7 @@ public class MessageListFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureList(view);
 
@@ -148,6 +155,10 @@ public class MessageListFragment extends Fragment {
      * @param view The content view.
      */
     private void ensureList(@NonNull View view) {
+        if (getContext() == null) {
+            return;
+        }
+
         if (absListView != null) {
             return;
         }
@@ -162,7 +173,9 @@ public class MessageListFragment extends Fragment {
             throw new RuntimeException("Your content must have a ListView whose id attribute is 'android.R.id.list'");
         }
 
-        absListView.setAdapter(adapter);
+        if (getAdapter() != null) {
+            absListView.setAdapter(getAdapter());
+        }
 
         // Pull to refresh
         refreshLayout = view.findViewById(R.id.swipe_container);
@@ -214,10 +227,10 @@ public class MessageListFragment extends Fragment {
      * @return A {@link MessageViewAdapter} for the list view.
      */
     @NonNull
-    protected MessageViewAdapter createMessageViewAdapter() {
-        return new MessageViewAdapter(getContext(), R.layout.ua_item_mc) {
+    protected MessageViewAdapter createMessageViewAdapter(@NonNull Context context) {
+        return new MessageViewAdapter(context, R.layout.ua_item_mc) {
             @Override
-            protected void bindView(View view, RichPushMessage message, final int position) {
+            protected void bindView(@NonNull View view, @NonNull RichPushMessage message, final int position) {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
@@ -226,7 +239,9 @@ public class MessageListFragment extends Fragment {
                     itemView.setSelectionListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
+                            if (getAbsListView() != null) {
+                                getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
+                            }
                         }
                     });
                 }
@@ -243,7 +258,9 @@ public class MessageListFragment extends Fragment {
         // Set latest messages
         updateAdapterMessages();
 
-        getAbsListView().invalidate();
+        if (getAbsListView() != null) {
+            getAbsListView().invalidate();
+        }
     }
 
     @Override
@@ -287,6 +304,7 @@ public class MessageListFragment extends Fragment {
      *
      * @return The {@link AbsListView}.
      */
+    @Nullable
     public AbsListView getAbsListView() {
         return absListView;
     }
@@ -299,12 +317,12 @@ public class MessageListFragment extends Fragment {
      * @param callback The on ready callback.
      */
     @MainThread
-    public void getAbsListViewAsync(OnListViewReadyCallback callback) {
-       if (absListView != null) {
-           callback.onListViewReady(absListView);
-       } else {
-           pendingCallbacks.add(callback);
-       }
+    public void getAbsListViewAsync(@NonNull OnListViewReadyCallback callback) {
+        if (absListView != null) {
+            callback.onListViewReady(absListView);
+        } else {
+            pendingCallbacks.add(callback);
+        }
     }
 
     /**
@@ -313,8 +331,9 @@ public class MessageListFragment extends Fragment {
      * @param position The list position.
      * @return The {@link RichPushMessage} at a given position.
      */
+    @Nullable
     public RichPushMessage getMessage(int position) {
-        if (adapter.getCount() > position) {
+        if (adapter != null && adapter.getCount() > position) {
             return (RichPushMessage) adapter.getItem(position);
         }
         return null;
@@ -341,13 +360,22 @@ public class MessageListFragment extends Fragment {
      *
      * @return The {@link MessageViewAdapter} for the list view.
      */
+    @Nullable
     public MessageViewAdapter getAdapter() {
+        if (adapter == null) {
+            if (getContext() == null) {
+                return null;
+            }
+            adapter = createMessageViewAdapter(getContext());
+        }
+
         return adapter;
     }
 
     /**
      * Called to set the current message Id. The message will be highlighted
      * in the list.
+     *
      * @param messageId The message ID or null to clear it.
      */
     void setCurrentMessage(@Nullable String messageId) {
@@ -367,7 +395,7 @@ public class MessageListFragment extends Fragment {
 
     void setPredicate(RichPushInbox.Predicate predicate) {
         this.predicate = predicate;
-        if (adapter != null) {
+        if (getAdapter() != null) {
             updateAdapterMessages();
         }
     }

@@ -2,6 +2,8 @@
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
@@ -31,7 +33,7 @@ public class TagEditorTest extends BaseTestCase {
 
         editor = new TagEditor() {
             @Override
-            void onApply(boolean clear, Set<String> tagsToAdd, Set<String> tagsToRemove) {
+            void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
                 TagEditorTest.this.clear = clear;
                 TagEditorTest.this.tagsToAdd = tagsToAdd;
                 TagEditorTest.this.tagsToRemove = tagsToRemove;

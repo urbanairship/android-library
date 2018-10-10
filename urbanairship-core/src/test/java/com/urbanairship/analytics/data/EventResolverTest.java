@@ -2,6 +2,8 @@
 
 package com.urbanairship.analytics.data;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
@@ -201,11 +203,13 @@ public class EventResolverTest extends BaseTestCase {
             this.eventType = eventType;
         }
 
+        @NonNull
         @Override
         public String getType() {
             return eventType;
         }
 
+        @NonNull
         @Override
         public String getEventId() {
             if (id != null) {
@@ -215,6 +219,7 @@ public class EventResolverTest extends BaseTestCase {
             return super.getEventId();
         }
 
+        @NonNull
         @Override
         protected JsonMap getEventData() {
             return new JsonMap(null);

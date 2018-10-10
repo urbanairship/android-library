@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -51,13 +52,13 @@ import java.util.WeakHashMap;
  * <p>
  * A web view client that intercepts Urban Airship URLs and enables triggering
  * actions from javascript.
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * The UAWebViewClient will intercept links with the 'uairship' scheme and with
  * the commands (supplied as the host) 'run-actions' or 'run-basic-actions'.
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * The run-actions command runs a set of actions listed in the URL's query
  * options, by providing key=value pairs, where each pair's key is the name of
@@ -65,28 +66,28 @@ import java.util.WeakHashMap;
  * the action's {@link com.urbanairship.actions.ActionArguments}. The JSON
  * encoded string is decoded and converted to a List<Object> if the argument is
  * a JSONArray or a Map<String, Object> if the argument is a JSONObject.
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * Example: uairship://run-actions?&add_tags_action=%5B%22one%22%2C%22two%22%5D
  * will run the "add_tags_action" with value "["one", "two"]".
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * The run-basic-actions command is similar to run-actions, but the argument value
  * is treated as a string literal.
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * Example: uairship://run-basic-actions?add_tags_action=one&remove_tags_action=two will run
  * the "add_tags_action" with the value "one", and perform the "remove_tags_action" action with
  * value "two".
- * </p>
- * <p/>
+ * <p>
+ * <p>
  * <p>
  * When extending this class, any overridden methods should call through to the
  * super class' implementations.
- * </p>
+ * <p>
  */
 public class UAWebViewClient extends WebViewClient {
 
@@ -94,16 +95,19 @@ public class UAWebViewClient extends WebViewClient {
      * Urban Airship's scheme. The web view client will override any
      * URLs that have this scheme by default.
      */
+    @NonNull
     public static final String UA_ACTION_SCHEME = "uairship";
 
     /**
      * Run basic actions command.
      */
+    @NonNull
     public static final String RUN_BASIC_ACTIONS_COMMAND = "run-basic-actions";
 
     /**
      * Run actions command.
      */
+    @NonNull
     public static final String RUN_ACTIONS_COMMAND = "run-actions";
 
     /**
@@ -114,6 +118,7 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Close command to handle close method in the Javascript Interface.
      */
+    @NonNull
     public static final String CLOSE_COMMAND = "close";
 
 
@@ -138,7 +143,7 @@ public class UAWebViewClient extends WebViewClient {
      *
      * @param actionRunRequestFactory The action run request factory.
      */
-    UAWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
+    UAWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
         this.actionRunRequestFactory = actionRunRequestFactory;
     }
 
@@ -148,7 +153,7 @@ public class UAWebViewClient extends WebViewClient {
      *
      * @param actionCompletionCallback The completion callback.
      */
-    public void setActionCompletionCallback(ActionCompletionCallback actionCompletionCallback) {
+    public void setActionCompletionCallback(@Nullable ActionCompletionCallback actionCompletionCallback) {
         synchronized (this) {
             this.actionCompletionCallback = actionCompletionCallback;
         }
@@ -156,25 +161,25 @@ public class UAWebViewClient extends WebViewClient {
 
     /**
      * Called when UAirship.close() is triggered from the Urban Airship Javascript interface.
-     * <p/>
+     * <p>
      * The default behavior simulates a back key press.
      *
      * @param webView The web view.
      */
-    public void onClose(final WebView webView) {
+    public void onClose(@NonNull final WebView webView) {
         webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
         webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
     }
 
     @CallSuper
     @Override
-    public boolean shouldOverrideUrlLoading(WebView webView, String url) {
+    public boolean shouldOverrideUrlLoading(@NonNull WebView webView, @Nullable String url) {
         return interceptUrl(webView, url);
     }
 
     @CallSuper
     @Override
-    public void onLoadResource(WebView webView, String url) {
+    public void onLoadResource(@NonNull WebView webView, @Nullable String url) {
 
         /*
          * Sometimes shouldOverrideUrlLoading is not called when the uairship library is ready for whatever reasons,
@@ -192,8 +197,8 @@ public class UAWebViewClient extends WebViewClient {
      * @param url The url being loaded.
      * @return <code>true</code> if the url was loaded, otherwise <code>false</code>.
      */
-    private boolean interceptUrl(WebView webView, String url) {
-        if (webView == null || url == null) {
+    private boolean interceptUrl(@NonNull WebView webView, @Nullable String url) {
+        if (url == null) {
             return false;
         }
 
@@ -245,7 +250,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param webView The web view.
      * @param arguments Map of action to action arguments to run.
      */
-    private void runActions(WebView webView, Map<String, List<ActionValue>> arguments) {
+    private void runActions(@NonNull WebView webView, @Nullable Map<String, List<ActionValue>> arguments) {
         if (arguments == null) {
             return;
         }
@@ -284,7 +289,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param value A JSON-encoded string representing the action value.
      * @param callbackKey The key for the callback function in JavaScript.
      */
-    private void runAction(final WebView webView, final String name, final String value, final String callbackKey) {
+    private void runAction(@NonNull final WebView webView, @NonNull final String name, @Nullable final String value, @Nullable final String callbackKey) {
         // Parse the action value
         ActionValue actionValue;
         try {
@@ -349,7 +354,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param callbackKey The key for the callback function in JavaScript.
      */
     @SuppressLint("NewAPI")
-    private void triggerCallback(final WebView webView, String error, ActionValue resultValue, String callbackKey) {
+    private void triggerCallback(@NonNull final WebView webView, @Nullable String error, @NonNull ActionValue resultValue, @Nullable String callbackKey) {
         // Create the callback string
         String callbackString = String.format("'%s'", callbackKey);
 
@@ -382,12 +387,8 @@ public class UAWebViewClient extends WebViewClient {
      * @param basicEncoding A boolean to select for basic encoding
      * @return A map of action values under action name strings or returns null if decoding error occurs.
      */
-    private Map<String, List<ActionValue>> decodeActionArguments(Uri uri, boolean basicEncoding) {
+    private Map<String, List<ActionValue>> decodeActionArguments(@NonNull Uri uri, boolean basicEncoding) {
         Map<String, List<String>> options = UriUtils.getQueryParameters(uri);
-        if (options == null) {
-            return null;
-        }
-
         Map<String, List<ActionValue>> decodedActions = new HashMap<>();
 
         for (String actionName : options.keySet()) {
@@ -422,7 +423,7 @@ public class UAWebViewClient extends WebViewClient {
 
     @CallSuper
     @Override
-    public void onPageFinished(final WebView view, String url) {
+    public void onPageFinished(@Nullable final WebView view, @Nullable String url) {
         if (view == null) {
             return;
         }
@@ -440,7 +441,7 @@ public class UAWebViewClient extends WebViewClient {
 
     @CallSuper
     @Override
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+    public void onPageStarted(@NonNull WebView view, @Nullable String url, @Nullable Bitmap favicon) {
         InjectJsBridgeTask task = injectJsBridgeTaskMap.remove(view);
         if (task != null) {
             task.cancel(true);
@@ -453,14 +454,14 @@ public class UAWebViewClient extends WebViewClient {
      * @param url The URL being loaded.
      * @return <code>true</code> if the URL is white listed, otherwise <code>false</code>.
      */
-    private boolean isWhiteListed(String url) {
+    private boolean isWhiteListed(@Nullable String url) {
         return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
     }
 
     @CallSuper
     @Override
-    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host,
-                                          String realm) {
+    public void onReceivedHttpAuthRequest(@NonNull WebView view, @NonNull HttpAuthHandler handler, @Nullable String host,
+                                          @Nullable String realm) {
         Credentials credentials = authRequestCredentials.get(host);
         if (credentials != null) {
             handler.proceed(credentials.username, credentials.password);
@@ -474,7 +475,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param username The auth user.
      * @param password The auth password.
      */
-    void addAuthRequestCredentials(String expectedAuthHost, String username, String password) {
+    void addAuthRequestCredentials(@NonNull String expectedAuthHost, @Nullable  String username, @Nullable String password) {
         authRequestCredentials.put(expectedAuthHost, new Credentials(username, password));
     }
 
@@ -483,16 +484,16 @@ public class UAWebViewClient extends WebViewClient {
      *
      * @param expectedAuthHost The expected host.
      */
-    void removeAuthRequestCredentials(String expectedAuthHost) {
+    void removeAuthRequestCredentials(@NonNull String expectedAuthHost) {
         authRequestCredentials.remove(expectedAuthHost);
     }
 
-    private String createGetter(String functionName, String value) {
+    private String createGetter(@NonNull String functionName, @Nullable String value) {
         value = (value == null) ? "null" : JSONObject.quote(value);
         return String.format(Locale.US, "_UAirship.%s = function(){return %s;};", functionName, value);
     }
 
-    private String createGetter(String functionName, long value) {
+    private String createGetter(@NonNull String functionName, long value) {
         return String.format(Locale.US, "_UAirship.%s = function(){return %d;};", functionName, value);
     }
 
@@ -503,7 +504,8 @@ public class UAWebViewClient extends WebViewClient {
      * @return The rich push message or null if the web view is not an instance of UAWebView
      * or does not have an associated message.
      */
-    private RichPushMessage getMessage(WebView webView) {
+    @Nullable
+    private RichPushMessage getMessage(@Nullable WebView webView) {
         if (webView instanceof UAWebView) {
             return ((UAWebView) webView).getCurrentMessage();
         }
@@ -529,6 +531,7 @@ public class UAWebViewClient extends WebViewClient {
     @SuppressLint("StaticFieldLeak")
     private class InjectJsBridgeTask extends AsyncTask<Void, Void, String> {
 
+        @NonNull
         private final WeakReference<WebView> webViewWeakReference;
         private final Context context;
 
@@ -537,6 +540,7 @@ public class UAWebViewClient extends WebViewClient {
             this.webViewWeakReference = new WeakReference<>(webView);
         }
 
+        @Nullable
         @Override
         protected String doInBackground(Void... params) {
             WebView webView = webViewWeakReference.get();

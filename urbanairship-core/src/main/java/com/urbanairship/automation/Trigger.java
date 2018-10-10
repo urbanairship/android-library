@@ -5,6 +5,7 @@ package com.urbanairship.automation;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
@@ -38,7 +39,9 @@ public class Trigger implements Parcelable {
     private static final String ACTIVE_SESSION_NAME = "active_session";
     private static final String VERSION_NAME = "version";
 
-    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION, VERSION })
+    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT,
+              CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT,
+              ACTIVE_SESSION, VERSION })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -104,12 +107,18 @@ public class Trigger implements Parcelable {
      */
     public static final int VERSION = 10;
 
+    /**
+     * @hide
+     */
+    @NonNull
     public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
+        @NonNull
         @Override
-        public Trigger createFromParcel(Parcel in) {
+        public Trigger createFromParcel(@NonNull Parcel in) {
             return new Trigger(in);
         }
 
+        @NonNull
         @Override
         public Trigger[] newArray(int size) {
             return new Trigger[size];
@@ -121,13 +130,14 @@ public class Trigger implements Parcelable {
     private final JsonPredicate predicate;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Trigger(@TriggerType int type, double goal, JsonPredicate predicate) {
+    public Trigger(@TriggerType int type, double goal, @Nullable JsonPredicate predicate) {
         this.type = type;
         this.goal = goal;
         this.predicate = predicate;
     }
 
-    public Trigger(Parcel in) {
+
+    public Trigger(@NonNull Parcel in) {
         double goal;
         int type;
         JsonPredicate predicate = null;
@@ -184,7 +194,7 @@ public class Trigger implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeInt(type);
         dest.writeDouble(goal);
         dest.writeParcelable(predicate == null ? null : predicate.toJsonValue(), flags);
@@ -228,7 +238,7 @@ public class Trigger implements Parcelable {
 
     /**
      * Parses a Trigger from a JsonValue.
-     * <p/>
+     * <p>
      * The expected JsonValue is a map containing:
      * <pre>
      * - "goal": Required. The trigger's goal. Either the count of event occurrences or the aggregate value of custom event values ("custom_event_value").
@@ -240,7 +250,8 @@ public class Trigger implements Parcelable {
      * @return The parsed Trigger.
      * @throws JsonException If the JsonValue does not produce a valid Trigger.
      */
-    public static Trigger parseJson(JsonValue value) throws JsonException {
+    @NonNull
+    public static Trigger parseJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         @TriggerType int type;
@@ -250,7 +261,7 @@ public class Trigger implements Parcelable {
             throw new JsonException("Trigger goal must be defined and greater than 0.");
         }
 
-        String typeString = jsonMap.opt(TYPE_KEY).getString("").toLowerCase(Locale.ROOT);
+        String typeString = jsonMap.opt(TYPE_KEY).optString().toLowerCase(Locale.ROOT);
         switch (typeString) {
             case CUSTOM_EVENT_COUNT_NAME:
                 type = CUSTOM_EVENT_COUNT;

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
@@ -30,10 +31,13 @@ public class EventResolver extends UrbanAirshipResolver {
     /**
      * Default sort order that sorts the events in ASCENDING order by age
      */
+    @NonNull
     public static final String ASCENDING_SORT_ORDER = EventsStorage.Events._ID + " ASC";
+
+    @NonNull
     private final Uri uri;
 
-    public EventResolver(Context context) {
+    public EventResolver(@NonNull Context context) {
         super(context);
         this.uri = UrbanAirshipProvider.getEventsContentUri(context);
     }
@@ -85,7 +89,7 @@ public class EventResolver extends UrbanAirshipResolver {
      * @param eventIds Ids of the events to delete
      * @return <code>true</code> if any events were deleted, otherwise <code>false</code>
      */
-    boolean deleteEvents(Set<String> eventIds) {
+    boolean deleteEvents(@Nullable Set<String> eventIds) {
         if (eventIds == null || eventIds.size() == 0) {
             Logger.verbose("EventsStorage - Nothing to delete. Returning.");
             return false;
@@ -99,7 +103,7 @@ public class EventResolver extends UrbanAirshipResolver {
         return deleted > 0;
     }
 
-    private static String repeat(String repeater, int times, String separator) {
+    private static String repeat(@NonNull String repeater, int times, @NonNull String separator) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < times; i++) {
             builder.append(repeater);
@@ -117,6 +121,7 @@ public class EventResolver extends UrbanAirshipResolver {
      *
      * @return The oldest session id if exists, null otherwise
      */
+    @Nullable
     private String getOldestSessionId() {
         String[] columns = new String[] { EventsStorage.Events.COLUMN_NAME_SESSION_ID };
         Uri eventsUri = uri.buildUpon().appendQueryParameter(UrbanAirshipProvider.QUERY_PARAMETER_LIMIT, "1").build();
@@ -192,7 +197,7 @@ public class EventResolver extends UrbanAirshipResolver {
      * @param event The event.
      * @param sessionId The session ID.
      */
-    void insertEvent(Event event, String sessionId) {
+    void insertEvent(@NonNull Event event, @NonNull String sessionId) {
         String eventPayload = event.createEventPayload(sessionId);
 
         ContentValues values = new ContentValues();
@@ -215,7 +220,7 @@ public class EventResolver extends UrbanAirshipResolver {
         while (getDatabaseSize() > maxDatabaseSize) {
 
             String sessionId = getOldestSessionId();
-            if (UAStringUtil.isEmpty(sessionId))  {
+            if (UAStringUtil.isEmpty(sessionId)) {
                 break;
             }
 

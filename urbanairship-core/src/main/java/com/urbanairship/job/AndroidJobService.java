@@ -3,6 +3,7 @@ package com.urbanairship.job;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
 import com.urbanairship.Logger;
@@ -17,7 +18,7 @@ import com.urbanairship.Logger;
 public class AndroidJobService extends JobService {
 
     @Override
-    public boolean onStartJob(final JobParameters jobParameters) {
+    public boolean onStartJob(@NonNull final JobParameters jobParameters) {
         JobInfo jobInfo = JobInfo.fromPersistableBundle(jobParameters.getExtras());
 
         if (jobInfo == null) {
@@ -28,7 +29,7 @@ public class AndroidJobService extends JobService {
         Job job = new Job.Builder(jobInfo)
                 .setCallback(new Job.Callback() {
                     @Override
-                    public void onFinish(Job job, @JobInfo.JobResult int result) {
+                    public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
                         jobFinished(jobParameters, result == JobInfo.JOB_RETRY);
                     }
                 })
@@ -42,7 +43,7 @@ public class AndroidJobService extends JobService {
     }
 
     @Override
-    public boolean onStopJob(JobParameters jobParameters) {
+    public boolean onStopJob(@NonNull JobParameters jobParameters) {
         return false;
     }
 }

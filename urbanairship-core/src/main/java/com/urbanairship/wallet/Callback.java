@@ -3,6 +3,8 @@
 package com.urbanairship.wallet;
 
 
+import android.support.annotation.NonNull;
+
 /**
  * Callback when executing a {@link PassRequest}.
  */
@@ -12,7 +14,7 @@ public interface Callback {
      *
      * @param pass The {@link Pass}.
      */
-    void onResult(Pass pass);
+    void onResult(@NonNull Pass pass);
 
     /**
      * Called when an error occurred.

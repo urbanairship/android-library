@@ -36,7 +36,7 @@ class Job implements Runnable {
          * @param job The job.
          * @param result The job's result.
          */
-        void onFinish(Job job, @JobInfo.JobResult int result);
+        void onFinish(@NonNull Job job, @JobInfo.JobResult int result);
     }
 
     private final JobInfo jobInfo;
@@ -48,7 +48,7 @@ class Job implements Runnable {
      *
      * @param builder The job builder.
      */
-    private Job(Builder builder) {
+    private Job(@NonNull Builder builder) {
         this.jobInfo = builder.jobInfo;
         this.callback = builder.callback;
     }
@@ -105,7 +105,7 @@ class Job implements Runnable {
      * @param airship The airship instance.
      * @return The airship component.
      */
-    private AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
+    private AirshipComponent findAirshipComponent(@NonNull UAirship airship, String componentClassName) {
         if (UAStringUtil.isEmpty(componentClassName)) {
             return null;
         }
@@ -143,6 +143,7 @@ class Job implements Runnable {
          * @param callback A callback.
          * @return The builder instance.
          */
+        @NonNull
         Builder setCallback(@NonNull Callback callback) {
             this.callback = callback;
             return this;
@@ -153,6 +154,7 @@ class Job implements Runnable {
          *
          * @return The job.
          */
+        @NonNull
         Job build() {
             return new Job(this);
         }

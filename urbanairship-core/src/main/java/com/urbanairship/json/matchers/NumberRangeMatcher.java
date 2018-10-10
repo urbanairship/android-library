@@ -3,6 +3,7 @@
 package com.urbanairship.json.matchers;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
@@ -11,15 +12,22 @@ import com.urbanairship.json.ValueMatcher;
 
 /**
  * Range matcher.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class NumberRangeMatcher extends ValueMatcher {
 
+    @NonNull
     public static final String MIN_VALUE_KEY = "at_least";
+
+    @NonNull
     public static final String MAX_VALUE_KEY = "at_most";
 
+    @Nullable
     private final Double min;
+
+    @Nullable
     private final Double max;
 
     /**
@@ -29,13 +37,13 @@ public class NumberRangeMatcher extends ValueMatcher {
      * @param max The max value.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public NumberRangeMatcher(Double min, Double max) {
+    public NumberRangeMatcher(@Nullable Double min, @Nullable Double max) {
         this.min = min;
         this.max = max;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -60,17 +68,14 @@ public class NumberRangeMatcher extends ValueMatcher {
 
     @Override
     protected boolean apply(@NonNull JsonValue value, boolean ignoreCase) {
-        if (min != null && (!value.isNumber() || value.getNumber().doubleValue() < min)) {
+        if (min != null && (!value.isNumber() || value.getDouble(0) < min)) {
             return false;
         }
 
-        if (max != null && (!value.isNumber() || value.getNumber().doubleValue() > max)) {
-            return false;
-        }
-
-        return true;
+        return max == null || (value.isNumber() && !(value.getDouble(0) > max));
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()

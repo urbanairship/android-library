@@ -39,8 +39,8 @@ public class PlayServicesUtils {
 
     /**
      * Checks and handles any user recoverable Google Play services errors.
-     * <p/>
-     * </p>
+     * <p>
+     * <p>
      * If a user recoverable error is encountered, a {@link com.urbanairship.google.PlayServicesErrorActivity}
      * will be launched to display any resolution dialog provided by Google Play
      * services.
@@ -81,7 +81,7 @@ public class PlayServicesUtils {
      * Verifies that Google Play services dependency is available and the Google
      * Play services version required for the application is installed and enabled
      * on the device.
-     * <p/>
+     * <p>
      * This method is a wrapper around
      * {@link com.google.android.gms.common.GooglePlayServicesUtil#isGooglePlayServicesAvailable(android.content.Context)}
      * but with an additional check if the dependency is also available.
@@ -204,6 +204,7 @@ public class PlayServicesUtils {
 
     /**
      * Checks if a given package is installed on the device.
+     *
      * @param context The application context.
      * @param packageName The name of the package as a string.
      * @return <code>true</code> if the given package is installed on the device,

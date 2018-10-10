@@ -21,7 +21,7 @@ public class SampleAutopilot extends Autopilot {
     private static final String FIRST_RUN_KEY = "first_run";
 
     @Override
-    public void onAirshipReady(UAirship airship) {
+    public void onAirshipReady(@NonNull UAirship airship) {
         SharedPreferences preferences = UAirship.getApplicationContext().getSharedPreferences(NO_BACKUP_PREFERENCES, Context.MODE_PRIVATE);
 
         boolean isFirstRun = preferences.getBoolean(FIRST_RUN_KEY, true);

@@ -15,6 +15,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,7 +44,7 @@ import java.lang.ref.WeakReference;
 
 /**
  * An activity that displays a landing page.
- * <p/>
+ * <p>
  * The easiest way to customize the landing page view is to specify a theme
  * for the activity in the AndroidManifest.xml. A custom layout can be specified
  * by providing a metadata element com.urbanairship.action.LANDING_PAGE_VIEW with
@@ -53,7 +55,7 @@ import java.lang.ref.WeakReference;
  * An optional close button can be added by defining it in the layout and setting
  * the android:onClick="onCloseButtonClick". The onCloseButtonClick method will
  * close the landing page by finishing the activity.
- * <p/>
+ * <p>
  * More extensive landing page customization can be defined by creating custom Activity.
  * In the AndroidManifest.xml, define the landing page activity with an intent
  * filter with action com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION,
@@ -66,26 +68,31 @@ public class LandingPageActivity extends Activity {
     /**
      * Metadata extra to specify a custom landing page view.
      */
+    @NonNull
     public static final String LANDING_PAGE_VIEW_KEY = "com.urbanairship.action.LANDING_PAGE_VIEW";
 
     /**
      * The content's width payload key
      */
+    @NonNull
     public static final String WIDTH_KEY = "width";
 
     /**
      * The content's height payload key
      */
+    @NonNull
     public static final String HEIGHT_KEY = "height";
 
     /**
      * The content's aspectLock payload key
      */
+    @NonNull
     public static final String ASPECT_LOCK_KEY = "aspectLock";
 
     /**
      * Metadata extra to specify the web view's background color when displaying landing pages.
      */
+    @NonNull
     public static final String LANDING_PAGE_BACKGROUND_COLOR = "com.urbanairship.LANDING_PAGE_BACKGROUND_COLOR";
 
     private static final long LANDING_PAGE_RETRY_DELAY_MS = 20000; // 20 seconds
@@ -102,7 +109,7 @@ public class LandingPageActivity extends Activity {
 
     @SuppressLint("NewApi")
     @Override
-    public final void onCreate(Bundle savedInstanceState) {
+    public final void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
@@ -199,7 +206,7 @@ public class LandingPageActivity extends Activity {
             }
 
             @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+            public void onReceivedError(WebView view, int errorCode, String description, @Nullable String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
                     Logger.error("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
                     error = errorCode;
@@ -223,7 +230,7 @@ public class LandingPageActivity extends Activity {
     }
 
     @Override
-    public void onNewIntent(Intent intent) {
+    public void onNewIntent(@NonNull Intent intent) {
         Logger.debug("LandingPageActivity - New intent received for landing page");
         restartActivity(intent.getData(), intent.getExtras());
     }
@@ -236,7 +243,7 @@ public class LandingPageActivity extends Activity {
      * otherwise <code>false</code>.
      */
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
@@ -280,7 +287,7 @@ public class LandingPageActivity extends Activity {
      * @param out The view to fade out
      */
     @SuppressLint("NewApi")
-    private void crossFade(final View in, final View out) {
+    private void crossFade(@Nullable final View in, @Nullable final View out) {
         if (in != null) {
             in.animate().alpha(1f).setDuration(200);
         }
@@ -303,7 +310,7 @@ public class LandingPageActivity extends Activity {
      *
      * @param view The view that was clicked.
      */
-    public void onCloseButtonClick(View view) {
+    public void onCloseButtonClick(@NonNull View view) {
         this.finish();
     }
 
@@ -312,6 +319,7 @@ public class LandingPageActivity extends Activity {
      *
      * @return A landing page view
      */
+    @NonNull
     private View createDefaultLandingPageView() {
         FrameLayout frameLayout = new FrameLayout(this);
         UAWebView webView = new UAWebView(this);
@@ -470,7 +478,7 @@ public class LandingPageActivity extends Activity {
      * @param uri The URI of the intent.
      * @param extras The extras bundle.
      */
-    private void restartActivity(Uri uri, Bundle extras) {
+    private void restartActivity(@NonNull Uri uri, @Nullable Bundle extras) {
         Logger.debug("Relaunching activity");
 
         finish();

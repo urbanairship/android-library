@@ -3,6 +3,9 @@
 package com.urbanairship.push;
 
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonValue;
 
@@ -57,6 +60,7 @@ class PendingTagGroupMutationStore {
      *
      * @return The next tag group mutation or {@code null} if no mutations exist.
      */
+    @Nullable
     TagGroupsMutation pop() {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();
@@ -75,6 +79,7 @@ class PendingTagGroupMutationStore {
      *
      * @return The top tag group mutation or {@code null} if no mutations exist.
      */
+    @Nullable
     TagGroupsMutation peek() {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();
@@ -106,7 +111,7 @@ class PendingTagGroupMutationStore {
      * @param pendingAddTagsKey The old pending addPending tags key.
      * @param pendingRemoveTagsKey The old pending remove tags key.
      */
-    void migrateTagGroups(String pendingAddTagsKey, String pendingRemoveTagsKey) {
+    void migrateTagGroups(@NonNull String pendingAddTagsKey, @NonNull String pendingRemoveTagsKey) {
         JsonValue pendingAddTags = dataStore.getJsonValue(pendingAddTagsKey);
         JsonValue pendingRemoveTags = dataStore.getJsonValue(pendingRemoveTagsKey);
 
@@ -132,6 +137,7 @@ class PendingTagGroupMutationStore {
      *
      * @return A list of all the tag group mutations.
      */
+    @NonNull
     List<TagGroupsMutation> getMutations() {
         return TagGroupsMutation.fromJsonList(dataStore.getJsonValue(storeKey).optList());
     }

@@ -2,6 +2,7 @@
 
 package com.urbanairship.json;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
@@ -21,6 +22,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
     /**
      * Empty list.
      */
+    @NonNull
     public static final JsonList EMPTY_LIST = new JsonList(null);
 
     private final List<JsonValue> list;
@@ -40,7 +42,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @param jsonValue the object to search for.
      * @return {@code true} if the list contains the value, otherwise {@code false}.
      */
-    public boolean contains(JsonValue jsonValue) {
+    public boolean contains(@NonNull JsonValue jsonValue) {
         return list.contains(jsonValue);
     }
 
@@ -51,6 +53,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @return the element at the specified location.
      * @throws IndexOutOfBoundsException if {@code location < 0 || location >= size()}
      */
+    @Nullable
     public JsonValue get(int location) {
         return list.get(location);
     }
@@ -63,7 +66,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @return the index of the first occurrence of the object or -1 if the
      * object was not found.
      */
-    public int indexOf(JsonValue jsonValue) {
+    public int indexOf(@NonNull JsonValue jsonValue) {
         return list.indexOf(jsonValue);
     }
 
@@ -85,6 +88,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @return an iterator on the elements of this {@code List}.
      * @see Iterator
      */
+    @NonNull
     public Iterator<JsonValue> iterator() {
         return list.iterator();
     }
@@ -97,7 +101,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @return the index of the first occurrence of the object or -1 if the
      * object was not found.
      */
-    public int lastIndexOf(JsonValue jsonValue) {
+    public int lastIndexOf(@NonNull JsonValue jsonValue) {
         return list.indexOf(jsonValue);
     }
 
@@ -115,12 +119,13 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      *
      * @return The JsonList as a list.
      */
+    @NonNull
     public List<JsonValue> getList() {
         return new ArrayList<>(list);
     }
 
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@Nullable Object object) {
         if (object == this) {
             return true;
         }
@@ -143,6 +148,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      *
      * @return The value as a JSON encoded String.
      */
+    @NonNull
     @Override
     public String toString() {
         try {
@@ -162,7 +168,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @param stringer The JSONStringer object.
      * @throws org.json.JSONException If the value is unable to be written as JSON.
      */
-    void write(JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer) throws JSONException {
         stringer.array();
         for (JsonValue actionValue : this) {
             actionValue.write(stringer);
@@ -170,6 +176,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
         stringer.endArray();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonValue.wrap(this);

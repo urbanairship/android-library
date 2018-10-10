@@ -5,6 +5,8 @@ package com.urbanairship.iam.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -42,7 +44,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
          * @param view The button's view.
          * @param buttonInfo The button info.
          */
-        void onButtonClicked(View view, ButtonInfo buttonInfo);
+        void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo);
     }
 
     private ButtonClickListener buttonClickListener;
@@ -52,7 +54,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      *
      * @param context A Context object used to access application assets.
      */
-    public InAppButtonLayout(Context context) {
+    public InAppButtonLayout(@NonNull Context context) {
         this(context, null);
     }
 
@@ -62,7 +64,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public InAppButtonLayout(Context context, AttributeSet attrs) {
+    public InAppButtonLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
@@ -73,7 +75,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public InAppButtonLayout(Context context, AttributeSet attrs, int defStyle) {
+    public InAppButtonLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context, attrs, defStyle, 0);
     }
@@ -89,7 +91,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * look for defaults.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    public InAppButtonLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    public InAppButtonLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context, attrs, defStyle, defResStyle);
     }
@@ -104,7 +106,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
-    private void init(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    private void init(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         if (attrs != null) {
             TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.UrbanAirshipInAppButtonLayout, defStyle, defResStyle);
             stackedSpaceHeight = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipInAppButtonLayout_urbanAirshipStackedSpaceHeight, 0);
@@ -119,7 +121,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      *
      * @param buttonClickListener The button click listener.
      */
-    public void setButtonClickListener(ButtonClickListener buttonClickListener) {
+    public void setButtonClickListener(@Nullable ButtonClickListener buttonClickListener) {
         this.buttonClickListener = buttonClickListener;
     }
 
@@ -129,7 +131,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * @param layout The button layout.
      * @param buttonInfos The list of button infos.
      */
-    public void setButtons(@DisplayContent.ButtonLayout String layout, final List<ButtonInfo> buttonInfos) {
+    public void setButtons(@NonNull @DisplayContent.ButtonLayout String layout, @NonNull final List<ButtonInfo> buttonInfos) {
         boolean isStacked = false;
         boolean isJoined = false;
 
@@ -185,7 +187,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
 
             button.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onClick(@NonNull View view) {
                     if (buttonClickListener != null) {
                         buttonClickListener.onButtonClicked(view, buttonInfo);
                     }

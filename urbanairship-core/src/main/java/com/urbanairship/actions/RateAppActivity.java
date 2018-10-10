@@ -10,6 +10,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.urbanairship.Autopilot;
@@ -23,11 +25,11 @@ import com.urbanairship.messagecenter.ThemedActivity;
  */
 public class RateAppActivity extends ThemedActivity {
 
-    AlertDialog dialog;
+    private AlertDialog dialog;
 
     @SuppressLint("NewApi")
     @Override
-    public final void onCreate(Bundle savedInstanceState) {
+    public final void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
@@ -38,7 +40,7 @@ public class RateAppActivity extends ThemedActivity {
     }
 
     @Override
-    public void onNewIntent(Intent intent) {
+    public void onNewIntent(@NonNull Intent intent) {
         Logger.debug("RateAppActivity - New intent received for rate app activity");
         restartActivity(intent.getData(), intent.getExtras());
     }
@@ -61,7 +63,7 @@ public class RateAppActivity extends ThemedActivity {
      *
      * @param view The view that was clicked.
      */
-    public void onCloseButtonClick(View view) {
+    public void onCloseButtonClick(@NonNull View view) {
         this.finish();
     }
 
@@ -89,7 +91,6 @@ public class RateAppActivity extends ThemedActivity {
         }
 
 
-
         AlertDialog.Builder builder;
         Context context = this;
         builder = new AlertDialog.Builder(context);
@@ -112,7 +113,7 @@ public class RateAppActivity extends ThemedActivity {
         builder.setPositiveButton(
                 context.getString(R.string.ua_rate_app_action_default_rate_positive_button),
                 new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
+                    public void onClick(@NonNull DialogInterface dialog, int id) {
                         try {
                             Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, storeUri);
                             startActivity(openLinkIntent);
@@ -129,7 +130,7 @@ public class RateAppActivity extends ThemedActivity {
         builder.setNegativeButton(
                 context.getString(R.string.ua_rate_app_action_default_rate_negative_button),
                 new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
+                    public void onClick(@NonNull DialogInterface dialog, int id) {
                         dialog.cancel();
                         finish();
                     }
@@ -137,7 +138,7 @@ public class RateAppActivity extends ThemedActivity {
 
         builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
-            public void onCancel(DialogInterface dialog) {
+            public void onCancel(@NonNull DialogInterface dialog) {
                 dialog.cancel();
                 finish();
             }
@@ -154,7 +155,7 @@ public class RateAppActivity extends ThemedActivity {
      * @param uri The URI of the intent.
      * @param extras The extras bundle.
      */
-    private void restartActivity(Uri uri, Bundle extras) {
+    private void restartActivity(@NonNull Uri uri, @Nullable Bundle extras) {
         Logger.debug("Relaunching activity");
 
         finish();
@@ -171,13 +172,14 @@ public class RateAppActivity extends ThemedActivity {
         this.startActivity(restartIntent);
     }
 
+    @NonNull
     private String getAppName() {
         String packageName = UAirship.getApplicationContext().getPackageName();
         PackageManager packageManager = UAirship.getApplicationContext().getPackageManager();
 
         try {
             ApplicationInfo info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            return (String)packageManager.getApplicationLabel(info);
+            return (String) packageManager.getApplicationLabel(info);
         } catch (PackageManager.NameNotFoundException e) {
             return "";
         }

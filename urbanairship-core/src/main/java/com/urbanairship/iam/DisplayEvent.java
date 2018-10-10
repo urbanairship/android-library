@@ -24,6 +24,7 @@ class DisplayEvent extends InAppMessageEvent {
         super(createEventId(message), message.getSource());
     }
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;

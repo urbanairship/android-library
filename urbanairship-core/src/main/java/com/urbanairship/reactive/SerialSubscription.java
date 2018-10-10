@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -18,9 +19,10 @@ public class SerialSubscription extends Subscription {
 
     /**
      * Sets the subscription.
+     *
      * @param subscription The subscription.
      */
-    public synchronized void setSubscription(Subscription subscription) {
+    public synchronized void setSubscription(@NonNull Subscription subscription) {
         if (!isCancelled()) {
             this.subscription = subscription;
         } else {

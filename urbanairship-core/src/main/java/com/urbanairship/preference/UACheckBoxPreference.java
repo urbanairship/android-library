@@ -2,6 +2,7 @@
 
 package com.urbanairship.preference;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -9,6 +10,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.CheckBoxPreference;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,17 +31,17 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     private Handler handler;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public UACheckBoxPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public UACheckBoxPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init();
     }
 
-    public UACheckBoxPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public UACheckBoxPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
 
-    public UACheckBoxPreference(Context context, AttributeSet attrs) {
+    public UACheckBoxPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
@@ -46,7 +49,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     private void init() {
         listener = new ActivityMonitor.SimpleListener() {
             @Override
-            public void onActivityPaused(Activity activity) {
+            public void onActivityPaused(@NonNull Activity activity) {
                 applyAirshipPreferenceRunnable.run();
             }
         };
@@ -69,6 +72,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
         setDefaultValue(isChecked);
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public View onCreateView(ViewGroup parent) {
         View view = super.onCreateView(parent);
@@ -100,18 +104,21 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
      * @param airship The {@link UAirship} instance.
      * @return The initial value for the preference.
      */
-    protected abstract boolean getInitialAirshipValue(UAirship airship);
+    protected abstract boolean getInitialAirshipValue(@NonNull UAirship airship);
 
     /**
      * Called when the preference should be set on Urban Airship.
+     *
      * @param airship The {@link UAirship} instance.
      * @param enabled The value of the preference.
      */
-    protected abstract void onApplyAirshipPreference(UAirship airship, boolean enabled);
+    protected abstract void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled);
 
     /**
      * Called to get the content description of the preference's view.
+     *
      * @return The content description.
      */
+    @NonNull
     protected abstract String getContentDescription();
 }

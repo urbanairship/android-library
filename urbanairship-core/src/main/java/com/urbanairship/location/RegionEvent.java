@@ -4,6 +4,7 @@ package com.urbanairship.location;
 
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 
 import com.urbanairship.Logger;
@@ -24,11 +25,13 @@ public class RegionEvent extends Event implements JsonSerializable {
     /**
      * The event type.
      */
+    @NonNull
     public static final String TYPE = "region_event";
 
     /**
      * The region ID key.
      */
+    @NonNull
     public static final String REGION_ID = "region_id";
 
     /**
@@ -111,7 +114,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      */
     private ProximityRegion proximityRegion;
 
-    @IntDef({BOUNDARY_EVENT_ENTER, BOUNDARY_EVENT_EXIT})
+    @IntDef({ BOUNDARY_EVENT_ENTER, BOUNDARY_EVENT_EXIT })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Boundary {}
 
@@ -166,6 +169,7 @@ public class RegionEvent extends Event implements JsonSerializable {
         this.boundaryEvent = boundaryEvent;
     }
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;
@@ -177,28 +181,25 @@ public class RegionEvent extends Event implements JsonSerializable {
      *
      * @return The boundary event type.
      */
-    public @Boundary int getBoundaryEvent() {
+    public @Boundary
+    int getBoundaryEvent() {
         return boundaryEvent;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
-
-        if (!isValid()) {
-            return null;
-        }
-
         JsonMap.Builder data = JsonMap.newBuilder()
-                .put(REGION_ID, regionId)
-                .put(SOURCE, source)
-                .put(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
+                                      .put(REGION_ID, regionId)
+                                      .put(SOURCE, source)
+                                      .put(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
 
         if (proximityRegion != null && proximityRegion.isValid()) {
             JsonMap.Builder proximityRegionData = JsonMap.newBuilder()
-                    .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
-                    .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
-                    .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
-                    .putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
+                                                         .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
+                                                         .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
+                                                         .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
+                                                         .putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
 
             if (proximityRegion.getLatitude() != null) {
                 proximityRegionData.put(LATITUDE, Double.toString(proximityRegion.getLatitude()));
@@ -213,10 +214,10 @@ public class RegionEvent extends Event implements JsonSerializable {
 
         if (circularRegion != null && circularRegion.isValid()) {
             JsonMap circularRegionData = JsonMap.newBuilder()
-                    .put(CIRCULAR_REGION_RADIUS, String.format(Locale.US, "%.1f", circularRegion.getRadius()))
-                    .put(LATITUDE, String.format(Locale.US, "%.7f", circularRegion.getLatitude()))
-                    .put(LONGITUDE,  String.format(Locale.US, "%.7f", circularRegion.getLongitude()))
-                    .build();
+                                                .put(CIRCULAR_REGION_RADIUS, String.format(Locale.US, "%.1f", circularRegion.getRadius()))
+                                                .put(LATITUDE, String.format(Locale.US, "%.7f", circularRegion.getLatitude()))
+                                                .put(LONGITUDE, String.format(Locale.US, "%.7f", circularRegion.getLongitude()))
+                                                .build();
 
             data.put(CIRCULAR_REGION, circularRegionData);
         }
@@ -224,41 +225,10 @@ public class RegionEvent extends Event implements JsonSerializable {
         return data.build();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
-
-        if (!isValid()) {
-            return null;
-        }
-
-        JsonMap.Builder data = JsonMap.newBuilder()
-                                      .put(REGION_ID, regionId)
-                                      .put(SOURCE, source)
-                                      .put(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
-
-        if (proximityRegion != null && proximityRegion.isValid()) {
-            JsonMap.Builder proximityRegionData = JsonMap.newBuilder()
-                                                         .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
-                                                         .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
-                                                         .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
-                                                         .putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi())
-                                                         .putOpt(LATITUDE, proximityRegion.getLatitude())
-                                                         .putOpt(LATITUDE, proximityRegion.getLatitude());
-
-            data.put(RegionEvent.PROXIMITY_REGION, proximityRegionData.build());
-        }
-
-        if (circularRegion != null && circularRegion.isValid()) {
-            JsonMap circularRegionData = JsonMap.newBuilder()
-                                                .put(CIRCULAR_REGION_RADIUS, circularRegion.getRadius())
-                                                .put(LATITUDE, circularRegion.getLatitude())
-                                                .put(LONGITUDE,  circularRegion.getLongitude())
-                                                .build();
-
-            data.put(CIRCULAR_REGION, circularRegionData);
-        }
-
-        return data.build().toJsonValue();
+        return getEventData().toJsonValue();
     }
 
     /**
@@ -266,7 +236,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      *
      * @param proximityRegion The optional proximity region.
      */
-    public void setProximityRegion(ProximityRegion proximityRegion) {
+    public void setProximityRegion(@Nullable ProximityRegion proximityRegion) {
         this.proximityRegion = proximityRegion;
     }
 
@@ -275,7 +245,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      *
      * @param circularRegion The optional circular region.
      */
-    public void setCircularRegion(CircularRegion circularRegion) {
+    public void setCircularRegion(@Nullable CircularRegion circularRegion) {
         this.circularRegion = circularRegion;
     }
 
@@ -284,7 +254,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      *
      * @param string The event string to be validated.
      */
-    static boolean regionEventCharacterCountIsValid(String string) {
+    static boolean regionEventCharacterCountIsValid(@NonNull String string) {
         return string.length() <= MAX_CHARACTER_LENGTH && string.length() > 0;
     }
 
@@ -294,7 +264,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      * @param lat The latitude in degrees.
      * @return True if latitude is valid, false otherwise.
      */
-    static boolean regionEventLatitudeIsValid(Double lat) {
+    static boolean regionEventLatitudeIsValid(@NonNull Double lat) {
         return lat <= RegionEvent.MAX_LATITUDE && lat >= RegionEvent.MIN_LATITUDE;
     }
 
@@ -304,7 +274,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      * @param lon The longitude in degrees.
      * @return True if longitude is valid, false otherwise.
      */
-    static boolean regionEventLongitudeIsValid(Double lon) {
+    static boolean regionEventLongitudeIsValid(@NonNull Double lon) {
         return lon <= RegionEvent.MAX_LONGITUDE && lon >= RegionEvent.MIN_LONGITUDE;
     }
 

@@ -75,7 +75,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
          * @return The builder.
          */
         @NonNull
-        InAppMessage.Builder extend(Context context, InAppMessage.Builder builder, LegacyInAppMessage legacyMessage);
+        InAppMessage.Builder extend(@NonNull Context context, @NonNull InAppMessage.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
     }
 
     /**
@@ -92,7 +92,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
          * @return The builder.
          */
         @NonNull
-        InAppMessageScheduleInfo.Builder extend(Context context, InAppMessageScheduleInfo.Builder builder, LegacyInAppMessage legacyMessage);
+        InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
     }
 
 
@@ -104,7 +104,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public LegacyInAppMessageManager(PreferenceDataStore preferenceDataStore, InAppMessageManager inAppMessageManager, Analytics analytics) {
+    public LegacyInAppMessageManager(@NonNull PreferenceDataStore preferenceDataStore, @NonNull InAppMessageManager inAppMessageManager, @NonNull Analytics analytics) {
         super(preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.inAppMessageManager = inAppMessageManager;
@@ -126,7 +126,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      *
      * @param messageBuilderExtender The extender.
      */
-    public void setMessageBuilderExtender(MessageBuilderExtender messageBuilderExtender) {
+    public void setMessageBuilderExtender(@Nullable MessageBuilderExtender messageBuilderExtender) {
         this.messageBuilderExtender = messageBuilderExtender;
     }
 
@@ -135,13 +135,14 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      *
      * @param scheduleBuilderExtender The extender.
      */
-    public void setScheduleBuilderExtender(ScheduleInfoBuilderExtender scheduleBuilderExtender) {
+    public void setScheduleBuilderExtender(@Nullable ScheduleInfoBuilderExtender scheduleBuilderExtender) {
         this.scheduleBuilderExtender = scheduleBuilderExtender;
     }
 
     /**
      * Sets whether legacy messages will display immediately upon arrival, instead of waiting
      * until the following foreground. Defaults to <code>true</code>.
+     *
      * @param enabled Whether immediate display is enabled.
      */
     public void setDisplayAsapEnabled(boolean enabled) {
@@ -151,6 +152,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     /**
      * Determines whether legacy messages will display immediately upon arrival, instead of waiting
      * until the following foreground.
+     *
      * @return <code>true</code> if immediate display is enabled, otherwise <code>false</code>.
      */
     public boolean getDisplayAsapEnabled() {
@@ -241,7 +243,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      * @param legacyInAppMessage The legacy in-app message.
      * @return The schedule info, or {@code null} if the factory is unable to create a schedule info.
      */
-    private InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage legacyInAppMessage) {
+    @Nullable
+    private InAppMessageScheduleInfo createScheduleInfo(@NonNull Context context, @NonNull LegacyInAppMessage legacyInAppMessage) {
         try {
             Trigger trigger;
 
@@ -277,9 +280,10 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      *
      * @param context The application context.
      * @param legacyMessage The legacy in-app message.
-     * @return
+     * @return The In-App message.
      */
-    private InAppMessage createMessage(Context context, LegacyInAppMessage legacyMessage) {
+    @NonNull
+    private InAppMessage createMessage(@NonNull Context context, @NonNull LegacyInAppMessage legacyMessage) {
         @ColorInt
         int primaryColor = legacyMessage.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : legacyMessage.getPrimaryColor();
 
@@ -317,9 +321,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                     TextInfo.Builder labelBuilder = TextInfo.newBuilder()
                                                             .setDrawable(button.getIcon())
                                                             .setColor(primaryColor)
-                                                            .setAlignment(TextInfo.ALIGNMENT_CENTER);
-
-                    labelBuilder.setText(button.getLabel(context));
+                                                            .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                                                            .setText(button.getLabel(context));
 
                     ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
                                                                      .setActions(legacyMessage.getButtonActionValues(button.getId()))

@@ -29,7 +29,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
     private final Long editGracePeriod;
     private final Long interval;
 
-    private InAppMessageScheduleEdits(Builder builder) {
+    private InAppMessageScheduleEdits(@NonNull Builder builder) {
         this.limit = builder.limit;
         this.start = builder.start;
         this.end = builder.end;
@@ -120,6 +120,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
      * @return The edit info.
      * @throws JsonException If the json is invalid.
      */
+    @NonNull
     public static InAppMessageScheduleEdits fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
@@ -170,6 +171,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -180,6 +182,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
      * @param edits Edits to extend.
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull InAppMessageScheduleEdits edits) {
         return new Builder(edits);
     }
@@ -213,6 +216,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param limit The display limit.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setLimit(int limit) {
             this.limit = limit;
             return this;
@@ -224,7 +228,8 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param message The in-app message.
          * @return The builder instance.
          */
-        public Builder setMessage(InAppMessage message) {
+        @NonNull
+        public Builder setMessage(@Nullable InAppMessage message) {
             this.message = message;
             return this;
         }
@@ -235,6 +240,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param start The start time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setStart(long start) {
             this.start = start;
             return this;
@@ -246,6 +252,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param end The end time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEnd(long end) {
             this.end = end;
             return this;
@@ -257,6 +264,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param priority The priority level.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setPriority(int priority) {
             this.priority = priority;
             return this;
@@ -269,6 +277,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
@@ -281,6 +290,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
             return this;
@@ -291,6 +301,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          *
          * @return The schedule edits.
          */
+        @NonNull
         public InAppMessageScheduleEdits build() {
             return new InAppMessageScheduleEdits(this);
         }

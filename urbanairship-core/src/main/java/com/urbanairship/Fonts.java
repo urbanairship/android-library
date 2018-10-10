@@ -33,7 +33,7 @@ public class Fonts {
     @SuppressLint("StaticFieldLeak")
     private static Fonts instance;
 
-    private Fonts(Context context) {
+    private Fonts(@NonNull Context context) {
         this.context = context.getApplicationContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -55,6 +55,7 @@ public class Fonts {
      * @param context The application context.
      * @return The shared instance.
      */
+    @NonNull
     public static Fonts shared(@NonNull Context context) {
         synchronized (Fonts.class) {
             if (instance == null) {
@@ -71,7 +72,7 @@ public class Fonts {
      * @param fontFamily The font family.
      * @param typeface The typeface.
      */
-    public synchronized void addFontFamily(String fontFamily, Typeface typeface) {
+    public synchronized void addFontFamily(@NonNull String fontFamily, @NonNull Typeface typeface) {
         fontCache.put(fontFamily, typeface);
     }
 
@@ -82,7 +83,7 @@ public class Fonts {
      * @return The type face or null if the font family is unavailable.
      */
     @Nullable
-    public synchronized Typeface getFontFamily(String fontFamily) {
+    public synchronized Typeface getFontFamily(@NonNull String fontFamily) {
         if (fontCache.containsKey(fontFamily)) {
             return fontCache.get(fontFamily);
         }

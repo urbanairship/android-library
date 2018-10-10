@@ -8,9 +8,10 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Base64;
-import android.view.MotionEvent;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -44,7 +45,7 @@ public class UAWebView extends WebView {
      *
      * @param context A Context object used to access application assets.
      */
-    public UAWebView(Context context) {
+    public UAWebView(@NonNull Context context) {
         this(context, null);
     }
 
@@ -54,7 +55,7 @@ public class UAWebView extends WebView {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public UAWebView(Context context, AttributeSet attrs) {
+    public UAWebView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, android.R.attr.webViewStyle);
     }
 
@@ -65,7 +66,7 @@ public class UAWebView extends WebView {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public UAWebView(Context context, AttributeSet attrs, int defStyle) {
+    public UAWebView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
         if (!isInEditMode()) {
@@ -84,7 +85,7 @@ public class UAWebView extends WebView {
      * look for defaults.
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public UAWebView(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    public UAWebView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
 
         if (!isInEditMode()) {
@@ -104,7 +105,7 @@ public class UAWebView extends WebView {
      * look for defaults.
      */
     @SuppressLint({ "NewApi", "SetJavaScriptEnabled" })
-    private void init(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    private void init(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         WebSettings settings = getSettings();
 
         settings.setAppCacheEnabled(true);
@@ -144,7 +145,7 @@ public class UAWebView extends WebView {
 
     /**
      * Initializes the web view with any default settings.
-     * <p/>
+     * <p>
      * Called during create.
      */
     protected void initializeView() {}
@@ -153,20 +154,20 @@ public class UAWebView extends WebView {
      * Populate any custom javascript interfaces by calling
      * addJavascriptInterface(Object interface, String identifier) for each
      * custom interface.
-     * <p/>
+     * <p>
      * Called after initializeView.
      */
     protected void populateCustomJavascriptInterfaces() {}
 
     @Override
-    public void loadData(String data, String mimeType, String encoding) {
+    public void loadData(@NonNull String data, @Nullable String mimeType, @Nullable String encoding) {
         onPreLoad();
         super.loadData(data, mimeType, encoding);
     }
 
     @Override
-    public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding,
-                                    String historyUrl) {
+    public void loadDataWithBaseURL(@Nullable String baseUrl, @NonNull String data, @Nullable String mimeType, @Nullable String encoding,
+                                    @Nullable String historyUrl) {
         onPreLoad();
         super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
     }
@@ -176,11 +177,11 @@ public class UAWebView extends WebView {
      *
      * @param url The URL of the resource to load.
      */
-    public void loadUrl(String url) {
+    public void loadUrl(@NonNull String url) {
         onPreLoad();
 
         // Add auth to landing page content URLs
-        if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
+        if (url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
             // Do pre auth if we can
             AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
             HashMap<String, String> headers = new HashMap<>();
@@ -202,11 +203,11 @@ public class UAWebView extends WebView {
      * @param additionalHttpHeaders The additional headers to be used in the HTTP request for
      * this URL.
      */
-    public void loadUrl(String url, Map<String, String> additionalHttpHeaders) {
+    public void loadUrl(@NonNull String url, @NonNull Map<String, String> additionalHttpHeaders) {
         onPreLoad();
         super.loadUrl(url, additionalHttpHeaders);
 
-        if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
+        if (url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
             AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
             setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
         }
@@ -218,7 +219,7 @@ public class UAWebView extends WebView {
      * @param message The RichPushMessage that will be displayed.
      */
     @SuppressLint("NewApi")
-    public void loadRichPushMessage(RichPushMessage message) {
+    public void loadRichPushMessage(@Nullable RichPushMessage message) {
         if (message == null) {
             Logger.warn("Unable to load null message into UAWebView");
             return;
@@ -228,14 +229,15 @@ public class UAWebView extends WebView {
 
         // Send authorization in the headers if the web view supports it
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
-
-        loadUrl(message.getMessageBodyUrl(), headers);
-
-        currentMessage = message;
 
         // Set the auth
-        setClientAuthRequest(message.getMessageBodyUrl(), user.getId(), user.getPassword());
+        if (user.getId() != null && user.getPassword() != null) {
+            setClientAuthRequest(message.getMessageBodyUrl(), user.getId(), user.getPassword());
+            headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
+        }
+
+        currentMessage = message;
+        loadUrl(message.getMessageBodyUrl(), headers);
     }
 
     /**
@@ -243,13 +245,14 @@ public class UAWebView extends WebView {
      *
      * @return The current RichPushMessage that was loaded.
      */
+    @Nullable
     public RichPushMessage getCurrentMessage() {
         return currentMessage;
     }
 
     @Override
-    public void setWebViewClient(WebViewClient webViewClient) {
-        if (!(webViewClient instanceof UAWebViewClient)) {
+    public void setWebViewClient(@Nullable WebViewClient webViewClient) {
+        if (webViewClient != null && !(webViewClient instanceof UAWebViewClient)) {
             Logger.warn("The web view client should extend UAWebViewClient to " +
                     "support urban airship url overrides and triggering actions from.");
         }
@@ -284,6 +287,7 @@ public class UAWebView extends WebView {
      *
      * @return The web view client.
      */
+    @Nullable
     WebViewClient getWebViewClientCompat() {
         return webViewClient;
     }
@@ -294,6 +298,7 @@ public class UAWebView extends WebView {
      *
      * @return The absolute path to the cache directory.
      */
+    @NonNull
     private String getCachePath() {
         File cacheDirectory = new File(UAirship.getApplicationContext().getCacheDir(), CACHE_DIRECTORY);
         if (!cacheDirectory.exists()) {
@@ -310,11 +315,7 @@ public class UAWebView extends WebView {
      * @param username The auth user
      * @param password The auth password
      */
-    private void setClientAuthRequest(String url, String username, String password) {
-        if (url == null) {
-            return;
-        }
-
+    private void setClientAuthRequest(@Nullable String url, @NonNull String username, @NonNull String password) {
         currentClientAuthRequestUrl = url;
 
         if (getWebViewClientCompat() != null && getWebViewClientCompat() instanceof UAWebViewClient) {
@@ -332,7 +333,7 @@ public class UAWebView extends WebView {
      * @param password The password.
      * @return The basic auth string.
      */
-    private String createBasicAuth(String userName, String password) {
+    private String createBasicAuth(@NonNull String userName, @NonNull String password) {
         String credentials = userName + ":" + password;
         return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
     }

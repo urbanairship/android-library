@@ -2,6 +2,7 @@
 
 package com.urbanairship.http;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -33,6 +34,7 @@ public class Response {
      *
      * @return The response as a string.
      */
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -75,6 +77,7 @@ public class Response {
      *
      * @return The response body as a string.
      */
+    @Nullable
     public String getResponseBody() {
         return responseBody;
     }
@@ -93,6 +96,7 @@ public class Response {
      *
      * @return The response headers as a map.
      */
+    @Nullable
     public Map<String, List<String>> getResponseHeaders() {
         return responseHeaders;
     }
@@ -124,7 +128,8 @@ public class Response {
          * @param responseMessage The response message string.
          * @return The builder with the response message set.
          */
-        public Builder setResponseMessage(String responseMessage) {
+        @NonNull
+        public Builder setResponseMessage(@Nullable String responseMessage) {
             this.responseMessage = responseMessage;
             return this;
         }
@@ -135,7 +140,8 @@ public class Response {
          * @param responseBody The response body string.
          * @return The builder with the response body set.
          */
-        public Builder setResponseBody(String responseBody) {
+        @NonNull
+        public Builder setResponseBody(@Nullable String responseBody) {
             this.responseBody = responseBody;
             return this;
         }
@@ -146,7 +152,8 @@ public class Response {
          * @param responseHeaders The response headers.
          * @return The builder with the response headers set.
          */
-        public Builder setResponseHeaders(Map<String, List<String>> responseHeaders) {
+        @NonNull
+        public Builder setResponseHeaders(@Nullable Map<String, List<String>> responseHeaders) {
             this.responseHeaders = responseHeaders;
             return this;
         }
@@ -157,6 +164,7 @@ public class Response {
          * @param lastModified The modified time in milliseconds.
          * @return The builder with the last modified time.
          */
+        @NonNull
         public Builder setLastModified(long lastModified) {
             this.lastModified = lastModified;
             return this;
@@ -188,7 +196,7 @@ public class Response {
      * @return The first header value.
      */
     @Nullable
-    public String getResponseHeader(String key) {
+    public String getResponseHeader(@NonNull String key) {
         if (responseHeaders != null) {
             List<String> headersList = responseHeaders.get(key);
             if (headersList != null && headersList.size() > 0) {

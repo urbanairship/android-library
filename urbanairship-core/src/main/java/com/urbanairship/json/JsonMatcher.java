@@ -33,31 +33,28 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
     @Nullable
     private final Boolean ignoreCase;
 
-    private JsonMatcher(Builder builder) {
+    private JsonMatcher(@NonNull Builder builder) {
         this.key = builder.key;
         this.scopeList = builder.scope;
         this.value = builder.valueMatcher == null ? ValueMatcher.newIsPresentMatcher() : builder.valueMatcher;
         this.ignoreCase = builder.ignoreCase;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                .putOpt(FIELD_KEY, key)
-                .putOpt(SCOPE_KEY, scopeList)
-                .put(VALUE_KEY, value)
-                .putOpt(IGNORE_CASE_KEY, ignoreCase)
-                .build()
-                .toJsonValue();
+                      .putOpt(FIELD_KEY, key)
+                      .putOpt(SCOPE_KEY, scopeList)
+                      .put(VALUE_KEY, value)
+                      .putOpt(IGNORE_CASE_KEY, ignoreCase)
+                      .build()
+                      .toJsonValue();
     }
 
     @Override
-    public boolean apply(JsonSerializable jsonSerializable) {
+    public boolean apply(@Nullable JsonSerializable jsonSerializable) {
         JsonValue jsonValue = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
-        if (jsonValue == null) {
-            jsonValue = JsonValue.NULL;
-        }
-
         for (String scope : scopeList) {
             jsonValue = jsonValue.optMap().opt(scope);
             if (jsonValue.isNull()) {
@@ -79,7 +76,8 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
      * @return The parsed JsonMatcher.
      * @throws JsonException If the JSON is invalid.
      */
-    public static JsonMatcher parse(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static JsonMatcher parse(@Nullable JsonValue jsonValue) throws JsonException {
         if (jsonValue == null || !jsonValue.isJsonMap() || jsonValue.optMap().isEmpty()) {
             throw new JsonException("Unable to parse empty JsonValue: " + jsonValue);
         }
@@ -91,12 +89,12 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         }
 
         JsonMatcher.Builder builder = JsonMatcher.newBuilder()
-                .setKey(map.opt(FIELD_KEY).getString(null))
-                .setValueMatcher(ValueMatcher.parse(map.get(VALUE_KEY)));
+                                                 .setKey(map.opt(FIELD_KEY).getString())
+                                                 .setValueMatcher(ValueMatcher.parse(map.get(VALUE_KEY)));
 
         JsonValue scope = map.opt(SCOPE_KEY);
         if (scope.isString()) {
-            builder.setScope(scope.getString());
+            builder.setScope(scope.optString());
         } else if (scope.isJsonList()) {
             List<String> scopes = new ArrayList<>();
 
@@ -119,6 +117,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -149,7 +148,8 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          * @param valueMatcher The ValueMatcher instance.
          * @return The Builder instance.
          */
-        public Builder setValueMatcher(ValueMatcher valueMatcher) {
+        @NonNull
+        public Builder setValueMatcher(@Nullable ValueMatcher valueMatcher) {
             this.valueMatcher = valueMatcher;
             return this;
         }
@@ -160,9 +160,12 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          * @param scope The scope as a list of fields.
          * @return The Builder instance.
          */
-        public Builder setScope(List<String> scope) {
+        @NonNull
+        public Builder setScope(@Nullable List<String> scope) {
             this.scope = new ArrayList<>();
-            this.scope.addAll(scope);
+            if (scope != null) {
+                this.scope.addAll(scope);
+            }
             return this;
         }
 
@@ -172,8 +175,10 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          * @param scope The scope as a single field.
          * @return The Builder instance.
          */
-        public Builder setScope(String scope) {
+        @NonNull
+        public Builder setScope(@NonNull String scope) {
             this.scope = new ArrayList<>();
+
             this.scope.add(scope);
             return this;
         }
@@ -184,7 +189,8 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          * @param key The key.
          * @return The Builder instance.
          */
-        public Builder setKey(String key) {
+        @NonNull
+        public Builder setKey(@Nullable String key) {
             this.key = key;
             return this;
         }
@@ -194,9 +200,9 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          *
          * @param ignoreCase The ignoreCase flag.
          * @return The Builder instance.
-         *
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         Builder setIgnoreCase(boolean ignoreCase) {
             this.ignoreCase = ignoreCase;
@@ -208,13 +214,14 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
          *
          * @return The JsonMatcher instance.
          */
+        @NonNull
         public JsonMatcher build() {
             return new JsonMatcher(this);
         }
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

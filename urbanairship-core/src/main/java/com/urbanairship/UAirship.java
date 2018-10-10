@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -57,8 +58,8 @@ public class UAirship {
     /**
      * Broadcast that is sent when UAirship is finished taking off.
      */
+    @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
-
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -104,6 +105,7 @@ public class UAirship {
     public static boolean LOG_TAKE_OFF_STACKTRACE = false;
 
     private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
+
     private static boolean queuePendingAirshipRequests = true;
 
     final List<AirshipComponent> components = new ArrayList<>();
@@ -158,6 +160,20 @@ public class UAirship {
     }
 
     /**
+     * Requests the airship instance asynchronously.
+     * <p>
+     * This method calls through to {@link #shared(android.os.Looper, com.urbanairship.UAirship.OnReadyCallback)}
+     * with a null looper.
+     *
+     * @param callback An optional callback
+     * @return A cancelable object that can be used to cancel the callback.
+     */
+    @NonNull
+    public static Cancelable shared(@NonNull OnReadyCallback callback) {
+        return shared(null, callback);
+    }
+
+    /**
      * Waits for UAirship to takeOff and be ready.
      *
      * @param millis Time to wait for UAirship to be ready in milliseconds or {@code 0} to wait
@@ -166,6 +182,7 @@ public class UAirship {
      * is not ready by the specified wait time.
      * @hide
      */
+    @Nullable
     public static UAirship waitForTakeOff(long millis) {
         synchronized (airshipLock) {
             if (isFlying) {
@@ -210,36 +227,23 @@ public class UAirship {
 
     /**
      * Requests the airship instance asynchronously.
-     * <p/>
-     * This method calls through to {@link #shared(com.urbanairship.UAirship.OnReadyCallback, android.os.Looper)}
-     * with a null looper.
-     *
-     * @param callback An optional callback
-     * @return A cancelable object that can be used to cancel the callback.
-     */
-    @NonNull
-    public static Cancelable shared(OnReadyCallback callback) {
-        return shared(callback, null);
-    }
-
-    /**
-     * Requests the airship instance asynchronously.
-     * <p/>
+     * <p>
      * If airship is ready, the callback will not be called immediately, the callback is still
      * dispatched to the specified looper. The blocking shared may unblock before any of the
      * asynchronous callbacks are executed.
      *
-     * @param callback An optional callback
      * @param looper A Looper object whose message queue will be used for the callback,
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
+     * @param callback An optional callback
      * @return A cancelable object that can be used to cancel the callback.
      */
     @NonNull
-    public static Cancelable shared(final OnReadyCallback callback, Looper looper) {
+    public static Cancelable shared(@Nullable Looper looper, @NonNull final OnReadyCallback callback) {
         CancelableOperation cancelableOperation = new CancelableOperation(looper) {
             @Override
             public void onRun() {
+                //noinspection ConstantConditions
                 if (callback != null) {
                     callback.onAirshipReady(shared());
                 }
@@ -320,7 +324,6 @@ public class UAirship {
         if (Looper.myLooper() == null || Looper.getMainLooper() != Looper.myLooper()) {
             Logger.error("takeOff() must be called on the main thread!");
         }
-
 
 
         if (LOG_TAKE_OFF_STACKTRACE) {
@@ -432,6 +435,7 @@ public class UAirship {
 
     /**
      * Cleans up and closes any connections or other resources.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -459,6 +463,7 @@ public class UAirship {
      * @return The package name.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @SuppressLint("UnknownNullness")
     public static String getPackageName() {
         return getApplicationContext().getPackageName();
     }
@@ -471,6 +476,7 @@ public class UAirship {
      * @deprecated No longer used.
      */
     @Deprecated
+    @NonNull
     public static String getUrbanAirshipPermission() {
         return getApplicationContext().getPackageName() + ".permission.UA_DATA";
     }
@@ -481,6 +487,7 @@ public class UAirship {
      * @return The package manager.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @NonNull
     public static PackageManager getPackageManager() {
         return getApplicationContext().getPackageManager();
     }
@@ -491,6 +498,8 @@ public class UAirship {
      * @return The PackageInfo for this Application
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @SuppressLint("UnknownNullness")
+    @Nullable
     public static PackageInfo getPackageInfo() {
         try {
             return getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -507,6 +516,7 @@ public class UAirship {
      * @return The shared ApplicationInfo object for this application.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @SuppressLint("UnknownNullness")
     public static ApplicationInfo getAppInfo() {
         return getApplicationContext().getApplicationInfo();
     }
@@ -518,11 +528,12 @@ public class UAirship {
      * @return The current Application's name
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @SuppressLint("UnknownNullness")
     public static String getAppName() {
         if (getAppInfo() != null) {
             return getPackageManager().getApplicationLabel(getAppInfo()).toString();
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -564,6 +575,7 @@ public class UAirship {
      * @return The current application Context.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
+    @NonNull
     public static Context getApplicationContext() {
         if (application == null) {
             throw new IllegalStateException("TakeOff must be called first.");
@@ -604,6 +616,7 @@ public class UAirship {
      *
      * @return The Urban Airship version number.
      */
+    @NonNull
     public static String getVersion() {
         return BuildConfig.URBAN_AIRSHIP_VERSION;
     }
@@ -724,6 +737,7 @@ public class UAirship {
      *
      * @return The current configuration options.
      */
+    @NonNull
     public AirshipConfigOptions getAirshipConfigOptions() {
         return airshipConfigOptions;
     }
@@ -733,6 +747,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.push.NamedUser} instance.
      */
+    @NonNull
     public NamedUser getNamedUser() {
         return namedUser;
     }
@@ -742,6 +757,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.push.PushManager} instance.
      */
+    @NonNull
     public PushManager getPushManager() {
         return pushManager;
     }
@@ -751,6 +767,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.richpush.RichPushInbox} instance.
      */
+    @NonNull
     public RichPushInbox getInbox() {
         return inbox;
     }
@@ -760,6 +777,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.location.UALocationManager} instance.
      */
+    @NonNull
     public UALocationManager getLocationManager() {
         return locationManager;
     }
@@ -769,6 +787,7 @@ public class UAirship {
      *
      * @return The legacy {@link com.urbanairship.iam.LegacyInAppMessageManager} instance.
      */
+    @NonNull
     public LegacyInAppMessageManager getLegacyInAppMessageManager() {
         return legacyInAppMessageManager;
     }
@@ -778,6 +797,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.iam.InAppMessageManager} instance.
      */
+    @NonNull
     public InAppMessageManager getInAppMessagingManager() {
         return inAppMessageManager;
     }
@@ -788,6 +808,7 @@ public class UAirship {
      * @return The RemoteData instance.
      * @hide
      */
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public RemoteData getRemoteData() { return remoteData; }
 
@@ -797,6 +818,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.analytics.Analytics} instance.
      */
+    @NonNull
     public Analytics getAnalytics() {
         return analytics;
     }
@@ -806,6 +828,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.ApplicationMetrics} instance.
      */
+    @NonNull
     public ApplicationMetrics getApplicationMetrics() {
         return applicationMetrics;
     }
@@ -816,6 +839,7 @@ public class UAirship {
      *
      * @return The url whitelist.
      */
+    @NonNull
     public Whitelist getWhitelist() {
         return whitelist;
     }
@@ -823,6 +847,7 @@ public class UAirship {
     /**
      * The default Action Registry.
      */
+    @NonNull
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
     }
@@ -832,6 +857,7 @@ public class UAirship {
      *
      * @return The default message center.
      */
+    @NonNull
     public MessageCenter getMessageCenter() { return messageCenter; }
 
     /**
@@ -839,6 +865,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.automation.Automation} instance.
      */
+    @NonNull
     public Automation getAutomation() {
         return automation;
     }
@@ -848,6 +875,7 @@ public class UAirship {
      *
      * @return The {@link com.urbanairship.ChannelCapture} instance.
      */
+    @NonNull
     public ChannelCapture getChannelCapture() {
         return channelCapture;
     }
@@ -869,6 +897,7 @@ public class UAirship {
      * @return The list of all the top level airship components.
      * @hide
      */
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public List<AirshipComponent> getComponents() {
         return components;
@@ -885,7 +914,7 @@ public class UAirship {
          *
          * @param airship The UAirship instance.
          */
-        void onAirshipReady(UAirship airship);
+        void onAirshipReady(@NonNull UAirship airship);
     }
 
 
@@ -897,7 +926,7 @@ public class UAirship {
      * @return The platform's best provider, or {@code null}.
      */
     @Nullable
-    private PushProvider determinePushProvider(@Platform int platform, PushProviders providers) {
+    private PushProvider determinePushProvider(@Platform int platform, @NonNull PushProviders providers) {
         // Existing provider class
         String existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null);
 
@@ -925,7 +954,7 @@ public class UAirship {
      * @return The device platform.
      */
     @Platform
-    private int determinePlatform(PushProviders providers) {
+    private int determinePlatform(@NonNull PushProviders providers) {
         // Existing platform
         int existingPlatform = preferenceDataStore.getInt(PLATFORM_KEY, -1);
         if (PlatformUtils.isPlatformValid(existingPlatform)) {

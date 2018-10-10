@@ -12,7 +12,13 @@ import android.support.annotation.NonNull;
 public class StubbedActionRunRequest extends ActionRunRequest {
 
     public StubbedActionRunRequest() {
-        super(null);
+        super(new Action() {
+            @NonNull
+            @Override
+            public ActionResult perform(@NonNull ActionArguments arguments) {
+                return ActionResult.newEmptyResult();
+            }
+        });
     }
 
     @NonNull
@@ -46,6 +52,6 @@ public class StubbedActionRunRequest extends ActionRunRequest {
     public void run(ActionCompletionCallback callback) { }
 
     @Override
-    public void run(ActionCompletionCallback callback, Looper looper) { }
+    public void run(Looper looper, ActionCompletionCallback callback) { }
 
 }

@@ -15,22 +15,22 @@ import com.urbanairship.util.Checks;
 
 /**
  * Action to link users to the rating section of their respective app store directly or through a prompt.
- *
- * <p/>
+ * <p>
+ * <p>
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION, SITUATION_PUSH_OPENED,
  * SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Expected argument values:
  * ``show_link_prompt``: Optional Boolean. If NO action will link directly to the Amazon or Play store
  * review page, if YES action will display a rating prompt. Defaults to NO if null.
  * ``title``: Optional String. String to override the link prompt's title. Header defaults to "Enjoying <App Name>?" if null.
  * ``body``: Optional String. String to override the link prompt's body.
- *  Body defaults to "Tap Rate to rate it in the app store." if null.
- * <p/>
+ * Body defaults to "Tap Rate to rate it in the app store." if null.
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Names: ^ra, rate_app_action
- * <p/>
+ * <p>
  */
 
 public class RateAppAction extends Action {
@@ -38,26 +38,31 @@ public class RateAppAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "rate_app_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^ra";
 
     /**
      * Key for the showing link prompt option.
      */
+    @NonNull
     public static final String SHOW_LINK_PROMPT_KEY = "show_link_prompt";
 
     /**
      * Key to define the app review link prompt's title when providing the action's value as a map.
      */
+    @NonNull
     public static final String TITLE_KEY = "title";
 
     /**
      * Key to define the app review link prompt's body when providing the action's value as a map.
      */
+    @NonNull
     public static final String BODY_KEY = "body";
 
     /**
@@ -84,6 +89,7 @@ public class RateAppAction extends Action {
      * Intent action for linking directly to store review page or displaying a rating link prompt
      * with the option of opening the review page link.
      */
+    @NonNull
     public static final String SHOW_RATE_APP_INTENT_ACTION = "com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION";
 
 
@@ -104,7 +110,7 @@ public class RateAppAction extends Action {
         return ActionResult.newEmptyResult();
     }
 
-    private void startRateAppActivity(Uri storeUri, ActionArguments arguments) {
+    private void startRateAppActivity(@NonNull Uri storeUri, @NonNull ActionArguments arguments) {
 
         Context context = UAirship.getApplicationContext();
         JsonMap argMap = arguments.getValue().toJsonValue().optMap();

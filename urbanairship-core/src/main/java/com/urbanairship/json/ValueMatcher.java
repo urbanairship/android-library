@@ -2,6 +2,7 @@
 
 package com.urbanairship.json;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -28,6 +29,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @return A new ValueMatcher instance.
      * @throws IllegalArgumentException if min is greater than max.
      */
+    @NonNull
     public static ValueMatcher newNumberRangeMatcher(@Nullable Double min, @Nullable Double max) {
         if (min != null && max != null && max < min) {
             throw new IllegalArgumentException();
@@ -42,6 +44,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @param value The value to apply as a JsonValue.
      * @return A new ValueMatcher instance.
      */
+    @NonNull
     public static ValueMatcher newValueMatcher(@NonNull JsonValue value) {
         return new ExactValueMatcher(value);
     }
@@ -51,6 +54,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      *
      * @return A new ValueMatcher instance.
      */
+    @NonNull
     public static ValueMatcher newIsPresentMatcher() {
         return new PresenceMatcher(true);
     }
@@ -60,6 +64,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      *
      * @return A new ValueMatcher instance.
      */
+    @NonNull
     public static ValueMatcher newIsAbsentMatcher() {
         return new PresenceMatcher(false);
     }
@@ -70,7 +75,8 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @return A new ValueMatcher instance.
      * @throws IllegalArgumentException If the constraint is not a valid ivy version constraint.
      */
-    public static ValueMatcher newVersionMatcher(String constraint) {
+    @NonNull
+    public static ValueMatcher newVersionMatcher(@NonNull String constraint) {
         return new VersionMatcher(IvyVersionMatcher.newMatcher(constraint));
     }
 
@@ -81,7 +87,8 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @param index The index of the value.
      * @return A new ValueMatcher instance.
      */
-    public static ValueMatcher newArrayContainsMatcher(JsonPredicate predicate, int index) {
+    @NonNull
+    public static ValueMatcher newArrayContainsMatcher(@NonNull JsonPredicate predicate, int index) {
         return new ArrayContainsMatcher(predicate, index);
     }
 
@@ -91,7 +98,8 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @param predicate The predicate to apply to each value of the array.
      * @return A new ValueMatcher instance.
      */
-    public static ValueMatcher newArrayContainsMatcher(JsonPredicate predicate) {
+    @NonNull
+    public static ValueMatcher newArrayContainsMatcher(@NonNull JsonPredicate predicate) {
         return new ArrayContainsMatcher(predicate, null);
     }
 
@@ -101,16 +109,17 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @param jsonValue The predicate as a JsonValue.
      * @return The matcher as a ValueMatcher.
      */
-    public static ValueMatcher parse(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static ValueMatcher parse(@Nullable JsonValue jsonValue) throws JsonException {
         JsonMap map = jsonValue == null ? JsonMap.EMPTY_MAP : jsonValue.optMap();
 
         if (map.containsKey(ExactValueMatcher.EQUALS_VALUE_KEY)) {
-            return newValueMatcher(map.get(ExactValueMatcher.EQUALS_VALUE_KEY));
+            return newValueMatcher(map.opt(ExactValueMatcher.EQUALS_VALUE_KEY));
         }
 
         if (map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) || map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY)) {
-            Double min = map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) ? map.get(NumberRangeMatcher.MIN_VALUE_KEY).getDouble(0) : null;
-            Double max = map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY) ? map.get(NumberRangeMatcher.MAX_VALUE_KEY).getDouble(0) : null;
+            Double min = map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) ? map.opt(NumberRangeMatcher.MIN_VALUE_KEY).getDouble(0) : null;
+            Double max = map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY) ? map.opt(NumberRangeMatcher.MAX_VALUE_KEY).getDouble(0) : null;
             try {
                 return newNumberRangeMatcher(min, max);
             } catch (IllegalArgumentException e) {
@@ -125,7 +134,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
 
         if (map.containsKey(VersionMatcher.VERSION_KEY)) {
             try {
-                String constraint = map.opt(VersionMatcher.VERSION_KEY).getString();
+                String constraint = map.opt(VersionMatcher.VERSION_KEY).optString();
                 return newVersionMatcher(constraint);
             } catch (NumberFormatException e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.VERSION_KEY), e);
@@ -134,7 +143,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
 
         if (map.containsKey(VersionMatcher.ALTERNATE_VERSION_KEY)) {
             try {
-                String constraint = map.opt(VersionMatcher.ALTERNATE_VERSION_KEY).getString();
+                String constraint = map.opt(VersionMatcher.ALTERNATE_VERSION_KEY).optString();
                 return newVersionMatcher(constraint);
             } catch (NumberFormatException e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.ALTERNATE_VERSION_KEY), e);
@@ -144,7 +153,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
         if (map.containsKey(ArrayContainsMatcher.ARRAY_CONTAINS_KEY)) {
             JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayContainsMatcher.ARRAY_CONTAINS_KEY));
             if (map.containsKey(ArrayContainsMatcher.INDEX_KEY)) {
-                int index = map.get(ArrayContainsMatcher.INDEX_KEY).getInt(-1);
+                int index = map.opt(ArrayContainsMatcher.INDEX_KEY).getInt(-1);
                 if (index == -1) {
                     throw new JsonException("Invalid index for array_contains matcher: " + map.get(ArrayContainsMatcher.INDEX_KEY));
                 }
@@ -158,24 +167,20 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     }
 
     @Override
-    public boolean apply(JsonSerializable jsonSerializable) {
-        return apply(jsonSerializable,false);
+    public boolean apply(@Nullable JsonSerializable jsonSerializable) {
+        return apply(jsonSerializable, false);
     }
 
     /**
      * Applies the value matcher to a JSON value.
+     *
      * @param jsonSerializable The JSON value.
      * @param ignoreCase {@code true} to ignore case when checking String values, {@code false} to check case.
      * @return {@code true} if the value matcher matches the JSON value, {@code false} if they do not match.
-     *
      * @hide
      */
-    boolean apply(JsonSerializable jsonSerializable, boolean ignoreCase) {
+    boolean apply(@Nullable JsonSerializable jsonSerializable, boolean ignoreCase) {
         JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
-        if (value == null) {
-            value = JsonValue.NULL;
-        }
-
         return apply(value, ignoreCase);
     }
 
@@ -188,6 +193,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      */
     protected abstract boolean apply(@NonNull JsonValue jsonValue, boolean ignoreCase);
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();

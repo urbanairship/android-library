@@ -57,7 +57,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
      * @param context The application context.
      * @param message The push message.
      */
-    public StyleNotificationExtender(Context context, PushMessage message) {
+    public StyleNotificationExtender(@NonNull Context context, @NonNull PushMessage message) {
         this.context = context.getApplicationContext();
         this.message = message;
     }
@@ -69,13 +69,15 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
      * @param defaultStyle The default style.
      * @return The StyleNotificationExtender to chain calls.
      */
-    public StyleNotificationExtender setDefaultStyle(NotificationCompat.Style defaultStyle) {
+    @NonNull
+    public StyleNotificationExtender setDefaultStyle(@Nullable NotificationCompat.Style defaultStyle) {
         this.defaultStyle = defaultStyle;
         return this;
     }
 
+    @NonNull
     @Override
-    public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
+    public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
         if (!applyStyle(builder) && defaultStyle != null) {
             builder.setStyle(defaultStyle);
         }
@@ -103,7 +105,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             return false;
         }
 
-        String type = styleJson.opt(TYPE_KEY).getString("");
+        String type = styleJson.opt(TYPE_KEY).optString();
 
         switch (type) {
             case BIG_TEXT_KEY:
@@ -169,7 +171,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         URL url;
 
         try {
-            url = new URL(styleJson.opt(BIG_PICTURE_KEY).getString(""));
+            url = new URL(styleJson.opt(BIG_PICTURE_KEY).optString());
         } catch (MalformedURLException e) {
             Logger.error("Malformed big picture URL.", e);
             return false;
@@ -257,6 +259,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         final int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
 
         Future<Bitmap> future = NotificationFactory.EXECUTOR.submit(new Callable<Bitmap>() {
+            @Nullable
             @Override
             public Bitmap call() throws Exception {
                 return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);

@@ -28,6 +28,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class ChannelApiClientTest extends BaseTestCase {
+
     private static final String CHANNEL_ID_KEY = "channel_id";
     private static final String CHANNEL_LOCATION_KEY = "Location";
 

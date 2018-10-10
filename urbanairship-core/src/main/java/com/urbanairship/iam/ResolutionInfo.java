@@ -21,21 +21,25 @@ public final class ResolutionInfo {
     /**
      * Button click resolution.
      */
+    @NonNull
     public static final String RESOLUTION_BUTTON_CLICK = "button_click";
 
     /**
      * Message click resolution
      */
+    @NonNull
     public static final String RESOLUTION_MESSAGE_CLICK = "message_click";
 
     /**
      * User dismissed resolution.
      */
+    @NonNull
     public static final String RESOLUTION_USER_DISMISSED = "user_dismissed";
 
     /**
      * Timed out resolution.
      */
+    @NonNull
     public static final String RESOLUTION_TIMED_OUT = "timed_out";
 
     @NonNull
@@ -76,7 +80,8 @@ public final class ResolutionInfo {
      * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
-    public static ResolutionInfo buttonPressed(ButtonInfo buttonInfo, long displayMilliseconds) {
+    @NonNull
+    public static ResolutionInfo buttonPressed(@NonNull ButtonInfo buttonInfo, long displayMilliseconds) {
         return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, displayMilliseconds, buttonInfo);
     }
 
@@ -86,6 +91,7 @@ public final class ResolutionInfo {
      * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
+    @NonNull
     public static ResolutionInfo messageClicked(long displayMilliseconds) {
         return new ResolutionInfo(RESOLUTION_MESSAGE_CLICK, displayMilliseconds);
     }
@@ -96,6 +102,7 @@ public final class ResolutionInfo {
      * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
+    @NonNull
     public static ResolutionInfo dismissed(long displayMilliseconds) {
         return new ResolutionInfo(RESOLUTION_USER_DISMISSED, displayMilliseconds);
     }
@@ -106,6 +113,7 @@ public final class ResolutionInfo {
      * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
+    @NonNull
     public static ResolutionInfo timedOut(long displayMilliseconds) {
         return new ResolutionInfo(RESOLUTION_TIMED_OUT, displayMilliseconds);
     }

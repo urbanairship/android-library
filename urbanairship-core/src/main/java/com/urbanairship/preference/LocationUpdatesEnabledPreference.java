@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 
@@ -25,15 +27,15 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     private static final String CONTENT_DESCRIPTION = "LOCATION_UPDATES_ENABLED";
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public LocationUpdatesEnabledPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public LocationUpdatesEnabledPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public LocationUpdatesEnabledPreference(Context context, AttributeSet attrs) {
+    public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
@@ -41,7 +43,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     public void setChecked(boolean value) {
         if (isChecked != value && value && shouldRequestPermissions()) {
             RequestPermissionsTask task = new RequestPermissionsTask(getContext(), this);
-            String[] permissions = new String[] {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
+            String[] permissions = new String[] { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, permissions);
         } else {
             super.setChecked(value);
@@ -63,15 +65,16 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     }
 
     @Override
-    protected boolean getInitialAirshipValue(UAirship airship) {
+    protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
         return airship.getLocationManager().isLocationUpdatesEnabled();
     }
 
     @Override
-    protected void onApplyAirshipPreference(UAirship airship, boolean enabled) {
+    protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getLocationManager().setLocationUpdatesEnabled(enabled);
     }
 
+    @NonNull
     @Override
     protected String getContentDescription() {
         return CONTENT_DESCRIPTION;
@@ -88,6 +91,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
             this.weakReference = new WeakReference<>(preference);
         }
 
+        @NonNull
         @Override
         protected Boolean doInBackground(String[]... strings) {
             int[] result = HelperActivity.requestPermissions(context, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);

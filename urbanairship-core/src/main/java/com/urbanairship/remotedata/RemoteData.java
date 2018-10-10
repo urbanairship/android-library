@@ -102,7 +102,8 @@ public class RemoteData extends AirshipComponent {
      * @param configOptions The config options.
      * @param activityMonitor The activity monitor.
      */
-    public RemoteData(Context context, @NonNull PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, ActivityMonitor activityMonitor) {
+    public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                      @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor) {
         this(context, preferenceDataStore, configOptions, activityMonitor, JobDispatcher.shared(context));
     }
 
@@ -115,7 +116,9 @@ public class RemoteData extends AirshipComponent {
      * @param dispatcher A job dispatcher.
      */
     @VisibleForTesting
-    RemoteData(Context context, @NonNull PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, ActivityMonitor activityMonitor, JobDispatcher dispatcher) {
+    RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+               @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
+               @NonNull JobDispatcher dispatcher) {
         super(preferenceDataStore);
         this.context = context;
         this.jobDispatcher = dispatcher;
@@ -208,10 +211,12 @@ public class RemoteData extends AirshipComponent {
      * @param type The payload type.
      * @return An Observable of RemoteDataPayload.
      */
+    @NonNull
     public Observable<RemoteDataPayload> payloadsForType(final @NonNull String type) {
         return payloadsForTypes(Collections.singleton(type)).flatMap(new Function<Collection<RemoteDataPayload>, Observable<RemoteDataPayload>>() {
+            @NonNull
             @Override
-            public Observable<RemoteDataPayload> apply(Collection<RemoteDataPayload> payloads) {
+            public Observable<RemoteDataPayload> apply(@NonNull Collection<RemoteDataPayload> payloads) {
                 return Observable.from(payloads);
             }
         });
@@ -226,6 +231,7 @@ public class RemoteData extends AirshipComponent {
      * @param types Array of types.
      * @return An Observable of RemoteDataPayload.
      */
+    @NonNull
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull String... types) {
         return payloadsForTypes(Arrays.asList(types));
     }
@@ -238,11 +244,13 @@ public class RemoteData extends AirshipComponent {
      * @param types A collection of types.
      * @return An Observable of RemoteDataPayload.
      */
+    @NonNull
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
         return Observable.concat(cachedPayloads(types), payloadUpdates)
                          .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
+                             @NonNull
                              @Override
-                             public Map<String, Collection<RemoteDataPayload>> apply(Set<RemoteDataPayload> payloads) {
+                             public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
                                  Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
                                  for (RemoteDataPayload payload : payloads) {
                                      if (!map.containsKey(payload.getType())) {
@@ -255,8 +263,9 @@ public class RemoteData extends AirshipComponent {
                              }
                          })
                          .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
+                             @NonNull
                              @Override
-                             public Collection<RemoteDataPayload> apply(Map<String, Collection<RemoteDataPayload>> payloadMap) {
+                             public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
                                  Set<RemoteDataPayload> payloads = new HashSet<>();
                                  for (String type : new HashSet<>(types)) {
                                      if (payloadMap.containsKey(type)) {
@@ -277,7 +286,7 @@ public class RemoteData extends AirshipComponent {
      *
      * @param newPayloads A list of new payloads.
      */
-    void handleRefreshResponse(final Set<RemoteDataPayload> newPayloads) {
+    void handleRefreshResponse(@NonNull final Set<RemoteDataPayload> newPayloads) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -327,6 +336,7 @@ public class RemoteData extends AirshipComponent {
      */
     private Observable<Set<RemoteDataPayload>> cachedPayloads(final Collection<String> types) {
         return Observable.defer(new Supplier<Observable<Set<RemoteDataPayload>>>() {
+            @NonNull
             @Override
             public Observable<Set<RemoteDataPayload>> apply() {
                 return Observable.just(dataStore.getPayloads(types))
@@ -336,7 +346,7 @@ public class RemoteData extends AirshipComponent {
     }
 
     @WorkerThread
-    private void overwriteCachedData(final Set<RemoteDataPayload> newPayloads) {
+    private void overwriteCachedData(@NonNull final Set<RemoteDataPayload> newPayloads) {
         // Clear the cache
         if (!dataStore.deletePayloads()) {
             Logger.error("Unable to delete existing payload data");

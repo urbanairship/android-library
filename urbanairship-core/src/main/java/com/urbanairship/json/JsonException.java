@@ -2,6 +2,9 @@
 
 package com.urbanairship.json;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Thrown when a JsonValue is unable to wrap an object or unable to parse a JSON encoded String.
  */
@@ -13,7 +16,7 @@ public class JsonException extends Exception {
      *
      * @param message The detail message for this exception.
      */
-    public JsonException(String message) {
+    public JsonException(@NonNull String message) {
         super(message);
     }
 
@@ -24,7 +27,7 @@ public class JsonException extends Exception {
      * @param message The detail message for this exception.
      * @param cause The cause of this exception.
      */
-    public JsonException(String message, Throwable cause) {
+    public JsonException(@NonNull String message, @Nullable Throwable cause) {
         super(message, cause);
     }
 }

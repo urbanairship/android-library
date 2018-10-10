@@ -3,6 +3,7 @@
 package com.urbanairship.remotedata;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
@@ -132,7 +133,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         payloadsObservable.subscribe(new Subscriber<RemoteDataPayload>() {
             @Override
-            public void onNext(RemoteDataPayload value) {
+            public void onNext(@NonNull RemoteDataPayload value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -171,7 +172,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         payloadsObservable.subscribe(new Subscriber<RemoteDataPayload>() {
             @Override
-            public void onNext(RemoteDataPayload value) {
+            public void onNext(@NonNull RemoteDataPayload value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -206,7 +207,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         payloadsObservable.subscribe(new Subscriber<RemoteDataPayload>() {
             @Override
-            public void onNext(RemoteDataPayload value) {
+            public void onNext(@NonNull RemoteDataPayload value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -251,7 +252,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
             @Override
-            public void onNext(Collection<RemoteDataPayload> value) {
+            public void onNext(@NonNull Collection<RemoteDataPayload> value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -298,7 +299,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
             @Override
-            public void onNext(Collection<RemoteDataPayload> value) {
+            public void onNext(@NonNull Collection<RemoteDataPayload> value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -335,7 +336,7 @@ public class RemoteDataTest extends BaseTestCase {
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
             @Override
-            public void onNext(Collection<RemoteDataPayload> value) {
+            public void onNext(@NonNull Collection<RemoteDataPayload> value) {
                 subscribedPayloads.add(value);
             }
         });
@@ -394,7 +395,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         remoteData.payloadUpdates.subscribe(new Subscriber<Set<RemoteDataPayload>>() {
             @Override
-            public void onNext(Set<RemoteDataPayload> payloads) {
+            public void onNext(@NonNull Set<RemoteDataPayload> payloads) {
                 subscribedPayloads.addAll(payloads);
             }
         });

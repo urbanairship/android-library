@@ -12,20 +12,20 @@ import java.util.List;
 
 /**
  * Action to cancel automation schedules.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_AUTOMATION, and SITUATION_PUSH_RECEIVED.
- * <p/>
+ * <p>
  * Accepted argument value - Either {@link #ALL} or a map with:
  * <ul>
  * <li>{@link #GROUPS}: List of schedule groups or a single group. Optional.</li>
  * <li>{@link #IDS}: List of schedule IDs or a single schedule Id. Optional.</li>
  * </ul>
- * <p/>
+ * <p>
  * Result value: null.
- * <p/>
+ * <p>
  * Default Registration Names: {@link #DEFAULT_REGISTRY_NAME}, {@link #DEFAULT_REGISTRY_SHORT_NAME}
- * <p/>
+ * <p>
  * Default Registration Predicate: none
  */
 public class CancelSchedulesAction extends Action {
@@ -33,26 +33,31 @@ public class CancelSchedulesAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "cancel_scheduled_actions";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^csa";
 
     /**
      * Used as the key in the action's value map to specify schedule groups to cancel.
      */
+    @NonNull
     public static final String GROUPS = "groups";
 
     /**
      * Used as the key in the action's value map to specify schedule IDs to cancel.
      */
+    @NonNull
     public static final String IDS = "ids";
 
     /**
      * Used as the action's value to cancel all schedules.
      */
+    @NonNull
     public static final String ALL = "all";
 
     @Override
@@ -91,11 +96,11 @@ public class CancelSchedulesAction extends Action {
         // Groups
         JsonValue groupsJson = jsonValue.optMap().opt(GROUPS);
         if (groupsJson.isString()) {
-            UAirship.shared().getAutomation().cancelGroup(groupsJson.getString());
-        } else if (groupsJson.isJsonList()){
-            for (JsonValue value : groupsJson.getList()) {
+            UAirship.shared().getAutomation().cancelGroup(groupsJson.optString());
+        } else if (groupsJson.isJsonList()) {
+            for (JsonValue value : groupsJson.optList()) {
                 if (value.isString()) {
-                    UAirship.shared().getAutomation().cancelGroup(value.getString());
+                    UAirship.shared().getAutomation().cancelGroup(value.optString());
                 }
             }
         }
@@ -103,10 +108,10 @@ public class CancelSchedulesAction extends Action {
         // IDs
         JsonValue idsJson = jsonValue.optMap().opt(IDS);
         if (idsJson.isString()) {
-            UAirship.shared().getAutomation().cancel(idsJson.getString());
+            UAirship.shared().getAutomation().cancel(idsJson.optString());
         } else if (idsJson.isJsonList()) {
             List<String> ids = new ArrayList<>();
-            for (JsonValue value : idsJson.getList()) {
+            for (JsonValue value : idsJson.optList()) {
                 if (value.isString()) {
                     ids.add(value.getString());
                 }

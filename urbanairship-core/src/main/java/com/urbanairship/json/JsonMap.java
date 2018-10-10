@@ -22,6 +22,7 @@ import java.util.Set;
  */
 public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSerializable {
 
+    @NonNull
     public static final JsonMap EMPTY_MAP = new JsonMap(null);
 
     private final Map<String, JsonValue> map;
@@ -40,6 +41,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return A JSON map builder.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new JsonMap.Builder();
     }
@@ -51,7 +53,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @return {@code true} if this map contains the specified key,
      * {@code false} otherwise.
      */
-    public boolean containsKey(String key) {
+    public boolean containsKey(@NonNull String key) {
         return map.containsKey(key);
     }
 
@@ -62,7 +64,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @return {@code true} if this map contains the specified value,
      * {@code false} otherwise.
      */
-    public boolean containsValue(JsonValue value) {
+    public boolean containsValue(@NonNull JsonValue value) {
         return map.containsValue(value);
     }
 
@@ -73,6 +75,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return a set of the mappings.
      */
+    @NonNull
     public Set<Map.Entry<String, JsonValue>> entrySet() {
         return map.entrySet();
     }
@@ -84,7 +87,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @return the value of the mapping with the specified key, or {@code null}
      * if no mapping for the specified key is found.
      */
-    public JsonValue get(String key) {
+    @Nullable
+    public JsonValue get(@NonNull String key) {
         return map.get(key);
     }
 
@@ -96,7 +100,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @return the value of the mapping with the specified key, or {@link JsonValue#NULL}
      * if no mapping for the specified key is found.
      */
-    public JsonValue opt(String key) {
+    @NonNull
+    public JsonValue opt(@NonNull String key) {
         JsonValue value = get(key);
         if (value != null) {
             return value;
@@ -121,6 +126,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return a set of the keys.
      */
+    @NonNull
     public Set<String> keySet() {
         return map.keySet();
     }
@@ -139,6 +145,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return a collection of the values contained in this map.
      */
+    @NonNull
     public Collection<JsonValue> values() {
         return new ArrayList<>(map.values());
     }
@@ -148,12 +155,13 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return The JsonMap as a Map.
      */
+    @NonNull
     public Map<String, JsonValue> getMap() {
         return new HashMap<>(map);
     }
 
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@Nullable Object object) {
         if (object == this) {
             return true;
         }
@@ -179,6 +187,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      *
      * @return The value as a JSON encoded String.
      */
+    @NonNull
     @Override
     public String toString() {
         try {
@@ -198,7 +207,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @param stringer The JSONStringer object.
      * @throws org.json.JSONException If the value is unable to be written as JSON.
      */
-    void write(JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer) throws JSONException {
         stringer.object();
         for (Map.Entry<String, JsonValue> entry : entrySet()) {
             stringer.key(entry.getKey());
@@ -207,11 +216,13 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
         stringer.endObject();
     }
 
+    @NonNull
     @Override
     public Iterator<Map.Entry<String, JsonValue>> iterator() {
         return entrySet().iterator();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonValue.wrap(this);
@@ -231,6 +242,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param map A JsonMap instance.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder putAll(@NonNull JsonMap map) {
             for (Map.Entry<String, JsonValue> entry : map.entrySet()) {
                 put(entry.getKey(), entry.getValue());
@@ -246,7 +258,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a JsonSerializable.
          * @return The JSON map builder.
          */
-        public Builder put(@NonNull String key, JsonSerializable value) {
+        @NonNull
+        public Builder put(@NonNull String key, @Nullable JsonSerializable value) {
             if (value == null || value.toJsonValue().isNull()) {
                 map.remove(key);
             } else {
@@ -264,7 +277,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * this object as a JsonValue, it will be swallowed and the entry will be dropped from the map.
          * @return The JSON map builder.
          */
-        public Builder putOpt(@NonNull String key, Object value) {
+        @NonNull
+        public Builder putOpt(@NonNull String key, @Nullable Object value) {
             put(key, JsonValue.wrapOpt(value));
             return this;
         }
@@ -276,7 +290,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a String.
          * @return The JSON map builder.
          */
-        public Builder put(@NonNull String key, String value) {
+        @NonNull
+        public Builder put(@NonNull String key, @Nullable String value) {
             if (value != null) {
                 put(key, JsonValue.wrap(value));
             } else {
@@ -293,6 +308,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a boolean.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder put(@NonNull String key, boolean value) {
             return put(key, JsonValue.wrap(value));
         }
@@ -304,6 +320,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as an int.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder put(@NonNull String key, int value) {
             return put(key, JsonValue.wrap(value));
         }
@@ -315,6 +332,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a long.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder put(@NonNull String key, long value) {
             return put(key, JsonValue.wrap(value));
         }
@@ -326,6 +344,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a double.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder put(@NonNull String key, double value) {
             return put(key, JsonValue.wrap(value));
         }
@@ -337,6 +356,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @param value The value as a char.
          * @return The JSON map builder.
          */
+        @NonNull
         public Builder put(@NonNull String key, char value) {
             return put(key, JsonValue.wrap(value));
         }
@@ -346,6 +366,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          *
          * @return The created JSON map.
          */
+        @NonNull
         public JsonMap build() {
             return new JsonMap(map);
         }

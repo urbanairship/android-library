@@ -4,6 +4,7 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
@@ -23,7 +24,7 @@ public class NotificationActionButtonGroup {
 
     private final List<NotificationActionButton> actionButtons;
 
-    private NotificationActionButtonGroup(List<NotificationActionButton> actionButtons) {
+    private NotificationActionButtonGroup(@NonNull List<NotificationActionButton> actionButtons) {
         this.actionButtons = new ArrayList<>(actionButtons);
     }
 
@@ -48,7 +49,7 @@ public class NotificationActionButtonGroup {
      * @return List of Android notification actions.
      */
     @NonNull
-    List<NotificationCompat.Action> createAndroidActions(Context context, PushMessage message, int notificationId, String actionsPayload) {
+    List<NotificationCompat.Action> createAndroidActions(@NonNull Context context, @NonNull PushMessage message, int notificationId, @Nullable String actionsPayload) {
         final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
         JsonMap notificationActionMap = null;
@@ -56,7 +57,7 @@ public class NotificationActionButtonGroup {
             // Run UA actions for the notification action
             try {
                 notificationActionMap = JsonValue.parseString(actionsPayload).optMap();
-            } catch(JsonException e) {
+            } catch (JsonException e) {
                 Logger.error("Failed to parse notification actions payload: " + actionsPayload, e);
             }
         }
@@ -83,7 +84,7 @@ public class NotificationActionButtonGroup {
          * @return The builder to allow method chaining.
          */
         @NonNull
-        public Builder addNotificationActionButton(NotificationActionButton action) {
+        public Builder addNotificationActionButton(@NonNull NotificationActionButton action) {
             actionButtons.add(action);
             return this;
         }

@@ -7,9 +7,9 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
@@ -43,8 +43,13 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
 
+    @Nullable
     private final InAppMessageCache cache;
+
+    @NonNull
     private BannerDisplayContent displayContent;
+
+    @NonNull
     private Timer timer;
 
     /**
@@ -55,14 +60,11 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      * @param displayContent The banner display content.
      * @param cache The IAM cache.
      */
-    public BannerView(@NonNull Context context, @NonNull DisplayHandler displayHandler, @NonNull BannerDisplayContent displayContent, InAppMessageCache cache) {
+    public BannerView(@NonNull Context context, @NonNull DisplayHandler displayHandler, @NonNull BannerDisplayContent displayContent, @Nullable InAppMessageCache cache) {
         super(context, displayHandler);
         this.displayContent = displayContent;
         this.cache = cache;
-    }
 
-    @Override
-    protected View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
         final long duration = displayContent.getDuration();
         this.timer = new Timer(duration) {
             @Override
@@ -72,7 +74,11 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
                 }
             }
         };
+    }
 
+    @NonNull
+    @Override
+    protected View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
         // Main view
         BannerDismissLayout view = (BannerDismissLayout) inflater.inflate(getLayout(), container, false);
         view.setPlacement(displayContent.getPlacement());
@@ -193,7 +199,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
     }
 
     @Override
-    public void onClick(View view) {
+    public void onClick(@NonNull View view) {
         if (displayContent.getActions().isEmpty()) {
             return;
         }
@@ -207,6 +213,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      *
      * @return The in-app message display timer.
      */
+    @NonNull
     protected Timer getTimer() {
         return timer;
     }
@@ -216,6 +223,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      *
      * @return The in-app message.
      */
+    @NonNull
     protected BannerDisplayContent getDisplayContent() {
         return displayContent;
     }
@@ -225,10 +233,11 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      *
      * @param view The fragment's view.
      */
-    private void applyWindowInsets(View view) {
+    private void applyWindowInsets(@NonNull View view) {
         ViewCompat.setOnApplyWindowInsetsListener(view, new android.support.v4.view.OnApplyWindowInsetsListener() {
+            @NonNull
             @Override
-            public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat src) {
+            public WindowInsetsCompat onApplyWindowInsets(@NonNull View view, @NonNull WindowInsetsCompat src) {
                 WindowInsetsCompat copy = new WindowInsetsCompat(src);
 
                 int left, top, right, bottom;
@@ -251,7 +260,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
 
         view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View view) {
+            public void onViewAttachedToWindow(@NonNull View view) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     view.dispatchApplyWindowInsets(view.getRootWindowInsets());
                     return;
@@ -267,7 +276,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
             }
 
             @Override
-            public void onViewDetachedFromWindow(View view) {
+            public void onViewDetachedFromWindow(@NonNull View view) {
                 view.removeOnAttachStateChangeListener(this);
             }
         });
@@ -324,6 +333,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      *
      * @return The banner's background drawable.
      */
+    @NonNull
     private Drawable createBannerBackground() {
         int pressedColor = ColorUtils.setAlphaComponent(displayContent.getDismissButtonColor(), Math.round(Color.alpha(displayContent.getDismissButtonColor()) * PRESSED_ALPHA_PERCENT));
 

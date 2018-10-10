@@ -33,7 +33,8 @@ class PushProviders {
      * @param configOptions The airship config options.
      * @return A PushProviders class with the loaded providers.
      */
-    static PushProviders load(Context context, AirshipConfigOptions configOptions) {
+    @NonNull
+    static PushProviders load(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         PushProviders providers = new PushProviders();
         providers.init(context, configOptions);
         return providers;
@@ -42,7 +43,7 @@ class PushProviders {
     /**
      * Loads all the plugins that are currently supported by the device.
      */
-    private void init(Context context, AirshipConfigOptions configOptions) {
+    private void init(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         List<PushProvider> providers = createProviders();
         if (configOptions.customPushProvider != null) {
             providers.add(0, configOptions.customPushProvider);
@@ -93,7 +94,7 @@ class PushProviders {
             }
 
             if (pushProvider instanceof AirshipVersionInfo) {
-                AirshipVersionInfo versionInfo =  (AirshipVersionInfo)pushProvider;
+                AirshipVersionInfo versionInfo = (AirshipVersionInfo) pushProvider;
                 Logger.verbose("Found provider: " + pushProvider + " version: " + versionInfo.getPackageVersion());
 
                 if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {

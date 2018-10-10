@@ -75,6 +75,7 @@ public class RemoveTagsActionTest extends BaseTestCase {
         NamedUser namedUser = mock(NamedUser.class);
 
         TagGroupsEditor tagGroupsEditor = new TagGroupsEditor() {
+            @NonNull
             @Override
             public TagGroupsEditor removeTags(@NonNull String group, @NonNull Set<String> tags) {
                 removed.put(group, tags);

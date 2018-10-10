@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.push.PushManager;
@@ -53,8 +54,9 @@ public class ChannelCapture extends AirshipComponent {
      * @param pushManager The push manager instance.
      * @param activityMonitor The activity monitor instance.
      */
-    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, PreferenceDataStore preferenceDataStore,
-                   ActivityMonitor activityMonitor) {
+    ChannelCapture(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
+                   @NonNull PushManager pushManager, @NonNull PreferenceDataStore preferenceDataStore,
+                   @NonNull ActivityMonitor activityMonitor) {
         super(preferenceDataStore);
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
@@ -73,7 +75,6 @@ public class ChannelCapture extends AirshipComponent {
         this.preferenceDataStore = preferenceDataStore;
         this.activityMonitor = activityMonitor;
     }
-
 
     @Override
     protected void init() {
@@ -95,7 +96,7 @@ public class ChannelCapture extends AirshipComponent {
      * @param duration The duration of time.
      * @param unit The time unit.
      */
-    public void enable(long duration, TimeUnit unit) {
+    public void enable(long duration, @NonNull TimeUnit unit) {
         long milliDuration = unit.toMillis(duration);
         preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, System.currentTimeMillis() + milliDuration);
     }
@@ -194,13 +195,12 @@ public class ChannelCapture extends AirshipComponent {
      * @param channel The channel string.
      * @param url The channel url.
      */
-    private void startChannelCaptureActivity(String channel, String url) {
+    private void startChannelCaptureActivity(@Nullable String channel, @Nullable String url) {
         Intent intent = new Intent(context, ChannelCaptureActivity.class);
         intent.putExtra(CHANNEL, channel);
         intent.putExtra(URL, url);
         context.startActivity(intent);
     }
-
 
 
     /**

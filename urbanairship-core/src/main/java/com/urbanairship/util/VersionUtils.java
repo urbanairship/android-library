@@ -29,6 +29,7 @@ public class VersionUtils {
      *
      * @return The version object.
      */
+    @NonNull
     public static JsonSerializable createVersionObject() {
         return createVersionObject(UAirship.shared().getApplicationMetrics().getCurrentAppVersion());
     }
@@ -37,9 +38,9 @@ public class VersionUtils {
      * Generates the version object.
      *
      * @param appVersion The app version.
-     *
      * @return The version object.
      */
+    @NonNull
     public static JsonSerializable createVersionObject(int appVersion) {
         // Get the version code
         String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
@@ -55,9 +56,11 @@ public class VersionUtils {
 
     /**
      * Creates the version predicate.
+     *
      * @param versionMatcher The value matcher.
      * @return The version predicate.
      */
+    @NonNull
     public static JsonPredicate createVersionPredicate(@NonNull ValueMatcher versionMatcher) {
         String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 

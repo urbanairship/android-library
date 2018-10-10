@@ -51,18 +51,19 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Action sent as a broadcast when a push message is received.
-     * <p/>
+     * <p>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
      * {@link #EXTRA_PUSH_MESSAGE_BUNDLE}
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.RECEIVED";
 
     /**
      * Action sent as a broadcast when a notification is opened.
-     * <p/>
+     * <p>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
      * {@link #EXTRA_PUSH_MESSAGE_BUNDLE},
@@ -71,35 +72,39 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_NOTIFICATION_OPENED = "com.urbanairship.push.OPENED";
 
     /**
      * Action sent as a broadcast when a notification is dismissed.
-     * <p/>
+     * <p>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
      * {@link #EXTRA_PUSH_MESSAGE_BUNDLE}
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_NOTIFICATION_DISMISSED = "com.urbanairship.push.DISMISSED";
 
     /**
      * Action sent as a broadcast when a channel registration succeeds.
-     * <p/>
+     * <p>
      * Extras:
      * {@link #EXTRA_CHANNEL_ID}
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_CHANNEL_UPDATED = "com.urbanairship.push.CHANNEL_UPDATED";
 
     /**
      * The notification ID extra contains the ID of the notification placed in the
      * <code>NotificationManager</code> by the library.
-     * <p/>
+     * <p>
      * If a <code>Notification</code> was not created, the extra will not be included.
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.push.NOTIFICATION_ID";
 
     /**
@@ -107,6 +112,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_PUSH_MESSAGE_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE_BUNDLE";
 
 
@@ -115,6 +121,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_ID = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ID";
 
     /**
@@ -122,6 +129,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_FOREGROUND = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_FOREGROUND";
 
     /**
@@ -129,6 +137,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_ERROR = "com.urbanairship.push.EXTRA_ERROR";
 
     /**
@@ -136,6 +145,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_CHANNEL_ID = "com.urbanairship.push.EXTRA_CHANNEL_ID";
 
     /**
@@ -143,6 +153,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_CHANNEL_CREATE_REQUEST = "com.urbanairship.push.EXTRA_CHANNEL_CREATE_REQUEST";
 
     /**
@@ -150,6 +161,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_NOTIFICATION_OPENED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_OPENED_PROXY";
 
     /**
@@ -157,6 +169,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_NOTIFICATION_BUTTON_OPENED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY";
 
     /**
@@ -164,6 +177,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String ACTION_NOTIFICATION_DISMISSED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_DISMISSED_PROXY";
 
     /**
@@ -173,6 +187,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_CONTENT_INTENT = "com.urbanairship.push.EXTRA_NOTIFICATION_CONTENT_INTENT";
 
     /**
@@ -182,6 +197,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_DELETE_INTENT = "com.urbanairship.push.EXTRA_NOTIFICATION_DELETE_INTENT";
 
     /**
@@ -189,6 +205,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION = "com.urbanairship.push.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION";
 
     /**
@@ -196,6 +213,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
 
@@ -369,7 +387,7 @@ public class PushManager extends AirshipComponent {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Executor getJobExecutor(JobInfo jobInfo) {
+    public Executor getJobExecutor(@NonNull JobInfo jobInfo) {
         if (jobInfo.getAction().equals(PushManagerJobHandler.ACTION_PROCESS_PUSH)) {
             return PUSH_EXECUTOR;
         }
@@ -393,7 +411,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Enables channel creation if channel creation has been delayed.
-     * <p/>
+     * <p>
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
      * set to <code>true</code> in the airship config.
@@ -407,7 +425,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Enables or disables push notifications.
-     * <p/>
+     * <p>
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when a user preference has changed.
      *
@@ -430,10 +448,10 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Enables or disables user notifications.
-     * <p/>
+     * <p>
      * User notifications are push notifications that contain an alert message and are
      * intended to be shown to the user.
-     * <p/>
+     * <p>
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when a user preference has changed.
      *
@@ -455,11 +473,11 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Sets the notification factory used when push notifications are received.
-     * <p/>
+     * <p>
      * Specify a notification factory here to customize the display
      * of a push notification's Custom Expanded Views in the
      * Android Notification Manager.
-     * <p/>
+     * <p>
      * If <code>null</code>, push notifications will not be displayed by the
      * library.
      *
@@ -477,6 +495,7 @@ public class PushManager extends AirshipComponent {
      *
      * @return The current notification factory.
      */
+    @Nullable
     public NotificationFactory getNotificationFactory() {
         return notificationFactory;
     }
@@ -486,16 +505,17 @@ public class PushManager extends AirshipComponent {
      *
      * @return The PreferenceDataStore
      */
+    @NonNull
     PreferenceDataStore getPreferenceDataStore() {
         return preferenceDataStore;
     }
 
     /**
      * Sets both the alias and tags for this channel and updates the server.
-     * <p/>
+     * <p>
      * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
      * tag includes whitespace or special characters, we recommend URL encoding the string.
-     * <p/>
+     * <p>
      *
      * @param alias The desired alias, <code>null</code> to remove
      * @param tags The desired set of tags, must be non-null
@@ -547,6 +567,7 @@ public class PushManager extends AirshipComponent {
      *
      * @return The ChannelRegistrationPayload payload
      */
+    @NonNull
     ChannelRegistrationPayload getNextChannelRegistrationPayload() {
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
                 .setAlias(getAlias())
@@ -600,11 +621,11 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Set the alias for the channel and update the server.
-     * <p/>
+     * <p>
      * If you are setting both the alias and tags at the same time, you should
      * use {@link #setAliasAndTags(String, Set)} to avoid making an extra
      * network call.
-     * <p/>
+     * <p>
      * Refer to the
      * <a href="https://docs.urbanairship.com/build/android_features.html#aliases">Alias</a>
      * for more information on the use of aliases.
@@ -626,16 +647,16 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Set tags for the channel and update the server.
-     * <p/>
+     * <p>
      * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
      * tag includes whitespace or special characters, we recommend URL encoding the string.
-     * <p/>
+     * <p>
      * To clear the current set of tags, pass an empty set to this method.
-     * <p/>
+     * <p>
      * If you are setting both the alias and tags at the same time, you should
      * use {@link #setAliasAndTags(String, Set)} to avoid making an extra
      * network call.
-     * <p/>
+     * <p>
      * Refer to the <a href="https://docs.urbanairship.com/build/android_features.html#tags">Tag API</a> for
      * more information.
      *
@@ -660,13 +681,14 @@ public class PushManager extends AirshipComponent {
      *
      * @return The string alias, or null if one is not set.
      */
+    @Nullable
     public String getAlias() {
         return preferenceDataStore.getString(ALIAS_KEY, null);
     }
 
     /**
      * Returns the current set of tags.
-     * <p/>
+     * <p>
      * An empty set indicates that no tags are set on this channel.
      *
      * @return The current set of tags.
@@ -679,7 +701,7 @@ public class PushManager extends AirshipComponent {
             JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
 
             if (jsonValue.isJsonList()) {
-                for (JsonValue tag : jsonValue.getList()) {
+                for (JsonValue tag : jsonValue.optList()) {
                     if (tag.isString()) {
                         tags.add(tag.getString());
                     }
@@ -826,6 +848,7 @@ public class PushManager extends AirshipComponent {
      *
      * @return An array of two Date instances, representing the start and end of Quiet Time.
      */
+    @Nullable
     public Date[] getQuietTimeInterval() {
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
         if (quietTimeInterval != null) {
@@ -872,10 +895,11 @@ public class PushManager extends AirshipComponent {
      *
      * @return A {@link TagGroupsEditor}.
      */
+    @NonNull
     public TagGroupsEditor editTagGroups() {
         return new TagGroupsEditor() {
             @Override
-            protected boolean allowTagGroupChange(String tagGroup) {
+            protected boolean allowTagGroupChange(@NonNull String tagGroup) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to add tags to `device` tag group when `channelTagRegistrationEnabled` is true.");
                     return false;
@@ -885,7 +909,7 @@ public class PushManager extends AirshipComponent {
             }
 
             @Override
-            protected void onApply(List<TagGroupsMutation> collapsedMutations) {
+            protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
 
                 if (collapsedMutations.isEmpty()) {
                     return;
@@ -905,10 +929,11 @@ public class PushManager extends AirshipComponent {
      *
      * @return A {@link TagEditor}
      */
+    @NonNull
     public TagEditor editTags() {
         return new TagEditor() {
             @Override
-            void onApply(boolean clear, Set<String> tagsToAdd, Set<String> tagsToRemove) {
+            void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
                 synchronized (tagLock) {
                     Set<String> tags = clear ? new HashSet<String>() : getTags();
 
@@ -923,7 +948,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Register a notification action group under the given name.
-     * <p/>
+     * <p>
      * The provided notification builders will automatically add the actions to the
      * notification when a message is received with a group specified under the
      * {@link com.urbanairship.push.PushMessage#EXTRA_INTERACTIVE_TYPE}
@@ -988,7 +1013,11 @@ public class PushManager extends AirshipComponent {
      * @param id The id of the action group.
      * @return The notification action group.
      */
-    public NotificationActionButtonGroup getNotificationActionGroup(String id) {
+    @Nullable
+    public NotificationActionButtonGroup getNotificationActionGroup(@Nullable String id) {
+        if (id  == null) {
+            return null;
+        }
         return actionGroupMap.get(id);
     }
 
@@ -1062,6 +1091,7 @@ public class PushManager extends AirshipComponent {
      *
      * @return an APID string or null if it doesn't exist.
      */
+    @Nullable
     String getApid() {
         return preferenceDataStore.getString(APID_KEY, null);
     }

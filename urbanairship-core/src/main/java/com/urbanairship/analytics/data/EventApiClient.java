@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
@@ -40,11 +41,16 @@ import java.util.TimeZone;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventApiClient {
 
-    static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
-    static final String NOT_ALLOWED = "NOT_ALLOWED";
-    static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
+    private static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
 
+    private static final String NOT_ALLOWED = "NOT_ALLOWED";
+
+    private static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
+
+    @NonNull
     private final RequestFactory requestFactory;
+
+    @NonNull
     private final Context context;
 
     /**
@@ -75,7 +81,8 @@ public class EventApiClient {
      * @param events Specified events
      * @return eventResponse or null if an error occurred
      */
-    EventResponse sendEvents(UAirship airship, @NonNull Collection<String> events) {
+    @Nullable
+    EventResponse sendEvents(@NonNull UAirship airship, @NonNull Collection<String> events) {
         if (events.size() == 0) {
             Logger.verbose("EventApiClient - No analytics events to send.");
             return null;
@@ -99,6 +106,10 @@ public class EventApiClient {
             analyticsServerUrl = new URL(url);
         } catch (MalformedURLException e) {
             Logger.error("EventApiClient - Invalid analyticsServer: " + url, e);
+        }
+
+        if (analyticsServerUrl == null) {
+            return null;
         }
 
         String deviceFamily;
@@ -180,6 +191,7 @@ public class EventApiClient {
      *
      * @return The location permission string.
      */
+    @NonNull
     String getLocationPermissionForApp() {
         if (ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION) ||
                 ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -194,6 +206,7 @@ public class EventApiClient {
      *
      * @return The location permission string.
      */
+    @NonNull
     String getLocationPermission() {
         // Android Marshmallow
         if (Build.VERSION.SDK_INT >= 23) {
@@ -251,6 +264,7 @@ public class EventApiClient {
         }
     }
 
+    @Nullable
     String getPackageName() {
         try {
             return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).packageName;
@@ -259,6 +273,7 @@ public class EventApiClient {
         }
     }
 
+    @Nullable
     String getPackageVersion() {
         try {
             return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;

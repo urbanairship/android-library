@@ -58,6 +58,7 @@ public class JobDispatcher {
      * @param context The application context.
      * @return The JobDispatcher.
      */
+    @NonNull
     public static JobDispatcher shared(@NonNull Context context) {
         if (instance == null) {
             synchronized (JobDispatcher.class) {
@@ -164,7 +165,7 @@ public class JobDispatcher {
      * @param jobInfo The job info.
      * @return {@code true} if the job should be scheduled, otherwise {@code false}.
      */
-    private boolean requiresScheduling(JobInfo jobInfo) {
+    private boolean requiresScheduling(@NonNull JobInfo jobInfo) {
         if (!activityMonitor.isAppForegrounded()) {
             return true;
         }
@@ -176,9 +177,7 @@ public class JobDispatcher {
         if (jobInfo.isNetworkAccessRequired()) {
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            if (activeNetwork == null || !activeNetwork.isConnected()) {
-                return true;
-            }
+            return activeNetwork == null || !activeNetwork.isConnected();
         }
 
         return false;

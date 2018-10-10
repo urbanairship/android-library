@@ -17,14 +17,14 @@ import java.util.List;
 
 /**
  * Shows a chooser activity to share text.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument values: A String used as the share text.
- * <p/>
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Names: ^s, share_action
  */
 public class ShareAction extends Action {
@@ -32,14 +32,16 @@ public class ShareAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "share_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^s";
 
-    private static final List<String> ignoredPackages = new ArrayList<String>() {{
+    private static final List<String> IGNORED_PACKAGES = new ArrayList<String>() {{
         add("com.android.bluetooth");
         add("com.android.nfc");
         add("com.google.android.apps.docs");
@@ -81,7 +83,7 @@ public class ShareAction extends Action {
 
             String packageName = resolveInfo.activityInfo.packageName;
 
-            if (!excludePackage(packageName)) {
+            if (packageName != null && !excludePackage(packageName)) {
                 shareResolveInfos.add(resolveInfo);
             }
         }
@@ -121,8 +123,8 @@ public class ShareAction extends Action {
      * @param packageName The package name.
      * @return <code>true</code> to exclude the package from the chooser dialog, <code>false</code> to include the package.
      */
-    protected boolean excludePackage(String packageName) {
-        return ignoredPackages.contains(packageName);
+    protected boolean excludePackage(@NonNull String packageName) {
+        return IGNORED_PACKAGES.contains(packageName);
     }
 
     @Override

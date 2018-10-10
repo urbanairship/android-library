@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -25,12 +26,12 @@ class NamedUserApiClient extends BaseApiClient {
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String NAMED_USER_ID_KEY = "named_user_id";
 
-    NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
+    NamedUserApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+    NamedUserApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         super(platform, configOptions, requestFactory);
     }
 
@@ -41,12 +42,13 @@ class NamedUserApiClient extends BaseApiClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
+    @Nullable
     Response associate(@NonNull String id, @NonNull String channelId) {
         JsonMap payload = JsonMap.newBuilder()
-                .put(CHANNEL_KEY, channelId)
-                .put(DEVICE_TYPE_KEY, getDeviceType())
-                .put(NAMED_USER_ID_KEY, id)
-                .build();
+                                 .put(CHANNEL_KEY, channelId)
+                                 .put(DEVICE_TYPE_KEY, getDeviceType())
+                                 .put(NAMED_USER_ID_KEY, id)
+                                 .build();
 
         URL associateUrl = getDeviceUrl(ASSOCIATE_PATH);
         return performRequest(associateUrl, "POST", payload.toString());
@@ -58,11 +60,12 @@ class NamedUserApiClient extends BaseApiClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
+    @Nullable
     Response disassociate(@NonNull String channelId) {
         JsonMap payload = JsonMap.newBuilder()
-                .put(CHANNEL_KEY, channelId)
-                .put(DEVICE_TYPE_KEY, getDeviceType())
-                .build();
+                                 .put(CHANNEL_KEY, channelId)
+                                 .put(DEVICE_TYPE_KEY, getDeviceType())
+                                 .build();
 
         URL disassociateUrl = getDeviceUrl(DISASSOCIATE_PATH);
         return performRequest(disassociateUrl, "POST", payload.toString());
@@ -73,6 +76,7 @@ class NamedUserApiClient extends BaseApiClient {
      *
      * @return The device type string.
      */
+    @NonNull
     String getDeviceType() {
         switch (getPlatform()) {
             case UAirship.AMAZON_PLATFORM:
@@ -80,7 +84,7 @@ class NamedUserApiClient extends BaseApiClient {
 
             case UAirship.ANDROID_PLATFORM:
             default:
-                return  "android";
+                return "android";
         }
     }
 }

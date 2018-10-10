@@ -2,19 +2,20 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
  * Concrete convenience implementation of Observer.
- * @param <T> The type of the value under observation.
  *
+ * @param <T> The type of the value under observation.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Subscriber<T> implements Observer<T> {
 
     @Override
-    public void onNext(T value) {
+    public void onNext(@NonNull T value) {
     }
 
     @Override
@@ -22,6 +23,6 @@ public class Subscriber<T> implements Observer<T> {
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(@NonNull Exception e) {
     }
 }

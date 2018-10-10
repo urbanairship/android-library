@@ -42,7 +42,7 @@ public class DisplayHandler implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeString(scheduleId);
     }
 
@@ -56,12 +56,16 @@ public class DisplayHandler implements Parcelable {
      *
      * @hide
      */
+    @NonNull
     public static final Creator<DisplayHandler> CREATOR = new Creator<DisplayHandler>() {
+
+        @NonNull
         @Override
-        public DisplayHandler createFromParcel(Parcel in) {
+        public DisplayHandler createFromParcel(@NonNull Parcel in) {
             return new DisplayHandler(in.readString());
         }
 
+        @NonNull
         @Override
         public DisplayHandler[] newArray(int size) {
             return new DisplayHandler[size];
@@ -122,7 +126,7 @@ public class DisplayHandler implements Parcelable {
      * @return {@code true} if the display lock was granted or the in-app message already contained
      * the lock. Otherwise {@code false}.
      */
-    public boolean requestDisplayLock(Activity activity) {
+    public boolean requestDisplayLock(@NonNull Activity activity) {
         Autopilot.automaticTakeOff(activity.getApplication());
 
         InAppMessageManager manager = getInAppMessagingManager();

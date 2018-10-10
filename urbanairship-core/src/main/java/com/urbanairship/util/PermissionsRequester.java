@@ -21,5 +21,5 @@ public interface PermissionsRequester {
      * @return The result from requesting permissions.
      */
     @NonNull
-    int[] requestPermissions(@NonNull  Context context, @NonNull List<String> permissions);
+    int[] requestPermissions(@NonNull Context context, @NonNull List<String> permissions);
 }

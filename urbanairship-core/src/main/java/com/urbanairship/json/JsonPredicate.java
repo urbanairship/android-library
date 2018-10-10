@@ -2,6 +2,7 @@
 
 package com.urbanairship.json;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
@@ -14,16 +15,16 @@ import java.util.List;
 
 /**
  * Class abstracting a JSON predicate. The predicate is contained to the following schema:
- * <p/>
+ * <p>
  * <predicate>         := <json_matcher> | <not> | <and> | <or>
  * <not>               := { "not": { <predicate> } }
  * <and>               := { "and": [<predicate>, <predicate>, …] }
  * <or>                := { "or": [<predicate>, <predicate>, …] }
- * <p/>
+ * <p>
  * <json_matcher>      := { <selector>, "value": { <value_matcher> }} | { "value": {<value_matcher>}}
  * <selector>          := <scope>, "key": string | "key": string | <scope>
  * <scope>             := "scope": string | "scope": [string, string, …]
- * <p/>
+ * <p>
  * <value_matcher>     := <numeric_matcher> | <equals_matcher> | <presence_matcher> | <version_matcher> | <array_matcher>
  * <array_matcher>     := "array_contains": <predicate> | "array_contains": <predicate>, "index": number
  * <numeric_matcher>   := "at_least": number | "at_most": number | "at_least": number, "at_most": number
@@ -33,10 +34,14 @@ import java.util.List;
  */
 public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializable> {
 
+    @NonNull
     public static final String OR_PREDICATE_TYPE = "or";
-    public static final String AND_PREDICATE_TYPE = "and";
-    public static final String NOT_PREDICATE_TYPE = "not";
 
+    @NonNull
+    public static final String AND_PREDICATE_TYPE = "and";
+
+    @NonNull
+    public static final String NOT_PREDICATE_TYPE = "not";
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({ OR_PREDICATE_TYPE, AND_PREDICATE_TYPE, NOT_PREDICATE_TYPE })
@@ -55,10 +60,12 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder().put(type, JsonValue.wrapOpt(items))
@@ -73,7 +80,8 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
      * @return The parsed JsonPredicate.
      * @throws JsonException If the jsonValue defines invalid JsonPredicate.
      */
-    public static JsonPredicate parse(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static JsonPredicate parse(@Nullable JsonValue jsonValue) throws JsonException {
         if (jsonValue == null || !jsonValue.isJsonMap() || jsonValue.optMap().isEmpty()) {
             throw new JsonException("Unable to parse empty JsonValue: " + jsonValue);
         }
@@ -113,7 +121,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
 
     @PredicateType
     @Nullable
-    private static String getPredicateType(JsonMap jsonMap) {
+    private static String getPredicateType(@NonNull JsonMap jsonMap) {
         if (jsonMap.containsKey(AND_PREDICATE_TYPE)) {
             return AND_PREDICATE_TYPE;
         }
@@ -130,7 +138,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
     }
 
     @Override
-    public boolean apply(JsonSerializable value) {
+    public boolean apply(@Nullable JsonSerializable value) {
         if (items.size() == 0) {
             return true;
         }
@@ -175,7 +183,8 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
          * @param type The predicate type.
          * @return The builder instance.
          */
-        public Builder setPredicateType(@PredicateType String type) {
+        @NonNull
+        public Builder setPredicateType(@NonNull @PredicateType String type) {
             this.type = type;
             return this;
         }
@@ -186,7 +195,8 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
          * @param matcher The JsonMatcher instance.
          * @return The builder instance.
          */
-        public Builder addMatcher(JsonMatcher matcher) {
+        @NonNull
+        public Builder addMatcher(@NonNull JsonMatcher matcher) {
             items.add(matcher);
             return this;
         }
@@ -197,7 +207,8 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
          * @param predicate The JsonPredicate instance.
          * @return The builder instance.
          */
-        public Builder addPredicate(JsonPredicate predicate) {
+        @NonNull
+        public Builder addPredicate(@NonNull JsonPredicate predicate) {
             items.add(predicate);
             return this;
         }
@@ -209,6 +220,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
          * @throws IllegalArgumentException if a NOT predicate has more than one matcher or predicate
          * defined, or if the predicate does not contain at least 1 child predicate or matcher.
          */
+        @NonNull
         public JsonPredicate build() {
             if (type.equals(NOT_PREDICATE_TYPE) && items.size() > 1) {
                 throw new IllegalArgumentException("`NOT` predicate type only supports a single matcher or predicate.");
@@ -223,7 +235,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

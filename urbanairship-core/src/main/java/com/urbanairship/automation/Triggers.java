@@ -2,6 +2,9 @@
 
 package com.urbanairship.automation;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
@@ -20,6 +23,7 @@ public class Triggers {
      *
      * @return The new foreground trigger builder.
      */
+    @NonNull
     public static LifeCycleTriggerBuilder newForegroundTriggerBuilder() {
         return new LifeCycleTriggerBuilder(Trigger.LIFE_CYCLE_FOREGROUND);
     }
@@ -29,6 +33,7 @@ public class Triggers {
      *
      * @return The new background trigger builder.
      */
+    @NonNull
     public static LifeCycleTriggerBuilder newBackgroundTriggerBuilder() {
         return new LifeCycleTriggerBuilder(Trigger.LIFE_CYCLE_BACKGROUND);
     }
@@ -38,6 +43,7 @@ public class Triggers {
      *
      * @return The new app init trigger builder.
      */
+    @NonNull
     public static LifeCycleTriggerBuilder newAppInitTriggerBuilder() {
         return new LifeCycleTriggerBuilder(Trigger.LIFE_CYCLE_APP_INIT);
     }
@@ -47,6 +53,7 @@ public class Triggers {
      *
      * @return The new enter region trigger builder.
      */
+    @NonNull
     public static RegionTriggerBuilder newEnterRegionTriggerBuilder() {
         return new RegionTriggerBuilder(Trigger.REGION_ENTER);
     }
@@ -56,6 +63,7 @@ public class Triggers {
      *
      * @return The new exit region trigger builder.
      */
+    @NonNull
     public static RegionTriggerBuilder newExitRegionTriggerBuilder() {
         return new RegionTriggerBuilder(Trigger.REGION_EXIT);
     }
@@ -65,6 +73,7 @@ public class Triggers {
      *
      * @return The new screen trigger builder.
      */
+    @NonNull
     public static ScreenTriggerBuilder newScreenTriggerBuilder() {
         return new ScreenTriggerBuilder();
     }
@@ -74,6 +83,7 @@ public class Triggers {
      *
      * @return The new custom event trigger builder.
      */
+    @NonNull
     public static CustomEventTriggerBuilder newCustomEventTriggerBuilder() {
         return new CustomEventTriggerBuilder();
     }
@@ -83,6 +93,7 @@ public class Triggers {
      *
      * @return The new active session trigger builder.
      */
+    @NonNull
     public static ActiveSessionTriggerBuilder newActiveSessionTriggerBuilder() {
         return new ActiveSessionTriggerBuilder();
     }
@@ -93,7 +104,8 @@ public class Triggers {
      * @param versionMatcher The version matcher.
      * @return The new version trigger builder.
      */
-    public static VersionTriggerBuilder newVersionTriggerBuilder(ValueMatcher versionMatcher) {
+    @NonNull
+    public static VersionTriggerBuilder newVersionTriggerBuilder(@Nullable ValueMatcher versionMatcher) {
         return new VersionTriggerBuilder(versionMatcher);
     }
 
@@ -114,6 +126,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public LifeCycleTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
@@ -124,6 +137,7 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
             return new Trigger(type, goal, null);
         }
@@ -147,6 +161,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public RegionTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
@@ -158,7 +173,8 @@ public class Triggers {
          * @param regionId The region ID.
          * @return The Builder instance.
          */
-        public RegionTriggerBuilder setRegionId(String regionId) {
+        @NonNull
+        public RegionTriggerBuilder setRegionId(@Nullable String regionId) {
             this.regionId = regionId;
             return this;
         }
@@ -168,6 +184,7 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
             JsonPredicate predicate;
             if (UAStringUtil.isEmpty(regionId)) {
@@ -192,9 +209,7 @@ public class Triggers {
         private double goal = 1;
         private String screenName;
 
-        private ScreenTriggerBuilder() {
-
-        }
+        private ScreenTriggerBuilder() {}
 
         /**
          * Sets the trigger goal.
@@ -202,6 +217,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public ScreenTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
@@ -213,7 +229,8 @@ public class Triggers {
          * @param screenName The screen name.
          * @return The Builder instance.
          */
-        public ScreenTriggerBuilder setScreenName(String screenName) {
+        @NonNull
+        public ScreenTriggerBuilder setScreenName(@Nullable String screenName) {
             this.screenName = screenName;
             return this;
         }
@@ -223,6 +240,7 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
             JsonPredicate predicate;
 
@@ -248,9 +266,7 @@ public class Triggers {
         private int type;
         private String eventName;
 
-        private CustomEventTriggerBuilder() {
-
-        }
+        private CustomEventTriggerBuilder() {}
 
         /**
          * Sets the goal for {@link Trigger#CUSTOM_EVENT_COUNT} triggers.
@@ -258,6 +274,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public CustomEventTriggerBuilder setCountGoal(double goal) {
             this.type = Trigger.CUSTOM_EVENT_COUNT;
             this.goal = goal;
@@ -270,6 +287,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public CustomEventTriggerBuilder setValueGoal(double goal) {
             this.type = Trigger.CUSTOM_EVENT_VALUE;
             this.goal = goal;
@@ -282,7 +300,8 @@ public class Triggers {
          * @param eventName The event name.
          * @return The Builder instance.
          */
-        public CustomEventTriggerBuilder setEventName(String eventName) {
+        @NonNull
+        public CustomEventTriggerBuilder setEventName(@Nullable String eventName) {
             this.eventName = eventName;
             return this;
         }
@@ -292,6 +311,7 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
             if (UAStringUtil.isEmpty(eventName)) {
                 return new Trigger(type, goal, null);
@@ -322,6 +342,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public ActiveSessionTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
@@ -332,6 +353,7 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
             return new Trigger(Trigger.ACTIVE_SESSION, goal, null);
         }
@@ -344,7 +366,7 @@ public class Triggers {
         private double goal = 1;
         private final ValueMatcher versionMatcher;
 
-        private VersionTriggerBuilder(ValueMatcher versionMatcher) { this.versionMatcher = versionMatcher; }
+        private VersionTriggerBuilder(@Nullable ValueMatcher versionMatcher) { this.versionMatcher = versionMatcher; }
 
         /**
          * Sets the goal for {@link Trigger#VERSION} triggers.
@@ -352,6 +374,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
+        @NonNull
         public VersionTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
@@ -362,8 +385,12 @@ public class Triggers {
          *
          * @return The trigger instance.
          */
+        @NonNull
         public Trigger build() {
-            JsonPredicate predicate = VersionUtils.createVersionPredicate(versionMatcher);
+            JsonPredicate predicate = null;
+            if (versionMatcher != null) {
+                predicate = VersionUtils.createVersionPredicate(versionMatcher);
+            }
             return new Trigger(Trigger.VERSION, goal, predicate);
         }
     }

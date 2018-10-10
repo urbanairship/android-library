@@ -4,6 +4,7 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
@@ -29,7 +30,7 @@ public interface PushProvider {
          * @param isRecoverable If the exception is recoverable (should retry registration).
          * @param cause The cause of the exception.
          */
-        public RegistrationException(String message, boolean isRecoverable, Throwable cause) {
+        public RegistrationException(@NonNull String message, boolean isRecoverable, @Nullable Throwable cause) {
             super(message, cause);
             this.isRecoverable = isRecoverable;
         }
@@ -40,7 +41,7 @@ public interface PushProvider {
          * @param message The exception message.
          * @param isRecoverable If the exception is recoverable (should retry registration).
          */
-        public RegistrationException(String message, boolean isRecoverable) {
+        public RegistrationException(@NonNull String message, boolean isRecoverable) {
             super(message);
             this.isRecoverable = isRecoverable;
         }
@@ -70,6 +71,7 @@ public interface PushProvider {
      * @return The registration ID.
      * @throws RegistrationException If the registration fails.
      */
+    @Nullable
     String getRegistrationToken(@NonNull Context context) throws RegistrationException;
 
     /**

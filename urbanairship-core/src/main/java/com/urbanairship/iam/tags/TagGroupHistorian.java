@@ -3,6 +3,7 @@
 package com.urbanairship.iam.tags;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -102,7 +103,7 @@ class TagGroupHistorian {
      *
      * @param mutation The mutation.
      */
-    private void recordMutation(TagGroupsMutation mutation) {
+    private void recordMutation(@NonNull TagGroupsMutation mutation) {
         synchronized (recordLock) {
             List<MutationRecord> records = getMutationRecords();
 
@@ -112,7 +113,7 @@ class TagGroupHistorian {
             // Sort entries by oldest first
             Collections.sort(records, new Comparator<MutationRecord>() {
                 @Override
-                public int compare(MutationRecord lh, MutationRecord rh) {
+                public int compare(@NonNull MutationRecord lh, @NonNull MutationRecord rh) {
                     if (lh.time == rh.time) {
                         return 0;
                     }
@@ -132,6 +133,7 @@ class TagGroupHistorian {
      *
      * @return The list of recorded mutations.
      */
+    @NonNull
     private List<MutationRecord> getMutationRecords() {
         synchronized (recordLock) {
             // Grab entries, should already be sorted
@@ -172,6 +174,7 @@ class TagGroupHistorian {
             this.mutation = mutation;
         }
 
+        @NonNull
         @Override
         public JsonValue toJsonValue() {
             return JsonMap.newBuilder()
@@ -191,8 +194,8 @@ class TagGroupHistorian {
         static MutationRecord fromJsonValue(JsonValue jsonValue) throws JsonException {
             JsonMap jsonMap = jsonValue.optMap();
 
-            long time = jsonMap.get(TIME_KEY).getLong(0);
-            TagGroupsMutation mutation = TagGroupsMutation.fromJsonValue(jsonMap.get(MUTATION));
+            long time = jsonMap.opt(TIME_KEY).getLong(0);
+            TagGroupsMutation mutation = TagGroupsMutation.fromJsonValue(jsonMap.opt(MUTATION));
 
             if (time >= 0 && mutation != null) {
                 return new MutationRecord(time, mutation);
@@ -208,7 +211,7 @@ class TagGroupHistorian {
          * @return A list of mutation records.
          */
         @NonNull
-        static List<MutationRecord> fromJsonList(JsonList jsonList) {
+        static List<MutationRecord> fromJsonList(@Nullable JsonList jsonList) {
             List<MutationRecord> records = new ArrayList<>();
 
             if (jsonList != null) {

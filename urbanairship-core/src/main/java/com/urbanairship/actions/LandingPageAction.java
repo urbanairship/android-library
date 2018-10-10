@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.TypedValue;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -17,6 +18,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
 import com.urbanairship.widget.UAWebView;
@@ -27,28 +29,28 @@ import java.net.URLEncoder;
 
 /**
  * Action for launching a Landing Page.
- * <p/>
+ * <p>
  * The landing page will not be launched in SITUATION_PUSH_RECEIVED, instead it will be cached
  * if the action is triggered with a payload that sets "cache_on_receive" to true.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_PUSH_RECEIVED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument value types: URL defined as either a String or a Map containing the key
  * "url" that defines the URL, an optional width and height in points as an int or "fill" string,
- *  an optional aspectLock option as a boolean.
- *  The aspectLock option guarantees that if the message does not fit, it will be resized at the
- *  same aspect ratio defined by the provided width and height parameters. The map argument value
- *  can also define a "cache_on_receive" flag to enable or disable caching when a
- *  SITUATION_PUSH_RECEIVED. Caching is disabled by default.
- * <p/>
+ * an optional aspectLock option as a boolean.
+ * The aspectLock option guarantees that if the message does not fit, it will be resized at the
+ * same aspect ratio defined by the provided width and height parameters. The map argument value
+ * can also define a "cache_on_receive" flag to enable or disable caching when a
+ * SITUATION_PUSH_RECEIVED. Caching is disabled by default.
+ * <p>
  * <pre>{@code Note: URLs in the format of "u:<content-id>" will be treated as a short url and
  * used to construct a separate url using the content id. }</pre>
- * <p/>
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Names: ^p, landing_page_action
- * <p/>
+ * <p>
  * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED if the application
  * has not been opened in the last week.
  */
@@ -59,48 +61,58 @@ public class LandingPageAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "landing_page_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^p";
 
     /**
      * Intent action for showing a URL in a {@link com.urbanairship.widget.UAWebView}
      */
+    @NonNull
     public static final String SHOW_LANDING_PAGE_INTENT_ACTION = "com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION";
 
     /**
      * The content's url payload key
      */
+    @NonNull
     public static final String URL_KEY = "url";
 
     /**
      * The content's width payload key
      */
+    @NonNull
     public static final String WIDTH_KEY = "width";
 
     /**
      * The content's height payload key
      */
+    @NonNull
     public static final String HEIGHT_KEY = "height";
 
     /**
      * The content's aspectLock payload key
      */
+    @NonNull
     public static final String ASPECT_LOCK_KEY = "aspectLock";
 
     /**
      * The payload key for indicating if the landing page should be cached
      * when triggered in Action.SITUATION_PUSH_RECEIVED
      */
+    @NonNull
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
+        Checks.checkNotNull(uri, "URI should not be null");
+
         int width = 0;
         int height = 0;
         boolean aspectLock = false;
@@ -109,7 +121,7 @@ public class LandingPageAction extends Action {
         // Parse width
         if (arguments.getValue().getMap() != null) {
             int widthPoints = arguments.getValue().getMap().opt(WIDTH_KEY).getInt(0);
-            width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());
+            width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());
         }
 
         // Parse height
@@ -213,6 +225,7 @@ public class LandingPageAction extends Action {
      * @param arguments The action arguments.
      * @return A landing page Uri, or null if the arguments could not be parsed.
      */
+    @Nullable
     protected Uri parseUri(@NonNull ActionArguments arguments) {
         String uriValue;
 
@@ -228,7 +241,7 @@ public class LandingPageAction extends Action {
 
         // Assume a string
         Uri uri = UriUtils.parse(uriValue);
-        if (UAStringUtil.isEmpty(uri.toString())) {
+        if (uri == null || UAStringUtil.isEmpty(uri.toString())) {
             return null;
         }
 
@@ -279,7 +292,7 @@ public class LandingPageAction extends Action {
      */
     public static class LandingPagePredicate implements ActionRegistry.Predicate {
         @Override
-        public boolean apply(ActionArguments arguments) {
+        public boolean apply(@NonNull ActionArguments arguments) {
             if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
                 long lastOpenTime = UAirship.shared().getApplicationMetrics().getLastOpenTimeMillis();
                 return System.currentTimeMillis() - lastOpenTime <= LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS;

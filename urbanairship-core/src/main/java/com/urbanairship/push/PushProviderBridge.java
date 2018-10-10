@@ -53,6 +53,7 @@ public abstract class PushProviderBridge {
      * @param pushMessage The push message.
      */
     @WorkerThread
+    @NonNull
     public static ProcessPushRequest processPush(@NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage) {
         return new ProcessPushRequest(provider, pushMessage);
     }
@@ -74,22 +75,13 @@ public abstract class PushProviderBridge {
         }
 
         /**
-         * Enables or disables the use of wakelocks. Defaults to {@code false}.
-         *
-         * @param allowWakeLocks {@code true} to allow wakelocks, otherwise {@code false}.
-         * @return The process push request.
-         */
-        public ProcessPushRequest allowWakeLocks(boolean allowWakeLocks) {
-            this.allowWakeLocks = allowWakeLocks;
-            return this;
-        }
-
-        /**
          * Sets the max callback wait time in milliseconds.
+         *
          * @param milliseconds The max callback wait time. If <= 0, the callback will
          * wait until the push request is completed.
          * @return The process push request.
          */
+        @NonNull
         public ProcessPushRequest setMaxCallbackWaitTime(long milliseconds) {
             this.maxCallbackWaitTime = milliseconds;
             return this;

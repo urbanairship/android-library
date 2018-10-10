@@ -18,17 +18,17 @@ import android.util.Log;
  * directly is the simplest integration, however some application frameworks do not provide a way to
  * extend the Application class. Autopilot allows you to provide your bootstrapping code in a way
  * that allows the library to lazily execute it.
- * <p/>
+ * <p>
  * Autopilot will be called before {@link Application#onCreate()} on the main process. If this is too early
  * for the application to handle takeOff, it can be delayed by overriding {@link #allowEarlyTakeOff(Context)}.
  * If delayed or if the application uses multiple processes, {@link #automaticTakeOff(Context)} must be called
  * at <em>all</em> application entry points (i.e., in the onCreate() method of all registered
  * Broadcast Receivers, Activities and Services).
- * <p/>
+ * <p>
  * The default {@link com.urbanairship.AirshipConfigOptions} will be created from the
  * {@code airshipconfig.properties} file from the assets. To provide a different config,
  * override {@link #createAirshipConfigOptions}.
- * <p/>
+ * <p>
  * The default Autopilot behavior will call takeOff and load airship config options from the {@code airshipconfig.properties}
  * file in the assets directory. To use autopilot, add the following entry to the application block
  * in the Application AndroidManifest.xml:
@@ -36,7 +36,7 @@ import android.util.Log;
  *  <meta-data android:name="com.urbanairship.autopilot"
  *           android:value="com.urbanairship.Autopilot" /> }</pre>
  * <p>
- * <p/>
+ * <p>
  * Autopilot can be customized in order to load config from a different source or to customize the Airship
  * instance when it is ready. To customize Autopilot, extend the class and override either {@link #allowEarlyTakeOff(Context)},
  * {@link #onAirshipReady(UAirship)}, or {@link #createAirshipConfigOptions(Context)} methods. The class
@@ -53,6 +53,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
      * The name of the AndroidManifest meta-data element used to hold the fully qualified class
      * name of the application's Autopilot implementation.
      */
+    @NonNull
     public static final String AUTOPILOT_MANIFEST_KEY = "com.urbanairship.autopilot";
 
     private static final String TAG = "Urban Airship Autopilot";
@@ -181,7 +182,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
 
     /**
      * Checks if Autopilot is able to takeOff before {@link Application#onCreate()}.
-     * <p/>
+     * <p>
      * Early takeOff will only be called on the main process. Apps that use multiple processes need
      * to make sure {@link #automaticTakeOff(Context)} is called in any other processes that use
      * Urban Airship. If early takeOff is disabled, {@link #automaticTakeOff(Context)} must be called
@@ -216,7 +217,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
      * @param airship The UAirship instance.
      */
     @Override
-    public void onAirshipReady(UAirship airship) {
+    public void onAirshipReady(@NonNull UAirship airship) {
         Logger.info("Autopilot - Airship ready!");
     }
 

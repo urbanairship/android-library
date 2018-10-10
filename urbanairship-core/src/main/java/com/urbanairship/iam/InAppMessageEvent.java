@@ -35,7 +35,7 @@ abstract class InAppMessageEvent extends Event {
     private final String source;
 
 
-    InAppMessageEvent(InAppMessage message) {
+    InAppMessageEvent(@NonNull InAppMessage message) {
         this(createEventId(message), message.getSource());
     }
 
@@ -44,6 +44,7 @@ abstract class InAppMessageEvent extends Event {
         this.source = source;
     }
 
+    @NonNull
     @Override
     protected JsonMap getEventData() {
         boolean isAppDefined = InAppMessage.SOURCE_APP_DEFINED.equals(source);
@@ -61,6 +62,7 @@ abstract class InAppMessageEvent extends Event {
         return !eventId.isNull();
     }
 
+    @NonNull
     static JsonValue createEventId(InAppMessage message) {
         switch (message.getSource()) {
             case InAppMessage.SOURCE_LEGACY_PUSH:

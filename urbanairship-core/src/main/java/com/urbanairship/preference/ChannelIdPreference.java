@@ -8,6 +8,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.Preference;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,15 +40,15 @@ public class ChannelIdPreference extends Preference {
     private int channelRetries;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ChannelIdPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public ChannelIdPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public ChannelIdPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ChannelIdPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public ChannelIdPreference(Context context, AttributeSet attrs) {
+    public ChannelIdPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
@@ -75,8 +77,9 @@ public class ChannelIdPreference extends Preference {
         });
     }
 
+    @NonNull
     @Override
-    public View onCreateView(ViewGroup parent) {
+    public View onCreateView(@NonNull ViewGroup parent) {
         View view = super.onCreateView(parent);
         view.setContentDescription(CONTENT_DESCRIPTION);
         return view;

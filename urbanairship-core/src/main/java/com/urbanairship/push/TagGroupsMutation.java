@@ -40,7 +40,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param removeTags Map of pending remove tags.
      * @param setTags Map of pending set tags.
      */
-    private TagGroupsMutation(Map<String, Set<String>> addTags, Map<String, Set<String>> removeTags, Map<String, Set<String>> setTags) {
+    private TagGroupsMutation(@Nullable Map<String, Set<String>> addTags, @Nullable Map<String, Set<String>> removeTags, @Nullable Map<String, Set<String>> setTags) {
         this.addTags = addTags;
         this.removeTags = removeTags;
         this.setTags = setTags;
@@ -53,6 +53,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to add.
      * @return Tag group mutation.
      */
+    @NonNull
     public static TagGroupsMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
@@ -67,6 +68,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to remove.
      * @return Tag group mutation.
      */
+    @NonNull
     public static TagGroupsMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
@@ -81,6 +83,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to set.
      * @return Tag group mutation.
      */
+    @NonNull
     public static TagGroupsMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
@@ -95,7 +98,8 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param pendingRemoveTags Map of pending remove tags.
      * @return Tag group mutation.
      */
-    public static TagGroupsMutation newAddRemoveMutation(Map<String, Set<String>> pendingAddTags, Map<String, Set<String>> pendingRemoveTags) {
+    @NonNull
+    public static TagGroupsMutation newAddRemoveMutation(@Nullable Map<String, Set<String>> pendingAddTags, @Nullable Map<String, Set<String>> pendingRemoveTags) {
         Map<String, Set<String>> normalizedPendingAddTags = new HashMap<>();
         Map<String, Set<String>> normalizedPendingRemoveTags = new HashMap<>();
 
@@ -148,7 +152,8 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param mutations List of mutations to collapse.
      * @return A new list of collapsed mutations.
      */
-    static List<TagGroupsMutation> collapseMutations(List<TagGroupsMutation> mutations) {
+    @NonNull
+    static List<TagGroupsMutation> collapseMutations(@Nullable List<TagGroupsMutation> mutations) {
         if (mutations == null || mutations.isEmpty()) {
             return Collections.emptyList();
         }
@@ -263,6 +268,7 @@ public class TagGroupsMutation implements JsonSerializable {
         return collapsedMutations;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         JsonMap.Builder builder = JsonMap.newBuilder();
@@ -283,7 +289,7 @@ public class TagGroupsMutation implements JsonSerializable {
     }
 
     @Nullable
-    public static TagGroupsMutation fromJsonValue(JsonValue jsonValue) {
+    public static TagGroupsMutation fromJsonValue(@NonNull JsonValue jsonValue) {
         JsonMap jsonMap = jsonValue.optMap();
 
         Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(jsonMap.get(ADD_KEY));
@@ -298,7 +304,7 @@ public class TagGroupsMutation implements JsonSerializable {
     }
 
     @NonNull
-    public static List<TagGroupsMutation> fromJsonList(JsonList jsonList) {
+    public static List<TagGroupsMutation> fromJsonList(@Nullable JsonList jsonList) {
         List<TagGroupsMutation> mutations = new ArrayList<>();
 
         if (jsonList != null) {
@@ -314,7 +320,7 @@ public class TagGroupsMutation implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -337,12 +343,12 @@ public class TagGroupsMutation implements JsonSerializable {
         return result;
     }
 
-    public void apply(Map<String, Set<String>> tagGroups) {
+    public void apply(@NonNull Map<String, Set<String>> tagGroups) {
         // Add tags
         if (addTags != null) {
             for (Map.Entry<String, Set<String>> entry : addTags.entrySet()) {
                 if (!tagGroups.containsKey(entry.getKey())) {
-                   tagGroups.put(entry.getKey(), new HashSet<String>());
+                    tagGroups.put(entry.getKey(), new HashSet<String>());
                 }
 
                 tagGroups.get(entry.getKey()).addAll(entry.getValue());

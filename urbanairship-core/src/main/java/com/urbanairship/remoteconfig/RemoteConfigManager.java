@@ -52,12 +52,12 @@ public class RemoteConfigManager extends AirshipComponent {
      * @param dataStore The preference data store.
      * @param remoteData The remote data manager.
      */
-    public RemoteConfigManager(PreferenceDataStore dataStore, RemoteData remoteData) {
+    public RemoteConfigManager(@NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData) {
         this(dataStore, remoteData, new ModuleAdapter());
     }
 
     @VisibleForTesting
-    public RemoteConfigManager(PreferenceDataStore dataStore, RemoteData remoteData, ModuleAdapter moduleAdapter) {
+    public RemoteConfigManager(@NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
         super(dataStore);
         this.remoteData = remoteData;
         this.moduleAdapter = moduleAdapter;
@@ -72,7 +72,7 @@ public class RemoteConfigManager extends AirshipComponent {
         subscription = remoteData.payloadsForTypes(CONFIG_TYPE_COMMON, platformConfig)
                                  .subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
                                      @Override
-                                     public void onNext(Collection<RemoteDataPayload> remoteDataPayloads) {
+                                     public void onNext(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
                                          try {
                                              processRemoteData(remoteDataPayloads);
                                          } catch (Exception e) {
@@ -87,7 +87,7 @@ public class RemoteConfigManager extends AirshipComponent {
      *
      * @param remoteDataPayloads The remote data payloads.
      */
-    private void processRemoteData(Collection<RemoteDataPayload> remoteDataPayloads) {
+    private void processRemoteData(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
 
         List<DisableInfo> disableInfos = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public class RemoteConfigManager extends AirshipComponent {
         for (RemoteDataPayload payload : remoteDataPayloads) {
             for (String key : payload.getData().keySet()) {
 
-                JsonValue value = payload.getData().get(key);
+                JsonValue value = payload.getData().opt(key);
 
                 if (DISABLE_INFO_KEY.equals(key)) {
                     for (JsonValue disableInfoJson : value.optList()) {

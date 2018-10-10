@@ -11,6 +11,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.util.Checks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,9 @@ import java.util.Map;
 
 /**
  * An action that adds a custom event.
- * <p/>
+ * <p>
  * Accepted situations: all
- * <p/>
+ * <p>
  * Accepted argument value - A map of fields for the custom event:
  * <ul>
  * <li>{@link com.urbanairship.analytics.CustomEvent#EVENT_NAME}: String, Required</li>
@@ -32,11 +33,11 @@ import java.util.Map;
  * </ul>
  * When a custom event action is triggered from a Message Center Rich Push Message, the interaction type
  * and ID will automatically be filled for the message if they are left blank.
- * <p/>
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Name: add_custom_event_action
- * <p/>
+ * <p>
  * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED
  */
 public class AddCustomEventAction extends Action {
@@ -44,16 +45,17 @@ public class AddCustomEventAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "add_custom_event_action";
 
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-
-        JsonMap customEventMap = arguments.getValue().getMap();
+        JsonMap customEventMap = arguments.getValue().toJsonValue().optMap();
 
         // Parse the event values from the map
         String eventName = customEventMap.opt(CustomEvent.EVENT_NAME).getString();
+        Checks.checkNotNull(eventName, "Missing event name");
 
         String eventStringValue = customEventMap.opt(CustomEvent.EVENT_VALUE).getString();
         double eventDoubleValue = customEventMap.opt(CustomEvent.EVENT_VALUE).getDouble(0);
@@ -64,9 +66,9 @@ public class AddCustomEventAction extends Action {
         JsonMap properties = customEventMap.opt(CustomEvent.PROPERTIES).getMap();
 
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder(eventName)
-                .setTransactionId(transactionId)
-                .setInteraction(interactionType, interactionId)
-                .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
+                                                      .setTransactionId(transactionId)
+                                                      .setInteraction(interactionType, interactionId)
+                                                      .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
 
         if (eventStringValue != null) {
             eventBuilder.setEventValue(eventStringValue);
@@ -91,13 +93,13 @@ public class AddCustomEventAction extends Action {
                 } else if (property.getValue().isDouble()) {
                     eventBuilder.addProperty(property.getKey(), property.getValue().getDouble(0));
                 } else if (property.getValue().isNumber()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().getNumber().longValue());
+                    eventBuilder.addProperty(property.getKey(), property.getValue().getLong(0));
                 } else if (property.getValue().isString()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().getString());
+                    eventBuilder.addProperty(property.getKey(), property.getValue().optString());
                 } else if (property.getValue().isJsonList()) {
                     List<String> strings = new ArrayList<>();
 
-                    for (JsonValue jsonValue : property.getValue().getList()) {
+                    for (JsonValue jsonValue : property.getValue().optList()) {
                         if (jsonValue.isString()) {
                             strings.add(jsonValue.getString());
                         } else {
@@ -139,7 +141,7 @@ public class AddCustomEventAction extends Action {
     public static class AddCustomEventActionPredicate implements ActionRegistry.Predicate {
 
         @Override
-        public boolean apply(ActionArguments arguments) {
+        public boolean apply(@NonNull ActionArguments arguments) {
             return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
         }
 

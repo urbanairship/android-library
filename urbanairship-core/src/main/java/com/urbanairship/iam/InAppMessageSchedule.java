@@ -2,6 +2,8 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.automation.Schedule;
 
 /**
@@ -18,7 +20,7 @@ public class InAppMessageSchedule implements Schedule<InAppMessageScheduleInfo> 
      * @param id The schedule ID.
      * @param info The ActionScheduleInfo instance.
      */
-    public InAppMessageSchedule(String id, InAppMessageScheduleInfo info) {
+    public InAppMessageSchedule(@NonNull String id, @NonNull InAppMessageScheduleInfo info) {
         this.id = id;
         this.info = info;
     }
@@ -26,6 +28,7 @@ public class InAppMessageSchedule implements Schedule<InAppMessageScheduleInfo> 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public InAppMessageScheduleInfo getInfo() {
         return info;
@@ -35,6 +38,7 @@ public class InAppMessageSchedule implements Schedule<InAppMessageScheduleInfo> 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public String getId() {
         return id;

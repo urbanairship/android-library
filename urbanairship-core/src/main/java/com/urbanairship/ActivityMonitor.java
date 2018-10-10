@@ -36,6 +36,8 @@ public class ActivityMonitor {
     private boolean isForeground;
     private WeakReference<Activity> resumedActivityReference;
 
+    @VisibleForTesting
+    @NonNull
     protected final Application.ActivityLifecycleCallbacks activityLifecycleCallbacks = new Application.ActivityLifecycleCallbacks() {
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
@@ -130,19 +132,21 @@ public class ActivityMonitor {
 
     /**
      * Registers for activity lifecycle callbacks.
+     *
      * @param context The application context.
      */
     @VisibleForTesting
-    void registerListener(Context context) {
+    void registerListener(@NonNull Context context) {
         ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
     }
 
     /**
      * Unregisters for activity lifecycle callbacks.
+     *
      * @param context The application context.
      */
     @VisibleForTesting
-    void unregisterListener(Context context) {
+    void unregisterListener(@NonNull Context context) {
         ((Application) context.getApplicationContext()).unregisterActivityLifecycleCallbacks(activityLifecycleCallbacks);
     }
 
@@ -152,6 +156,7 @@ public class ActivityMonitor {
      * @param context The application context.
      * @return The singleton.
      */
+    @NonNull
     public static ActivityMonitor shared(@NonNull Context context) {
         if (singleton != null) {
             return singleton;
@@ -163,13 +168,12 @@ public class ActivityMonitor {
     }
 
 
-
     /**
      * Adds a listener to the activity monitor.
      *
      * @param listener The added listener.
      */
-    public void addListener(@NonNull final Listener listener) {
+    public void addListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.add(listener);
         }
@@ -180,7 +184,7 @@ public class ActivityMonitor {
      *
      * @param listener The removed listener.
      */
-    public void removeListener(Listener listener) {
+    public void removeListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
@@ -235,24 +239,24 @@ public class ActivityMonitor {
         public void onBackground(long time) {}
 
         @Override
-        public void onActivityPaused(Activity activity) {}
+        public void onActivityPaused(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityCreated(Activity activity, Bundle bundle) {}
+        public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {}
 
         @Override
-        public void onActivityStarted(Activity activity) {}
+        public void onActivityStarted(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityResumed(Activity activity) {}
+        public void onActivityResumed(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityStopped(Activity activity) {}
+        public void onActivityStopped(@NonNull Activity activity) {}
 
         @Override
-        public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {}
+        public void onActivitySaveInstanceState(@NonNull Activity activity, @Nullable Bundle bundle) {}
 
         @Override
-        public void onActivityDestroyed(Activity activity) {}
+        public void onActivityDestroyed(@NonNull Activity activity) {}
     }
 }

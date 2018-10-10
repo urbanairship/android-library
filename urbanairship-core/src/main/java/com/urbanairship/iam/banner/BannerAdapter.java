@@ -1,15 +1,9 @@
 package com.urbanairship.iam.banner;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.support.annotation.NonNull;
-import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.widget.FrameLayout;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -28,7 +22,9 @@ public class BannerAdapter extends MediaDisplayAdapter {
     /**
      * Metadata an app can use to specify the banner's container ID per activity.
      */
+    @NonNull
     public final static String BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID";
+
     private final BannerDisplayContent displayContent;
 
     private WeakReference<Activity> lastActivity;
@@ -39,7 +35,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
      * @param displayContent The display content.
      * @param message The in-app message.
      */
-    protected BannerAdapter(InAppMessage message, BannerDisplayContent displayContent) {
+    protected BannerAdapter(@NonNull InAppMessage message, @NonNull BannerDisplayContent displayContent) {
         super(message, displayContent.getMedia());
         this.displayContent = displayContent;
     }
@@ -49,8 +45,10 @@ public class BannerAdapter extends MediaDisplayAdapter {
      *
      * @param message The in-app message.
      * @return The banner adapter.
+     * @throws IllegalArgumentException If the message is not a banner in-app message.
      */
-    public static BannerAdapter newAdapter(InAppMessage message) {
+    @NonNull
+    public static BannerAdapter newAdapter(@NonNull InAppMessage message) {
         BannerDisplayContent displayContent = message.getDisplayContent();
         if (displayContent == null) {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
@@ -61,7 +59,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
             return false;
         }
@@ -73,7 +71,6 @@ public class BannerAdapter extends MediaDisplayAdapter {
         }
 
         Logger.info("BannerAdapter - Displaying in-app message.");
-
 
 
         BannerView view = new BannerView(activity, displayHandler, displayContent, getCache());
@@ -100,7 +97,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
      * @param activity The activity.
      * @return The container ID.
      */
-    protected int getContainerId(Activity activity) {
+    protected int getContainerId(@NonNull Activity activity) {
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
         if (info != null && info.metaData != null) {
             return info.metaData.getInt(BANNER_CONTAINER_ID, android.R.id.content);

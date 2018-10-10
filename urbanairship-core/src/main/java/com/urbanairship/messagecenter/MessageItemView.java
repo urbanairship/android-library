@@ -2,12 +2,15 @@
 
 package com.urbanairship.messagecenter;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -39,21 +42,21 @@ public class MessageItemView extends FrameLayout {
     private Typeface titleReadTypeface;
 
 
-    public MessageItemView(Context context) {
+    public MessageItemView(@NonNull Context context) {
         this(context, null, R.attr.messageCenterStyle);
     }
 
-    public MessageItemView(Context context, AttributeSet attrs) {
+    public MessageItemView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, R.attr.messageCenterStyle);
     }
 
-    public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public MessageItemView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs, defStyleAttr, R.style.MessageCenter);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public MessageItemView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
         init(context, attrs, defStyleAttr, defStyleRes);
@@ -73,7 +76,7 @@ public class MessageItemView extends FrameLayout {
      * defStyleAttr is 0 or cannot be found in the theme. Can be 0
      * to not look for defaults.
      */
-    private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    private void init(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         int contentLayout = R.layout.ua_item_mc_content;
         int dateTextAppearance;
         int titleTextAppearance;
@@ -146,7 +149,7 @@ public class MessageItemView extends FrameLayout {
      * @param message The message.
      * @param placeholder Image place holder.
      */
-    void updateMessage(RichPushMessage message, @DrawableRes int placeholder) {
+    void updateMessage(@NonNull RichPushMessage message, @DrawableRes int placeholder) {
         titleView.setText(message.getTitle());
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
@@ -190,10 +193,11 @@ public class MessageItemView extends FrameLayout {
      *
      * @param listener A click listener.
      */
-    void setSelectionListener(View.OnClickListener listener) {
+    void setSelectionListener(@Nullable View.OnClickListener listener) {
         this.selectionListener = listener;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     protected int[] onCreateDrawableState(int extraSpace) {
         if (isHighlighted) {

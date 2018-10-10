@@ -3,12 +3,13 @@
 package com.urbanairship.richpush;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
@@ -44,7 +45,7 @@ public class RichPushUser {
     private final PreferenceDataStore preferences;
     private final JobDispatcher jobDispatcher;
 
-    RichPushUser(PreferenceDataStore preferenceDataStore, JobDispatcher jobDispatcher) {
+    RichPushUser(@NonNull PreferenceDataStore preferenceDataStore, @NonNull JobDispatcher jobDispatcher) {
         this.preferences = preferenceDataStore;
         this.jobDispatcher = jobDispatcher;
 
@@ -139,6 +140,7 @@ public class RichPushUser {
      *
      * @return A user ID String or null if it doesn't exist.
      */
+    @Nullable
     public String getId() {
         if (preferences.getString(USER_TOKEN_KEY, null) != null) {
             return preferences.getString(USER_ID_KEY, null);
@@ -151,6 +153,7 @@ public class RichPushUser {
      *
      * @return A user token String.
      */
+    @Nullable
     public String getPassword() {
         if (preferences.getString(USER_ID_KEY, null) != null) {
             return decode(preferences.getString(USER_TOKEN_KEY, null), getId());
@@ -165,7 +168,8 @@ public class RichPushUser {
      * @param key The key used to encode the string.
      * @return The encoded string.
      */
-    private static String encode(String input, String key) {
+    @Nullable
+    private static String encode(@Nullable String input, @Nullable String key) {
         if (UAStringUtil.isEmpty(input) || UAStringUtil.isEmpty(key)) {
             return null;
         }
@@ -188,8 +192,8 @@ public class RichPushUser {
      * @param key The key used to decode the string.
      * @return The decoded string.
      */
-    private static String decode(String encodedString, String key) {
-
+    @Nullable
+    private static String decode(@Nullable String encodedString, @Nullable String key) {
         if (UAStringUtil.isEmpty(encodedString) || UAStringUtil.isEmpty(key)) {
             return null;
         }
@@ -226,7 +230,7 @@ public class RichPushUser {
      * @param b The byte value.
      * @return The byte result value.
      */
-    private static byte[] xor(byte[] a, byte[] b) {
+    private static byte[] xor(@NonNull byte[] a, @NonNull byte[] b) {
         byte[] out = new byte[a.length];
 
         for (int i = 0; i < a.length; i++) {

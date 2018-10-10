@@ -4,6 +4,7 @@ package com.urbanairship.util;
 
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,7 +32,7 @@ public class DateUtils {
      * to be parsed.
      * @throws java.text.ParseException if the timestamp was unable to be parsed.
      */
-    public static long parseIso8601(@NonNull String timeStamp) throws ParseException {
+    public static long parseIso8601(@Nullable String timeStamp) throws ParseException {
         //noinspection ConstantConditions
         if (timeStamp == null) {
             throw new ParseException("Unable to parse null timestamp", -1);
@@ -66,6 +67,7 @@ public class DateUtils {
      * @param milliseconds The time in milliseconds since Jan. 1, 1970, midnight GMT.
      * @return An ISO 8601 formatted time stamp.
      */
+    @NonNull
     public static String createIso8601TimeStamp(long milliseconds) {
         return ISO_DATE_FORMAT.format(new Date(milliseconds));
     }

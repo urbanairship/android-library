@@ -14,16 +14,16 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Action to schedule {@link ActionScheduleInfo}.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_AUTOMATION, and SITUATION_PUSH_RECEIVED.
- * <p/>
+ * <p>
  * Accepted argument value - JsonValue defined by {@link ActionScheduleInfo#parseJson(JsonValue)}.
- * <p/>
+ * <p>
  * Result value: Schedule ID.
- * <p/>
+ * <p>
  * Default Registration Names: {@link #DEFAULT_REGISTRY_NAME}, {@link #DEFAULT_REGISTRY_SHORT_NAME}
- * <p/>
+ * <p>
  * Default Registration Predicate: none
  */
 public class ScheduleAction extends Action {
@@ -31,11 +31,13 @@ public class ScheduleAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "schedule_actions";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^sa";
 
     @Override
@@ -62,7 +64,7 @@ public class ScheduleAction extends Action {
             ActionScheduleInfo info = ActionScheduleInfo.parseJson(arguments.getValue().toJsonValue());
             ActionSchedule schedule = UAirship.shared().getAutomation().schedule(info).get();
             return schedule == null ? ActionResult.newEmptyResult() : ActionResult.newResult(ActionValue.wrap(schedule.getId()));
-        } catch (JsonException| InterruptedException | ExecutionException e) {
+        } catch (JsonException | InterruptedException | ExecutionException e) {
             return ActionResult.newErrorResult(e);
         }
     }

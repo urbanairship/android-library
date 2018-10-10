@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.ContextCompat;
 
@@ -29,30 +30,32 @@ public class HelperActivity extends Activity {
     /**
      * Intent extra holding the permissions.
      */
+    @NonNull
     public static final String PERMISSIONS_EXTRA = "com.urbanairship.util.helperactivity.PERMISSIONS_EXTRA";
 
     /**
      * Intent extra holding an activity result receiver.
      */
+    @NonNull
     public static final String RESULT_RECEIVER_EXTRA = "com.urbanairship.util.helperactivity.RESULT_RECEIVER_EXTRA";
 
     /**
      * Intent extra holding activity result intent.
      */
+    @NonNull
     public static final String RESULT_INTENT_EXTRA = "com.urbanairship.util.helperactivity.RESULT_INTENT_EXTRA";
 
     /**
      * Intent extra holding the intent for an activity to be started.
      */
+    @NonNull
     public static final String START_ACTIVITY_INTENT_EXTRA = "com.urbanairship.util.START_ACTIVITY_INTENT_EXTRA";
 
-
     private ResultReceiver resultReceiver;
-
     private static int requestCode = 0;
 
     @Override
-    public final void onCreate(Bundle savedInstanceState) {
+    public final void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
@@ -88,7 +91,7 @@ public class HelperActivity extends Activity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (resultReceiver != null) {
             Bundle bundledData = new Bundle();
             bundledData.putParcelable(RESULT_INTENT_EXTRA, data);
@@ -119,6 +122,7 @@ public class HelperActivity extends Activity {
      * @return The result from requesting permissions.
      */
     @WorkerThread
+    @NonNull
     public static int[] requestPermissions(@NonNull Context context, @NonNull String... permissions) {
         context = context.getApplicationContext();
         boolean permissionsDenied = false;
@@ -222,6 +226,7 @@ public class HelperActivity extends Activity {
          *
          * @return The result intent from the activity.
          */
+        @Nullable
         public Intent getIntent() {
             return intent;
         }
@@ -235,8 +240,7 @@ public class HelperActivity extends Activity {
             return resultCode;
         }
 
-
-        private void setResult(int resultCode, Intent intent) {
+        private void setResult(int resultCode, @Nullable Intent intent) {
             this.resultCode = resultCode;
             this.intent = intent;
         }

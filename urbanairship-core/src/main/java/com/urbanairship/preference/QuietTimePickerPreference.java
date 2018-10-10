@@ -6,6 +6,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.preference.DialogPreference;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -24,28 +26,30 @@ public abstract class QuietTimePickerPreference extends DialogPreference {
     private long currentTime;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public QuietTimePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         currentTime = getInitialAirshipValue(UAirship.shared());
     }
 
-    public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public QuietTimePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         currentTime = getInitialAirshipValue(UAirship.shared());
     }
 
-    public QuietTimePickerPreference(Context context, AttributeSet attrs) {
+    public QuietTimePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         currentTime = getInitialAirshipValue(UAirship.shared());
     }
 
+    @NonNull
     @Override
-    public View onCreateView(ViewGroup parent) {
+    public View onCreateView(@NonNull ViewGroup parent) {
         View view = super.onCreateView(parent);
         view.setContentDescription(getContentDescription());
         return view;
     }
 
+    @NonNull
     @Override
     protected View onCreateDialogView() {
         timePicker = new TimePicker(getContext());
@@ -75,6 +79,7 @@ public abstract class QuietTimePickerPreference extends DialogPreference {
         }
     }
 
+    @NonNull
     @Override
     public String getSummary() {
         return DateFormat.getTimeFormat(getContext()).format(getCalendar().getTime());
@@ -85,6 +90,7 @@ public abstract class QuietTimePickerPreference extends DialogPreference {
      *
      * @return Calendar of the current time of the preference
      */
+    @NonNull
     private Calendar getCalendar() {
         Calendar calendar = Calendar.getInstance();
 
@@ -106,18 +112,21 @@ public abstract class QuietTimePickerPreference extends DialogPreference {
      * @param airship The {@link UAirship} instance.
      * @return The initial value for the preference.
      */
-    protected abstract long getInitialAirshipValue(UAirship airship);
+    protected abstract long getInitialAirshipValue(@NonNull UAirship airship);
 
     /**
      * Called when the preference should be set on Urban Airship.
+     *
      * @param airship The {@link UAirship} instance.
      * @param time The value of the preference.
      */
-    protected abstract void onApplyAirshipPreference(UAirship airship, long time);
+    protected abstract void onApplyAirshipPreference(@NonNull UAirship airship, long time);
 
     /**
      * Called to get the content description of the preference's view.
+     *
      * @return The content description.
      */
+    @NonNull
     protected abstract String getContentDescription();
 }

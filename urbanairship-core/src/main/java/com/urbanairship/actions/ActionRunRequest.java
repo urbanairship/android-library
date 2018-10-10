@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
 
 /**
  * ActionRunRequests provides a fluent API for running Actions.
- * <p/>
+ * <p>
  * If an action entails a UI interaction, {@link Action#shouldRunOnMainThread()} will be
  * overridden to return true so that the action runs on the UI thread when triggered
  * asynchronously. If called by the UI thread, the action will run immediately, otherwise it will
@@ -29,7 +29,7 @@ import java.util.concurrent.Semaphore;
  * executed on the calling thread by sending a message to the calling thread's handler.
  * If the calling thread does not have a prepared looper, the callback will be
  * executed on the main thread.
- * <p/>
+ * <p>
  * Synchronous runs will block, and should never be called on the UI thread.
  * It should only be used when executing actions in a separate thread, or as a
  * convenient way of running actions from another action.
@@ -44,7 +44,8 @@ public class ActionRunRequest {
     private Action action;
     private ActionValue actionValue;
     private Bundle metadata;
-    private @Action.Situation int situation = Action.SITUATION_MANUAL_INVOCATION;
+    private @Action.Situation
+    int situation = Action.SITUATION_MANUAL_INVOCATION;
 
     /**
      * Creates an action run request. The action will not be run
@@ -53,7 +54,8 @@ public class ActionRunRequest {
      * @param actionName The action name in the registry.
      * @return An action run request.
      */
-    public static ActionRunRequest createRequest(String actionName) {
+    @NonNull
+    public static ActionRunRequest createRequest(@NonNull String actionName) {
         return new ActionRunRequest(actionName, null);
     }
 
@@ -67,7 +69,7 @@ public class ActionRunRequest {
      * @return An action run request.
      */
     @NonNull
-    public static ActionRunRequest createRequest(String actionName, ActionRegistry registry) {
+    public static ActionRunRequest createRequest(@NonNull String actionName, @Nullable ActionRegistry registry) {
         return new ActionRunRequest(actionName, registry);
     }
 
@@ -95,8 +97,7 @@ public class ActionRunRequest {
      * @param actionName The action name in the registry.
      * @param registry Optional - The action registry to look up the action. Defaults to {@link com.urbanairship.UAirship#getActionRegistry()}
      */
-    @VisibleForTesting
-    ActionRunRequest(String actionName, ActionRegistry registry) {
+    private ActionRunRequest(@NonNull String actionName, @Nullable ActionRegistry registry) {
         this.actionName = actionName;
         this.registry = registry;
     }
@@ -107,7 +108,7 @@ public class ActionRunRequest {
      * @param action The action to run.
      */
     @VisibleForTesting
-    ActionRunRequest(Action action) {
+    ActionRunRequest(@NonNull Action action) {
         this.action = action;
     }
 
@@ -118,7 +119,7 @@ public class ActionRunRequest {
      * @return The request object.
      */
     @NonNull
-    public ActionRunRequest setValue(ActionValue actionValue) {
+    public ActionRunRequest setValue(@Nullable ActionValue actionValue) {
         this.actionValue = actionValue;
         return this;
     }
@@ -132,7 +133,7 @@ public class ActionRunRequest {
      * @throws IllegalArgumentException if the object is unable to be wrapped in an ActionValue.
      */
     @NonNull
-    public ActionRunRequest setValue(Object object) {
+    public ActionRunRequest setValue(@Nullable Object object) {
         try {
             this.actionValue = ActionValue.wrap(object);
         } catch (ActionValueException e) {
@@ -148,7 +149,7 @@ public class ActionRunRequest {
      * @return The request object.
      */
     @NonNull
-    public ActionRunRequest setMetadata(Bundle metadata) {
+    public ActionRunRequest setMetadata(@Nullable Bundle metadata) {
         this.metadata = metadata;
         return this;
     }
@@ -178,7 +179,7 @@ public class ActionRunRequest {
 
         ActionRunnable runnable = new ActionRunnable(arguments) {
             @Override
-            void onFinish(ActionArguments arguments, ActionResult result) {
+            void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
                 semaphore.release();
             }
         };
@@ -193,7 +194,7 @@ public class ActionRunRequest {
             semaphore.acquire();
         } catch (InterruptedException ex) {
             Logger.error("Failed to run action with arguments " + arguments);
-           return ActionResult.newErrorResult(ex);
+            return ActionResult.newErrorResult(ex);
         }
 
         return runnable.result;
@@ -211,8 +212,8 @@ public class ActionRunRequest {
      *
      * @param callback The action completion callback.
      */
-    public void run(final ActionCompletionCallback callback) {
-        run(callback, null);
+    public void run(@Nullable ActionCompletionCallback callback) {
+        run(null, callback);
     }
 
     /**
@@ -223,7 +224,7 @@ public class ActionRunRequest {
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
      */
-    public void run(final ActionCompletionCallback callback, Looper looper) {
+    public void run(@Nullable Looper looper, @Nullable final ActionCompletionCallback callback) {
         if (looper == null) {
             Looper myLooper = Looper.myLooper();
             looper = myLooper != null ? myLooper : Looper.getMainLooper();
@@ -234,7 +235,7 @@ public class ActionRunRequest {
 
         ActionRunnable runnable = new ActionRunnable(arguments) {
             @Override
-            void onFinish(final ActionArguments arguments, final ActionResult result) {
+            void onFinish(@NonNull final ActionArguments arguments, @NonNull final ActionResult result) {
                 if (callback == null) {
                     return;
                 }
@@ -300,7 +301,7 @@ public class ActionRunRequest {
      * @param arguments The action arguments.
      * @return {@code true} if the action should run on the main thread, otherwise {@code false}
      */
-    private boolean shouldRunOnMain(ActionArguments arguments) {
+    private boolean shouldRunOnMain(@NonNull ActionArguments arguments) {
         if (action != null) {
             return action.shouldRunOnMainThread();
         }
@@ -316,7 +317,7 @@ public class ActionRunRequest {
      * @return The action's result.
      */
     @NonNull
-    private ActionResult executeAction(ActionArguments arguments) {
+    private ActionResult executeAction(@NonNull ActionArguments arguments) {
         if (actionName != null) {
             ActionRegistry.Entry entry = lookUpAction(actionName);
             if (entry == null) {
@@ -342,7 +343,7 @@ public class ActionRunRequest {
         private volatile ActionResult result;
         private final ActionArguments arguments;
 
-        public ActionRunnable(ActionArguments arguments) {
+        public ActionRunnable(@NonNull ActionArguments arguments) {
             this.arguments = arguments;
         }
 
@@ -358,6 +359,6 @@ public class ActionRunRequest {
          * @param arguments The arguments.
          * @param result The action result.
          */
-        abstract void onFinish(ActionArguments arguments, ActionResult result);
+        abstract void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result);
     }
 }

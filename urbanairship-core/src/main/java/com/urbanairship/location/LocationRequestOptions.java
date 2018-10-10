@@ -2,10 +2,12 @@
 
 package com.urbanairship.location;
 
+import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -21,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * High level location requirements to be used for UALocationManager and service.
- * <p/>
+ * <p>
  * The class is modeled after the LocationRequest for the Fused Location Provider,
  * but only supports a subset of the options.
  */
@@ -30,16 +32,19 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * JSON key for the min distance.
      */
+    @NonNull
     public static final String MIN_DISTANCE_KEY = "minDistance";
 
     /**
      * JSON key for the min time.
      */
+    @NonNull
     public static final String MIN_TIME_KEY = "minTime";
 
     /**
      * JSON key for the request priority.
      */
+    @NonNull
     public static final String PRIORITY_KEY = "priority";
 
     /**
@@ -57,17 +62,17 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      */
     public static final int DEFAULT_REQUEST_PRIORITY = LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
 
-    @IntDef({PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, PRIORITY_NO_POWER})
+    @IntDef({ PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, PRIORITY_NO_POWER })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Priority {}
 
     /**
      * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
      * to request highest level of accuracy.
-     * <p/>
+     * <p>
      * When used with the fused location provider it will request the highest
      * level of accuracy available.
-     * <p/>
+     * <p>
      * When used with standard android location it will use Criteria.ACCURACY_FINE
      * and Criteria.POWER_HIGH.
      */
@@ -76,10 +81,10 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
      * to request balanced power and accuracy.
-     * <p/>
+     * <p>
      * When used with the fused location provider it will use "block" level
      * accuracy, about 100 meter accuracy.
-     * <p/>
+     * <p>
      * When used with standard android location it will use Criteria.ACCURACY_COARSE
      * and Criteria.POWER_MEDIUM.
      */
@@ -88,10 +93,10 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
      * to request low power location updates.
-     * <p/>
+     * <p>
      * When used with the fused location provider it will use "city" level
      * accuracy, about 10km accuracy.
-     * <p/>
+     * <p>
      * When used with standard android location it will use Criteria.ACCURACY_COARSE
      * and Criteria.POWER_LOW.
      */
@@ -100,7 +105,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
      * to request location that requires no extra power consumption.
-     * <p/>
+     * <p>
      * Warning: When used with the standard android location it will only use
      * the PASSIVE provider if available.  The passive provider requires ACCESS_FINE_LOCATION
      * permission.  If either the provider is missing or missing permissions location
@@ -118,7 +123,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      *
      * @param builder The options builder.
      */
-    private LocationRequestOptions(Builder builder) {
+    private LocationRequestOptions(@NonNull Builder builder) {
         this(builder.priority, builder.minTime, builder.minDistance);
     }
 
@@ -128,12 +133,13 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      *
      * @param in The parcel.
      */
-    private LocationRequestOptions(Parcel in) {
+    private LocationRequestOptions(@NonNull Parcel in) {
         this(in.readInt(), in.readLong(), in.readFloat());
     }
 
     /**
      * Default constructor.
+     *
      * @param priority The request priority.
      * @param minTime The request min update time in milliseconds.
      * @param minDistance The request min update distance in meters.
@@ -163,6 +169,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      *
      * @return Default location request options.
      */
+    @NonNull
     public static LocationRequestOptions createDefaultOptions() {
         return new LocationRequestOptions(
                 DEFAULT_REQUEST_PRIORITY,
@@ -199,13 +206,14 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     }
 
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "LocationRequestOptions: Priority " + priority + " minTime " + minTime + " minDistance " + minDistance;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof LocationRequestOptions)) {
             return false;
         }
@@ -257,6 +265,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         }
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         Map<String, Object> map = new HashMap<>();
@@ -275,15 +284,17 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
 
     /**
      * Creates a LocationRequestOptions from a JSON string.
+     *
      * @param json The JSON string.
      * @return A LocationRequestOptions, or null if the JSON is not a valid object.
      * @throws JsonException If the string is unable to be parsed to a {@link JsonValue}.
      */
-    public static LocationRequestOptions parseJson(String json) throws JsonException {
+    @NonNull
+    public static LocationRequestOptions parseJson(@Nullable String json) throws JsonException {
         JsonMap jsonMap = JsonValue.parseString(json).getMap();
 
         if (jsonMap == null) {
-            return null;
+            throw new JsonException("Invalid location request options: " + json);
         }
 
         Number minDistanceNumber = jsonMap.opt(MIN_DISTANCE_KEY).getNumber();
@@ -299,12 +310,17 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         return new LocationRequestOptions(priority, minTime, minDistance);
     }
 
+    /**
+     * @hide
+     */
+    @NonNull
     public static final Parcelable.Creator<LocationRequestOptions> CREATOR = new Parcelable.Creator<LocationRequestOptions>() {
         @Override
-        public LocationRequestOptions createFromParcel(Parcel in) {
+        public LocationRequestOptions createFromParcel(@NonNull Parcel in) {
             return new LocationRequestOptions(in);
         }
 
+        @NonNull
         @Override
         public LocationRequestOptions[] newArray(int size) {
             return new LocationRequestOptions[size];
@@ -322,7 +338,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
 
         /**
          * Sets the min time between location updates.
-         * <p/>
+         * <p>
          * Defaults to {@link #DEFAULT_UPDATE_INTERVAL_MILLISECONDS}
          *
          * @param time The duration.
@@ -330,7 +346,8 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
          * @return The builder.
          * @throws IllegalArgumentException if time is less than 0.
          */
-        public Builder setMinTime(long time, TimeUnit unit) {
+        @NonNull
+        public Builder setMinTime(long time, @NonNull TimeUnit unit) {
             verifyMinTime(unit.toMillis(time));
             minTime = unit.toMillis(time);
             return this;
@@ -338,13 +355,14 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
 
         /**
          * Sets the min distance between location updates.
-         * <p/>
+         * <p>
          * Defaults to {@link #DEFAULT_UPDATE_INTERVAL_METERS}
          *
          * @param meters The distance in meters.
          * @return The builder.
          * @throws IllegalArgumentException if distance is less than 0.
          */
+        @NonNull
         public Builder setMinDistance(float meters) {
             verifyMinDistance(meters);
             minDistance = meters;
@@ -353,7 +371,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
 
         /**
          * Sets the priority of the location request.
-         * <p/>
+         * <p>
          * Defaults to {@link #DEFAULT_REQUEST_PRIORITY}
          *
          * @param priority The priority.
@@ -361,6 +379,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
          * @throws IllegalArgumentException if priority is not PRIORITY_HIGH_ACCURACY,
          * PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, or PRIORITY_NO_POWER.
          */
+        @NonNull
         public Builder setPriority(@Priority int priority) {
             verifyPriority(priority);
             this.priority = priority;
@@ -372,6 +391,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
          *
          * @return The new location request option.
          */
+        @NonNull
         public LocationRequestOptions create() {
             return new LocationRequestOptions(this);
         }

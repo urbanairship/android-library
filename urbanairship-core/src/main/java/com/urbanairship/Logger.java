@@ -2,6 +2,8 @@
 
 package com.urbanairship;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
@@ -28,6 +30,7 @@ public class Logger {
      * The current log tag.
      * Defaults to "UALib".
      */
+    @NonNull
     public static String TAG = "UALib";
 
     /**
@@ -40,8 +43,8 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void warn(String s) {
-        if (logLevel <= Log.WARN && s != null) {
+    public static void warn(@NonNull String s) {
+        if (logLevel <= Log.WARN) {
             Log.w(TAG, s);
         }
     }
@@ -52,8 +55,8 @@ public class Logger {
      * @param s The message you would like logged.
      * @param t An exception to log
      */
-    public static void warn(String s, Throwable t) {
-        if (logLevel <= Log.WARN && s != null && t != null) {
+    public static void warn(@NonNull String s, @NonNull Throwable t) {
+        if (logLevel <= Log.WARN) {
             Log.w(TAG, s, t);
         }
     }
@@ -63,8 +66,8 @@ public class Logger {
      *
      * @param t An exception to log
      */
-    public static void warn(Throwable t) {
-        if (logLevel <= Log.WARN && t != null) {
+    public static void warn(@NonNull Throwable t) {
+        if (logLevel <= Log.WARN) {
             Log.w(TAG, t);
         }
     }
@@ -74,8 +77,8 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void verbose(String s) {
-        if (logLevel <= Log.VERBOSE && s != null) {
+    public static void verbose(@NonNull String s) {
+        if (logLevel <= Log.VERBOSE) {
             Log.v(TAG, s);
         }
     }
@@ -85,8 +88,8 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void debug(String s) {
-        if (logLevel <= Log.DEBUG && s != null) {
+    public static void debug(@NonNull String s) {
+        if (logLevel <= Log.DEBUG) {
             Log.d(TAG, s);
         }
     }
@@ -97,8 +100,8 @@ public class Logger {
      * @param s The message you would like logged.
      * @param t An exception to log
      */
-    public static void debug(String s, Throwable t) {
-        if (logLevel <= Log.DEBUG && s != null && t != null) {
+    public static void debug(@NonNull String s, @NonNull Throwable t) {
+        if (logLevel <= Log.DEBUG) {
             Log.d(TAG, s, t);
         }
     }
@@ -108,8 +111,8 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void info(String s) {
-        if (logLevel <= Log.INFO && s != null) {
+    public static void info(@NonNull String s) {
+        if (logLevel <= Log.INFO) {
             Log.i(TAG, s);
         }
     }
@@ -120,8 +123,8 @@ public class Logger {
      * @param s The message you would like logged.
      * @param t An exception to log
      */
-    public static void info(String s, Throwable t) {
-        if (logLevel <= Log.INFO && s != null && t != null) {
+    public static void info(@NonNull String s, @Nullable Throwable t) {
+        if (logLevel <= Log.INFO && t != null) {
             Log.i(TAG, s, t);
         }
     }
@@ -131,8 +134,8 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void error(String s) {
-        if (logLevel <= Log.ERROR && s != null) {
+    public static void error(@NonNull String s) {
+        if (logLevel <= Log.ERROR) {
             Log.e(TAG, s);
         }
     }
@@ -142,7 +145,7 @@ public class Logger {
      *
      * @param t An exception to log
      */
-    public static void error(Throwable t) {
+    public static void error(@Nullable Throwable t) {
         if (logLevel <= Log.ERROR && t != null) {
             Log.e(TAG, "", t);
         }
@@ -154,8 +157,8 @@ public class Logger {
      * @param s The message you would like logged.
      * @param t An exception to log
      */
-    public static void error(String s, Throwable t) {
-        if (logLevel <= Log.ERROR && s != null && t != null) {
+    public static void error(@NonNull String s, @Nullable Throwable t) {
+        if (logLevel <= Log.ERROR && t != null) {
             Log.e(TAG, s, t);
         }
     }
@@ -168,7 +171,7 @@ public class Logger {
      * @return The log level.
      * @throws IllegalArgumentException
      */
-    static int parseLogLevel(String value, int defaultValue) throws IllegalArgumentException {
+    static int parseLogLevel(@Nullable String value, int defaultValue) throws IllegalArgumentException {
         if (UAStringUtil.isEmpty(value)) {
             return defaultValue;
         }

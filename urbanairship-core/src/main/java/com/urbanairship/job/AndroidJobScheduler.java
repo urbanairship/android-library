@@ -8,6 +8,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import com.urbanairship.Logger;
@@ -32,7 +33,7 @@ public class AndroidJobScheduler implements Scheduler {
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int schedulerId, Bundle extras) throws SchedulerException {
+    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int schedulerId, @Nullable Bundle extras) throws SchedulerException {
         scheduleJob(context, jobInfo, schedulerId, INITIAL_RETRY_MS);
     }
 
@@ -96,7 +97,7 @@ public class AndroidJobScheduler implements Scheduler {
      * @param context The application context.
      * @return The job scheduler.
      */
-    private JobScheduler getScheduler(Context context) {
+    private JobScheduler getScheduler(@NonNull Context context) {
         if (scheduler == null) {
             scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         }

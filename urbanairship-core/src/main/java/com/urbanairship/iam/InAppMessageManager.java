@@ -18,6 +18,7 @@ import android.support.annotation.WorkerThread;
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
@@ -27,8 +28,8 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
-import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
+import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.iam.tags.TagGroupManager;
@@ -37,7 +38,6 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -72,6 +72,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * Metadata an app can use to prevent an in-app message from showing on a specific activity.
      */
+    @NonNull
     public final static String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
 
     /**
@@ -177,7 +178,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     @VisibleForTesting
-    InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
+    InAppMessageManager(@NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
                         RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory,
                         TagGroupManager tagGroupManager) {
@@ -206,7 +207,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         this.automationEngine.setScheduleExpiryListener(new AutomationEngine.ScheduleExpiryListener<InAppMessageSchedule>() {
             @Override
-            public void onScheduleExpired(InAppMessageSchedule schedule) {
+            public void onScheduleExpired(@NonNull InAppMessageSchedule schedule) {
                 analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
             }
         });
@@ -237,7 +238,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
                 Map<String, Set<String>> tags = new HashMap<>();
 
-                for (InAppMessageSchedule schedule : getSchedules().get()) {
+                Collection<InAppMessageSchedule> schedules = getSchedules().get();
+                if (schedules == null) {
+                    return tags;
+                }
+
+                for (InAppMessageSchedule schedule : schedules) {
                     Audience audience = schedule.getInfo().getInAppMessage().getAudience();
                     if (audience == null || audience.getTagSelector() == null || !audience.getTagSelector().containsTagGroups()) {
                         continue;
@@ -283,7 +289,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         // Add the activity listener
         activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
             @Override
-            public void onActivityStopped(Activity activity) {
+            public void onActivityStopped(@NonNull Activity activity) {
                 // If this is the current activity and its not changing configuration, then its
                 // either being dismissed or another activity is starting on top of it.
                 if (currentScheduleId != null && getCurrentActivity() == activity && !activity.isChangingConfigurations()) {
@@ -300,13 +306,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
 
             @Override
-            public void onActivityPaused(Activity activity) {
+            public void onActivityPaused(@NonNull Activity activity) {
                 super.onActivityPaused(activity);
                 resumedActivity = null;
             }
 
             @Override
-            public void onActivityResumed(Activity activity) {
+            public void onActivityResumed(@NonNull Activity activity) {
                 if (shouldIgnoreActivity(activity)) {
                     return;
                 }
@@ -334,7 +340,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Override
-    public void onAirshipReady(UAirship airship) {
+    public void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
         executor.setPaused(false);
         remoteDataSubscriber.subscribe(remoteData, this);
@@ -374,6 +380,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos) {
         return automationEngine.schedule(scheduleInfos);
@@ -382,6 +389,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo) {
         return automationEngine.schedule(messageScheduleInfo);
     }
@@ -389,6 +397,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     public PendingResult<Void> cancelSchedule(@NonNull String scheduleId) {
         return automationEngine.cancel(Collections.singletonList(scheduleId));
     }
@@ -396,6 +405,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     public PendingResult<Boolean> cancelMessage(@NonNull String messageId) {
         return automationEngine.cancelGroup(messageId);
     }
@@ -403,6 +413,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<Void> cancelMessages(@NonNull Collection<String> messageIds) {
         return automationEngine.cancelGroups(messageIds);
@@ -411,6 +422,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<Collection<InAppMessageSchedule>> getSchedules(@NonNull final String messageId) {
         return automationEngine.getSchedules(messageId);
@@ -419,6 +431,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<Collection<InAppMessageSchedule>> getSchedules() {
         return automationEngine.getSchedules();
@@ -427,6 +440,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId) {
         return automationEngine.getSchedule(scheduleId);
@@ -435,6 +449,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public PendingResult<InAppMessageSchedule> editSchedule(@NonNull String scheduleId, @NonNull InAppMessageScheduleEdits edit) {
         return automationEngine.editSchedule(scheduleId, edit);
@@ -446,7 +461,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param displayType The display type.
      * @param factory The adapter factory.
      */
-    public void setAdapterFactory(@InAppMessage.DisplayType String displayType, InAppMessageAdapter.Factory factory) {
+    public void setAdapterFactory(@NonNull @InAppMessage.DisplayType String displayType, @Nullable InAppMessageAdapter.Factory factory) {
         if (factory == null) {
             adapterFactories.remove(displayType);
         } else {
@@ -582,10 +597,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     /**
      * Prepares a message to be displayed.
+     *
      * @param scheduleId The schedule ID.
      * @param message The message.
      */
-    private void prepareMessage(final String scheduleId, final InAppMessage message) {
+    private void prepareMessage(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
 
         // Create the adapter
         final RetryingExecutor.Operation createAdapter = new RetryingExecutor.Operation() {
@@ -625,7 +641,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     Map<String, Set<String>> tags = message.getAudience().getTagSelector().getTagGroups();
                     TagGroupResult result = tagGroupManager.getTags(tags);
                     if (!result.success) {
-                         return RetryingExecutor.RESULT_RETRY;
+                        return RetryingExecutor.RESULT_RETRY;
                     }
 
                     tagGroups = result.tagGroups;
@@ -691,12 +707,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     /**
      * Creates an adapter.
+     *
      * @param scheduleId The schedule ID.
      * @param message The message.
      * @return The adapter.
      */
     @Nullable
-    private AdapterWrapper createAdapter(String scheduleId, InAppMessage message) {
+    private AdapterWrapper createAdapter(@NonNull String scheduleId, @NonNull InAppMessage message) {
         InAppMessageAdapter adapter = null;
 
         try {
@@ -724,10 +741,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     /**
      * Extends the in-app message.
+     *
      * @param originalMessage The original message.
      * @return The extended message, or the original message if no extender is set.
      */
-    private InAppMessage extendMessage(InAppMessage originalMessage) {
+    @NonNull
+    private InAppMessage extendMessage(@NonNull InAppMessage originalMessage) {
         // Extend the message
         InAppMessageExtender extender = InAppMessageManager.this.messageExtender;
         if (extender != null) {
@@ -746,7 +765,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    void continueOnNextActivity(String scheduleId) {
+    void continueOnNextActivity(@NonNull String scheduleId) {
         Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: " + scheduleId);
 
         Activity previousActivity = getCurrentActivity();
@@ -848,7 +867,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    boolean requestDisplayLock(Activity activity, String scheduleId) {
+    boolean requestDisplayLock(@NonNull Activity activity, @NonNull String scheduleId) {
         Logger.verbose("InAppMessagingManager - Requesting display lock for schedule: " + scheduleId);
 
         if (scheduleId.equals(currentScheduleId)) {
@@ -886,7 +905,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param scheduleId The schedule ID to display.
      */
     @MainThread
-    private void display(Activity activity, @NonNull String scheduleId) {
+    private void display(@Nullable Activity activity, @NonNull String scheduleId) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
 
         if (adapterWrapper == null) {

@@ -60,7 +60,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
     }
 
     @Override
-    public void onPrepareSchedule(InAppMessageSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+    public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule, @NonNull PrepareScheduleCallback callback) {
         synchronized (prepareCallbacks) {
             prepareCallbacks.put(schedule.getId(), callback);
         }
@@ -72,7 +72,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
 
     @Override
     @MainThread
-    public boolean isScheduleReadyToExecute(final InAppMessageSchedule schedule) {
+    public boolean isScheduleReadyToExecute(@NonNull final InAppMessageSchedule schedule) {
         if (listener == null) {
             return false;
         }
@@ -92,7 +92,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
 
     @NonNull
     @Override
-    public InAppMessageSchedule createSchedule(String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException {
+    public InAppMessageSchedule createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException {
         try {
             InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
                                                                             .addTriggers(info.getTriggers())

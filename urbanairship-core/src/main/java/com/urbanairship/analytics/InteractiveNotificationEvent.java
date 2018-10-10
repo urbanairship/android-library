@@ -17,11 +17,17 @@ import com.urbanairship.push.PushMessage;
 public class InteractiveNotificationEvent extends Event {
 
     private static final String SEND_ID_KEY = "send_id";
+
     private static final String BUTTON_GROUP_KEY = "button_group";
+
     private static final String BUTTON_ID_KEY = "button_id";
+
     private static final String BUTTON_DESCRIPTION_KEY = "button_description";
+
     private static final String FOREGROUND_KEY = "foreground";
+
     private static final String TYPE = "interactive_notification_action";
+
     private static final String USER_INPUT = "user_input";
 
     private final String sendId;
@@ -33,6 +39,7 @@ public class InteractiveNotificationEvent extends Event {
 
     /**
      * Creates an interactive notification event.
+     *
      * @param message The PushMessage that displayed the notification.
      * @param buttonId The button ID.
      * @param buttonDescription The button description.
@@ -48,19 +55,21 @@ public class InteractiveNotificationEvent extends Event {
         this.remoteInput = remoteInput;
     }
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
         JsonMap.Builder builder = JsonMap.newBuilder()
-                .put(SEND_ID_KEY, sendId)
-                .put(BUTTON_GROUP_KEY, buttonGroupId)
-                .put(BUTTON_ID_KEY, buttonId)
-                .put(BUTTON_DESCRIPTION_KEY, buttonDescription)
-                .put(FOREGROUND_KEY, isForeground);
+                                         .put(SEND_ID_KEY, sendId)
+                                         .put(BUTTON_GROUP_KEY, buttonGroupId)
+                                         .put(BUTTON_ID_KEY, buttonId)
+                                         .put(BUTTON_DESCRIPTION_KEY, buttonDescription)
+                                         .put(FOREGROUND_KEY, isForeground);
 
         if (remoteInput != null && !remoteInput.isEmpty()) {
 

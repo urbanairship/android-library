@@ -2,6 +2,8 @@
 
 package com.urbanairship.actions;
 
+import android.support.annotation.Nullable;
+
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -223,30 +225,6 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test registering a null action.
-     */
-    @Test(expected=IllegalArgumentException.class)
-    public void testRegisterNullAction() {
-        registry.registerAction((Action)null, "hi");
-    }
-
-    /**
-     * Test registering a null action class.
-     */
-    @Test(expected=IllegalArgumentException.class)
-    public void testRegisterNullActionClass() {
-        registry.registerAction((Class<? extends Action>) null, "hi");
-    }
-
-    /**
-     * Test registering a null action names
-     */
-    @Test(expected=IllegalArgumentException.class)
-    public void testRegisterNullActionNames() {
-        registry.registerAction(new TestAction(), (String[]) null);
-    }
-
-    /**
      * Test registering a empty action name
      */
     @Test(expected=IllegalArgumentException.class)
@@ -288,8 +266,8 @@ public class ActionRegistryTest extends BaseTestCase {
         registry.registerAction(defaultAction, "action");
 
         ActionRegistry.Entry entry = registry.registerAction(defaultAction, "action");
-        entry.addSituationOverride(openAction, Action.SITUATION_PUSH_OPENED);
-        entry.addSituationOverride(receiveAction, Action.SITUATION_PUSH_RECEIVED);
+        entry.setSituationOverride(Action.SITUATION_PUSH_OPENED, openAction);
+        entry.setSituationOverride(Action.SITUATION_PUSH_RECEIVED, receiveAction);
 
         assertEquals("Should return situation override action",
                 entry.getActionForSituation(Action.SITUATION_PUSH_OPENED), openAction);
@@ -305,7 +283,8 @@ public class ActionRegistryTest extends BaseTestCase {
      * @param entry Entry to validate
      * @param names Expected names
      */
-    private void validateEntry(ActionRegistry.Entry entry, String... names) {
+    private void validateEntry(@Nullable ActionRegistry.Entry entry, String... names) {
+        assertNotNull(entry);
         List<String> entryNames = entry.getNames();
 
         assertEquals("Entry's name count is unexpected", entryNames.size(), names.length);

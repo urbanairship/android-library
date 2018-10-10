@@ -55,20 +55,13 @@ public class LegacyInAppMessage {
     private final String buttonGroupId;
     private final String id;
 
-    @NonNull
     @BannerDisplayContent.Placement
     private final String placement;
-
-    @NonNull
     private final Map<String, JsonValue> clickActionValues;
-
-    @NonNull
     private final JsonMap extras;
-
-    @NonNull
     private final Map<String, Map<String, JsonValue>> buttonActionValues;
 
-    private LegacyInAppMessage(Builder builder) {
+    private LegacyInAppMessage(@NonNull Builder builder) {
         this.expiryMS = builder.expiryMS == null ? System.currentTimeMillis() + DEFAULT_EXPIRY_MS : builder.expiryMS;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.alert = builder.alert;
@@ -106,6 +99,7 @@ public class LegacyInAppMessage {
      *
      * @return The message's alert.
      */
+    @Nullable
     public String getAlert() {
         return alert;
     }
@@ -126,7 +120,7 @@ public class LegacyInAppMessage {
      * @return The button's action values.
      */
     @Nullable
-    public Map<String, JsonValue> getButtonActionValues(String buttonId) {
+    public Map<String, JsonValue> getButtonActionValues(@NonNull String buttonId) {
         if (buttonActionValues.containsKey(buttonId)) {
             return Collections.unmodifiableMap(buttonActionValues.get(buttonId));
         } else {
@@ -139,6 +133,7 @@ public class LegacyInAppMessage {
      *
      * @return The button group ID.
      */
+    @Nullable
     public String getButtonGroupId() {
         return buttonGroupId;
     }
@@ -148,6 +143,7 @@ public class LegacyInAppMessage {
      *
      * @return The duration of the message in milliseconds.
      */
+    @Nullable
     public Long getDuration() {
         return durationMilliseconds;
     }
@@ -168,6 +164,7 @@ public class LegacyInAppMessage {
      *
      * @return The message's primary color.
      */
+    @Nullable
     public Integer getPrimaryColor() {
         return primaryColor;
     }
@@ -177,6 +174,7 @@ public class LegacyInAppMessage {
      *
      * @return The message's secondary color.
      */
+    @Nullable
     public Integer getSecondaryColor() {
         return secondaryColor;
     }
@@ -187,6 +185,7 @@ public class LegacyInAppMessage {
      *
      * @return The message's ID.
      */
+    @NonNull
     public String getId() {
         return id;
     }
@@ -199,8 +198,7 @@ public class LegacyInAppMessage {
      * @throws JsonException If the JSON payload is unable to parsed.
      */
     @Nullable
-    public static LegacyInAppMessage fromPush(PushMessage pushMessage) throws JsonException {
-
+    public static LegacyInAppMessage fromPush(@NonNull PushMessage pushMessage) throws JsonException {
         if (!pushMessage.containsKey(PushMessage.EXTRA_IN_APP_MESSAGE)) {
             return null;
         }
@@ -223,7 +221,7 @@ public class LegacyInAppMessage {
         // Primary color
         if (displayJson.containsKey(PRIMARY_COLOR_KEY)) {
             try {
-                builder.setPrimaryColor(Color.parseColor(displayJson.opt(PRIMARY_COLOR_KEY).getString("")));
+                builder.setPrimaryColor(Color.parseColor(displayJson.opt(PRIMARY_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid primary color: " + displayJson.opt(PRIMARY_COLOR_KEY), e);
             }
@@ -232,7 +230,7 @@ public class LegacyInAppMessage {
         // Secondary color
         if (displayJson.containsKey(SECONDARY_COLOR_KEY)) {
             try {
-                builder.setSecondaryColor(Color.parseColor(displayJson.opt(SECONDARY_COLOR_KEY).getString("")));
+                builder.setSecondaryColor(Color.parseColor(displayJson.opt(SECONDARY_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid secondary color: " + displayJson.opt(SECONDARY_COLOR_KEY), e);
             }
@@ -247,7 +245,7 @@ public class LegacyInAppMessage {
         // Expiry
         long defaultExpiry = System.currentTimeMillis() + DEFAULT_EXPIRY_MS;
         if (jsonValue.optMap().containsKey(EXPIRY_KEY)) {
-            builder.setExpiry(DateUtils.parseIso8601(jsonValue.optMap().opt(EXPIRY_KEY).getString(), defaultExpiry));
+            builder.setExpiry(DateUtils.parseIso8601(jsonValue.optMap().opt(EXPIRY_KEY).optString(), defaultExpiry));
         } else {
             builder.setExpiry(defaultExpiry);
         }
@@ -295,6 +293,7 @@ public class LegacyInAppMessage {
      *
      * @return A new legacy in-app message builder.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -343,7 +342,8 @@ public class LegacyInAppMessage {
             return this;
         }
 
-        public Builder setId(String id) {
+        @NonNull
+        public Builder setId(@Nullable String id) {
             this.id = id;
             return this;
         }
@@ -423,7 +423,7 @@ public class LegacyInAppMessage {
          * @return The builder.
          */
         @NonNull
-        public Builder setDuration(Long milliseconds) {
+        public Builder setDuration(@Nullable Long milliseconds) {
             this.durationMilliseconds = milliseconds;
             return this;
         }

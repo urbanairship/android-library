@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonSerializable;
@@ -14,14 +16,31 @@ import java.util.List;
 public interface ScheduleInfo {
 
     // JSON KEYS
+    @NonNull
     String LIMIT_KEY = "limit";
+
+    @NonNull
     String PRIORITY_KEY = "priority";
+
+    @NonNull
     String GROUP_KEY = "group";
+
+    @NonNull
     String END_KEY = "end";
+
+    @NonNull
     String START_KEY = "start";
+
+    @NonNull
     String DELAY_KEY = "delay";
+
+    @NonNull
     String TRIGGERS_KEY = "triggers";
+
+    @NonNull
     String EDIT_GRACE_PERIOD = "edit_grace_period";
+
+    @NonNull
     String INTERVAL = "interval";
 
     /**
@@ -29,6 +48,7 @@ public interface ScheduleInfo {
      *
      * @return A list of triggers.
      */
+    @NonNull
     List<Trigger> getTriggers();
 
     /**
@@ -37,6 +57,7 @@ public interface ScheduleInfo {
      * @return Schedule data.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     JsonSerializable getData();
 
     /**
@@ -58,6 +79,7 @@ public interface ScheduleInfo {
      *
      * @return The schedule group.
      */
+    @Nullable
     String getGroup();
 
     /**
@@ -79,6 +101,7 @@ public interface ScheduleInfo {
      *
      * @return A ScheduleDelay instance.
      */
+    @Nullable
     ScheduleDelay getDelay();
 
     /**

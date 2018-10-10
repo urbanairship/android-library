@@ -3,6 +3,7 @@
 package com.urbanairship.json.matchers;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
@@ -12,24 +13,30 @@ import com.urbanairship.util.IvyVersionMatcher;
 
 /**
  * Version matcher.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class VersionMatcher extends ValueMatcher {
 
+    @NonNull
     public static final String VERSION_KEY = "version_matches";
+
+    @NonNull
     public static final String ALTERNATE_VERSION_KEY = "version";
 
     private final IvyVersionMatcher versionMatcher;
 
     /**
      * Default constructor.
+     *
      * @param matcher The version matcher.
      */
     public VersionMatcher(@NonNull IvyVersionMatcher matcher) {
         this.versionMatcher = matcher;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -44,7 +51,7 @@ public class VersionMatcher extends ValueMatcher {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

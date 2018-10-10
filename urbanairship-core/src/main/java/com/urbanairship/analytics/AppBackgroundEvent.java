@@ -2,6 +2,8 @@
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 
@@ -19,18 +21,20 @@ class AppBackgroundEvent extends Event {
     }
 
     @Override
+    @NonNull
     public final String getType() {
         return TYPE;
     }
 
     @Override
+    @NonNull
     protected final JsonMap getEventData() {
         return JsonMap.newBuilder()
-                .put(CONNECTION_TYPE_KEY, getConnectionType())
-                .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
-                .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
-                .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
-                .build();
+                      .put(CONNECTION_TYPE_KEY, getConnectionType())
+                      .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
+                      .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
+                      .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
+                      .build();
     }
 
 }

@@ -16,7 +16,7 @@ public class ActionRunRequestFactory {
      * @return An action run request.
      */
     @NonNull
-    public ActionRunRequest createActionRequest(String actionName) {
+    public ActionRunRequest createActionRequest(@NonNull String actionName) {
         return ActionRunRequest.createRequest(actionName);
     }
 

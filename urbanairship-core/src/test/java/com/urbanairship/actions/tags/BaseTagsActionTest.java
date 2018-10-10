@@ -2,6 +2,8 @@
 
 package com.urbanairship.actions.tags;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -152,17 +154,17 @@ public class BaseTagsActionTest extends BaseTestCase {
         Map<String, Set<String>> applyNamedUserTags = new HashMap<>();
 
         @Override
-        void applyChannelTags(Set<String> tags) {
+        void applyChannelTags(@NonNull Set<String> tags) {
             applyTags.add(tags);
         }
 
         @Override
-        void applyChannelTagGroups(Map<String, Set<String>> tags) {
+        void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
             applyChannelTags.putAll(tags);
         }
 
         @Override
-        void applyNamedUserTagGroups(Map<String, Set<String>> tags) {
+        void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
             applyNamedUserTags.putAll(tags);
         }
     }

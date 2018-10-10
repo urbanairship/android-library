@@ -14,6 +14,7 @@ import com.urbanairship.json.ValueMatcher;
 
 /**
  * Array contains matcher.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -22,11 +23,13 @@ public class ArrayContainsMatcher extends ValueMatcher {
     /**
      * Json key for the predicate.
      */
+    @NonNull
     public static final String ARRAY_CONTAINS_KEY = "array_contains";
 
     /**
      * Json key for the index.
      */
+    @NonNull
     public static final String INDEX_KEY = "index";
 
     private final Integer index;
@@ -34,6 +37,7 @@ public class ArrayContainsMatcher extends ValueMatcher {
 
     /**
      * Default constructor.
+     *
      * @param predicate The predicate.
      * @param index The optional index.
      */
@@ -42,6 +46,7 @@ public class ArrayContainsMatcher extends ValueMatcher {
         this.index = index;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -77,7 +82,7 @@ public class ArrayContainsMatcher extends ValueMatcher {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

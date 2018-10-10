@@ -15,7 +15,7 @@ import com.urbanairship.push.PushMessage;
 
 /**
  * Base intent receiver to process registration and push events from Urban Airship.
- * <p/>
+ * <p>
  * To listen for Urban Airship events, create a class that extends the AirshipReceiver.
  * Register the new class in the AndroidManifest.xml with the following intent filter:
  * <pre>
@@ -32,7 +32,7 @@ import com.urbanairship.push.PushMessage;
  * </receiver>
  * }
  * </pre>
- * <p/>
+ * <p>
  * Make sure the registered intent receiver is not exported to prevent it from receiving messages
  * outside the application.
  */
@@ -57,7 +57,7 @@ public class AirshipReceiver extends BroadcastReceiver {
 
     @Override
     @CallSuper
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(@NonNull Context context, @Nullable Intent intent) {
         Autopilot.automaticTakeOff(context);
 
         if (intent == null || intent.getAction() == null) {
@@ -199,7 +199,7 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param channelId The channel ID.
      */
-    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId){}
+    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {}
 
     /**
      * Called when a channel ID is created.
@@ -254,7 +254,6 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param notificationInfo The notification info.
      * @param actionButtonInfo THe notification action button info.
-     *
      * @return <code>true</code> if the application was launched, otherwise <code>false</code>. If
      * <code>false</code> is returned for a foreground notification action button,
      * and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication} is enabled, the launcher

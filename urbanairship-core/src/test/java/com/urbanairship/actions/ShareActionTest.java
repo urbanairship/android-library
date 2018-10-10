@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
@@ -119,7 +120,7 @@ public class ShareActionTest extends BaseTestCase {
 
         // Create a new share action that excludes all package
         action = new ShareAction() {
-            protected boolean excludePackage(String packageName) {
+            protected boolean excludePackage(@NonNull String packageName) {
                 return true;
             }
         };

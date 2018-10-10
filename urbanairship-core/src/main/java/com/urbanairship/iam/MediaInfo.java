@@ -2,7 +2,9 @@
 
 package com.urbanairship.iam;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
@@ -27,16 +29,19 @@ public class MediaInfo implements JsonSerializable {
     /**
      * Image media type.
      */
+    @NonNull
     public static final String TYPE_IMAGE = "image";
 
     /**
      * Video media type.
      */
+    @NonNull
     public static final String TYPE_VIDEO = "video";
 
     /**
      * Youtube media type.
      */
+    @NonNull
     public static final String TYPE_YOUTUBE = "youtube";
 
     // JSON keys
@@ -53,12 +58,13 @@ public class MediaInfo implements JsonSerializable {
      *
      * @param builder The media info builder.
      */
-    private MediaInfo(Builder builder) {
+    private MediaInfo(@NonNull Builder builder) {
         this.url = builder.url;
         this.description = builder.description;
         this.type = builder.type;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -76,12 +82,13 @@ public class MediaInfo implements JsonSerializable {
      * @return The parsed media info.
      * @throws JsonException If the media info was unable to be parsed.
      */
-    public static MediaInfo parseJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static MediaInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         try {
             return newBuilder()
-                    .setUrl(jsonValue.optMap().opt(URL_KEY).getString())
-                    .setType(jsonValue.optMap().opt(TYPE_KEY).getString())
-                    .setDescription(jsonValue.optMap().opt(DESCRIPTION_KEY).getString())
+                    .setUrl(jsonValue.optMap().opt(URL_KEY).optString())
+                    .setType(jsonValue.optMap().opt(TYPE_KEY).optString())
+                    .setDescription(jsonValue.optMap().opt(DESCRIPTION_KEY).optString())
                     .build();
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid media object json: " + jsonValue, e);
@@ -120,7 +127,7 @@ public class MediaInfo implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -147,6 +154,7 @@ public class MediaInfo implements JsonSerializable {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -157,6 +165,7 @@ public class MediaInfo implements JsonSerializable {
      *
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -167,6 +176,7 @@ public class MediaInfo implements JsonSerializable {
      * @param mediaInfo The media info.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull MediaInfo mediaInfo) {
         return new Builder(mediaInfo);
     }
@@ -193,6 +203,7 @@ public class MediaInfo implements JsonSerializable {
          * @param url The media URL.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setUrl(@NonNull String url) {
             this.url = url;
             return this;
@@ -205,6 +216,7 @@ public class MediaInfo implements JsonSerializable {
          * @param type The media type.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setType(@Type @NonNull String type) {
             this.type = type;
             return this;
@@ -216,6 +228,7 @@ public class MediaInfo implements JsonSerializable {
          * @param description The media description.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setDescription(@NonNull String description) {
             this.description = description;
             return this;
@@ -228,6 +241,7 @@ public class MediaInfo implements JsonSerializable {
          * @return A media info.
          * @throws IllegalArgumentException If the URL, type, or description is missing.
          */
+        @NonNull
         public MediaInfo build() {
             Checks.checkArgument(!UAStringUtil.isEmpty(url), "Missing URL");
             Checks.checkArgument(!UAStringUtil.isEmpty(type), "Missing type");

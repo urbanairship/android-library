@@ -32,8 +32,9 @@ public class ActionsNotificationExtender implements NotificationCompat.Extender 
         this.notificationId = notificationId;
     }
 
+    @NonNull
     @Override
-    public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
+    public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
         NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(message.getInteractiveNotificationType());
         if (actionGroup == null) {
             return builder;

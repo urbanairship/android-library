@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -44,9 +45,9 @@ class TagGroupApiClient extends BaseApiClient {
      *
      * @param audienceId The audienceId.
      * @param mutation The tag group mutation.
-     *
      * @return The response or null if an error occurred.
      */
+    @Nullable
     Response updateTagGroups(@TagGroupRegistrar.TagGroupType int type, @NonNull String audienceId, @NonNull TagGroupsMutation mutation) {
         URL tagUrl = getDeviceUrl(type == TagGroupRegistrar.NAMED_USER ? NAMED_USER_TAG_GROUP_PATH : CHANNEL_TAGS_PATH);
         if (tagUrl == null) {
@@ -76,7 +77,7 @@ class TagGroupApiClient extends BaseApiClient {
      *
      * @param response The tag group response.
      */
-    private void logTagGroupResponseIssues(Response response) {
+    private void logTagGroupResponseIssues(@Nullable Response response) {
         if (response == null || response.getResponseBody() == null) {
             return;
         }
@@ -93,19 +94,20 @@ class TagGroupApiClient extends BaseApiClient {
 
         if (responseJson.isJsonMap()) {
             // Check for any warnings in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("warnings")) {
-                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
+            if (responseJson.optMap().containsKey("warnings")) {
+                for (JsonValue warning : responseJson.optMap().opt("warnings").optList()) {
                     Logger.warn("Tag Groups warnings: " + warning);
                 }
             }
 
             // Check for any errors in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("error")) {
-                Logger.error("Tag Groups error: " + responseJson.getMap().get("error"));
+            if (responseJson.optMap().containsKey("error")) {
+                Logger.error("Tag Groups error: " + responseJson.optMap().get("error"));
             }
         }
     }
 
+    @NonNull
     private String getTagGroupAudienceSelector(@TagGroupRegistrar.TagGroupType int type) {
         switch (type) {
             case TagGroupRegistrar.CHANNEL:

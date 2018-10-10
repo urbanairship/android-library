@@ -24,7 +24,7 @@ import java.net.URL;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class RemoteDataApiClient  {
+public class RemoteDataApiClient {
 
     private static final String REMOTE_DATA_PATH = "api/remote-data/app/";
     private static final String SDK_VERSION_QUERY_PARAM = "sdk_version";
@@ -66,7 +66,7 @@ public class RemoteDataApiClient  {
      * @return A Response.
      */
     @Nullable
-    Response fetchRemoteData(String lastModified) {
+    Response fetchRemoteData(@Nullable String lastModified) {
         URL url = getRemoteDataURL();
 
         if (url == null) {

@@ -48,6 +48,7 @@ import java.util.concurrent.Executors;
  */
 public class RichPushInbox extends AirshipComponent {
 
+    @NonNull
     public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
             OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
             OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
@@ -89,23 +90,26 @@ public class RichPushInbox extends AirshipComponent {
          * @param message A {@link RichPushMessage} instance.
          * @return {@code true} if the message matches the predicate, otherwise {@code false}.
          */
-        boolean apply(RichPushMessage message);
+        boolean apply(@NonNull RichPushMessage message);
     }
 
     /**
      * Intent action to view the rich push inbox.
      */
+    @NonNull
     public static final String VIEW_INBOX_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_INBOX";
 
     /**
      * Intent action to view a rich push message.
      */
+    @NonNull
     public static final String VIEW_MESSAGE_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_MESSAGE";
 
     /**
      * Scheme used for @{code message:<MESSAGE_ID>} when requesting to view a message with
      * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE}.
      */
+    @NonNull
     public static final String MESSAGE_DATA_SCHEME = "message";
 
     private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
@@ -140,7 +144,7 @@ public class RichPushInbox extends AirshipComponent {
      * @param dataStore The preference data store.
      * @hide
      */
-    public RichPushInbox(Context context, PreferenceDataStore dataStore, ActivityMonitor activityMonitor) {
+    public RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull ActivityMonitor activityMonitor) {
         this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)),
                 new RichPushResolver(context), Executors.newSingleThreadExecutor(), activityMonitor);
     }
@@ -149,8 +153,8 @@ public class RichPushInbox extends AirshipComponent {
      * @hide
      */
     @VisibleForTesting
-    RichPushInbox(Context context, PreferenceDataStore dataStore, final JobDispatcher jobDispatcher,
-                  RichPushUser user, RichPushResolver resolver, Executor executor, ActivityMonitor activityMonitor) {
+    RichPushInbox(Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
+                  @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor, @NonNull ActivityMonitor activityMonitor) {
         super(dataStore);
 
         this.context = context.getApplicationContext();
@@ -216,7 +220,7 @@ public class RichPushInbox extends AirshipComponent {
     @WorkerThread
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
+    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, airship, dataStore);
         }
@@ -234,6 +238,7 @@ public class RichPushInbox extends AirshipComponent {
      *
      * @return The {@link RichPushUser}.
      */
+    @NonNull
     public RichPushUser getUser() {
         return user;
     }
@@ -311,10 +316,10 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Fetches the latest inbox changes from Urban Airship.
-     * <p/>
+     * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p/>
+     * <p>
      * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      */
@@ -324,26 +329,27 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Fetches the latest inbox changes from Urban Airship.
-     * <p/>
+     * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p/>
+     * <p>
      * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public Cancelable fetchMessages(@NonNull final FetchMessagesCallback callback) {
-        return fetchMessages(callback, null);
+    @Nullable
+    public Cancelable fetchMessages(@Nullable FetchMessagesCallback callback) {
+        return fetchMessages(null, callback);
     }
 
     /**
      * Fetches the latest inbox changes from Urban Airship.
-     * <p/>
+     * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p/>
+     * <p>
      * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      *
@@ -351,7 +357,8 @@ public class RichPushInbox extends AirshipComponent {
      * @param looper The looper to post the callback on.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public Cancelable fetchMessages(final FetchMessagesCallback callback, Looper looper) {
+    @Nullable
+    public Cancelable fetchMessages(@Nullable Looper looper, @Nullable FetchMessagesCallback callback) {
         PendingFetchMessagesCallback cancelableOperation = new PendingFetchMessagesCallback(callback, looper);
 
         synchronized (pendingFetchCallbacks) {
@@ -372,7 +379,6 @@ public class RichPushInbox extends AirshipComponent {
 
         return cancelableOperation;
     }
-
 
     void onUpdateMessagesFinished(boolean result) {
         synchronized (pendingFetchCallbacks) {
@@ -441,7 +447,8 @@ public class RichPushInbox extends AirshipComponent {
      * @param predicate The predicate. If null, the collection will be returned as-is.
      * @return A filtered collection of messages
      */
-    private Collection<RichPushMessage> filterMessages(Collection<RichPushMessage> messages, @Nullable Predicate predicate) {
+    @NonNull
+    private Collection<RichPushMessage> filterMessages(@NonNull Collection<RichPushMessage> messages, @Nullable Predicate predicate) {
         List<RichPushMessage> filteredMessages = new ArrayList<>();
 
         if (predicate == null) {
@@ -545,7 +552,7 @@ public class RichPushInbox extends AirshipComponent {
      * @return A {@link RichPushMessage} or <code>null</code> if one does not exist.
      */
     @Nullable
-    public RichPushMessage getMessage(String messageId) {
+    public RichPushMessage getMessage(@Nullable String messageId) {
         if (messageId == null) {
             return null;
         }
@@ -620,7 +627,7 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Mark {@link RichPushMessage}s deleted.
-     * <p/>
+     * <p>
      * Note that in most cases these messages aren't immediately deleted on the server, but they will
      * be inaccessible on the device as soon as they're marked deleted.
      *
@@ -734,7 +741,7 @@ public class RichPushInbox extends AirshipComponent {
 
     static class SentAtRichPushMessageComparator implements Comparator<RichPushMessage> {
         @Override
-        public int compare(RichPushMessage lhs, RichPushMessage rhs) {
+        public int compare(@NonNull RichPushMessage lhs, @NonNull RichPushMessage rhs) {
             if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
                 return lhs.getMessageId().compareTo(rhs.getMessageId());
             } else {

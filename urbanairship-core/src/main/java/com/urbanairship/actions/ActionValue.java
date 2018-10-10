@@ -2,9 +2,11 @@
 
 package com.urbanairship.actions;
 
+import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -17,6 +19,8 @@ import com.urbanairship.json.JsonValue;
  * of the following: a JsonMap, a JsonList, a Number, a Boolean, String, or it can contain null.
  */
 public class ActionValue implements JsonSerializable, Parcelable {
+
+    @NonNull
     private final JsonValue jsonValue;
 
     /**
@@ -24,7 +28,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @param jsonValue A jsonValue.
      */
-    public ActionValue(JsonValue jsonValue) {
+    public ActionValue(@Nullable JsonValue jsonValue) {
         this.jsonValue = jsonValue == null ? JsonValue.NULL : jsonValue;
     }
 
@@ -35,7 +39,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @return The ActionValue object.
      */
     @NonNull
-    public static ActionValue wrap(String value) {
+    public static ActionValue wrap(@Nullable String value) {
         return new ActionValue(JsonValue.wrap(value));
     }
 
@@ -90,7 +94,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @return The ActionValue object.
      */
     @NonNull
-    public static ActionValue wrap(JsonSerializable value) {
+    public static ActionValue wrap(@Nullable JsonSerializable value) {
         return new ActionValue(JsonValue.wrap(value));
     }
 
@@ -103,7 +107,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * action value.
      */
     @NonNull
-    public static ActionValue wrap(Object object) throws ActionValueException {
+    public static ActionValue wrap(@Nullable Object object) throws ActionValueException {
         try {
             return new ActionValue(JsonValue.wrap(object));
         } catch (JsonException e) {
@@ -123,8 +127,9 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @return The value as a String, or null if the value is not a String.
      */
+    @Nullable
     public String getString() {
-        return getString(null);
+        return jsonValue.getString();
     }
 
     /**
@@ -133,7 +138,8 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param defaultValue The default value if the contained value is not a String.
      * @return The value as a String, or the defaultValue if the value is not a String.
      */
-    public String getString(String defaultValue) {
+    @NonNull
+    public String getString(@NonNull String defaultValue) {
         return jsonValue.getString(defaultValue);
     }
 
@@ -182,6 +188,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @return The value as a JsonList, or null if the value is not a JsonList.
      */
+    @Nullable
     public JsonList getList() {
         return jsonValue.getList();
     }
@@ -191,6 +198,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @return The value as a JsonMap, or null if the value is not a JsonMap.
      */
+    @Nullable
     public JsonMap getMap() {
         return jsonValue.getMap();
     }
@@ -205,7 +213,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
     }
 
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@Nullable Object object) {
         if (object instanceof ActionValue) {
             ActionValue o = (ActionValue) object;
             return jsonValue.equals(o.jsonValue);
@@ -224,12 +232,14 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @return The value as a JSON encoded String.
      */
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return jsonValue.toString();
     }
 
     @Override
+    @NonNull
     public JsonValue toJsonValue() {
         return jsonValue;
     }
@@ -240,20 +250,24 @@ public class ActionValue implements JsonSerializable, Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeParcelable(jsonValue, flags);
     }
 
     /**
      * ActionValue parcel creator.
+     * @hide
      */
+    @NonNull
     public static final Parcelable.Creator<ActionValue> CREATOR = new Parcelable.Creator<ActionValue>() {
 
+        @NonNull
         @Override
-        public ActionValue createFromParcel(Parcel in) {
+        public ActionValue createFromParcel(@NonNull Parcel in) {
             return new ActionValue((JsonValue) in.readParcelable(JsonValue.class.getClassLoader()));
         }
 
+        @NonNull
         @Override
         public ActionValue[] newArray(int size) {
             return new ActionValue[size];

@@ -4,6 +4,7 @@ package com.urbanairship.reactive;
 
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 
 import com.urbanairship.BaseTestCase;
@@ -76,7 +77,7 @@ public class ObservableTest extends BaseTestCase {
     public <T> void subscribeObservable(Observable<T> observable) {
         observable.subscribe(new Subscriber<T>() {
             @Override
-            public void onNext(T value) {
+            public void onNext(@NonNull T value) {
                 values.add(value);
                 nexts++;
             }
@@ -87,7 +88,7 @@ public class ObservableTest extends BaseTestCase {
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onError(@NonNull Exception e) {
                 error = e;
                 errors++;
             }
@@ -155,8 +156,9 @@ public class ObservableTest extends BaseTestCase {
         Observable<Integer> obs = Observable.from(Arrays.asList(1, 2, 3));
 
         Observable<String> mapped = obs.map(new Function<Integer, String>() {
+            @NonNull
             @Override
-            public String apply(Integer value) {
+            public String apply(@NonNull Integer value) {
                 return value.toString();
             }
         });
@@ -204,6 +206,7 @@ public class ObservableTest extends BaseTestCase {
         final ArrayList<Integer> ints = new ArrayList<>(Arrays.asList(1, 2, 3));
 
         Observable<Integer> deferred = Observable.defer(new Supplier<Observable<Integer>>() {
+            @NonNull
             @Override
             public Observable<Integer> apply() {
                 return Observable.from(ints);
@@ -284,6 +287,7 @@ public class ObservableTest extends BaseTestCase {
         Subject<Integer> second = Subject.create();
 
         Observable<Pair<Integer, Integer>> zipped = Observable.zip(first, second, new BiFunction<Integer, Integer, Pair<Integer, Integer>>() {
+            @NonNull
             @Override
             public Pair<Integer, Integer> apply(Integer lh, Integer rh) {
                 return new Pair<>(lh, rh);

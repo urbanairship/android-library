@@ -11,23 +11,24 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 
 /**
  * Displays an inbox message in a landing page.
- * <p/>
+ * <p>
  * To view messages, the intent will use the action
  * {@code com.urbanairship.SHOW_LANDING_PAGE_INTENT_ACTION} with the message ID supplied as the data
  * in the form of {@code message:<MESSAGE_ID>}.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument values: The specified message ID, or {@code "auto"}
  * to look for the message ID in the {@link ActionArguments#getMetadata()}.
- * <p/>
+ * <p>
  * Result value: <code>null</code>
- * <p/>
+ * <p>
  * Default Registration Names: ^mco, open_mc_overlay_action
  */
 public class OverlayRichPushMessageAction extends Action {
@@ -35,13 +36,19 @@ public class OverlayRichPushMessageAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "open_mc_overlay_action";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mco";
 
+    /**
+     * Message ID place holder. Will pull the message ID from the push metadata.
+     */
+    @NonNull
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
     @Override
@@ -71,6 +78,7 @@ public class OverlayRichPushMessageAction extends Action {
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         String messageId = arguments.getValue().getString();
+        Checks.checkNotNull(messageId, "Missing message ID");
 
         if (messageId.equalsIgnoreCase(MESSAGE_ID_PLACEHOLDER)) {
             PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);

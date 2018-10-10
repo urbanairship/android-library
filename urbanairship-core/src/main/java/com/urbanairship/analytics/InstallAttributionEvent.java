@@ -12,6 +12,7 @@ import com.urbanairship.json.JsonMap;
 class InstallAttributionEvent extends Event {
 
     private static final String TYPE = "install_attribution";
+
     private static final String PLAY_STORE_REFERRER = "google_play_referrer";
 
     private final String referrer;
@@ -25,15 +26,17 @@ class InstallAttributionEvent extends Event {
         this.referrer = referrer;
     }
 
+    @NonNull
     @Override
     public String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected JsonMap getEventData() {
         return JsonMap.newBuilder()
-                .put(PLAY_STORE_REFERRER, referrer)
-                .build();
+                      .put(PLAY_STORE_REFERRER, referrer)
+                      .build();
     }
 }

@@ -38,7 +38,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
      * @param message The in-app message.
      * @param mediaInfo The media info.
      */
-    protected MediaDisplayAdapter(InAppMessage message, MediaInfo mediaInfo) {
+    protected MediaDisplayAdapter(@NonNull InAppMessage message, @Nullable MediaInfo mediaInfo) {
         this.message = message;
         this.mediaInfo = mediaInfo;
     }
@@ -65,7 +65,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         if (mediaInfo == null || MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
             return true;
         } else {
@@ -112,7 +112,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
      * @param context The application context.
      * @throws IOException If the cache fails to create.
      */
-    protected void createCache(Context context) throws IOException {
+    protected void createCache(@NonNull Context context) throws IOException {
         if (cache == null) {
             cache = InAppMessageCache.newCache(context, message);
         }
@@ -127,7 +127,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
      * resource was cached. {@link #RETRY} if it failed to cache the resource.
      */
     @PrepareResult
-    protected int cacheMedia(Context context, MediaInfo mediaInfo) {
+    protected int cacheMedia(@NonNull Context context, @Nullable MediaInfo mediaInfo) {
         if (mediaInfo == null || !mediaInfo.getType().equals(MediaInfo.TYPE_IMAGE)) {
             return OK;
         }

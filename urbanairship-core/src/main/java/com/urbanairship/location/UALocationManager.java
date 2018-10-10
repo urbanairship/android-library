@@ -61,7 +61,7 @@ public class UALocationManager extends AirshipComponent {
      */
     private final PreferenceDataStore.PreferenceChangeListener preferenceChangeListener = new PreferenceDataStore.PreferenceChangeListener() {
         @Override
-        public void onPreferenceChange(String key) {
+        public void onPreferenceChange(@NonNull String key) {
             switch (key) {
                 case BACKGROUND_UPDATES_ALLOWED_KEY:
                 case LOCATION_UPDATES_ENABLED_KEY:
@@ -117,6 +117,7 @@ public class UALocationManager extends AirshipComponent {
 
     /**
      * {@inheritDoc}
+     *
      * @hide
      */
     @Override
@@ -133,7 +134,7 @@ public class UALocationManager extends AirshipComponent {
 
     /**
      * Checks if continuous location updates is enabled or not.
-     * </p>
+     * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
@@ -146,7 +147,7 @@ public class UALocationManager extends AirshipComponent {
 
     /**
      * Enable or disable continuous location updates.
-     * </p>
+     * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
@@ -247,7 +248,7 @@ public class UALocationManager extends AirshipComponent {
     /**
      * Records a single location using either the foreground request options
      * or the background request options depending on the application's state.
-     * <p/>
+     * <p>
      * The request may fail due to insufficient permissions.
      *
      * @return A cancelable object that can be used to cancel the request.
@@ -352,7 +353,7 @@ public class UALocationManager extends AirshipComponent {
      * Gets the last update's location request options.  If no options have been set, it will default to null.
      *
      * @return The last update's location request options.
-     * */
+     */
     @Nullable
     LocationRequestOptions getLastUpdateOptions() {
         String jsonString = preferenceDataStore.getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
@@ -439,7 +440,6 @@ public class UALocationManager extends AirshipComponent {
             }
         });
     }
-
 
 
     /**

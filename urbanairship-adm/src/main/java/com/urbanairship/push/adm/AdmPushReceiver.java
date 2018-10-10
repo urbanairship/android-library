@@ -2,12 +2,12 @@
 
 package com.urbanairship.push.adm;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.WakefulBroadcastReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
@@ -26,9 +26,8 @@ public class AdmPushReceiver extends BroadcastReceiver {
     private static final long BROADCAST_INTENT_TIME_MS = 10000;
 
 
-    @SuppressLint("NewApi")
     @Override
-    public void onReceive(final Context context, final Intent intent) {
+    public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
         if (intent == null || intent.getExtras() == null || !ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE.equals(intent.getAction())) {
@@ -45,7 +44,6 @@ public class AdmPushReceiver extends BroadcastReceiver {
         Logger.verbose("AdmPushReceiver - Received push.");
 
         PushProviderBridge.processPush(AdmPushProvider.class, message)
-                          .allowWakeLocks(true)
                           .setMaxCallbackWaitTime(BROADCAST_INTENT_TIME_MS)
                           .execute(context, new Runnable() {
                               @Override

@@ -2,7 +2,9 @@
 
 package com.urbanairship.remotedata;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
@@ -36,7 +38,7 @@ public class RemoteDataPayload {
      * @param timestamp The timestamp.
      * @param data The data.
      */
-    public RemoteDataPayload(String type, long timestamp, JsonMap data) {
+    public RemoteDataPayload(@NonNull String type, long timestamp, @NonNull JsonMap data) {
         this.type = type;
         this.timestamp = timestamp;
         this.data = data;
@@ -44,11 +46,11 @@ public class RemoteDataPayload {
 
     /**
      * RemoteDataPayload constructor.
+     *
      * @param entry The associated payload entry
-
      * @throws JsonException
      */
-    RemoteDataPayload(RemoteDataPayloadEntry entry) throws JsonException {
+    RemoteDataPayload(@NonNull RemoteDataPayloadEntry entry) throws JsonException {
         this.type = entry.type;
         this.timestamp = entry.timestamp;
         this.data = JsonValue.parseString(entry.data).getMap();
@@ -61,6 +63,7 @@ public class RemoteDataPayload {
      * @return A RemoteDataPayload
      * @throws JsonException
      */
+    @NonNull
     public static RemoteDataPayload parsePayload(@NonNull JsonValue value) throws JsonException {
         JsonMap map = value.optMap();
         JsonValue type = map.opt("type");
@@ -69,7 +72,7 @@ public class RemoteDataPayload {
         try {
             if (type.isString() && isoTimestamp.isString() && data.isJsonMap()) {
                 long timestampMs = DateUtils.parseIso8601(isoTimestamp.getString());
-                return new RemoteDataPayload(type.getString(), timestampMs, data.getMap());
+                return new RemoteDataPayload(type.optString(), timestampMs, data.optMap());
             } else {
                 throw new JsonException("Invalid remote data payload: " + value.toString());
             }
@@ -85,6 +88,7 @@ public class RemoteDataPayload {
      * @param value The JSON.
      * @return A List of RemoteDataPayloads.
      */
+    @NonNull
     public static Set<RemoteDataPayload> parsePayloads(@NonNull JsonValue value) {
         JsonList list = value.optList();
 
@@ -103,7 +107,7 @@ public class RemoteDataPayload {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -131,6 +135,7 @@ public class RemoteDataPayload {
     }
 
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "RemoteDataPayload{" +
@@ -145,6 +150,7 @@ public class RemoteDataPayload {
      *
      * @return The type.
      */
+    @NonNull
     public final String getType() {
         return type;
     }
@@ -163,6 +169,7 @@ public class RemoteDataPayload {
      *
      * @return The data.
      */
+    @NonNull
     public final JsonMap getData() {
         return data;
     }

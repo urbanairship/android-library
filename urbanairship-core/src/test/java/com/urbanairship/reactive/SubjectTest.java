@@ -2,6 +2,8 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 
 import junit.framework.Assert;
@@ -27,7 +29,7 @@ public class SubjectTest extends BaseTestCase {
         Subject<Integer> subject = Subject.create();
         subject.subscribe(new Subscriber<Integer>(){
             @Override
-            public void onNext(Integer value) {
+            public void onNext(@NonNull Integer value) {
                 Assert.assertEquals(value.intValue(), 3);
                 resultMap.put("next", true);
             }
@@ -38,7 +40,7 @@ public class SubjectTest extends BaseTestCase {
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onError(@NonNull Exception e) {
                 resultMap.put("error", true);
             }
         });
@@ -58,7 +60,7 @@ public class SubjectTest extends BaseTestCase {
         Subject<Integer> subject = Subject.create();
         subject.subscribe(new Subscriber<Integer>(){
             @Override
-            public void onNext(Integer value) {
+            public void onNext(@NonNull Integer value) {
                 resultMap.put("next", true);
             }
 
@@ -68,7 +70,7 @@ public class SubjectTest extends BaseTestCase {
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onError(@NonNull Exception e) {
                 Assert.assertEquals(e, exception);
                 resultMap.put("error", true);
             }

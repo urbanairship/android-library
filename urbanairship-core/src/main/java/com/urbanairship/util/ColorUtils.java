@@ -3,6 +3,7 @@
 package com.urbanairship.util;
 
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 
 /**
  * Color utility methods.
@@ -15,6 +16,7 @@ public class ColorUtils {
      * @param color The color to covert.
      * @return The color string.
      */
+    @NonNull
     public static String convertToString(@ColorInt int color) {
         StringBuilder hex = new StringBuilder("#");
         hex.append(Integer.toHexString(color));

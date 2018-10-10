@@ -14,7 +14,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public final class ActionResult {
 
-    @IntDef({STATUS_COMPLETED, STATUS_REJECTED_ARGUMENTS, STATUS_ACTION_NOT_FOUND, STATUS_EXECUTION_ERROR})
+    @IntDef({ STATUS_COMPLETED, STATUS_REJECTED_ARGUMENTS, STATUS_ACTION_NOT_FOUND, STATUS_EXECUTION_ERROR })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {}
 
@@ -43,21 +43,23 @@ public final class ActionResult {
      */
     public static final int STATUS_EXECUTION_ERROR = 4;
 
-
     /**
      * The result exception. This value may be null.
      */
+    @Nullable
     private final Exception exception;
 
     /**
      * The result value.
      */
+    @NonNull
     private final ActionValue value;
 
     /**
      * Run status of the action.
      */
-    private final @Status int status;
+    private final @Status
+    int status;
 
     /**
      * Factory method to create an empty result
@@ -73,7 +75,7 @@ public final class ActionResult {
      * @param value The result value
      */
     @NonNull
-    public static ActionResult newResult(ActionValue value) {
+    public static ActionResult newResult(@Nullable ActionValue value) {
         return new ActionResult(value, null, STATUS_COMPLETED);
     }
 
@@ -83,7 +85,7 @@ public final class ActionResult {
      * @param exception The result value
      */
     @NonNull
-    public static ActionResult newErrorResult(Exception exception) {
+    public static ActionResult newErrorResult(@Nullable Exception exception) {
         return new ActionResult(null, exception, STATUS_EXECUTION_ERROR);
     }
 
@@ -104,7 +106,7 @@ public final class ActionResult {
      * @param exception The result exception.
      * @param status The run status of the action.
      */
-    ActionResult(ActionValue value, Exception exception, @Status int status) {
+    ActionResult(@Nullable ActionValue value, @Nullable Exception exception, @Status int status) {
         this.value = value == null ? new ActionValue() : value;
         this.exception = exception;
         this.status = status;

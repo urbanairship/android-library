@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 public class PassRequest {
 
     private static final Executor DEFAULT_REQUEST_EXECUTOR = Executors.newSingleThreadExecutor();
+
     private static final String DEPRECATED_PATH_FORMAT = "v1/pass/%s?api_key=%s";
     private static final String PATH_FORMAT = "v1/pass/%s";
 
@@ -66,7 +67,7 @@ public class PassRequest {
      * @param requestFactory An HTTP request factory instance.
      * @param requestExecutor A thread executor instance.
      */
-    PassRequest(Builder builder, RequestFactory requestFactory, Executor requestExecutor) {
+    PassRequest(@NonNull Builder builder, @NonNull RequestFactory requestFactory, @NonNull Executor requestExecutor) {
         this.apiKey = builder.apiKey;
         this.userName = builder.userName;
         this.templateId = builder.templateId;
@@ -83,7 +84,7 @@ public class PassRequest {
      *
      * @param builder The pass request builder instance.
      */
-    PassRequest(Builder builder) {
+    PassRequest(@NonNull Builder builder) {
         this(builder, RequestFactory.DEFAULT_REQUEST_FACTORY, DEFAULT_REQUEST_EXECUTOR);
     }
 
@@ -92,6 +93,7 @@ public class PassRequest {
      *
      * @return The new Builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -132,6 +134,7 @@ public class PassRequest {
                     url = getPassUrl();
                 } catch (MalformedURLException e) {
                     Logger.error("PassRequest - Invalid pass URL", e);
+                    requestCallback.setResult(-1, null);
                     return;
                 }
 
@@ -168,6 +171,12 @@ public class PassRequest {
 
                 Logger.debug("PassRequest - Requesting pass " + url + " with payload: " + body);
                 Response response = httpRequest.execute();
+
+                if (response == null) {
+                    Logger.error("PassRequest - Failed to get a response.");
+                    requestCallback.setResult(-1, null);
+                    return;
+                }
 
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                     JsonValue json;
@@ -208,6 +217,7 @@ public class PassRequest {
      * @return The pass request URL.
      * @throws MalformedURLException
      */
+    @NonNull
     URL getPassUrl() throws MalformedURLException {
         Uri uri;
         if (userName == null) {
@@ -219,6 +229,7 @@ public class PassRequest {
         return new URL(uri.toString());
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "PassRequest{ templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", externalId: " + externalId + ", headers: " + headers + " }";
@@ -234,7 +245,7 @@ public class PassRequest {
         private final List<Field> headers = new ArrayList<>();
         private String tag;
         private String externalId;
-        public String userName;
+        private String userName;
 
 
         /**
@@ -244,6 +255,7 @@ public class PassRequest {
          * @param token The request token.
          * @return Builder object.
          */
+        @NonNull
         public Builder setAuth(@NonNull String userName, @NonNull String token) {
             this.apiKey = token;
             this.userName = userName;
@@ -256,6 +268,7 @@ public class PassRequest {
          * @param templateId The ID of the template.
          * @return Builder object.
          */
+        @NonNull
         public Builder setTemplateId(@NonNull @Size(min = 1) String templateId) {
             this.templateId = templateId;
             return this;
@@ -267,6 +280,7 @@ public class PassRequest {
          * @param field The field instance.
          * @return Builder object.
          */
+        @NonNull
         public Builder addField(@NonNull Field field) {
             fields.add(field);
             return this;
@@ -279,7 +293,8 @@ public class PassRequest {
          * @param label The expiration date label.
          * @return Builder object.
          */
-        public Builder setExpirationDate(String value, String label) {
+        @NonNull
+        public Builder setExpirationDate(@NonNull String value, @NonNull String label) {
             Field field = Field.newBuilder()
                                .setName("expirationDate")
                                .setValue(value)
@@ -297,7 +312,8 @@ public class PassRequest {
          * @param label The barcode_value label.
          * @return Builder object.
          */
-        public Builder setBarcodeValue(String value, String label) {
+        @NonNull
+        public Builder setBarcodeValue(@NonNull String value, @NonNull String label) {
             Field field = Field.newBuilder()
                                .setName("barcode_value")
                                .setValue(value)
@@ -315,7 +331,8 @@ public class PassRequest {
          * @param label The barcodeAltText label.
          * @return Builder object.
          */
-        public Builder setBarcodeAltText(String value, String label) {
+        @NonNull
+        public Builder setBarcodeAltText(@NonNull String value, @NonNull String label) {
             Field field = Field.newBuilder()
                                .setName("barcodeAltText")
                                .setValue(value)
@@ -332,7 +349,8 @@ public class PassRequest {
          * @param tag The pass tag.
          * @return Builder object.
          */
-        public Builder setTag(@NonNull String tag) {
+        @NonNull
+        public Builder setTag(@Nullable String tag) {
             this.tag = tag;
             return this;
         }
@@ -343,7 +361,8 @@ public class PassRequest {
          * @param externalId The external ID.
          * @return Builder object.
          */
-        public Builder setExternalId(@NonNull String externalId) {
+        @NonNull
+        public Builder setExternalId(@Nullable String externalId) {
             this.externalId = externalId;
             return this;
         }
@@ -355,6 +374,7 @@ public class PassRequest {
          * @throws IllegalStateException if the apiKey or templateId is
          * null or empty.
          */
+        @NonNull
         public PassRequest build() {
             if (TextUtils.isEmpty(apiKey) || TextUtils.isEmpty(templateId)) {
                 throw new IllegalStateException("The apiKey or templateId is missing.");

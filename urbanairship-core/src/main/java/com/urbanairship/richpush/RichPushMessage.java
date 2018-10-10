@@ -58,19 +58,40 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @param deleted flag indication the delete status.
      * @return A RichPushMessage instance, or {@code null} if the message payload is invalid.
      */
-    static RichPushMessage create(JsonValue messagePayload, boolean unreadClient, boolean deleted) {
+    @Nullable
+    static RichPushMessage create(@NonNull JsonValue messagePayload, boolean unreadClient, boolean deleted) {
         JsonMap messageMap = messagePayload.getMap();
         if (messageMap == null) {
             return null;
         }
 
+        String messageId = messageMap.opt(MESSAGE_ID_KEY).getString();
+        if (messageId == null) {
+            return null;
+        }
+
+        String messageUrl = messageMap.opt(MESSAGE_URL_KEY).getString();
+        if (messageUrl == null) {
+            return null;
+        }
+
+        String messageBodyUrl = messageMap.opt(MESSAGE_BODY_URL_KEY).getString();
+        if (messageBodyUrl == null) {
+            return null;
+        }
+
+        String messageReadUrl = messageMap.opt(MESSAGE_READ_URL_KEY).getString();
+        if (messageReadUrl == null) {
+            return null;
+        }
 
         RichPushMessage message = new RichPushMessage();
-        message.messageId = messageMap.opt(MESSAGE_ID_KEY).getString();
-        message.messageUrl = messageMap.opt(MESSAGE_URL_KEY).getString();
-        message.messageBodyUrl = messageMap.opt(MESSAGE_BODY_URL_KEY).getString();
-        message.messageReadUrl = messageMap.opt(MESSAGE_READ_URL_KEY).getString();
-        message.title = messageMap.opt(TITLE_KEY).getString();
+        message.messageId = messageId;
+        message.messageUrl = messageUrl;
+        message.messageBodyUrl = messageBodyUrl;
+        message.messageReadUrl = messageReadUrl;
+
+        message.title = messageMap.opt(TITLE_KEY).optString();
         message.unreadOrigin = messageMap.opt(UNREAD_KEY).getBoolean(true);
         message.rawJson = messagePayload;
 
@@ -110,6 +131,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message id.
      */
+    @NonNull
     public String getMessageId() {
         return this.messageId;
     }
@@ -119,6 +141,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message URL.
      */
+    @NonNull
     public String getMessageUrl() {
         return this.messageUrl;
     }
@@ -128,6 +151,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message body URL.
      */
+    @NonNull
     public String getMessageBodyUrl() {
         return this.messageBodyUrl;
     }
@@ -137,6 +161,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message mark-as-read URL.
      */
+    @NonNull
     public String getMessageReadUrl() {
         return this.messageReadUrl;
     }
@@ -146,6 +171,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message title.
      */
+    @NonNull
     public String getTitle() {
         return this.title;
     }
@@ -164,6 +190,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message's sent date.
      */
+    @NonNull
     public Date getSentDate() {
         return new Date(sentMS);
     }
@@ -183,6 +210,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @return The message's sent expiration date or null if the message does
      * not have an expiration date.
      */
+    @Nullable
     public Date getExpirationDate() {
         if (expirationMS != null) {
             return new Date(expirationMS);
@@ -196,6 +224,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @return The message's expiration date (unix epoch time in milliseconds),
      * or null if the message does not have an expiration date.
      */
+    @Nullable
     public Long getExpirationDateMS() {
         return expirationMS;
     }
@@ -214,6 +243,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message's extras in a {@link android.os.Bundle}.
      */
+    @NonNull
     public Bundle getExtras() {
         return this.extras;
     }
@@ -261,6 +291,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      *
      * @return The message's payload as JSON.
      */
+    @NonNull
     public JsonValue getRawMessageJson() {
         return rawJson;
     }
@@ -282,9 +313,9 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      */
     @Nullable
     public String getListIconUrl() {
-        JsonValue icons = getRawMessageJson().getMap().get("icons");
-        if (icons != null && icons.isJsonMap()) {
-            return icons.getMap().opt("list_icon").getString();
+        JsonValue icons = getRawMessageJson().optMap().opt("icons");
+        if (icons.isJsonMap()) {
+            return icons.optMap().opt("list_icon").getString();
         }
 
         return null;
@@ -296,7 +327,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof RichPushMessage)) {
             return false;
         }

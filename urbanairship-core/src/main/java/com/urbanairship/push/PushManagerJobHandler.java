@@ -118,7 +118,7 @@ class PushManagerJobHandler {
      * @return The job result.
      */
     @JobInfo.JobResult
-    protected int performJob(JobInfo jobInfo) {
+    protected int performJob(@NonNull JobInfo jobInfo) {
         switch (jobInfo.getAction()) {
 
             case ACTION_UPDATE_PUSH_REGISTRATION:

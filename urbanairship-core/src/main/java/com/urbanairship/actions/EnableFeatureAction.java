@@ -18,6 +18,7 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.HelperActivity;
 import com.urbanairship.util.PermissionsRequester;
 
@@ -28,16 +29,16 @@ import java.util.List;
 /**
  * An action that enables features. Running the action with value {@link #FEATURE_LOCATION} or {@link #FEATURE_BACKGROUND_LOCATION}
  * will prompt the user for permissions before enabling.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument value - either {@link #FEATURE_USER_NOTIFICATIONS}, {@link #FEATURE_BACKGROUND_LOCATION},
  * or {@link #FEATURE_LOCATION}.
- * <p/>
+ * <p>
  * Result value: {@code true} if the feature was enabled. {@code false} if the feature required user
  * permissions that were rejected by the user.
- * <p/>
+ * <p>
  * Default Registration Names: {@link #DEFAULT_REGISTRY_NAME}, {@link #DEFAULT_REGISTRY_SHORT_NAME}
  */
 public class EnableFeatureAction extends Action {
@@ -45,29 +46,33 @@ public class EnableFeatureAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "enable_feature";
 
     /**
      * Default registry short name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^ef";
 
     /**
      * Action value to enable user notifications. See {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}
      */
+    @NonNull
     public static final String FEATURE_USER_NOTIFICATIONS = "user_notifications";
 
     /**
      * Action value to enable location. See {@link com.urbanairship.location.UALocationManager#setLocationUpdatesEnabled(boolean)}
      */
+    @NonNull
     public static final String FEATURE_LOCATION = "location";
 
     /**
      * Action value to enable location with background updates. See {@link com.urbanairship.location.UALocationManager#setLocationUpdatesEnabled(boolean)}
      * and {@link com.urbanairship.location.UALocationManager#setBackgroundLocationAllowed(boolean)}
      */
+    @NonNull
     public static final String FEATURE_BACKGROUND_LOCATION = "background_location";
-
 
     private final PermissionsRequester permissionsRequester;
 
@@ -104,7 +109,12 @@ public class EnableFeatureAction extends Action {
         }
 
         // Validate value
-        switch (arguments.getValue().getString("")) {
+        String feature = arguments.getValue().getString();
+        if (feature == null) {
+            return false;
+        }
+
+        switch (feature) {
             case FEATURE_BACKGROUND_LOCATION:
             case FEATURE_LOCATION:
             case FEATURE_USER_NOTIFICATIONS:
@@ -117,7 +127,10 @@ public class EnableFeatureAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        switch (arguments.getValue().getString("")) {
+        String feature = arguments.getValue().getString();
+        Checks.checkNotNull(feature, "Missing feature.");
+
+        switch (feature) {
             case FEATURE_BACKGROUND_LOCATION:
                 if (requestLocationPermissions()) {
                     UAirship.shared().getLocationManager().setLocationUpdatesEnabled(true);

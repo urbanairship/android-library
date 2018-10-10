@@ -17,6 +17,7 @@ public abstract class InAppActionUtils {
 
     /**
      * Runs actions from the button info.
+     *
      * @param buttonInfo The button info.
      */
     public static void runActions(@Nullable ButtonInfo buttonInfo) {
@@ -27,6 +28,7 @@ public abstract class InAppActionUtils {
 
     /**
      * Runs a map of actions.
+     *
      * @param actionsMap The action map.
      */
     public static void runActions(@Nullable Map<String, JsonValue> actionsMap) {
@@ -35,6 +37,7 @@ public abstract class InAppActionUtils {
 
     /**
      * Runs a map of actions.
+     *
      * @param actionsMap The action map.
      * @param requestFactory Optional action request factory.
      */

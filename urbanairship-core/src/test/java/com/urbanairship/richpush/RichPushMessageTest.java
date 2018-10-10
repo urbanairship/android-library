@@ -17,6 +17,7 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 public class RichPushMessageTest extends BaseTestCase {
+
     private static final String MCRAP_MESSAGE = "{\"content_size\":44,\"extra\":{}," +
             "\"message_url\":\"https:\\/\\/device-api.urbanairship.com\\/api\\/user\\/test\\/messages\\/message\\/MESSAGE_ID\\/\"," +
             "\"title\":\"MESSAGE_TITLE\",\"message_sent\":\"2015-09-23 16:46:26\",\"options\":{\"asset_hosted\":\"true\"}," +

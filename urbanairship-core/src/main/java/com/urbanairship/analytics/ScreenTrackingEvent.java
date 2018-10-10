@@ -18,6 +18,7 @@ class ScreenTrackingEvent extends Event {
     /**
      * The screen tracking type key.
      */
+    @NonNull
     static final String TYPE = "screen_tracking";
 
     /**
@@ -28,26 +29,31 @@ class ScreenTrackingEvent extends Event {
     /**
      * The screen key.
      */
+    @NonNull
     static final String SCREEN_KEY = "screen";
 
     /**
      * The previous screen key.
      */
+    @NonNull
     static final String PREVIOUS_SCREEN_KEY = "previous_screen";
 
     /**
      * The start time key.
      */
+    @NonNull
     static final String START_TIME_KEY = "entered_time";
 
     /**
      * The stop time key.
      */
+    @NonNull
     static final String STOP_TIME_KEY = "exited_time";
 
     /**
      * The duration key.
      */
+    @NonNull
     static final String DURATION_KEY = "duration";
 
     private final String screen;
@@ -86,19 +92,21 @@ class ScreenTrackingEvent extends Event {
         return true;
     }
 
+    @NonNull
     @Override
     public String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
         return JsonMap.newBuilder()
-                .put(SCREEN_KEY, screen)
-                .put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime))
-                .put(STOP_TIME_KEY, Event.millisecondsToSecondsString(stopTime))
-                .put(DURATION_KEY, Event.millisecondsToSecondsString(stopTime - startTime))
-                .put(PREVIOUS_SCREEN_KEY, previousScreen)
-                .build();
+                      .put(SCREEN_KEY, screen)
+                      .put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime))
+                      .put(STOP_TIME_KEY, Event.millisecondsToSecondsString(stopTime))
+                      .put(DURATION_KEY, Event.millisecondsToSecondsString(stopTime - startTime))
+                      .put(PREVIOUS_SCREEN_KEY, previousScreen)
+                      .build();
     }
 }

@@ -81,7 +81,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**
@@ -96,7 +95,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(null, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**
@@ -112,7 +110,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**
@@ -128,7 +125,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
 
@@ -144,7 +140,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, null, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**
@@ -160,7 +155,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**
@@ -176,7 +170,6 @@ public class RegionEventTest extends BaseTestCase {
         RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
 
         assertFalse(event.isValid());
-        assertNull(event.getEventData());
     }
 
     /**

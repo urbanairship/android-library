@@ -42,6 +42,7 @@ abstract class BaseTagsAction extends Action {
      *
      * @return A push manager instance
      */
+    @NonNull
     protected PushManager getPushManager() {
         return UAirship.shared().getPushManager();
     }
@@ -60,11 +61,8 @@ abstract class BaseTagsAction extends Action {
             return true;
         }
 
-        if (arguments.getValue().getMap() != null) {
-            return true;
-        }
+        return arguments.getValue().getMap() != null;
 
-        return false;
     }
 
     @NonNull
@@ -110,7 +108,7 @@ abstract class BaseTagsAction extends Action {
 
             // Named User Tag Groups
             tagsMap = new HashMap<>();
-            for (Map.Entry<String, JsonValue> entry :  arguments.getValue().getMap().opt(NAMED_USER_KEY).optMap().getMap().entrySet()) {
+            for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(NAMED_USER_KEY).optMap().getMap().entrySet()) {
                 String group = entry.getKey();
                 Set<String> tags = new HashSet<>();
                 for (JsonValue jsonValue : entry.getValue().optList().getList()) {
@@ -147,19 +145,19 @@ abstract class BaseTagsAction extends Action {
      *
      * @param tags The set of tags.
      */
-    abstract void applyChannelTags(Set<String> tags);
+    abstract void applyChannelTags(@NonNull Set<String> tags);
 
     /**
      * Applies channel tag group updates.
      *
      * @param tags The map of tag groups.
      */
-    abstract void applyChannelTagGroups(Map<String, Set<String>> tags);
+    abstract void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags);
 
     /**
      * Applies named user tag group updates.
      *
      * @param tags The map of tag groups.
      */
-    abstract void applyNamedUserTagGroups(Map<String, Set<String>> tags);
+    abstract void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags);
 }

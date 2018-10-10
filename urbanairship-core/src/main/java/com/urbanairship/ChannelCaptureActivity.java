@@ -5,6 +5,7 @@ package com.urbanairship;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
@@ -36,7 +37,7 @@ public class ChannelCaptureActivity extends ThemedActivity {
     private static final String NAMED_USER_HEADER = "Named User";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ua_activity_channel_capture);
 
@@ -99,30 +100,32 @@ public class ChannelCaptureActivity extends ThemedActivity {
                 this,
                 getChannelData(),
                 android.R.layout.simple_list_item_2,
-                new String[] {"header", "data"},
-                new int[] {android.R.id.text1, android.R.id.text2}
+                new String[] { "header", "data" },
+                new int[] { android.R.id.text1, android.R.id.text2 }
         );
         channelData.setAdapter(channelAdapter);
     }
 
-     private List<Map<String, String>> getChannelData() {
-         List<Map<String, String>> data = new ArrayList<>();
-         PushManager pushManager = UAirship.shared().getPushManager();
+    @NonNull
+    private List<Map<String, String>> getChannelData() {
+        List<Map<String, String>> data = new ArrayList<>();
+        PushManager pushManager = UAirship.shared().getPushManager();
 
-         addChannelAttribute(data, NAMED_USER_HEADER, UAirship.shared().getNamedUser().getId());
-         addChannelAttribute(data, ALIAS_HEADER, pushManager.getAlias());
-         addChannelAttribute(data, USER_NOTIFICATION_ENABLED_HEADER, String.valueOf(pushManager.getUserNotificationsEnabled()));
+        addChannelAttribute(data, NAMED_USER_HEADER, UAirship.shared().getNamedUser().getId());
+        addChannelAttribute(data, ALIAS_HEADER, pushManager.getAlias());
+        addChannelAttribute(data, USER_NOTIFICATION_ENABLED_HEADER, String.valueOf(pushManager.getUserNotificationsEnabled()));
 
-         return data;
-     }
+        return data;
+    }
 
-     private void addChannelAttribute (List<Map<String, String>> channelDataList, String header, String data) {
-         if (!UAStringUtil.isEmpty(data)) {
-             Map<String, String> channelDataMap = new HashMap<>();
-             channelDataMap.put("header", header);
-             channelDataMap.put("data", data);
-             channelDataList.add(channelDataMap);
-         }
-     }
+
+    private void addChannelAttribute(@NonNull List<Map<String, String>> channelDataList, @NonNull String header, @Nullable String data) {
+        if (!UAStringUtil.isEmpty(data)) {
+            Map<String, String> channelDataMap = new HashMap<>();
+            channelDataMap.put("header", header);
+            channelDataMap.put("data", data);
+            channelDataList.add(channelDataMap);
+        }
+    }
 }
 

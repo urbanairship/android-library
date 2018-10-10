@@ -68,7 +68,7 @@ public class RetryingExecutor implements Executor {
      * @param scheduler A handler used to schedule retries.
      * @param executor The executor that performs the operations.
      */
-    public RetryingExecutor(Handler scheduler, Executor executor) {
+    public RetryingExecutor(@NonNull Handler scheduler, @NonNull Executor executor) {
         this.scheduler = scheduler;
         this.executor = executor;
     }
@@ -103,7 +103,7 @@ public class RetryingExecutor implements Executor {
      *
      * @param operations The operations to execute.
      */
-    public void execute(Operation... operations) {
+    public void execute(@NonNull Operation... operations) {
         execute(new ChainedOperations(Arrays.asList(operations)));
     }
 

@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.automation.ScheduleDelay;
@@ -50,7 +51,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      *
      * @param builder The schedule builder.
      */
-    private InAppMessageScheduleInfo(Builder builder) {
+    private InAppMessageScheduleInfo(@NonNull Builder builder) {
         this.limit = builder.limit;
         this.start = builder.start;
         this.end = builder.end;
@@ -67,6 +68,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      *
      * @return The schedule's in-app message.
      */
+    @NonNull
     public InAppMessage getInAppMessage() {
         return message;
     }
@@ -106,6 +108,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public List<Trigger> getTriggers() {
         return triggers;
@@ -114,6 +117,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public JsonSerializable getData() {
         return message;
@@ -123,6 +127,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public String getGroup() {
         return message.getId();
@@ -131,6 +136,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     /**
      * {@inheritDoc}
      */
+    @Nullable
     @Override
     public ScheduleDelay getDelay() {
         return delay;
@@ -157,8 +163,19 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Create a new builder.
+     *
+     * @return A new builder instance.
+     */
+    @NonNull
+    public static Builder newBuilder(@NonNull InAppMessageScheduleInfo info) {
+        return new Builder(info);
     }
 
     /**
@@ -171,7 +188,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value, @InAppMessage.Source String defaultSource) throws JsonException {
+    static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value, @Nullable @InAppMessage.Source String defaultSource) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         InAppMessageScheduleInfo.Builder builder = newBuilder()
@@ -225,6 +242,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      * @return A schedule info.
      * @throws JsonException If the json value contains an invalid schedule info.
      */
+    @NonNull
     public static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException {
         return fromJson(value, null);
     }
@@ -235,7 +253,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      * @param jsonValue The json value.
      * @return The message ID or {@code null} if the message ID was unavailable.
      */
-    static String parseMessageId(JsonValue jsonValue) {
+    @Nullable
+    static String parseMessageId(@NonNull JsonValue jsonValue) {
         return jsonValue.optMap().opt(MESSAGE_KEY).optMap().opt(InAppMessage.MESSAGE_ID_KEY).getString();
     }
 
@@ -256,12 +275,25 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
 
         private Builder() {}
 
+        private Builder(@NonNull InAppMessageScheduleInfo info) {
+            this.limit = info.limit;
+            this.start = info.start;
+            this.end = info.end;
+            this.triggers.addAll(info.triggers);
+            this.delay = info.delay;
+            this.message = info.message;
+            this.priority = info.priority;
+            this.editGracePeriod = info.editGracePeriod;
+            this.interval = info.interval;
+        }
+
         /**
          * Sets the display limit.
          *
          * @param limit The display limit.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setLimit(int limit) {
             this.limit = limit;
             return this;
@@ -273,7 +305,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param message The in-app message.
          * @return The builder instance.
          */
-        public Builder setMessage(InAppMessage message) {
+        @NonNull
+        public Builder setMessage(@NonNull InAppMessage message) {
             this.message = message;
             return this;
         }
@@ -284,6 +317,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param start The start time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setStart(long start) {
             this.start = start;
             return this;
@@ -295,6 +329,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param end The end time in ms.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEnd(long end) {
             this.end = end;
             return this;
@@ -306,7 +341,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param delay A ScheduleDelay object.
          * @return The Builder instance.
          */
-        public Builder setDelay(ScheduleDelay delay) {
+        @NonNull
+        public Builder setDelay(@Nullable ScheduleDelay delay) {
             this.delay = delay;
             return this;
         }
@@ -317,6 +353,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param priority The priority level.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setPriority(int priority) {
             this.priority = priority;
             return this;
@@ -328,7 +365,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param trigger A trigger instance.
          * @return The Builder instance.
          */
-        public Builder addTrigger(Trigger trigger) {
+        @NonNull
+        public Builder addTrigger(@NonNull Trigger trigger) {
             this.triggers.add(trigger);
             return this;
         }
@@ -339,7 +377,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param triggers A list of trigger instances.
          * @return The Builder instance.
          */
-        public Builder addTriggers(List<Trigger> triggers) {
+        @NonNull
+        public Builder addTriggers(@NonNull List<Trigger> triggers) {
             this.triggers.addAll(triggers);
             return this;
         }
@@ -350,9 +389,12 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param triggers A list of trigger instances.
          * @return The Builder instance.
          */
-        public Builder setTriggers(List<Trigger> triggers) {
+        @NonNull
+        public Builder setTriggers(@Nullable List<Trigger> triggers) {
             this.triggers.clear();
-            this.triggers.addAll(triggers);
+            if (triggers != null) {
+                this.triggers.addAll(triggers);
+            }
             return this;
         }
 
@@ -363,6 +405,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
@@ -375,6 +418,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @param timeUnit The time unit.
          * @return The Builder instance.
          */
+        @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
             return this;
@@ -387,6 +431,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          * @throws IllegalArgumentException if the no triggers are set, missing a valid in-app message,
          * {@link #TRIGGER_LIMIT} triggers are set, or the start time is set after the end time.
          */
+        @NonNull
         public InAppMessageScheduleInfo build() {
             Checks.checkNotNull(message, "Missing message.");
             Checks.checkArgument(start < 0 || end < 0 || start < end, "End must be after start.");

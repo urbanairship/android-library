@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -9,16 +10,16 @@ import android.support.annotation.RestrictTo;
  * Use with {@link Observable}.
  *
  * @param <T> The type of the value under observation.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Observer<T> {
     /**
      * Notifies the observer that a new value is available
+     *
      * @param value The value.
      */
-    void onNext(T value);
+    void onNext(@NonNull T value);
 
     /**
      * Notifies the observer that the observable has finished providing value updates.
@@ -29,7 +30,8 @@ public interface Observer<T> {
     /**
      * Notifies the observer that the observable has encountered an error.
      * No further values should be provided.
+     *
      * @param e The error as an exception.
      */
-    void onError(Exception e);
+    void onError(@NonNull Exception e);
 }

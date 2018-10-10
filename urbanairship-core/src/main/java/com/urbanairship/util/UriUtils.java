@@ -5,6 +5,7 @@ package com.urbanairship.util;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class UriUtils {
      * @param uri The uri to parse
      * @return A map of query parameter name to values
      */
+    @NonNull
     public static Map<String, List<String>> getQueryParameters(@NonNull Uri uri) {
         Map<String, List<String>> parameters = new HashMap<>();
 
@@ -59,7 +61,8 @@ public class UriUtils {
      * @return A Uri representation of the value, or <code>null</code> if the value
      * is not able to be parsed to a Uri.
      */
-    public static Uri parse(Object value) {
+    @Nullable
+    public static Uri parse(@Nullable Object value) {
         if (!(value instanceof String || value instanceof Uri || value instanceof URL)) {
             return null;
         }

@@ -2,6 +2,9 @@
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
+
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
@@ -11,8 +14,10 @@ import com.urbanairship.util.UAStringUtil;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PushArrivedEvent extends Event {
 
+    @NonNull
     static final String TYPE = "push_arrived";
 
     /**
@@ -28,26 +33,28 @@ public class PushArrivedEvent extends Event {
      *
      * @param message The associated PushMessage.
      */
-    public PushArrivedEvent(PushMessage message) {
+    public PushArrivedEvent(@NonNull PushMessage message) {
         super();
         this.pushId = message.getSendId();
         this.metadata = message.getMetadata();
     }
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected final JsonMap getEventData() {
 
         return JsonMap.newBuilder()
-                .put(PUSH_ID_KEY, !UAStringUtil.isEmpty(pushId) ? pushId : DEFAULT_SEND_ID)
-                .put(METADATA_KEY, metadata)
-                .put(CONNECTION_TYPE_KEY, getConnectionType())
-                .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
-                .put(CARRIER_KEY, getCarrier())
-                .build();
+                      .put(PUSH_ID_KEY, !UAStringUtil.isEmpty(pushId) ? pushId : DEFAULT_SEND_ID)
+                      .put(METADATA_KEY, metadata)
+                      .put(CONNECTION_TYPE_KEY, getConnectionType())
+                      .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
+                      .put(CARRIER_KEY, getCarrier())
+                      .build();
     }
 }

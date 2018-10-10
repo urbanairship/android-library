@@ -71,6 +71,7 @@ public class AddTagsActionTest extends BaseTestCase {
         PushManager pushManager = mock(PushManager.class);
         NamedUser namedUser = mock(NamedUser.class);
         TagGroupsEditor tagGroupsEditor = new TagGroupsEditor() {
+            @NonNull
             @Override
             public TagGroupsEditor addTags(@NonNull String group, @NonNull Set<String> tags) {
                 added.put(group, tags);

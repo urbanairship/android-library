@@ -9,12 +9,12 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.AlarmOperationScheduler;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -105,6 +105,7 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfo The {@link ActionScheduleInfo} instance.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<ActionSchedule> schedule(@NonNull final ActionScheduleInfo scheduleInfo) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
@@ -120,6 +121,7 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfos A list of {@link ActionScheduleInfo}.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
@@ -136,6 +138,7 @@ public class Automation extends AirshipComponent {
      * @param id The schedule ID.
      * @return A pending result.
      */
+    @NonNull
     public Future<Void> cancel(@NonNull final String id) {
         return cancel(Collections.singletonList(id));
     }
@@ -147,6 +150,7 @@ public class Automation extends AirshipComponent {
      * @param ids The list of schedule IDs.
      * @return A pending result.
      */
+    @NonNull
     public Future<Void> cancel(@NonNull final Collection<String> ids) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
@@ -163,6 +167,7 @@ public class Automation extends AirshipComponent {
      * @param group The schedule group.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Boolean> cancelGroup(@NonNull final String group) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
@@ -179,6 +184,7 @@ public class Automation extends AirshipComponent {
      *
      * @return A pending result.
      */
+    @NonNull
     public Future<Void> cancelAll() {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
@@ -195,10 +201,13 @@ public class Automation extends AirshipComponent {
      * @param scheduleId The schedule ID.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<ActionSchedule> getSchedule(@NonNull final String scheduleId) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return null;
+            PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
+            pendingResult.setResult(null);
+            return pendingResult;
         }
 
         return automationEngine.getSchedule(scheduleId);
@@ -211,10 +220,13 @@ public class Automation extends AirshipComponent {
      * @param scheduleIds The requested schedule IDs.
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Collection<ActionSchedule>> getSchedules(@NonNull final Set<String> scheduleIds) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return null;
+            PendingResult<Collection<ActionSchedule>> pendingResult = new PendingResult<>();
+            pendingResult.setResult(null);
+            return pendingResult;
         }
 
         return automationEngine.getSchedules(scheduleIds);
@@ -225,10 +237,13 @@ public class Automation extends AirshipComponent {
      *
      * @return A pending result.
      */
+    @NonNull
     public PendingResult<Collection<ActionSchedule>> getSchedules() {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return null;
+            PendingResult<Collection<ActionSchedule>> pendingResult = new PendingResult<>();
+            pendingResult.setResult(null);
+            return pendingResult;
         }
 
         return automationEngine.getSchedules();
@@ -240,10 +255,13 @@ public class Automation extends AirshipComponent {
      * @param group The group.
      * @return A pending result.
      */
-    public PendingResult<Collection<ActionSchedule>> getSchedules(final String group) {
+    @NonNull
+    public PendingResult<Collection<ActionSchedule>> getSchedules(@NonNull final String group) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return null;
+            PendingResult<Collection<ActionSchedule>> pendingResult = new PendingResult<>();
+            pendingResult.setResult(null);
+            return pendingResult;
         }
 
         return automationEngine.getSchedules(group);
@@ -256,10 +274,13 @@ public class Automation extends AirshipComponent {
      * @param edits The edits.
      * @return A pending result with the updated schedule. The schedule will be null if it does not exist.
      */
+    @NonNull
     PendingResult<ActionSchedule> editSchedule(@NonNull String scheduleId, @NonNull ActionScheduleEdits edits) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return null;
+            PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
+            pendingResult.setResult(null);
+            return pendingResult;
         }
 
         return automationEngine.editSchedule(scheduleId, edits);

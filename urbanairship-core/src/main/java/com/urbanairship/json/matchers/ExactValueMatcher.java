@@ -15,22 +15,27 @@ import java.util.Map;
 
 /**
  * Exact value matcher.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ExactValueMatcher extends ValueMatcher {
+
+    @NonNull
     public static final String EQUALS_VALUE_KEY = "equals";
 
     private final JsonValue expected;
 
     /**
      * Default constructor.
+     *
      * @param expected The expected value.
      */
     public ExactValueMatcher(@NonNull JsonValue expected) {
         this.expected = expected;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -57,7 +62,7 @@ public class ExactValueMatcher extends ValueMatcher {
                 return false;
             }
 
-            return valueOne.getString().equalsIgnoreCase(valueTwo.getString());
+            return valueOne.optString().equalsIgnoreCase(valueTwo.getString());
         }
 
         if (valueOne.isJsonList()) {
@@ -65,15 +70,15 @@ public class ExactValueMatcher extends ValueMatcher {
                 return false;
             }
 
-            JsonList listOne = valueOne.getList();
-            JsonList listTwo = valueTwo.getList();
+            JsonList listOne = valueOne.optList();
+            JsonList listTwo = valueTwo.optList();
 
             if (listOne.size() != listTwo.size()) {
                 return false;
             }
 
             // iterate over both lists
-            for(int i = 0; i< listOne.size(); i++) {
+            for (int i = 0; i < listOne.size(); i++) {
                 if (!isEquals(listOne.get(i), listTwo.get(i), ignoreCase)) {
                     return false;
                 }
@@ -87,8 +92,8 @@ public class ExactValueMatcher extends ValueMatcher {
                 return false;
             }
 
-            JsonMap mapOne = valueOne.getMap();
-            JsonMap mapTwo = valueTwo.getMap();
+            JsonMap mapOne = valueOne.optMap();
+            JsonMap mapTwo = valueTwo.optMap();
 
             if (mapOne.size() != mapTwo.size()) {
                 return false;
@@ -112,7 +117,7 @@ public class ExactValueMatcher extends ValueMatcher {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

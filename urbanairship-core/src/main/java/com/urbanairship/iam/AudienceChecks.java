@@ -10,10 +10,10 @@ import android.support.v4.os.ConfigurationCompat;
 import android.support.v4.os.LocaleListCompat;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.util.VersionUtils;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.VersionUtils;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -121,11 +121,7 @@ public abstract class AudienceChecks {
         }
 
         // Version
-        if (!isAppVersionConditionMet(audience)) {
-            return false;
-        }
-
-        return true;
+        return isAppVersionConditionMet(audience);
     }
 
     /**

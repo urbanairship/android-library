@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -53,11 +54,13 @@ public class ButtonInfo implements JsonSerializable {
     /**
      * Cancels the in-app message's schedule when clicked.
      */
+    @NonNull
     public static final String BEHAVIOR_CANCEL = "cancel";
 
     /**
      * Dismisses the in-app message when clicked.
      */
+    @NonNull
     public static final String BEHAVIOR_DISMISS = "dismiss";
 
     private final TextInfo label;
@@ -75,7 +78,7 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @param builder A builder.
      */
-    private ButtonInfo(Builder builder) {
+    private ButtonInfo(@NonNull Builder builder) {
         this.label = builder.label;
         this.id = builder.id;
         this.behavior = builder.behavior;
@@ -85,6 +88,7 @@ public class ButtonInfo implements JsonSerializable {
         this.actions = builder.actions;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -106,7 +110,8 @@ public class ButtonInfo implements JsonSerializable {
      * @return The parsed button info.
      * @throws JsonException If the button info was unable to be parsed.
      */
-    public static ButtonInfo parseJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static ButtonInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap content = jsonValue.optMap();
         Builder builder = newBuilder();
 
@@ -116,11 +121,13 @@ public class ButtonInfo implements JsonSerializable {
         }
 
         // ID
-        builder.setId(content.opt(ID_KEY).getString());
+        if (content.opt(ID_KEY).isString()) {
+            builder.setId(content.opt(ID_KEY).optString());
+        }
 
         // Behavior
         if (content.containsKey(BEHAVIOR_KEY)) {
-            switch (content.opt(BEHAVIOR_KEY).getString("")) {
+            switch (content.opt(BEHAVIOR_KEY).optString()) {
                 case BEHAVIOR_CANCEL:
                     builder.setBehavior(BEHAVIOR_CANCEL);
                     break;
@@ -138,13 +145,13 @@ public class ButtonInfo implements JsonSerializable {
                 throw new JsonException("Border radius must be a number: " + content.opt(BORDER_RADIUS_KEY));
             }
 
-            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getFloat(0));
         }
 
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
-                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid background button color: " + content.opt(BACKGROUND_COLOR_KEY), e);
             }
@@ -153,7 +160,7 @@ public class ButtonInfo implements JsonSerializable {
         // Border Color
         if (content.containsKey(BORDER_COLOR_KEY)) {
             try {
-                builder.setBorderColor(Color.parseColor(content.opt(BORDER_COLOR_KEY).getString("")));
+                builder.setBorderColor(Color.parseColor(content.opt(BORDER_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid border color: " + content.opt(BORDER_COLOR_KEY), e);
             }
@@ -161,7 +168,7 @@ public class ButtonInfo implements JsonSerializable {
 
         // Actions
         if (content.containsKey(ACTIONS_KEY)) {
-            JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
+            JsonMap jsonMap = content.opt(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
                 throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
             }
@@ -183,8 +190,9 @@ public class ButtonInfo implements JsonSerializable {
      * @return The list of parsed button info.
      * @throws JsonException If the list was unable to be parsed.
      */
-    public static List<ButtonInfo> parseJson(JsonList jsonList) throws JsonException {
-        if (jsonList == null || jsonList.isEmpty()) {
+    @NonNull
+    public static List<ButtonInfo> parseJson(@NonNull JsonList jsonList) throws JsonException {
+        if (jsonList.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -201,6 +209,7 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @return The button's ID.
      */
+    @NonNull
     public String getId() {
         return id;
     }
@@ -270,7 +279,7 @@ public class ButtonInfo implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -313,6 +322,7 @@ public class ButtonInfo implements JsonSerializable {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -323,6 +333,7 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -333,6 +344,7 @@ public class ButtonInfo implements JsonSerializable {
      * @param buttonInfo The button info.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull ButtonInfo buttonInfo) {
         return new Builder(buttonInfo);
     }
@@ -352,7 +364,7 @@ public class ButtonInfo implements JsonSerializable {
 
         private Builder() {}
 
-        private Builder(ButtonInfo buttonInfo) {
+        private Builder(@NonNull ButtonInfo buttonInfo) {
             this.label = buttonInfo.label;
             this.id = buttonInfo.id;
             this.behavior = buttonInfo.behavior;
@@ -368,7 +380,8 @@ public class ButtonInfo implements JsonSerializable {
          * @param label The button's label text info.
          * @return The builder instance.
          */
-        public Builder setLabel(TextInfo label) {
+        @NonNull
+        public Builder setLabel(@NonNull TextInfo label) {
             this.label = label;
             return this;
         }
@@ -379,6 +392,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param id The button's ID.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setId(@NonNull @Size(min = 1, max = MAX_ID_LENGTH) String id) {
             this.id = id;
             return this;
@@ -390,6 +404,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param behavior The button's behavior.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setBehavior(@NonNull @Behavior String behavior) {
             this.behavior = behavior;
             return this;
@@ -401,6 +416,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param borderRadius The border radius.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
@@ -412,6 +428,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param borderColor The border color.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setBorderColor(@ColorInt int borderColor) {
             this.borderColor = borderColor;
             return this;
@@ -423,6 +440,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param backgroundColor The background color.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setBackgroundColor(@ColorInt int backgroundColor) {
             this.backgroundColor = backgroundColor;
             return this;
@@ -434,7 +452,8 @@ public class ButtonInfo implements JsonSerializable {
          * @param actions The button's actions.
          * @return The builder instance.
          */
-        public Builder setActions(Map<String, JsonValue> actions) {
+        @NonNull
+        public Builder setActions(@Nullable Map<String, JsonValue> actions) {
             this.actions.clear();
 
             if (actions != null) {
@@ -451,6 +470,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param actionValue The action value.
          * @return The builder instance.
          */
+        @NonNull
         public Builder addAction(@NonNull String actionName, @NonNull JsonSerializable actionValue) {
             this.actions.put(actionName, actionValue.toJsonValue());
             return this;
@@ -463,6 +483,7 @@ public class ButtonInfo implements JsonSerializable {
          * @throws IllegalArgumentException If the label is missing, ID is missing, or if the ID length
          * is greater than the  {@link #MAX_ID_LENGTH}.
          */
+        @NonNull
         public ButtonInfo build() {
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
             Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);

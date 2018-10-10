@@ -35,10 +35,10 @@ public class EventsStorage extends DataManager {
      */
     public interface Events extends BaseColumns {
 
-
         /**
          * The table name offered by this provider
          */
+        @NonNull
         String TABLE_NAME = "events";
 
 
@@ -46,19 +46,23 @@ public class EventsStorage extends DataManager {
          * Column definitions
          */
 
+        @NonNull
         String COLUMN_NAME_TYPE = "type";
+
+        @NonNull
         String COLUMN_NAME_EVENT_ID = "event_id";
 
-        /**
-         * Column name for the creation timestamp
-         * <P>Type: INTEGER (long from System.currentTimeMillis())</P>
-         */
+        @NonNull
         String COLUMN_NAME_TIME = "time";
 
         //serialized
+        @NonNull
         String COLUMN_NAME_DATA = "data";
 
+        @NonNull
         String COLUMN_NAME_SESSION_ID = "session_id";
+
+        @NonNull
         String COLUMN_NAME_EVENT_SIZE = "event_size";
     }
 

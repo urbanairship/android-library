@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -38,7 +39,7 @@ public class LocationService extends IntentService {
         Autopilot.automaticTakeOff(getApplicationContext());
     }
 
-    public void onHandleIntent(Intent intent) {
+    public void onHandleIntent(@Nullable Intent intent) {
         if (intent == null || intent.getAction() == null) {
             return;
         }
@@ -61,7 +62,7 @@ public class LocationService extends IntentService {
      *
      * @param intent The received intent.
      */
-    private void onLocationUpdate(UAirship airship, @NonNull Intent intent) {
+    private void onLocationUpdate(@NonNull UAirship airship, @NonNull Intent intent) {
         // Fused location sometimes has an "Unmarshalling unknown type" runtime exception on 4.4.2 devices
         Location location;
         try {
@@ -73,8 +74,8 @@ public class LocationService extends IntentService {
             }
 
             location = (Location) (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED) ?
-                        intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
-                        intent.getParcelableExtra("com.google.android.location.LOCATION"));
+                                   intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
+                                   intent.getParcelableExtra("com.google.android.location.LOCATION"));
         } catch (Exception e) {
             Logger.error("Unable to extract location.", e);
             return;

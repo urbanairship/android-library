@@ -8,6 +8,8 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -21,12 +23,12 @@ public class UrbanAirshipResolver {
 
     private final Context context;
 
-    public UrbanAirshipResolver(Context context) {
+    public UrbanAirshipResolver(@NonNull Context context) {
         this.context = context;
     }
 
-    protected Cursor query(Uri uri, String[] projection, String whereClause, String[] whereArgs, String sortOrder) {
-
+    @Nullable
+    protected Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String whereClause, @Nullable String[] whereArgs, @Nullable String sortOrder) {
         try {
             return this.getResolver().query(uri, projection, whereClause, whereArgs, sortOrder);
         } catch (Exception e) {
@@ -35,7 +37,7 @@ public class UrbanAirshipResolver {
         }
     }
 
-    protected int delete(Uri uri, String whereClause, String[] whereArgs) {
+    protected int delete(@NonNull Uri uri, @Nullable String whereClause, @Nullable String[] whereArgs) {
         try {
             return this.getResolver().delete(uri, whereClause, whereArgs);
         } catch (Exception e) {
@@ -44,7 +46,7 @@ public class UrbanAirshipResolver {
         }
     }
 
-    protected int update(Uri uri, ContentValues values, String whereClause, String[] whereArgs) {
+    protected int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String whereClause, @Nullable String[] whereArgs) {
         try {
             return this.getResolver().update(uri, values, whereClause, whereArgs);
         } catch (Exception e) {
@@ -53,7 +55,8 @@ public class UrbanAirshipResolver {
         }
     }
 
-    protected Uri insert(Uri uri, ContentValues values) {
+    @Nullable
+    protected Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         try {
             return this.getResolver().insert(uri, values);
         } catch (Exception e) {
@@ -62,7 +65,7 @@ public class UrbanAirshipResolver {
         }
     }
 
-    protected int bulkInsert(Uri uri, ContentValues[] values) {
+    protected int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
         try {
             return this.getResolver().bulkInsert(uri, values);
         } catch (Exception e) {
@@ -81,7 +84,7 @@ public class UrbanAirshipResolver {
      * at or below the specified URI will also trigger a match.
      * @param observer The ContentObserver you want to alert when the supplied URI is updated.
      */
-    public void registerContentObserver(Uri uri, boolean notifyForDescendants, ContentObserver observer) {
+    public void registerContentObserver(@Nullable Uri uri, boolean notifyForDescendants, @NonNull ContentObserver observer) {
         try {
             this.getResolver().registerContentObserver(uri, notifyForDescendants, observer);
         } catch (IllegalArgumentException e) {
@@ -94,11 +97,11 @@ public class UrbanAirshipResolver {
      *
      * @param observer The ContentObserver you wish to unregister
      */
-    public void unregisterContentObserver(ContentObserver observer) {
+    public void unregisterContentObserver(@NonNull ContentObserver observer) {
         this.getResolver().unregisterContentObserver(observer);
     }
 
-    public void notifyChange(Uri uri, ContentObserver observer) {
+    public void notifyChange(@NonNull Uri uri, @NonNull ContentObserver observer) {
         try {
             this.getResolver().notifyChange(uri, observer);
         } catch (IllegalArgumentException ex) {
@@ -108,6 +111,7 @@ public class UrbanAirshipResolver {
 
     // helpers
 
+    @NonNull
     private ContentResolver getResolver() {
         return this.context.getContentResolver();
     }

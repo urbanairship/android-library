@@ -57,7 +57,7 @@ class AlarmScheduler implements Scheduler {
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, @Nullable  Bundle extras) throws SchedulerException {
+    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, @Nullable Bundle extras) throws SchedulerException {
         long backOff = extras != null ? extras.getLong(EXTRA_BACKOFF_DELAY, 0) : 0;
         if (backOff <= 0) {
             backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
@@ -75,7 +75,6 @@ class AlarmScheduler implements Scheduler {
      * @param jobInfo The jobInfo to schedule.
      * @param scheduleId The scheduler ID.
      * @param delay The alarm delay in milliseconds.
-     *
      * @throws SchedulerException if the schedule fails.
      */
     private void scheduleIntent(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long delay) throws SchedulerException {

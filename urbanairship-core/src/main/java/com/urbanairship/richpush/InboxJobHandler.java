@@ -83,7 +83,7 @@ class InboxJobHandler {
     private final PreferenceDataStore dataStore;
     private final UAirship airship;
 
-    InboxJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    InboxJobHandler(Context context, @NonNull UAirship airship, PreferenceDataStore dataStore) {
         this(airship, dataStore, RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
     }
 
@@ -105,7 +105,7 @@ class InboxJobHandler {
      * @return The job result.
      */
     @JobInfo.JobResult
-    int performJob(JobInfo jobInfo) {
+    int performJob(@NonNull JobInfo jobInfo) {
         switch (jobInfo.getAction()) {
             case ACTION_RICH_PUSH_USER_UPDATE:
                 onUpdateUser(jobInfo.getExtras().opt(EXTRA_FORCEFULLY).getBoolean(false));
@@ -208,7 +208,7 @@ class InboxJobHandler {
             try {
                 JsonMap responseJson = JsonValue.parseString(response.getResponseBody()).getMap();
                 if (responseJson != null) {
-                    serverMessages = responseJson.get("messages").getList();
+                    serverMessages = responseJson.opt("messages").getList();
                 }
             } catch (JsonException e) {
                 Logger.error("Failed to update inbox. Unable to parse response body: " + response.getResponseBody());
@@ -246,7 +246,7 @@ class InboxJobHandler {
                 continue;
             }
 
-            String messageId = message.getMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
+            String messageId = message.optMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
             if (messageId == null) {
                 Logger.error("InboxJobHandler - Invalid message payload, missing message ID: " + message);
                 continue;
@@ -296,9 +296,6 @@ class InboxJobHandler {
          * and we'll get them next time.
          */
         JsonMap payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
-        if (payload == null) {
-            return;
-        }
 
         Logger.verbose("InboxJobHandler - Deleting inbox messages with payload: " + payload);
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
@@ -338,9 +335,6 @@ class InboxJobHandler {
          * and we'll get them next time.
          */
         JsonMap payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
-        if (payload == null) {
-            return;
-        }
 
         Logger.verbose("InboxJobHandler - Marking inbox messages read request with payload: " + payload);
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
@@ -364,6 +358,7 @@ class InboxJobHandler {
      * @param ids Set of message ID strings.
      * @return A message payload as a JsonMap.
      */
+    @NonNull
     private JsonMap buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
         List<String> urls = new ArrayList<>();
         String userId = this.user.getId();
@@ -418,8 +413,8 @@ class InboxJobHandler {
         try {
             JsonMap credentials = JsonValue.parseString(response.getResponseBody()).getMap();
             if (credentials != null) {
-                userId = credentials.get("user_id").getString();
-                userToken = credentials.get("password").getString();
+                userId = credentials.opt("user_id").getString();
+                userToken = credentials.opt("password").getString();
             }
         } catch (JsonException ex) {
             Logger.error("InboxJobHandler - Unable to parse Rich Push user response: " + response);
@@ -508,6 +503,7 @@ class InboxJobHandler {
      *
      * @return The payload channels key as a string.
      */
+    @NonNull
     private String getPayloadChannelsKey() {
         if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
             return PAYLOAD_AMAZON_CHANNELS_KEY;

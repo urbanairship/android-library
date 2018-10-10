@@ -16,8 +16,11 @@ import com.urbanairship.UAirship;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 final class AdapterWrapper {
+    @NonNull
     public final String scheduleId;
+    @NonNull
     public final InAppMessage message;
+    @NonNull
     public final InAppMessageAdapter adapter;
 
     public boolean displayed = false;
@@ -44,7 +47,7 @@ final class AdapterWrapper {
         }
     }
 
-    boolean display(Activity activity) {
+    boolean display(@NonNull Activity activity) {
         Logger.debug("InAppMessageManager - Displaying schedule: " + scheduleId);
         try {
             DisplayHandler displayHandler = new DisplayHandler(scheduleId);
@@ -72,7 +75,7 @@ final class AdapterWrapper {
         }
     }
 
-    boolean isReady(Activity activity) {
+    boolean isReady(@NonNull Activity activity) {
         try {
             return adapter.isReady(activity);
         } catch (Exception e) {

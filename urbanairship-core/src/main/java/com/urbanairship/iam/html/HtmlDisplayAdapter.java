@@ -28,16 +28,18 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
      *
      * @param message The HTML in-app message.
      */
-    protected HtmlDisplayAdapter(InAppMessage message) {
+    protected HtmlDisplayAdapter(@NonNull InAppMessage message) {
         this.message = message;
     }
 
     /**
      * Creates a new modal adapter.
+     *
      * @param message The in-app message.
      * @return The modal adapter.
      */
-    public static HtmlDisplayAdapter newAdapter(InAppMessage message) {
+    @NonNull
+    public static HtmlDisplayAdapter newAdapter(@NonNull InAppMessage message) {
         HtmlDisplayContent displayContent = message.getDisplayContent();
         if (displayContent == null) {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
@@ -63,7 +65,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         if (!Network.isConnected()) {
             return false;
         }

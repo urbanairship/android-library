@@ -46,6 +46,7 @@ class TagGroupUtils {
      * @param rh Map of tags groups to tags.
      * @return A new map tag groups that are contained in both arguments.
      */
+    @NonNull
     static Map<String, Set<String>> intersect(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
         Map<String, Set<String>> result = new HashMap<>();
 

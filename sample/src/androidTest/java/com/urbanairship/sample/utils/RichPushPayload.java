@@ -2,6 +2,8 @@
 
 package com.urbanairship.sample.utils;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -51,6 +53,7 @@ public class RichPushPayload implements JsonSerializable {
         return title;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()

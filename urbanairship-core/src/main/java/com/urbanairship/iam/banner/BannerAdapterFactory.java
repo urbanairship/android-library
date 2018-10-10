@@ -1,5 +1,7 @@
 package com.urbanairship.iam.banner;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 
@@ -8,8 +10,9 @@ import com.urbanairship.iam.InAppMessageAdapter;
  */
 public class BannerAdapterFactory implements InAppMessageAdapter.Factory {
 
+    @NonNull
     @Override
-    public InAppMessageAdapter createAdapter(InAppMessage message) {
+    public InAppMessageAdapter createAdapter(@NonNull InAppMessage message) {
         return BannerAdapter.newAdapter(message);
     }
 }

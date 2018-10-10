@@ -92,7 +92,7 @@ public class BitmapUtils {
     /**
      * Calculate the largest inSampleSize value that is a power of 2 and keeps both
      * height and width larger than the requested height and width.
-     * <p/>
+     * <p>
      * Taken from http://developer.android.com/training/displaying-bitmaps/load-bitmap.html.
      *
      * @param width The width of the image.

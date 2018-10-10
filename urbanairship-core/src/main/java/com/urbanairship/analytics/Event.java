@@ -6,6 +6,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 
@@ -50,7 +52,7 @@ public abstract class Event {
     static final String PACKAGE_VERSION_KEY = "package_version";
     static final String LAST_METADATA_KEY = "last_metadata";
 
-    @IntDef({LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY})
+    @IntDef({ LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Priority {}
 
@@ -92,6 +94,7 @@ public abstract class Event {
      *
      * @return an Event id String.
      */
+    @NonNull
     public String getEventId() {
         return eventId;
     }
@@ -101,6 +104,7 @@ public abstract class Event {
      *
      * @return Seconds from the epoch, as a String.
      */
+    @NonNull
     public String getTime() {
         return time;
     }
@@ -112,20 +116,21 @@ public abstract class Event {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public String createEventPayload(String sessionId) {
+    @NonNull
+    public String createEventPayload(@NonNull String sessionId) {
         JsonMap.Builder object = JsonMap.newBuilder();
         JsonMap data = getEventData();
 
         // Copy the event data and add the session id
         data = JsonMap.newBuilder()
-                .putAll(data)
-                .put(SESSION_ID_KEY, sessionId)
-                .build();
+                      .putAll(data)
+                      .put(SESSION_ID_KEY, sessionId)
+                      .build();
 
         object.put(TYPE_KEY, getType())
-                .put(EVENT_ID_KEY, eventId)
-                .put(TIME_KEY, time)
-                .put(DATA_KEY, data);
+              .put(EVENT_ID_KEY, eventId)
+              .put(TIME_KEY, time)
+              .put(DATA_KEY, data);
 
         return object.build().toString();
     }
@@ -135,6 +140,7 @@ public abstract class Event {
      *
      * @return The event type.
      */
+    @NonNull
     public abstract String getType();
 
     /**
@@ -142,6 +148,7 @@ public abstract class Event {
      *
      * @return The event data.
      */
+    @NonNull
     protected abstract JsonMap getEventData();
 
     /**
@@ -149,6 +156,7 @@ public abstract class Event {
      *
      * @return The list of notification types as an ArrayList of String.
      */
+    @NonNull
     public ArrayList<String> getNotificationTypes() {
 
         ArrayList<String> notificationTypes = new ArrayList<>();
@@ -175,6 +183,7 @@ public abstract class Event {
      *
      * @return The connection type as a String.
      */
+    @NonNull
     public String getConnectionType() {
 
         int type = -1;//not connected
@@ -213,6 +222,7 @@ public abstract class Event {
      *
      * @return The connection subtype as a String.
      */
+    @NonNull
     public String getConnectionSubType() {
 
         //determine network connectivity state
@@ -221,7 +231,7 @@ public abstract class Event {
         ConnectivityManager cm = (ConnectivityManager) UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
             NetworkInfo ni = cm.getActiveNetworkInfo();
-            if (ni != null) {
+            if (ni != null && ni.getSubtypeName() != null) {
                 return ni.getSubtypeName();
             }
         }
@@ -233,6 +243,7 @@ public abstract class Event {
      *
      * @return The carrier as a String.
      */
+    @Nullable
     protected String getCarrier() {
         TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         return tm.getNetworkOperatorName();
@@ -266,21 +277,22 @@ public abstract class Event {
         return true;
     }
 
-
     /**
      * Helper method to convert milliseconds to a seconds string containing a double.
-     * @param milliseconds Milliseconds to convert.
      *
+     * @param milliseconds Milliseconds to convert.
      * @return Seconds as a string containing a double.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public static String millisecondsToSecondsString(long milliseconds) {
         return String.format(Locale.US, "%.3f", milliseconds / 1000.0);
     }
 
     /**
      * The event's send priority.
+     *
      * @return The event's send priority.
      */
     @Priority

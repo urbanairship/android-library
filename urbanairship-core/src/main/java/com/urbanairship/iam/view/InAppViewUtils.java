@@ -179,7 +179,7 @@ public class InAppViewUtils {
      */
     private static class RemoveUnderlineSpan extends CharacterStyle {
         @Override
-        public void updateDrawState(TextPaint textPaint) {
+        public void updateDrawState(@NonNull TextPaint textPaint) {
             textPaint.setUnderlineText(false);
         }
     }
@@ -194,7 +194,7 @@ public class InAppViewUtils {
         }
 
         @Override
-        public void draw(Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, Paint paint) {
+        public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
             canvas.save();
 
             Drawable drawable = getDrawable();

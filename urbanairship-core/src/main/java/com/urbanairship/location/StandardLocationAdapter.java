@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Location adapter for the standard Android location.
- * <p/>
+ * <p>
  * The adapter tries to mimic the Fused Location Provider as much as possible by
  * automatically selecting the best provider based on the request settings. It
  * will reevaluate the best provider when providers are enabled and disabled.
@@ -98,8 +98,9 @@ class StandardLocationAdapter implements LocationAdapter {
         currentProvider = null;
     }
 
+    @NonNull
     @Override
-    public Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback) {
+    public Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull ResultCallback<Location> resultCallback) {
         CancelableOperation cancelableOperation = new SingleLocationRequest(context, options, resultCallback);
         cancelableOperation.run();
         return cancelableOperation;
@@ -111,6 +112,7 @@ class StandardLocationAdapter implements LocationAdapter {
      * @param options The locationRequestOptions.
      * @return A criteria created from the supplied options.
      */
+    @NonNull
     private Criteria createCriteria(@NonNull LocationRequestOptions options) {
 
         Criteria criteria = new Criteria();
@@ -183,7 +185,7 @@ class StandardLocationAdapter implements LocationAdapter {
          * @param options The locationRequestOptions.
          * @param resultCallback The result callback.
          */
-        SingleLocationRequest(@NonNull final Context context, @NonNull final LocationRequestOptions options, @NonNull final  ResultCallback<Location> resultCallback) {
+        SingleLocationRequest(@NonNull final Context context, @NonNull final LocationRequestOptions options, @NonNull final ResultCallback<Location> resultCallback) {
             super();
             this.context = context.getApplicationContext();
             this.options = options;

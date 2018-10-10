@@ -132,8 +132,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                    .build());
 
         manager.setAdapterFactory(InAppMessage.TYPE_CUSTOM, new InAppMessageAdapter.Factory() {
+            @NonNull
             @Override
-            public InAppMessageAdapter createAdapter(InAppMessage message) {
+            public InAppMessageAdapter createAdapter(@NonNull InAppMessage message) {
                 return mockAdapter;
             }
         });

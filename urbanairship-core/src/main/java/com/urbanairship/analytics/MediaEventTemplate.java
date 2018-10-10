@@ -2,6 +2,9 @@
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.math.BigDecimal;
 
 /**
@@ -12,26 +15,31 @@ public class MediaEventTemplate {
     /**
      * The media event template type.
      */
+    @NonNull
     public static final String MEDIA_EVENT_TEMPLATE = "media";
 
     /**
      * The browsed event name.
      */
+    @NonNull
     public static final String BROWSED_CONTENT_EVENT = "browsed_content";
 
     /**
      * The consumed_content event name.
      */
+    @NonNull
     public static final String CONSUMED_CONTENT_EVENT = "consumed_content";
 
     /**
      * The starred_content event name.
      */
+    @NonNull
     public static final String STARRED_CONTENT_EVENT = "starred_content";
 
     /**
      * The shared_content event name.
      */
+    @NonNull
     public static final String SHARED_CONTENT_EVENT = "shared_content";
 
     /**
@@ -84,31 +92,49 @@ public class MediaEventTemplate {
      */
     private static final String MEDIUM = "medium";
 
+    @NonNull
     private final String eventName;
 
     // CONSUMED_CONTENT_EVENT optional
+    @Nullable
     private BigDecimal value;
 
     // optional
+    @Nullable
     private String id;
+
+    @Nullable
     private String category;
+
+    @Nullable
     private String description;
+
+    @Nullable
     private String type;
-    private boolean feature;
-    private boolean featureSet;
+
+    @Nullable
     private String author;
+
+    @Nullable
     private String publishedDate;
 
+    private boolean feature;
+    private boolean featureSet;
+
+
     // SHARED_CONTENT_EVENT optional
+    @Nullable
     private String source;
+
+    @Nullable
     private String medium;
 
-    private MediaEventTemplate(String eventName, BigDecimal value) {
+    private MediaEventTemplate(@NonNull String eventName, @Nullable BigDecimal value) {
         this.eventName = eventName;
         this.value = value;
     }
 
-    private MediaEventTemplate(String eventName, String source, String medium) {
+    private MediaEventTemplate(@NonNull String eventName, @Nullable String source, @Nullable String medium) {
         this.eventName = eventName;
         this.source = source;
         this.medium = medium;
@@ -119,6 +145,7 @@ public class MediaEventTemplate {
      *
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public static MediaEventTemplate newStarredTemplate() {
         return new MediaEventTemplate(STARRED_CONTENT_EVENT, null);
     }
@@ -128,20 +155,22 @@ public class MediaEventTemplate {
      *
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public static MediaEventTemplate newSharedTemplate() {
         return new MediaEventTemplate(SHARED_CONTENT_EVENT, null);
     }
 
     /**
      * Creates a shared content event template.
-     * </p>
+     * <p>
      * If the source or medium exceeds 255 characters it will cause the event to be invalid.
      *
      * @param source The source as a string.
      * @param medium The medium as a string.
      * @return A MediaEventTemplate.
      */
-    public static MediaEventTemplate newSharedTemplate(String source, String medium) {
+    @NonNull
+    public static MediaEventTemplate newSharedTemplate(@Nullable String source, @Nullable String medium) {
         return new MediaEventTemplate(SHARED_CONTENT_EVENT, source, medium);
     }
 
@@ -150,6 +179,7 @@ public class MediaEventTemplate {
      *
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public static MediaEventTemplate newConsumedTemplate() {
         return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, null);
     }
@@ -159,26 +189,28 @@ public class MediaEventTemplate {
      *
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public static MediaEventTemplate newBrowsedTemplate() {
         return new MediaEventTemplate(BROWSED_CONTENT_EVENT, null);
     }
 
     /**
      * Creates a consumed content event template.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as a BigDecimal.
      * @return A MediaEventTemplate.
      */
-    public static MediaEventTemplate newConsumedTemplate(BigDecimal value) {
+    @NonNull
+    public static MediaEventTemplate newConsumedTemplate(@Nullable BigDecimal value) {
         return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, value);
     }
 
     /**
      * Creates a consumed content event template.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
@@ -186,13 +218,14 @@ public class MediaEventTemplate {
      * @return A MediaEventTemplate.
      * @throws NumberFormatException if the value is infinity or not a number.
      */
+    @NonNull
     public static MediaEventTemplate newConsumedTemplate(double value) {
         return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, BigDecimal.valueOf(value));
     }
 
     /**
      * Creates a consumed content event template.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
@@ -201,7 +234,8 @@ public class MediaEventTemplate {
      * @throws NumberFormatException if the event value does not contain a valid string representation
      * of a big decimal.
      */
-    public static MediaEventTemplate newConsumedTemplate(String value) {
+    @NonNull
+    public static MediaEventTemplate newConsumedTemplate(@Nullable String value) {
         if (value == null || value.length() == 0) {
             return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, null);
         } else {
@@ -211,65 +245,70 @@ public class MediaEventTemplate {
 
     /**
      * Creates a consumed content event template.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as an int.
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public static MediaEventTemplate newConsumedTemplate(int value) {
         return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, new BigDecimal(value));
     }
 
     /**
      * Set the ID.
-     * <p/>
+     * <p>
      * If the ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param id The ID as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setId(String id) {
+    @NonNull
+    public MediaEventTemplate setId(@Nullable String id) {
         this.id = id;
         return this;
     }
 
     /**
      * Set the category.
-     * <p/>
+     * <p>
      * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setCategory(String category) {
+    @NonNull
+    public MediaEventTemplate setCategory(@Nullable String category) {
         this.category = category;
         return this;
     }
 
     /**
      * Set the type.
-     * <p/>
+     * <p>
      * If the type exceeds 255 characters it will cause the event to be invalid.
      *
      * @param type The type as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setType(String type) {
+    @NonNull
+    public MediaEventTemplate setType(@Nullable String type) {
         this.type = type;
         return this;
     }
 
     /**
      * Set the description.
-     * <p/>
+     * <p>
      * If the description exceeds 255 characters it will cause the event to be invalid.
      *
      * @param description The description as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setDescription(String description) {
+    @NonNull
+    public MediaEventTemplate setDescription(@Nullable String description) {
         this.description = description;
         return this;
     }
@@ -280,6 +319,7 @@ public class MediaEventTemplate {
      * @param feature The feature as a boolean.
      * @return A MediaEventTemplate.
      */
+    @NonNull
     public MediaEventTemplate setFeature(boolean feature) {
         this.feature = feature;
         this.featureSet = true;
@@ -288,26 +328,28 @@ public class MediaEventTemplate {
 
     /**
      * Set the author.
-     * <p/>
+     * <p>
      * If the author exceeds 255 characters it will cause the event to be invalid.
      *
      * @param author The author as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setAuthor(String author) {
+    @NonNull
+    public MediaEventTemplate setAuthor(@Nullable String author) {
         this.author = author;
         return this;
     }
 
     /**
      * Set the publishedDate.
-     * <p/>
+     * <p>
      * If the publishedDate exceeds 255 characters it will cause the event to be invalid.
      *
      * @param publishedDate The publishedDate as a string.
      * @return A MediaEventTemplate.
      */
-    public MediaEventTemplate setPublishedDate(String publishedDate) {
+    @NonNull
+    public MediaEventTemplate setPublishedDate(@Nullable String publishedDate) {
         this.publishedDate = publishedDate;
         return this;
     }
@@ -317,6 +359,7 @@ public class MediaEventTemplate {
      *
      * @return The custom media event.
      */
+    @NonNull
     public CustomEvent createEvent() {
         CustomEvent.Builder builder = CustomEvent.newBuilder(this.eventName);
 

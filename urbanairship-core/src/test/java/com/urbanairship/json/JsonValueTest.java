@@ -3,6 +3,7 @@
 package com.urbanairship.json;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
@@ -58,6 +59,7 @@ public class JsonValueTest extends BaseTestCase {
     public void testWrapJsonSerializable() throws JsonException, JSONException {
         final JsonValue serializableValue = JsonValue.wrap("some value");
         Object jsonSerializable = new JsonSerializable() {
+            @NonNull
             @Override
             public JsonValue toJsonValue() {
                 return serializableValue;
@@ -66,24 +68,6 @@ public class JsonValueTest extends BaseTestCase {
 
         JsonValue jsonValue = JsonValue.wrap(jsonSerializable);
         assertEquals(serializableValue, jsonValue);
-    }
-
-    /**
-     * Test wrapping a JsonSerializable object returns JsonValue.NULL if the object returns
-     * null for the JsonValue.
-     */
-    @Test
-    public void testWrapJsonSerializableNull() throws JsonException, JSONException {
-        Object jsonSerializable = new JsonSerializable() {
-            @Override
-            public JsonValue toJsonValue() {
-                return null;
-            }
-        };
-
-        JsonValue jsonValue = JsonValue.wrap(jsonSerializable);
-        assertEquals(JsonValue.NULL, jsonValue);
-        assertNull(jsonValue.getValue());
     }
 
     /**

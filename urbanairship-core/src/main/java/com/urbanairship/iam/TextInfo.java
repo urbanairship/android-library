@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
@@ -45,16 +46,19 @@ public class TextInfo implements JsonSerializable {
     /**
      * Right text alignment.
      */
+    @NonNull
     public static final String ALIGNMENT_RIGHT = "right";
 
     /**
      * Left text alignment.
      */
+    @NonNull
     public static final String ALIGNMENT_LEFT = "left";
 
     /**
      * Center text alignment.
      */
+    @NonNull
     public static final String ALIGNMENT_CENTER = "center";
 
 
@@ -62,8 +66,22 @@ public class TextInfo implements JsonSerializable {
     @Retention(RetentionPolicy.SOURCE)
     public @interface Style {}
 
+    /**
+     * Bold text style.
+     */
+    @NonNull
     public static final String STYLE_BOLD = "bold";
+
+    /**
+     * Underline text style.
+     */
+    @NonNull
     public static final String STYLE_UNDERLINE = "underline";
+
+    /**
+     * Italic text style.
+     */
+    @NonNull
     public static final String STYLE_ITALIC = "italic";
 
     private final String text;
@@ -85,7 +103,7 @@ public class TextInfo implements JsonSerializable {
      *
      * @param builder The text info builder.
      */
-    private TextInfo(Builder builder) {
+    private TextInfo(@NonNull Builder builder) {
         this.text = builder.text;
         this.color = builder.color;
         this.size = builder.size;
@@ -95,6 +113,7 @@ public class TextInfo implements JsonSerializable {
         this.fontFamilies = new ArrayList<>(builder.fontFamilies);
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -116,19 +135,20 @@ public class TextInfo implements JsonSerializable {
      * @return The parsed text info.
      * @throws JsonException If the text info was unable to be parsed.
      */
-    public static TextInfo parseJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static TextInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap content = jsonValue.optMap();
         Builder builder = newBuilder();
 
         // Text
         if (content.containsKey(TEXT_KEY)) {
-            builder.setText(content.get(TEXT_KEY).getString());
+            builder.setText(content.opt(TEXT_KEY).optString());
         }
 
         // Color
         if (content.containsKey(COLOR_KEY)) {
             try {
-                builder.setColor(Color.parseColor(content.opt(COLOR_KEY).getString("")));
+                builder.setColor(Color.parseColor(content.opt(COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid color: " + content.opt(COLOR_KEY), e);
             }
@@ -140,12 +160,12 @@ public class TextInfo implements JsonSerializable {
                 throw new JsonException("Size must be a number: " + content.opt(SIZE_KEY));
             }
 
-            builder.setFontSize(content.opt(SIZE_KEY).getNumber().floatValue());
+            builder.setFontSize(content.opt(SIZE_KEY).getFloat(0));
         }
 
         // Alignment
         if (content.containsKey(ALIGNMENT_KEY)) {
-            switch (content.opt(ALIGNMENT_KEY).getString("")) {
+            switch (content.opt(ALIGNMENT_KEY).optString()) {
                 case ALIGNMENT_CENTER:
                     builder.setAlignment(ALIGNMENT_CENTER);
                     break;
@@ -167,7 +187,7 @@ public class TextInfo implements JsonSerializable {
             }
 
             for (JsonValue value : content.opt(STYLE_KEY).optList()) {
-                switch (value.getString("").toLowerCase(Locale.ROOT)) {
+                switch (value.optString().toLowerCase(Locale.ROOT)) {
                     case STYLE_BOLD:
                         builder.addStyle(STYLE_BOLD);
                         break;
@@ -194,7 +214,7 @@ public class TextInfo implements JsonSerializable {
                 if (!value.isString()) {
                     throw new JsonException("Invalid font: " + value);
                 }
-                builder.addFontFamily(value.getString());
+                builder.addFontFamily(value.optString());
             }
         }
 
@@ -282,7 +302,7 @@ public class TextInfo implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -325,6 +345,7 @@ public class TextInfo implements JsonSerializable {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -335,6 +356,7 @@ public class TextInfo implements JsonSerializable {
      *
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -345,6 +367,7 @@ public class TextInfo implements JsonSerializable {
      * @param textInfo The text info.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull TextInfo textInfo) {
         return new Builder(textInfo);
     }
@@ -367,7 +390,7 @@ public class TextInfo implements JsonSerializable {
 
         private Builder() {}
 
-        private Builder(TextInfo textInfo) {
+        private Builder(@NonNull TextInfo textInfo) {
             this.text = textInfo.text;
             this.color = textInfo.color;
             this.size = textInfo.size;
@@ -383,7 +406,8 @@ public class TextInfo implements JsonSerializable {
          * @param text The text.
          * @return The builder instance.
          */
-        public Builder setText(@NonNull @Size(min = 1) String text) {
+        @NonNull
+        public Builder setText(@Nullable @Size(min = 1) String text) {
             this.text = text;
             return this;
         }
@@ -394,6 +418,7 @@ public class TextInfo implements JsonSerializable {
          * @param drawable The drawable resource ID.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setDrawable(@DrawableRes int drawable) {
             this.drawable = drawable;
             return this;
@@ -405,6 +430,7 @@ public class TextInfo implements JsonSerializable {
          * @param color The text color.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setColor(@ColorInt int color) {
             this.color = color;
             return this;
@@ -416,6 +442,7 @@ public class TextInfo implements JsonSerializable {
          * @param size The font size.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setFontSize(float size) {
             this.size = size;
             return this;
@@ -427,6 +454,7 @@ public class TextInfo implements JsonSerializable {
          * @param alignment The text alignment.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setAlignment(@NonNull @Alignment String alignment) {
             this.alignment = alignment;
             return this;
@@ -438,6 +466,7 @@ public class TextInfo implements JsonSerializable {
          * @param style The text style.
          * @return The builder instance.
          */
+        @NonNull
         public Builder addStyle(@NonNull @Style String style) {
             if (!styles.contains(style)) {
                 styles.add(style);
@@ -452,7 +481,8 @@ public class TextInfo implements JsonSerializable {
          * @param font The font family.
          * @return The builder instance.
          */
-        public Builder addFontFamily(String font) {
+        @NonNull
+        public Builder addFontFamily(@NonNull String font) {
             fontFamilies.add(font);
             return this;
         }
@@ -463,6 +493,7 @@ public class TextInfo implements JsonSerializable {
          * @return The text info.
          * @throws IllegalArgumentException If the text and label are missing.
          */
+        @NonNull
         public TextInfo build() {
             Checks.checkArgument(drawable != 0 || text != null, "Missing text.");
             return new TextInfo(this);

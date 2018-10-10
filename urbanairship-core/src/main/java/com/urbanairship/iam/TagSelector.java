@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -31,6 +32,7 @@ import java.util.Set;
  */
 public class TagSelector implements JsonSerializable {
 
+    @NonNull
     public static final Map<String, Set<String>> EMPTY_TAG_GROUPS = Collections.unmodifiableMap(new HashMap<String, Set<String>>());
 
     /*
@@ -85,6 +87,7 @@ public class TagSelector implements JsonSerializable {
      * @param selectors The selectors to AND together.
      * @return The AND tag selector.
      */
+    @NonNull
     public static TagSelector and(@NonNull @Size(min = 1) List<TagSelector> selectors) {
         return new TagSelector(AND, selectors);
     }
@@ -95,7 +98,8 @@ public class TagSelector implements JsonSerializable {
      * @param selectors The selectors to AND together.
      * @return The AND tag selector.
      */
-    public static TagSelector and(@Size(min = 1) TagSelector... selectors) {
+    @NonNull
+    public static TagSelector and(@NonNull @Size(min = 1) TagSelector... selectors) {
         return new TagSelector(AND, Arrays.asList(selectors));
     }
 
@@ -105,6 +109,7 @@ public class TagSelector implements JsonSerializable {
      * @param selectors The selectors to OR together.
      * @return The OR tag selector.
      */
+    @NonNull
     public static TagSelector or(@NonNull @Size(min = 1) List<TagSelector> selectors) {
         return new TagSelector(OR, selectors);
     }
@@ -115,7 +120,8 @@ public class TagSelector implements JsonSerializable {
      * @param selectors The selectors to OR together.
      * @return The OR tag selector.
      */
-    public static TagSelector or(@Size(min = 1) TagSelector... selectors) {
+    @NonNull
+    public static TagSelector or(@NonNull @Size(min = 1) TagSelector... selectors) {
         return new TagSelector(OR, Arrays.asList(selectors));
     }
 
@@ -125,6 +131,7 @@ public class TagSelector implements JsonSerializable {
      * @param selector The selectors to negate.
      * @return The NOT tag selector.
      */
+    @NonNull
     public static TagSelector not(@NonNull TagSelector selector) {
         return new TagSelector(NOT, Collections.singletonList(selector));
     }
@@ -135,6 +142,7 @@ public class TagSelector implements JsonSerializable {
      * @param tag The tag.
      * @return A tag selector.
      */
+    @NonNull
     public static TagSelector tag(@NonNull String tag) {
         return new TagSelector(tag, (String) null);
     }
@@ -146,6 +154,7 @@ public class TagSelector implements JsonSerializable {
      * @param group The group.
      * @return A tag selector.
      */
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static TagSelector tag(@NonNull String tag, @Nullable String group) {
         return new TagSelector(tag, group);
@@ -158,7 +167,8 @@ public class TagSelector implements JsonSerializable {
      * @return The parsed tag selector.
      * @throws JsonException If the json value does not contain a valid tag selector.
      */
-    public static TagSelector parseJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    public static TagSelector parseJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap jsonMap = jsonValue.optMap();
 
         if (jsonMap.containsKey(TAG)) {
@@ -190,12 +200,7 @@ public class TagSelector implements JsonSerializable {
         }
 
         if (jsonMap.containsKey(NOT)) {
-            JsonValue selector = jsonMap.opt(NOT);
-            if (selector == null) {
-                throw new JsonException("NOT selector expected single tag selector of selectors: " + jsonMap.opt(NOT));
-            }
-
-            return not(parseJson(selector));
+            return not(parseJson(jsonMap.opt(NOT)));
         }
 
         throw new JsonException("Json value did not contain a valid selector: " + jsonValue);
@@ -221,6 +226,7 @@ public class TagSelector implements JsonSerializable {
         return selectors;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         JsonMap.Builder builder = JsonMap.newBuilder();
@@ -365,7 +371,7 @@ public class TagSelector implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -396,6 +402,7 @@ public class TagSelector implements JsonSerializable {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();

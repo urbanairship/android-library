@@ -173,7 +173,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int deleteMessages(@NonNull Set<String> messageIds) {
         String query = RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )";
-        return this.delete(this.uri,query, messageIds.toArray(new String[0]));
+        return this.delete(this.uri, query, messageIds.toArray(new String[0]));
     }
 
 
@@ -205,6 +205,7 @@ class RichPushResolver extends UrbanAirshipResolver {
 
     /**
      * Updates a message in the database.
+     *
      * @param messageId The message ID to update.
      * @param messagePayload The raw message payload.
      * @return The row number that new message, or -1 if the message failed ot be updated.
@@ -222,6 +223,7 @@ class RichPushResolver extends UrbanAirshipResolver {
 
     /**
      * Updates message IDs with the content values.
+     *
      * @param messageIds The message IDs to update.
      * @param values The content values of the update.
      * @return Count of messages that where updated.
@@ -263,6 +265,7 @@ class RichPushResolver extends UrbanAirshipResolver {
 
     /**
      * Parses a raw message payload into content values.
+     *
      * @param messagePayload The raw message payload.
      * @return ContentValues that can be inserted into the database, or null if the message payload
      * was invalid.
@@ -274,7 +277,7 @@ class RichPushResolver extends UrbanAirshipResolver {
             return null;
         }
 
-        JsonMap messageMap = messagePayload.getMap();
+        JsonMap messageMap = messagePayload.optMap();
 
         if (UAStringUtil.isEmpty(messageMap.opt(RichPushMessage.MESSAGE_ID_KEY).getString())) {
             Logger.error("RichPushResolver - Message is missing an ID: " + messagePayload);

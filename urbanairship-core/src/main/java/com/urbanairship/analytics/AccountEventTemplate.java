@@ -2,6 +2,9 @@
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.math.BigDecimal;
 
 /**
@@ -12,11 +15,13 @@ public class AccountEventTemplate {
     /**
      * The account event template type.
      */
+    @NonNull
     public static final String ACCOUNT_EVENT_TEMPLATE = "account";
 
     /**
      * The registered account event name.
      */
+    @NonNull
     public static final String REGISTERED_ACCOUNT_EVENT = "registered_account";
 
     /**
@@ -34,48 +39,50 @@ public class AccountEventTemplate {
     private String category;
     private String transactionId;
 
-    private AccountEventTemplate() {
-    }
+    private AccountEventTemplate() {}
 
     /**
      * Creates a registered account event template.
      *
      * @return An AccountEventTemplate.
      */
+    @NonNull
     public static AccountEventTemplate newRegisteredTemplate() {
         return new AccountEventTemplate();
     }
 
     /**
      * Set the transaction ID.
-     * <p/>
+     * <p>
      * If the transaction ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param transactionId The event's transaction ID as a string.
      * @return An AccountEventTemplate.
      */
-    public AccountEventTemplate setTransactionId(String transactionId) {
+    @NonNull
+    public AccountEventTemplate setTransactionId(@Nullable String transactionId) {
         this.transactionId = transactionId;
         return this;
     }
 
     /**
      * Sets the event value.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a BigDecimal.
      * @return An AccountEventTemplate.
      */
-    public AccountEventTemplate setValue(BigDecimal value) {
+    @NonNull
+    public AccountEventTemplate setValue(@Nullable BigDecimal value) {
         this.value = value;
         return this;
     }
 
     /**
      * Sets the event value.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
@@ -83,13 +90,14 @@ public class AccountEventTemplate {
      * @return An AccountEventTemplate.
      * @throws NumberFormatException if the value is infinity or not a number.
      */
+    @NonNull
     public AccountEventTemplate setValue(double value) {
         return setValue(BigDecimal.valueOf(value));
     }
 
     /**
      * Sets the event value.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
@@ -98,7 +106,8 @@ public class AccountEventTemplate {
      * @throws NumberFormatException if the event value does not contain a valid string representation
      * of a big decimal.
      */
-    public AccountEventTemplate setValue(String value) {
+    @NonNull
+    public AccountEventTemplate setValue(@Nullable String value) {
         if (value == null || value.length() == 0) {
             this.value = null;
             return this;
@@ -109,26 +118,28 @@ public class AccountEventTemplate {
 
     /**
      * Sets the event value.
-     * <p/>
+     * <p>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as an int.
      * @return An AccountEventTemplate.
      */
+    @NonNull
     public AccountEventTemplate setValue(int value) {
         return setValue(new BigDecimal(value));
     }
 
     /**
      * Set the category.
-     * </p>
+     * <p>
      * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
      * @return An AccountEventTemplate.
      */
-    public AccountEventTemplate setCategory(String category) {
+    @NonNull
+    public AccountEventTemplate setCategory(@Nullable String category) {
         this.category = category;
         return this;
     }
@@ -138,6 +149,7 @@ public class AccountEventTemplate {
      *
      * @return The custom account event.
      */
+    @NonNull
     public CustomEvent createEvent() {
         CustomEvent.Builder builder = CustomEvent.newBuilder(REGISTERED_ACCOUNT_EVENT);
 

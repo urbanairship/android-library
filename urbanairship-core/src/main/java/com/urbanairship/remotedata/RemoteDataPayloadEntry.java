@@ -5,6 +5,7 @@ package com.urbanairship.remotedata;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
@@ -37,24 +38,27 @@ public class RemoteDataPayloadEntry {
     /**
      * The type.
      */
+    @NonNull
     public final String type;
+
     /**
      * The timestamp.
      */
     public final long timestamp;
+
     /**
      * The data as a JSON string
      */
+    @NonNull
     public final String data;
-
 
     /**
      * RemoteDataPayloadEntry constructor.
      *
      * @param payload A RemoteDataPayload
      */
-    RemoteDataPayloadEntry(RemoteDataPayload payload) {
-        this(payload.getType(),payload.getTimestamp(), payload.getData());
+    RemoteDataPayloadEntry(@NonNull RemoteDataPayload payload) {
+        this(payload.getType(), payload.getTimestamp(), payload.getData());
     }
 
     /**
@@ -64,7 +68,7 @@ public class RemoteDataPayloadEntry {
      * @param timestamp The timestamp.
      * @param data The data.
      */
-    RemoteDataPayloadEntry(String type, long timestamp, JsonMap data) {
+    RemoteDataPayloadEntry(@NonNull String type, long timestamp, @NonNull JsonMap data) {
         this.type = type;
         this.timestamp = timestamp;
         this.data = data.toString();
@@ -75,7 +79,7 @@ public class RemoteDataPayloadEntry {
      *
      * @param cursor The cursor from which to read the data.
      */
-    RemoteDataPayloadEntry(Cursor cursor) {
+    RemoteDataPayloadEntry(@NonNull Cursor cursor) {
         this.type = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE));
         this.timestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP));
         this.data = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA));
@@ -89,7 +93,7 @@ public class RemoteDataPayloadEntry {
      * @return A boolean indicating success.
      */
     @WorkerThread
-    boolean save(SQLiteDatabase database) {
+    boolean save(@NonNull SQLiteDatabase database) {
         if (id == -1) {
             ContentValues value = new ContentValues();
             value.put(COLUMN_NAME_TYPE, type);

@@ -6,6 +6,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
@@ -25,7 +27,7 @@ public class BoundedFrameLayout extends FrameLayout {
      *
      * @param context A Context object used to access application assets.
      */
-    public BoundedFrameLayout(Context context) {
+    public BoundedFrameLayout(@NonNull Context context) {
         this(context, null);
     }
 
@@ -35,7 +37,7 @@ public class BoundedFrameLayout extends FrameLayout {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public BoundedFrameLayout(Context context, AttributeSet attrs) {
+    public BoundedFrameLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
@@ -46,7 +48,7 @@ public class BoundedFrameLayout extends FrameLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public BoundedFrameLayout(Context context, AttributeSet attrs, int defStyle) {
+    public BoundedFrameLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         this.boundedViewDelegate = new BoundedViewDelegate(context, attrs, defStyle, 0);
         this.clippableViewDelegate = new ClippableViewDelegate();
@@ -63,7 +65,7 @@ public class BoundedFrameLayout extends FrameLayout {
      * look for defaults.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    public BoundedFrameLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    public BoundedFrameLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         this.boundedViewDelegate = new BoundedViewDelegate(context, attrs, defStyle, defResStyle);
         this.clippableViewDelegate = new ClippableViewDelegate();
@@ -81,7 +83,7 @@ public class BoundedFrameLayout extends FrameLayout {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         clippableViewDelegate.onDraw(canvas);
         super.onDraw(canvas);
     }

@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
@@ -34,6 +35,7 @@ public class TagGroupsEditor {
      * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
+    @NonNull
     public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
         return addTags(tagGroup, Collections.singleton(tag));
     }
@@ -45,6 +47,7 @@ public class TagGroupsEditor {
      * @param tags The tags set.
      * @return The TagGroupsEditor
      */
+    @NonNull
     public TagGroupsEditor addTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
@@ -73,6 +76,7 @@ public class TagGroupsEditor {
      * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
+    @NonNull
     public TagGroupsEditor setTag(@NonNull String tagGroup, @NonNull String tag) {
         return setTags(tagGroup, Collections.singleton(tag));
     }
@@ -84,7 +88,8 @@ public class TagGroupsEditor {
      * @param tags The tags set.
      * @return The TagGroupsEditor
      */
-    public TagGroupsEditor setTags(@NonNull String tagGroup, Set<String> tags) {
+    @NonNull
+    public TagGroupsEditor setTags(@NonNull String tagGroup, @Nullable Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
             Logger.warn("The tag group ID string cannot be null.");
@@ -112,6 +117,7 @@ public class TagGroupsEditor {
      * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
+    @NonNull
     public TagGroupsEditor removeTag(@NonNull String tagGroup, @NonNull String tag) {
         return removeTags(tagGroup, Collections.singleton((tag)));
     }
@@ -123,6 +129,7 @@ public class TagGroupsEditor {
      * @param tags The tags set.
      * @return The TagGroupsEditor.
      */
+    @NonNull
     public TagGroupsEditor removeTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
@@ -152,10 +159,10 @@ public class TagGroupsEditor {
         onApply(collapsedMutations);
     }
 
-    protected boolean allowTagGroupChange(String tagGroup) {
+    protected boolean allowTagGroupChange(@NonNull String tagGroup) {
         return true;
     }
 
-    protected void onApply(List<TagGroupsMutation> collapsedMutations) {}
+    protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {}
 
 }

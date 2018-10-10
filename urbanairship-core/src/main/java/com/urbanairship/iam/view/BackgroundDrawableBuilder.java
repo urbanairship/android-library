@@ -44,6 +44,7 @@ public class BackgroundDrawableBuilder {
      * @param context The application context.
      * @return The builder instance.
      */
+    @NonNull
     public static BackgroundDrawableBuilder newBuilder(@NonNull Context context) {
         return new BackgroundDrawableBuilder(context);
     }
@@ -63,6 +64,7 @@ public class BackgroundDrawableBuilder {
      * @param color The pressed color.
      * @return The builder instance.
      */
+    @NonNull
     public BackgroundDrawableBuilder setPressedColor(@ColorInt int color) {
         this.pressedColor = color;
         return this;
@@ -74,6 +76,7 @@ public class BackgroundDrawableBuilder {
      * @param color The background color.
      * @return The builder instance.
      */
+    @NonNull
     public BackgroundDrawableBuilder setBackgroundColor(@ColorInt int color) {
         this.backgroundColor = color;
         return this;
@@ -86,6 +89,7 @@ public class BackgroundDrawableBuilder {
      * @param borderRadiusFlag Border radius flag.
      * @return The builder instance.
      */
+    @NonNull
     public BackgroundDrawableBuilder setBorderRadius(float dps, @BorderRadius.BorderRadiusFlag int borderRadiusFlag) {
         this.borderRadiusFlag = borderRadiusFlag;
         this.borderRadiusDps = dps;
@@ -98,6 +102,7 @@ public class BackgroundDrawableBuilder {
      * @param dps The width in DPs.
      * @return The builder instance.
      */
+    @NonNull
     public BackgroundDrawableBuilder setStrokeWidth(@Dimension int dps) {
         this.strokeWidthDps = dps;
         return this;
@@ -109,6 +114,7 @@ public class BackgroundDrawableBuilder {
      * @param strokeColor The stroke color.
      * @return The builder instance.
      */
+    @NonNull
     public BackgroundDrawableBuilder setStrokeColor(@ColorInt int strokeColor) {
         this.strokeColor = strokeColor;
         return this;
@@ -119,6 +125,7 @@ public class BackgroundDrawableBuilder {
      *
      * @return The background drawable.
      */
+    @NonNull
     public Drawable build() {
         int strokeWidthPixels = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.strokeWidthDps, context.getResources().getDisplayMetrics()));
         int strokeColor = this.strokeColor == null ? this.backgroundColor : this.strokeColor;

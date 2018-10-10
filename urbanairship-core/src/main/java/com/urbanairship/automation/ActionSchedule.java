@@ -2,6 +2,7 @@ package com.urbanairship.automation;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 /**
  * Defines an action schedule.
@@ -11,13 +12,16 @@ public class ActionSchedule implements Schedule<ActionScheduleInfo>, Parcelable 
     /**
      * @hide
      */
+    @NonNull
     public static final Creator<ActionSchedule> CREATOR = new Creator<ActionSchedule>() {
         @Override
-        public ActionSchedule createFromParcel(Parcel in) {
+        @NonNull
+        public ActionSchedule createFromParcel(@NonNull Parcel in) {
             return new ActionSchedule(in);
         }
 
         @Override
+        @NonNull
         public ActionSchedule[] newArray(int size) {
             return new ActionSchedule[size];
         }
@@ -32,18 +36,18 @@ public class ActionSchedule implements Schedule<ActionScheduleInfo>, Parcelable 
      * @param id The schedule ID.
      * @param info The ActionScheduleInfo instance.
      */
-    public ActionSchedule(String id, ActionScheduleInfo info) {
+    public ActionSchedule(@NonNull String id, @NonNull ActionScheduleInfo info) {
         this.id = id;
         this.info = info;
     }
 
-    private ActionSchedule(Parcel in) {
+    private ActionSchedule(@NonNull Parcel in) {
         this.id = in.readString();
         this.info = in.readParcelable(ActionScheduleInfo.class.getClassLoader());
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeString(id);
         dest.writeParcelable(info, flags);
     }
@@ -53,11 +57,11 @@ public class ActionSchedule implements Schedule<ActionScheduleInfo>, Parcelable 
         return 0;
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
+    @NonNull
     public String getId() {
         return id;
     }
@@ -66,6 +70,7 @@ public class ActionSchedule implements Schedule<ActionScheduleInfo>, Parcelable 
      * {@inheritDoc}
      */
     @Override
+    @NonNull
     public ActionScheduleInfo getInfo() {
         return info;
     }

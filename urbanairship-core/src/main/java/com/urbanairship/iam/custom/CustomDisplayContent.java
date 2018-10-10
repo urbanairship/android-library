@@ -3,6 +3,7 @@
 package com.urbanairship.iam.custom;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonMap;
@@ -26,6 +27,7 @@ public class CustomDisplayContent implements DisplayContent {
         this.value = value;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -40,6 +42,7 @@ public class CustomDisplayContent implements DisplayContent {
      * @param jsonValue The json value.
      * @return A custom display content instance.
      */
+    @NonNull
     public static CustomDisplayContent parseJson(@NonNull JsonValue jsonValue) {
         return new CustomDisplayContent(jsonValue.optMap().opt(CUSTOM_KEY));
     }
@@ -49,12 +52,13 @@ public class CustomDisplayContent implements DisplayContent {
      *
      * @return The custom value.
      */
+    @NonNull
     public JsonValue getValue() {
         return value;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }

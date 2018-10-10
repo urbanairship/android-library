@@ -2,10 +2,12 @@
 
 package com.urbanairship.iam.html;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;
@@ -30,7 +32,7 @@ public class HtmlDisplayContent implements DisplayContent {
      *
      * @param builder The display content builder.
      */
-    private HtmlDisplayContent(Builder builder) {
+    private HtmlDisplayContent(@NonNull Builder builder) {
         this.url = builder.url;
         this.dismissButtonColor = builder.dismissButtonColor;
         this.backgroundColor = builder.backgroundColor;
@@ -41,13 +43,12 @@ public class HtmlDisplayContent implements DisplayContent {
     /**
      * Parses HTML display JSON.
      *
-     *
      * @param json The json payload.
      * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static HtmlDisplayContent parseJson(JsonValue json) throws JsonException {
+    public static HtmlDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 
         Builder builder = newBuilder();
@@ -55,7 +56,7 @@ public class HtmlDisplayContent implements DisplayContent {
         // Dismiss button color
         if (content.containsKey(DISMISS_BUTTON_COLOR_KEY)) {
             try {
-                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).getString("")));
+                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
@@ -63,13 +64,17 @@ public class HtmlDisplayContent implements DisplayContent {
 
         // URL
         if (content.containsKey(URL_KEY)) {
-            builder.setUrl(content.opt(URL_KEY).getString());
+            String url = content.opt(URL_KEY).getString();
+            if (url == null) {
+                throw new JsonException("Invalid url: " + content.opt(URL_KEY));
+            }
+            builder.setUrl(url);
         }
 
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
-                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid background color: " + content.opt(BACKGROUND_COLOR_KEY), e);
             }
@@ -81,7 +86,7 @@ public class HtmlDisplayContent implements DisplayContent {
                 throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
             }
 
-            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getFloat(0));
         }
 
         // Allow Fullscreen display
@@ -100,6 +105,7 @@ public class HtmlDisplayContent implements DisplayContent {
         }
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -143,14 +149,14 @@ public class HtmlDisplayContent implements DisplayContent {
         return backgroundColor;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
     }
 
-
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -190,6 +196,7 @@ public class HtmlDisplayContent implements DisplayContent {
      *
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -200,6 +207,7 @@ public class HtmlDisplayContent implements DisplayContent {
      * @param displayContent The display content.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull HtmlDisplayContent displayContent) {
         return new Builder(displayContent);
     }
@@ -236,7 +244,7 @@ public class HtmlDisplayContent implements DisplayContent {
 
         private Builder() {}
 
-        private Builder(HtmlDisplayContent displayContent) {
+        private Builder(@NonNull HtmlDisplayContent displayContent) {
             this.url = displayContent.url;
             this.dismissButtonColor = displayContent.dismissButtonColor;
             this.backgroundColor = displayContent.backgroundColor;
@@ -249,7 +257,7 @@ public class HtmlDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setUrl(String url) {
+        public Builder setUrl(@NonNull String url) {
             this.url = url;
             return this;
         }

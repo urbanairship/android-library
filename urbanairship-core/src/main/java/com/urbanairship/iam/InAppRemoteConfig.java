@@ -76,7 +76,7 @@ class InAppRemoteConfig {
     private static InAppRemoteConfig fromJsonValue(JsonValue jsonValue) {
         TagGroupsConfig config = null;
         if (jsonValue.optMap().containsKey(TAG_GROUPS_CONFIG_KEY)) {
-            config = TagGroupsConfig.fromJsonValue(jsonValue.optMap().get(TAG_GROUPS_CONFIG_KEY));
+            config = TagGroupsConfig.fromJsonValue(jsonValue.optMap().opt(TAG_GROUPS_CONFIG_KEY));
         }
 
         return new InAppRemoteConfig(config);
@@ -86,9 +86,13 @@ class InAppRemoteConfig {
      * The in-app tag groups config.
      */
     public static class TagGroupsConfig {
+        @NonNull
         private static final String TAG_GROUP_FETCH_ENABLED_KEY = "enabled";
+        @NonNull
         private static final String TAG_GROUP_CACHE_MAX_AGE_SECONDS = "cache_max_age_seconds";
+        @NonNull
         private static final String TAG_GROUP_CACHE_STALE_READ_TIME_SECONDS = "cache_stale_read_age_seconds";
+        @NonNull
         private static final String TAG_GROUP_CACHE_PREFER_LOCAL_UNTIL_SECONDS = "cache_prefer_local_until_seconds";
 
         /**
@@ -123,7 +127,7 @@ class InAppRemoteConfig {
             this.cachePreferLocalTagDataTimeSeconds = cachePreferLocalTagDataTimeSeconds;
         }
 
-        @Nullable
+        @NonNull
         private TagGroupsConfig combine(TagGroupsConfig config) {
             return new TagGroupsConfig(this.isEnabled && config.isEnabled,
                     Math.max(this.cacheMaxAgeInSeconds, config.cacheMaxAgeInSeconds),

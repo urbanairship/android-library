@@ -56,8 +56,9 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         this.notificationId = notificationId;
     }
 
+    @NonNull
     @Override
-    public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
+    public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
         String wearablePayload = message.getWearablePayload();
         if (wearablePayload == null) {
             return builder;

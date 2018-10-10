@@ -17,12 +17,14 @@ class AssociateIdentifiersEvent extends Event {
 
     private static final String TYPE = "associate_identifiers";
 
+    @NonNull
     private final Map<String, String> ids;
 
     AssociateIdentifiersEvent(@NonNull AssociatedIdentifiers ids) {
         this.ids = ids.getIds();
     }
 
+    @NonNull
     @Override
     public String getType() {
         return TYPE;
@@ -52,6 +54,7 @@ class AssociateIdentifiersEvent extends Event {
         return isValid;
     }
 
+    @NonNull
     @Override
     protected JsonMap getEventData() {
         return JsonValue.wrapOpt(ids).optMap();

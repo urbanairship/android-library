@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.fullscreen;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
@@ -38,16 +39,19 @@ public class FullScreenDisplayContent implements DisplayContent {
     /**
      * Template with display order of header, media, body, buttons, footer.
      */
+    @NonNull
     public static final String TEMPLATE_HEADER_MEDIA_BODY = "header_media_body";
 
     /**
      * Template with display order of media, header, body, buttons, footer.
      */
+    @NonNull
     public static final String TEMPLATE_MEDIA_HEADER_BODY = "media_header_body";
 
     /**
      * Template with display order of header, body, media, buttons, footer.
      */
+    @NonNull
     public static final String TEMPLATE_HEADER_BODY_MEDIA = "header_body_media";
 
     private final TextInfo heading;
@@ -72,7 +76,7 @@ public class FullScreenDisplayContent implements DisplayContent {
      *
      * @param builder The display content builder.
      */
-    private FullScreenDisplayContent(Builder builder) {
+    private FullScreenDisplayContent(@NonNull Builder builder) {
         this.heading = builder.heading;
         this.body = builder.body;
         this.media = builder.media;
@@ -92,7 +96,7 @@ public class FullScreenDisplayContent implements DisplayContent {
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static FullScreenDisplayContent parseJson(JsonValue json) throws JsonException {
+    public static FullScreenDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 
         Builder builder = newBuilder();
@@ -109,12 +113,12 @@ public class FullScreenDisplayContent implements DisplayContent {
 
         // Media
         if (content.containsKey(MEDIA_KEY)) {
-            builder.setMedia(MediaInfo.parseJson(content.get(MEDIA_KEY)));
+            builder.setMedia(MediaInfo.parseJson(content.opt(MEDIA_KEY)));
         }
 
         // Buttons
         if (content.containsKey(BUTTONS_KEY)) {
-            JsonList buttonJsonList = content.get(BUTTONS_KEY).getList();
+            JsonList buttonJsonList = content.opt(BUTTONS_KEY).getList();
             if (buttonJsonList == null) {
                 throw new JsonException("Buttons must be an array of button objects.");
             }
@@ -124,7 +128,7 @@ public class FullScreenDisplayContent implements DisplayContent {
 
         // Button Layout
         if (content.containsKey(BUTTON_LAYOUT_KEY)) {
-            switch (content.opt(BUTTON_LAYOUT_KEY).getString("")) {
+            switch (content.opt(BUTTON_LAYOUT_KEY).optString()) {
                 case BUTTON_LAYOUT_STACKED:
                     builder.setButtonLayout(BUTTON_LAYOUT_STACKED);
                     break;
@@ -146,7 +150,7 @@ public class FullScreenDisplayContent implements DisplayContent {
 
         // Template
         if (content.containsKey(TEMPLATE_KEY)) {
-            switch (content.opt(TEMPLATE_KEY).getString("")) {
+            switch (content.opt(TEMPLATE_KEY).optString()) {
                 case TEMPLATE_HEADER_BODY_MEDIA:
                     builder.setTemplate(TEMPLATE_HEADER_BODY_MEDIA);
                     break;
@@ -165,7 +169,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
-                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid background color: " + content.opt(BACKGROUND_COLOR_KEY), e);
             }
@@ -174,7 +178,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         // Dismiss button color
         if (content.containsKey(DISMISS_BUTTON_COLOR_KEY)) {
             try {
-                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).getString("")));
+                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
@@ -187,6 +191,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -298,13 +303,14 @@ public class FullScreenDisplayContent implements DisplayContent {
         return footer;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -360,6 +366,7 @@ public class FullScreenDisplayContent implements DisplayContent {
      *
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -370,6 +377,7 @@ public class FullScreenDisplayContent implements DisplayContent {
      * @param displayContent The display content.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull FullScreenDisplayContent displayContent) {
         return new Builder(displayContent);
     }
@@ -415,7 +423,7 @@ public class FullScreenDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setHeading(TextInfo heading) {
+        public Builder setHeading(@Nullable TextInfo heading) {
             this.heading = heading;
             return this;
         }
@@ -427,7 +435,7 @@ public class FullScreenDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBody(TextInfo body) {
+        public Builder setBody(@Nullable TextInfo body) {
             this.body = body;
             return this;
         }
@@ -453,7 +461,7 @@ public class FullScreenDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setButtons(@Size(max = 5) List<ButtonInfo> buttons) {
+        public Builder setButtons(@Nullable @Size(max = 5) List<ButtonInfo> buttons) {
             this.buttons.clear();
             if (buttons != null) {
                 this.buttons.addAll(buttons);
@@ -469,7 +477,7 @@ public class FullScreenDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setMedia(@NonNull MediaInfo media) {
+        public Builder setMedia(@Nullable MediaInfo media) {
             this.media = media;
             return this;
         }
@@ -530,7 +538,8 @@ public class FullScreenDisplayContent implements DisplayContent {
          * @param footer The footer button info.
          * @return The builder instance.
          */
-        public Builder setFooter(ButtonInfo footer) {
+        @NonNull
+        public Builder setFooter(@Nullable ButtonInfo footer) {
             this.footer = footer;
             return this;
         }

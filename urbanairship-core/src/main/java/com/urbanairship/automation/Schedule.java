@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.support.annotation.NonNull;
+
 /**
  * Class representing an automation action schedule - wraps {@link ScheduleInfo} with the schedule ID.
  */
@@ -12,6 +14,7 @@ public interface Schedule<T extends ScheduleInfo> {
      *
      * @return The schedule info.
      */
+    @NonNull
     T getInfo();
 
     /**
@@ -19,5 +22,6 @@ public interface Schedule<T extends ScheduleInfo> {
      *
      * @return The schedule ID.
      */
+    @NonNull
     String getId();
 }

@@ -73,7 +73,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         OperationScheduler scheduler = new OperationScheduler() {
             @Override
-            public void schedule(long delay, CancelableOperation operation) {
+            public void schedule(long delay, @NonNull CancelableOperation operation) {
                 operation.getHandler().postDelayed(operation, delay);
             }
         };
@@ -576,7 +576,7 @@ public class AutomationEngineTest extends BaseTestCase {
     public void testOnScheduleChangeBeforeEngineStarts() {
         OperationScheduler scheduler = new OperationScheduler() {
             @Override
-            public void schedule(long delay, CancelableOperation operation) {
+            public void schedule(long delay, @NonNull CancelableOperation operation) {
                 operation.getHandler().postDelayed(operation, delay);
             }
         };
@@ -827,7 +827,7 @@ public class AutomationEngineTest extends BaseTestCase {
         }
 
         @Override
-        public void onPrepareSchedule(ActionSchedule schedule, @NonNull PrepareScheduleCallback prepareCallback) {
+        public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback prepareCallback) {
             prepareCallbackMap.put(schedule.getId(), prepareCallback);
             priorityList.add(schedule.getInfo().getPriority());
         }

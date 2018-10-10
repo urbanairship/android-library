@@ -9,19 +9,19 @@ import com.urbanairship.UAirship;
 
 /**
  * An action that displays text in a toast.
- * <p/>
+ * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
  * and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p/>
+ * <p>
  * Accepted argument value - A string with the toast text or a map with:
  * <ul>
  * <li>{@link #LENGTH_KEY}: int either {@link Toast#LENGTH_LONG} or {@link Toast#LENGTH_SHORT}, Optional</li>
  * <li>{@link #TEXT_KEY}: String, Required</li>
  * </ul>
- * <p/>
+ * <p>
  * Result value: The arguments value.
- * <p/>
+ * <p>
  * Default Registration Names: toast_action
  */
 public class ToastAction extends Action {
@@ -29,16 +29,19 @@ public class ToastAction extends Action {
     /**
      * Default registry name
      */
+    @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "toast_action";
 
     /**
      * Key to define the Toast's text when providing the action's value as a map.
      */
+    @NonNull
     public static final String TEXT_KEY = "text";
 
     /**
      * Key to define the Toast's length when providing the action's value as a map.
      */
+    @NonNull
     public static final String LENGTH_KEY = "length";
 
     @Override
@@ -51,7 +54,7 @@ public class ToastAction extends Action {
             case SITUATION_WEB_VIEW_INVOCATION:
             case SITUATION_AUTOMATION:
                 if (arguments.getValue().getMap() != null) {
-                    return arguments.getValue().getMap().get(TEXT_KEY).isString();
+                    return arguments.getValue().getMap().opt(TEXT_KEY).isString();
                 }
 
                 return arguments.getValue().getString() != null;

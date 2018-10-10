@@ -17,12 +17,19 @@ import java.io.IOException;
  */
 public class InAppMessageCache implements Parcelable {
 
+    /**
+     * @hide
+     */
+    @NonNull
     public static final Creator<InAppMessageCache> CREATOR = new Creator<InAppMessageCache>() {
+
+        @NonNull
         @Override
-        public InAppMessageCache createFromParcel(Parcel in) {
+        public InAppMessageCache createFromParcel(@NonNull Parcel in) {
             return new InAppMessageCache(in);
         }
 
+        @NonNull
         @Override
         public InAppMessageCache[] newArray(int size) {
             return new InAppMessageCache[size];
@@ -33,16 +40,19 @@ public class InAppMessageCache implements Parcelable {
     /**
      * Cache key for the in-app message media.
      */
+    @NonNull
     public static final String MEDIA_CACHE_KEY = "MEDIA_CACHE_KEY";
 
     /**
      * Cache key for the image width.
      */
+    @NonNull
     public static final String IMAGE_WIDTH_CACHE_KEY = "width";
 
     /**
      * Cache key for the image height.
      */
+    @NonNull
     public static final String IMAGE_HEIGHT_CACHE_KEY = "height";
 
     private static final String CACHE_DIRECTORY = "com.urbanairship.iam";
@@ -66,13 +76,13 @@ public class InAppMessageCache implements Parcelable {
      *
      * @param in The parcel.
      */
-    private InAppMessageCache(Parcel in) {
+    private InAppMessageCache(@NonNull Parcel in) {
         assets = in.readBundle(getClass().getClassLoader());
         directory = new File(in.readString());
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeBundle(assets);
         dest.writeString(directory.getAbsolutePath());
     }
@@ -90,7 +100,8 @@ public class InAppMessageCache implements Parcelable {
      * @param fileName The file name.
      * @return The created file.
      */
-    public File file(String fileName) {
+    @NonNull
+    public File file(@NonNull String fileName) {
         return new File(directory, fileName);
     }
 
@@ -99,6 +110,7 @@ public class InAppMessageCache implements Parcelable {
      *
      * @return The bundle.
      */
+    @NonNull
     public Bundle getBundle() {
         return assets;
     }
@@ -121,7 +133,8 @@ public class InAppMessageCache implements Parcelable {
      * @throws java.io.IOException if the cache directory was not able to be created.
      */
     @WorkerThread
-    public static InAppMessageCache newCache(Context context, InAppMessage message) throws IOException {
+    @NonNull
+    public static InAppMessageCache newCache(@NonNull Context context, @NonNull InAppMessage message) throws IOException {
         File parent;
         synchronized (CACHE_DIRECTORY) {
             parent = new File(context.getCacheDir(), CACHE_DIRECTORY);

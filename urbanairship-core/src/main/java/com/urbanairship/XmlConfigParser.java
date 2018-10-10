@@ -5,6 +5,8 @@ package com.urbanairship;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Xml;
@@ -34,7 +36,7 @@ class XmlConfigParser implements ConfigParser {
      * @throws IOException
      * @throws XmlPullParserException
      */
-    XmlConfigParser(Context context, int resId) throws IOException, XmlPullParserException {
+    XmlConfigParser(@NonNull Context context, int resId) throws IOException, XmlPullParserException {
         this.context = context;
         parser = context.getResources().getXml(resId);
 
@@ -64,11 +66,13 @@ class XmlConfigParser implements ConfigParser {
         return attributeSet.getAttributeCount();
     }
 
+    @Nullable
     @Override
     public String getName(int index) {
         return attributeSet.getAttributeName(index);
     }
 
+    @Nullable
     @Override
     public String getString(int index) {
         int resourceId = attributeSet.getAttributeResourceValue(index, 0);
@@ -77,6 +81,13 @@ class XmlConfigParser implements ConfigParser {
         }
 
         return attributeSet.getAttributeValue(index);
+    }
+
+    @NonNull
+    @Override
+    public String getString(int index, @NonNull String defaultValue) {
+       String value = getString(index);
+       return value == null ? defaultValue : value;
     }
 
     @Override
@@ -89,6 +100,7 @@ class XmlConfigParser implements ConfigParser {
         return attributeSet.getAttributeBooleanValue(index, false);
     }
 
+    @Nullable
     @Override
     public String[] getStringArray(int index) {
         int resourceId = attributeSet.getAttributeResourceValue(index, 0);

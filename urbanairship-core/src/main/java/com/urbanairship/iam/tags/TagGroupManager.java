@@ -179,7 +179,7 @@ public class TagGroupManager {
      *
      * @param callback The callback.
      */
-    public void setRequestTagsCallback(RequestTagsCallback callback) {
+    public void setRequestTagsCallback(@Nullable RequestTagsCallback callback) {
         this.requestTagsCallback = callback;
     }
 
@@ -217,6 +217,7 @@ public class TagGroupManager {
      * @param tags The requested tags.
      * @return The tag result.
      */
+    @NonNull
     @WorkerThread
     public synchronized TagGroupResult getTags(@NonNull Map<String, Set<String>> tags) {
         if (requestTagsCallback == null) {
@@ -260,7 +261,7 @@ public class TagGroupManager {
 
         // Refresh the cache
         try {
-            refreshCache(cachedResponse);
+            refreshCache(tags, cachedResponse);
             cachedResponse = getCachedResponse();
             cacheCreateDate = getCacheCreateDate();
         } catch (Exception e) {
@@ -284,10 +285,10 @@ public class TagGroupManager {
      *
      * @param response The response to cache.
      */
-    private void setCachedResponse(@NonNull TagGroupResponse response, Map<String, Set<String>> requstedTags) {
+    private void setCachedResponse(@NonNull TagGroupResponse response, @NonNull Map<String, Set<String>> requestedTags) {
         dataStore.put(CACHE_RESPONSE_KEY, response);
         dataStore.put(CACHE_CREATE_DATE_KEY, clock.currentTimeMillis());
-        dataStore.put(CACHE_REQUESTED_TAGS_KEY, JsonValue.wrapOpt(requstedTags));
+        dataStore.put(CACHE_REQUESTED_TAGS_KEY, JsonValue.wrapOpt(requestedTags));
     }
 
     /**
@@ -336,6 +337,7 @@ public class TagGroupManager {
      * @param response The response.
      * @return The tag groups.
      */
+    @NonNull
     private Map<String, Set<String>> generateTags(Map<String, Set<String>> requestedTags, TagGroupResponse response, long cacheTime) {
         Map<String, Set<String>> currentTags = new HashMap<>(response.tags);
 
@@ -353,25 +355,34 @@ public class TagGroupManager {
     /**
      * Refreshes the cache.
      *
+     * @param tags The requested tags.
      * @param cachedResponse The cached response.
      */
-    private void refreshCache(TagGroupResponse cachedResponse) throws Exception {
-        Map<String, Set<String>> tags = requestTagsCallback.getTags();
+    private void refreshCache(Map<String, Set<String>> tags, @Nullable TagGroupResponse cachedResponse) throws Exception {
+        Map<String, Set<String>> requestTags = new HashMap<>(tags);
+        if (requestTagsCallback != null) {
+            requestTags.putAll(requestTagsCallback.getTags());
+        }
 
         // Only use the cached response if it the requested tags are the same
-        if (cachedResponse != null && !tags.equals(getCachedRequestTags())) {
+        if (cachedResponse != null && !requestTags.equals(getCachedRequestTags())) {
             cachedResponse = null;
         }
 
-        TagGroupResponse response = client.lookupTagGroups(pushManager.getChannelId(), UAirship.shared().getPlatformType(), tags, cachedResponse);
+        TagGroupResponse response = client.lookupTagGroups(pushManager.getChannelId(), UAirship.shared().getPlatformType(), requestTags, cachedResponse);
+
+        if (response == null) {
+            Logger.error("Failed to refresh the cache.");
+            return;
+        }
 
         if (response.status != 200) {
-            Logger.error("Failed to refresh the cache. Status: " + response.status);
+            Logger.error("Failed to refresh the cache. Status: " + response);
             return;
         }
 
         Logger.verbose("Refreshed tag group with response: " + response);
-        setCachedResponse(response, tags);
+        setCachedResponse(response, requestTags);
     }
 }
 

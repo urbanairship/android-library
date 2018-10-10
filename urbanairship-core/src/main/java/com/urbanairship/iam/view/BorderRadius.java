@@ -3,6 +3,7 @@
 package com.urbanairship.iam.view;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.util.TypedValue;
 import android.view.View;
@@ -78,7 +79,6 @@ public abstract class BorderRadius {
      */
     public static final int BOTTOM = BOTTOM_LEFT | BOTTOM_RIGHT;
 
-
     /**
      * Creates the border radius array.
      *
@@ -86,6 +86,7 @@ public abstract class BorderRadius {
      * @param borderRadiusFlag THe border radius flag.
      * @return The corner radius array.
      */
+    @NonNull
     public static float[] createRadiiArray(float pixels, @BorderRadiusFlag int borderRadiusFlag) {
         float[] radii = new float[8];
 
@@ -122,7 +123,7 @@ public abstract class BorderRadius {
      * @param borderRadius The border radius.
      * @param borderRadiusFlag The border radius flags.
      */
-    public static void applyBorderRadiusPadding(View view, final float borderRadius, @BorderRadiusFlag final int borderRadiusFlag) {
+    public static void applyBorderRadiusPadding(@NonNull View view, final float borderRadius, @BorderRadiusFlag final int borderRadiusFlag) {
         if (view.getWidth() == 0) {
             final WeakReference<View> weakReference = new WeakReference<View>(view);
             view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {

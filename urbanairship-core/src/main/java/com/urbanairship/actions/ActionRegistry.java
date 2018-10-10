@@ -2,10 +2,12 @@
 
 package com.urbanairship.actions;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.urbanairship.Logger;
@@ -30,11 +32,7 @@ import java.util.Set;
  */
 public final class ActionRegistry {
 
-    private final Map<String, Entry> actionMap = new HashMap<>();
-
-
     private static final String ACTION_ENTRY_TAG = "ActionEntry";
-
     private static final String CLASS_ATTRIBUTE = "class";
     private static final String NAME_ATTRIBUTE = "name";
     private static final String ALT_NAME_ATTRIBUTE = "altName";
@@ -50,82 +48,50 @@ public final class ActionRegistry {
          * @param arguments The action arguments.
          * @return {@code true} to accept the arguments, otherwise {@code false}.
          */
-        boolean apply(ActionArguments arguments);
+        boolean apply(@NonNull ActionArguments arguments);
     }
+
+    private final Map<String, Entry> actionMap = new HashMap<>();
 
     /**
      * Registers an action.
-     * <p/>
+     * <p>
      * If another entry is registered under specified name, it will be removed from that
      * entry and used for the new action.
      *
      * @param action The action to register
      * @param names The names the action will be registered under
-     * @return The entry, or null if the action was unable to be registered
-     * @throws IllegalArgumentException If the action is null, names is null, or if any of the provided
-     * names is empty.
+     * @return The entry.
+     * @throws IllegalArgumentException If no names were provided, or if th one of the names is an empty string.
      */
+    @NonNull
     public Entry registerAction(@NonNull Action action, @NonNull String... names) {
-        //noinspection ConstantConditions
-        if (action == null) {
-            throw new IllegalArgumentException("Unable to register a null action");
-        }
-
-        //noinspection ConstantConditions
-        if (names == null || names.length == 0) {
+        if (names.length == 0) {
             throw new IllegalArgumentException("Unable to register an action without a name.");
         }
 
-        return registerEntry(new Entry(action, names));
+        return registerEntry(new Entry(action, new ArrayList<>(Arrays.asList(names))));
     }
 
     /**
-     * Lazily registers an action.
+     * Registers an action by class.
      *
-     * @param c The class to register
+     * @param clazz The class to register
      * @param names The names the action will be registered under
-     * @return The entry, or null if the action was unable to be registered
-     * @throws IllegalArgumentException If the class is null, if names is null or if any of the provided names is empty.
+     * @return The entry.
+     * @throws IllegalArgumentException If no names were provided, or if th one of the names is an empty string.
      */
-    public Entry registerAction(@NonNull Class<? extends Action> c, @NonNull String... names) {
-        //noinspection ConstantConditions
-        if (c == null) {
-            throw new IllegalArgumentException("Unable to an register a null action class.");
-        }
-
-
-        //noinspection ConstantConditions
-        if (names == null || names.length == 0) {
+    @NonNull
+    public Entry registerAction(@NonNull Class<? extends Action> clazz, @NonNull String... names) {
+        if (names.length == 0) {
             throw new IllegalArgumentException("Unable to register an action without a name.");
         }
 
-        return registerEntry(new Entry(c, names));
+        return registerEntry(new Entry(clazz, new ArrayList<>(Arrays.asList(names))));
     }
 
-    /**
-     * Lazily registers an action.
-     *
-     * @param c The class to register
-     * @param names The names the action will be registered under
-     * @return The entry, or null if the action was unable to be registered
-     * @throws IllegalArgumentException If the class is null, if names is null or if any of the provided names is empty.
-     */
-    public Entry registerAction(@NonNull Class<? extends Action> c, Predicate predicate, @NonNull String... names) {
-        //noinspection ConstantConditions
-        if (c == null) {
-            throw new IllegalArgumentException("Unable to register a null action class.");
-        }
-
-
-        //noinspection ConstantConditions
-        if (names == null || names.length == 0) {
-            throw new IllegalArgumentException("Unable to register an action without a name.");
-        }
-
-        return registerEntry(new Entry(c, names));
-    }
-
-    private Entry registerEntry(Entry entry) {
+    @NonNull
+    private Entry registerEntry(@NonNull Entry entry) {
         List<String> names = entry.getNames();
 
         // Validate all the names
@@ -136,9 +102,7 @@ public final class ActionRegistry {
         }
 
         synchronized (actionMap) {
-
             for (String name : names) {
-
                 if (UAStringUtil.isEmpty(name)) {
                     continue;
                 }
@@ -162,6 +126,7 @@ public final class ActionRegistry {
      * @return An Entry for the name, or null if no entry exists for
      * the given name
      */
+    @Nullable
     public Entry getEntry(@NonNull String name) {
         if (UAStringUtil.isEmpty(name)) {
             return null;
@@ -211,7 +176,7 @@ public final class ActionRegistry {
      *
      * @param context The application context.
      */
-    public void registerDefaultActions(Context context) {
+    public void registerDefaultActions(@NonNull Context context) {
         try {
             XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
 
@@ -228,7 +193,7 @@ public final class ActionRegistry {
                     Logger.error(ACTION_ENTRY_TAG + " must specify class attribute.");
                     continue;
                 }
-                
+
                 Class<? extends Action> c;
                 try {
                     c = Class.forName(className).asSubclass(Action.class);
@@ -285,9 +250,9 @@ public final class ActionRegistry {
          * @param action The entry's action
          * @param names The names of the entry
          */
-        private Entry(Action action, String[] names) {
+        private Entry(@NonNull Action action, @NonNull List<String> names) {
             this.defaultAction = action;
-            this.names = new ArrayList<>(Arrays.asList(names));
+            this.names = names;
         }
 
         /**
@@ -296,9 +261,9 @@ public final class ActionRegistry {
          * @param c The entry's action
          * @param names The names of the entry
          */
-        private Entry(Class c, String[] names) {
+        private Entry(@NonNull Class c, @NonNull List<String> names) {
             this.defaultActionClass = c;
-            this.names = new ArrayList<>(Arrays.asList(names));
+            this.names = names;
         }
 
         /**
@@ -313,15 +278,8 @@ public final class ActionRegistry {
             Action action = situationOverrides.get(situation);
             if (action != null) {
                 return action;
-            } else if (defaultAction != null) {
-                return defaultAction;
             } else {
-                try {
-                    defaultAction = (Action) defaultActionClass.newInstance();
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Unable to instantiate action class.");
-                }
-                return defaultAction;
+                return getDefaultAction();
             }
         }
 
@@ -330,6 +288,7 @@ public final class ActionRegistry {
          *
          * @return The entry's predicate, or null if it is not defined
          */
+        @Nullable
         public Predicate getPredicate() {
             return predicate;
         }
@@ -339,7 +298,7 @@ public final class ActionRegistry {
          *
          * @param predicate A predicate for the entry
          */
-        public void setPredicate(Predicate predicate) {
+        public void setPredicate(@Nullable Predicate predicate) {
             this.predicate = predicate;
         }
 
@@ -348,6 +307,7 @@ public final class ActionRegistry {
          *
          * @return The default action
          */
+        @NonNull
         public Action getDefaultAction() {
             if (defaultAction != null) {
                 return defaultAction;
@@ -363,16 +323,10 @@ public final class ActionRegistry {
 
         /**
          * Sets the default action.
-         * <p/>
-         * The action must not be null.
          *
          * @param action The default action for the entry
          */
-        public void setDefaultAction(Action action) {
-            if (action == null) {
-                return;
-            }
-
+        public void setDefaultAction(@NonNull Action action) {
             this.defaultAction = action;
         }
 
@@ -380,16 +334,15 @@ public final class ActionRegistry {
          * Adds an action to be used instead of the default action for a
          * given situation.
          *
-         * @param action Action for the situation
          * @param situation The situation to override
+         * @param action Action for the situation
          */
-        public void addSituationOverride(@NonNull Action action, @Action.Situation int situation) {
-            //noinspection ConstantConditions
+        public void setSituationOverride(@Action.Situation int situation, @Nullable Action action) {
             if (action == null) {
-                return;
+                situationOverrides.remove(situation);
+            } else {
+                situationOverrides.put(situation, action);
             }
-
-            situationOverrides.put(situation, action);
         }
 
         /**
@@ -426,7 +379,7 @@ public final class ActionRegistry {
             }
         }
 
-
+        @SuppressLint("UnknownNullness")
         @Override
         public String toString() {
             return "Action Entry: " + names;

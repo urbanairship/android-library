@@ -3,6 +3,8 @@
 package com.urbanairship.messagecenter;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +33,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
      * @param context The application context
      * @param layout The layout for each line item
      */
-    public MessageViewAdapter(Context context, int layout) {
+    public MessageViewAdapter(@NonNull Context context, int layout) {
         this.context = context;
         this.layout = layout;
         this.items = new ArrayList<>();
@@ -42,6 +44,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
         return items.size();
     }
 
+    @Nullable
     @Override
     public Object getItem(int position) {
         if (position >= items.size() || position < 0) {
@@ -60,8 +63,9 @@ public abstract class MessageViewAdapter extends BaseAdapter {
         return items.get(position).getMessageId().hashCode();
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
         View view = convertView;
         if (view == null) {
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -82,14 +86,14 @@ public abstract class MessageViewAdapter extends BaseAdapter {
      * @param message The message.
      * @param position The message's position in the list.
      */
-    protected abstract void bindView(View view, RichPushMessage message, int position);
+    protected abstract void bindView(@NonNull View view, @NonNull RichPushMessage message, int position);
 
     /**
      * Sets the current items in the adapter to the collection.
      *
      * @param collection Collection of items
      */
-    public void set(Collection<RichPushMessage> collection) {
+    public void set(@NonNull Collection<RichPushMessage> collection) {
         synchronized (items) {
             items.clear();
             items.addAll(collection);
@@ -103,6 +107,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
      *
      * @return The context.
      */
+    @NonNull
     protected Context getContext() {
         return context;
     }

@@ -11,6 +11,7 @@ import com.urbanairship.util.DateUtils;
 
 /**
  * Resolution event.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -125,11 +126,13 @@ class ResolutionEvent extends InAppMessageEvent {
     }
 
 
+    @NonNull
     @Override
     public final String getType() {
         return TYPE;
     }
 
+    @NonNull
     @Override
     protected JsonMap getEventData() {
         return JsonMap.newBuilder()

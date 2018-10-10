@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
@@ -34,7 +35,7 @@ public class NotificationActionButton {
     private final String description;
     private final List<LocalizableRemoteInput> remoteInputs;
 
-    private NotificationActionButton(Builder builder, Bundle extras) {
+    private NotificationActionButton(@NonNull Builder builder, @NonNull Bundle extras) {
         this.id = builder.buttonId;
         this.labelId = builder.labelId;
         this.label = builder.label;
@@ -50,6 +51,7 @@ public class NotificationActionButton {
      *
      * @return The button's description.
      */
+    @Nullable
     public String getDescription() {
         return description;
     }
@@ -59,6 +61,7 @@ public class NotificationActionButton {
      *
      * @return The button's ID as a string.
      */
+    @NonNull
     public String getId() {
         return id;
     }
@@ -80,7 +83,8 @@ public class NotificationActionButton {
      *
      * @return The button's label.
      */
-    public String getLabel(Context context) {
+    @Nullable
+    public String getLabel(@NonNull Context context) {
         if (label != null) {
             return label;
         }
@@ -124,6 +128,7 @@ public class NotificationActionButton {
      *
      * @return A list of remote inputs.
      */
+    @Nullable
     public List<LocalizableRemoteInput> getRemoteInputs() {
         if (remoteInputs == null) {
             return null;
@@ -141,7 +146,8 @@ public class NotificationActionButton {
      * @param notificationId The notification ID.
      * @return The action as a NotificationCompat.Action
      */
-    NotificationCompat.Action createAndroidNotificationAction(Context context, String actionsPayload, PushMessage message, int notificationId) {
+    @NonNull
+    NotificationCompat.Action createAndroidNotificationAction(@NonNull Context context, @Nullable String actionsPayload, @NonNull PushMessage message, int notificationId) {
         String label = getLabel(context);
         if (label == null) {
             label = "";
@@ -198,7 +204,7 @@ public class NotificationActionButton {
          *
          * @param buttonId A string value.
          */
-        public Builder(String buttonId) {
+        public Builder(@NonNull String buttonId) {
             this.buttonId = buttonId;
         }
 
@@ -222,7 +228,7 @@ public class NotificationActionButton {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setLabel(String label) {
+        public Builder setLabel(@Nullable String label) {
             this.labelId = 0;
             this.label = label;
             return this;
@@ -235,14 +241,14 @@ public class NotificationActionButton {
          * @return The builder with the description set.
          */
         @NonNull
-        public Builder setDescription(String description) {
+        public Builder setDescription(@Nullable String description) {
             this.description = description;
             return this;
         }
 
         /**
          * Set the icon.
-         * <p/>
+         * <p>
          * Note: All notification icons should be entirely white on a transparent background.
          *
          * @param iconId An int value.

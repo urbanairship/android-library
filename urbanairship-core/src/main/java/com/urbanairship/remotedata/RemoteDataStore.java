@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
@@ -105,6 +106,7 @@ public class RemoteDataStore extends DataManager {
      *
      * @return A List of RemoteDataPayload.
      */
+    @NonNull
     public Set<RemoteDataPayload> getPayloads() {
         return getPayloads(null);
     }
@@ -115,7 +117,8 @@ public class RemoteDataStore extends DataManager {
      * @param types The specified types.
      * @return A List of RemoteDataPayload.
      */
-    public Set<RemoteDataPayload> getPayloads(Collection<String> types) {
+    @NonNull
+    public Set<RemoteDataPayload> getPayloads(@Nullable Collection<String> types) {
         Cursor cursor;
         if (types == null) {
             cursor = this.query(RemoteDataPayloadEntry.TABLE_NAME, null,
@@ -156,7 +159,8 @@ public class RemoteDataStore extends DataManager {
      * @param entries A list of payload entries.
      * @return A list of payloads.
      */
-    private Set<RemoteDataPayload> payloadsForEntries(List<RemoteDataPayloadEntry> entries) {
+    @NonNull
+    private Set<RemoteDataPayload> payloadsForEntries(@NonNull List<RemoteDataPayloadEntry> entries) {
         Set<RemoteDataPayload> payloads = new HashSet<>();
         for (RemoteDataPayloadEntry entry : entries) {
             RemoteDataPayload payload = payloadForEntry(entry);
@@ -174,7 +178,8 @@ public class RemoteDataStore extends DataManager {
      * @param entry A payload entry, or <code>null</code> if one could not be constructed.
      * @return A payload, or <code>null</code> if one could not be constructed.
      */
-    private RemoteDataPayload payloadForEntry(RemoteDataPayloadEntry entry) {
+    @Nullable
+    private RemoteDataPayload payloadForEntry(@Nullable RemoteDataPayloadEntry entry) {
         if (entry == null) {
             return null;
         }

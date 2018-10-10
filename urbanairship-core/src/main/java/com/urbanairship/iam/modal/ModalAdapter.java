@@ -22,16 +22,18 @@ public class ModalAdapter extends MediaDisplayAdapter {
      * @param displayContent The display content.
      * @param message The in-app message.
      */
-    private ModalAdapter(InAppMessage message, ModalDisplayContent displayContent) {
+    private ModalAdapter(@NonNull InAppMessage message, @NonNull ModalDisplayContent displayContent) {
         super(message, displayContent.getMedia());
     }
 
     /**
      * Creates a new modal adapter.
+     *
      * @param message The in-app message.
      * @return The modal adapter.
      */
-    public static ModalAdapter newAdapter(InAppMessage message) {
+    @NonNull
+    public static ModalAdapter newAdapter(@NonNull InAppMessage message) {
         ModalDisplayContent displayContent = message.getDisplayContent();
         if (displayContent == null) {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
@@ -41,7 +43,7 @@ public class ModalAdapter extends MediaDisplayAdapter {
     }
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
             return false;
         }

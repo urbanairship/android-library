@@ -144,7 +144,8 @@ public class TagGroupRegistrar {
                 return false;
             }
 
-            notifyListeners(mutationStore.pop());
+            notifyListeners(mutation);
+            mutationStore.pop();
             int status = response.getStatus();
             Logger.info("Update tag groups finished with status: " + status);
         }
@@ -174,7 +175,7 @@ public class TagGroupRegistrar {
         }
     }
 
-    private void notifyListeners(TagGroupsMutation mutation) {
+    private void notifyListeners(@NonNull TagGroupsMutation mutation) {
         synchronized (listeners) {
             for (Listener listener : new ArrayList<>(listeners)) {
                 listener.onMutationUploaded(mutation);
@@ -196,6 +197,7 @@ public class TagGroupRegistrar {
      * @param type The tag group type.
      * @return The pending tag groups mutations.
      */
+    @NonNull
     public List<TagGroupsMutation> getPendingMutations(@TagGroupType int type) {
         return getMutationStore(type).getMutations();
     }
@@ -206,6 +208,7 @@ public class TagGroupRegistrar {
      * @param type The type.
      * @return The mutation store for the type.
      */
+    @NonNull
     private PendingTagGroupMutationStore getMutationStore(@TagGroupType int type) {
         switch (type) {
             case CHANNEL:

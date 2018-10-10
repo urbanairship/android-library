@@ -8,12 +8,15 @@ import java.net.URL;
 
 /**
  * Class that creates the request.
+ * @hide
  */
+
 public class RequestFactory {
 
     /**
      * Default request factory.
      */
+    @NonNull
     public static final RequestFactory DEFAULT_REQUEST_FACTORY = new RequestFactory();
 
     /**
@@ -24,7 +27,7 @@ public class RequestFactory {
      * @return The request.
      */
     @NonNull
-    public Request createRequest(String requestMethod, URL url) {
+    public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
         return new Request(requestMethod, url);
     }
 }

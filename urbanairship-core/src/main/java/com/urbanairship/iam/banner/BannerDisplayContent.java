@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.banner;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -42,11 +43,13 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Display the message on top of the screen.
      */
+    @NonNull
     public static final String PLACEMENT_TOP = "top";
 
     /**
      * Display the message on bottom of the screen.
      */
+    @NonNull
     public static final String PLACEMENT_BOTTOM = "bottom";
 
 
@@ -57,11 +60,13 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Template to display the optional media on the left.
      */
+    @NonNull
     public static final String TEMPLATE_LEFT_MEDIA = "media_left";
 
     /**
      * Template to display the optional media on the right.
      */
+    @NonNull
     public static final String TEMPLATE_RIGHT_MEDIA = "media_right";
 
     /**
@@ -101,7 +106,7 @@ public class BannerDisplayContent implements DisplayContent {
      *
      * @param builder The display content builder.
      */
-    private BannerDisplayContent(Builder builder) {
+    private BannerDisplayContent(@NonNull Builder builder) {
         this.heading = builder.heading;
         this.body = builder.body;
         this.media = builder.media;
@@ -124,7 +129,7 @@ public class BannerDisplayContent implements DisplayContent {
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static BannerDisplayContent parseJson(JsonValue json) throws JsonException {
+    public static BannerDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 
         Builder builder = newBuilder();
@@ -141,12 +146,12 @@ public class BannerDisplayContent implements DisplayContent {
 
         // Image
         if (content.containsKey(MEDIA_KEY)) {
-            builder.setMedia(MediaInfo.parseJson(content.get(MEDIA_KEY)));
+            builder.setMedia(MediaInfo.parseJson(content.opt(MEDIA_KEY)));
         }
 
         // Buttons
         if (content.containsKey(BUTTONS_KEY)) {
-            JsonList buttonJsonList = content.get(BUTTONS_KEY).getList();
+            JsonList buttonJsonList = content.opt(BUTTONS_KEY).getList();
             if (buttonJsonList == null) {
                 throw new JsonException("Buttons must be an array of button objects.");
             }
@@ -156,7 +161,7 @@ public class BannerDisplayContent implements DisplayContent {
 
         // Button Layout
         if (content.containsKey(BUTTON_LAYOUT_KEY)) {
-            switch (content.opt(BUTTON_LAYOUT_KEY).getString("")) {
+            switch (content.opt(BUTTON_LAYOUT_KEY).optString()) {
                 case BUTTON_LAYOUT_STACKED:
                     builder.setButtonLayout(BUTTON_LAYOUT_STACKED);
                     break;
@@ -173,7 +178,7 @@ public class BannerDisplayContent implements DisplayContent {
 
         // Placement
         if (content.containsKey(PLACEMENT_KEY)) {
-            switch (content.opt(PLACEMENT_KEY).getString("")) {
+            switch (content.opt(PLACEMENT_KEY).optString()) {
                 case PLACEMENT_BOTTOM:
                     builder.setPlacement(PLACEMENT_BOTTOM);
                     break;
@@ -187,7 +192,7 @@ public class BannerDisplayContent implements DisplayContent {
 
         // Template
         if (content.containsKey(TEMPLATE_KEY)) {
-            switch (content.opt(TEMPLATE_KEY).getString("")) {
+            switch (content.opt(TEMPLATE_KEY).optString()) {
                 case TEMPLATE_LEFT_MEDIA:
                     builder.setTemplate(TEMPLATE_LEFT_MEDIA);
                     break;
@@ -213,7 +218,7 @@ public class BannerDisplayContent implements DisplayContent {
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
-                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid background color: " + content.opt(BACKGROUND_COLOR_KEY), e);
             }
@@ -222,7 +227,7 @@ public class BannerDisplayContent implements DisplayContent {
         // Dismiss button color
         if (content.containsKey(DISMISS_BUTTON_COLOR_KEY)) {
             try {
-                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).getString("")));
+                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).optString()));
             } catch (IllegalArgumentException e) {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
@@ -234,12 +239,12 @@ public class BannerDisplayContent implements DisplayContent {
                 throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
             }
 
-            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getFloat(0));
         }
 
         // Actions
         if (content.containsKey(ACTIONS_KEY)) {
-            JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
+            JsonMap jsonMap = content.opt(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
                 throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
             }
@@ -254,6 +259,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -396,7 +402,7 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -460,6 +466,7 @@ public class BannerDisplayContent implements DisplayContent {
         return result;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -470,10 +477,10 @@ public class BannerDisplayContent implements DisplayContent {
      *
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
-
 
     /**
      * Creates a builder from existing display content.
@@ -481,6 +488,7 @@ public class BannerDisplayContent implements DisplayContent {
      * @param displayContent The display content.
      * @return A builder instance.
      */
+    @NonNull
     public static Builder newBuilder(@NonNull BannerDisplayContent displayContent) {
         return new Builder(displayContent);
     }
@@ -508,7 +516,7 @@ public class BannerDisplayContent implements DisplayContent {
 
         private Builder() {}
 
-        private Builder(BannerDisplayContent displayContent) {
+        private Builder(@NonNull BannerDisplayContent displayContent) {
             this.heading = displayContent.heading;
             this.body = displayContent.body;
             this.media = displayContent.media;
@@ -530,7 +538,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setHeading(TextInfo heading) {
+        public Builder setHeading(@Nullable TextInfo heading) {
             this.heading = heading;
             return this;
         }
@@ -542,7 +550,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBody(TextInfo body) {
+        public Builder setBody(@Nullable TextInfo body) {
             this.body = body;
             return this;
         }
@@ -566,7 +574,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setButtons(@Size(max = 2) List<ButtonInfo> buttons) {
+        public Builder setButtons(@Nullable @Size(max = 2) List<ButtonInfo> buttons) {
             this.buttons.clear();
             if (buttons != null) {
                 this.buttons.addAll(buttons);
@@ -582,7 +590,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setMedia(@NonNull MediaInfo media) {
+        public Builder setMedia(@Nullable MediaInfo media) {
             this.media = media;
             return this;
         }
@@ -678,7 +686,8 @@ public class BannerDisplayContent implements DisplayContent {
          * @param actions The action map.
          * @return The builder instance.
          */
-        public Builder setActions(Map<String, JsonValue> actions) {
+        @NonNull
+        public Builder setActions(@Nullable Map<String, JsonValue> actions) {
             this.actions.clear();
 
             if (actions != null) {
@@ -695,6 +704,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @param actionValue The action value.
          * @return The builder instance.
          */
+        @NonNull
         public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
             this.actions.put(actionName, actionValue);
             return this;

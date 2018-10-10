@@ -2,6 +2,7 @@
 
 package com.urbanairship.job;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -118,7 +119,7 @@ public class JobInfo {
     }
 
     @VisibleForTesting
-    static void resetGeneratedIds(Context context) {
+    static void resetGeneratedIds(@NonNull Context context) {
         synchronized (preferenceLock) {
             if (sharedPreferences == null) {
                 sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
@@ -199,6 +200,7 @@ public class JobInfo {
      *
      * @return A bundle representing the job.
      */
+    @NonNull
     public Bundle toBundle() {
         Bundle bundle = new Bundle();
         bundle.putString(EXTRA_AIRSHIP_COMPONENT, airshipComponentName);
@@ -217,6 +219,7 @@ public class JobInfo {
      * @return A persistable bundle representing the job.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+    @NonNull
     public PersistableBundle toPersistableBundle() {
         PersistableBundle bundle = new PersistableBundle();
         bundle.putString(EXTRA_AIRSHIP_COMPONENT, airshipComponentName);
@@ -236,7 +239,7 @@ public class JobInfo {
      * @return JobInfo builder.
      */
     @Nullable
-    public static JobInfo fromBundle(Bundle bundle) {
+    public static JobInfo fromBundle(@Nullable Bundle bundle) {
         if (bundle == null) {
             return new Builder().build();
         }
@@ -270,7 +273,7 @@ public class JobInfo {
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Nullable
-    static JobInfo fromPersistableBundle(PersistableBundle persistableBundle) {
+    static JobInfo fromPersistableBundle(@Nullable PersistableBundle persistableBundle) {
         if (persistableBundle == null) {
             return new Builder().build();
         }
@@ -295,7 +298,7 @@ public class JobInfo {
         return null;
     }
 
-
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return "JobInfo{" +
@@ -342,7 +345,8 @@ public class JobInfo {
          * @param action The job's action.
          * @return The job builder.
          */
-        public Builder setAction(String action) {
+        @NonNull
+        public Builder setAction(@NonNull String action) {
             this.action = action;
             return this;
         }
@@ -353,6 +357,7 @@ public class JobInfo {
          * @param id The job's ID.
          * @return The job builder.
          */
+        @NonNull
         public Builder setId(@JobId int id) {
             this.jobId = id;
             return this;
@@ -364,8 +369,9 @@ public class JobInfo {
          * @param context The application context.
          * @return The job builder.
          */
+        @NonNull
         @WorkerThread
-        public Builder generateUniqueId(Context context) {
+        public Builder generateUniqueId(@NonNull Context context) {
             synchronized (preferenceLock) {
                 if (sharedPreferences == null) {
                     sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
@@ -388,6 +394,7 @@ public class JobInfo {
          * @param isNetworkAccessRequired Flag if network access is required.
          * @return The job builder.
          */
+        @NonNull
         public Builder setNetworkAccessRequired(boolean isNetworkAccessRequired) {
             this.isNetworkAccessRequired = isNetworkAccessRequired;
             return this;
@@ -399,6 +406,7 @@ public class JobInfo {
          * @param component The airship component.
          * @return The job builder.
          */
+        @NonNull
         public Builder setAirshipComponent(@NonNull Class<? extends AirshipComponent> component) {
             this.airshipComponentName = component.getName();
             return this;
@@ -411,6 +419,7 @@ public class JobInfo {
          * @param unit The delay time unit.
          * @return The job builder.
          */
+        @NonNull
         public Builder setInitialDelay(long delay, @NonNull TimeUnit unit) {
             this.initialDelay = unit.toMillis(delay);
             return this;
@@ -422,6 +431,7 @@ public class JobInfo {
          * @param persistent {@code true} If the job should persist across reboots.
          * @return The job builder.
          */
+        @NonNull
         public Builder setPersistent(boolean persistent) {
             this.persistent = persistent;
             return this;
@@ -433,7 +443,8 @@ public class JobInfo {
          * @param componentName The airship component name.
          * @return The job builder.
          */
-        Builder setAirshipComponent(String componentName) {
+        @NonNull
+        Builder setAirshipComponent(@NonNull String componentName) {
             this.airshipComponentName = componentName;
             return this;
         }
@@ -444,7 +455,8 @@ public class JobInfo {
          * @param extras Bundle of extras.
          * @return The job builder.
          */
-        public Builder setExtras(JsonMap extras) {
+        @NonNull
+        public Builder setExtras(@NonNull JsonMap extras) {
             this.extras = extras;
             return this;
         }
@@ -454,6 +466,7 @@ public class JobInfo {
          *
          * @return The job.
          */
+        @NonNull
         public JobInfo build() {
             Checks.checkNotNull(action, "Missing action.");
             return new JobInfo(this);

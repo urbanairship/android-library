@@ -4,6 +4,7 @@ package com.urbanairship.analytics;
 
 import android.content.Context;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -22,13 +23,11 @@ import java.io.IOException;
  */
 class AnalyticsJobHandler {
 
-
     private final Context context;
     private final UAirship airship;
     private final EventManager eventManager;
 
-
-    AnalyticsJobHandler(Context context, UAirship airship, EventManager eventManager) {
+    AnalyticsJobHandler(@NonNull Context context, @NonNull UAirship airship, @NonNull EventManager eventManager) {
         this.airship = airship;
         this.context = context;
         this.eventManager = eventManager;
@@ -36,7 +35,7 @@ class AnalyticsJobHandler {
 
 
     @JobInfo.JobResult
-    public int performJob(JobInfo jobInfo) {
+    public int performJob(@NonNull JobInfo jobInfo) {
         Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: " + jobInfo.getAction());
 
         switch (jobInfo.getAction()) {
@@ -111,8 +110,8 @@ class AnalyticsJobHandler {
                 break;
         }
 
-        if (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
-                associatedIdentifiers.isLimitAdTrackingEnabled() != limitedAdTrackingEnabled) {
+        if (advertisingId != null && (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
+                associatedIdentifiers.isLimitAdTrackingEnabled() != limitedAdTrackingEnabled)) {
 
             airship.getAnalytics().editAssociatedIdentifiers()
                    .setAdvertisingId(advertisingId, limitedAdTrackingEnabled)

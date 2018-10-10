@@ -5,6 +5,8 @@ package com.urbanairship.preference;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
@@ -17,28 +19,29 @@ public class AnalyticsEnablePreference extends UACheckBoxPreference {
     private static final String CONTENT_DESCRIPTION = "ANALYTICS_ENABLED";
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public AnalyticsEnablePreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public AnalyticsEnablePreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public AnalyticsEnablePreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public AnalyticsEnablePreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public AnalyticsEnablePreference(Context context, AttributeSet attrs) {
+    public AnalyticsEnablePreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
-    protected boolean getInitialAirshipValue(UAirship airship) {
+    protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
         return airship.getAnalytics().isEnabled();
     }
 
     @Override
-    protected void onApplyAirshipPreference(UAirship airship, boolean enabled) {
+    protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getAnalytics().setEnabled(enabled);
     }
 
+    @NonNull
     @Override
     protected String getContentDescription() {
         return CONTENT_DESCRIPTION;

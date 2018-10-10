@@ -3,6 +3,7 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
@@ -62,7 +63,7 @@ public class RichPushInboxTest extends BaseTestCase {
         // Only the "even" messages
         testPredicate = new RichPushInbox.Predicate() {
             @Override
-            public boolean apply(RichPushMessage message) {
+            public boolean apply(@NonNull RichPushMessage message) {
                 String substring = message.getMessageId().replace("_message_id", "");
                 int index = Integer.parseInt(substring);
                 return index % 2 == 0;

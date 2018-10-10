@@ -21,6 +21,7 @@ public interface InAppMessageScheduler {
      * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be nil if
      * the message's audience
      */
+    @NonNull
     PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo);
 
     /**
@@ -29,6 +30,7 @@ public interface InAppMessageScheduler {
      * @param scheduleId The in-app message's schedule ID.
      * @return A pending result.
      */
+    @NonNull
     PendingResult<Void> cancelSchedule(@NonNull String scheduleId);
 
     /**
@@ -38,6 +40,7 @@ public interface InAppMessageScheduler {
      * @param messageId The in-app message's ID.
      * @return A pending result.
      */
+    @NonNull
     PendingResult<Boolean> cancelMessage(@NonNull String messageId);
 
     /**
@@ -46,6 +49,7 @@ public interface InAppMessageScheduler {
      * @param messageIds The list of message IDs.
      * @return A pending result.
      */
+    @NonNull
     PendingResult<Void> cancelMessages(@NonNull Collection<String> messageIds);
 
     /**
@@ -54,6 +58,7 @@ public interface InAppMessageScheduler {
      * @param scheduleInfos The list of schedule infos.
      * @return A pending result.
      */
+    @NonNull
     PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos);
 
     /**
@@ -62,7 +67,8 @@ public interface InAppMessageScheduler {
      * @param messageId The message ID.
      * @return A pending result.
      */
-    PendingResult<Collection<InAppMessageSchedule>> getSchedules(String messageId);
+    @NonNull
+    PendingResult<Collection<InAppMessageSchedule>> getSchedules(@NonNull String messageId);
 
     /**
      * Gets the schedule.
@@ -70,6 +76,7 @@ public interface InAppMessageScheduler {
      * @param scheduleId The schedule ID.
      * @return A pending result.
      */
+    @NonNull
     PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId);
 
 
@@ -78,6 +85,7 @@ public interface InAppMessageScheduler {
      *
      * @return A pending result.
      */
+    @NonNull
     PendingResult<Collection<InAppMessageSchedule>> getSchedules();
 
     /**
@@ -87,6 +95,7 @@ public interface InAppMessageScheduler {
      * @param edits The edits.
      * @return A pending result with the updated schedule.
      */
+    @NonNull
     PendingResult<InAppMessageSchedule> editSchedule(@NonNull String scheduleId, @NonNull InAppMessageScheduleEdits edits);
 
 }

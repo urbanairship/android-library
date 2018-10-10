@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -40,6 +41,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
     // JSON keys
     static final String MESSAGE_ID_KEY = "message_id";
+
     private static final String DISPLAY_TYPE_KEY = "display_type";
     private static final String DISPLAY_CONTENT_KEY = "display";
     private static final String EXTRA_KEY = "extra";
@@ -74,28 +76,32 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     /**
      * Banner in-app message.
      */
+    @NonNull
     public static final String TYPE_BANNER = "banner";
 
     /**
      * Custom in-app message.
      */
+    @NonNull
     public static final String TYPE_CUSTOM = "custom";
 
     /**
      * Fullscreen in-app message.
      */
+    @NonNull
     public static final String TYPE_FULLSCREEN = "fullscreen";
 
     /**
      * Modal in-app message.
      */
+    @NonNull
     public static final String TYPE_MODAL = "modal";
 
     /**
      * HTML in-app message.
      */
+    @NonNull
     public static final String TYPE_HTML = "html";
-
 
     @DisplayType
     private final String type;
@@ -115,7 +121,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @param builder An InAppMessage builder instance.
      */
-    private InAppMessage(Builder builder) {
+    private InAppMessage(@NonNull Builder builder) {
         this.type = builder.type;
         this.content = builder.content;
         this.id = builder.id;
@@ -132,6 +138,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @return The in-app message type.
      */
     @DisplayType
+    @NonNull
     public String getType() {
         return type;
     }
@@ -147,6 +154,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return The display content.
      */
+    @Nullable
     public <T extends DisplayContent> T getDisplayContent() {
         if (content == null) {
             return null;
@@ -164,6 +172,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return The message ID.
      */
+    @NonNull
     public String getId() {
         return id;
     }
@@ -193,6 +202,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return The actions.
      */
+    @NonNull
     public Map<String, JsonValue> getActions() {
         return actions;
     }
@@ -205,6 +215,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Source
+    @NonNull
     String getSource() {
         return source;
     }
@@ -221,6 +232,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return campaigns;
     }
 
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -244,9 +256,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @throws JsonException If the json is invalid.
      * @hide
      */
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static InAppMessage fromJson(JsonValue jsonValue, @Source String defaultSource) throws JsonException {
-        String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).getString("");
+    static InAppMessage fromJson(@NonNull JsonValue jsonValue, @Nullable @Source String defaultSource) throws JsonException {
+        String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).optString();
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
 
@@ -263,14 +276,16 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
 
         // Source
-        @Source String source = jsonValue.optMap().opt(SOURCE_KEY).getString(defaultSource);
+        @Source String source = jsonValue.optMap().opt(SOURCE_KEY).getString();
         if (source != null) {
             builder.setSource(source);
+        } else if (defaultSource != null) {
+            builder.setSource(defaultSource);
         }
 
         // Actions
         if (jsonValue.optMap().containsKey(ACTIONS_KEY)) {
-            JsonMap jsonMap = jsonValue.optMap().get(ACTIONS_KEY).getMap();
+            JsonMap jsonMap = jsonValue.optMap().opt(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
                 throw new JsonException("Actions must be a JSON object: " + jsonValue.optMap().opt(ACTIONS_KEY));
             }
@@ -303,7 +318,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @return The parsed InAppMessage.
      * @throws JsonException If the json is invalid.
      */
-    static InAppMessage fromJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    static InAppMessage fromJson(@NonNull JsonValue jsonValue) throws JsonException {
         return fromJson(jsonValue, null);
     }
 
@@ -313,6 +329,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return A new in-app message builder.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -323,7 +340,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @param message The in-app message.
      * @return A new in-app message builder.
      */
-    public static Builder newBuilder(InAppMessage message) {
+    @NonNull
+    public static Builder newBuilder(@NonNull InAppMessage message) {
         return new Builder(message);
     }
 
@@ -332,9 +350,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @hide
      */
+    @NonNull
     public static final Creator<InAppMessage> CREATOR = new Creator<InAppMessage>() {
+
+        @Nullable
         @Override
-        public InAppMessage createFromParcel(Parcel in) {
+        public InAppMessage createFromParcel(@NonNull Parcel in) {
             String payload = in.readString();
 
             try {
@@ -345,6 +366,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             }
         }
 
+        @NonNull
         @Override
         public InAppMessage[] newArray(int size) {
             return new InAppMessage[size];
@@ -352,7 +374,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     };
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeString(toJsonValue().toString());
     }
 
@@ -361,13 +383,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return 0;
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public String toString() {
         return toJsonValue().toString();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -432,7 +455,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
         private Builder() {}
 
-        public Builder(InAppMessage message) {
+        public Builder(@NonNull InAppMessage message) {
             this.type = message.type;
             this.content = message.content;
             this.id = message.id;
@@ -450,7 +473,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param content The display content as a json value.
          * @return The builder object.
          */
-        private Builder setDisplayContent(String type, JsonValue content) throws JsonException {
+        @NonNull
+        private Builder setDisplayContent(@NonNull String type, @NonNull JsonValue content) throws JsonException {
             switch (type) {
                 case TYPE_BANNER:
                     this.setDisplayContent(BannerDisplayContent.parseJson(content));
@@ -482,7 +506,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param displayContent The modal display content.
          * @return The builder.
          */
-        public Builder setDisplayContent(ModalDisplayContent displayContent) {
+        @NonNull
+        public Builder setDisplayContent(@NonNull ModalDisplayContent displayContent) {
             this.type = TYPE_MODAL;
             this.content = displayContent;
             return this;
@@ -494,7 +519,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param displayContent The full screen display content.
          * @return The builder.
          */
-        public Builder setDisplayContent(FullScreenDisplayContent displayContent) {
+        @NonNull
+        public Builder setDisplayContent(@NonNull FullScreenDisplayContent displayContent) {
             this.type = TYPE_FULLSCREEN;
             this.content = displayContent;
             return this;
@@ -506,7 +532,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param displayContent The banner display content.
          * @return The builder.
          */
-        public Builder setDisplayContent(BannerDisplayContent displayContent) {
+        @NonNull
+        public Builder setDisplayContent(@NonNull BannerDisplayContent displayContent) {
             this.type = TYPE_BANNER;
             this.content = displayContent;
             return this;
@@ -518,7 +545,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param displayContent The html display content.
          * @return The builder.
          */
-        public Builder setDisplayContent(HtmlDisplayContent displayContent) {
+        @NonNull
+        public Builder setDisplayContent(@NonNull HtmlDisplayContent displayContent) {
             this.type = TYPE_HTML;
             this.content = displayContent;
             return this;
@@ -531,8 +559,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        Builder setSource(@NonNull @Source String source) {
+        Builder setSource(@Nullable @Source String source) {
             this.source = source;
             return this;
         }
@@ -544,8 +573,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        Builder setCampaigns(JsonValue campaigns) {
+        Builder setCampaigns(@Nullable JsonValue campaigns) {
             this.campaigns = campaigns;
             return this;
         }
@@ -556,7 +586,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param displayContent The custom display content.
          * @return The builder.
          */
-        public Builder setDisplayContent(CustomDisplayContent displayContent) {
+        @NonNull
+        public Builder setDisplayContent(@NonNull CustomDisplayContent displayContent) {
             this.type = TYPE_CUSTOM;
             this.content = displayContent;
             return this;
@@ -568,7 +599,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param extras An extra json map.
          * @return The builder.
          */
-        public Builder setExtras(JsonMap extras) {
+        @NonNull
+        public Builder setExtras(@Nullable JsonMap extras) {
             this.extras = extras;
             return this;
         }
@@ -579,6 +611,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param id The message ID.
          * @return The builder.
          */
+        @NonNull
         public Builder setId(@NonNull @Size(min = 1, max = MAX_ID_LENGTH) String id) {
             this.id = id;
             return this;
@@ -590,7 +623,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param audience The audience.
          * @return The builder.
          */
-        public Builder setAudience(Audience audience) {
+        @NonNull
+        public Builder setAudience(@Nullable Audience audience) {
             this.audience = audience;
             return this;
         }
@@ -601,7 +635,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param actions The action map.
          * @return The builder.
          */
-        public Builder setActions(Map<String, JsonValue> actions) {
+        @NonNull
+        public Builder setActions(@Nullable Map<String, JsonValue> actions) {
             this.actions.clear();
 
             if (actions != null) {
@@ -618,6 +653,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param actionValue The action value.
          * @return The builder.
          */
+        @NonNull
         public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
             this.actions.put(actionName, actionValue);
             return this;
@@ -630,6 +666,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @throws IllegalArgumentException If the ID is missing, ID length is greater than the {@link #MAX_ID_LENGTH},
          * or if the content is missing.
          */
+        @NonNull
         public InAppMessage build() {
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
             Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);

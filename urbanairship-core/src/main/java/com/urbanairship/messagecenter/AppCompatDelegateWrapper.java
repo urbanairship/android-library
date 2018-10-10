@@ -5,6 +5,8 @@ package com.urbanairship.messagecenter;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.MenuInflater;
@@ -24,7 +26,8 @@ class AppCompatDelegateWrapper {
      * @param activity The activity.
      * @return Instance of {@code AppCompatDelegateWrapper}.
      */
-    static AppCompatDelegateWrapper create(Activity activity) {
+    @NonNull
+    static AppCompatDelegateWrapper create(@NonNull Activity activity) {
         AppCompatDelegateWrapper delegateWrapper = new AppCompatDelegateWrapper();
         delegateWrapper.delegate = AppCompatDelegate.create(activity, null);
         return delegateWrapper;
@@ -85,6 +88,7 @@ class AppCompatDelegateWrapper {
         delegate.onDestroy();
     }
 
+    @Nullable
     ActionBar getSupportActionBar() {
         return delegate.getSupportActionBar();
     }

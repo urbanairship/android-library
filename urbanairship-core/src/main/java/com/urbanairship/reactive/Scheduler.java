@@ -2,6 +2,7 @@
 
 package com.urbanairship.reactive;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
@@ -17,14 +18,16 @@ public interface Scheduler {
      * @param runnable The runnable.
      * @return A Subscription.
      */
-    Subscription schedule(Runnable runnable);
+    @NonNull
+    Subscription schedule(@NonNull Runnable runnable);
 
     /**
      * Schedules a runnable to be executed after a delay
      *
-     * @param runnable The runnable.
      * @param delayTimeMs The delay time in milliseconds.
+     * @param runnable The runnable.
      * @return A Subscription.
      */
-    Subscription schedule(Runnable runnable, long delayTimeMs);
+    @NonNull
+    Subscription schedule(long delayTimeMs, @NonNull Runnable runnable);
 }

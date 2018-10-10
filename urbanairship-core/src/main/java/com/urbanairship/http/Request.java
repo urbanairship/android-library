@@ -4,6 +4,7 @@ package com.urbanairship.http;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 
 import com.urbanairship.Logger;
@@ -29,13 +30,25 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Request {
 
+    @NonNull
     protected URL url;
+
+    @Nullable
     protected String user;
+
+    @Nullable
     protected String password;
+
+    @NonNull
     protected String requestMethod;
+
+    @Nullable
     protected String body;
+
+    @Nullable
     protected String contentType;
 
+    @NonNull
     protected final Map<String, String> responseProperties;
     private static final String USER_AGENT_FORMAT = "%s (%s; %s; UrbanAirshipLib-%s/%s; %s; %s)";
     private long ifModifiedSince = 0;
@@ -63,7 +76,7 @@ public class Request {
      * @return The request.
      */
     @NonNull
-    public Request setCredentials(String user, String password) {
+    public Request setCredentials(@Nullable String user, @Nullable String password) {
         this.user = user;
         this.password = password;
 
@@ -78,7 +91,7 @@ public class Request {
      * @return The request.
      */
     @NonNull
-    public Request setRequestBody(String body, String contentType) {
+    public Request setRequestBody(@Nullable String body, @Nullable String contentType) {
         this.body = body;
         this.contentType = contentType;
         return this;
@@ -102,14 +115,14 @@ public class Request {
      * The credentials and content type will also be added. The credentials can be set with
      * {@link #setCredentials(String, String)} and the content type can be set with
      * {@link #setRequestBody(String, String)}.
-     * </p>
+     * <p>
      *
      * @param key The property.
      * @param value The value of the property.
      * @return The request.
      */
     @NonNull
-    public Request setHeader(String key, String value) {
+    public Request setHeader(@NonNull String key, @Nullable String value) {
         if (value == null) {
             responseProperties.remove(key);
         } else {
@@ -135,6 +148,7 @@ public class Request {
      *
      * @return The request response.
      */
+    @Nullable
     public Response execute() {
         HttpURLConnection conn = null;
 
@@ -223,7 +237,8 @@ public class Request {
                 UAirship.shared().getAirshipConfigOptions().getAppKey(), Locale.getDefault());
     }
 
-    private String readEntireStream(InputStream input) throws IOException {
+    @Nullable
+    private String readEntireStream(@Nullable InputStream input) throws IOException {
         if (input == null) {
             return null;
         }

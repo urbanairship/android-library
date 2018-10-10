@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -24,7 +25,7 @@ public abstract class ThemedActivity extends FragmentActivity {
     private AppCompatDelegateWrapper delegate;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         if (isAppCompatAvailable(this)) {
             delegate = AppCompatDelegateWrapper.create(this);
         }
@@ -44,7 +45,7 @@ public abstract class ThemedActivity extends FragmentActivity {
             delegate.onPostCreate(savedInstanceState);
         }
     }
-    
+
     @NonNull
     @Override
     public MenuInflater getMenuInflater() {
@@ -64,6 +65,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public void setContentView(View view) {
         if (delegate != null) {
@@ -73,6 +75,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public void setContentView(View view, ViewGroup.LayoutParams params) {
         if (delegate != null) {
@@ -82,6 +85,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public void addContentView(View view, ViewGroup.LayoutParams params) {
         if (delegate != null) {
@@ -91,6 +95,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -125,6 +130,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    @SuppressLint("UnknownNullness")
     @Override
     protected void onTitleChanged(CharSequence title, int color) {
         super.onTitleChanged(title, color);
@@ -175,7 +181,7 @@ public abstract class ThemedActivity extends FragmentActivity {
      * @param activity The activity to check.
      * @return {@code true} if app compatibility is available for the activity, otherwise {@code false}.
      */
-    static boolean isAppCompatAvailable(Activity activity) {
+    static boolean isAppCompatAvailable(@NonNull Activity activity) {
         if (isAppCompatDependencyAvailable == null) {
             // Play Services
             try {
@@ -195,7 +201,7 @@ public abstract class ThemedActivity extends FragmentActivity {
             return false;
         }
 
-        TypedArray a = activity.obtainStyledAttributes(new int[]{ colorPrimary });
+        TypedArray a = activity.obtainStyledAttributes(new int[] { colorPrimary });
         final boolean isAvailable = a.hasValue(0);
         a.recycle();
 

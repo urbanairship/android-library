@@ -63,7 +63,6 @@ public class Whitelist {
     /**
      * Regular expression to match the pattern.
      * <pattern> := '*' | <scheme>://<host>/<path> | <scheme>://<host> | <scheme>:///<path> | <scheme>:/<path> | <scheme>:/
-     *
      */
     private static final String PATTERN_REGEX = String.format(Locale.US, "^((\\*)|((%s://%s/%s)|(%s://%s)|(%s:/[^/]%s)|(%s:/)|(%s:///%s)))",
             SCHEME_REGEX, HOST_REGEX, PATH_REGEX, SCHEME_REGEX, HOST_REGEX, SCHEME_REGEX, PATH_REGEX, SCHEME_REGEX, SCHEME_REGEX, PATH_REGEX);
@@ -206,7 +205,7 @@ public class Whitelist {
      * @param pattern The pattern.
      * @param scope The scope.
      */
-    private void addEntry(UriPattern pattern, @Scope int scope) {
+    private void addEntry(@NonNull UriPattern pattern, @Scope int scope) {
         synchronized (entries) {
             entries.add(new Entry(pattern, scope));
         }
@@ -218,7 +217,7 @@ public class Whitelist {
      * @param url The URL.
      * @return <code>true</code> If the URL matches any entries in the whitelist.
      */
-    public boolean isWhitelisted(String url) {
+    public boolean isWhitelisted(@Nullable String url) {
         return isWhitelisted(url, SCOPE_ALL);
     }
 
@@ -229,7 +228,7 @@ public class Whitelist {
      * @param scope The scope.
      * @return <code>true</code> If the URL matches any entries in the whitelist.
      */
-    public boolean isWhitelisted(String url, @Scope int scope) {
+    public boolean isWhitelisted(@Nullable String url, @Scope int scope) {
         if (url == null) {
             return false;
         }
@@ -307,6 +306,7 @@ public class Whitelist {
      * @return The default whitelist.
      * @hide
      */
+    @NonNull
     public static Whitelist createDefaultWhitelist(@NonNull AirshipConfigOptions airshipConfigOptions) {
         Whitelist whitelist = new Whitelist();
         whitelist.addEntry("https://*.urbanairship.com");
@@ -369,16 +369,11 @@ public class Whitelist {
                 return false;
             }
 
-            if (path != null && (uri.getPath() == null || !path.matcher(uri.getPath()).matches())) {
-                return false;
-            }
-
-            return true;
+            return path == null || (uri.getPath() != null && path.matcher(uri.getPath()).matches());
         }
 
-
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) {
                 return true;
             }

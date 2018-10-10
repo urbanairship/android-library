@@ -7,6 +7,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.util.UAStringUtil;
 
@@ -35,12 +36,14 @@ class PropertiesConfigParser implements ConfigParser {
 
     /**
      * Factory method to create a config parser from a file in the assets directory.
+     *
      * @param context The application context.
      * @param propertiesFile The properties file.
      * @return A PropertiesConfigParser instance.
      * @throws IOException
      */
-    public static PropertiesConfigParser fromAssets(Context context, String propertiesFile) throws IOException {
+    @NonNull
+    public static PropertiesConfigParser fromAssets(@NonNull Context context, @NonNull String propertiesFile) throws IOException {
         Resources resources = context.getResources();
         AssetManager assetManager = resources.getAssets();
 
@@ -69,10 +72,12 @@ class PropertiesConfigParser implements ConfigParser {
 
     /**
      * Factory method to create a config parser.
+     *
      * @param context The application context.
      * @param properties The properties.
      * @return A PropertiesConfigParser instance.
      */
+    @NonNull
     public static PropertiesConfigParser fromProperties(@NonNull Context context, @NonNull Properties properties) {
         List<String> propertyNames = new ArrayList<>();
         List<String> propertyValues = new ArrayList<>();
@@ -99,14 +104,23 @@ class PropertiesConfigParser implements ConfigParser {
         return propertyNames.size();
     }
 
+    @Nullable
     @Override
     public String getName(int index) {
         return propertyNames.get(index);
     }
 
+    @Nullable
     @Override
     public String getString(int index) {
         return propertyValues.get(index);
+    }
+
+    @NonNull
+    @Override
+    public String getString(int index, @NonNull String defaultValue) {
+        String value = getString(index);
+        return value == null ? defaultValue : value;
     }
 
     @Override
@@ -114,6 +128,7 @@ class PropertiesConfigParser implements ConfigParser {
         return Boolean.parseBoolean(propertyValues.get(index));
     }
 
+    @Nullable
     @Override
     public String[] getStringArray(int index) {
         return propertyValues.get(index).split("[, ]+");

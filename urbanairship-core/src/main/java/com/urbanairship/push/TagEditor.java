@@ -2,6 +2,8 @@
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,7 +24,8 @@ public abstract class TagEditor {
      * @param tag Tag to add.
      * @return The TagEditor instance.
      */
-    public TagEditor addTag(String tag) {
+    @NonNull
+    public TagEditor addTag(@NonNull String tag) {
         tagsToRemove.remove(tag);
         tagsToAdd.add(tag);
         return this;
@@ -34,7 +37,8 @@ public abstract class TagEditor {
      * @param tags Tags to add.
      * @return The TagEditor instance.
      */
-    public TagEditor addTags(Set<String> tags) {
+    @NonNull
+    public TagEditor addTags(@NonNull Set<String> tags) {
         tagsToRemove.removeAll(tags);
         tagsToAdd.addAll(tags);
 
@@ -47,7 +51,8 @@ public abstract class TagEditor {
      * @param tag Tag to remove.
      * @return The TagEditor instance.
      */
-    public TagEditor removeTag(String tag) {
+    @NonNull
+    public TagEditor removeTag(@NonNull String tag) {
         tagsToAdd.remove(tag);
         tagsToRemove.add(tag);
 
@@ -60,7 +65,8 @@ public abstract class TagEditor {
      * @param tags Tags to remove.
      * @return The TagEditor instance.
      */
-    public TagEditor removeTags(Set<String> tags) {
+    @NonNull
+    public TagEditor removeTags(@NonNull Set<String> tags) {
         tagsToAdd.removeAll(tags);
         tagsToRemove.addAll(tags);
 
@@ -69,12 +75,13 @@ public abstract class TagEditor {
 
     /**
      * Clears all tags.
-     * <p/>
+     * <p>
      * Tags will be cleared first during apply, then the other
      * operations will be applied.
      *
      * @return The TagEditor instance.
      */
+    @NonNull
     public TagEditor clear() {
         clear = true;
 
@@ -95,5 +102,5 @@ public abstract class TagEditor {
      * @param tagsToAdd Tags to add.
      * @param tagsToRemove Tags to remove.
      */
-    abstract void onApply(boolean clear, Set<String> tagsToAdd, Set<String> tagsToRemove);
+    abstract void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove);
 }
