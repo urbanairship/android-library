@@ -273,7 +273,7 @@ public class CoreReceiver extends BroadcastReceiver {
         actionMetadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
 
         final int result;
-        if (shouldLaunchApplication && launchApplication(context)) {
+        if (shouldLaunchApplication && launchApplication(context, message)) {
             result = AirshipReceiver.RESULT_ACTIVITY_LAUNCHED;
         } else {
             result = AirshipReceiver.RESULT_ACTIVITY_NOT_LAUNCHED;
@@ -301,10 +301,11 @@ public class CoreReceiver extends BroadcastReceiver {
      *
      * @param context The application context.
      */
-    private boolean launchApplication(@NonNull Context context) {
+    private boolean launchApplication(@NonNull Context context, @NonNull PushMessage pushMessage) {
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(UAirship.getPackageName());
         if (launchIntent != null) {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            launchIntent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle());
             Logger.info("Starting application's launch intent.");
             context.startActivity(launchIntent);
             return true;

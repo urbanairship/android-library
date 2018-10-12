@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UriUtils;
 
 /**
@@ -48,6 +50,11 @@ public class DeepLinkAction extends Action {
         Intent intent = new Intent(Intent.ACTION_VIEW, uri)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .setPackage(UAirship.getPackageName());
+
+        PushMessage message = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
+        if (message != null) {
+            intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle());
+        }
 
         UAirship.getApplicationContext().startActivity(intent);
         return ActionResult.newResult(arguments.getValue());

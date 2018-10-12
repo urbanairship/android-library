@@ -242,7 +242,8 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param notificationInfo The notification info.
      * @return <code>true</code> if the application was launched, otherwise <code>false</code>. If
      * <code>false</code> is returned, and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication}
-     * is enabled, the launcher activity will automatically be launched.
+     * is enabled, the launcher activity will automatically be launched. The push message will be available
+     * in the launcher intent's extras. Use {@link PushMessage#fromIntent(Intent) to access the message.
      */
     protected boolean onNotificationOpened(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {
         return false;
