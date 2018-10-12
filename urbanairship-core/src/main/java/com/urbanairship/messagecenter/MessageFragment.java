@@ -286,16 +286,6 @@ public class MessageFragment extends Fragment {
     /**
      * Shows the error page.
      *
-     * @deprecated Use {@link #showErrorPage(int)} instead.
-     */
-    @Deprecated
-    protected void showErrorPage() {
-        showErrorPage(ERROR_DISPLAYING_MESSAGE);
-    }
-
-    /**
-     * Shows the error page.
-     *
      * @param error The error.
      */
     protected void showErrorPage(@Error int error) {

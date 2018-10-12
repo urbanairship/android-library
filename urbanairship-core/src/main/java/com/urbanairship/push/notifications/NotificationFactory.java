@@ -390,32 +390,6 @@ public class NotificationFactory {
         return builder.build();
     }
 
-    /**
-     * Creates a <code>Notification</code> for an incoming push message.
-     * <p>
-     * In order to handle notification opens, the application should register a broadcast receiver
-     * that extends {@link AirshipReceiver}. When the notification is opened
-     * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
-     * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
-     * or {@code false} is returned, an open will be handled by either starting the launcher activity or
-     * by sending the notification's content intent if it is present.
-     *
-     * @param message The push message.
-     * @param notificationId The notification ID.
-     * @return The notification result.
-     * @deprecated Use {@link #createNotificationResult(PushMessage, int, boolean)}.
-     */
-    @NonNull
-    @Deprecated
-    public Result createNotificationResult(@NonNull final PushMessage message, final int notificationId) {
-        Notification notification = createNotification(message, notificationId);
-        if (notification == null) {
-            return Result.cancel();
-        } else {
-            return Result.notification(notification);
-        }
-    }
-
 
     /**
      * Creates a <code>Notification</code> for an incoming push message.
@@ -438,8 +412,12 @@ public class NotificationFactory {
      */
     @NonNull
     public Result createNotificationResult(@NonNull final PushMessage message, final int notificationId, boolean isLongRunningTask) {
-        //noinspection deprecation
-        return this.createNotificationResult(message, notificationId);
+        Notification notification = createNotification(message, notificationId);
+        if (notification == null) {
+            return Result.cancel();
+        } else {
+            return Result.notification(notification);
+        }
     }
 
     /**

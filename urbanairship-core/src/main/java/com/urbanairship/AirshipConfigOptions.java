@@ -33,12 +33,6 @@ public class AirshipConfigOptions {
     public static final String ADM_TRANSPORT = "ADM";
 
     /**
-     * The GCM transport type for Push.
-     */
-    @NonNull
-    public static final String GCM_TRANSPORT = "GCM";
-
-    /**
      * The FCM transport type for Push.
      */
     @NonNull
@@ -113,17 +107,6 @@ public class AirshipConfigOptions {
     @NonNull
     public final String remoteDataURL;
 
-    /**
-     * The GCM/FCM sender ID used for push registration. This is your Google API project number.
-     * <p>
-     * Will be used in {@link #getFcmSenderId()} if the {@link #fcmSenderId} is not set.
-     *
-     * @deprecated Use FCM sender ID instead. To be removed in SDK 10.0.
-     */
-    @Nullable
-    @Deprecated
-    public final String gcmSender;
-
 
     /**
      * The FCM sender ID for push registration. Used as a fallback
@@ -159,7 +142,7 @@ public class AirshipConfigOptions {
     /**
      * The transport types allowed for Push.
      * <p>
-     * Defaults to ADM, GCM, FCM.
+     * Defaults to ADM, FCM.
      */
     @Nullable
     public final String[] allowedTransports;
@@ -317,7 +300,6 @@ public class AirshipConfigOptions {
         this.analyticsServer = builder.analyticsServer;
         this.landingPageContentURL = builder.landingPageContentURL;
         this.remoteDataURL = builder.remoteDataURL;
-        this.gcmSender = builder.gcmSender;
         this.fcmSenderId = builder.fcmSenderId;
         this.developmentFcmSenderId = builder.developmentFcmSenderId;
         this.productionFcmSenderId = builder.productionFcmSenderId;
@@ -389,9 +371,6 @@ public class AirshipConfigOptions {
             return fcmSenderId;
         }
 
-        if (gcmSender != null) {
-            return gcmSender;
-        }
 
         return null;
     }
@@ -462,11 +441,10 @@ public class AirshipConfigOptions {
         private String analyticsServer = "https://combine.urbanairship.com/";
         private String landingPageContentURL = "https://dl.urbanairship.com/aaa/";
         private String remoteDataURL = "https://remote-data.urbanairship.com/";
-        private String gcmSender;
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
-        private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT, FCM_TRANSPORT };
+        private String[] allowedTransports = new String[] { ADM_TRANSPORT, FCM_TRANSPORT };
         private String[] whitelist = null;
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
@@ -512,9 +490,6 @@ public class AirshipConfigOptions {
          *
          * # Flag to indicate what credentials to use
          * inProduction = false
-         *
-         * # Required for FCM
-         * fcmSenderId = Your FCM sender ID is your Google API project number (required for GCM)
          *
          * # Log levels
          * developmentLogLevel = DEBUG
@@ -579,7 +554,6 @@ public class AirshipConfigOptions {
          *    developmentAppKey = "Your Development App Key"
          *    developmentAppSecret = "Your Development App Secret"
          *    developmentLogLevel = "VERBOSE"
-         *    fcmSenderId = "Your FCM sender ID is your Google API project number (required for GCM)" />
          * }
          * </pre>
          *
@@ -646,8 +620,8 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_GCM_SENDER:
-                            this.setGcmSender(configParser.getString(i));
-                            break;
+                            throw new IllegalArgumentException("gcmSender no longer supported. Please use " +
+                                    "fcmSender or remove it to allow the Urban Airship SDK to pull from the google-services.json.");
 
                         case FIELD_ALLOWED_TRANSPORTS:
                             this.setAllowedTransports(configParser.getStringArray(i));
@@ -881,20 +855,6 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setRemoteDataURL(@Nullable String remoteDataURL) {
             this.remoteDataURL = remoteDataURL;
-            return this;
-        }
-
-        /**
-         * Set the sender ID used to send GCM pushes.
-         *
-         * @param gcmSender The sender ID used to send GCM pushes.
-         * @return The config options builder.
-         * @deprecated Set the FCM sender ID instead.
-         */
-        @NonNull
-        @Deprecated
-        public Builder setGcmSender(@Nullable String gcmSender) {
-            this.gcmSender = gcmSender;
             return this;
         }
 
@@ -1203,10 +1163,6 @@ public class AirshipConfigOptions {
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
                 Logger.warn("Production App Secret matches Development App Secret");
-            }
-
-            if (gcmSender != null) {
-                Logger.warn("AirshipConfigOption's gcmSender is deprecated. Please use fcmSenderId instead.");
             }
 
             return new AirshipConfigOptions(this);

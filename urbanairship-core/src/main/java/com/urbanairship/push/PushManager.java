@@ -511,30 +511,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets both the alias and tags for this channel and updates the server.
-     * <p>
-     * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
-     * tag includes whitespace or special characters, we recommend URL encoding the string.
-     * <p>
-     *
-     * @param alias The desired alias, <code>null</code> to remove
-     * @param tags The desired set of tags, must be non-null
-     * @see #setAlias(String)
-     * @see #setTags(Set)
-     * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
-     */
-    @Deprecated
-    public void setAliasAndTags(@Nullable String alias, @NonNull Set<String> tags) {
-        //noinspection ConstantConditions
-        if (tags == null) {
-            throw new IllegalArgumentException("Tags must be non-null.");
-        }
-
-        setAlias(alias);
-        setTags(tags);
-    }
-
-    /**
      * Determines whether the app is capable of receiving push,
      * meaning whether a GCM or ADM registration ID is present.
      *
@@ -570,7 +546,6 @@ public class PushManager extends AirshipComponent {
     @NonNull
     ChannelRegistrationPayload getNextChannelRegistrationPayload() {
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setAlias(getAlias())
                 .setTags(getChannelTagRegistrationEnabled(), getTags())
                 .setOptIn(isOptIn())
                 .setBackgroundEnabled(isPushEnabled() && isPushAvailable())
@@ -620,45 +595,12 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Set the alias for the channel and update the server.
-     * <p>
-     * If you are setting both the alias and tags at the same time, you should
-     * use {@link #setAliasAndTags(String, Set)} to avoid making an extra
-     * network call.
-     * <p>
-     * Refer to the
-     * <a href="https://docs.urbanairship.com/build/android_features.html#aliases">Alias</a>
-     * for more information on the use of aliases.
-     *
-     * @param alias The alias, <code>null</code> to remove
-     * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
-     */
-    @Deprecated
-    public void setAlias(@Nullable String alias) {
-        if (alias != null) {
-            alias = alias.trim();
-        }
-
-        if (!UAStringUtil.equals(alias, getAlias())) {
-            preferenceDataStore.put(ALIAS_KEY, alias);
-            updateRegistration();
-        }
-    }
-
-    /**
      * Set tags for the channel and update the server.
      * <p>
      * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
      * tag includes whitespace or special characters, we recommend URL encoding the string.
      * <p>
      * To clear the current set of tags, pass an empty set to this method.
-     * <p>
-     * If you are setting both the alias and tags at the same time, you should
-     * use {@link #setAliasAndTags(String, Set)} to avoid making an extra
-     * network call.
-     * <p>
-     * Refer to the <a href="https://docs.urbanairship.com/build/android_features.html#tags">Tag API</a> for
-     * more information.
      *
      * @param tags A set of tag strings.
      */
@@ -674,16 +616,6 @@ public class PushManager extends AirshipComponent {
         }
 
         updateRegistration();
-    }
-
-    /**
-     * Returns the current alias for this application's channel.
-     *
-     * @return The string alias, or null if one is not set.
-     */
-    @Nullable
-    public String getAlias() {
-        return preferenceDataStore.getString(ALIAS_KEY, null);
     }
 
     /**

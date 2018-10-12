@@ -54,13 +54,13 @@ public class ActionButtonGroupsParserTest extends BaseTestCase {
 
         NotificationActionButton yes  = yesNoGroup.getNotificationActionButtons().get(0);
         assertEquals("yes", yes.getId());
-        assertEquals(R.string.ua_notification_button_yes, yes.getLabel());
+        assertEquals("Yes", yes.getLabel(context));
         assertEquals(R.drawable.ua_ic_notification_button_accept, yes.getIcon());
         assertTrue(yes.isForegroundAction());
 
         NotificationActionButton no  = yesNoGroup.getNotificationActionButtons().get(1);
         assertEquals("no", no.getId());
-        assertEquals(R.string.ua_notification_button_no, no.getLabel());
+        assertEquals("No", no.getLabel(context));
         assertEquals(R.drawable.ua_ic_notification_button_decline, no.getIcon());
         assertFalse(no.isForegroundAction());
     }

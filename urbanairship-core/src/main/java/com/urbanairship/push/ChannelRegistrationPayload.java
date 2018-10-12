@@ -23,7 +23,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String OPT_IN_KEY = "opt_in";
     static final String BACKGROUND_ENABLED_KEY = "background";
-    static final String ALIAS_KEY = "alias";
     static final String PUSH_ADDRESS_KEY = "push_address";
     static final String SET_TAGS_KEY = "set_tags";
     static final String TAGS_KEY = "tags";
@@ -36,7 +35,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
 
     private final boolean optIn;
     private final boolean backgroundEnabled;
-    private final String alias;
     private final String deviceType;
     private final String pushAddress;
     private final boolean setTags;
@@ -54,7 +52,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
     static class Builder {
         private boolean optIn;
         private boolean backgroundEnabled;
-        private String alias;
         private String deviceType;
         private String pushAddress;
         private boolean setTags;
@@ -89,20 +86,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
             return this;
         }
 
-        /**
-         * Set the alias value
-         *
-         * @param alias A string value
-         * @return The builder with alias value set
-         */
-        @NonNull
-        Builder setAlias(@Nullable String alias) {
-            if (alias != null) {
-                alias = alias.trim();
-            }
-            this.alias = UAStringUtil.isEmpty(alias) ? null : alias;
-            return this;
-        }
 
         /**
          * Set the device type
@@ -212,7 +195,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
     private ChannelRegistrationPayload(Builder builder) {
         this.optIn = builder.optIn;
         this.backgroundEnabled = builder.backgroundEnabled;
-        this.alias = builder.alias;
         this.deviceType = builder.deviceType;
         this.pushAddress = builder.pushAddress;
         this.setTags = builder.setTags;
@@ -229,7 +211,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
     public JsonValue toJsonValue() {
         // Channel Payload
         JsonMap.Builder channel = JsonMap.newBuilder()
-                                         .put(ALIAS_KEY, alias)
                                          .put(DEVICE_TYPE_KEY, deviceType)
                                          .put(SET_TAGS_KEY, setTags)
                                          .put(OPT_IN_KEY, optIn)
@@ -294,9 +275,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
         if (setTags != that.setTags) {
             return false;
         }
-        if (alias != null ? !alias.equals(that.alias) : that.alias != null) {
-            return false;
-        }
         if (deviceType != null ? !deviceType.equals(that.deviceType) : that.deviceType != null) {
             return false;
         }
@@ -326,7 +304,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
     public int hashCode() {
         int result = (optIn ? 1 : 0);
         result = 31 * result + (backgroundEnabled ? 1 : 0);
-        result = 31 * result + (alias != null ? alias.hashCode() : 0);
         result = 31 * result + (deviceType != null ? deviceType.hashCode() : 0);
         result = 31 * result + (pushAddress != null ? pushAddress.hashCode() : 0);
         result = 31 * result + (setTags ? 1 : 0);
@@ -367,7 +344,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
                             .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
                             .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
                             .setPushAddress(channelJson.opt(PUSH_ADDRESS_KEY).getString())
-                            .setAlias(channelJson.opt(ALIAS_KEY).getString())
                             .setLanguage(channelJson.opt(LANGUAGE_KEY).getString())
                             .setCountry(channelJson.opt(COUNTRY_KEY).getString())
                             .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())

@@ -49,7 +49,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://test.host.url.com/", aco.hostURL);
         assertEquals("https://test.analytics.url.com/", aco.analyticsServer);
         assertEquals("https://test.landingpage.url.com/", aco.landingPageContentURL);
-        assertEquals("id", aco.gcmSender);
         assertArrayEquals(new String[] { "GCM_TRANSPORT" }, aco.allowedTransports);
         assertEquals("https://first.whitelist.url.com/", aco.whitelist[0]);
         assertEquals("https://second.whitelist.url.com/", aco.whitelist[1]);
@@ -105,7 +104,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
                 .setDevelopmentFcmSenderId("dev fcm sender ID")
                 .setProductionFcmSenderId("prod fcm sender ID")
                 .setFcmSenderId("fcm sender ID")
-                .setGcmSender("deprecated gcm sender ID")
                 .build();
 
         assertEquals("dev fcm sender ID", aco.getFcmSenderId());
@@ -122,7 +120,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
                 .setDevelopmentFcmSenderId("dev fcm sender ID")
                 .setProductionFcmSenderId("prod fcm sender ID")
                 .setFcmSenderId("fcm sender ID")
-                .setGcmSender("deprecated gcm sender ID")
                 .build();
 
         assertEquals("prod fcm sender ID", aco.getFcmSenderId());
@@ -138,7 +135,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
                 .setInProduction(true)
                 .setDevelopmentFcmSenderId("dev fcm sender ID")
                 .setFcmSenderId("fcm sender ID")
-                .setGcmSender("deprecated gcm sender ID")
                 .build();
 
         assertEquals("fcm sender ID", aco.getFcmSenderId());
@@ -146,20 +142,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
 
     }
 
-    @Test
-    public void testGcmSenderId() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setProductionAppSecret("appSecret")
-                .setProductionAppKey("appKey")
-                .setInProduction(true)
-                .setDevelopmentFcmSenderId("dev fcm sender ID")
-                .setGcmSender("deprecated gcm sender ID")
-                .build();
-
-        assertEquals("deprecated gcm sender ID", aco.getFcmSenderId());
-    }
 
     Properties getProperties(String file) throws IOException {
         InputStream stream = null;

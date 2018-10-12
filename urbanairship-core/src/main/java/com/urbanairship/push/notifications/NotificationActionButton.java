@@ -67,18 +67,6 @@ public class NotificationActionButton {
     }
 
     /**
-     * Gets the button's label ID.
-     *
-     * @return The button's label ID as an int.
-     * @deprecated Use {@link #getLabel(Context)} instead.
-     */
-    @Deprecated
-    @StringRes
-    public int getLabel() {
-        return labelId;
-    }
-
-    /**
      * Gets the button's label.
      *
      * @return The button's label.

@@ -296,7 +296,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @NonNull
             @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
                 return NotificationFactory.Result.cancel();
             }
 
@@ -325,7 +325,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @NonNull
             @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
                 return NotificationFactory.Result.retry();
             }
 
@@ -357,7 +357,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @NonNull
             @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
                 return NotificationFactory.Result.notification(notification);
             }
 

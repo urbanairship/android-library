@@ -26,7 +26,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
     private final boolean testOptIn = true;
     private final boolean testBackgroundEnabled = true;
-    private final String testAlias = "fakeAlias";
     private final String testDeviceType = "android";
     private final String testPushAddress = "gcmRegistrationId";
     private final String testUserId = "fakeUserId";
@@ -55,7 +54,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
                 .setBackgroundEnabled(testBackgroundEnabled)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -91,8 +89,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals("Background flag should be true.", channel.get(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY).getBoolean(!testBackgroundEnabled), testBackgroundEnabled);
         assertTrue("Push address should be present in payload.", channel.containsKey(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
         assertEquals("Push address should be gcmRegistrationId.", channel.get(ChannelRegistrationPayload.PUSH_ADDRESS_KEY).getString(), testPushAddress);
-        assertTrue("Alias should be present in payload", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
-        assertEquals("Alias should be fakeAlias.", channel.get(ChannelRegistrationPayload.ALIAS_KEY).getString(), testAlias);
         assertTrue("Set tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
         assertEquals("Set tags should be true.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(!testSetTags), testSetTags);
         assertTrue("Tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
@@ -172,60 +168,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     }
 
     /**
-     * Test that an empty alias is not included.
-     */
-    @Test
-    public void testAsJsonEmptyAlias() throws JSONException {
-        payload = new ChannelRegistrationPayload.Builder()
-                .setAlias("").build();
-
-        // Channel specific items
-        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
-        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
-    }
-
-    /**
-     * Test that an alias with just spaces is not included.
-     */
-    @Test
-    public void testAsJsonSpacesAlias() throws JSONException {
-        payload = new ChannelRegistrationPayload.Builder()
-                .setAlias("         ").build();
-
-        // Channel specific items
-        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
-        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
-    }
-
-    /**
-     * Test that an alias with spaces is trimmed and included.
-     */
-    @Test
-    public void testAsJsonSpacesTrimmedAlias() throws JSONException {
-        payload = new ChannelRegistrationPayload.Builder()
-                .setAlias("     fakeAlias     ").build();
-
-        // Channel specific items
-        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
-
-        assertTrue("Alias should be present in payload", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
-        assertEquals("Alias should be fakeAlias.", channel.get(ChannelRegistrationPayload.ALIAS_KEY).getString(), testAlias);
-    }
-
-    /**
-     * Test that a null alias is not included.
-     */
-    @Test
-    public void testAsJsonNullAlias() throws JSONException {
-        payload = new ChannelRegistrationPayload.Builder()
-                .setAlias(null).build();
-
-        // Channel specific items
-        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
-        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
-    }
-
-    /**
      * Test an empty builder.
      */
     @Test
@@ -245,7 +187,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Background flag should be present in payload.", channel.containsKey(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY));
         assertEquals("Background flag should be false.", channel.get(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY).getBoolean(true), false);
         assertFalse("Push address should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
-        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
         assertTrue("Set tags should be present in payload.", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
         assertEquals("Set tags should be false.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(true), false);
         assertFalse("Tags should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
@@ -258,7 +199,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testPayloadEqualToItself() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -275,7 +215,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testPayloadsEqual() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -285,7 +224,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
         ChannelRegistrationPayload payload2 = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -304,7 +242,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testPayloadsNotEqual() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -314,7 +251,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
         ChannelRegistrationPayload emptyPayload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(false)
-                .setAlias(null)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(null)
                 .setTags(false, null)
@@ -344,7 +280,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testCreateFromJSON() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
@@ -369,7 +304,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testFromJsonNoTags() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias(testAlias)
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
@@ -385,7 +319,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testFromJsonEmptyAlias() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
-                .setAlias("")
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)

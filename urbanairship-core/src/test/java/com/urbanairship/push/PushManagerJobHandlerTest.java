@@ -86,7 +86,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushManager.setAlias("someAlias");
+        pushManager.editTags().addTag("someTag").apply();
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -125,7 +125,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushManager.setAlias("someAlias");
+        pushManager.editTags().addTag("someTag").apply();
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -201,7 +201,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushManager.setAlias("someAlias");
+        pushManager.editTags().addTag("someTag").apply();
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -253,7 +253,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushManager.setAlias("someAlias");
+        pushManager.editTags().addTag("someTag").apply();
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -285,7 +285,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
 
         // Ensure payload is different, so we don't get a null payload
-        pushManager.setAlias("someAlias");
+        pushManager.editTags().addTag("someTag").apply();
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         URL channelLocation = new URL(fakeChannelLocation);

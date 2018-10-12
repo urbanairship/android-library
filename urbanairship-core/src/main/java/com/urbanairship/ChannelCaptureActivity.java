@@ -112,7 +112,6 @@ public class ChannelCaptureActivity extends ThemedActivity {
         PushManager pushManager = UAirship.shared().getPushManager();
 
         addChannelAttribute(data, NAMED_USER_HEADER, UAirship.shared().getNamedUser().getId());
-        addChannelAttribute(data, ALIAS_HEADER, pushManager.getAlias());
         addChannelAttribute(data, USER_NOTIFICATION_ENABLED_HEADER, String.valueOf(pushManager.getUserNotificationsEnabled()));
 
         return data;

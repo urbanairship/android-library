@@ -118,30 +118,6 @@ public class PlayServicesUtils {
         return isGooglePlayServicesDependencyAvailable;
     }
 
-    /**
-     * Checks if Google Play services dependency is available for GCM.
-     *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
-     * @deprecated Marked to be removed in SDK 10.0
-     */
-    @Deprecated
-    public static boolean isGoogleCloudMessagingDependencyAvailable() {
-        if (isGoogleCloudMessagingDependencyAvailable == null) {
-            if (!isGooglePlayServicesDependencyAvailable()) {
-                isGoogleCloudMessagingDependencyAvailable = false;
-            } else {
-                try {
-                    Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
-                    Class.forName("com.google.android.gms.gcm.GcmReceiver");
-                    isGoogleCloudMessagingDependencyAvailable = true;
-                } catch (ClassNotFoundException e) {
-                    isGoogleCloudMessagingDependencyAvailable = false;
-                }
-            }
-        }
-
-        return isGoogleCloudMessagingDependencyAvailable;
-    }
 
     /**
      * Checks if Google Play services dependency is available for Fused Location.
