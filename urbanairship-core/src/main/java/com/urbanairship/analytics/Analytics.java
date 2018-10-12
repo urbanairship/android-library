@@ -48,16 +48,6 @@ public class Analytics extends AirshipComponent {
     public static final String ACTION_SEND = "ACTION_SEND";
 
     /**
-     * Job action to update the ad ID on foreground.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public static final String ACTION_UPDATE_ADVERTISING_ID = "ACTION_UPDATE_ADVERTISING_ID";
-
-
-    /**
      * Minimum amount of delay when {@link #uploadEvents()} is called.
      */
     public static final long SCHEDULE_SEND_DELAY_SECONDS = 10;
@@ -65,7 +55,6 @@ public class Analytics extends AirshipComponent {
     private static final String KEY_PREFIX = "com.urbanairship.analytics";
     private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
     private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
-    private static final String ADVERTISING_ID_AUTO_TRACKING_KEY = KEY_PREFIX + ".ADVERTISING_ID_TRACKING";
 
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
@@ -299,15 +288,6 @@ public class Analytics extends AirshipComponent {
             trackScreen(previousScreen);
         }
 
-        // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
-        if (isAutoTrackAdvertisingIdEnabled()) {
-            jobDispatcher.dispatch(JobInfo.newBuilder()
-                                          .setAction(ACTION_UPDATE_ADVERTISING_ID)
-                                          .setId(JobInfo.ANALYTICS_UPDATE_ADVERTISING_ID)
-                                          .setAirshipComponent(Analytics.class)
-                                          .build());
-        }
-
         addEvent(new AppForegroundEvent(timeMS));
     }
 
@@ -363,37 +343,6 @@ public class Analytics extends AirshipComponent {
      */
     public boolean isEnabled() {
         return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
-    }
-
-    /**
-     * Sets the ad ID auto tracking enabled flag.
-     *
-     * @param enabled {@code true} to enable, {@code false} to disable.
-     */
-    public void setAutoTrackAdvertisingIdEnabled(boolean enabled) {
-        if (platform == UAirship.ANDROID_PLATFORM && !PlayServicesUtils.isGoogleAdsDependencyAvailable() && enabled) {
-            Logger.error("Analytics - Advertising ID auto-tracking could not be enabled due to a missing Google Ads dependency.");
-            return;
-        }
-
-        preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
-
-        if (enabled) {
-            jobDispatcher.dispatch(JobInfo.newBuilder()
-                                          .setAction(ACTION_UPDATE_ADVERTISING_ID)
-                                          .setId(JobInfo.ANALYTICS_UPDATE_ADVERTISING_ID)
-                                          .setAirshipComponent(Analytics.class)
-                                          .build());
-        }
-    }
-
-    /**
-     * Returns the ad ID auto tracking enabled flag.
-     *
-     * @return {@code true} if enabled, otherwise {@code false}.
-     */
-    public boolean isAutoTrackAdvertisingIdEnabled() {
-        return preferenceDataStore.getBoolean(ADVERTISING_ID_AUTO_TRACKING_KEY, false);
     }
 
     /**

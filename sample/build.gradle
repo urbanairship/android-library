@@ -44,8 +44,11 @@ dependencies {
 
     // Urban Airship - FCM
     implementation project(':urbanairship-fcm')
-    implementation 'com.google.firebase:firebase-core:16.0.3'
-    implementation 'com.google.firebase:firebase-iid:17.0.2'
+    implementation 'com.google.firebase:firebase-core:16.0.4'
+
+    // Urban Airship - Advertising ID tracking
+    implementation project(':urbanairship-ads-identifier')
+
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"

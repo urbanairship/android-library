@@ -286,30 +286,4 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify no jobs were created for the event
         verifyZeroInteractions(mockJobDispatcher);
     }
-
-
-    /**
-     * Test that foregrounding the app with advertising ID tracking enabled dispatches a job to update
-     * the advertising ID.
-     */
-    @Test
-    public void testAdIdTrackingOnForeground() {
-        // Test the preference settings.
-        analytics.setAutoTrackAdvertisingIdEnabled(false);
-        assertFalse(analytics.isAutoTrackAdvertisingIdEnabled());
-
-        analytics.setAutoTrackAdvertisingIdEnabled(true);
-        assertTrue(analytics.isAutoTrackAdvertisingIdEnabled());
-
-        // Start analytics in the background.
-        analytics.onForeground(0);
-
-        // Verify a job was dispatched fot update the advertising ID
-        verify(mockJobDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(Analytics.ACTION_UPDATE_ADVERTISING_ID);
-            }
-        }));
-    }
 }

@@ -49,6 +49,10 @@
 			android:key="analytics_preference"
 			android:title="@string/analytics_preference_title" />
 
+		<com.urbanairship.sample.preference.EnableAdvertisingIdPreference
+			android:persistent="false"
+			android:title="@string/analytics_ad_id_preference_title" />
+
 	</PreferenceCategory>
 
 	<PreferenceCategory

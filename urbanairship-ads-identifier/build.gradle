@@ -1,0 +1,8 @@
+description = "Urban Airship Android SDK Advertising ID plugin"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+    implementation "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesAdsIdentifierVersion}"
+}

@@ -15,9 +15,9 @@ dependencies {
     api "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
 
     // Optional
-    compileOnly "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesAdsIdentifierVersion}"
     compileOnly "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
     compileOnly "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
+    compileOnly "com.google.android.gms:play-services-base:${airshipProperties.playServicesBaseVersion}"
 
     // Tests
     testImplementation 'junit:junit:4.12'
@@ -26,7 +26,6 @@ dependencies {
     testImplementation 'org.robolectric:shadows-supportv4:3.8'
     testImplementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
     testImplementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
-    testImplementation "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesAdsIdentifierVersion}"
 
     // Docs
     doclava("com.google.doclava:doclava:1.0.6")
