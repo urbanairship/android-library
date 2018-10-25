@@ -4,6 +4,7 @@ package com.urbanairship.iam.tags;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonValue;
 
@@ -14,8 +15,44 @@ import java.util.Set;
 
 /***
  * Utils for Tag Groups.
+ * @hide
  */
-class TagGroupUtils {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class TagGroupUtils {
+
+    /**
+     * Creates a new map of the union of the two provided maps.
+     *
+     * @param lh The left map.
+     * @param rh The right map.
+     * @return A new map that contains all the elements from both maps.
+     */
+    @NonNull
+    public static Map<String, Set<String>> union(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
+        Map<String, Set<String>> result = new HashMap<>();
+        addAll(result, lh);
+        addAll(result, rh);
+        return result;
+    }
+
+    /**
+     * Adds all tags from the right map to the left map. Use this instead of {@link Map#putAll(Map)}
+     * to combine the tag sets if the two maps contain the same groups.
+     * <p>
+     * This method will mutate the left map. To avoid mutating the parameters, use {@link #union(Map, Map)}.
+     *
+     * @param lh The map that will have all the elements.
+     * @param rh The elements to add.
+     */
+    public static void addAll(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
+        for (Map.Entry<String, Set<String>> entry : rh.entrySet()) {
+            if (!lh.containsKey(entry.getKey())) {
+                lh.put(entry.getKey(), new HashSet<String>());
+            }
+
+            lh.get(entry.getKey()).addAll(entry.getValue());
+        }
+    }
 
     /**
      * Checks if lh argument contains all the tags in the rh argument.
@@ -24,7 +61,7 @@ class TagGroupUtils {
      * @param rh Map of tags groups to tags.
      * @return {@code true} if the lh contains all the rh tags.
      */
-    static boolean containsAll(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
+    public static boolean containsAll(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
         for (Map.Entry<String, Set<String>> entry : rh.entrySet()) {
 
             if (!lh.containsKey(entry.getKey())) {
@@ -46,7 +83,8 @@ class TagGroupUtils {
      * @param rh Map of tags groups to tags.
      * @return A new map tag groups that are contained in both arguments.
      */
-    static Map<String, Set<String>> intersect(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
+    @NonNull
+    public static Map<String, Set<String>> intersect(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
         Map<String, Set<String>> result = new HashMap<>();
 
         for (Map.Entry<String, Set<String>> entry : lh.entrySet()) {
@@ -69,7 +107,7 @@ class TagGroupUtils {
      * @return The parsed tags.
      */
     @NonNull
-    static Map<String, Set<String>> parseTags(@Nullable JsonValue value) {
+    public static Map<String, Set<String>> parseTags(@Nullable JsonValue value) {
         Map<String, Set<String>> tagGroups = new HashMap<>();
 
         if (value == null) {

@@ -8,6 +8,7 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
+import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -343,25 +344,11 @@ public class TagSelector implements JsonSerializable {
 
         if (selectors != null) {
             for (TagSelector selector : selectors) {
-                merge(tagGroups, selector.getTagGroups());
+                TagGroupUtils.addAll(tagGroups, selector.getTagGroups());
             }
         }
 
         return tagGroups;
-    }
-
-    private void merge(@NonNull Map<String, Set<String>> first, @NonNull Map<String, Set<String>> second) {
-        if (second.isEmpty()) {
-            return;
-        }
-
-        for (Map.Entry<String, Set<String>> entry : second.entrySet()) {
-            if (first.containsKey(entry.getKey())) {
-                first.get(entry.getKey()).addAll(entry.getValue());
-            } else {
-                first.put(entry.getKey(), entry.getValue());
-            }
-        }
     }
 
     @Override
