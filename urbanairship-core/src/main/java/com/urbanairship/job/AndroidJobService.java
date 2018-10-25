@@ -15,7 +15,7 @@ import com.urbanairship.Logger;
  * @hide
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-class AndroidJobService extends JobService {
+public class AndroidJobService extends JobService {
 
     @Override
     public boolean onStartJob(@NonNull final JobParameters jobParameters) {
