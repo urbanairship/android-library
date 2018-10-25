@@ -38,6 +38,7 @@ import java.util.Locale;
  * @hide
  */
 public class MediaView extends FrameLayout {
+
     private WebView webView;
     private WebChromeClient chromeClient;
 
@@ -200,10 +201,28 @@ public class MediaView extends FrameLayout {
             }
         }
 
+        final WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
+
+        Runnable load = new Runnable() {
+            @Override
+            public void run() {
+                WebView webView = webViewWeakReference.get();
+                if (webView == null) {
+                    return;
+                }
+
+                if (MediaInfo.TYPE_VIDEO.equals(mediaInfo.getType())) {
+                    webView.loadData(String.format(Locale.ROOT, VIDEO_HTML_FORMAT, mediaInfo.getUrl()), "text/html", "UTF-8");
+                } else {
+                    webView.loadUrl(mediaInfo.getUrl());
+                }
+            }
+        };
+
         webView.setWebChromeClient(chromeClient);
         webView.setContentDescription(mediaInfo.getDescription());
         webView.setVisibility(View.INVISIBLE);
-        webView.setWebViewClient(new MediaWebViewClient() {
+        webView.setWebViewClient(new MediaWebViewClient(load) {
             @Override
             protected void onPageFinished(@NonNull WebView webView) {
                 webView.setVisibility(View.VISIBLE);
@@ -218,35 +237,26 @@ public class MediaView extends FrameLayout {
             return;
         }
 
-        if (MediaInfo.TYPE_VIDEO.equals(mediaInfo.getType())) {
-            webView.loadData(String.format(Locale.ROOT, VIDEO_HTML_FORMAT, mediaInfo.getUrl()), "text/html", "UTF-8");
-        } else {
-            webView.loadUrl(mediaInfo.getUrl());
-        }
-
+        load.run();
     }
 
     private static abstract class MediaWebViewClient extends WebViewClient {
         static final long START_RETRY_DELAY = 1000;
 
+        private final Runnable onRetry;
         boolean error = false;
-        long retry = START_RETRY_DELAY;
+        long retryDelay = START_RETRY_DELAY;
+
+        private MediaWebViewClient(Runnable onRetry) {
+            this.onRetry = onRetry;
+        }
 
         @Override
         public void onPageFinished(@NonNull WebView view, final String url) {
             super.onPageFinished(view, url);
             if (error) {
-                final WeakReference<WebView> weakReference = new WeakReference<WebView>(view);
-                view.getHandler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        WebView webView = weakReference.get();
-                        if (webView != null) {
-                            webView.loadUrl(url);
-                        }
-                    }
-                }, retry);
-                retry = retry * 2;
+                view.getHandler().postDelayed(onRetry, retryDelay);
+                retryDelay = retryDelay * 2;
             } else {
                 onPageFinished(view);
             }

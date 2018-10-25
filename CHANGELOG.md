@@ -3,18 +3,32 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.5.4 - October 25, 2018
+================================
+
+Patch to fix an issue where if two in-app messages have an audience condition for the same tag group,
+only the newest tag group will be requested properly. Apps that use in-app automation should update.
+
+Version 9.5.3 - October 15, 2018
+================================
+Patch release that fixes displaying HTML in-app messages as full screen
+on smaller screen (w480dp) devices.
+
 Version 9.5.2 - September 20, 2018
 ==================================
+
 Patch release to fix build errors when building with code shrinking enabled while proguard is disabled.
 
 Version 9.5.1 - September 11, 2018
 ==================================
-Patch release to fix a rare NPE with banner messages in In-App Automation. Apps supporting banner messages should update to this version.
+
+Patch release to fix a rare NPE with banner messages in In-App Automation. Apps supporting banner
+messages should update to this version.
 
 Version 9.5.0 - September 4, 2018
 =================================
 
-Minor release thats adds support for tag group audiences, miss behaviors and resizable HTML messages in
+Minor release that adds support for tag group audiences, miss behaviors and resizable HTML messages in
 In-App Automation. HTML in-app messages are now displayed as dialogs by default, with an option
 to display fullscreen on smaller devices.
 

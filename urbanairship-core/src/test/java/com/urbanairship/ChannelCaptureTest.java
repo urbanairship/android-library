@@ -127,6 +127,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Verify the intent
         assertNotNull(intent);
+        assertEquals(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK);
         assertEquals(intent.getComponent().getClassName(), "com.urbanairship.ChannelCaptureActivity");
         assertEquals("channel ID", intent.getExtras().getString(ChannelCapture.CHANNEL));
         assertEquals("https://go.urbanairship.com//oh_hi", intent.getExtras().getString(ChannelCapture.URL));
@@ -148,6 +149,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Verify the intent
         assertNotNull(intent);
+        assertEquals(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK);
         assertEquals(intent.getComponent().getClassName(), "com.urbanairship.ChannelCaptureActivity");
         assertEquals("channel ID", intent.getExtras().getString(ChannelCapture.CHANNEL));
         assertEquals(null, intent.getExtras().getString(ChannelCapture.URL));

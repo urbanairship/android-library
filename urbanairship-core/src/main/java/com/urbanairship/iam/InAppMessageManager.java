@@ -34,6 +34,7 @@ import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
+import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
@@ -245,11 +246,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                 for (InAppMessageSchedule schedule : schedules) {
                     Audience audience = schedule.getInfo().getInAppMessage().getAudience();
-                    if (audience == null || audience.getTagSelector() == null || !audience.getTagSelector().containsTagGroups()) {
-                        continue;
+                    if (audience != null && audience.getTagSelector() != null && audience.getTagSelector().containsTagGroups()) {
+                        TagGroupUtils.addAll(tags, audience.getTagSelector().getTagGroups());
                     }
-
-                    tags.putAll(audience.getTagSelector().getTagGroups());
                 }
 
                 return tags;

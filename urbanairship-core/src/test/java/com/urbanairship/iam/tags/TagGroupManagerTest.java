@@ -27,6 +27,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -69,7 +70,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         callbackResponseTags.put("some-group", tagSet("cool", "story"));
         callbackResponseTags.put("some-other-group", tagSet("not cool"));
         callbackResponseTags.put("yet-another-group", tagSet("so cool"));
-        
+
 
         clientResponseTags = new HashMap<>();
         clientResponseTags.put("some-group", tagSet("cool"));
@@ -385,14 +386,17 @@ public class TagGroupManagerTest extends BaseTestCase {
 
         manager.getTags(requestTags);
 
+        verify(mockClient, times(1))
+                .lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+
         // Request a new tag that the manager did not previously request.
         requestTags.get("some-group").add("new-tag");
-        callbackResponseTags.get("some-group").add("new-tag");
 
         manager.getTags(requestTags);
 
-        // Verify we hit the client twice. It should throw away the cached response since the tags do not match
-        verify(mockClient, times(2)).lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+        verify(mockClient, times(1))
+                .lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+
         verifyNoMoreInteractions(mockClient);
     }
 
@@ -436,9 +440,7 @@ public class TagGroupManagerTest extends BaseTestCase {
     }
 
     private Map<String, Set<String>> getExpectedClientRequestTags() {
-        Map<String, Set<String>> tags = new HashMap<>(callbackResponseTags);
-        tags.putAll(requestTags);
-        return tags;
+        return TagGroupUtils.union(callbackResponseTags, requestTags);
     }
 
     private class TestCallback implements TagGroupManager.RequestTagsCallback {

@@ -21,6 +21,47 @@ import static junit.framework.Assert.assertTrue;
 public class TagGroupUtilsTest extends BaseTestCase {
 
     /**
+     * Tests union.
+     */
+    @Test
+    public void testUnion() {
+        Map<String, Set<String>> tagGroupsOne = new HashMap<>();
+        tagGroupsOne.put("shared-group", tagSet("cool", "awesome"));
+        tagGroupsOne.put("unique-group", tagSet("nice", "amazing"));
+
+        Map<String, Set<String>> tagGroupsTwo = new HashMap<>();
+        tagGroupsTwo.put("shared-group", tagSet("rad"));
+
+        Map<String, Set<String>> expected = new HashMap<>();
+        expected.put("shared-group", tagSet("cool", "awesome", "rad"));
+        expected.put("unique-group", tagSet("nice", "amazing"));
+
+        assertEquals(expected, TagGroupUtils.union(tagGroupsOne, tagGroupsTwo));
+        assertEquals(expected, TagGroupUtils.union(tagGroupsTwo, tagGroupsOne));
+    }
+
+    /**
+     * Tests add all.
+     */
+    @Test
+    public void testAddAll() {
+        Map<String, Set<String>> tags = new HashMap<>();
+
+        Map<String, Set<String>> tagGroupsOne = new HashMap<>();
+        tagGroupsOne.put("shared-group", tagSet("cool", "awesome"));
+        tagGroupsOne.put("unique-group", tagSet("nice", "amazing"));
+
+        Map<String, Set<String>> tagGroupsTwo = new HashMap<>();
+        tagGroupsTwo.put("shared-group", tagSet("rad"));
+
+        TagGroupUtils.addAll(tags, tagGroupsOne);
+        assertEquals(tags, tagGroupsOne);
+
+        TagGroupUtils.addAll(tags, tagGroupsTwo);
+        assertEquals(tags, TagGroupUtils.union(tagGroupsOne, tagGroupsTwo));
+    }
+
+    /**
      * Tests intersect.
      */
     @Test

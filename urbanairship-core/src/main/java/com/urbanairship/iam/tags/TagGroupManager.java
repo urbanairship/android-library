@@ -359,9 +359,11 @@ public class TagGroupManager {
      * @param cachedResponse The cached response.
      */
     private void refreshCache(Map<String, Set<String>> tags, @Nullable TagGroupResponse cachedResponse) throws Exception {
-        Map<String, Set<String>> requestTags = new HashMap<>(tags);
+        Map<String, Set<String>> requestTags;
         if (requestTagsCallback != null) {
-            requestTags.putAll(requestTagsCallback.getTags());
+            requestTags = TagGroupUtils.union(tags, requestTagsCallback.getTags());
+        } else {
+            requestTags = tags;
         }
 
         // Only use the cached response if it the requested tags are the same
@@ -385,4 +387,3 @@ public class TagGroupManager {
         setCachedResponse(response, requestTags);
     }
 }
-

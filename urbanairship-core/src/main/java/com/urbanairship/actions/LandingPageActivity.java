@@ -50,7 +50,7 @@ import java.lang.ref.WeakReference;
  * by providing a metadata element com.urbanairship.action.LANDING_PAGE_VIEW with
  * the specified view resource. When supplying a custom view, a
  * {@link com.urbanairship.widget.UAWebView} must be defined with id
- * android.R.id.primary inside a content holder with id android.R.id.content_holder.
+ * android.R.id.primary inside a content holder with id content_holder.
  * An optional progress view with id android.R.id.progress can be added to the webview.
  * An optional close button can be added by defining it in the layout and setting
  * the android:onClick="onCloseButtonClick". The onCloseButtonClick method will
@@ -439,7 +439,7 @@ public class LandingPageActivity extends Activity {
 
         error = null;
 
-        if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
             final String messageId = uri.getSchemeSpecificPart();
             RichPushMessage message = UAirship.shared()
                                               .getInbox()
