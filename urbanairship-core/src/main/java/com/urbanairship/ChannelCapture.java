@@ -185,6 +185,7 @@ public class ChannelCapture extends AirshipComponent {
             Logger.debug("Unable to clear clipboard: " + e.getMessage());
         }
 
+
         startChannelCaptureActivity(channel, url);
     }
 
@@ -195,13 +196,12 @@ public class ChannelCapture extends AirshipComponent {
      * @param url The channel url.
      */
     private void startChannelCaptureActivity(String channel, String url) {
-        Intent intent = new Intent(context, ChannelCaptureActivity.class);
-        intent.putExtra(CHANNEL, channel);
-        intent.putExtra(URL, url);
+        Intent intent = new Intent(context, ChannelCaptureActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra(CHANNEL, channel)
+                .putExtra(URL, url);
         context.startActivity(intent);
     }
-
-
 
     /**
      * Generates the expected clipboard token.
