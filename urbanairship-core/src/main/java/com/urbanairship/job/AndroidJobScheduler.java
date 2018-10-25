@@ -16,9 +16,10 @@ import com.urbanairship.util.ManifestUtils;
 
 /**
  * Job scheduler using the Android Job's API.
+ * @hide
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-public class AndroidJobScheduler implements Scheduler {
+class AndroidJobScheduler implements Scheduler {
 
     private static final long INITIAL_RETRY_MS = 30000; // 30 seconds.
     private static final long DEFAULT_DELAY_MS = 10000; // 10 seconds.

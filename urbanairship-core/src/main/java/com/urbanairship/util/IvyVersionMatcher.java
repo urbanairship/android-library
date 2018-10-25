@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 /**
  * Ivy version matcher.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {

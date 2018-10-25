@@ -3,6 +3,7 @@
 package com.urbanairship.http;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import java.net.URL;
 
@@ -10,7 +11,7 @@ import java.net.URL;
  * Class that creates the request.
  * @hide
  */
-
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RequestFactory {
 
     /**

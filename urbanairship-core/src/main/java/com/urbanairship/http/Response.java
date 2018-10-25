@@ -5,13 +5,16 @@ package com.urbanairship.http;
 import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * Model object containing response information from a request.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Response {
 
     /**

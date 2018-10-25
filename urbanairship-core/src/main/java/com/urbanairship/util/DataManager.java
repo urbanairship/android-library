@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 
@@ -24,7 +25,9 @@ import java.util.List;
 
 /**
  * An abstract class to manage a SQLiteDatabase.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class DataManager {
 
     private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";
