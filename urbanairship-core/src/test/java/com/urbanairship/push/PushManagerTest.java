@@ -455,7 +455,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testAddingNotificationActionButtonGroupWithReservedPrefix() {
-        pushManager.addNotificationActionButtonGroup("ua_my_test_id", new NotificationActionButtonGroup.Builder().build());
+        pushManager.addNotificationActionButtonGroup("ua_my_test_id", NotificationActionButtonGroup.newBuilder().build());
         assertNull("Should not be able to add groups with prefix ua_", pushManager.getNotificationActionGroup("ua_my_test_id"));
     }
 

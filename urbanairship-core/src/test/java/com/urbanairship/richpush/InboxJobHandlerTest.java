@@ -160,7 +160,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Return a 304 response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                new Response.Builder(HttpURLConnection.HTTP_NOT_MODIFIED).create());
+                Response.newBuilder(HttpURLConnection.HTTP_NOT_MODIFIED).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -197,11 +197,11 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                new Response.Builder(HttpURLConnection.HTTP_OK)
+                Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
                         .setLastModified(600l)
                         .setResponseBody("{ \"messages\": []}")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -242,7 +242,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                new Response.Builder(HttpURLConnection.HTTP_OK)
+                Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
                         .setLastModified(600l)
                         .setResponseBody("{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
@@ -252,7 +252,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
                                 "\"unread\": true, \"message_sent\": \"2010-09-05 12:13 -0000\"," +
                                 "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," +
                                 "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -291,9 +291,9 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -326,9 +326,9 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -358,10 +358,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
                         .setResponseMessage("Created")
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
-                        .create());
+                        .build());
 
 
         JobInfo jobInfo = JobInfo.newBuilder()
@@ -392,10 +392,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
                         .setResponseMessage("Created")
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
-                        .create());
+                        .build());
 
 
         JobInfo jobInfo = JobInfo.newBuilder()
@@ -425,10 +425,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn(null);
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
                         .setResponseMessage("Created")
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
-                        .create());
+                        .build());
 
 
         JobInfo jobInfo = JobInfo.newBuilder()
@@ -452,7 +452,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Set a error response
         responses.put("https://device-api.urbanairship.com/api/user/",
-                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
+                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
@@ -479,10 +479,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Set a successful response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                new Response.Builder(HttpURLConnection.HTTP_OK)
+                Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
                         .setResponseBody("{ \"ok\" }")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
@@ -512,10 +512,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Set a successful response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                new Response.Builder(HttpURLConnection.HTTP_OK)
+                Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
                         .setResponseBody("{ \"ok\" }")
-                        .create());
+                        .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
@@ -561,7 +561,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         // Set a error response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
+                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)

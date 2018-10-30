@@ -119,6 +119,16 @@ class Job implements Runnable {
         return null;
     }
 
+    /**
+     * Creates a new builder from job info.
+     *
+     * @param jobInfo The job info.
+     * @return A new job builder.
+     */
+    @NonNull
+    public static Builder newBuilder(@NonNull JobInfo jobInfo) {
+        return new Builder(jobInfo);
+    }
 
     /**
      * Builds the job
@@ -133,7 +143,7 @@ class Job implements Runnable {
          *
          * @param jobInfo The job info.
          */
-        Builder(JobInfo jobInfo) {
+        Builder(@NonNull JobInfo jobInfo) {
             this.jobInfo = jobInfo;
         }
 

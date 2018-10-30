@@ -631,13 +631,13 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
-        this.analytics = new Analytics.Builder(application)
+        this.analytics = Analytics.newBuilder(application)
                 .setActivityMonitor(ActivityMonitor.shared(application))
                 .setConfigOptions(airshipConfigOptions)
                 .setJobDispatcher(JobDispatcher.shared(application))
                 .setPlatform(getPlatformType())
                 .setPreferenceDataStore(preferenceDataStore)
-                .setEventManager(new EventManager.Builder()
+                .setEventManager(EventManager.newBuilder()
                         .setEventResolver(new EventResolver(application))
                         .setActivityMonitor(ActivityMonitor.shared(application))
                         .setJobDispatcher(JobDispatcher.shared(application))

@@ -32,7 +32,7 @@ public class UALocationManagerTest extends BaseTestCase {
     public void setUp() {
         analytics = mock(Analytics.class);
         locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
-        options = new LocationRequestOptions.Builder().setMinDistance(100).create();
+        options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
 
         TestApplication.getApplication().setAnalytics(analytics);
     }

@@ -99,10 +99,10 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate200Response() {
         // Set up a 200 response
-        Response response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        Response response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
-                .create();
+                .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
@@ -114,8 +114,8 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate500Response() {
         // Set up a 500 response
-        Response response = new Response.Builder(500)
-                .create();
+        Response response = Response.newBuilder(500)
+                .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
@@ -127,8 +127,8 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate429Response() {
         // Set up a 429 response
-        Response response = new Response.Builder(429)
-                .create();
+        Response response = Response.newBuilder(429)
+                .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
@@ -140,8 +140,8 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate400Response() {
         // Set up a 400 response
-        Response response = new Response.Builder(400)
-                .create();
+        Response response = Response.newBuilder(400)
+                .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);

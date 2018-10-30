@@ -75,10 +75,10 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSendBody() throws IOException {
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         EventResponse response = client.sendEvents(UAirship.shared(), events);
 
@@ -94,10 +94,10 @@ public class EventApiClientTest extends BaseTestCase {
     public void testRequestHeaders() {
         Locale.setDefault(new Locale("en", "US", "POSIX"));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         AirshipConfigOptions airshipConfig = UAirship.shared().getAirshipConfigOptions();
 
@@ -134,10 +134,10 @@ public class EventApiClientTest extends BaseTestCase {
     public void testAmazonDeviceFamily() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         client.sendEvents(UAirship.shared(), events);
 
@@ -154,10 +154,10 @@ public class EventApiClientTest extends BaseTestCase {
     public void testRequestHeaderEmptyLocaleCountryHeaders() {
         Locale.setDefault(new Locale("en", "", "POSIX"));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         client.sendEvents(UAirship.shared(), events);
 
@@ -173,10 +173,10 @@ public class EventApiClientTest extends BaseTestCase {
     public void testRequestHeaderEmptyLocaleVariantHeaders() {
         Locale.setDefault(new Locale("en", "US", ""));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         client.sendEvents(UAirship.shared(), events);
 
@@ -192,10 +192,10 @@ public class EventApiClientTest extends BaseTestCase {
     public void testRequestHeaderEmptyLanguageLocaleHeaders() {
         Locale.setDefault(new Locale("", "US", "POSIX"));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(events.toString())
-                .create();
+                .build();
 
         client.sendEvents(UAirship.shared(), events);
 

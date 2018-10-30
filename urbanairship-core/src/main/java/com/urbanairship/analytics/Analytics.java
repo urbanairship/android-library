@@ -486,6 +486,16 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
+     * Builder factory method.
+     *
+     * @param context The application context.
+     * @return A new builder instance.
+     */
+    public static Builder newBuilder(@NonNull Context context) {
+        return new Builder(context);
+    }
+
+    /**
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

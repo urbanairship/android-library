@@ -56,10 +56,10 @@ public class TagGroupApiClientTest extends BaseTestCase {
                 .build();
 
         testRequest = new TestRequest();
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
-                .create();
+                .build();
 
         requestFactory = new RequestFactory() {
             @NonNull

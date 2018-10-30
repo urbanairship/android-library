@@ -46,7 +46,7 @@ public class EventManagerTest extends BaseTestCase {
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        eventManager = new EventManager.Builder()
+        eventManager = EventManager.newBuilder()
                 .setEventResolver(mockEventResolver)
                 .setActivityMonitor(mockActivityMonitor)
                 .setApiClient(mockClient)

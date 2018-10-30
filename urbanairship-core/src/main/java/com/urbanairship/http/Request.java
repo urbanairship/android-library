@@ -202,7 +202,7 @@ public class Request {
                 }
             }
 
-            Response.Builder responseBuilder = new Response.Builder(conn.getResponseCode())
+            Response.Builder responseBuilder = Response.newBuilder(conn.getResponseCode())
                     .setResponseMessage(conn.getResponseMessage())
                     .setResponseHeaders(conn.getHeaderFields())
                     .setLastModified(conn.getLastModified());
@@ -214,7 +214,7 @@ public class Request {
                 responseBuilder.setResponseBody(readEntireStream(conn.getErrorStream()));
             }
 
-            return responseBuilder.create();
+            return responseBuilder.build();
 
         } catch (Exception ex) {
             Logger.debug("Request - Request failed URL: " + url + " method: " + requestMethod, ex);

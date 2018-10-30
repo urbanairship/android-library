@@ -328,6 +328,15 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     };
 
     /**
+     * Builder factory method.
+     *
+     * @return A new builder instance.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
      * Builder to construct LocationRequestOptions.
      */
     public static class Builder {
@@ -392,7 +401,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
          * @return The new location request option.
          */
         @NonNull
-        public LocationRequestOptions create() {
+        public LocationRequestOptions build() {
             return new LocationRequestOptions(this);
         }
     }

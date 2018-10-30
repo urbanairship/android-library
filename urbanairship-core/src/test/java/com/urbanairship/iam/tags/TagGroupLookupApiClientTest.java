@@ -55,13 +55,13 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
                 .build();
 
         testRequest = new TestRequest();
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(JsonMap.newBuilder()
                                         .putOpt("tag_groups", responseTags)
                                         .put("last_modified", "lastModifiedTime")
                                         .build().toString())
-                .create();
+                .build();
 
 
         requestFactory = new RequestFactory() {
@@ -111,8 +111,8 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
      */
     @Test
     public void testFailedResponse() {
-        testRequest.response =  new Response.Builder(400)
-                .create();
+        testRequest.response =  Response.newBuilder(400)
+                .build();
 
         TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
 
@@ -134,12 +134,12 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
         // Update the response to return a 200 with the same lastModified time as the
         // response, but no tags. This indicates a 304, but since its a POST we do not
         // get a 304.
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(JsonMap.newBuilder()
                                         .put("last_modified", "lastModifiedTime")
                                         .build().toString())
-                .create();
+                .build();
 
         TagGroupResponse cachedResponse = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, response);
         verifyRequest(UAirship.ANDROID_PLATFORM, "some-channel", requestTags, response.lastModifiedTime);
@@ -157,13 +157,13 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
         TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
 
         // Update the response to return new data
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody(JsonMap.newBuilder()
                                         .putOpt("tag_groups", responseTags)
                                         .put("last_modified", "newDate")
                                         .build().toString())
-                .create();
+                .build();
 
         TagGroupResponse newResponse = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, response);
 

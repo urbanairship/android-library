@@ -210,7 +210,7 @@ public class UALocationManager extends AirshipComponent {
         }
 
         if (options == null) {
-            options = new LocationRequestOptions.Builder().create();
+            options = LocationRequestOptions.newBuilder().build();
         }
 
         return options;

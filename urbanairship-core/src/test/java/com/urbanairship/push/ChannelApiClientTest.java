@@ -66,11 +66,11 @@ public class ChannelApiClientTest extends BaseTestCase {
         Map<String, List<String>> headers = new HashMap<>();
         headers.put("Location", Arrays.asList(new String[] { channelLocation }));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseHeaders(headers)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
-                .create();
+                .build();
 
         Response response = client.createChannelWithPayload(payload);
 
@@ -91,10 +91,10 @@ public class ChannelApiClientTest extends BaseTestCase {
     public void testCreateChannelFailsRequest() throws Exception {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                 .setResponseHeaders(headers)
                 .setResponseMessage("Not Implemented")
-                .create();
+                .build();
 
         Response response = client.createChannelWithPayload(payload);
 
@@ -111,10 +111,10 @@ public class ChannelApiClientTest extends BaseTestCase {
     public void testUpdateChannelSucceedsRequest() throws Exception {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseHeaders(headers)
                 .setResponseMessage("OK")
-                .create();
+                .build();
 
         URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
         Response response = client.updateChannelWithPayload(channelLocation, payload);
@@ -132,10 +132,10 @@ public class ChannelApiClientTest extends BaseTestCase {
     public void testUpdateChannelFailsRequest() throws Exception {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                 .setResponseHeaders(headers)
                 .setResponseMessage("Not Implemented")
-                .create();
+                .build();
 
         URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
         Response response = client.updateChannelWithPayload(channelLocation, payload);

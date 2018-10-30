@@ -198,6 +198,15 @@ class QuietTimeInterval implements JsonSerializable {
     }
 
     /**
+     * Builder factory method.
+     *
+     * @return A new builder instance.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
      * QuietTimeInterval builder class.
      */
     public static class Builder {

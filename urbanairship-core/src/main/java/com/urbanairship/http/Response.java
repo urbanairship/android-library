@@ -105,6 +105,17 @@ public class Response {
     }
 
     /**
+     * Builder factory method.
+     *
+     * @param status The status.
+     *
+     * @return A new builder instance.
+     */
+    public static Builder newBuilder(int status) {
+        return new Builder(status);
+    }
+
+    /**
      * Builds a Request Response.
      */
     public static class Builder {
@@ -123,7 +134,6 @@ public class Response {
         public Builder(int status) {
             this.status = status;
         }
-
 
         /**
          * Set the response message.
@@ -179,7 +189,7 @@ public class Response {
          * @return The response.
          */
         @NonNull
-        public Response create() {
+        public Response build() {
             Response response = new Response();
             response.status = status;
             response.responseBody = responseBody;

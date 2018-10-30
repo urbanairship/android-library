@@ -86,7 +86,7 @@ class ActionButtonGroupsParser {
                 }
 
                 groupId = id;
-                groupBuilder = new NotificationActionButtonGroup.Builder();
+                groupBuilder = NotificationActionButtonGroup.newBuilder();
 
                 continue;
             }
@@ -106,7 +106,7 @@ class ActionButtonGroupsParser {
                 AttributeSet attributeSet = Xml.asAttributeSet(parser);
                 TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.UrbanAirshipActionButton);
 
-                NotificationActionButton.Builder builder = new NotificationActionButton.Builder(buttonId)
+                NotificationActionButton.Builder builder = NotificationActionButton.newBuilder(buttonId)
                         .setPerformsInForeground(parser.getAttributeBooleanValue(null, FOREGROUND_ATTRIBUTE, true))
                         .setIcon(typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_icon, 0))
                         .setDescription(parser.getAttributeValue(null, DESCRIPTION_ATTRIBUTE));

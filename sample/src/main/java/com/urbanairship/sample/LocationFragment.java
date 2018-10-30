@@ -77,9 +77,9 @@ public class LocationFragment extends Fragment {
 
         progress.setVisibility(View.VISIBLE);
 
-        LocationRequestOptions options = new LocationRequestOptions.Builder()
+        LocationRequestOptions options = LocationRequestOptions.newBuilder()
                 .setPriority(getPriority())
-                .create();
+                .build();
 
         pendingResult = UAirship.shared()
                                 .getLocationManager()

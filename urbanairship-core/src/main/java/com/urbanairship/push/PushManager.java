@@ -816,7 +816,7 @@ public class PushManager extends AirshipComponent {
      * @param endTime A Date instance indicating when Quiet Time should end.
      */
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
-        QuietTimeInterval quietTimeInterval = new QuietTimeInterval.Builder()
+        QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
                 .setQuietTimeInterval(startTime, endTime)
                 .build();
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
@@ -1084,7 +1084,7 @@ public class PushManager extends AirshipComponent {
 
         Logger.info("Migrating quiet time interval");
 
-        QuietTimeInterval quietTimeInterval = new QuietTimeInterval.Builder()
+        QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
                 .setStartHour(startHr)
                 .setStartMin(startMin)
                 .setEndHour(endHr)

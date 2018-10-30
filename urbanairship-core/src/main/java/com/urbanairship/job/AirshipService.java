@@ -122,7 +122,7 @@ public class AirshipService extends Service {
 
         runningJobs++;
 
-        Job job = new Job.Builder(jobInfo)
+        Job job = Job.newBuilder(jobInfo)
                 .setCallback(new Job.Callback() {
                     @Override
                     public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {

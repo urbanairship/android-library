@@ -53,10 +53,10 @@ public class NamedUserApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAssociateSucceeds() {
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
-                .create();
+                .build();
 
         Response response = client.associate(fakeNamedUserId, fakeChannelId);
 
@@ -69,10 +69,10 @@ public class NamedUserApiClientTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateSucceeds() {
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
-                .create();
+                .build();
 
         Response response = client.disassociate(fakeChannelId);
 

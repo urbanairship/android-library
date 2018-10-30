@@ -75,11 +75,11 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Arrays.asList(payload.toJsonValue()));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseHeaders(headers)
                 .setResponseMessage("OK")
                 .setResponseBody(list.toString())
-                .create();
+                .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp);
@@ -106,11 +106,11 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Arrays.asList(payload.toJsonValue()));
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseHeaders(headers)
                 .setResponseMessage("OK")
                 .setResponseBody(list.toString())
-                .create();
+                .build();
 
         Response response = client.fetchRemoteData(null);
 
@@ -128,10 +128,10 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testFetchRemoteDataRequestFailure() throws Exception {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
+        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                 .setResponseHeaders(headers)
                 .setResponseMessage("Not Implemented")
-                .create();
+                .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp);

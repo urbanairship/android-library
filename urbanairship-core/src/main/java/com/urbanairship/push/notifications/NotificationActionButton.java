@@ -175,6 +175,17 @@ public class NotificationActionButton {
     }
 
     /**
+     * Creates a new Builder from a button ID.
+     *
+     * @param buttonId The button identifier.
+     * @return A new builder.
+     */
+    @NonNull
+    public static Builder newBuilder(@NonNull String buttonId) {
+        return new Builder(buttonId);
+    }
+
+    /**
      * Builds the NotificationAction.
      */
     public static class Builder {

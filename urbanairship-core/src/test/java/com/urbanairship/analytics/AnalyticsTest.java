@@ -51,7 +51,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        this.analytics = new Analytics.Builder(TestApplication.getApplication())
+        this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                 .setActivityMonitor(new TestActivityMonitor())
                 .setConfigOptions(airshipConfigOptions)
                 .setJobDispatcher(mockJobDispatcher)
@@ -153,7 +153,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setAnalyticsEnabled(false)
                 .build();
 
-        this.analytics = new Analytics.Builder(TestApplication.getApplication())
+        this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                 .setActivityMonitor(new TestActivityMonitor())
                 .setConfigOptions(options)
                 .setJobDispatcher(mockJobDispatcher)
