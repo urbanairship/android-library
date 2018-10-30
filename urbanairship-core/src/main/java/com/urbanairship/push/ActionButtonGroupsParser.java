@@ -63,8 +63,8 @@ class ActionButtonGroupsParser {
      * @param context The context.
      * @param parser The xml parser.
      * @return A map of NotificationActionButtonGroups.
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @throws IOException if the AirshipConfigOptions element is missing.
+     * @throws XmlPullParserException if XML parsing fails to get next element.
      */
     private static Map<String, NotificationActionButtonGroup> parseGroups(@NonNull Context context, XmlResourceParser parser) throws IOException, XmlPullParserException {
         Map<String, NotificationActionButtonGroup> groups = new HashMap<>();

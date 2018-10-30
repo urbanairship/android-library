@@ -326,7 +326,6 @@ public class Whitelist {
      * Sets the whitelist callback.
      *
      * @param whitelistCallback The whitelist callback.
-     * @return The config options builder.
      */
     public void setWhitelistCallback(@Nullable OnWhitelistCallback whitelistCallback) {
         this.whitelistCallback = whitelistCallback;

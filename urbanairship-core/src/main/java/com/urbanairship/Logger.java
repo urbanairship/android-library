@@ -169,7 +169,7 @@ public class Logger {
      * @param value The log level as a String.
      * @param defaultValue Default value if the value is empty.
      * @return The log level.
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if an invalid log level is provided.
      */
     static int parseLogLevel(@Nullable String value, int defaultValue) throws IllegalArgumentException {
         if (UAStringUtil.isEmpty(value)) {

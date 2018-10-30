@@ -48,7 +48,7 @@ public class RemoteDataPayload {
      * RemoteDataPayload constructor.
      *
      * @param entry The associated payload entry
-     * @throws JsonException
+     * @throws JsonException if parseString operation fails.
      */
     RemoteDataPayload(@NonNull RemoteDataPayloadEntry entry) throws JsonException {
         this.type = entry.type;
@@ -61,7 +61,7 @@ public class RemoteDataPayload {
      *
      * @param value The Json
      * @return A RemoteDataPayload
-     * @throws JsonException
+     * @throws JsonException if the remote data payload's json value is invalid.
      */
     @NonNull
     public static RemoteDataPayload parsePayload(@NonNull JsonValue value) throws JsonException {

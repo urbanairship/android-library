@@ -607,7 +607,7 @@ public class UAWebViewClient extends WebViewClient {
          * Helper method to read the native bridge from resources.
          *
          * @return The native bridge.
-         * @throws IOException
+         * @throws IOException if output steam read or write operations fail.
          */
         private String readNativeBridge() throws IOException {
             InputStream input = context.getResources().openRawResource(R.raw.ua_native_bridge);

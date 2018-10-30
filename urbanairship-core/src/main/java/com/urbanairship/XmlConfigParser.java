@@ -33,8 +33,8 @@ class XmlConfigParser implements ConfigParser {
      *
      * @param context The application context.
      * @param resId The config resource ID.
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @throws IOException if the AirshipConfigOptions element is missing.
+     * @throws XmlPullParserException if XML parsing fails to get next element.
      */
     XmlConfigParser(@NonNull Context context, int resId) throws IOException, XmlPullParserException {
         this.context = context;
@@ -57,7 +57,7 @@ class XmlConfigParser implements ConfigParser {
 
         if (attributeSet == null) {
             parser.close();
-            throw new IllegalArgumentException("Config missing AirshipConfigOptions element.");
+            throw new IOException("Config missing AirshipConfigOptions element.");
         }
     }
 

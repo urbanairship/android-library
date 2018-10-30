@@ -215,7 +215,7 @@ public class PassRequest {
      * Gets the pass request URL.
      *
      * @return The pass request URL.
-     * @throws MalformedURLException
+     * @throws MalformedURLException if URL string is malformed.
      */
     @NonNull
     URL getPassUrl() throws MalformedURLException {

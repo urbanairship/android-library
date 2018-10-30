@@ -77,7 +77,7 @@ public abstract class FileUtils {
      * @param url The URL image.
      * @param file The file path where the image will be downloaded.
      * @return The download result.
-     * @throws IOException
+     * @throws IOException if output steam read or write operation fails.
      */
     @NonNull
     @WorkerThread

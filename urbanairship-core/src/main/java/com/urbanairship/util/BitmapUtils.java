@@ -30,7 +30,7 @@ public class BitmapUtils {
      * @param reqWidth The requested width of the image.
      * @param reqHeight The requested height of the image.
      * @return The scaled bitmap.
-     * @throws IOException
+     * @throws IOException if file fails to be created.
      */
     @Nullable
     public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {

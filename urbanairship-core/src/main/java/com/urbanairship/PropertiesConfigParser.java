@@ -40,7 +40,7 @@ class PropertiesConfigParser implements ConfigParser {
      * @param context The application context.
      * @param propertiesFile The properties file.
      * @return A PropertiesConfigParser instance.
-     * @throws IOException
+     * @throws IOException if properties file cannot be found.
      */
     @NonNull
     public static PropertiesConfigParser fromAssets(@NonNull Context context, @NonNull String propertiesFile) throws IOException {

@@ -303,7 +303,7 @@ public class ScheduleDelay implements Parcelable {
         /**
          * Sets the app screens.
          *
-         * @param screens
+         * @param screens The app screens.
          * @return The Builder instance.
          */
         @NonNull
