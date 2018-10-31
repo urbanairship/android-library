@@ -131,13 +131,13 @@ public class TextInfo implements JsonSerializable {
     /**
      * Parses a {@link TextInfo} from a {@link JsonValue}.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The parsed text info.
      * @throws JsonException If the text info was unable to be parsed.
      */
     @NonNull
-    public static TextInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
-        JsonMap content = jsonValue.optMap();
+    public static TextInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap content = value.optMap();
         Builder builder = newBuilder();
 
         // Text
@@ -186,8 +186,8 @@ public class TextInfo implements JsonSerializable {
                 throw new JsonException("Style must be an array: " + content.opt(STYLE_KEY));
             }
 
-            for (JsonValue value : content.opt(STYLE_KEY).optList()) {
-                switch (value.optString().toLowerCase(Locale.ROOT)) {
+            for (JsonValue val : content.opt(STYLE_KEY).optList()) {
+                switch (val.optString().toLowerCase(Locale.ROOT)) {
                     case STYLE_BOLD:
                         builder.addStyle(STYLE_BOLD);
                         break;
@@ -198,7 +198,7 @@ public class TextInfo implements JsonSerializable {
                         builder.addStyle(STYLE_UNDERLINE);
                         break;
                     default:
-                        throw new JsonException("Invalid style: " + value);
+                        throw new JsonException("Invalid style: " + val);
 
                 }
             }
@@ -210,11 +210,11 @@ public class TextInfo implements JsonSerializable {
                 throw new JsonException("Fonts must be an array: " + content.opt(STYLE_KEY));
             }
 
-            for (JsonValue value : content.opt(FONT_FAMILY_KEY).optList()) {
-                if (!value.isString()) {
-                    throw new JsonException("Invalid font: " + value);
+            for (JsonValue val : content.opt(FONT_FAMILY_KEY).optList()) {
+                if (!val.isString()) {
+                    throw new JsonException("Invalid font: " + val);
                 }
-                builder.addFontFamily(value.optString());
+                builder.addFontFamily(val.optString());
             }
         }
 

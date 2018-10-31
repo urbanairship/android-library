@@ -41,7 +41,7 @@ public class ActionScheduleInfoTest extends BaseTestCase {
                                       .put("edit_grace_period", 10)
                                       .build();
 
-        ActionScheduleInfo info = ActionScheduleInfo.parseJson(scheduleJson.toJsonValue());
+        ActionScheduleInfo info = ActionScheduleInfo.fromJson(scheduleJson.toJsonValue());
 
         // Schedule Info
         assertEquals(10, info.getLimit());
@@ -60,7 +60,7 @@ public class ActionScheduleInfoTest extends BaseTestCase {
 
     @Test(expected = JsonException.class)
     public void testParseInvalidJson() throws JsonException {
-        ActionScheduleInfo.parseJson(JsonValue.NULL);
+        ActionScheduleInfo.fromJson(JsonValue.NULL);
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -207,7 +207,7 @@ public class ScheduleDelay implements Parcelable {
      * @throws JsonException If the json does not produce a valid ScheduleDelay.
      */
     @NonNull
-    public static ScheduleDelay parseJson(@NonNull JsonValue value) throws JsonException {
+    public static ScheduleDelay fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         Builder builder = ScheduleDelay.newBuilder()
@@ -244,7 +244,7 @@ public class ScheduleDelay implements Parcelable {
         }
 
         for (JsonValue triggerJson : jsonMap.opt(CANCELLATION_TRIGGERS_KEY).optList()) {
-            builder.addCancellationTrigger(Trigger.parseJson(triggerJson));
+            builder.addCancellationTrigger(Trigger.fromJson(triggerJson));
         }
 
         try {

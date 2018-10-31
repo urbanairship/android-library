@@ -28,7 +28,7 @@ public class TextInfoTest extends BaseTestCase {
                                     .build();
 
 
-        TextInfo fromJson = TextInfo.parseJson(original.toJsonValue());
+        TextInfo fromJson = TextInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());

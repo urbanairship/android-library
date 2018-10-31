@@ -6,8 +6,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.iam.DisplayContent;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+
+import org.json.JSONException;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_CUSTOM} in-app message.
@@ -39,12 +42,16 @@ public class CustomDisplayContent implements DisplayContent {
     /**
      * Parses a json value.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return A custom display content instance.
      */
     @NonNull
-    public static CustomDisplayContent parseJson(@NonNull JsonValue jsonValue) {
-        return new CustomDisplayContent(jsonValue.optMap().opt(CUSTOM_KEY));
+    public static CustomDisplayContent fromJson(@NonNull JsonValue value) throws JsonException {
+        if (!value.isJsonMap()) {
+            throw new JsonException("Invalid custom display content: " + value);
+        }
+
+        return new CustomDisplayContent(value.optMap().opt(CUSTOM_KEY));
     }
 
     /**

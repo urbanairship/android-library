@@ -761,8 +761,16 @@ public class PushManager extends AirshipComponent {
             return false;
         }
 
-        QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
-        return quietTimeInterval != null && quietTimeInterval.isInQuietTime(Calendar.getInstance());
+        QuietTimeInterval quietTimeInterval;
+
+        try {
+            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
+        } catch (JsonException e) {
+            Logger.error("Failed to parse quiet time interval");
+            return false;
+        }
+
+        return quietTimeInterval.isInQuietTime(Calendar.getInstance());
     }
 
     /**
@@ -782,12 +790,16 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public Date[] getQuietTimeInterval() {
-        QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
-        if (quietTimeInterval != null) {
-            return quietTimeInterval.getQuietTimeIntervalDateArray();
-        } else {
+        QuietTimeInterval quietTimeInterval;
+
+        try {
+            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
+        } catch (JsonException e) {
+            Logger.error("Failed to parse quiet time interval");
             return null;
         }
+
+        return quietTimeInterval.getQuietTimeIntervalDateArray();
     }
 
     /**

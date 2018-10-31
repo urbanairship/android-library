@@ -128,21 +128,16 @@ class QuietTimeInterval implements JsonSerializable {
     /**
      * Static helper method to deserialize JSON into a QuietTimeInterval instance.
      *
-     * @param json The JSON as a string.
+     * @param value The JSON value.
      * @return The deserialized QuietTimeInterval instance.
      */
-    public static QuietTimeInterval parseJson(@Nullable String json) {
+    public static QuietTimeInterval fromJson(@Nullable JsonValue value) throws JsonException {
 
         JsonMap jsonMap;
-        try {
-            jsonMap = JsonValue.parseString(json).getMap();
-        } catch (JsonException e) {
-            Logger.error("QuietTimeInterval - Failed to create quiet time interval from json", e);
-            return null;
-        }
+        jsonMap = value.getMap();
 
         if (jsonMap == null || jsonMap.isEmpty()) {
-            return null;
+            throw new JsonException("Invalid quiet time interval: " + value);
         }
 
         return new Builder()

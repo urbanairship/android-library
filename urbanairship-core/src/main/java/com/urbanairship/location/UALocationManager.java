@@ -25,6 +25,7 @@ import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -201,7 +202,7 @@ public class UALocationManager extends AirshipComponent {
         String jsonString = preferenceDataStore.getString(LOCATION_OPTIONS_KEY, null);
         if (jsonString != null) {
             try {
-                options = LocationRequestOptions.parseJson(jsonString);
+                options = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
             } catch (JsonException e) {
                 Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
             } catch (IllegalArgumentException e) {
@@ -361,7 +362,7 @@ public class UALocationManager extends AirshipComponent {
 
         if (jsonString != null) {
             try {
-                lastUpdateOptions = LocationRequestOptions.parseJson(jsonString);
+                lastUpdateOptions = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
             } catch (JsonException e) {
                 Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
             } catch (IllegalArgumentException e) {

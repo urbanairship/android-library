@@ -100,13 +100,13 @@ public class Audience implements JsonSerializable {
     /**
      * Parses the json value.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The audience condition.
      * @throws JsonException If the json is invalid.
      */
     @NonNull
-    public static Audience parseJson(@NonNull JsonValue jsonValue) throws JsonException {
-        JsonMap content = jsonValue.optMap();
+    public static Audience fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap content = value.optMap();
 
         Builder builder = newBuilder();
 
@@ -140,10 +140,10 @@ public class Audience implements JsonSerializable {
                 throw new JsonException("locales must be an array: " + content.get(LOCALE_KEY));
             }
 
-            for (JsonValue value : content.opt(LOCALE_KEY).optList()) {
-                String tag = value.getString();
+            for (JsonValue val : content.opt(LOCALE_KEY).optList()) {
+                String tag = val.getString();
                 if (tag == null) {
-                    throw new JsonException("Invalid locale: " + value);
+                    throw new JsonException("Invalid locale: " + val);
                 }
 
                 builder.addLanguageTag(tag);
@@ -157,7 +157,7 @@ public class Audience implements JsonSerializable {
 
         // Tags
         if (content.containsKey(TAGS_KEY)) {
-            builder.setTagSelector(TagSelector.parseJson(content.opt(TAGS_KEY)));
+            builder.setTagSelector(TagSelector.fromJson(content.opt(TAGS_KEY)));
         }
 
         // Test devices
@@ -166,12 +166,12 @@ public class Audience implements JsonSerializable {
                 throw new JsonException("test devices must be an array: " + content.get(LOCALE_KEY));
             }
 
-            for (JsonValue value : content.opt(TEST_DEVICES_KEY).optList()) {
-                if (!value.isString()) {
-                    throw new JsonException("Invalid test device: " + value);
+            for (JsonValue val : content.opt(TEST_DEVICES_KEY).optList()) {
+                if (!val.isString()) {
+                    throw new JsonException("Invalid test device: " + val);
                 }
 
-                builder.addTestDevice(value.getString());
+                builder.addTestDevice(val.getString());
             }
         }
 

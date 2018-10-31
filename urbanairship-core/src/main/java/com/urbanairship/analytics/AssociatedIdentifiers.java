@@ -91,15 +91,16 @@ public class AssociatedIdentifiers implements JsonSerializable {
     }
 
     @NonNull
-    public static AssociatedIdentifiers fromJson(@Nullable String json) throws JsonException {
+    public static AssociatedIdentifiers fromJson(@Nullable JsonValue value) throws JsonException {
 
         Map<String, String> ids = new HashMap<>();
 
-        JsonValue idsJasonValue = JsonValue.parseString(json);
-        if (idsJasonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> entry : idsJasonValue.optMap()) {
+        if (value.isJsonMap()) {
+            for (Map.Entry<String, JsonValue> entry : value.optMap()) {
                 ids.put(entry.getKey(), entry.getValue().getString());
             }
+        } else {
+            throw new JsonException("Associated identifiers not found in JsonValue: " + value);
         }
 
         return new AssociatedIdentifiers(ids);

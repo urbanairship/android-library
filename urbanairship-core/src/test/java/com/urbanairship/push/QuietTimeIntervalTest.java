@@ -37,7 +37,8 @@ public class QuietTimeIntervalTest extends BaseTestCase {
                     "\"end_hour\": " + endHour + "," +
                     "\"end_min\": " + 15 +
                 "}";
-        assertEquals(interval, QuietTimeInterval.parseJson(json));
+
+        assertEquals(interval, QuietTimeInterval.fromJson(JsonValue.parseString(json)));
 
         Map<String, Integer> jsonMap = new HashMap<>();
         jsonMap.put("start_hour", startHour);

@@ -43,13 +43,13 @@ public class HtmlDisplayContent implements DisplayContent {
     /**
      * Parses HTML display JSON.
      *
-     * @param json The json payload.
+     * @param value The json payload.
      * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static HtmlDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        JsonMap content = json.optMap();
+    public static HtmlDisplayContent fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap content = value.optMap();
 
         Builder builder = newBuilder();
 

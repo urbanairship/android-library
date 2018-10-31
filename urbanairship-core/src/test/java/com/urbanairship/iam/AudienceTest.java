@@ -10,7 +10,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 
 import junit.framework.Assert;
@@ -47,7 +46,7 @@ public class AudienceTest extends BaseTestCase {
                                     .setMissBehavior("cancel")
                                     .build();
 
-        Audience fromJson = Audience.parseJson(original.toJsonValue());
+        Audience fromJson = Audience.fromJson(original.toJsonValue());
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());
     }
@@ -102,8 +101,8 @@ public class AudienceTest extends BaseTestCase {
                                     .build();
 
         try {
-            Audience fromJson = Audience.parseJson(original.toJsonValue());
-            Assert.fail("parseJson() should throw an exception when miss_behavior is not valid.");
+            Audience fromJson = Audience.fromJson(original.toJsonValue());
+            Assert.fail("fromJson() should throw an exception when miss_behavior is not valid.");
         } catch (Exception e) {
         }
     }

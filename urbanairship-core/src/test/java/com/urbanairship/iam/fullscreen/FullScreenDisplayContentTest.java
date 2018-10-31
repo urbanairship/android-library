@@ -52,7 +52,7 @@ public class FullScreenDisplayContentTest extends BaseTestCase {
                                                                                       .build())
                                                                    .build();
 
-        FullScreenDisplayContent fromJson = FullScreenDisplayContent.parseJson(content.toJsonValue());
+        FullScreenDisplayContent fromJson = FullScreenDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }

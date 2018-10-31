@@ -251,7 +251,7 @@ public class Trigger implements Parcelable {
      * @throws JsonException If the JsonValue does not produce a valid Trigger.
      */
     @NonNull
-    public static Trigger parseJson(@NonNull JsonValue value) throws JsonException {
+    public static Trigger fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         @TriggerType int type;

@@ -319,16 +319,16 @@ class ChannelRegistrationPayload implements JsonSerializable {
     /**
      * Creates a ChannelRegistrationPayload from JSON object
      *
-     * @param jsonValue The JSON object to create the ChannelRegistrationPayload from
+     * @param value The JSON object to create the ChannelRegistrationPayload from
      * @return The payload as a ChannelRegistrationPayload
      */
-    static ChannelRegistrationPayload parseJson(JsonValue jsonValue) throws JsonException {
-        JsonMap jsonMap = jsonValue.optMap();
+    static ChannelRegistrationPayload fromJson(JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
         JsonMap channelJson = jsonMap.opt(CHANNEL_KEY).optMap();
         JsonMap identityHints = jsonMap.opt(IDENTITY_HINTS_KEY).optMap();
 
         if (channelJson.isEmpty() && identityHints.isEmpty()) {
-            throw new JsonException("Invalid channel payload: " + jsonValue);
+            throw new JsonException("Invalid channel payload: " + value);
         }
 
         Set<String> tags = new HashSet<>();

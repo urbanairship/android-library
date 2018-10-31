@@ -5,7 +5,6 @@ package com.urbanairship.location;
 import android.os.Parcel;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -86,7 +85,7 @@ public class LocationRequestOptionsTest extends BaseTestCase {
                 .setMinTime(1111, TimeUnit.MILLISECONDS)
                 .build();
         
-        LocationRequestOptions fromJson = LocationRequestOptions.parseJson(original.toJsonValue().toString());
+        LocationRequestOptions fromJson = LocationRequestOptions.fromJson(original.toJsonValue());
         assertEquals(original, fromJson);
     }
 

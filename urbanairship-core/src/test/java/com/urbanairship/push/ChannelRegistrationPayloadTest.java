@@ -286,7 +286,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue());
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
 
@@ -297,7 +297,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      */
     @Test(expected = JsonException.class)
     public void testCreateFromEmptyJSON() throws JsonException {
-        ChannelRegistrationPayload.parseJson(JsonValue.NULL);
+        ChannelRegistrationPayload.fromJson(JsonValue.NULL);
     }
 
     @Test
@@ -309,7 +309,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue());
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
@@ -324,7 +324,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue());
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }

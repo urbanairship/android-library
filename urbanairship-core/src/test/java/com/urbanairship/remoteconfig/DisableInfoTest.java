@@ -5,19 +5,13 @@ package com.urbanairship.remoteconfig;
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonMatcher;
-import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.util.VersionUtils;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +21,6 @@ import java.util.List;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DisableInfoTest extends BaseTestCase {
     private ApplicationMetrics mockMetrics;
@@ -55,7 +48,7 @@ public class DisableInfoTest extends BaseTestCase {
                                           .build();
 
 
-        DisableInfo fromJson = DisableInfo.parseJson(original.toJsonValue());
+        DisableInfo fromJson = DisableInfo.fromJson(original.toJsonValue());
 
         assertEquals(original.getDisabledModules(), modules);
         assertEquals(original.getSdkVersionConstraints(), sdkVersions);
@@ -72,7 +65,7 @@ public class DisableInfoTest extends BaseTestCase {
                                  .put("modules", "all")
                                  .build();
 
-        DisableInfo disableInfo = DisableInfo.parseJson(jsonMap.toJsonValue());
+        DisableInfo disableInfo = DisableInfo.fromJson(jsonMap.toJsonValue());
 
         assertEquals(disableInfo.getDisabledModules(), new HashSet<>(Modules.ALL_MODULES));
         assertEquals(disableInfo.getRemoteDataRefreshInterval(), 0);

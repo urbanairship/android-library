@@ -27,7 +27,7 @@ public class HtmlDisplayContentTest extends BaseTestCase {
                                                        .setAllowFullscreenDisplay(true)
                                                        .build();
 
-        HtmlDisplayContent fromJson = HtmlDisplayContent.parseJson(content.toJsonValue());
+        HtmlDisplayContent fromJson = HtmlDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }

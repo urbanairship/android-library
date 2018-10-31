@@ -99,7 +99,7 @@ public class ScheduleActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() throws JsonException {
-        ActionScheduleInfo scheduleInfo = ActionScheduleInfo.parseJson(JsonValue.wrap(scheduleJson));
+        ActionScheduleInfo scheduleInfo = ActionScheduleInfo.fromJson(JsonValue.wrap(scheduleJson));
 
         PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
         pendingResult.setResult(new ActionSchedule("automation id", scheduleInfo));

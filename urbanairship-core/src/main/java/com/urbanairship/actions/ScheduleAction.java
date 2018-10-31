@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_AUTOMATION, and SITUATION_PUSH_RECEIVED.
  * <p>
- * Accepted argument value - JsonValue defined by {@link ActionScheduleInfo#parseJson(JsonValue)}.
+ * Accepted argument value - JsonValue defined by {@link ActionScheduleInfo#fromJson(JsonValue)}.
  * <p>
  * Result value: Schedule ID.
  * <p>
@@ -61,7 +61,7 @@ public class ScheduleAction extends Action {
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         try {
-            ActionScheduleInfo info = ActionScheduleInfo.parseJson(arguments.getValue().toJsonValue());
+            ActionScheduleInfo info = ActionScheduleInfo.fromJson(arguments.getValue().toJsonValue());
             ActionSchedule schedule = UAirship.shared().getAutomation().schedule(info).get();
             return schedule == null ? ActionResult.newEmptyResult() : ActionResult.newResult(ActionValue.wrap(schedule.getId()));
         } catch (JsonException | InterruptedException | ExecutionException e) {

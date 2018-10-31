@@ -101,7 +101,7 @@ public class RemoteConfigManager extends AirshipComponent {
                 if (DISABLE_INFO_KEY.equals(key)) {
                     for (JsonValue disableInfoJson : value.optList()) {
                         try {
-                            disableInfos.add(DisableInfo.parseJson(disableInfoJson));
+                            disableInfos.add(DisableInfo.fromJson(disableInfoJson));
                         } catch (JsonException e) {
                             Logger.error("Failed to parse remote config: " + payload, e);
                         }

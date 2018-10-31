@@ -51,7 +51,7 @@ public class ModalDisplayContentTest extends BaseTestCase {
                                                                             .build())
                                                          .build();
 
-        ModalDisplayContent fromJson = ModalDisplayContent.parseJson(content.toJsonValue());
+        ModalDisplayContent fromJson = ModalDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }

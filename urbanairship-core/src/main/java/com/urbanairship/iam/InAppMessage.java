@@ -295,7 +295,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
         // Audience
         if (jsonValue.optMap().containsKey(AUDIENCE_KEY)) {
-            builder.setAudience(Audience.parseJson(jsonValue.optMap().opt(AUDIENCE_KEY)));
+            builder.setAudience(Audience.fromJson(jsonValue.optMap().opt(AUDIENCE_KEY)));
         }
 
         // Campaigns
@@ -477,23 +477,23 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private Builder setDisplayContent(@NonNull String type, @NonNull JsonValue content) throws JsonException {
             switch (type) {
                 case TYPE_BANNER:
-                    this.setDisplayContent(BannerDisplayContent.parseJson(content));
+                    this.setDisplayContent(BannerDisplayContent.fromJson(content));
                     break;
 
                 case TYPE_CUSTOM:
-                    this.setDisplayContent(CustomDisplayContent.parseJson(content));
+                    this.setDisplayContent(CustomDisplayContent.fromJson(content));
                     break;
 
                 case TYPE_FULLSCREEN:
-                    this.setDisplayContent(FullScreenDisplayContent.parseJson(content));
+                    this.setDisplayContent(FullScreenDisplayContent.fromJson(content));
                     break;
 
                 case TYPE_MODAL:
-                    this.setDisplayContent(ModalDisplayContent.parseJson(content));
+                    this.setDisplayContent(ModalDisplayContent.fromJson(content));
                     break;
 
                 case TYPE_HTML:
-                    this.setDisplayContent(HtmlDisplayContent.parseJson(content));
+                    this.setDisplayContent(HtmlDisplayContent.fromJson(content));
                     break;
             }
 

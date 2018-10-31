@@ -236,7 +236,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * @throws JsonException If the JsonValue does not produce a valid ActionScheduleInfo.
      */
     @NonNull
-    public static ActionScheduleInfo parseJson(@NonNull JsonValue value) throws JsonException {
+    public static ActionScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         ActionScheduleInfo.Builder builder = newBuilder()
@@ -254,11 +254,11 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         }
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
-            builder.addTrigger(Trigger.parseJson(triggerJson));
+            builder.addTrigger(Trigger.fromJson(triggerJson));
         }
 
         if (jsonMap.containsKey(DELAY_KEY)) {
-            builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt(DELAY_KEY)));
+            builder.setDelay(ScheduleDelay.fromJson(jsonMap.opt(DELAY_KEY)));
         }
 
         if (jsonMap.containsKey(EDIT_GRACE_PERIOD)) {

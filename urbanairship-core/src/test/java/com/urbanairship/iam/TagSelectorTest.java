@@ -33,7 +33,7 @@ public class TagSelectorTest extends BaseTestCase {
                         TagSelector.not(TagSelector.tag("not-tag"))),
                 TagSelector.tag("some-other-tag"));
 
-        TagSelector fromJson = TagSelector.parseJson(original.toJsonValue());
+        TagSelector fromJson = TagSelector.fromJson(original.toJsonValue());
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());
     }

@@ -97,29 +97,29 @@ public class ModalDisplayContent implements DisplayContent {
     /**
      * Parses modal display JSON.
      *
-     * @param json The json payload.
+     * @param value The json payload.
      * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static ModalDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        JsonMap content = json.optMap();
+    public static ModalDisplayContent fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap content = value.optMap();
 
         Builder builder = newBuilder();
 
         // Heading
         if (content.containsKey(HEADING_KEY)) {
-            builder.setHeading(TextInfo.parseJson(content.opt(HEADING_KEY)));
+            builder.setHeading(TextInfo.fromJson(content.opt(HEADING_KEY)));
         }
 
         // Body
         if (content.containsKey(BODY_KEY)) {
-            builder.setBody(TextInfo.parseJson(content.opt(BODY_KEY)));
+            builder.setBody(TextInfo.fromJson(content.opt(BODY_KEY)));
         }
 
         // Media
         if (content.containsKey(MEDIA_KEY)) {
-            builder.setMedia(MediaInfo.parseJson(content.opt(MEDIA_KEY)));
+            builder.setMedia(MediaInfo.fromJson(content.opt(MEDIA_KEY)));
         }
 
         // Buttons
@@ -129,7 +129,7 @@ public class ModalDisplayContent implements DisplayContent {
                 throw new JsonException("Buttons must be an array of button objects.");
             }
 
-            builder.setButtons(ButtonInfo.parseJson(buttonJsonList));
+            builder.setButtons(ButtonInfo.fromJson(buttonJsonList));
         }
 
         // Button Layout
@@ -151,7 +151,7 @@ public class ModalDisplayContent implements DisplayContent {
 
         // Footer
         if (content.containsKey(FOOTER_KEY)) {
-            builder.setFooter(ButtonInfo.parseJson(content.opt(FOOTER_KEY)));
+            builder.setFooter(ButtonInfo.fromJson(content.opt(FOOTER_KEY)));
         }
 
         // Template

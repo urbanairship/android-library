@@ -35,8 +35,8 @@ public class ScheduleDelayTest extends BaseTestCase {
         JsonMap singleScreenMap = mapBuilder.put("screen", "some screen").build();
         JsonMap multiScreenMap = mapBuilder.put("screen", screensArray).build();
 
-        ScheduleDelay singleScreenDelay = ScheduleDelay.parseJson(singleScreenMap.toJsonValue());
-        ScheduleDelay multiScreenDelay = ScheduleDelay.parseJson(multiScreenMap.toJsonValue());
+        ScheduleDelay singleScreenDelay = ScheduleDelay.fromJson(singleScreenMap.toJsonValue());
+        ScheduleDelay multiScreenDelay = ScheduleDelay.fromJson(multiScreenMap.toJsonValue());
 
         for (ScheduleDelay delay : Arrays.asList(singleScreenDelay, multiScreenDelay)) {
             assertEquals(delay.getSeconds(), 1);
@@ -44,7 +44,7 @@ public class ScheduleDelayTest extends BaseTestCase {
             assertEquals(delay.getRegionId(),  "some region");
 
             Trigger trigger = delay.getCancellationTriggers().get(0);
-            Trigger otherTrigger = Trigger.parseJson(triggerJson.toJsonValue());
+            Trigger otherTrigger = Trigger.fromJson(triggerJson.toJsonValue());
 
             assertEquals(trigger.getType(), otherTrigger.getType());
             assertEquals(trigger.getGoal(), otherTrigger.getGoal());
@@ -56,11 +56,11 @@ public class ScheduleDelayTest extends BaseTestCase {
      */
     @Test(expected = JsonException.class)
     public void testParseInvalidAppState() throws JsonException {
-        ScheduleDelay.parseJson(JsonMap.newBuilder()
-               .put("seconds", 1)
-               .put("app_state", "not an app state")
-                                       .build()
-                                       .toJsonValue());
+        ScheduleDelay.fromJson(JsonMap.newBuilder()
+                                      .put("seconds", 1)
+                                      .put("app_state", "not an app state")
+                                      .build()
+                                      .toJsonValue());
     }
 
     /**
@@ -68,9 +68,9 @@ public class ScheduleDelayTest extends BaseTestCase {
      */
     @Test
     public void testParseMissingAppStateDefaultsToAny() throws Exception {
-        ScheduleDelay delay = ScheduleDelay.parseJson(JsonMap.newBuilder().put("seconds", 1)
-                                       .build()
-                                       .toJsonValue());
+        ScheduleDelay delay = ScheduleDelay.fromJson(JsonMap.newBuilder().put("seconds", 1)
+                                                            .build()
+                                                            .toJsonValue());
 
         assertEquals(delay.getAppState(), ScheduleDelay.APP_STATE_ANY);
     }

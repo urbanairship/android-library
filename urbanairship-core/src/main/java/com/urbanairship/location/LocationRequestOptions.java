@@ -285,16 +285,16 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * Creates a LocationRequestOptions from a JSON string.
      *
-     * @param json The JSON string.
+     * @param value The JSON string.
      * @return A LocationRequestOptions, or null if the JSON is not a valid object.
      * @throws JsonException If the string is unable to be parsed to a {@link JsonValue}.
      */
     @NonNull
-    public static LocationRequestOptions parseJson(@Nullable String json) throws JsonException {
-        JsonMap jsonMap = JsonValue.parseString(json).getMap();
+    public static LocationRequestOptions fromJson(@Nullable JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.getMap();
 
         if (jsonMap == null) {
-            throw new JsonException("Invalid location request options: " + json);
+            throw new JsonException("Invalid location request options: " + value);
         }
 
         Number minDistanceNumber = jsonMap.opt(MIN_DISTANCE_KEY).getNumber();

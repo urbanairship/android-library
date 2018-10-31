@@ -444,7 +444,7 @@ class PushManagerJobHandler {
     @Nullable
     private ChannelRegistrationPayload getLastRegistrationPayload() {
         try {
-            return ChannelRegistrationPayload.parseJson(dataStore.getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY));
+            return ChannelRegistrationPayload.fromJson(dataStore.getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY));
         } catch (JsonException e) {
             Logger.error("PushManagerJobHandler - Failed to parse payload from JSON.", e);
             return null;

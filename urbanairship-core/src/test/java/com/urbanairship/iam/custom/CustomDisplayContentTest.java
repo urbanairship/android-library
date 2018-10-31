@@ -19,7 +19,7 @@ public class CustomDisplayContentTest {
     public void testJson() throws JsonException {
         CustomDisplayContent content = new CustomDisplayContent(JsonValue.wrapOpt("some value"));
 
-        CustomDisplayContent fromJson = CustomDisplayContent.parseJson(content.toJsonValue());
+        CustomDisplayContent fromJson = CustomDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }

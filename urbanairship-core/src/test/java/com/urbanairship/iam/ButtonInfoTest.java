@@ -28,7 +28,7 @@ public class ButtonInfoTest extends BaseTestCase {
                                         .build();
 
 
-        ButtonInfo fromJson = ButtonInfo.parseJson(original.toJsonValue());
+        ButtonInfo fromJson = ButtonInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());

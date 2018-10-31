@@ -78,20 +78,20 @@ public class MediaInfo implements JsonSerializable {
     /**
      * Parses a {@link MediaInfo} from a {@link JsonValue}.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The parsed media info.
      * @throws JsonException If the media info was unable to be parsed.
      */
     @NonNull
-    public static MediaInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
+    public static MediaInfo fromJson(@NonNull JsonValue value) throws JsonException {
         try {
             return newBuilder()
-                    .setUrl(jsonValue.optMap().opt(URL_KEY).optString())
-                    .setType(jsonValue.optMap().opt(TYPE_KEY).optString())
-                    .setDescription(jsonValue.optMap().opt(DESCRIPTION_KEY).optString())
+                    .setUrl(value.optMap().opt(URL_KEY).optString())
+                    .setType(value.optMap().opt(TYPE_KEY).optString())
+                    .setDescription(value.optMap().opt(DESCRIPTION_KEY).optString())
                     .build();
         } catch (IllegalArgumentException e) {
-            throw new JsonException("Invalid media object json: " + jsonValue, e);
+            throw new JsonException("Invalid media object json: " + value, e);
         }
     }
 

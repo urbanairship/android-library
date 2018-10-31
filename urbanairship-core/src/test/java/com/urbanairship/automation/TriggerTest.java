@@ -50,7 +50,7 @@ public class TriggerTest extends BaseTestCase {
                                          .put("predicate", predicate)
                                          .build();
 
-            Trigger trigger = Trigger.parseJson(triggerJson.toJsonValue());
+            Trigger trigger = Trigger.fromJson(triggerJson.toJsonValue());
 
             // Triggers
             assertEquals(key, trigger.getType());
@@ -64,7 +64,7 @@ public class TriggerTest extends BaseTestCase {
      */
     @Test(expected = JsonException.class)
     public void testParseEmptyJson() throws JsonException {
-        ActionScheduleInfo.parseJson(JsonValue.NULL);
+        ActionScheduleInfo.fromJson(JsonValue.NULL);
     }
 
     /**
@@ -77,7 +77,7 @@ public class TriggerTest extends BaseTestCase {
                                      .put("goal", 100)
                                      .build();
 
-        Trigger.parseJson(triggerJson.toJsonValue());
+        Trigger.fromJson(triggerJson.toJsonValue());
     }
 
     /**
@@ -90,6 +90,6 @@ public class TriggerTest extends BaseTestCase {
                                      .put("goal", -100)
                                      .build();
 
-        Trigger.parseJson(triggerJson.toJsonValue());
+        Trigger.fromJson(triggerJson.toJsonValue());
     }
 }

@@ -106,18 +106,18 @@ public class ButtonInfo implements JsonSerializable {
     /**
      * Parses an {@link ButtonInfo} from a {@link JsonValue}.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The parsed button info.
      * @throws JsonException If the button info was unable to be parsed.
      */
     @NonNull
-    public static ButtonInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
-        JsonMap content = jsonValue.optMap();
+    public static ButtonInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap content = value.optMap();
         Builder builder = newBuilder();
 
         // Label
         if (content.containsKey(LABEL_KEY)) {
-            builder.setLabel(TextInfo.parseJson(content.opt(LABEL_KEY)));
+            builder.setLabel(TextInfo.fromJson(content.opt(LABEL_KEY)));
         }
 
         // ID
@@ -191,14 +191,14 @@ public class ButtonInfo implements JsonSerializable {
      * @throws JsonException If the list was unable to be parsed.
      */
     @NonNull
-    public static List<ButtonInfo> parseJson(@NonNull JsonList jsonList) throws JsonException {
+    public static List<ButtonInfo> fromJson(@NonNull JsonList jsonList) throws JsonException {
         if (jsonList.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<ButtonInfo> buttons = new ArrayList<>();
         for (JsonValue value : jsonList) {
-            buttons.add(parseJson(value));
+            buttons.add(fromJson(value));
         }
 
         return buttons;

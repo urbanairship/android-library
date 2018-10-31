@@ -388,7 +388,7 @@ public class Analytics extends AirshipComponent {
     public AssociatedIdentifiers getAssociatedIdentifiers() {
         synchronized (associatedIdentifiersLock) {
             try {
-                return AssociatedIdentifiers.fromJson(preferenceDataStore.getString(ASSOCIATED_IDENTIFIERS_KEY, null));
+                return AssociatedIdentifiers.fromJson(preferenceDataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY));
             } catch (JsonException e) {
                 Logger.debug("Unable to parse associated identifiers.", e);
                 preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);

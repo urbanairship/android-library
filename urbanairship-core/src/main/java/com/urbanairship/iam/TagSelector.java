@@ -164,13 +164,13 @@ public class TagSelector implements JsonSerializable {
     /**
      * Parses a json value for a tag selector.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The parsed tag selector.
      * @throws JsonException If the json value does not contain a valid tag selector.
      */
     @NonNull
-    public static TagSelector parseJson(@NonNull JsonValue jsonValue) throws JsonException {
-        JsonMap jsonMap = jsonValue.optMap();
+    public static TagSelector fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
 
         if (jsonMap.containsKey(TAG)) {
             String tag = jsonMap.opt(TAG).getString();
@@ -201,10 +201,10 @@ public class TagSelector implements JsonSerializable {
         }
 
         if (jsonMap.containsKey(NOT)) {
-            return not(parseJson(jsonMap.opt(NOT)));
+            return not(fromJson(jsonMap.opt(NOT)));
         }
 
-        throw new JsonException("Json value did not contain a valid selector: " + jsonValue);
+        throw new JsonException("Json value did not contain a valid selector: " + value);
     }
 
     /**
@@ -217,7 +217,7 @@ public class TagSelector implements JsonSerializable {
     private static List<TagSelector> parseSelectors(JsonList jsonList) throws JsonException {
         List<TagSelector> selectors = new ArrayList<>();
         for (JsonValue jsonValue : jsonList) {
-            selectors.add(parseJson(jsonValue));
+            selectors.add(fromJson(jsonValue));
         }
 
         if (selectors.isEmpty()) {

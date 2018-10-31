@@ -37,7 +37,7 @@ public class BannerDisplayContentTest extends BaseTestCase {
                                                  .build())
                             .build();
 
-        BannerDisplayContent fromJson = BannerDisplayContent.parseJson(content.toJsonValue());
+        BannerDisplayContent fromJson = BannerDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }

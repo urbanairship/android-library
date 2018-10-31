@@ -132,13 +132,13 @@ class DisableInfo implements JsonSerializable {
      * <p>
      * Note: This method has the side effect of multiplying the refresh interval by a factor of 1000.
      *
-     * @param jsonValue The json value.
+     * @param value The json value.
      * @return The disable info.
      * @throws JsonException If the json value is invalid.
      */
     @NonNull
-    public static DisableInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException {
-        JsonMap jsonMap = jsonValue.optMap();
+    public static DisableInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
 
 
         Builder builder = newBuilder();

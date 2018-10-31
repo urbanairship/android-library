@@ -23,7 +23,7 @@ public class MediaInfoTest extends BaseTestCase {
                                       .build();
 
 
-        MediaInfo fromJson = MediaInfo.parseJson(original.toJsonValue());
+        MediaInfo fromJson = MediaInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());
