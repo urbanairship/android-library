@@ -366,7 +366,7 @@ public class AutomationDataManager extends DataManager {
      */
     void deleteSchedule(String scheduleId) {
         if (delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = ?", new String[] { scheduleId }) < 0) {
-            Logger.warn("AutomationDataManager - failed to delete schedule for schedule ID " + scheduleId);
+            Logger.error("AutomationDataManager - failed to delete schedule for schedule ID " + scheduleId);
         }
     }
 
@@ -378,7 +378,7 @@ public class AutomationDataManager extends DataManager {
      */
     boolean deleteGroup(String group) {
         if (delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " = ?", new String[] { group }) < 0) {
-            Logger.warn("AutomationDataManager - failed to delete schedules for group " + group);
+            Logger.error("AutomationDataManager - failed to delete schedules for group " + group);
             return false;
         }
         return true;
@@ -389,7 +389,7 @@ public class AutomationDataManager extends DataManager {
      */
     void deleteAllSchedules() {
         if (delete(ScheduleEntry.TABLE_NAME, null, null) < 0) {
-            Logger.warn("AutomationDataManager - failed to delete schedules");
+            Logger.error("AutomationDataManager - failed to delete schedules");
         }
     }
 

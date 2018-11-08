@@ -198,7 +198,7 @@ class InboxJobHandler {
 
         // 304
         if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
-            Logger.info("Inbox messages already up-to-date. ");
+            Logger.debug("Inbox messages already up-to-date. ");
             return true;
         }
 
@@ -216,7 +216,7 @@ class InboxJobHandler {
             }
 
             if (serverMessages == null) {
-                Logger.info("Inbox message list is empty.");
+                Logger.debug("Inbox message list is empty.");
             } else {
                 Logger.info("Received " + serverMessages.size() + " inbox messages.");
                 updateInbox(serverMessages);
@@ -226,7 +226,7 @@ class InboxJobHandler {
             return true;
         }
 
-        Logger.info("Unable to update inbox messages.");
+        Logger.debug("Unable to update inbox messages.");
         return false;
     }
 
@@ -408,7 +408,7 @@ class InboxJobHandler {
 
         // Check for failure
         if (response == null || response.getStatus() != HttpURLConnection.HTTP_CREATED) {
-            Logger.verbose("InboxJobHandler - Rich Push user creation failed: " + response);
+            Logger.debug("InboxJobHandler - Rich Push user creation failed: " + response);
             return false;
         }
 
@@ -427,7 +427,7 @@ class InboxJobHandler {
         }
 
         if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
-            Logger.error("InboxJobHandler - Rich Push user creation failed: " + response);
+            Logger.debug("InboxJobHandler - Rich Push user creation failed: " + response);
             return false;
         }
 

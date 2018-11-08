@@ -247,7 +247,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
     @Nullable
     private Bitmap fetchBigImage(@NonNull final URL url) {
 
-        Logger.info("Fetching notification image at URL: " + url);
+        Logger.debug("Fetching notification image at URL: " + url);
         WindowManager window = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics dm = new DisplayMetrics();
         window.getDefaultDisplay().getMetrics(dm);
