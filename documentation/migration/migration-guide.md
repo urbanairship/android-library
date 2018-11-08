@@ -45,6 +45,160 @@ methods had to be changed to move the lambda to the last parameter.
     public static Cancelable shared(@Nullable Looper looper, @NonNull final OnReadyCallback)
 ```
 
+#### ActionScheduleInfo
+
+```java
+    // 9.x
+    public static ActionScheduleInfo parseJson(@NonNull JsonValue value) throws JsonException
+
+    // 10.x
+    public static ActionScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### ScheduleDelay
+
+```java
+    // 9.x
+    public static ScheduleDelay parseJson(@NonNull JsonValue value) throws JsonException
+
+    // 10.x
+    public static ScheduleDelay fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### Audience
+
+```java
+    // 9.x
+    public static Audience parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    // 10.x
+    public static Audience fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### ButtonInfo
+
+```java
+    // 9.x
+    public static ButtonInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    public static List<ButtonInfo> parseJson(@NonNull JsonList jsonList) throws JsonException
+
+    // 10.x
+    public static ButtonInfo fromJson(@NonNull JsonValue value) throws JsonException
+
+    public static List<ButtonInfo> fromJson(@NonNull JsonList jsonList) throws JsonException
+```
+
+#### MediaInfo
+
+```java
+    // 9.x
+    public static MediaInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    // 10.x
+    public static MediaInfo fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### TagSelector
+
+```java
+    // 9.x
+    public static TagSelector parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    // 10.x
+    public static TagSelector fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### TextInfo
+
+```java
+    // 9.x
+    public static TextInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    // 10.x
+    public static TextInfo fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### BannerDisplayContent
+
+```java
+    // 9.x
+    public static BannerDisplayContent parseJson(@NonNull JsonValue json) throws JsonException
+
+    // 10.x
+    public static BannerDisplayContent fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### CustomDisplayContent
+
+```java
+    // 9.x
+    public static CustomDisplayContent parseJson(@NonNull JsonValue jsonValue)
+
+    // 10.x
+    public static CustomDisplayContent fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### FullScreenDisplayContent
+
+```java
+    // 9.x
+    public static FullScreenDisplayContent parseJson(@NonNull JsonValue json) throws JsonException
+
+    // 10.x
+    public static FullScreenDisplayContent fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### HtmlDisplayContent
+
+```java
+    // 9.x
+    public static HtmlDisplayContent parseJson(@NonNull JsonValue json) throws JsonException
+
+    // 10.x
+    public static HtmlDisplayContent fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### ModalDisplayContent
+
+```java
+    // 9.x
+    public static ModalDisplayContent parseJson(@NonNull JsonValue json) throws JsonException
+
+    // 10.x
+    public static ModalDisplayContent fromJson(@NonNull JsonValue value) throws JsonException
+```
+
+#### LocationRequestOptions
+
+```java
+    // 9.x
+    public static LocationRequestOptions parseJson(@Nullable String json) throws JsonException
+
+    // 10.x
+    public static LocationRequestOptions fromJson(@Nullable JsonValue value) throws JsonException
+```
+
+#### QuietTimeInterval
+
+```java
+    // 9.x
+    public static QuietTimeInterval parseJson(@Nullable String json)
+
+    // 10.x
+    public static QuietTimeInterval fromJson(@Nullable JsonValue value) throws JsonException
+```
+
+#### DisableInfo
+
+```java
+    // 9.x
+    public static DisableInfo parseJson(@NonNull JsonValue jsonValue) throws JsonException
+
+    // 10.x
+    public static DisableInfo fromJson(@NonNull JsonValue value) throws JsonException
+```
+
 #### ActionRegistry#Entry
 
 ```java
@@ -93,4 +247,3 @@ Instead, you can set the predicate after registering the action:
 ### FCM provider changes
 
 `AirshipFirebaseInstanceIdService` was removed to avoid using the deprecated `FirebaseInstanceIdService`. To notify Urban Airship of token changes, please use the new `AirshipFirebaseMessagingService.processNewToken(Context)` method.
-
