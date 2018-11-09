@@ -859,7 +859,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         // is suspended while displaying an iam and later restored. We will return false here and
         // let the automation engine trigger an execution for the iam.
         if (!adapterWrappers.containsKey(scheduleId)) {
-            Logger.error("InAppMessagingManager - Lock denied. No record of the schedule.");
+            Logger.debug("InAppMessagingManager - Lock denied. No record of the schedule.");
             return false;
         }
 

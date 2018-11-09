@@ -195,7 +195,7 @@ public class Logger {
                 return intValue;
             }
 
-            Logger.error(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
+            Logger.warn(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
             return defaultValue;
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException("Invalid log level: " + value);

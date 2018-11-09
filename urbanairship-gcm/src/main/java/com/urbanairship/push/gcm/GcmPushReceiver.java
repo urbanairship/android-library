@@ -136,7 +136,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 Logger.debug("GcmPushReceiver - Forwarding GCM intent to " + serviceName);
                 intent.setClassName(context.getPackageName(), serviceName);
             } else {
-                Logger.error("GcmPushReceiver - Error resolving target intent service, skipping classname enforcement. Resolved service was: " + serviceInfo.packageName + "/" + serviceInfo.name);
+                Logger.debug("GcmPushReceiver - Error resolving target intent service, skipping classname enforcement. Resolved service was: " + serviceInfo.packageName + "/" + serviceInfo.name);
             }
         }
 
@@ -147,7 +147,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 setResultCode(componentName == null ? 404 : Activity.RESULT_OK);
             }
         } catch (IllegalStateException | SecurityException e) {
-            Logger.error("GcmPushReceiver - Error while delivering the message to the serviceIntent", e);
+            Logger.debug("GcmPushReceiver - Error while delivering the message to the serviceIntent", e);
             if (this.isOrderedBroadcast()) {
                 this.setResultCode(401);
             }

@@ -357,7 +357,7 @@ public class MessageFragment extends Fragment {
         message = UAirship.shared().getInbox().getMessage(getMessageId());
 
         if (message == null) {
-            Logger.info("MessageFragment - Fetching messages.");
+            Logger.debug("MessageFragment - Fetching messages.");
             fetchMessageRequest = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
                 @Override
                 public void onFinished(boolean success) {

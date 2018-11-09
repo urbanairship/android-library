@@ -103,17 +103,17 @@ class IncomingPushRunnable implements Runnable {
         Logger.info("Processing push: " + message);
 
         if (!airship.getPushManager().isPushEnabled()) {
-            Logger.info("Push disabled, ignoring message");
+            Logger.debug("Push disabled, ignoring message");
             return;
         }
 
         if (!airship.getPushManager().isComponentEnabled()) {
-            Logger.info("PushManager component is disabled, ignoring message.");
+            Logger.debug("PushManager component is disabled, ignoring message.");
             return;
         }
 
         if (!airship.getPushManager().isUniqueCanonicalId(message.getCanonicalPushId())) {
-            Logger.info("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
+            Logger.debug("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
             return;
         }
         if (message.isExpired()) {
@@ -165,13 +165,13 @@ class IncomingPushRunnable implements Runnable {
         final NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory == null) {
-            Logger.info("NotificationFactory is null. Unable to display notification for message: " + message);
+            Logger.error("NotificationFactory is null. Unable to display notification for message: " + message);
             sendPushResultBroadcast(null);
             return;
         }
 
         if (!isLongRunning && factory.requiresLongRunningTask(message)) {
-            Logger.info("Push requires a long running task. Scheduled for a later time: " + message);
+            Logger.debug("Push requires a long running task. Scheduled for a later time: " + message);
             reschedulePush(message);
             return;
         }
@@ -198,7 +198,7 @@ class IncomingPushRunnable implements Runnable {
                 sendPushResultBroadcast(null);
                 break;
             case NotificationFactory.Result.RETRY:
-                Logger.info("Scheduling notification to be retried for a later time: " + message);
+                Logger.debug("Scheduling notification to be retried for a later time: " + message);
                 reschedulePush(message);
                 break;
         }

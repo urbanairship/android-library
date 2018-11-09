@@ -88,7 +88,7 @@ public class RemoteDataJobHandler {
         Response response = apiClient.fetchRemoteData(lastModified);
 
         if (response == null) {
-            Logger.info("Unable to connect to remote data server, retrying later");
+            Logger.debug("Unable to connect to remote data server, retrying later");
             return JobInfo.JOB_RETRY;
         }
 
@@ -128,7 +128,7 @@ public class RemoteDataJobHandler {
             return JobInfo.JOB_FINISHED;
         } else {
             // Error
-            Logger.info("Error fetching remote data: " + String.valueOf(status));
+            Logger.debug("Error fetching remote data: " + String.valueOf(status));
             return JobInfo.JOB_RETRY;
         }
 

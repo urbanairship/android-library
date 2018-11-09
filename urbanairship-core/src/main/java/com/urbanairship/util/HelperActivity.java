@@ -65,7 +65,7 @@ public class HelperActivity extends Activity {
         Intent intent = getIntent();
 
         if (intent == null) {
-            Logger.warn("HelperActivity - Started with null intent");
+            Logger.error("HelperActivity - Started with null intent");
             finish();
             return;
         }
@@ -81,7 +81,7 @@ public class HelperActivity extends Activity {
                 resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
                 requestPermissions(permissions, ++requestCode);
             } else {
-                Logger.warn("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
+                Logger.error("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
                 finish();
             }
         }

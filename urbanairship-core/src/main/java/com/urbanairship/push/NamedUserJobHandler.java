@@ -123,19 +123,19 @@ class NamedUserJobHandler {
         // 5xx
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
-            Logger.info("Update named user failed, will retry.");
+            Logger.debug("Update named user failed, will retry.");
             return JobInfo.JOB_RETRY;
         }
 
         // 429
         if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-            Logger.info("Update named user failed. Too many requests. Will retry.");
+            Logger.debug("Update named user failed. Too many requests. Will retry.");
             return JobInfo.JOB_RETRY;
         }
 
         // 2xx
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.info("Update named user succeeded with status: " + response.getStatus());
+            Logger.debug("Update named user succeeded with status: " + response.getStatus());
             dataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
             namedUser.dispatchUpdateTagGroupsJob();
             return JobInfo.JOB_FINISHED;
@@ -143,13 +143,13 @@ class NamedUserJobHandler {
 
         // 403
         if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.info("Update named user failed with status: " + response.getStatus() +
+            Logger.debug("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
             return JobInfo.JOB_FINISHED;
         }
 
         // 4xx
-        Logger.info("Update named user failed with status: " + response.getStatus());
+        Logger.debug("Update named user failed with status: " + response.getStatus());
         return JobInfo.JOB_FINISHED;
     }
 

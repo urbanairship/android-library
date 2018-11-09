@@ -205,7 +205,7 @@ public class ActionService extends Service {
         }
 
         if (actions.isEmpty()) {
-            Logger.debug("ActionService - No actions to run.");
+            Logger.verbose("ActionService - No actions to run.");
             return;
         }
 

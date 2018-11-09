@@ -217,7 +217,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
      */
     @Override
     public void onAirshipReady(UAirship airship) {
-        Logger.info("Autopilot - Airship ready!");
+        Logger.debug("Autopilot - Airship ready!");
     }
 
 }

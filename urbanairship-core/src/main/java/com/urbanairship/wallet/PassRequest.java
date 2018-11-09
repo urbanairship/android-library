@@ -181,7 +181,7 @@ public class PassRequest {
                     Logger.debug("PassRequest - Received pass response: " + json + " for pass " + url);
                     requestCallback.setResult(response.getStatus(), Pass.parsePass(json));
                 } else {
-                    Logger.error("PassRequest - Pass " + templateId + " request failed with status " + response.getStatus());
+                    Logger.debug("PassRequest - Pass " + templateId + " request failed with status " + response.getStatus());
                     requestCallback.setResult(response.getStatus(), null);
                 }
 

@@ -270,7 +270,7 @@ class PushManagerJobHandler {
 
         // 2xx (API should only return 200 or 201)
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.info("Channel registration succeeded with status: " + response.getStatus());
+            Logger.debug("Channel registration succeeded with status: " + response.getStatus());
 
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
@@ -306,7 +306,7 @@ class PushManagerJobHandler {
     private int createChannel(@NonNull ChannelRegistrationPayload payload) {
 
         if (pushManager.isChannelCreationDelayEnabled()) {
-            Logger.info("Channel registration is currently disabled.");
+            Logger.debug("Channel registration is currently disabled.");
             return JobInfo.JOB_FINISHED;
         }
 
@@ -332,7 +332,7 @@ class PushManagerJobHandler {
             String channelLocation = response.getResponseHeader(CHANNEL_LOCATION_KEY);
 
             if (!UAStringUtil.isEmpty(channelLocation) && !UAStringUtil.isEmpty(channelId)) {
-                Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + channelId);
+                Logger.debug("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + channelId);
 
                 // Set the last registration payload and time then notify registration succeeded
                 pushManager.setChannel(channelId, channelLocation);

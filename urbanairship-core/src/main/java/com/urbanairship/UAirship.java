@@ -322,7 +322,6 @@ public class UAirship {
         }
 
 
-
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
             for (StackTraceElement element : new Exception().getStackTrace()) {

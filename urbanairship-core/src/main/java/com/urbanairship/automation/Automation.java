@@ -107,7 +107,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<ActionSchedule> schedule(@NonNull final ActionScheduleInfo scheduleInfo) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
@@ -122,7 +122,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
@@ -149,7 +149,7 @@ public class Automation extends AirshipComponent {
      */
     public Future<Void> cancel(@NonNull final Collection<String> ids) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
@@ -165,7 +165,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<Boolean> cancelGroup(@NonNull final String group) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             PendingResult<Boolean> pendingResult = new PendingResult<>();
             pendingResult.setResult(false);
             return pendingResult;
@@ -181,7 +181,7 @@ public class Automation extends AirshipComponent {
      */
     public Future<Void> cancelAll() {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
@@ -197,7 +197,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<ActionSchedule> getSchedule(@NonNull final String scheduleId) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return null;
         }
 
@@ -213,7 +213,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<Collection<ActionSchedule>> getSchedules(@NonNull final Set<String> scheduleIds) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return null;
         }
 
@@ -227,7 +227,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<Collection<ActionSchedule>> getSchedules() {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return null;
         }
 
@@ -242,7 +242,7 @@ public class Automation extends AirshipComponent {
      */
     public PendingResult<Collection<ActionSchedule>> getSchedules(final String group) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return null;
         }
 
@@ -258,7 +258,7 @@ public class Automation extends AirshipComponent {
      */
     PendingResult<ActionSchedule> editSchedule(@NonNull String scheduleId, @NonNull ActionScheduleEdits edits) {
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return null;
         }
 
