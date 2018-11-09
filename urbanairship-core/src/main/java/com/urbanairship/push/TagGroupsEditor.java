@@ -58,7 +58,6 @@ public class TagGroupsEditor {
 
         tags = TagUtils.normalizeTags(tags);
         if (tags.isEmpty()) {
-            Logger.debug("The tags cannot be empty");
             return this;
         }
 
@@ -136,7 +135,6 @@ public class TagGroupsEditor {
 
         tags = TagUtils.normalizeTags(tags);
         if (tags.isEmpty()) {
-            Logger.debug("The tags cannot be empty");
             return this;
         }
 
