@@ -157,7 +157,11 @@ public class AutomationEngineTest extends BaseTestCase {
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                RegionEvent event = new RegionEvent("region_id", "test_source", RegionEvent.BOUNDARY_EVENT_ENTER);
+                RegionEvent event = RegionEvent.newBuilder()
+                                               .setRegionId("region_id")
+                                               .setSource("test_source")
+                                               .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
+                                               .build();
                 UAirship.shared().getAnalytics().addEvent(event);
             }
         });
@@ -173,7 +177,11 @@ public class AutomationEngineTest extends BaseTestCase {
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                RegionEvent event = new RegionEvent("region_id", "test_source", RegionEvent.BOUNDARY_EVENT_EXIT);
+                RegionEvent event = RegionEvent.newBuilder()
+                                               .setRegionId("region_id")
+                                               .setSource("test_source")
+                                               .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
+                                               .build();
                 UAirship.shared().getAnalytics().addEvent(event);
             }
         });
@@ -333,7 +341,11 @@ public class AutomationEngineTest extends BaseTestCase {
         verifyDelay(delay, new Runnable() {
             @Override
             public void run() {
-                RegionEvent event = new RegionEvent("region_id", "test_source", RegionEvent.BOUNDARY_EVENT_EXIT);
+                RegionEvent event = RegionEvent.newBuilder()
+                                               .setRegionId("region_id")
+                                               .setSource("test_source")
+                                               .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
+                                               .build();
                 UAirship.shared().getAnalytics().addEvent(event);
             }
         });

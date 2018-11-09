@@ -12,6 +12,8 @@ import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.Checks;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -105,7 +107,7 @@ public class RegionEvent extends Event implements JsonSerializable {
     private final int boundaryEvent;
 
     /**
-     * A circular region with a radius, latitude and longitude from its center.
+     * A circular region with a radius, latitude and longitude.
      */
     private CircularRegion circularRegion;
 
@@ -113,6 +115,23 @@ public class RegionEvent extends Event implements JsonSerializable {
      * A proximity region with an identifier, major and minor.
      */
     private ProximityRegion proximityRegion;
+
+    private RegionEvent(@NonNull RegionEvent.Builder builder) {
+        this.regionId = builder.regionId;
+        this.source = builder.source;
+        this.boundaryEvent = builder.boundaryEvent;
+        this.circularRegion = builder.circularRegion;
+        this.proximityRegion = builder.proximityRegion;
+    }
+
+    /**
+     * Builder factory method.
+     *
+     * @return A new builder instance.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
 
     @IntDef({ BOUNDARY_EVENT_ENTER, BOUNDARY_EVENT_EXIT })
     @Retention(RetentionPolicy.SOURCE)
@@ -152,22 +171,6 @@ public class RegionEvent extends Event implements JsonSerializable {
      * The minimum longitude for a region in degrees.
      */
     public static final double MIN_LONGITUDE = -180.0;
-
-    /**
-     * Constructor for creating a region event.
-     *
-     * @param regionId The ID of the region object.
-     * @param source The source of the region definition.
-     * @param boundaryEvent The type of boundary crossing event.
-     */
-    public RegionEvent(@NonNull @Size(max = MAX_CHARACTER_LENGTH) String regionId,
-                       @NonNull @Size(max = MAX_CHARACTER_LENGTH) String source,
-                       @Boundary int boundaryEvent) {
-
-        this.regionId = regionId;
-        this.source = source;
-        this.boundaryEvent = boundaryEvent;
-    }
 
     @NonNull
     @Override
@@ -232,24 +235,6 @@ public class RegionEvent extends Event implements JsonSerializable {
     }
 
     /**
-     * Proximity region setter.
-     *
-     * @param proximityRegion The optional proximity region.
-     */
-    public void setProximityRegion(@Nullable ProximityRegion proximityRegion) {
-        this.proximityRegion = proximityRegion;
-    }
-
-    /**
-     * Circular region setter.
-     *
-     * @param circularRegion The optional circular region.
-     */
-    public void setCircularRegion(@Nullable CircularRegion circularRegion) {
-        this.circularRegion = circularRegion;
-    }
-
-    /**
      * Validates region event character count.
      *
      * @param string The event string to be validated.
@@ -311,5 +296,121 @@ public class RegionEvent extends Event implements JsonSerializable {
     @Priority
     public int getPriority() {
         return HIGH_PRIORITY;
+    }
+
+    /**
+     * Builder class for {@link com.urbanairship.location.RegionEvent} Objects.
+     */
+    public static class Builder {
+
+        /**
+         * The ID of the region.
+         */
+        private String regionId;
+
+        /**
+         * Source of the region definition.
+         */
+        private String source;
+
+        /**
+         * The type of boundary crossing event.
+         */
+        private int boundaryEvent;
+
+        /**
+         * A circular region with a radius, latitude and longitude.
+         */
+        private CircularRegion circularRegion;
+
+        /**
+         * A proximity region with an identifier, major and minor.
+         */
+        private ProximityRegion proximityRegion;
+
+        /**
+         * Creates a new region event builder
+         * <p>
+         * The region ID and source must be between 1 and 255 characters or the event will be invalid.
+         *
+         * 255 characters.
+         */
+        private Builder() {
+        }
+
+        /**
+         * Region identifier setter.
+         *
+         * @param regionId The region identifier.
+         */
+        public Builder setRegionId(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String regionId) {
+            this.regionId = regionId;
+            return this;
+        }
+
+        /**
+         * Region event source setter.
+         *
+         * @param source The region event source.
+         */
+        public Builder setSource(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String source) {
+            this.source = source;
+            return this;
+        }
+
+        /**
+         * Region boundary event setter.
+         *
+         * @param boundaryEvent The region boundary event.
+         */
+        public Builder setBoundaryEvent(int boundaryEvent) {
+            this.boundaryEvent = boundaryEvent;
+            return this;
+        }
+
+        /**
+         * Circular region setter.
+         *
+         * @param circularRegion The optional circular region.
+         */
+        public Builder setCircularRegion(@Nullable CircularRegion circularRegion) {
+            this.circularRegion = circularRegion;
+            return this;
+        }
+
+        /**
+         * Proximity region setter.
+         *
+         * @param proximityRegion The optional proximity region.
+         */
+        public Builder setProximityRegion(@Nullable ProximityRegion proximityRegion) {
+            this.proximityRegion = proximityRegion;
+            return this;
+        }
+
+        /**
+         * Builds the region event.
+         *
+         * @throws java.lang.IllegalArgumentException if the region ID or source is null, empty, or exceeds
+         * max length
+         * @return The built region event.
+         */
+        @NonNull
+        public RegionEvent build() {
+            Checks.checkNotNull(regionId, "Region identifier must not be null");
+            Checks.checkNotNull(source, "Region event source must not be null");
+            Checks.checkArgument(!UAStringUtil.isEmpty(regionId), "Region identifier must be greater than 0 characters.");
+            Checks.checkArgument(regionId.length() <= MAX_CHARACTER_LENGTH, "Region identifier exceeds max identifier length: " + MAX_CHARACTER_LENGTH);
+            Checks.checkArgument(!UAStringUtil.isEmpty(source), "Source must be greater than 0 characters.");
+            Checks.checkArgument(source.length() <= MAX_CHARACTER_LENGTH, "Source exceeds max source length: " + MAX_CHARACTER_LENGTH);
+
+            // Check boundary event
+            if (boundaryEvent < 1 || boundaryEvent > 2) {
+                throw new IllegalArgumentException("The boundary event must either be an entrance (" + BOUNDARY_EVENT_ENTER +
+                        ") or an exit (" + BOUNDARY_EVENT_EXIT + ").");
+            }
+
+            return new RegionEvent(this);
+        }
     }
 }

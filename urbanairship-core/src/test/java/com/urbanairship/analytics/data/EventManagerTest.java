@@ -209,7 +209,11 @@ public class EventManagerTest extends BaseTestCase {
         // Set last send time to year 3005 so next send time is way in the future
         dataStore.put(EventManager.LAST_SEND_KEY, 32661446400000L);
 
-        RegionEvent regionEvent = new RegionEvent("id", "source", RegionEvent.BOUNDARY_EVENT_ENTER);
+        RegionEvent regionEvent = RegionEvent.newBuilder()
+                                             .setRegionId("id")
+                                             .setSource("source")
+                                             .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
+                                             .build();
 
         eventManager.addEvent(regionEvent, "session");
 

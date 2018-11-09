@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 
@@ -27,17 +26,18 @@ public class RegionEventTest extends BaseTestCase {
         String source = "source";
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
-
         CircularRegion circularRegion = new CircularRegion(10, 90.0, 180.0);
-
-        event.setCircularRegion(circularRegion);
 
         ProximityRegion proximityRegion = new ProximityRegion("test_proximity_region", 1, 2);
         proximityRegion.setCoordinates(0.0, 0.0);
         proximityRegion.setRssi(-59);
 
-        event.setProximityRegion(proximityRegion);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .setCircularRegion(circularRegion)
+                                       .setProximityRegion(proximityRegion).build();
 
         JsonValue expectedData = JsonValue.parseString("{\"proximity\":{\"proximity_id\":\"test_proximity_region\",\"minor\":2," +
                 "\"longitude\":\"0.0\",\"rssi\":-59,\"latitude\":\"0.0\",\"major\":1},\"source\":\"source\"," +
@@ -58,7 +58,11 @@ public class RegionEventTest extends BaseTestCase {
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -71,105 +75,124 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with an empty region ID.
      */
-    @Test
-    public void testEmptyRegionID() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testEmptyRegionID() {
 
         String regionId = "";
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
     /**
      * Test creating a region event with a null region ID.
      */
-    @Test
-    public void testNullRegionID() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testNullRegionID() {
 
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(null, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(null)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
     /**
      * Test creating a region event with a region ID greater than maximum allowed length.
      */
-    @Test
-    public void testMaxRegionID() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testMaxRegionID() {
 
         String regionId = createFixedSizeString('a', 256);
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
     /**
      * Test creating a region event with an empty source.
      */
-    @Test
-    public void testEmptySource() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testEmptySource() {
 
         String regionId = createFixedSizeString('a', 255);
         String source = "";
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
 
     /**
      * Test creating a region event with a null source.
      */
-    @Test
-    public void testNullSource() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testNullSource() {
 
         String regionId = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, null, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
     /**
      * Test creating a region event with a source greater than maximum allowed length.
      */
-    @Test
-    public void testMaxSource() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testMaxSource() {
 
         String regionId = createFixedSizeString('a', 255);
         String source = createFixedSizeString('b', 256);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
 
-        assertFalse(event.isValid());
     }
 
     /**
      * Test a creating a region event with an invalid boundary event.
      */
-    @Test
-    public void testInvalidBoundaryEvent() throws JSONException {
+    @Test(expected= IllegalArgumentException.class)
+    public void testInvalidBoundaryEvent() {
 
         String regionId = createFixedSizeString('a', 255);
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = 11;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
-
-        assertFalse(event.isValid());
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .build();
     }
 
     /**
@@ -182,13 +205,14 @@ public class RegionEventTest extends BaseTestCase {
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
         ProximityRegion proximityRegion = new ProximityRegion("test_proximity_region", 1, 2);
-
         proximityRegion.setCoordinates(0.0, 0.0);
         proximityRegion.setRssi(-59);
 
-        event.setProximityRegion(proximityRegion);
+        RegionEvent event = RegionEvent.newBuilder().setRegionId(regionId)
+                                                  .setSource(source)
+                                                  .setBoundaryEvent(boundaryEvent)
+                                                  .setProximityRegion(proximityRegion).build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -212,12 +236,15 @@ public class RegionEventTest extends BaseTestCase {
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
         ProximityRegion proximityRegion = new ProximityRegion("test_proximity_region", 1, 2);
-
         proximityRegion.setRssi(-59);
 
-        event.setProximityRegion(proximityRegion);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .setProximityRegion(proximityRegion)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -226,6 +253,7 @@ public class RegionEventTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "proximity", "proximity_id", proximityRegion.getProximityId());
         EventTestUtils.validateNestedEventValue(event, "proximity", "major", proximityRegion.getMajor());
         EventTestUtils.validateNestedEventValue(event, "proximity", "minor", proximityRegion.getMinor());
+
         EventTestUtils.validateNestedEventValue(event, "proximity", "rssi", proximityRegion.getRssi());
     }
 
@@ -239,12 +267,15 @@ public class RegionEventTest extends BaseTestCase {
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
         ProximityRegion proximityRegion = new ProximityRegion("test_proximity_region", 1, 2);
-
         proximityRegion.setCoordinates(0.0, 0.0);
 
-        event.setProximityRegion(proximityRegion);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .setProximityRegion(proximityRegion)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -267,11 +298,14 @@ public class RegionEventTest extends BaseTestCase {
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
 
-        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
-
         CircularRegion circularRegion = new CircularRegion(10, 90.0, 180.0);
 
-        event.setCircularRegion(circularRegion);
+        RegionEvent event = RegionEvent.newBuilder()
+                                       .setRegionId(regionId)
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .setCircularRegion(circularRegion)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -286,7 +320,7 @@ public class RegionEventTest extends BaseTestCase {
      * Test character count validation directly.
      */
     @Test
-    public void testRegionEventCharacterCountIsValid() throws JSONException {
+    public void testRegionEventCharacterCountIsValid() {
         String validString = createFixedSizeString('a', 255);
         String invalidStringMax = createFixedSizeString('b', 256);
         String invalidStringMin = "";
@@ -300,7 +334,7 @@ public class RegionEventTest extends BaseTestCase {
      * Test region event latitude validation directly.
      */
     @Test
-    public void testRegionEventLatitudeIsValid() throws JSONException {
+    public void testRegionEventLatitudeIsValid() {
         Double validLatitude = 0.0;
         Double invalidLatitudeMax = 91.0;
         Double invalidLatitudeMin = -91.0;
@@ -314,7 +348,7 @@ public class RegionEventTest extends BaseTestCase {
      * Test region event longitude validation directly.
      */
     @Test
-    public void testRegionEventLongitudeIsValid() throws JSONException {
+    public void testRegionEventLongitudeIsValid() {
         Double validLongitude = 0.0;
         Double invalidLongitudeMax = 181.0;
         Double invalidLongitudeMin = -181.0;
