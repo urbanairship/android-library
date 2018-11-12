@@ -42,6 +42,9 @@ public class ChannelCapture extends AirshipComponent {
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
+    private final Runnable clipboardRunnable;
+
+    private boolean clipboardManagerInitialized = false;
 
     Executor executor = Executors.newSingleThreadExecutor();
 
@@ -59,9 +62,27 @@ public class ChannelCapture extends AirshipComponent {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
-        this.listener = new ActivityMonitor.SimpleListener() {
+
+        this.clipboardRunnable = new Runnable() {
             @Override
-            public void onForeground(long time) {
+            public void run() {
+                if (!clipboardManagerInitialized) {
+                    // Since ClipboardManager initialization can fail deep in the android platform
+                    // stack, catch any unanticipated errors here.
+                    try {
+                        Context ctx = ChannelCapture.this.context;
+                        clipboardManager = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+                        clipboardManagerInitialized = true;
+                    } catch (Exception e) {
+                        Logger.error("Unable to initialize clipboard manager: ", e);
+                    }
+                }
+
+                if (!clipboardManagerInitialized) {
+                    Logger.debug("Unable to check clipboard, clipboard manager uninitialized");
+                    return;
+                }
+
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -70,6 +91,14 @@ public class ChannelCapture extends AirshipComponent {
                 });
             }
         };
+
+        this.listener = new ActivityMonitor.SimpleListener() {
+            @Override
+            public void onForeground(long time) {
+                clipboardRunnable.run();
+            }
+        };
+
         this.preferenceDataStore = preferenceDataStore;
         this.activityMonitor = activityMonitor;
     }
@@ -79,11 +108,14 @@ public class ChannelCapture extends AirshipComponent {
     protected void init() {
         super.init();
 
-        // ClipboardManager must be prepared on a thread with a prepared looper
+        // ClipboardManager must be initialized on a thread with a prepared looper
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (activityMonitor.isAppForegrounded()) {
+                    clipboardRunnable.run();
+                }
+
                 activityMonitor.addListener(listener);
             }
         });
