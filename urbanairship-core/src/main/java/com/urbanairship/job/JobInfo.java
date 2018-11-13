@@ -289,7 +289,7 @@ public class JobInfo {
             builder.setId(persistableBundle.getInt(EXTRA_JOB_ID, 0));
 
             return builder.build();
-        } catch (IllegalArgumentException | JsonException e) {
+        } catch (Exception e) {
             Logger.error("Failed to parse job from bundle.", e);
         }
 
