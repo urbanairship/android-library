@@ -96,18 +96,6 @@ public class RichPushInboxTest extends BaseTestCase {
     }
 
     /**
-     * Test init only updates the mockUser if it exists.
-     */
-    @Test
-    public void testInitWithUser() {
-        when(mockUser.getId()).thenReturn("cool");
-
-        inbox.init();
-
-        verify(mockUser, times(1)).update(false);
-    }
-
-    /**
      * Tests the inbox reports the correct
      * number of messages that it was set up
      * with

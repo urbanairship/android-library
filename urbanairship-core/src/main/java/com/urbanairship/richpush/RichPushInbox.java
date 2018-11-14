@@ -200,8 +200,6 @@ public class RichPushInbox extends AirshipComponent {
             };
 
             user.addListener(userListener);
-        } else {
-            user.update(false);
         }
 
         refresh(false);
