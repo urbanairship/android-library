@@ -43,8 +43,6 @@ public class ChannelCapture extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
 
-    private boolean clipboardManagerInitialized = false;
-
     Executor executor = Executors.newSingleThreadExecutor();
 
     /**
@@ -115,19 +113,18 @@ public class ChannelCapture extends AirshipComponent {
     }
 
     private void checkClipboard() {
-        if (!clipboardManagerInitialized) {
+        if (clipboardManager == null) {
             // Since ClipboardManager initialization can fail deep in the android platform
             // stack, catch any unanticipated errors here.
             try {
                 Context ctx = ChannelCapture.this.context;
                 clipboardManager = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
-                clipboardManagerInitialized = true;
             } catch (Exception e) {
                 Logger.error("Unable to initialize clipboard manager: ", e);
             }
         }
 
-        if (!clipboardManagerInitialized) {
+        if (clipboardManager == null) {
             Logger.debug("Unable to attempt channel capture, clipboard manager uninitialized");
             return;
         }
