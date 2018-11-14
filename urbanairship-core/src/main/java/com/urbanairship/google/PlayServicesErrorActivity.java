@@ -49,10 +49,10 @@ public class PlayServicesErrorActivity extends FragmentActivity {
 
         if (requestCode == REQUEST_RESOLVE_ERROR) {
             if (resultCode == RESULT_OK) {
-                Logger.info("Google Play services resolution received result ok.");
+                Logger.debug("Google Play services resolution received result ok.");
                 checkPlayServices();
             } else {
-                Logger.error("Google Play services resolution canceled.");
+                Logger.debug("Google Play services resolution canceled.");
                 finish();
             }
         }
@@ -90,10 +90,10 @@ public class PlayServicesErrorActivity extends FragmentActivity {
 
         int error = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(this);
         if (error == ConnectionResult.SUCCESS) {
-            Logger.info("Google Play services available!");
+            Logger.debug("Google Play services available!");
             finish();
         } else if (GooglePlayServicesUtilWrapper.isUserRecoverableError(error)) {
-            Logger.info("Google Play services recoverable error: " + error);
+            Logger.debug("Google Play services recoverable error: " + error);
             ErrorDialogFragment.createInstance(error).show(getSupportFragmentManager(), DIALOG_TAG);
         } else {
             Logger.error("Unrecoverable Google Play services error: " + error);

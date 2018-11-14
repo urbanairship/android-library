@@ -221,7 +221,7 @@ public class UAWebView extends WebView {
     @SuppressLint("NewApi")
     public void loadRichPushMessage(@Nullable RichPushMessage message) {
         if (message == null) {
-            Logger.warn("Unable to load null message into UAWebView");
+            Logger.error("Unable to load null message into UAWebView");
             return;
         }
 
@@ -269,7 +269,7 @@ public class UAWebView extends WebView {
         currentMessage = null;
 
         if (getWebViewClientCompat() == null) {
-            Logger.info("No web view client set, setting a default " +
+            Logger.debug("No web view client set, setting a default " +
                     "UAWebViewClient for landing page view.");
             setWebViewClient(new UAWebViewClient());
         }

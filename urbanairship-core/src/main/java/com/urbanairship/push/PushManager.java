@@ -903,7 +903,7 @@ public class PushManager extends AirshipComponent {
      */
     public void addNotificationActionButtonGroup(@NonNull String id, @NonNull NotificationActionButtonGroup group) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.warn("Unable to add any notification button groups that starts with the reserved Urban Airship prefix " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            Logger.error("Unable to add any notification button groups that starts with the reserved Urban Airship prefix " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -1050,13 +1050,13 @@ public class PushManager extends AirshipComponent {
             return;
         }
 
-        Logger.info("Migrating push enabled preferences");
+        Logger.debug("Migrating push enabled preferences");
 
         // get old push enabled value, defaulting to false as before
         boolean oldPushEnabled = this.preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, false);
 
         // copy old push enabled value to user notifications enabled slot
-        Logger.info("Setting user notifications enabled to " + Boolean.toString(oldPushEnabled));
+        Logger.debug("Setting user notifications enabled to " + Boolean.toString(oldPushEnabled));
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, oldPushEnabled);
 
         if (!oldPushEnabled) {
@@ -1094,7 +1094,7 @@ public class PushManager extends AirshipComponent {
             return;
         }
 
-        Logger.info("Migrating quiet time interval");
+        Logger.debug("Migrating quiet time interval");
 
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
                 .setStartHour(startHr)
@@ -1118,7 +1118,7 @@ public class PushManager extends AirshipComponent {
             return;
         }
 
-        Logger.info("Migrating registration token preference");
+        Logger.debug("Migrating registration token preference");
 
         String token = null;
         switch (UAirship.shared().getPlatformType()) {

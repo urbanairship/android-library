@@ -159,7 +159,7 @@ public class Analytics extends AirshipComponent {
     public void addEvent(@NonNull final Event event) {
         //noinspection ConstantConditions
         if (event == null || !event.isValid()) {
-            Logger.warn("Analytics - Invalid event: " + event);
+            Logger.error("Analytics - Invalid event: " + event);
             return;
         }
 
@@ -390,7 +390,7 @@ public class Analytics extends AirshipComponent {
             try {
                 return AssociatedIdentifiers.fromJson(preferenceDataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY));
             } catch (JsonException e) {
-                Logger.debug("Unable to parse associated identifiers.", e);
+                Logger.error("Unable to parse associated identifiers.", e);
                 preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
             }
 

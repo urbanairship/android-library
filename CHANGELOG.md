@@ -3,6 +3,21 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.5.5 - November 14, 2018
+=================================
+
+Patch release that fixes an issue with Autopilot. If early take off was disabled it would prevent the
+display of push notifications. Apps that disable early take off should update.
+
+Changes
+-------
+- Fixed PersistableBundle NPE.
+- Fixed ChannelCapture tool sometimes throwing an exception.
+- Attempt automatic take off when receiving a new push or token from FCM.
+- Marked `RichPushUser#update(boolean)` as library only. Applications should not call this method. It
+  is handled internally by the SDK.
+
+
 Version 9.5.4 - October 25, 2018
 ================================
 

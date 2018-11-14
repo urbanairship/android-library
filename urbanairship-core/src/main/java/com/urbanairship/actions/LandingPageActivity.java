@@ -124,7 +124,7 @@ public class LandingPageActivity extends Activity {
         Intent intent = getIntent();
 
         if (intent == null) {
-            Logger.warn("LandingPageActivity - Started activity with null intent");
+            Logger.error("LandingPageActivity - Started activity with null intent");
             finish();
             return;
         }
@@ -142,7 +142,7 @@ public class LandingPageActivity extends Activity {
         this.aspectLock = intent.getBooleanExtra(ASPECT_LOCK_KEY, false) && height != 0 && width != 0;
 
         if (uri == null) {
-            Logger.warn("LandingPageActivity - No landing page uri to load.");
+            Logger.error("LandingPageActivity - No landing page uri to load.");
             finish();
             return;
         }
@@ -208,7 +208,7 @@ public class LandingPageActivity extends Activity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, @Nullable String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                    Logger.error("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
+                    Logger.info("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
                     error = errorCode;
                 }
             }

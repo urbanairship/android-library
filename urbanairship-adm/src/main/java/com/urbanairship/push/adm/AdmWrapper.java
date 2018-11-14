@@ -24,7 +24,7 @@ class AdmWrapper {
         try {
             return new ADM(UAirship.getApplicationContext()).isSupported();
         } catch (RuntimeException ex) {
-            Logger.error("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
+            Logger.warn("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
             return false;
         }
     }

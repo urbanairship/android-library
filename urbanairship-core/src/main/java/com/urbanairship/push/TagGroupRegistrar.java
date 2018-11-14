@@ -140,14 +140,14 @@ public class TagGroupRegistrar {
 
             // No response, 5xx, or 429
             if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-                Logger.info("Failed to update tag groups, will retry later.");
+                Logger.debug("Failed to update tag groups, will retry later.");
                 return false;
             }
 
             notifyListeners(mutation);
             mutationStore.pop();
             int status = response.getStatus();
-            Logger.info("Update tag groups finished with status: " + status);
+            Logger.debug("Update tag groups finished with status: " + status);
         }
 
         return true;

@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -35,6 +36,8 @@ public abstract class PushProviderBridge {
      * @param context The application context.
      */
     public static void requestRegistrationUpdate(@NonNull Context context) {
+        Autopilot.automaticTakeOff(context);
+
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
                                  .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)

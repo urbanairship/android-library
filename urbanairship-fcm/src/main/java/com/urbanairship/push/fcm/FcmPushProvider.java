@@ -79,7 +79,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         try {
             int playServicesStatus = PlayServicesUtils.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
-                Logger.error("Google Play services is currently unavailable.");
+                Logger.info("Google Play services is currently unavailable.");
                 return false;
             }
 

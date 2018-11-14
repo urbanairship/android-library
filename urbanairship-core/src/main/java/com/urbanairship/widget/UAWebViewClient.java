@@ -295,7 +295,7 @@ public class UAWebViewClient extends WebViewClient {
         try {
             actionValue = new ActionValue(JsonValue.parseString(value));
         } catch (JsonException e) {
-            Logger.warn("Unable to parse action argument value: " + value, e);
+            Logger.error("Unable to parse action argument value: " + value, e);
             triggerCallback(webView, "Unable to decode arguments payload", new ActionValue(), callbackKey);
             return;
         }
@@ -627,7 +627,7 @@ public class UAWebViewClient extends WebViewClient {
                     input.close();
                     outputStream.close();
                 } catch (Exception e) {
-                    Logger.error("Failed to close streams", e);
+                    Logger.debug("Failed to close streams", e);
                 }
             }
         }

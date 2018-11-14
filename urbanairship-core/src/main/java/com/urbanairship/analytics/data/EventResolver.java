@@ -224,7 +224,7 @@ public class EventResolver extends UrbanAirshipResolver {
                 break;
             }
 
-            Logger.info("Event database size exceeded. Deleting oldest session: " + sessionId);
+            Logger.debug("Event database size exceeded. Deleting oldest session: " + sessionId);
 
             int deleted = delete(uri, EventsStorage.Events.COLUMN_NAME_SESSION_ID + " = ?", new String[] { sessionId });
 

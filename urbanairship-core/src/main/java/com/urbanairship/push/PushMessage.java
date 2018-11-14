@@ -283,7 +283,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
     boolean isExpired() {
         String expirationStr = data.get(EXTRA_EXPIRATION);
         if (!UAStringUtil.isEmpty(expirationStr)) {
-            Logger.debug("Notification expiration time is \"" + expirationStr + "\"");
+            Logger.verbose("Notification expiration time is \"" + expirationStr + "\"");
             try {
                 long expiration = Long.parseLong(expirationStr) * 1000;
                 if (expiration < System.currentTimeMillis()) {

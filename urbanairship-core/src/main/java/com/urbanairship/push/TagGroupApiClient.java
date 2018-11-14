@@ -64,7 +64,7 @@ class TagGroupApiClient extends BaseApiClient {
 
 
         String tagPayload = payload.toString();
-        Logger.info("Updating tag groups with payload: " + tagPayload);
+        Logger.verbose("Updating tag groups with payload: " + tagPayload);
 
         Response response = performRequest(tagUrl, "POST", tagPayload);
         logTagGroupResponseIssues(response);

@@ -155,7 +155,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
             cache.getBundle().putInt(InAppMessageCache.IMAGE_HEIGHT_CACHE_KEY, options.outHeight);
             return OK;
         } catch (IOException e) {
-            Logger.error("Failed to cache media.", e);
+            Logger.debug("Failed to cache media.", e);
             return RETRY;
         }
     }

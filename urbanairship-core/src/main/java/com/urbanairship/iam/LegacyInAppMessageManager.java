@@ -227,7 +227,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             @Override
             public void onResult(@Nullable Boolean result) {
                 if (result != null && result) {
-                    Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
+                    Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
                     // Direct open event
                     ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessagePushOpened(push.getSendId());
                     analytics.addEvent(resolutionEvent);

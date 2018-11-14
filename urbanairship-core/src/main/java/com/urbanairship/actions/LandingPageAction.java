@@ -250,7 +250,7 @@ public class LandingPageAction extends Action {
             try {
                 id = URLEncoder.encode(uri.getSchemeSpecificPart(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                Logger.warn("LandingPageAction - Unable to decode " + uri.getSchemeSpecificPart());
+                Logger.error("LandingPageAction - Unable to decode " + uri.getSchemeSpecificPart());
                 return null;
             }
 

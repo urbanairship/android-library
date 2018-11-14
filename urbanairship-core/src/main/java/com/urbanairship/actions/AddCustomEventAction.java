@@ -125,13 +125,13 @@ public class AddCustomEventAction extends Action {
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         if (arguments.getValue().getMap() != null) {
             if (arguments.getValue().getMap().get("event_name") == null) {
-                Logger.debug("CustomEventAction requires an event name in the event data.");
+                Logger.error("CustomEventAction requires an event name in the event data.");
                 return false;
             }
             return true;
         }
 
-        Logger.debug("CustomEventAction requires a map of event data.");
+        Logger.error("CustomEventAction requires a map of event data.");
         return false;
     }
 

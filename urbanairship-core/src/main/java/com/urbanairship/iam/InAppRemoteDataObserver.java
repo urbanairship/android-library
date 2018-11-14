@@ -144,7 +144,7 @@ class InAppRemoteDataObserver {
                 if (schedules != null && !schedules.isEmpty()) {
                     // Make sure we only have a single schedule for the message ID
                     if (schedules.size() > 1) {
-                        Logger.error("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
+                        Logger.debug("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
                         continue;
                     }
 

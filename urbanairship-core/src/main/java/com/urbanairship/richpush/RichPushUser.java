@@ -4,6 +4,7 @@ package com.urbanairship.richpush;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -94,7 +95,9 @@ public class RichPushUser {
      * Updates the user on the device with what's on the server.
      *
      * @param forcefully A boolean indicating if the rich push user needs to be updated.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void update(boolean forcefully) {
 
         Logger.debug("RichPushUser - Updating user.");

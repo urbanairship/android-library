@@ -148,7 +148,7 @@ public class RemoteDataStore extends DataManager {
     public boolean deletePayloads() {
         boolean success = delete(RemoteDataPayloadEntry.TABLE_NAME, null, null) >= 0;
         if (!success) {
-            Logger.warn("RemoteDataStore - failed to delete payloads");
+            Logger.error("RemoteDataStore - failed to delete payloads");
         }
         return success;
     }

@@ -66,7 +66,7 @@ public class PlayServicesUtils {
         }
 
         if (GooglePlayServicesUtilWrapper.isUserRecoverableError(errorCode)) {
-            Logger.info("Launching Play Services Activity to resolve error.");
+            Logger.debug("Launching Play Services Activity to resolve error.");
             try {
                 context.startActivity(new Intent(context, PlayServicesErrorActivity.class));
             } catch (ActivityNotFoundException e) {

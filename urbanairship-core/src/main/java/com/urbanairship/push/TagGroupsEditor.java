@@ -51,7 +51,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor addTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.warn("The tag group ID string cannot be null.");
+            Logger.error("The tag group ID string cannot be null.");
             return this;
         }
 
@@ -61,7 +61,6 @@ public class TagGroupsEditor {
 
         tags = TagUtils.normalizeTags(tags);
         if (tags.isEmpty()) {
-            Logger.warn("The tags cannot be empty");
             return this;
         }
 
@@ -92,7 +91,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor setTags(@NonNull String tagGroup, @Nullable Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.warn("The tag group ID string cannot be null.");
+            Logger.error("The tag group ID string cannot be null.");
             return this;
         }
 
@@ -133,7 +132,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor removeTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.warn("The tag group ID string cannot be null.");
+            Logger.error("The tag group ID string cannot be null.");
             return this;
         }
 
@@ -143,7 +142,6 @@ public class TagGroupsEditor {
 
         tags = TagUtils.normalizeTags(tags);
         if (tags.isEmpty()) {
-            Logger.warn("The tags cannot be empty");
             return this;
         }
 

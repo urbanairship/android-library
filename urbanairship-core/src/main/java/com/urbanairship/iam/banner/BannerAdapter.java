@@ -66,7 +66,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
         int id = getContainerId(activity);
         if (id == 0 || activity.findViewById(id) == null || !(activity.findViewById(id) instanceof ViewGroup)) {
-            Logger.info("BannerAdapter - Unable to display in-app message. Missing view with id: " + id);
+            Logger.error("BannerAdapter - Unable to display in-app message. Missing view with id: " + id);
             return false;
         }
 

@@ -77,7 +77,7 @@ public class RateAppActivity extends ThemedActivity {
 
         Intent intent = getIntent();
         if (intent == null) {
-            Logger.warn("RateAppActivity - Started activity with null intent.");
+            Logger.error("RateAppActivity - Started activity with null intent.");
             finish();
             return;
         }
@@ -85,7 +85,7 @@ public class RateAppActivity extends ThemedActivity {
         final Uri storeUri = intent.getParcelableExtra(RateAppAction.STORE_URI_KEY);
 
         if (storeUri == null) {
-            Logger.warn("RateAppActivity - Missing store URI.");
+            Logger.error("RateAppActivity - Missing store URI.");
             finish();
             return;
         }
