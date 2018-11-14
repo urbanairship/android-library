@@ -13,6 +13,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.urbanairship.ActivityMonitor;
+import com.urbanairship.Autopilot;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -76,6 +77,8 @@ class IncomingPushRunnable implements Runnable {
 
     @Override
     public void run() {
+        Autopilot.automaticTakeOff(context);
+
         long airshipWaitTime = isLongRunning ? LONG_AIRSHIP_WAIT_TIME_MS : AIRSHIP_WAIT_TIME_MS;
         UAirship airship = UAirship.waitForTakeOff(airshipWaitTime);
 
