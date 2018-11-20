@@ -3,6 +3,11 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.5.6 - November 20, 2018
+=================================
+
+Patch release that fixes a race condition when a named user ID changes at the same time as a named user tag group update is being POSTed. Any apps that are using named user tag groups should update.
+
 Version 9.5.5 - November 14, 2018
 =================================
 
@@ -16,7 +21,6 @@ Changes
 - Attempt automatic take off when receiving a new push or token from FCM.
 - Marked `RichPushUser#update(boolean)` as library only. Applications should not call this method. It
   is handled internally by the SDK.
-
 
 Version 9.5.4 - October 25, 2018
 ================================
