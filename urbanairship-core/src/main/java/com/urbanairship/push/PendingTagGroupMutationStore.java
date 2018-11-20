@@ -3,6 +3,8 @@
 package com.urbanairship.push;
 
 
+import android.support.annotation.Nullable;
+
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonValue;
 
@@ -57,6 +59,7 @@ class PendingTagGroupMutationStore {
      *
      * @return The next tag group mutation or {@code null} if no mutations exist.
      */
+    @Nullable
     TagGroupsMutation pop() {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();
@@ -75,6 +78,7 @@ class PendingTagGroupMutationStore {
      *
      * @return The top tag group mutation or {@code null} if no mutations exist.
      */
+    @Nullable
     TagGroupsMutation peek() {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();

@@ -67,7 +67,7 @@ class TagUtils {
         if (jsonValue.isJsonMap()) {
             for (Map.Entry<String, JsonValue> groupEntry : jsonValue.getMap()) {
                 Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
+                for (JsonValue tag : groupEntry.getValue().optList()) {
                     if (tag.isString()) {
                         tags.add(tag.getString());
                     }

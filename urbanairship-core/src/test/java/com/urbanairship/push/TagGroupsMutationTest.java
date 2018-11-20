@@ -15,10 +15,11 @@ import java.util.List;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 
 
 public class TagGroupsMutationTest extends BaseTestCase {
-
 
     @Test
     public void testAddTagsMutation() throws JsonException {
@@ -193,6 +194,35 @@ public class TagGroupsMutationTest extends BaseTestCase {
 
         String expected  = "{ \"set\": { \"group\": [\"tag2\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
+    }
+
+    @Test
+    public void testEmptyMutation() {
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("empty", new HashSet<String>());
+        TagGroupsMutation fromJson = TagGroupsMutation.fromJsonValue(mutation.toJsonValue());
+        assertEquals(mutation.toJsonValue(), fromJson.toJsonValue());
+    }
+
+    @Test
+    public void testCollapseEmptyMutation() {
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("empty", new HashSet<String>());
+        List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(Arrays.asList(mutation));
+        assertTrue(collapsed.isEmpty());
+    }
+
+    @Test
+    public void testEmptySetMutation() {
+        TagGroupsMutation mutation = TagGroupsMutation.newSetTagsMutation("empty", new HashSet<String>());
+        TagGroupsMutation fromJson = TagGroupsMutation.fromJsonValue(mutation.toJsonValue());
+        assertEquals(mutation.toJsonValue(), fromJson.toJsonValue());
+    }
+
+
+    @Test
+    public void testCollapseEmptySetMutation() {
+        TagGroupsMutation mutation = TagGroupsMutation.newSetTagsMutation("empty", new HashSet<String>());
+        List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(Arrays.asList(mutation));
+        assertFalse(collapsed.isEmpty());
     }
 
     /**

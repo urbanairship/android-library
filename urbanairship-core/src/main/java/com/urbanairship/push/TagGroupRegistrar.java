@@ -2,10 +2,8 @@
 
 package com.urbanairship.push;
 
-import android.nfc.Tag;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
@@ -15,22 +13,12 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tag group registrar.
@@ -156,7 +144,9 @@ public class TagGroupRegistrar {
                 return false;
             }
 
-            notifyListeners(mutationStore.pop());
+            notifyListeners(mutation);
+            mutationStore.pop();
+
             int status = response.getStatus();
             Logger.debug("Update tag groups finished with status: " + status);
         }
@@ -186,7 +176,7 @@ public class TagGroupRegistrar {
         }
     }
 
-    private void notifyListeners(TagGroupsMutation mutation) {
+    private void notifyListeners(@NonNull TagGroupsMutation mutation) {
         synchronized (listeners) {
             for (Listener listener : new ArrayList<>(listeners)) {
                 listener.onMutationUploaded(mutation);

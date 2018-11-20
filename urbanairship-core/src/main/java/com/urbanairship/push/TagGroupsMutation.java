@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
+import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -282,35 +284,43 @@ public class TagGroupsMutation implements JsonSerializable {
         return builder.build().toJsonValue();
     }
 
-    @Nullable
-    public static TagGroupsMutation fromJsonValue(JsonValue jsonValue) {
+    @NonNull
+    public static TagGroupsMutation fromJsonValue(@NonNull JsonValue jsonValue) {
         JsonMap jsonMap = jsonValue.optMap();
 
-        Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(jsonMap.get(ADD_KEY));
-        Map<String, Set<String>> removeTags = TagUtils.convertToTagsMap(jsonMap.get(REMOVE_KEY));
-        Map<String, Set<String>> setTags = TagUtils.convertToTagsMap(jsonMap.get(SET_KEY));
-
-        if (addTags == null && removeTags == null && setTags == null) {
-            return null;
-        }
+        Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(jsonMap.opt(ADD_KEY));
+        Map<String, Set<String>> removeTags = TagUtils.convertToTagsMap(jsonMap.opt(REMOVE_KEY));
+        Map<String, Set<String>> setTags = TagUtils.convertToTagsMap(jsonMap.opt(SET_KEY));
 
         return new TagGroupsMutation(addTags, removeTags, setTags);
     }
 
     @NonNull
-    public static List<TagGroupsMutation> fromJsonList(JsonList jsonList) {
+    public static List<TagGroupsMutation> fromJsonList(@NonNull JsonList jsonList) {
         List<TagGroupsMutation> mutations = new ArrayList<>();
 
-        if (jsonList != null) {
-            for (JsonValue value : jsonList) {
-                TagGroupsMutation mutation = fromJsonValue(value);
-                if (mutation != null) {
-                    mutations.add(mutation);
-                }
-            }
+        for (JsonValue value : jsonList) {
+            TagGroupsMutation mutation = fromJsonValue(value);
+            mutations.add(mutation);
         }
 
         return mutations;
+    }
+
+    boolean isEmpty() {
+        if (addTags != null && !addTags.isEmpty()) {
+            return false;
+        }
+
+        if (removeTags != null && !removeTags.isEmpty()) {
+            return false;
+        }
+
+        if (setTags != null && !setTags.isEmpty()) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
