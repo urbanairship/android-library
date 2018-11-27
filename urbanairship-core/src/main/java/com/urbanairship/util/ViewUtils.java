@@ -26,9 +26,8 @@ public final class ViewUtils {
      * @param context The application context.
      * @param textView The text view.
      * @param textAppearance Optional text appearance.
-     * @param typeface Optional typeface.
      */
-    public static void applyTextStyle(@NonNull Context context, @NonNull TextView textView, @StyleRes int textAppearance, @Nullable Typeface typeface) {
+    public static void applyTextStyle(@NonNull Context context, @NonNull TextView textView, @StyleRes int textAppearance) {
         // Apply text appearance first before the color or type face.
         if (textAppearance != -1) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -38,37 +37,5 @@ public final class ViewUtils {
                 textView.setTextAppearance(context, textAppearance);
             }
         }
-
-        // Called after setting the text appearance so we can keep style defined in the text appearance
-        if (typeface != null) {
-            int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
-
-            textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-            textView.setTypeface(typeface, typefaceFlags);
-        }
-    }
-
-    /**
-     * Creates a typeface defined by the attribute {@code urbanAirshipFontPath} from the textAppearance style.
-     *
-     * @param context The application context.
-     * @param textAppearance The text appearance style.
-     * @return The defined Typeface or null if the text appearance does not define the {@code urbanAirshipFontPath} or
-     * fails to load the typeface.
-     */
-    @Nullable
-    public static Typeface createTypeface(@NonNull Context context, @StyleRes int textAppearance) {
-        TypedArray attributes = context.getTheme().obtainStyledAttributes(textAppearance, R.styleable.TextAppearance);
-
-        String fontPath = attributes.getString(R.styleable.TextAppearance_urbanAirshipFontPath);
-        if (!UAStringUtil.isEmpty(fontPath)) {
-            try {
-                return Typeface.createFromAsset(context.getAssets(), fontPath);
-            } catch (RuntimeException e) {
-                Logger.error("Failed to load font path: " + fontPath);
-            }
-        }
-
-        return null;
     }
 }

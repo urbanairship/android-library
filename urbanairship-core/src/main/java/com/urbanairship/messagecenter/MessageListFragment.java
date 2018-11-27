@@ -198,8 +198,7 @@ public class MessageListFragment extends Fragment {
         if (emptyListView instanceof TextView) {
             TextView textView = (TextView) emptyListView;
             int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
-            Typeface typeface = ViewUtils.createTypeface(getContext(), textAppearance);
-            ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
+            ViewUtils.applyTextStyle(getContext(), textView, textAppearance);
 
             String text = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageText);
             textView.setText(text);

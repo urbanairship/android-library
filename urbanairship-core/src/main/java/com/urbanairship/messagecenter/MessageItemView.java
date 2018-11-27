@@ -88,10 +88,8 @@ public class MessageItemView extends FrameLayout {
         }
 
         dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
-        Typeface dateFont = ViewUtils.createTypeface(context, dateTextAppearance);
 
         titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
-        Typeface titleFont = ViewUtils.createTypeface(context, titleTextAppearance);
 
         int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
         if (background > 0) {
@@ -102,8 +100,8 @@ public class MessageItemView extends FrameLayout {
 
         View contentView = View.inflate(context, contentLayout, this);
 
-        titleView = contentView.findViewById(R.id.title);
-        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, titleFont);
+        titleView = (TextView) contentView.findViewById(R.id.title);
+        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
             int style = titleView.getTypeface().getStyle();
@@ -114,8 +112,8 @@ public class MessageItemView extends FrameLayout {
             titleTypeface = Typeface.DEFAULT_BOLD;
         }
 
-        dateView = contentView.findViewById(R.id.date);
-        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, dateFont);
+        dateView = (TextView) contentView.findViewById(R.id.date);
+        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance);
 
         iconView = contentView.findViewById(R.id.image);
         if (iconView != null) {
