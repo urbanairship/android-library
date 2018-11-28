@@ -29,7 +29,7 @@ public final class ViewUtils {
      */
     public static void applyTextStyle(@NonNull Context context, @NonNull TextView textView, @StyleRes int textAppearance) {
         // Apply text appearance first before the color or type face.
-        if (textAppearance != -1) {
+        if (textAppearance != 0) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 textView.setTextAppearance(textAppearance);
             } else {

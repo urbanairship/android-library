@@ -100,7 +100,7 @@ public class MessageItemView extends FrameLayout {
 
         View contentView = View.inflate(context, contentLayout, this);
 
-        titleView = (TextView) contentView.findViewById(R.id.title);
+        titleView = contentView.findViewById(R.id.title);
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
@@ -112,7 +112,7 @@ public class MessageItemView extends FrameLayout {
             titleTypeface = Typeface.DEFAULT_BOLD;
         }
 
-        dateView = (TextView) contentView.findViewById(R.id.date);
+        dateView = contentView.findViewById(R.id.date);
         ViewUtils.applyTextStyle(context, dateView, dateTextAppearance);
 
         iconView = contentView.findViewById(R.id.image);
