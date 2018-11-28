@@ -381,7 +381,7 @@ public class MessageCenterFragment extends Fragment {
                         .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
 
                 TextView textView = (TextView) emptyListView;
-                int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageNotSelectedTextAppearance, -1);
+                int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageNotSelectedTextAppearance, 0);
 
                 ViewUtils.applyTextStyle(getContext(), textView, textAppearance);
 

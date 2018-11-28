@@ -87,11 +87,11 @@ public class MessageItemView extends FrameLayout {
             contentLayout = R.layout.ua_item_mc_icon_content;
         }
 
-        dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
+        dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, 0);
 
-        titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
+        titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, 0);
 
-        int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
+        int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, 0);
         if (background > 0) {
             setBackgroundResource(background);
         }
