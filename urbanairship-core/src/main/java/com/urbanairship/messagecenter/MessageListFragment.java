@@ -4,8 +4,8 @@ package com.urbanairship.messagecenter;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.DrawableRes;
@@ -207,8 +207,8 @@ public class MessageListFragment extends Fragment {
         if (absListView instanceof ListView) {
             ListView listView = (ListView) absListView;
 
-            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
-            if (color != -1 && listView.getDivider() != null) {
+            if (attributes.hasValue(R.styleable.MessageCenter_messageCenterDividerColor) && listView.getDivider() != null) {
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.BLACK);
                 DrawableCompat.setTint(listView.getDivider(), color);
                 DrawableCompat.setTintMode(listView.getDivider(), PorterDuff.Mode.SRC);
             }

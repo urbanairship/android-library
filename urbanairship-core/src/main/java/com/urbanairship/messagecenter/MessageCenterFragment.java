@@ -5,6 +5,7 @@ package com.urbanairship.messagecenter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -165,8 +166,8 @@ public class MessageCenterFragment extends Fragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 LinearLayout layoutContainer = view.findViewById(R.id.container);
                 TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
-                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
-                if (color != -1) {
+                if (attributes.hasValue(R.styleable.MessageCenter_messageCenterDividerColor)) {
+                    int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.BLACK);
                     DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
                     DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
                 }
