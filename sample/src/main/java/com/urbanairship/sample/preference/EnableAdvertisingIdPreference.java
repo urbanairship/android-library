@@ -28,12 +28,12 @@ public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return AdvertisingIdTracker.shared(UAirship.getApplicationContext()).isEnabled();
+        return AdvertisingIdTracker.shared().isEnabled();
     }
 
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
-        AdvertisingIdTracker.shared(UAirship.getApplicationContext()).setEnabled(enabled);
+        AdvertisingIdTracker.shared().setEnabled(enabled);
     }
 
     @NonNull

@@ -153,9 +153,9 @@ public class RichPushInbox extends AirshipComponent {
      * @hide
      */
     @VisibleForTesting
-    RichPushInbox(Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
+    RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
                   @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor, @NonNull ActivityMonitor activityMonitor) {
-        super(dataStore);
+        super(context, dataStore);
 
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;

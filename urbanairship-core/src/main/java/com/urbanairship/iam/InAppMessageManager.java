@@ -149,7 +149,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     public InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions configOptions,
                                @NonNull Analytics analytics, @NonNull ActivityMonitor activityMonitor, @NonNull RemoteData remoteData,
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
 
         this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;
@@ -179,11 +179,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     @VisibleForTesting
-    InAppMessageManager(@NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
+    InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
                         RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory,
                         TagGroupManager tagGroupManager) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
         this.analytics = analytics;
         this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;

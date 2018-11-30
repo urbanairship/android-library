@@ -83,7 +83,7 @@ public class UALocationManager extends AirshipComponent {
      * @hide
      */
     public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
 
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;

@@ -3,6 +3,7 @@
 package com.urbanairship.messagecenter;
 
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -21,12 +22,13 @@ public class MessageCenter extends AirshipComponent {
     /**
      * Default constructor.
      *
+     * @param context The application context.
      * @param dataStore The preference data store.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public MessageCenter(@NonNull PreferenceDataStore dataStore) {
-        super(dataStore);
+    public MessageCenter(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
+        super(context, dataStore);
     }
 
     /**

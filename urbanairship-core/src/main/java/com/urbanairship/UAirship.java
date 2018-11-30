@@ -45,6 +45,8 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,11 +57,15 @@ import java.util.List;
  */
 public class UAirship {
 
+    // Advertising ID tracker
+    private static final String AD_ID_CLASS = "com.urbanairship.aaid.AdvertisingIdTracker";
+
     /**
      * Broadcast that is sent when UAirship is finished taking off.
      */
     @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
+
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -649,7 +655,7 @@ public class UAirship {
                 .build();
         components.add(this.analytics);
 
-        this.applicationMetrics = new ApplicationMetrics(preferenceDataStore, ActivityMonitor.shared(application));
+        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
@@ -671,7 +677,7 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.messageCenter = new MessageCenter(preferenceDataStore);
+        this.messageCenter = new MessageCenter(application, preferenceDataStore);
         components.add(this.messageCenter);
 
         this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
@@ -680,15 +686,20 @@ public class UAirship {
         this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
         components.add(this.remoteData);
 
-        this.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, this.remoteData);
+        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, this.remoteData);
         components.add(this.remoteConfigManager);
 
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions,
                 analytics, ActivityMonitor.shared(application), this.remoteData, this.pushManager, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
-        this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
+        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, this.inAppMessageManager, this.analytics);
         components.add(this.legacyInAppMessageManager);
+
+        AirshipComponent adIdTracker = createOptionalComponent(AD_ID_CLASS, application, preferenceDataStore);
+        if (adIdTracker != null) {
+            components.add(adIdTracker);
+        }
 
         for (AirshipComponent component : components) {
             component.init();
@@ -890,6 +901,23 @@ public class UAirship {
         return components;
     }
 
+    /**
+     * Gets an AirshipComponent by class.
+     * @param clazz The component class.
+     * @return The component, or null if not found.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public AirshipComponent getComponent(Class<? extends AirshipComponent> clazz) {
+        for (AirshipComponent component : components) {
+            if (component.getClass().equals(clazz)) {
+                return component;
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Callback interface used to notify app when UAirship is ready.
@@ -967,6 +995,31 @@ public class UAirship {
 
         preferenceDataStore.put(PLATFORM_KEY, platform);
         return PlatformUtils.parsePlatform(platform);
+    }
+
+
+    @Nullable
+    private AirshipComponent createOptionalComponent(String className, Context context, PreferenceDataStore dataStore) {
+        try {
+            Class<?> componentClass = Class.forName(className);
+            Constructor<?> cons = componentClass.getConstructor(Context.class, PreferenceDataStore.class);
+            Object component = cons.newInstance(context, dataStore);
+            if (component instanceof AirshipComponent) {
+                return (AirshipComponent) component;
+            }
+        } catch (InstantiationException e) {
+            Logger.error("Unable to create component " + className, e);
+        } catch (IllegalAccessException e) {
+            Logger.error("Unable to create component " + className, e);
+        } catch (NoSuchMethodException e) {
+            Logger.error("Unable to create component " + className, e);
+        } catch (InvocationTargetException e) {
+            Logger.error("Unable to create component " + className, e);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+
+        return null;
     }
 
 }

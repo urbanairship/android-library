@@ -57,7 +57,7 @@ public class ChannelCapture extends AirshipComponent {
     ChannelCapture(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
                    @NonNull PushManager pushManager, @NonNull PreferenceDataStore preferenceDataStore,
                    @NonNull ActivityMonitor activityMonitor) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;

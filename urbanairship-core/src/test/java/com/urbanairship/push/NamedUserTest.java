@@ -61,7 +61,7 @@ public class NamedUserTest extends BaseTestCase {
 
         TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockDispatcher);
+        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockDispatcher);
     }
 
     /**

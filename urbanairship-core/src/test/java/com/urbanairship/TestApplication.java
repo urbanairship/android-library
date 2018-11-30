@@ -86,7 +86,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.ANDROID_PLATFORM, airshipConfigOptions, preferenceDataStore);
 
-        UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), tagGroupRegistrar);
@@ -94,15 +94,15 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.messageCenter = new MessageCenter(preferenceDataStore);
+        UAirship.sharedAirship.messageCenter = new MessageCenter(this, preferenceDataStore);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar);
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
+        UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore,
                 airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()),
                 UAirship.sharedAirship.remoteData, UAirship.sharedAirship.pushManager, tagGroupRegistrar);
-        UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, UAirship.sharedAirship.remoteData);
+        UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);

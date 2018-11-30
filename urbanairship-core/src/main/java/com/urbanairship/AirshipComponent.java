@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.content.Context;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -22,6 +23,7 @@ public abstract class AirshipComponent {
 
     private final PreferenceDataStore dataStore;
     private final String enableKey;
+    private final Context context;
 
 
     /**
@@ -31,7 +33,8 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public AirshipComponent(@NonNull PreferenceDataStore dataStore) {
+    public AirshipComponent(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
+        this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.enableKey = ENABLE_KEY_PREFIX + getClass().getName();
     }
@@ -149,6 +152,18 @@ public abstract class AirshipComponent {
     @NonNull
     protected PreferenceDataStore getDataStore() {
         return dataStore;
+    }
+
+    /**
+     * The application context.
+     *
+     * @return The application context.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    protected Context getContext() {
+        return context;
     }
 
     /**

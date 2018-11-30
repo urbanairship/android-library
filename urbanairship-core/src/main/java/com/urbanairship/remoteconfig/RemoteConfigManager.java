@@ -2,6 +2,7 @@
 
 package com.urbanairship.remoteconfig;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
@@ -52,13 +53,13 @@ public class RemoteConfigManager extends AirshipComponent {
      * @param dataStore The preference data store.
      * @param remoteData The remote data manager.
      */
-    public RemoteConfigManager(@NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData) {
-        this(dataStore, remoteData, new ModuleAdapter());
+    public RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData) {
+        this(context, dataStore, remoteData, new ModuleAdapter());
     }
 
     @VisibleForTesting
-    public RemoteConfigManager(@NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
-        super(dataStore);
+    public RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
+        super(context, dataStore);
         this.remoteData = remoteData;
         this.moduleAdapter = moduleAdapter;
     }

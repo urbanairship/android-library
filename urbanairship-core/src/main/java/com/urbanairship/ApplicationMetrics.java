@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 /**
@@ -17,8 +18,8 @@ public class ApplicationMetrics extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private boolean appVersionUpdated;
 
-    ApplicationMetrics(@NonNull final PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
-        super(preferenceDataStore);
+    ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
+        super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.listener = new ActivityMonitor.SimpleListener() {
             @Override

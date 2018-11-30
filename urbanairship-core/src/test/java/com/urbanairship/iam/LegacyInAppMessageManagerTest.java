@@ -43,7 +43,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
         inAppMessageManager = mock(InAppMessageManager.class);
         analytics = mock(Analytics.class);
-        legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, inAppMessageManager, analytics);
+        legacyInAppMessageManager = new LegacyInAppMessageManager(TestApplication.getApplication(), preferenceDataStore, inAppMessageManager, analytics);
 
         String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
                 "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +

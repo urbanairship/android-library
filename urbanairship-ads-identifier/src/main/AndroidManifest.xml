@@ -7,17 +7,6 @@
 
     <application>
 
-        <receiver
-            android:name="com.urbanairship.aaid.AirshipReadyReceiver"
-            android:exported="false">
-
-            <intent-filter>
-                <action android:name="com.urbanairship.AIRSHIP_READY"/>
-                <category android:name="${applicationId}"/>
-            </intent-filter>
-
-        </receiver>
-
 
     </application>
 </manifest>

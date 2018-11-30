@@ -15,7 +15,9 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.urbanairship.ActivityMonitor;
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AssociatedIdentifiers;
@@ -23,56 +25,61 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
 
-
 /**
  * Helper class that auto tracks the android advertising Id. The ID will
  * automatically be set on {@link Analytics} by editing the associated identifiers
  * using {@link Analytics#editAssociatedIdentifiers()}.
  */
-public class AdvertisingIdTracker {
+public class AdvertisingIdTracker extends AirshipComponent {
 
-    private static final String PREFERENCE_NAME = "com.urbanairship.aaid.preferences";
-    private static final String ENABLED_KEY = "ENABLED";
-
+    private static final String ENABLED_KEY = "com.urbanairship.analytics.ADVERTISING_ID_TRACKING";
 
     // Using application context
     @SuppressLint("StaticFieldLeak")
     private static AdvertisingIdTracker sharedInstance;
 
-    private final Context context;
-    private final SharedPreferences preferences;
-
     private UAirship airship;
 
-    private AdvertisingIdTracker(@NonNull Context context) {
-        this.context = context.getApplicationContext();
-        this.preferences = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param dataStore The preference data store.
+     * @hide
+     */
+    public AdvertisingIdTracker(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
+        super(context, dataStore);
+    }
+
+    @Override
+    protected void onAirshipReady(@NonNull UAirship airship) {
+        super.onAirshipReady(airship);
+        this.airship = airship;
+        update();
     }
 
     /**
      * Gets the the tracker.
      *
-     * @param context The application context.
      * @return The tracker.
      */
     @NonNull
-    public static AdvertisingIdTracker shared(@NonNull Context context) {
-        if (sharedInstance != null) {
-            return sharedInstance;
+    public static AdvertisingIdTracker shared() {
+        if (sharedInstance == null) {
+            sharedInstance = (AdvertisingIdTracker) UAirship.shared().getComponent(AdvertisingIdTracker.class);
         }
 
-        synchronized (AdvertisingIdTracker.class) {
-            if (sharedInstance == null) {
-                sharedInstance = new AdvertisingIdTracker(context);
-                sharedInstance.init();
-            }
+        if (sharedInstance == null) {
+            throw new IllegalStateException("Takeoff must be called");
         }
 
         return sharedInstance;
     }
 
-    private void init() {
-        ActivityMonitor.shared(context).addListener(new ActivityMonitor.SimpleListener() {
+    @Override
+    protected void init() {
+        super.init();
+        ActivityMonitor.shared(getContext()).addListener(new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 update();
@@ -86,7 +93,7 @@ public class AdvertisingIdTracker {
      * @return {@code true} if the tracker is enabled, {@code false} if its disabled.
      */
     public boolean isEnabled() {
-        return preferences.getBoolean(ENABLED_KEY, false);
+        return getDataStore().getBoolean(ENABLED_KEY, false);
     }
 
     /**
@@ -98,8 +105,7 @@ public class AdvertisingIdTracker {
      */
     public void setEnabled(boolean isEnabled) {
         synchronized (this) {
-            preferences.edit().putBoolean(ENABLED_KEY, isEnabled).apply();
-
+            getDataStore().put(ENABLED_KEY, isEnabled);
             if (isEnabled) {
                 update();
             }
@@ -111,19 +117,12 @@ public class AdvertisingIdTracker {
      */
     public void clear() {
         synchronized (this) {
-            preferences.edit().putBoolean(ENABLED_KEY, false).apply();
-
+            getDataStore().remove(ENABLED_KEY);
             airship.getAnalytics()
                    .editAssociatedIdentifiers()
                    .removeAdvertisingId()
                    .apply();
         }
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void setAirshipInstance(UAirship airship) {
-        this.airship = airship;
-        update();
     }
 
     private void update() {
@@ -132,7 +131,7 @@ public class AdvertisingIdTracker {
             return;
         }
 
-        UpdateIdTask task = new UpdateIdTask(context, airship.getPlatformType(), new UpdateIdTask.Callback() {
+        UpdateIdTask task = new UpdateIdTask(getContext(), airship.getPlatformType(), new UpdateIdTask.Callback() {
             @Override
             public void onResult(String advertisingId, boolean isLimitedTrackingEnabled) {
                 if (!isEnabled()) {

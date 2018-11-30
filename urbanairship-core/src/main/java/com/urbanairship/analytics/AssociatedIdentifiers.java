@@ -91,7 +91,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
     }
 
     @NonNull
-    public static AssociatedIdentifiers fromJson(@Nullable JsonValue value) throws JsonException {
+    public static AssociatedIdentifiers fromJson(@NonNull JsonValue value) throws JsonException {
 
         Map<String, String> ids = new HashMap<>();
 

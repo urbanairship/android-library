@@ -20,6 +20,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.Checks;
@@ -86,7 +87,7 @@ public class Analytics extends AirshipComponent {
      * @param builder The builder instance.
      */
     private Analytics(@NonNull Builder builder) {
-        super(builder.preferenceDataStore);
+        super(builder.context, builder.preferenceDataStore);
         this.context = builder.context.getApplicationContext();
         this.preferenceDataStore = builder.preferenceDataStore;
         this.configOptions = builder.configOptions;
@@ -388,7 +389,10 @@ public class Analytics extends AirshipComponent {
     public AssociatedIdentifiers getAssociatedIdentifiers() {
         synchronized (associatedIdentifiersLock) {
             try {
-                return AssociatedIdentifiers.fromJson(preferenceDataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY));
+                JsonValue value = preferenceDataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY);
+                if (!value.isNull()) {
+                    return AssociatedIdentifiers.fromJson(value);
+                }
             } catch (JsonException e) {
                 Logger.error("Unable to parse associated identifiers.", e);
                 preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);

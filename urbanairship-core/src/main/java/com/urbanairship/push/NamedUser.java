@@ -55,15 +55,15 @@ public class NamedUser extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      */
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        this(preferenceDataStore, tagGroupRegistrar, JobDispatcher.shared(context));
+        this(context, preferenceDataStore, tagGroupRegistrar, JobDispatcher.shared(context));
     }
 
     /**
      * @hide
      */
     @VisibleForTesting
-    NamedUser(@NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
-        super(preferenceDataStore);
+    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
+        super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
         this.tagGroupRegistrar = tagGroupRegistrar;

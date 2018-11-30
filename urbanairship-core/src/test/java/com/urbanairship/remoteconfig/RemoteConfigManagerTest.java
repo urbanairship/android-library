@@ -48,7 +48,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         this.updates = Subject.create();
         when(remoteData.payloadsForTypes("app_config", "app_config:android")).thenReturn(updates);
 
-        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication().preferenceDataStore, remoteData, testModuleAdapter);
+        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, remoteData, testModuleAdapter);
         this.remoteConfigManager.init();
     }
 

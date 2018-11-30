@@ -52,7 +52,7 @@ public class Automation extends AirshipComponent {
     public Automation(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics,
                       @NonNull ActivityMonitor activityMonitor) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
 
         this.automationEngine = new AutomationEngine.Builder<ActionSchedule>()
                 .setScheduleLimit(SCHEDULES_LIMIT)

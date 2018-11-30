@@ -119,7 +119,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
             }
         });
 
-        manager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor,
+        manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor,
                 executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager);
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()

@@ -119,7 +119,7 @@ public class RemoteData extends AirshipComponent {
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
                @NonNull JobDispatcher dispatcher) {
-        super(preferenceDataStore);
+        super(context, preferenceDataStore);
         this.context = context;
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getAppKey(), DATABASE_NAME);
