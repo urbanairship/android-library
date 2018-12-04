@@ -196,7 +196,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
             return stringer.toString();
         } catch (JSONException e) {
             // Should never happen
-            Logger.error("JsonMap - Failed to create JSON String.", e);
+            Logger.error(e, "JsonMap - Failed to create JSON String.");
             return "";
         }
     }

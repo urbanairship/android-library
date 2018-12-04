@@ -82,7 +82,7 @@ public abstract class FileUtils {
     @NonNull
     @WorkerThread
     public static DownloadResult downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
-        Logger.verbose("Downloading file from: " + url + " to: " + file.getAbsolutePath());
+        Logger.verbose("Downloading file from: %s to: %s", url, file.getAbsolutePath());
 
         InputStream inputStream = null;
         FileOutputStream outputStream = null;

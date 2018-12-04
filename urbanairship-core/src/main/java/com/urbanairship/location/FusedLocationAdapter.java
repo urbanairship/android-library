@@ -53,7 +53,7 @@ class FusedLocationAdapter implements LocationAdapter {
     @SuppressLint("MissingPermission")
     @Override
     public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
-        Logger.verbose("FusedLocationAdapter - Requesting updates: " + options);
+        Logger.verbose("FusedLocationAdapter - Requesting updates: %s", options);
         LocationRequest locationRequest = createLocationRequest(options);
 
         client.requestLocationUpdates(locationRequest, pendingIntent);
@@ -69,7 +69,7 @@ class FusedLocationAdapter implements LocationAdapter {
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.debug("FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location. " + e.getMessage());
+            Logger.debug(e, "FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location.");
             return false;
         }
 

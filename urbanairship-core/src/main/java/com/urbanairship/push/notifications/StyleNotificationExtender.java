@@ -101,7 +101,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         try {
             styleJson = JsonValue.parseString(stylePayload).optMap();
         } catch (JsonException e) {
-            Logger.error("Failed to parse notification style payload.", e);
+            Logger.error(e, "Failed to parse notification style payload.");
             return false;
         }
 
@@ -120,7 +120,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
                 return applyBigPictureStyle(builder, styleJson);
 
             default:
-                Logger.error("Unrecognized notification style type: " + type);
+                Logger.error("Unrecognized notification style type: %s", type);
                 return false;
         }
     }
@@ -173,7 +173,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         try {
             url = new URL(styleJson.opt(BIG_PICTURE_KEY).optString());
         } catch (MalformedURLException e) {
-            Logger.error("Malformed big picture URL.", e);
+            Logger.error(e, "Malformed big picture URL.");
             return false;
         }
 
@@ -247,7 +247,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
     @Nullable
     private Bitmap fetchBigImage(@NonNull final URL url) {
 
-        Logger.debug("Fetching notification image at URL: " + url);
+        Logger.debug("Fetching notification image at URL: %s", url);
         WindowManager window = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics dm = new DisplayMetrics();
         window.getDefaultDisplay().getMetrics(dm);
@@ -269,10 +269,10 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         try {
             return future.get(BIG_PICTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
-            Logger.error("Failed to create big picture style, unable to fetch image: " + e);
+            Logger.error("Failed to create big picture style, unable to fetch image: %s", e);
         } catch (TimeoutException e) {
             future.cancel(true);
-            Logger.error("Big picture took longer than " + BIG_PICTURE_TIMEOUT_SECONDS + " seconds to fetch.");
+            Logger.error("Big picture took longer than %s seconds to fetch.", BIG_PICTURE_TIMEOUT_SECONDS);
         }
 
         return null;

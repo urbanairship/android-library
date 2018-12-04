@@ -265,7 +265,7 @@ public class TagGroupManager {
             cachedResponse = getCachedResponse();
             cacheCreateDate = getCacheCreateDate();
         } catch (Exception e) {
-            Logger.error("Failed to refresh tags.", e);
+            Logger.error(e, "Failed to refresh tags.");
         }
 
         if (cachedResponse == null) {
@@ -379,11 +379,11 @@ public class TagGroupManager {
         }
 
         if (response.status != 200) {
-            Logger.error("Failed to refresh the cache. Status: " + response);
+            Logger.error("Failed to refresh the cache. Status: %s", response);
             return;
         }
 
-        Logger.verbose("Refreshed tag group with response: " + response);
+        Logger.verbose("Refreshed tag group with response: %s", response);
         setCachedResponse(response, requestTags);
     }
 }

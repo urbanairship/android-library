@@ -159,7 +159,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
 
             @Override
             public void onError(Exception e) {
-                Logger.error("AdvertisingIdTracker - Failed to retrieve and update advertising ID.", e);
+                Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
             }
         });
 

@@ -272,20 +272,17 @@ public class RegionEvent extends Event implements JsonSerializable {
         }
 
         if (!regionEventCharacterCountIsValid(regionId)) {
-            Logger.error("The region ID must not be greater than " + MAX_CHARACTER_LENGTH +
-                    " or less than " + 1 + " characters in length.");
+            Logger.error("The region ID must not be greater than %s or less than %s characters in length.", MAX_CHARACTER_LENGTH, 1);
             return false;
         }
 
         if (!regionEventCharacterCountIsValid(source)) {
-            Logger.error("The source must not be greater than " + MAX_CHARACTER_LENGTH +
-                    " or less than " + 1 + " characters in length.");
+            Logger.error("The source must not be greater than %s or less than %s characters in length.", MAX_CHARACTER_LENGTH, 1);
             return false;
         }
 
         if (boundaryEvent < 1 || boundaryEvent > 2) {
-            Logger.error("The boundary event must either be an entrance (" + BOUNDARY_EVENT_ENTER +
-                    ") or an exit (" + BOUNDARY_EVENT_EXIT + ").");
+            Logger.error("The boundary event must either be an entrance (%s) or an exit (%s).", BOUNDARY_EVENT_ENTER, BOUNDARY_EVENT_EXIT);
             return false;
         }
 

@@ -457,7 +457,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
             return String.valueOf(value);
         } catch (JSONException e) {
             // Should never happen
-            Logger.error("JsonValue - Failed to create JSON String.", e);
+            Logger.error(e, "JsonValue - Failed to create JSON String.");
             return "";
         }
     }
@@ -816,7 +816,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
             try {
                 return JsonValue.parseString(in.readString());
             } catch (JsonException e) {
-                Logger.error("JsonValue - Unable to create JsonValue from parcel.", e);
+                Logger.error(e, "JsonValue - Unable to create JsonValue from parcel.");
                 return JsonValue.NULL;
             }
         }

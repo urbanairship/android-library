@@ -108,7 +108,7 @@ public class RemoteDataApiClient {
 
             url = new URL(uri.toString());
         } catch (MalformedURLException e) {
-            Logger.error("Invalid URL.", e);
+            Logger.error(e, "Invalid URL.");
             return null;
         }
 

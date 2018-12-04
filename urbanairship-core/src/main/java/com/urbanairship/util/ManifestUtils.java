@@ -117,7 +117,7 @@ public class ManifestUtils {
         try {
             receivers = UAirship.getPackageManager().getPackageInfo(UAirship.getPackageName(), PackageManager.GET_RECEIVERS).receivers;
         } catch (Exception e) {
-            Logger.error("Unable to query the application's receivers.", e);
+            Logger.error(e, "Unable to query the application's receivers.");
         }
 
         if (receivers != null) {
@@ -126,15 +126,13 @@ public class ManifestUtils {
                     Class receiverClass = Class.forName(info.name);
                     if (AirshipReceiver.class.isAssignableFrom(receiverClass)) {
                         if (info.exported) {
-                            Logger.error("Receiver " + info.name + " is exported. This might " +
-                                    "allow outside applications to message the receiver. Make sure the intent is protected by a " +
-                                    "permission or prevent the receiver from being exported.");
+                            Logger.error("Receiver %s is exported. This might allow outside applications to message the receiver. Make sure the intent is protected by a permission or prevent the receiver from being exported.", info.name);
                             throw new IllegalStateException("Receiver cannot be exported. Exporting the receiver allows other " +
                                     "apps to send fake broadcasts to this app.");
                         }
                     }
                 } catch (ClassNotFoundException e) {
-                    Logger.debug("ManifestUtils - Unable to find class: " + info.name, e);
+                    Logger.debug(e, "ManifestUtils - Unable to find class: %s", info.name);
                 }
             }
         }

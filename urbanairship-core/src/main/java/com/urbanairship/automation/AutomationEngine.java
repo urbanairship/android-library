@@ -348,7 +348,7 @@ public class AutomationEngine<T extends Schedule> {
                 subscribeStateObservables(entries);
 
                 List<T> result = convertEntries(entries);
-                Logger.verbose("AutomationEngine - Scheduled entries: " + result);
+                Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
         });
@@ -388,7 +388,7 @@ public class AutomationEngine<T extends Schedule> {
                 subscribeStateObservables(entries);
 
                 List<T> result = convertEntries(entries);
-                Logger.verbose("AutomationEngine - Scheduled entries: " + result);
+                Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
                 pendingResult.setResult(convertEntries(entries));
 
             }
@@ -414,7 +414,7 @@ public class AutomationEngine<T extends Schedule> {
                 dataManager.deleteSchedules(ids);
                 cancelScheduleAlarms(ids);
 
-                Logger.verbose("AutomationEngine - Cancelled schedules: " + ids);
+                Logger.verbose("AutomationEngine - Cancelled schedules: %s", ids);
                 pendingResult.setResult(null);
 
             }
@@ -439,10 +439,10 @@ public class AutomationEngine<T extends Schedule> {
                 cancelGroupAlarms(Collections.singletonList(group));
 
                 if (dataManager.deleteGroup(group)) {
-                    Logger.verbose("AutomationEngine - Cancelled schedule group: " + group);
+                    Logger.verbose("AutomationEngine - Cancelled schedule group: %s", group);
                     pendingResult.setResult(true);
                 } else {
-                    Logger.verbose("AutomationEngine - Failed to cancel schedule group: " + group);
+                    Logger.verbose("AutomationEngine - Failed to cancel schedule group: %s", group);
                     pendingResult.setResult(false);
                 }
             }
@@ -466,7 +466,7 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 cancelGroupAlarms(groups);
                 dataManager.deleteGroups(groups);
-                Logger.verbose("AutomationEngine - Canceled schedule groups: " + groups);
+                Logger.verbose("AutomationEngine - Canceled schedule groups: %s", groups);
                 pendingResult.setResult(null);
             }
         });
@@ -579,7 +579,7 @@ public class AutomationEngine<T extends Schedule> {
                 ScheduleEntry entry = dataManager.getScheduleEntry(scheduleId);
 
                 if (entry == null) {
-                    Logger.error("AutomationEngine - Schedule no longer exists. Unable to edit: " + scheduleId);
+                    Logger.error("AutomationEngine - Schedule no longer exists. Unable to edit: %s", scheduleId);
                     pendingResult.setResult(null);
                     return;
                 }
@@ -608,7 +608,7 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 List<T> result = convertEntries(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
-                Logger.error("AutomationEngine - Updated schedule: " + result);
+                Logger.error("AutomationEngine - Updated schedule: %s", result);
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
         });
@@ -845,7 +845,7 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         dataManager.saveSchedules(entries);
-        Logger.verbose("AutomationEngine: Schedules reset state to STATE_PREPARING_SCHEDULE: " + entries);
+        Logger.verbose("AutomationEngine: Schedules reset state to STATE_PREPARING_SCHEDULE: %s", entries);
     }
 
     /**
@@ -870,7 +870,7 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         if (!schedulesToDelete.isEmpty()) {
-            Logger.verbose("AutomationEngine - Deleting finished schedules: " + schedulesToDelete);
+            Logger.verbose("AutomationEngine - Deleting finished schedules: %s", schedulesToDelete);
             dataManager.deleteSchedules(schedulesToDelete);
         }
     }
@@ -1017,7 +1017,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                Logger.debug("Automation - Updating triggers with type: " + type);
+                Logger.debug("Automation - Updating triggers with type: %s", type);
                 List<TriggerEntry> triggerEntries = dataManager.getActiveTriggerEntries(type);
                 if (triggerEntries.isEmpty()) {
                     return;
@@ -1223,7 +1223,7 @@ public class AutomationEngine<T extends Schedule> {
     @WorkerThread
     private void attemptExecution(@NonNull final ScheduleEntry scheduleEntry) {
         if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS) {
-            Logger.error("Unable to execute schedule when state is " + scheduleEntry.getExecutionState() + " scheduleID: " + scheduleEntry.scheduleId);
+            Logger.error("Unable to execute schedule when state is %s scheduleID: %s", scheduleEntry.getExecutionState(), scheduleEntry.scheduleId);
             return;
         }
 
@@ -1252,7 +1252,7 @@ public class AutomationEngine<T extends Schedule> {
                             result = true;
                         }
                     } catch (ParseScheduleException e) {
-                        Logger.error("Unable to create schedule.", e);
+                        Logger.error(e, "Unable to create schedule.");
                         this.exception = e;
                     }
                 }
@@ -1269,14 +1269,14 @@ public class AutomationEngine<T extends Schedule> {
         try {
             latch.await();
         } catch (InterruptedException ex) {
-            Logger.error("Failed to execute schedule. ", ex);
+            Logger.error(ex, "Failed to execute schedule. ");
         }
 
         if (runnable.exception != null) {
-            Logger.error("Failed to check conditions. Deleting schedule: " + scheduleEntry.scheduleId);
+            Logger.error("Failed to check conditions. Deleting schedule: %s", scheduleEntry.scheduleId);
             dataManager.deleteSchedule(scheduleEntry.scheduleId);
         } else if (runnable.result) {
-            Logger.verbose("AutomationEngine - Schedule executing: " + scheduleEntry.scheduleId);
+            Logger.verbose("AutomationEngine - Schedule executing: %s", scheduleEntry.scheduleId);
             scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
             dataManager.saveSchedule(scheduleEntry);
         }
@@ -1320,7 +1320,7 @@ public class AutomationEngine<T extends Schedule> {
             return;
         }
 
-        Logger.verbose("AutomationEngine - Schedule finished: " + scheduleEntry.scheduleId);
+        Logger.verbose("AutomationEngine - Schedule finished: %s", scheduleEntry.scheduleId);
 
         // Update the count
         scheduleEntry.setCount(scheduleEntry.getCount() + 1);
@@ -1449,7 +1449,7 @@ public class AutomationEngine<T extends Schedule> {
             try {
                 schedules.add(driver.createSchedule(entry.scheduleId, entry));
             } catch (Exception e) {
-                Logger.error("Unable to create schedule.", e);
+                Logger.error(e, "Unable to create schedule.");
                 cancel(Collections.singletonList(entry.scheduleId));
             }
         }

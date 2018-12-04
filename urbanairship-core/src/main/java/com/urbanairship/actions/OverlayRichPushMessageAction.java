@@ -103,9 +103,7 @@ public class OverlayRichPushMessageAction extends Action {
         try {
             UAirship.getApplicationContext().startActivity(intent);
         } catch (ActivityNotFoundException ex) {
-            Logger.error("Unable to view the inbox message in a landing page. The landing page activity " +
-                    "is either missing in the manifest or does not include the message scheme in its " +
-                    "intent filter.");
+            Logger.error("Unable to view the inbox message in a landing page. The landing page activity is either missing in the manifest or does not include the message scheme in its intent filter.");
 
             return ActionResult.newErrorResult(ex);
         }

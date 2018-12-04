@@ -103,7 +103,7 @@ public class JobDispatcher {
                 getScheduler().schedule(context, jobInfo, getScheduleId(jobInfo.getId()));
             }
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to schedule jobInfo", e);
+            Logger.error(e, "Scheduler failed to schedule jobInfo");
 
             if (useFallbackScheduler()) {
                 dispatch(jobInfo);
@@ -121,7 +121,7 @@ public class JobDispatcher {
         try {
             getScheduler().reschedule(context, jobInfo, getScheduleId(jobInfo.getId()), extras);
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to schedule jobInfo", e);
+            Logger.error(e, "Scheduler failed to schedule jobInfo");
 
             if (useFallbackScheduler()) {
                 reschedule(jobInfo, extras);
@@ -138,7 +138,7 @@ public class JobDispatcher {
         try {
             getScheduler().cancel(context, getScheduleId(jobId));
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to cancel job with id: " + jobId, e);
+            Logger.error(e, "Scheduler failed to cancel job with id: %s", jobId);
 
             if (useFallbackScheduler()) {
                 cancel(jobId);

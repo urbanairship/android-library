@@ -27,14 +27,14 @@ class AnalyticsJobHandler {
 
     @JobInfo.JobResult
     public int performJob(@NonNull JobInfo jobInfo) {
-        Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: " + jobInfo.getAction());
+        Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: %s", jobInfo.getAction());
 
         switch (jobInfo.getAction()) {
             case Analytics.ACTION_SEND:
                 return onUploadEvents();
 
             default:
-                Logger.warn("AnalyticsJobHandler - Unrecognized jobInfo with action: " + jobInfo.getAction());
+                Logger.warn("AnalyticsJobHandler - Unrecognized jobInfo with action: %s", jobInfo.getAction());
                 return JobInfo.JOB_FINISHED;
         }
     }

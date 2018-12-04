@@ -97,7 +97,7 @@ public class Fonts {
                     return typeface;
                 }
             } catch (Resources.NotFoundException e) {
-                Logger.error("Unable to load font from resources: " + fontFamily, e);
+                Logger.error(e, "Unable to load font from resources: %s", fontFamily);
             }
         }
 

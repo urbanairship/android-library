@@ -57,7 +57,7 @@ public class PlayServicesUtils {
         try {
             errorCode = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(context);
         } catch (IllegalStateException e) {
-            Logger.error("Google Play services developer error: " + e.getMessage());
+            Logger.error(e, "Google Play services developer error.");
             return;
         }
 
@@ -70,10 +70,10 @@ public class PlayServicesUtils {
             try {
                 context.startActivity(new Intent(context, PlayServicesErrorActivity.class));
             } catch (ActivityNotFoundException e) {
-                Logger.error(e.getMessage());
+                Logger.error(e);
             }
         } else {
-            Logger.info("Error " + errorCode + " is not user recoverable.");
+            Logger.info("Error %s is not user recoverable.", errorCode);
         }
     }
 

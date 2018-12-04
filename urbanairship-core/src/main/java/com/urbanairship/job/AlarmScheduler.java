@@ -87,7 +87,7 @@ class AlarmScheduler implements Scheduler {
         PendingIntent pendingIntent = PendingIntent.getService(context, scheduleId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         try {
-            Logger.verbose("AlarmScheduler - Scheduling jobInfo: " + jobInfo + " with delay: " + delay);
+            Logger.verbose("AlarmScheduler - Scheduling jobInfo: %s with delay: %s", jobInfo, delay);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
         } catch (RuntimeException e) {
 
@@ -95,7 +95,7 @@ class AlarmScheduler implements Scheduler {
             // happens if the app or another library scheduling alarms with FLAG_CANCEL_CURRENT instead of
             // FLAG_UPDATE_CURRENT
 
-            Logger.error("AlarmScheduler - Failed to schedule intent " + intent.getAction(), e);
+            Logger.error(e, "AlarmScheduler - Failed to schedule intent %s", intent.getAction());
             throw new SchedulerException("AlarmScheduler - Failed to schedule intent " + intent.getAction(), e);
         }
     }

@@ -277,7 +277,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         try {
             return JsonValue.wrap(map);
         } catch (JsonException e) {
-            Logger.error("LocationRequestOptions - Unable to serialize to JSON.", e);
+            Logger.error(e, "LocationRequestOptions - Unable to serialize to JSON.");
             return JsonValue.NULL;
         }
     }

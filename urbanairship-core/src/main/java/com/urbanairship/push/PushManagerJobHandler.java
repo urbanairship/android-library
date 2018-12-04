@@ -199,7 +199,7 @@ class PushManagerJobHandler {
         }
 
         if (!provider.isAvailable(context)) {
-            Logger.error("Registration failed. Push provider unavailable: " + provider);
+            Logger.error("Registration failed. Push provider unavailable: %s", provider);
             return JobInfo.JOB_RETRY;
         }
 
@@ -207,7 +207,7 @@ class PushManagerJobHandler {
         try {
             token = provider.getRegistrationToken(context);
         } catch (PushProvider.RegistrationException e) {
-            Logger.error("Push registration failed.", e);
+            Logger.error(e, "Push registration failed.");
             if (e.isRecoverable()) {
                 return JobInfo.JOB_RETRY;
             } else {
@@ -270,7 +270,7 @@ class PushManagerJobHandler {
 
         // 2xx (API should only return 200 or 201)
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.debug("Channel registration succeeded with status: " + response.getStatus());
+            Logger.debug("Channel registration succeeded with status: %s", response.getStatus());
 
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
@@ -291,7 +291,7 @@ class PushManagerJobHandler {
         }
 
         // Unexpected status code
-        Logger.error("Channel registration failed with status: " + response.getStatus());
+        Logger.error("Channel registration failed with status: %s", response.getStatus());
         sendRegistrationFinishedBroadcast(false, false);
         return JobInfo.JOB_FINISHED;
     }
@@ -326,13 +326,13 @@ class PushManagerJobHandler {
             try {
                 channelId = JsonValue.parseString(response.getResponseBody()).optMap().opt(CHANNEL_ID_KEY).getString();
             } catch (JsonException e) {
-                Logger.debug("Unable to parse channel registration response body: " + response.getResponseBody(), e);
+                Logger.debug(e, "Unable to parse channel registration response body: %s", response.getResponseBody());
             }
 
             String channelLocation = response.getResponseHeader(CHANNEL_LOCATION_KEY);
 
             if (!UAStringUtil.isEmpty(channelLocation) && !UAStringUtil.isEmpty(channelId)) {
-                Logger.debug("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + channelId);
+                Logger.debug("Channel creation succeeded with status: %s channel ID: %s", response.getStatus(), channelId);
 
                 // Set the last registration payload and time then notify registration succeeded
                 pushManager.setChannel(channelId, channelLocation);
@@ -361,8 +361,7 @@ class PushManagerJobHandler {
                 airship.getAnalytics().uploadEvents();
 
             } else {
-                Logger.error("Failed to register with channel ID: " + channelId +
-                        " channel location: " + channelLocation);
+                Logger.error("Failed to register with channel ID: %s channel location: %s", channelId, channelLocation);
                 sendRegistrationFinishedBroadcast(false, true);
                 return JobInfo.JOB_RETRY;
             }
@@ -371,7 +370,7 @@ class PushManagerJobHandler {
         }
 
         // Unexpected status code
-        Logger.error("Channel registration failed with status: " + response.getStatus());
+        Logger.error("Channel registration failed with status: %s", response.getStatus());
         sendRegistrationFinishedBroadcast(false, true);
 
         return JobInfo.JOB_FINISHED;
@@ -418,7 +417,7 @@ class PushManagerJobHandler {
             try {
                 return new URL(channelLocationString);
             } catch (MalformedURLException e) {
-                Logger.error("Channel location from preferences was invalid: " + channelLocationString, e);
+                Logger.error(e, "Channel location from preferences was invalid: %s", channelLocationString);
             }
         }
 
@@ -446,7 +445,7 @@ class PushManagerJobHandler {
         try {
             return ChannelRegistrationPayload.fromJson(dataStore.getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY));
         } catch (JsonException e) {
-            Logger.error("PushManagerJobHandler - Failed to parse payload from JSON.", e);
+            Logger.error(e, "PushManagerJobHandler - Failed to parse payload from JSON.");
             return null;
         }
     }

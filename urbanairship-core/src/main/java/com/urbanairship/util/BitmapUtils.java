@@ -34,7 +34,7 @@ public class BitmapUtils {
      */
     @Nullable
     public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
-        Logger.verbose("BitmapUtils - Fetching image from: " + url);
+        Logger.verbose("BitmapUtils - Fetching image from: %s", url);
 
         boolean deleteFile = false;
         File imageFile = null;
@@ -42,17 +42,17 @@ public class BitmapUtils {
             try {
                 imageFile = new File(url.toURI());
             } catch (URISyntaxException e) {
-                Logger.error("BitmapUtils - Invalid URL: " + url);
+                Logger.error("BitmapUtils - Invalid URL: %s", url);
             }
         }
 
         if (imageFile == null) {
             imageFile = File.createTempFile("ua_", ".temp", context.getCacheDir());
             deleteFile = true;
-            Logger.verbose("BitmapUtils - Created temp file: " + imageFile);
+            Logger.verbose("BitmapUtils - Created temp file: %s", imageFile);
 
             if (!FileUtils.downloadFile(url, imageFile).isSuccess) {
-                Logger.verbose("BitmapUtils - Failed to fetch image from: " + url);
+                Logger.verbose("BitmapUtils - Failed to fetch image from: %s", url);
                 return null;
             }
         }
@@ -72,14 +72,14 @@ public class BitmapUtils {
 
         if (deleteFile) {
             if (imageFile.delete()) {
-                Logger.verbose("BitmapUtils - Deleted temp file: " + imageFile);
+                Logger.verbose("BitmapUtils - Deleted temp file: %s", imageFile);
             } else {
-                Logger.verbose("BitmapUtils - Failed to delete temp file: " + imageFile);
+                Logger.verbose("BitmapUtils - Failed to delete temp file: %s", imageFile);
             }
         }
 
         if (bitmap == null) {
-            Logger.error("BitmapUtils - Failed to create bitmap for URL: " + url);
+            Logger.error("BitmapUtils - Failed to create bitmap for URL: %s", url);
             return null;
         }
 

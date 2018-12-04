@@ -157,7 +157,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
             return stringer.toString();
         } catch (JSONException e) {
             // Should never happen
-            Logger.error("JsonList - Failed to create JSON String.", e);
+            Logger.error(e, "JsonList - Failed to create JSON String.");
             return "";
         }
     }

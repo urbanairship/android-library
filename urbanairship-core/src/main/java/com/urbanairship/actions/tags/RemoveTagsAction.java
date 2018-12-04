@@ -57,7 +57,7 @@ public class RemoveTagsAction extends BaseTagsAction {
 
     @Override
     void applyChannelTags(@NonNull Set<String> tags) {
-        Logger.info("RemoveTagsAction - Removing tags: " + tags);
+        Logger.info("RemoveTagsAction - Removing tags: %s", tags);
         Set<String> currentTags = getPushManager().getTags();
         currentTags.removeAll(tags);
 
@@ -66,7 +66,7 @@ public class RemoveTagsAction extends BaseTagsAction {
 
     @Override
     void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("RemoveTagsAction - Removing channel tag groups: " + tags);
+        Logger.info("RemoveTagsAction - Removing channel tag groups: %s", tags);
         TagGroupsEditor tagGroupsEditor = getPushManager().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.removeTags(entry.getKey(), entry.getValue());
@@ -77,7 +77,7 @@ public class RemoveTagsAction extends BaseTagsAction {
 
     @Override
     void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("RemoveTagsAction - Removing named user tag groups: " + tags);
+        Logger.info("RemoveTagsAction - Removing named user tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = UAirship.shared().getNamedUser().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {

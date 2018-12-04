@@ -57,14 +57,14 @@ public class AddTagsAction extends BaseTagsAction {
 
     @Override
     void applyChannelTags(@NonNull Set<String> tags) {
-        Logger.info("AddTagsAction - Adding tags: " + tags);
+        Logger.info("AddTagsAction - Adding tags: %s", tags);
         tags.addAll(getPushManager().getTags());
         getPushManager().setTags(tags);
     }
 
     @Override
     void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("AddTagsAction - Adding channel tag groups: " + tags);
+        Logger.info("AddTagsAction - Adding channel tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = getPushManager().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
@@ -76,7 +76,7 @@ public class AddTagsAction extends BaseTagsAction {
 
     @Override
     void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("AddTagsAction - Adding named user tag groups: " + tags);
+        Logger.info("AddTagsAction - Adding named user tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = UAirship.shared().getNamedUser().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {

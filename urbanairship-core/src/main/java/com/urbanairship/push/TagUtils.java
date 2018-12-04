@@ -39,7 +39,7 @@ class TagUtils {
 
             tag = tag.trim();
             if (tag.length() <= 0 || tag.length() > MAX_TAG_LENGTH) {
-                Logger.error("Tag with zero or greater than max length was removed from set: " + tag);
+                Logger.error("Tag with zero or greater than max length was removed from set: %s", tag);
                 continue;
             }
 

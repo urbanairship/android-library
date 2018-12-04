@@ -79,8 +79,8 @@ class UALocationProvider {
             if (pendingIntent != null) {
                 availableAdapter.cancelLocationUpdates(context, pendingIntent);
             }
-        } catch (Exception ex) {
-            Logger.error("Unable to cancel location updates: " + ex.getMessage());
+        } catch (Exception e) {
+            Logger.error(e, "Unable to cancel location updates.");
         }
     }
 
@@ -99,12 +99,12 @@ class UALocationProvider {
             return;
         }
 
-        Logger.verbose("UALocationProvider - Requesting location updates: " + options);
+        Logger.verbose("UALocationProvider - Requesting location updates: %s", options);
         try {
             PendingIntent pendingIntent = PendingIntent.getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             availableAdapter.requestLocationUpdates(context, options, pendingIntent);
-        } catch (Exception ex) {
-            Logger.error("Unable to request location updates: " + ex.getMessage());
+        } catch (Exception e) {
+            Logger.error(e, "Unable to request location updates.");
         }
     }
 
@@ -123,12 +123,12 @@ class UALocationProvider {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
         }
 
-        Logger.verbose("UALocationProvider - Requesting single location update: " + options);
+        Logger.verbose("UALocationProvider - Requesting single location update: %s", options);
 
         try {
             return availableAdapter.requestSingleLocation(context, options, resultCallback);
-        } catch (Exception ex) {
-            Logger.error("Unable to request location: " + ex.getMessage());
+        } catch (Exception e) {
+            Logger.error(e, "Unable to request location.");
         }
 
         return null;
@@ -144,12 +144,12 @@ class UALocationProvider {
         }
 
         for (LocationAdapter adapter : adapters) {
-            Logger.verbose("UALocationProvider - Attempting to connect to location adapter: " + adapter);
+            Logger.verbose("UALocationProvider - Attempting to connect to location adapter: %s", adapter);
 
             if (adapter.isAvailable(context)) {
 
                 if (availableAdapter == null) {
-                    Logger.verbose("UALocationProvider - Using adapter: " + adapter);
+                    Logger.verbose("UALocationProvider - Using adapter: %s", adapter);
                     availableAdapter = adapter;
                 }
 
@@ -163,11 +163,11 @@ class UALocationProvider {
                     if (pendingIntent != null) {
                         adapter.cancelLocationUpdates(context, pendingIntent);
                     }
-                } catch (Exception ex) {
-                    Logger.error("Unable to cancel location updates: " + ex.getMessage());
+                } catch (Exception e) {
+                    Logger.error(e, "Unable to cancel location updates.");
                 }
             } else {
-                Logger.verbose("UALocationProvider - Adapter unavailable: " + adapter);
+                Logger.verbose("UALocationProvider - Adapter unavailable: %s", adapter);
             }
         }
 

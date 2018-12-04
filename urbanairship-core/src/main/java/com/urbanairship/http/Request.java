@@ -217,7 +217,7 @@ public class Request {
             return responseBuilder.build();
 
         } catch (Exception ex) {
-            Logger.debug("Request - Request failed URL: " + url + " method: " + requestMethod, ex);
+            Logger.debug(ex, "Request - Request failed URL: %s method: %s", url, requestMethod);
             return null;
         } finally {
             if (conn != null) {
@@ -260,7 +260,7 @@ public class Request {
                 input.close();
                 br.close();
             } catch (Exception e) {
-                Logger.error("Failed to close streams", e);
+                Logger.error(e, "Failed to close streams");
             }
         }
 

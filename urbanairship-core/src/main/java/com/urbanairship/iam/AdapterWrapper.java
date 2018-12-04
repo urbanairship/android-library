@@ -35,20 +35,20 @@ final class AdapterWrapper {
     @InAppMessageAdapter.PrepareResult
     int prepare() {
         try {
-            Logger.debug("InAppMessageManager - Preparing schedule: " + scheduleId);
+            Logger.debug("InAppMessageManager - Preparing schedule: %s", scheduleId);
 
             @InAppMessageAdapter.PrepareResult
             int result = adapter.onPrepare(UAirship.getApplicationContext());
             prepareCalled = true;
             return result;
         } catch (Exception e) {
-            Logger.error("InAppMessageManager - Failed to prepare in-app message.", e);
+            Logger.error(e, "InAppMessageManager - Failed to prepare in-app message.");
             return InAppMessageAdapter.RETRY;
         }
     }
 
     boolean display(@NonNull Activity activity) {
-        Logger.debug("InAppMessageManager - Displaying schedule: " + scheduleId);
+        Logger.debug("InAppMessageManager - Displaying schedule: %s", scheduleId);
         try {
             DisplayHandler displayHandler = new DisplayHandler(scheduleId);
             if (adapter.onDisplay(activity, displayed, displayHandler)) {
@@ -58,20 +58,20 @@ final class AdapterWrapper {
 
             return false;
         } catch (Exception e) {
-            Logger.error("InAppMessageManager - Failed to display in-app message.", e);
+            Logger.error(e, "InAppMessageManager - Failed to display in-app message.");
             return false;
         }
     }
 
     void finish() {
-        Logger.debug("InAppMessageManager - Schedule finished: " + scheduleId);
+        Logger.debug("InAppMessageManager - Schedule finished: %s", scheduleId);
 
         try {
             if (prepareCalled) {
                 adapter.onFinish();
             }
         } catch (Exception e) {
-            Logger.error("InAppMessageManager - Exception during onFinish().", e);
+            Logger.error(e, "InAppMessageManager - Exception during onFinish().");
         }
     }
 
@@ -79,7 +79,7 @@ final class AdapterWrapper {
         try {
             return adapter.isReady(activity);
         } catch (Exception e) {
-            Logger.error("InAppMessageManager - Exception during isReady(Activity).", e);
+            Logger.error(e, "InAppMessageManager - Exception during isReady(Activity).");
             return false;
         }
     }

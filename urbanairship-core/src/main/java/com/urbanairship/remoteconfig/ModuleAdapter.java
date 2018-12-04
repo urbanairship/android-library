@@ -74,7 +74,7 @@ class ModuleAdapter {
                 return Collections.singletonList(UAirship.shared().getNamedUser());
         }
 
-        Logger.verbose("ModuleAdapter - Unknown module: " + module);
+        Logger.verbose("ModuleAdapter - Unknown module: %s", module);
         return Collections.emptyList();
     }
 }

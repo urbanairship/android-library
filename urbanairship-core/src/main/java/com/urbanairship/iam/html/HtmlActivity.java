@@ -56,7 +56,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
         final HtmlDisplayContent displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
-            Logger.error("HtmlActivity - Invalid display type: " + getMessage().getDisplayContent());
+            Logger.error("HtmlActivity - Invalid display type: %s", getMessage().getDisplayContent());
             finish();
             return;
         }
@@ -118,7 +118,7 @@ public class HtmlActivity extends InAppMessageActivity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                    Logger.error("HtmlActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
+                    Logger.error("HtmlActivity - Failed to load page %s with error %s %s", failingUrl, errorCode, description);
                     error = errorCode;
                 }
             }
@@ -229,7 +229,7 @@ public class HtmlActivity extends InAppMessageActivity {
             return;
         }
 
-        Logger.info("Loading url: " + url);
+        Logger.info("Loading url: %s", url);
         error = null;
         webView.loadUrl(url);
     }

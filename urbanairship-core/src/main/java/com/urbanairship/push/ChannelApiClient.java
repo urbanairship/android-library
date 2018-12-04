@@ -40,7 +40,7 @@ class ChannelApiClient extends BaseApiClient {
     @Nullable
     Response createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelApiClient - Creating channel with payload: " + payload);
+        Logger.verbose("ChannelApiClient - Creating channel with payload: %s", payload);
         return performRequest(getDeviceUrl(CHANNEL_CREATION_PATH), "POST", payload);
     }
 
@@ -54,7 +54,7 @@ class ChannelApiClient extends BaseApiClient {
     @Nullable
     Response updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);
+        Logger.verbose("ChannelApiClient - Updating channel with payload: %s", payload);
         return performRequest(channelLocation, "PUT", payload);
     }
 }

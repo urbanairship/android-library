@@ -44,11 +44,11 @@ public class LocationService extends IntentService {
             return;
         }
 
-        Logger.verbose("LocationService - Received intent with action: " + intent.getAction());
+        Logger.verbose("LocationService - Received intent with action: %s", intent.getAction());
 
         final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
         if (airship == null) {
-            Logger.error("LocationService - UAirship not ready. Dropping intent: " + intent);
+            Logger.error("LocationService - UAirship not ready. Dropping intent: %s", intent);
             return;
         }
 
@@ -77,7 +77,7 @@ public class LocationService extends IntentService {
                                    intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
                                    intent.getParcelableExtra("com.google.android.location.LOCATION"));
         } catch (Exception e) {
-            Logger.error("Unable to extract location.", e);
+            Logger.error(e, "Unable to extract location.");
             return;
         }
 

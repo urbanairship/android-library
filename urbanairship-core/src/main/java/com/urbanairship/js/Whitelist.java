@@ -163,7 +163,7 @@ public class Whitelist {
     public boolean addEntry(@NonNull String pattern, @Scope int scope) {
         //noinspection ConstantConditions
         if (pattern == null || !VALID_PATTERN.matcher(pattern).matches()) {
-            Logger.error("Invalid whitelist pattern " + pattern);
+            Logger.error("Invalid whitelist pattern %s", pattern);
             return false;
         }
 

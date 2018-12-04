@@ -96,7 +96,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.error("Unable to register with FCM: " + e.getMessage());
+            Logger.error(e, "Unable to register with FCM.");
             return false;
         }
         return true;

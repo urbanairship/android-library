@@ -55,7 +55,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 
         // Video URLs, check whitelist
         if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("URL not whitelisted. Unable to load: " + mediaInfo.getUrl());
+            Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
             return CANCEL;
         }
 
@@ -155,7 +155,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
             cache.getBundle().putInt(InAppMessageCache.IMAGE_HEIGHT_CACHE_KEY, options.outHeight);
             return OK;
         } catch (IOException e) {
-            Logger.debug("Failed to cache media.", e);
+            Logger.debug(e, "Failed to cache media.");
             return RETRY;
         }
     }

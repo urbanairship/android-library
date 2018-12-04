@@ -52,7 +52,7 @@ class ActionButtonGroupsParser {
             return parseGroups(context, parser);
         } catch (IOException | XmlPullParserException | Resources.NotFoundException | NullPointerException e) {
             // Note: NullPointerException can occur in rare circumstances further down the call stack
-            Logger.error("Failed to parse NotificationActionButtonGroups:" + e.getMessage());
+            Logger.error(e, "Failed to parse NotificationActionButtonGroups.");
             return new HashMap<>();
         }
     }
@@ -81,7 +81,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.START_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 String id = parser.getAttributeValue(null, ID_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(id)) {
-                    Logger.error(BUTTON_GROUP_TAG + " missing id.");
+                    Logger.error("%s missing id.", BUTTON_GROUP_TAG);
                     continue;
                 }
 
@@ -99,7 +99,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.START_TAG && BUTTON_TAG.equals(tagName)) {
                 String buttonId = parser.getAttributeValue(null, ID_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(buttonId)) {
-                    Logger.error(BUTTON_TAG + " missing id.");
+                    Logger.error("%s missing id.", BUTTON_TAG);
                     continue;
                 }
 
@@ -129,7 +129,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.END_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 NotificationActionButtonGroup group = groupBuilder.build();
                 if (group.getNotificationActionButtons().isEmpty()) {
-                    Logger.error(BUTTON_GROUP_TAG + " " + groupId + " missing action buttons.");
+                    Logger.error("%s %s missing action buttons.",BUTTON_GROUP_TAG, groupId);
                     continue;
                 }
 

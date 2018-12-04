@@ -164,7 +164,7 @@ public class HelperActivity extends Activity {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                Logger.error("Thread interrupted when waiting for result from activity.", e);
+                Logger.error(e, "Thread interrupted when waiting for result from activity.");
             }
         }
 
@@ -205,7 +205,7 @@ public class HelperActivity extends Activity {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                Logger.error("Thread interrupted when waiting for result from activity.", e);
+                Logger.error(e, "Thread interrupted when waiting for result from activity.");
                 return new ActivityResult();
             }
         }

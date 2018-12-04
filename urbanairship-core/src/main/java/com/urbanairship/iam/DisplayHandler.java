@@ -79,7 +79,7 @@ public class DisplayHandler implements Parcelable {
     public void continueOnNextActivity() {
         InAppMessageManager manager = getInAppMessagingManager();
         if (manager == null) {
-            Logger.error("Takeoff not called. Unable to continue message on next activity: " + scheduleId);
+            Logger.error("Takeoff not called. Unable to continue message on next activity: %s", scheduleId);
             return;
         }
 
@@ -96,7 +96,7 @@ public class DisplayHandler implements Parcelable {
     public void finished(@NonNull ResolutionInfo resolutionInfo) {
         InAppMessageManager manager = getInAppMessagingManager();
         if (manager == null) {
-            Logger.error("Takeoff not called. Unable to finish display for schedule: " + scheduleId);
+            Logger.error("Takeoff not called. Unable to finish display for schedule: %s", scheduleId);
             return;
         }
 
@@ -109,7 +109,7 @@ public class DisplayHandler implements Parcelable {
     public void cancelFutureDisplays() {
         InAppMessageManager manager = getInAppMessagingManager();
         if (manager == null) {
-            Logger.error("Takeoff not called. Unable to cancel displays for schedule: " + scheduleId);
+            Logger.error("Takeoff not called. Unable to cancel displays for schedule: %s", scheduleId);
             return;
         }
 

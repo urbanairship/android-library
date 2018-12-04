@@ -293,7 +293,7 @@ public class ImageLoader {
                     return bitmapDrawable;
                 }
             } catch (IOException e) {
-                Logger.debug("Unable to fetch bitmap: " + request.imageUrl, e);
+                Logger.debug(e, "Unable to fetch bitmap: %s", request.imageUrl);
             }
 
             return null;

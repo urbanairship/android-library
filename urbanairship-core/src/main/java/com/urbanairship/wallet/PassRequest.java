@@ -127,13 +127,13 @@ public class PassRequest {
         Runnable requestRunnable = new Runnable() {
             @Override
             public void run() {
-                Logger.info("Requesting pass " + templateId);
+                Logger.info("Requesting pass %s", templateId);
                 URL url;
 
                 try {
                     url = getPassUrl();
                 } catch (MalformedURLException e) {
-                    Logger.error("PassRequest - Invalid pass URL", e);
+                    Logger.error(e, "PassRequest - Invalid pass URL");
                     requestCallback.setResult(-1, null);
                     return;
                 }
@@ -169,7 +169,7 @@ public class PassRequest {
                     httpRequest.setCredentials(userName, apiKey);
                 }
 
-                Logger.debug("PassRequest - Requesting pass " + url + " with payload: " + body);
+                Logger.debug("PassRequest - Requesting pass %s with payload: %s", url, body);
                 Response response = httpRequest.execute();
 
                 if (response == null) {
@@ -183,14 +183,14 @@ public class PassRequest {
                     try {
                         json = JsonValue.parseString(response.getResponseBody());
                     } catch (JsonException e) {
-                        Logger.error("PassRequest - Failed to parse response body " + response.getResponseBody());
+                        Logger.error("PassRequest - Failed to parse response body %s", response.getResponseBody());
                         return;
                     }
 
-                    Logger.debug("PassRequest - Received pass response: " + json + " for pass " + url);
+                    Logger.debug("PassRequest - Received pass response: %s for pass %s", json, url);
                     requestCallback.setResult(response.getStatus(), Pass.parsePass(json));
                 } else {
-                    Logger.debug("PassRequest - Pass " + templateId + " request failed with status " + response.getStatus());
+                    Logger.debug("PassRequest - Pass %s request failed with status %s", templateId, response.getStatus());
                     requestCallback.setResult(response.getStatus(), null);
                 }
 

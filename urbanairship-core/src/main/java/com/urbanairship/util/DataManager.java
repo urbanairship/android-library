@@ -55,13 +55,13 @@ public abstract class DataManager {
 
             @Override
             public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Upgrading database " + db + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Upgrading database %s from version %s to %s", db, oldVersion, newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
             public void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Downgrading database " + db + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Downgrading database %s from version %s to %s", db, oldVersion, newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
 
@@ -117,7 +117,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("DataManager - Error opening writable database. Retrying...", e);
+                Logger.error(e, "DataManager - Error opening writable database. Retrying...");
             }
         }
 
@@ -139,7 +139,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("DataManager - Error opening readable database. Retrying...", e);
+                Logger.error(e, "DataManager - Error opening readable database. Retrying...");
             }
         }
 
@@ -192,7 +192,7 @@ public abstract class DataManager {
             try {
                 return db.delete(table, selection, selectionArgs);
             } catch (Exception ex) {
-                Logger.error("Unable to delete item from a database", ex);
+                Logger.error(ex, "Unable to delete item from a database");
             }
         }
 
@@ -219,7 +219,7 @@ public abstract class DataManager {
             try {
                 db.replaceOrThrow(table, null, value);
             } catch (Exception ex) {
-                Logger.error("Unable to insert into database", ex);
+                Logger.error(ex, "Unable to insert into database");
                 db.endTransaction();
                 return Collections.emptyList();
             }
@@ -248,7 +248,7 @@ public abstract class DataManager {
             try {
                 return getWritableDatabase().replaceOrThrow(table, null, values);
             } catch (Exception ex) {
-                Logger.error("Unable to insert into database", ex);
+                Logger.error(ex, "Unable to insert into database");
             }
         }
 
@@ -275,7 +275,7 @@ public abstract class DataManager {
             try {
                 return db.update(table, values, selection, selectionArgs);
             } catch (SQLException e) {
-                Logger.error("Update Failed", e);
+                Logger.error(e, "Update Failed");
             }
         }
 
@@ -309,7 +309,7 @@ public abstract class DataManager {
                 return db.query(table, columns, selection,
                         selectionArgs, null, null, sortOrder, limit);
             } catch (SQLException e) {
-                Logger.error("Query Failed", e);
+                Logger.error(e, "Query Failed");
             }
         }
 
@@ -334,7 +334,7 @@ public abstract class DataManager {
             try {
                 return db.rawQuery(query, selectionArgs);
             } catch (SQLException e) {
-                Logger.error("Query failed", e);
+                Logger.error(e, "Query failed");
             }
         }
 
@@ -348,7 +348,7 @@ public abstract class DataManager {
         try {
             openHelper.close();
         } catch (Exception ex) {
-            Logger.error("Failed to close the database.", ex);
+            Logger.error(ex, "Failed to close the database.");
         }
     }
 

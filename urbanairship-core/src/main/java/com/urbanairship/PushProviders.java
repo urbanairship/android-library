@@ -82,9 +82,9 @@ class PushProviders {
                 Class providerClass = Class.forName(className);
                 pushProvider = (PushProvider) providerClass.newInstance();
             } catch (InstantiationException e) {
-                Logger.error("Unable to create provider " + className, e);
+                Logger.error(e, "Unable to create provider %s", className);
             } catch (IllegalAccessException e) {
-                Logger.error("Unable to create provider " + className, e);
+                Logger.error(e, "Unable to create provider %s", className);
             } catch (ClassNotFoundException e) {
                 continue;
             }
@@ -95,10 +95,10 @@ class PushProviders {
 
             if (pushProvider instanceof AirshipVersionInfo) {
                 AirshipVersionInfo versionInfo = (AirshipVersionInfo) pushProvider;
-                Logger.verbose("Found provider: " + pushProvider + " version: " + versionInfo.getPackageVersion());
+                Logger.verbose("Found provider: %s version: %s", pushProvider, versionInfo.getPackageVersion());
 
                 if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
-                    Logger.error("Provider: " + pushProvider + " version " + versionInfo.getAirshipVersion() + " does not match the SDK version " + UAirship.getVersion() + ". Make sure all Urban Airship dependencies are the exact same version.");
+                    Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Urban Airship dependencies are the exact same version.", pushProvider, versionInfo.getAirshipVersion(), UAirship.getVersion());
                     continue;
                 }
             }

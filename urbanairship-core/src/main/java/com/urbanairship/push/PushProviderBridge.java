@@ -121,7 +121,7 @@ public abstract class PushProviderBridge {
             } catch (TimeoutException e) {
                 Logger.error("Application took too long to process push. App may get closed.");
             } catch (Exception e) {
-                Logger.error("Failed to wait for notification", e);
+                Logger.error(e, "Failed to wait for notification");
             }
 
             if (callback != null) {
@@ -148,7 +148,7 @@ public abstract class PushProviderBridge {
             try {
                 countDownLatch.await();
             } catch (InterruptedException e) {
-                Logger.error("Failed to wait for push.", e);
+                Logger.error(e, "Failed to wait for push.");
             }
         }
     }

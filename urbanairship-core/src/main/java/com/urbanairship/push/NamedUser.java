@@ -129,8 +129,7 @@ public class NamedUser extends AirshipComponent {
         if (namedUserId != null) {
             id = namedUserId.trim();
             if (UAStringUtil.isEmpty(id) || id.length() > MAX_NAMED_USER_ID_LENGTH) {
-                Logger.error("Failed to set named user ID. " +
-                        "The named user ID must be greater than 0 and less than 129 characters.");
+                Logger.error("Failed to set named user ID. The named user ID must be greater than 0 and less than 129 characters.");
                 return;
             }
         }
@@ -151,7 +150,7 @@ public class NamedUser extends AirshipComponent {
 
                 dispatchNamedUserUpdateJob();
             } else {
-                Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: " + getId());
+                Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }
         }
     }

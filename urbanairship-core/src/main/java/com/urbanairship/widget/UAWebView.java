@@ -253,8 +253,7 @@ public class UAWebView extends WebView {
     @Override
     public void setWebViewClient(@Nullable WebViewClient webViewClient) {
         if (webViewClient != null && !(webViewClient instanceof UAWebViewClient)) {
-            Logger.warn("The web view client should extend UAWebViewClient to " +
-                    "support urban airship url overrides and triggering actions from.");
+            Logger.warn("The web view client should extend UAWebViewClient to support urban airship url overrides and triggering actions from.");
         }
 
         this.webViewClient = webViewClient;
@@ -269,8 +268,7 @@ public class UAWebView extends WebView {
         currentMessage = null;
 
         if (getWebViewClientCompat() == null) {
-            Logger.debug("No web view client set, setting a default " +
-                    "UAWebViewClient for landing page view.");
+            Logger.debug("No web view client set, setting a default UAWebViewClient for landing page view.");
             setWebViewClient(new UAWebViewClient());
         }
 

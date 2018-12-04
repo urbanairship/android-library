@@ -45,7 +45,7 @@ public class DeepLinkAction extends Action {
     public ActionResult perform(@NonNull ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue().getString());
 
-        Logger.info("Deep linking: " + uri);
+        Logger.info("Deep linking: %s", uri);
 
         Intent intent = new Intent(Intent.ACTION_VIEW, uri)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

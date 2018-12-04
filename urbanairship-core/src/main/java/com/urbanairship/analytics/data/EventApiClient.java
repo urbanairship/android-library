@@ -94,7 +94,7 @@ public class EventApiClient {
             try {
                 eventJSON.add(JsonValue.parseString(eventPayload));
             } catch (JsonException e) {
-                Logger.error("EventApiClient - Invalid eventPayload.", e);
+                Logger.error(e, "EventApiClient - Invalid eventPayload.");
             }
         }
 
@@ -105,7 +105,7 @@ public class EventApiClient {
         try {
             analyticsServerUrl = new URL(url);
         } catch (MalformedURLException e) {
-            Logger.error("EventApiClient - Invalid analyticsServer: " + url, e);
+            Logger.error(e, "EventApiClient - Invalid analyticsServer: %s", url);
         }
 
         if (analyticsServerUrl == null) {
@@ -175,12 +175,12 @@ public class EventApiClient {
             request.setHeader("X-UA-Push-Address", channelID);
         }
 
-        Logger.debug("EventApiClient - Sending analytics events. Request:  " + request + " Events: " + events);
+        Logger.debug("EventApiClient - Sending analytics events. Request: %s Events: %s", request, events);
 
         Response response = request.execute();
 
 
-        Logger.debug("EventApiClient - Analytics event response: " + response);
+        Logger.debug("EventApiClient - Analytics event response: %s", response);
 
 
         return response == null ? null : new EventResponse(response);

@@ -35,7 +35,7 @@ public class AndroidJobService extends JobService {
                 })
                 .build();
 
-        Logger.verbose("AndroidJobService - Running job: " + jobInfo);
+        Logger.verbose("AndroidJobService - Running job: %s", jobInfo);
 
         Job.EXECUTOR.execute(job);
 

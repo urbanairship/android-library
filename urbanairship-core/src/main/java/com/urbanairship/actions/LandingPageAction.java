@@ -152,7 +152,7 @@ public class LandingPageAction extends Action {
                             if (message != null) {
                                 webView.loadRichPushMessage(message);
                             } else {
-                                Logger.debug("LandingPageAction - Message " + messageId + " not found.");
+                                Logger.debug("LandingPageAction - Message %s not found.", messageId);
                             }
                         } else {
                             webView.loadUrl(uri.toString());
@@ -175,8 +175,7 @@ public class LandingPageAction extends Action {
                     try {
                         UAirship.getApplicationContext().startActivity(actionIntent);
                     } catch (ActivityNotFoundException ex) {
-                        Logger.error("Unable to view a landing page for uri " + uri + ". The landing page's" +
-                                "intent filter is missing the scheme: " + uri.getScheme());
+                        Logger.error("Unable to view a landing page for uri %s. The landing page's intent filter is missing the scheme: %s", uri, uri.getScheme());
                     }
                 }
             });
@@ -208,7 +207,7 @@ public class LandingPageAction extends Action {
                 }
 
                 if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
-                    Logger.error("Unable to show landing page, url is not whitelisted: " + uri);
+                    Logger.error("Unable to show landing page, url is not whitelisted: %s", uri);
                     return false;
                 }
 
@@ -250,7 +249,7 @@ public class LandingPageAction extends Action {
             try {
                 id = URLEncoder.encode(uri.getSchemeSpecificPart(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                Logger.error("LandingPageAction - Unable to decode " + uri.getSchemeSpecificPart());
+                Logger.error("LandingPageAction - Unable to decode %s", uri.getSchemeSpecificPart());
                 return null;
             }
 

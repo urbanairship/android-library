@@ -77,7 +77,7 @@ public class RemoteConfigManager extends AirshipComponent {
                                          try {
                                              processRemoteData(remoteDataPayloads);
                                          } catch (Exception e) {
-                                             Logger.error("Failed process remote data", e);
+                                             Logger.error(e, "Failed process remote data");
                                          }
                                      }
                                  });
@@ -104,7 +104,7 @@ public class RemoteConfigManager extends AirshipComponent {
                         try {
                             disableInfos.add(DisableInfo.fromJson(disableInfoJson));
                         } catch (JsonException e) {
-                            Logger.error("Failed to parse remote config: " + payload, e);
+                            Logger.error(e, "Failed to parse remote config: %s", payload);
                         }
                     }
                     continue;

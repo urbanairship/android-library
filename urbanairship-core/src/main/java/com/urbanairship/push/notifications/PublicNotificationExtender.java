@@ -107,7 +107,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
 
             builder.setPublicVersion(publicBuilder.build());
         } catch (JsonException e) {
-            Logger.error("Failed to parse public notification.", e);
+            Logger.error(e, "Failed to parse public notification.");
         }
 
         return builder;

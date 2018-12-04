@@ -364,13 +364,13 @@ public class MessageFragment extends Fragment {
                     if (message == null) {
                         showErrorPage(success ? ERROR_MESSAGE_UNAVAILABLE : ERROR_FETCHING_MESSAGES);
                     } else {
-                        Logger.info("Loading message: " + message.getMessageId());
+                        Logger.info("Loading message: %s", message.getMessageId());
                         webView.loadRichPushMessage(message);
                     }
                 }
             });
         } else {
-            Logger.info("Loading message: " + message.getMessageId());
+            Logger.info("Loading message: %s", message.getMessageId());
             webView.loadRichPushMessage(message);
         }
     }

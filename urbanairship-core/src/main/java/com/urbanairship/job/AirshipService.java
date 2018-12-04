@@ -83,7 +83,7 @@ public class AirshipService extends Service {
         msg.arg1 = startId;
         msg.obj = intent;
 
-        Logger.verbose("AirshipService - Received intent: " + intent);
+        Logger.verbose("AirshipService - Received intent: %s", intent);
         handler.sendMessage(msg);
 
         return START_NOT_STICKY;
@@ -134,7 +134,7 @@ public class AirshipService extends Service {
                 })
                 .build();
 
-        Logger.verbose("AirshipService - Running job: " + jobInfo);
+        Logger.verbose("AirshipService - Running job: %s", jobInfo);
         Job.EXECUTOR.execute(job);
 
     }
@@ -147,13 +147,13 @@ public class AirshipService extends Service {
      */
     @WorkerThread
     private void onJobFinished(@NonNull Intent intent, int startId) {
-        Logger.verbose("AirshipService - Component finished job with startId: " + startId);
+        Logger.verbose("AirshipService - Component finished job with startId: %s", startId);
 
         runningJobs--;
 
         if (runningJobs <= 0) {
             runningJobs = 0;
-            Logger.verbose("AirshipService - All jobs finished, stopping with last startId: " + lastStartId);
+            Logger.verbose("AirshipService - All jobs finished, stopping with last startId: %s", lastStartId);
             stopSelf(lastStartId);
         }
     }

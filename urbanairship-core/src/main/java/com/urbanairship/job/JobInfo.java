@@ -259,7 +259,7 @@ public class JobInfo {
             return builder.build();
 
         } catch (IllegalArgumentException | JsonException e) {
-            Logger.error("Failed to parse job from bundle.", e);
+            Logger.error(e, "Failed to parse job from bundle.");
         }
 
         return null;
@@ -292,7 +292,7 @@ public class JobInfo {
 
             return builder.build();
         } catch (Exception e) {
-            Logger.error("Failed to parse job from bundle.", e);
+            Logger.error(e, "Failed to parse job from bundle.");
         }
 
         return null;

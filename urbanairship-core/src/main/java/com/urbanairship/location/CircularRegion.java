@@ -80,20 +80,17 @@ public class CircularRegion {
      */
     public boolean isValid() {
         if (this.radius > MAX_RADIUS || this.radius <= 0) {
-            Logger.error("The radius must be greater than " + 0 +
-                    " and less than or equal to " + MAX_RADIUS + " meters.");
+            Logger.error("The radius must be greater than %s and less than or equal to %s meters.", 0, MAX_RADIUS);
             return false;
         }
 
         if (!RegionEvent.regionEventLatitudeIsValid(this.latitude)) {
-            Logger.error("The latitude must be greater than or equal to " + RegionEvent.MIN_LATITUDE +
-                    " and less than or equal to " + RegionEvent.MAX_LATITUDE + " degrees.");
+            Logger.error("The latitude must be greater than or equal to %s and less than or equal to %s degrees.", RegionEvent.MIN_LATITUDE, RegionEvent.MAX_LATITUDE);
             return false;
         }
 
         if (!RegionEvent.regionEventLongitudeIsValid(this.longitude)) {
-            Logger.error("The longitude must be greater than or equal to " + RegionEvent.MIN_LONGITUDE +
-                    " and less than or equal to " + RegionEvent.MAX_LONGITUDE + " degrees.");
+            Logger.error("The longitude must be greater than or equal to %s and less than or equal to %s degrees.", RegionEvent.MIN_LONGITUDE, RegionEvent.MAX_LONGITUDE);
             return false;
         }
 

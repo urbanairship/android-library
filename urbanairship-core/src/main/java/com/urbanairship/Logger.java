@@ -43,21 +43,23 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void warn(@NonNull String s) {
+    public static void warn(@NonNull String s, Object... args) {
         if (logLevel <= Log.WARN) {
-            Log.w(TAG, s);
+            String message = String.format(s, args);
+            Log.w(TAG, message);
         }
     }
 
     /**
      * Send a warning log message.
      *
-     * @param s The message you would like logged.
      * @param t An exception to log
+     * @param s The message you would like logged.
      */
-    public static void warn(@NonNull String s, @NonNull Throwable t) {
+    public static void warn(@NonNull Throwable t, @NonNull String s, Object... args) {
         if (logLevel <= Log.WARN) {
-            Log.w(TAG, s, t);
+            String message = String.format(s, args);
+            Log.w(TAG, message, t);
         }
     }
 
@@ -77,9 +79,10 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void verbose(@NonNull String s) {
+    public static void verbose(@NonNull String s, Object... args) {
         if (logLevel <= Log.VERBOSE) {
-            Log.v(TAG, s);
+            String message = String.format(s, args);
+            Log.v(TAG, message);
         }
     }
 
@@ -88,21 +91,23 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void debug(@NonNull String s) {
+    public static void debug(@NonNull String s, Object... args) {
         if (logLevel <= Log.DEBUG) {
-            Log.d(TAG, s);
+            String message = String.format(s, args);
+            Log.d(TAG, message);
         }
     }
 
     /**
      * Send a debug log message.
      *
-     * @param s The message you would like logged.
      * @param t An exception to log
+     * @param s The message you would like logged.
      */
-    public static void debug(@NonNull String s, @NonNull Throwable t) {
+    public static void debug(@NonNull Throwable t, @NonNull String s, Object... args) {
         if (logLevel <= Log.DEBUG) {
-            Log.d(TAG, s, t);
+            String message = String.format(s, args);
+            Log.d(TAG, message, t);
         }
     }
 
@@ -111,21 +116,23 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void info(@NonNull String s) {
+    public static void info(@NonNull String s, Object... args) {
         if (logLevel <= Log.INFO) {
-            Log.i(TAG, s);
+            String message = String.format(s, args);
+            Log.i(TAG, message);
         }
     }
 
     /**
      * Send an info log message.
      *
-     * @param s The message you would like logged.
      * @param t An exception to log
+     * @param s The message you would like logged.
      */
-    public static void info(@NonNull String s, @Nullable Throwable t) {
+    public static void info(@Nullable Throwable t, @NonNull String s, Object... args) {
         if (logLevel <= Log.INFO && t != null) {
-            Log.i(TAG, s, t);
+            String message = String.format(s, args);
+            Log.i(TAG, message, t);
         }
     }
 
@@ -134,9 +141,10 @@ public class Logger {
      *
      * @param s The message you would like logged.
      */
-    public static void error(@NonNull String s) {
+    public static void error(@NonNull String s, Object... args) {
         if (logLevel <= Log.ERROR) {
-            Log.e(TAG, s);
+            String message = String.format(s, args);
+            Log.e(TAG, message);
         }
     }
 
@@ -154,12 +162,13 @@ public class Logger {
     /**
      * Send an error log message.
      *
-     * @param s The message you would like logged.
      * @param t An exception to log
+     * @param s The message you would like logged.
      */
-    public static void error(@NonNull String s, @Nullable Throwable t) {
+    public static void error(@Nullable Throwable t, @NonNull String s, Object... args) {
         if (logLevel <= Log.ERROR && t != null) {
-            Log.e(TAG, s, t);
+            String message = String.format(s, args);
+            Log.e(TAG, message, t);
         }
     }
 
@@ -198,7 +207,7 @@ public class Logger {
                 return intValue;
             }
 
-            Logger.warn(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
+            Logger.warn("%s is not a valid log level. Falling back to %s.", intValue, defaultValue);
             return defaultValue;
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException("Invalid log level: " + value);

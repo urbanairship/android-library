@@ -166,8 +166,7 @@ public class LandingPageActivity extends Activity {
         final ProgressBar progressBar = findViewById(android.R.id.progress);
 
         if (webView == null) {
-            Logger.error("LandingPageActivity - A UAWebView with id android.R.id.primary is not defined" +
-                    " in the custom layout.  Unable to show the landing page.");
+            Logger.error("LandingPageActivity - A UAWebView with id android.R.id.primary is not defined in the custom layout.  Unable to show the landing page.");
             finish();
             return;
         }
@@ -208,7 +207,7 @@ public class LandingPageActivity extends Activity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, @Nullable String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                    Logger.info("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
+                    Logger.info("LandingPageActivity - Failed to load page %s with error %s %s", failingUrl, errorCode, description);
                     error = errorCode;
                 }
             }
@@ -430,7 +429,7 @@ public class LandingPageActivity extends Activity {
             return;
         }
 
-        Logger.info("Loading landing page: " + uri);
+        Logger.info("Loading landing page: %s", uri);
 
         // Set the background color
         if (webViewBackgroundColor != -1) {
@@ -452,7 +451,7 @@ public class LandingPageActivity extends Activity {
                     @Override
                     public void onFinished(boolean success) {
                         if (success && UAirship.shared().getInbox().getMessage(messageId) == null) {
-                            Logger.error("Message " + messageId + " not found.");
+                            Logger.error("Message %s not found.", messageId);
                             finish();
                         }
 
@@ -466,7 +465,7 @@ public class LandingPageActivity extends Activity {
             if (UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
                 webView.loadUrl(uri.toString());
             } else {
-                Logger.error("URL is not whitelisted. Unable to load landing page: " + uri);
+                Logger.error("URL is not whitelisted. Unable to load landing page: %s", uri);
                 finish();
             }
         }

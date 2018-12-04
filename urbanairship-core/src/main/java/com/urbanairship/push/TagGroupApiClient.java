@@ -64,7 +64,7 @@ class TagGroupApiClient extends BaseApiClient {
 
 
         String tagPayload = payload.toString();
-        Logger.verbose("Updating tag groups with payload: " + tagPayload);
+        Logger.verbose("Updating tag groups with payload: %s", tagPayload);
 
         Response response = performRequest(tagUrl, "POST", tagPayload);
         logTagGroupResponseIssues(response);
@@ -88,7 +88,7 @@ class TagGroupApiClient extends BaseApiClient {
         try {
             responseJson = JsonValue.parseString(responseBody);
         } catch (JsonException e) {
-            Logger.error("Unable to parse tag group response", e);
+            Logger.error(e, "Unable to parse tag group response");
             return;
         }
 
@@ -96,13 +96,13 @@ class TagGroupApiClient extends BaseApiClient {
             // Check for any warnings in the response and log them if they exist.
             if (responseJson.optMap().containsKey("warnings")) {
                 for (JsonValue warning : responseJson.optMap().opt("warnings").optList()) {
-                    Logger.warn("Tag Groups warnings: " + warning);
+                    Logger.warn("Tag Groups warnings: %s", warning);
                 }
             }
 
             // Check for any errors in the response and log them if they exist.
             if (responseJson.optMap().containsKey("error")) {
-                Logger.error("Tag Groups error: " + responseJson.optMap().get("error"));
+                Logger.error("Tag Groups error: %s", responseJson.optMap().get("error"));
             }
         }
     }

@@ -121,7 +121,7 @@ public class ChannelCapture extends AirshipComponent {
                 Context ctx = ChannelCapture.this.context;
                 clipboardManager = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
             } catch (Exception e) {
-                Logger.error("Unable to initialize clipboard manager: ", e);
+                Logger.error(e, "Unable to initialize clipboard manager: ");
             }
         }
 
@@ -186,7 +186,7 @@ public class ChannelCapture extends AirshipComponent {
                 }
             }
         } catch (SecurityException e) {
-            Logger.debug("Unable to read clipboard: " + e.getMessage());
+            Logger.debug(e, "Unable to read clipboard.");
             return;
         }
 
@@ -208,7 +208,7 @@ public class ChannelCapture extends AirshipComponent {
             // Clear the clipboard
             clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
         } catch (SecurityException e) {
-            Logger.debug("Unable to clear clipboard: " + e.getMessage());
+            Logger.debug(e, "Unable to clear clipboard.");
         }
 
 

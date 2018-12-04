@@ -96,7 +96,7 @@ public class RemoteDataJobHandler {
                 return JobInfo.JOB_FINISHED;
             }
 
-            Logger.debug("Received remote data response: " + body);
+            Logger.debug("Received remote data response: %s", body);
 
             lastModified = response.getResponseHeader("Last-Modified");
             remoteData.setLastModified(lastModified);
@@ -111,7 +111,7 @@ public class RemoteDataJobHandler {
                     return JobInfo.JOB_FINISHED;
                 }
             } catch (JsonException e) {
-                Logger.error("Unable to parse body: " + body);
+                Logger.error("Unable to parse body: %s", body);
                 return JobInfo.JOB_FINISHED;
             }
 
@@ -122,7 +122,7 @@ public class RemoteDataJobHandler {
             return JobInfo.JOB_FINISHED;
         } else {
             // Error
-            Logger.debug("Error fetching remote data: " + String.valueOf(status));
+            Logger.debug("Error fetching remote data: %s", String.valueOf(status));
             return JobInfo.JOB_RETRY;
         }
 

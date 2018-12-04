@@ -69,7 +69,7 @@ class TagGroupLookupApiClient {
         try {
             return new URL(uri.toString());
         } catch (MalformedURLException e) {
-            Logger.error("Invalid URL: " + uri, e);
+            Logger.error(e, "Invalid URL: %s", uri);
             return null;
         }
     }
@@ -103,7 +103,7 @@ class TagGroupLookupApiClient {
 
 
         String tagPayload = payload.toString();
-        Logger.debug("Looking up tags with payload: " + tagPayload);
+        Logger.debug("Looking up tags with payload: %s", tagPayload);
 
         Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret())
@@ -120,7 +120,7 @@ class TagGroupLookupApiClient {
         try {
             parsedResponse = TagGroupResponse.fromResponse(response);
         } catch (JsonException e) {
-            Logger.error("Failed to parse tag group response.", e);
+            Logger.error(e, "Failed to parse tag group response.");
             return null;
         }
 

@@ -538,7 +538,7 @@ public class NotificationFactory {
                 return channel;
             }
 
-            Logger.error("Message notification channel " + message.getNotificationChannel() + " does not exist. Unable to apply channel on notification.");
+            Logger.error("Message notification channel %s does not exist. Unable to apply channel on notification.", message.getNotificationChannel());
         }
 
         if (getNotificationChannel() != null) {
@@ -547,7 +547,7 @@ public class NotificationFactory {
                 return channel;
             }
 
-            Logger.error("Factory notification channel " + getNotificationChannel() + " does not exist. Unable to apply channel on notification.");
+            Logger.error("Factory notification channel %s does not exist. Unable to apply channel on notification.", getNotificationChannel());
         }
 
 

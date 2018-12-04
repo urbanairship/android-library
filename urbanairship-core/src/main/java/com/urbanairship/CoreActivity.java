@@ -21,7 +21,7 @@ public class CoreActivity extends Activity {
         Intent intent = getIntent();
 
         if (intent != null) {
-            Logger.verbose("CoreActivity - Received intent: " + intent.getAction());
+            Logger.verbose("CoreActivity - Received intent: %s", intent.getAction());
             CoreReceiver receiver = new CoreReceiver();
             receiver.onReceive(getApplicationContext(), intent);
         }

@@ -135,7 +135,7 @@ class NamedUserJobHandler {
 
         // 2xx
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.debug("Update named user succeeded with status: " + response.getStatus());
+            Logger.debug("Update named user succeeded with status: %s", response.getStatus());
             dataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
             namedUser.dispatchUpdateTagGroupsJob();
             return JobInfo.JOB_FINISHED;
@@ -143,13 +143,12 @@ class NamedUserJobHandler {
 
         // 403
         if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.debug("Update named user failed with status: " + response.getStatus() +
-                    " This action is not allowed when the app is in server-only mode.");
+            Logger.debug("Update named user failed with status: %s. This action is not allowed when the app is in server-only mode.", response.getStatus());
             return JobInfo.JOB_FINISHED;
         }
 
         // 4xx
-        Logger.debug("Update named user failed with status: " + response.getStatus());
+        Logger.debug("Update named user failed with status: %s", response.getStatus());
         return JobInfo.JOB_FINISHED;
     }
 

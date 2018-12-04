@@ -207,24 +207,24 @@ public class UAWebViewClient extends WebViewClient {
             return false;
         }
 
-        Logger.verbose("Intercepting: " + url);
+        Logger.verbose("Intercepting: %s", url);
         switch (uri.getHost()) {
             case RUN_BASIC_ACTIONS_COMMAND:
-                Logger.info("Running run basic actions command for URL: " + url);
+                Logger.info("Running run basic actions command for URL: %s", url);
                 runActions(webView, decodeActionArguments(uri, true));
                 return true;
 
             case RUN_ACTIONS_COMMAND:
-                Logger.info("Running run actions command for URL: " + url);
+                Logger.info("Running run actions command for URL: %s", url);
                 runActions(webView, decodeActionArguments(uri, false));
                 return true;
 
             case RUN_ACTIONS_COMMAND_CALLBACK:
-                Logger.info("Running run actions command with callback for URL: " + url);
+                Logger.info("Running run actions command with callback for URL: %s", url);
 
                 List<String> paths = uri.getPathSegments();
                 if (paths.size() == 3) {
-                    Logger.info("Action: " + paths.get(0) + ", Args: " + paths.get(1) + ", Callback: " + paths.get(2));
+                    Logger.info("Action: %s, Args: %s, Callback: %s", paths.get(0), paths.get(1), paths.get(2));
                     runAction(webView, paths.get(0), paths.get(1), paths.get(2));
                 } else {
                     Logger.error("Unable to run action, invalid number of arguments.");
@@ -232,13 +232,12 @@ public class UAWebViewClient extends WebViewClient {
                 return true;
 
             case CLOSE_COMMAND:
-                Logger.info("Running close command for URL: " + url);
+                Logger.info("Running close command for URL: %s", url);
                 onClose(webView);
                 return true;
 
             default:
-                Logger.warn("Unrecognized command: " + uri.getHost()
-                        + " for URL: " + url);
+                Logger.warn("Unrecognized command: %s for URL: %s", uri.getHost(), url);
 
                 return false;
         }
@@ -295,7 +294,7 @@ public class UAWebViewClient extends WebViewClient {
         try {
             actionValue = new ActionValue(JsonValue.parseString(value));
         } catch (JsonException e) {
-            Logger.error("Unable to parse action argument value: " + value, e);
+            Logger.error(e, "Unable to parse action argument value: %s", value);
             triggerCallback(webView, "Unable to decode arguments payload", new ActionValue(), callbackKey);
             return;
         }
@@ -395,7 +394,7 @@ public class UAWebViewClient extends WebViewClient {
             List<ActionValue> decodedActionArguments = new ArrayList<>();
 
             if (options.get(actionName) == null) {
-                Logger.warn("No arguments to decode for actionName: " + actionName);
+                Logger.warn("No arguments to decode for actionName: %s", actionName);
                 return null;
             }
 
@@ -404,8 +403,8 @@ public class UAWebViewClient extends WebViewClient {
                     JsonValue jsonValue = basicEncoding ? JsonValue.wrap(arg) : JsonValue.parseString(arg);
                     decodedActionArguments.add(new ActionValue(jsonValue));
                 } catch (JsonException e) {
-                    Logger.warn("Invalid json. Unable to create action argument "
-                            + actionName + " with args: " + arg, e);
+                    Logger.warn(e, "Invalid json. Unable to create action argument "
+                            + actionName + " with args: " + arg);
                     return null;
                 }
             }
@@ -429,7 +428,7 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         if (!isWhiteListed(url)) {
-            Logger.debug("UAWebViewClient - " + url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
+            Logger.debug("UAWebViewClient - %s is not a white listed URL. Urban Airship Javascript interface will not be accessible.", url);
             return;
         }
 
@@ -627,7 +626,7 @@ public class UAWebViewClient extends WebViewClient {
                     input.close();
                     outputStream.close();
                 } catch (Exception e) {
-                    Logger.debug("Failed to close streams", e);
+                    Logger.debug(e, "Failed to close streams");
                 }
             }
         }

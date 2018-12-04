@@ -65,12 +65,12 @@ public class AirshipReceiver extends BroadcastReceiver {
         }
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error(this.getClass().getSimpleName() + " - unable to receive intent, takeOff not called.");
+            Logger.error("%s - unable to receive intent, takeOff not called.", this.getClass().getSimpleName());
             return;
         }
 
         String action = intent.getAction();
-        Logger.debug(this.getClass().getSimpleName() + " - Received intent with action: " + action);
+        Logger.debug("%s - Received intent with action: %s", this.getClass().getSimpleName(), action);
 
         switch (action) {
             case PushManager.ACTION_PUSH_RECEIVED:
@@ -97,7 +97,7 @@ public class AirshipReceiver extends BroadcastReceiver {
     private void handlePushReceived(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
@@ -120,7 +120,7 @@ public class AirshipReceiver extends BroadcastReceiver {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
@@ -157,7 +157,7 @@ public class AirshipReceiver extends BroadcastReceiver {
         } else {
             String channel = intent.getStringExtra(PushManager.EXTRA_CHANNEL_ID);
             if (channel == null) {
-                Logger.error("AirshipReceiver - Intent is missing channel ID for: " + intent.getAction());
+                Logger.error("AirshipReceiver - Intent is missing channel ID for: %s", intent.getAction());
                 return;
             }
 
@@ -180,13 +180,13 @@ public class AirshipReceiver extends BroadcastReceiver {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         if (!intent.hasExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE)) {
-            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 

@@ -62,7 +62,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         cache = getIntent().getParcelableExtra(IN_APP_CACHE_KEY);
 
         if (displayHandler == null || inAppMessage == null) {
-            Logger.error(getClass() + " unable to show message. Missing display handler or in-app message.");
+            Logger.error("%s unable to show message. Missing display handler or in-app message.", getClass());
             finish();
             return;
         }

@@ -344,7 +344,7 @@ public class AutomationDataManager extends DataManager {
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being downgraded
-        Logger.debug("AutomationDataManager - Dropping automation database. Downgrading from version " + oldVersion + " to " + newVersion);
+        Logger.debug("AutomationDataManager - Dropping automation database. Downgrading from version %s to %s", oldVersion, newVersion);
 
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TriggerEntry.TABLE_NAME);
@@ -366,7 +366,7 @@ public class AutomationDataManager extends DataManager {
      */
     void deleteSchedule(String scheduleId) {
         if (delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = ?", new String[] { scheduleId }) < 0) {
-            Logger.error("AutomationDataManager - failed to delete schedule for schedule ID " + scheduleId);
+            Logger.error("AutomationDataManager - failed to delete schedule for schedule ID %s", scheduleId);
         }
     }
 
@@ -378,7 +378,7 @@ public class AutomationDataManager extends DataManager {
      */
     boolean deleteGroup(String group) {
         if (delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " = ?", new String[] { group }) < 0) {
-            Logger.error("AutomationDataManager - failed to delete schedules for group " + group);
+            Logger.error("AutomationDataManager - failed to delete schedules for group %s", group);
             return false;
         }
         return true;

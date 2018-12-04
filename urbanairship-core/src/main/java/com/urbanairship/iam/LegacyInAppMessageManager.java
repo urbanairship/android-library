@@ -172,7 +172,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         try {
             legacyInAppMessage = LegacyInAppMessage.fromPush(push);
         } catch (IllegalArgumentException | JsonException e) {
-            Logger.error("LegacyInAppMessageManager - Unable to create in-app message from push payload", e);
+            Logger.error(e, "LegacyInAppMessageManager - Unable to create in-app message from push payload");
         }
 
         if (legacyInAppMessage == null) {
@@ -270,7 +270,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                           .build();
 
         } catch (Exception e) {
-            Logger.error("Error during factory method to convert legacy in-app message.", e);
+            Logger.error(e, "Error during factory method to convert legacy in-app message.");
             return null;
         }
     }

@@ -93,10 +93,10 @@ public class PlayServicesErrorActivity extends FragmentActivity {
             Logger.debug("Google Play services available!");
             finish();
         } else if (GooglePlayServicesUtilWrapper.isUserRecoverableError(error)) {
-            Logger.debug("Google Play services recoverable error: " + error);
+            Logger.debug("Google Play services recoverable error: %s", error);
             ErrorDialogFragment.createInstance(error).show(getSupportFragmentManager(), DIALOG_TAG);
         } else {
-            Logger.error("Unrecoverable Google Play services error: " + error);
+            Logger.error("Unrecoverable Google Play services error: %s", error);
             finish();
         }
     }

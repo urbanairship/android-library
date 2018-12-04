@@ -77,7 +77,7 @@ public class RemoteDataPayload {
                 throw new JsonException("Invalid remote data payload: " + value.toString());
             }
         } catch (ParseException e) {
-            Logger.error("Unable to parse timestamp: " + isoTimestamp);
+            Logger.error("Unable to parse timestamp: %s", isoTimestamp);
             throw new JsonException("Invalid remote data payload: " + value.toString(), e);
         }
     }
@@ -100,7 +100,7 @@ public class RemoteDataPayload {
             }
             return payloads;
         } catch (JsonException e) {
-            Logger.error("Unable to parse remote data payloads: " + value.toString());
+            Logger.error("Unable to parse remote data payloads: %s", value.toString());
         }
 
         return Collections.emptySet();

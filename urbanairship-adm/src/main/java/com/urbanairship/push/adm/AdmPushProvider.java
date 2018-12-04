@@ -60,7 +60,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
             try {
                 registerReceiver.wait(REGISTRATION_TIMEOUT_MS);
             } catch (InterruptedException e) {
-                Logger.debug("Interrupted while waiting for adm registration", e);
+                Logger.debug(e, "Interrupted while waiting for adm registration");
                 throw new RegistrationException("Failed to register with ADM.", true, e);
             }
         }
@@ -134,7 +134,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         public void onReceive(Context context, Intent intent) {
             if (intent != null && intent.getExtras() != null && ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT.equals(intent.getAction())) {
                 if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
-                    Logger.error("ADM error occurred: " + intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
+                    Logger.error("ADM error occurred: %s", intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
                     this.error = intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR);
                 } else {
                     this.registrationToken = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);

@@ -361,7 +361,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             try {
                 return fromJson(JsonValue.parseString(payload));
             } catch (JsonException e) {
-                Logger.error("InAppMessage - Invalid parcel: " + e);
+                Logger.error("InAppMessage - Invalid parcel: %s", e);
                 return null;
             }
         }

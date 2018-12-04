@@ -134,7 +134,7 @@ class TriggerEntry {
                 return JsonPredicate.parse(jsonValue);
             }
         } catch (JsonException e) {
-            Logger.error("Failed to parse JSON predicate.", e);
+            Logger.error(e, "Failed to parse JSON predicate.");
             return null;
         }
 

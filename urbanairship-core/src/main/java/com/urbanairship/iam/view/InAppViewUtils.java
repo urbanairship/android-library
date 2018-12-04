@@ -124,7 +124,7 @@ public class InAppViewUtils {
 
                 textView.setText(text);
             } catch (Resources.NotFoundException e) {
-                Logger.error("Unable to find button drawable.", e);
+                Logger.error(e, "Unable to find button drawable.");
                 textView.setText(textInfo.getText());
             }
         } else {

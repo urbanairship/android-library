@@ -233,7 +233,7 @@ public class MediaView extends FrameLayout {
         addView(frameLayout);
 
         if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("URL not whitelisted. Unable to load: " + mediaInfo.getUrl());
+            Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
             return;
         }
 

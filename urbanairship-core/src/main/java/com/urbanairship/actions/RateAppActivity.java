@@ -118,7 +118,7 @@ public class RateAppActivity extends ThemedActivity {
                             Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, storeUri);
                             startActivity(openLinkIntent);
                         } catch (ActivityNotFoundException e) {
-                            Logger.error("No web browser available to handle request to open the store link.", e);
+                            Logger.error(e, "No web browser available to handle request to open the store link.");
                         }
 
                         dialog.cancel();

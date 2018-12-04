@@ -91,7 +91,7 @@ public class EventManager {
      */
     public void scheduleEventUpload(final long delay, @NonNull TimeUnit timeUnit) {
         long milliseconds = timeUnit.toMillis(delay);
-        Logger.verbose("EventManager - Requesting to schedule event upload with delay " + milliseconds + "ms.");
+        Logger.verbose("EventManager - Requesting to schedule event upload with delay %s ms.", milliseconds);
 
         long sendTime = System.currentTimeMillis() + milliseconds;
         long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
@@ -104,7 +104,7 @@ public class EventManager {
             }
         }
 
-        Logger.verbose("EventManager - Scheduling upload in " + milliseconds + "ms.");
+        Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(jobAction)
                                  .setId(JobInfo.ANALYTICS_EVENT_UPLOAD)

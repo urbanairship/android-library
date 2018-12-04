@@ -187,7 +187,7 @@ public class EnableFeatureAction extends Action {
                 context.startActivity(intent);
                 return;
             } catch (ActivityNotFoundException e) {
-                Logger.debug("Failed to launch notification settings.", e);
+                Logger.debug(e, "Failed to launch notification settings.");
             }
         }
 
@@ -201,7 +201,7 @@ public class EnableFeatureAction extends Action {
                 context.startActivity(intent);
                 return;
             } catch (ActivityNotFoundException e) {
-                Logger.debug("Failed to launch notification settings.", e);
+                Logger.debug(e, "Failed to launch notification settings.");
             }
         }
 
@@ -212,8 +212,8 @@ public class EnableFeatureAction extends Action {
 
         try {
             context.startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Logger.error("Unable to launch settings activity. ", ex);
+        } catch (ActivityNotFoundException e) {
+            Logger.error(e, "Unable to launch settings activity.");
         }
     }
 }

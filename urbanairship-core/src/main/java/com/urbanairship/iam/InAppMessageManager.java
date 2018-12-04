@@ -681,7 +681,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                 switch (result) {
                     case InAppMessageAdapter.OK:
-                        Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
+                        Logger.debug("InAppMessageManager - Scheduled message prepared for display: %s", scheduleId);
 
                         // Store the adapter
                         adapterWrappers.put(scheduleId, adapter);
@@ -689,7 +689,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
-                        Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
+                        Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: %s", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case InAppMessageAdapter.CANCEL:
@@ -722,12 +722,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
 
             if (factory == null) {
-                Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
+                Logger.debug("InAppMessageManager - No display adapter for message type: %s. Unable to process schedule: %s", message.getType(), scheduleId);
             } else {
                 adapter = factory.createAdapter(message);
             }
         } catch (Exception e) {
-            Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
+            Logger.error(e, "InAppMessageManager - Failed to create in-app message adapter.");
         }
 
         if (adapter == null) {
@@ -765,7 +765,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void continueOnNextActivity(@NonNull String scheduleId) {
-        Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: " + scheduleId);
+        Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: %s", scheduleId);
 
         Activity previousActivity = getCurrentActivity();
 
@@ -806,7 +806,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void messageFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo) {
-        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: " + scheduleId);
+        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: %s", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 
@@ -867,7 +867,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     boolean requestDisplayLock(@NonNull Activity activity, @NonNull String scheduleId) {
-        Logger.verbose("InAppMessagingManager - Requesting display lock for schedule: " + scheduleId);
+        Logger.verbose("InAppMessagingManager - Requesting display lock for schedule: %s", scheduleId);
 
         if (scheduleId.equals(currentScheduleId)) {
             Logger.verbose("InAppMessagingManager - Schedule already obtained lock.");
@@ -918,7 +918,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         boolean isRedisplay = adapterWrapper.displayed;
 
         if (activity != null && adapterWrapper.display(activity)) {
-            Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: " + scheduleId);
+            Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: %s", scheduleId);
             this.currentScheduleId = scheduleId;
             this.isDisplayedLocked = true;
             this.currentActivity = new WeakReference<>(activity);

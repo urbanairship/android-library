@@ -133,7 +133,7 @@ public class RichPushUser {
      * @param userToken The user token from the response
      */
     void setUser(@NonNull String userId, @NonNull String userToken) {
-        Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
+        Logger.debug("RichPushUser - Setting Rich Push user: %s", userId);
         preferences.put(USER_ID_KEY, userId);
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
     }
@@ -218,9 +218,9 @@ public class RichPushUser {
 
             return new String(decodedBytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Logger.error("RichPushUser - Unable to decode string. " + e.getMessage());
+            Logger.error(e, "RichPushUser - Unable to decode string.");
         } catch (NumberFormatException e) {
-            Logger.error("RichPushUser - String contains invalid hex numbers. " + e.getMessage());
+            Logger.error(e, "RichPushUser - String contains invalid hex numbers.");
         }
 
         return null;

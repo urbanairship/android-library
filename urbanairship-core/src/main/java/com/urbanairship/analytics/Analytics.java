@@ -16,7 +16,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
-import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -160,16 +159,16 @@ public class Analytics extends AirshipComponent {
     public void addEvent(@NonNull final Event event) {
         //noinspection ConstantConditions
         if (event == null || !event.isValid()) {
-            Logger.error("Analytics - Invalid event: " + event);
+            Logger.error("Analytics - Invalid event: %s", event);
             return;
         }
 
         if (!isEnabled()) {
-            Logger.debug("Analytics disabled - ignoring event: " + event.getType());
+            Logger.debug("Analytics disabled - ignoring event: %s", event.getType());
             return;
         }
 
-        Logger.verbose("Analytics - Adding event: " + event.getType());
+        Logger.verbose("Analytics - Adding event: %s", event.getType());
 
         executor.execute(new Runnable() {
             @Override
@@ -236,7 +235,7 @@ public class Analytics extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void setConversionSendId(@Nullable String sendId) {
-        Logger.debug("Analytics - Setting conversion send ID: " + sendId);
+        Logger.debug("Analytics - Setting conversion send ID: %s", sendId);
         this.conversionSendId = sendId;
     }
 
@@ -260,7 +259,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     public void setConversionMetadata(@Nullable String metadata) {
-        Logger.debug("Analytics - Setting conversion metadata: " + metadata);
+        Logger.debug("Analytics - Setting conversion metadata: %s", metadata);
         this.conversionMetadata = metadata;
     }
 
@@ -282,7 +281,7 @@ public class Analytics extends AirshipComponent {
     void onForeground(long timeMS) {
         // Start a new environment when the app enters the foreground
         sessionId = UUID.randomUUID().toString();
-        Logger.debug("Analytics - New session: " + sessionId);
+        Logger.debug("Analytics - New session: %s", sessionId);
 
         // If the app backgrounded, there should be no current screen
         if (currentScreen == null) {
@@ -394,7 +393,7 @@ public class Analytics extends AirshipComponent {
                     return AssociatedIdentifiers.fromJson(value);
                 }
             } catch (JsonException e) {
-                Logger.error("Unable to parse associated identifiers.", e);
+                Logger.error(e, "Unable to parse associated identifiers.");
                 preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
             }
 

@@ -188,7 +188,7 @@ public class RemoteDataStore extends DataManager {
         try {
             payload = new RemoteDataPayload(entry);
         } catch (JsonException e) {
-            Logger.error("Unable to construct RemoteDataPayload", e);
+            Logger.error(e, "Unable to construct RemoteDataPayload");
         }
 
         return payload;

@@ -32,7 +32,7 @@ public class UrbanAirshipResolver {
         try {
             return this.getResolver().query(uri, projection, whereClause, whereArgs, sortOrder);
         } catch (Exception e) {
-            Logger.error("Failed to query the UrbanAirshipProvider.", e);
+            Logger.error(e, "Failed to query the UrbanAirshipProvider.");
             return null;
         }
     }
@@ -41,7 +41,7 @@ public class UrbanAirshipResolver {
         try {
             return this.getResolver().delete(uri, whereClause, whereArgs);
         } catch (Exception e) {
-            Logger.error("Failed to perform a delete in UrbanAirshipProvider.", e);
+            Logger.error(e, "Failed to perform a delete in UrbanAirshipProvider.");
             return -1;
         }
     }
@@ -50,7 +50,7 @@ public class UrbanAirshipResolver {
         try {
             return this.getResolver().update(uri, values, whereClause, whereArgs);
         } catch (Exception e) {
-            Logger.error("Failed to perform an update in UrbanAirshipProvider.", e);
+            Logger.error(e, "Failed to perform an update in UrbanAirshipProvider.");
             return 0;
         }
     }
@@ -60,7 +60,7 @@ public class UrbanAirshipResolver {
         try {
             return this.getResolver().insert(uri, values);
         } catch (Exception e) {
-            Logger.error("Failed to insert in UrbanAirshipProvider.", e);
+            Logger.error(e, "Failed to insert in UrbanAirshipProvider.");
             return null;
         }
     }
@@ -69,7 +69,7 @@ public class UrbanAirshipResolver {
         try {
             return this.getResolver().bulkInsert(uri, values);
         } catch (Exception e) {
-            Logger.error("Failed to bulk insert in UrbanAirshipProvider.", e);
+            Logger.error(e, "Failed to bulk insert in UrbanAirshipProvider.");
             return 0;
         }
     }
@@ -88,7 +88,7 @@ public class UrbanAirshipResolver {
         try {
             this.getResolver().registerContentObserver(uri, notifyForDescendants, observer);
         } catch (IllegalArgumentException e) {
-            Logger.warn("Unable to register content observer for uri: " + uri);
+            Logger.warn("Unable to register content observer for uri: %s", uri);
         }
     }
 
@@ -105,7 +105,7 @@ public class UrbanAirshipResolver {
         try {
             this.getResolver().notifyChange(uri, observer);
         } catch (IllegalArgumentException ex) {
-            Logger.warn("Unable to notify observers of change for uri: " + uri);
+            Logger.warn("Unable to notify observers of change for uri: %s", uri);
         }
     }
 

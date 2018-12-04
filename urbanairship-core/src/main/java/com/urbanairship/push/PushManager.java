@@ -903,7 +903,7 @@ public class PushManager extends AirshipComponent {
      */
     public void addNotificationActionButtonGroup(@NonNull String id, @NonNull NotificationActionButtonGroup group) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to add any notification button groups that starts with the reserved Urban Airship prefix " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            Logger.error("Unable to add any notification button groups that starts with the reserved Urban Airship prefix %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -944,7 +944,7 @@ public class PushManager extends AirshipComponent {
      */
     public void removeNotificationActionButtonGroup(@NonNull String id) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to remove any reserved Urban Airship actions groups that begin with " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            Logger.error("Unable to remove any reserved Urban Airship actions groups that begin with %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -1056,12 +1056,11 @@ public class PushManager extends AirshipComponent {
         boolean oldPushEnabled = this.preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, false);
 
         // copy old push enabled value to user notifications enabled slot
-        Logger.debug("Setting user notifications enabled to " + Boolean.toString(oldPushEnabled));
+        Logger.debug("Setting user notifications enabled to %s", Boolean.toString(oldPushEnabled));
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, oldPushEnabled);
 
         if (!oldPushEnabled) {
-            Logger.info("Push is now enabled. You can continue to toggle the opt-in state by " +
-                    "enabling or disabling user notifications");
+            Logger.info("Push is now enabled. You can continue to toggle the opt-in state by enabling or disabling user notifications");
         }
 
         // set push enabled to true
@@ -1164,7 +1163,7 @@ public class PushManager extends AirshipComponent {
         try {
             jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
         } catch (JsonException e) {
-            Logger.debug("PushJobHandler - Unable to parse canonical Ids.", e);
+            Logger.debug(e, "PushJobHandler - Unable to parse canonical Ids.");
         }
 
         List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();

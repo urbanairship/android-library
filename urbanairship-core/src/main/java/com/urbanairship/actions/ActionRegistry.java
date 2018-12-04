@@ -190,7 +190,7 @@ public final class ActionRegistry {
 
                 String className = parser.getAttributeValue(null, CLASS_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(className)) {
-                    Logger.error(ACTION_ENTRY_TAG + " must specify class attribute.");
+                    Logger.error("%s must specify class attribute.", ACTION_ENTRY_TAG);
                     continue;
                 }
 
@@ -198,14 +198,14 @@ public final class ActionRegistry {
                 try {
                     c = Class.forName(className).asSubclass(Action.class);
                 } catch (ClassNotFoundException e) {
-                    Logger.error("Action class " + className + " not found. Skipping action registration.");
+                    Logger.error("Action class %s not found. Skipping action registration.", className);
                     continue;
                 }
 
                 // Handle primary and secondary names.
                 String actionName = parser.getAttributeValue(null, NAME_ATTRIBUTE);
                 if (actionName == null) {
-                    Logger.error(ACTION_ENTRY_TAG + " must specify name attribute.");
+                    Logger.error("%s must specify name attribute.", ACTION_ENTRY_TAG);
                     continue;
                 }
                 String altActionName = parser.getAttributeValue(null, ALT_NAME_ATTRIBUTE);
@@ -223,12 +223,12 @@ public final class ActionRegistry {
                     predicate = Class.forName(predicateClassName).asSubclass(Predicate.class).newInstance();
                     entry.setPredicate(predicate);
                 } catch (Exception e) {
-                    Logger.error("Predicate class " + predicateClassName + " not found. Skipping predicate.");
+                    Logger.error("Predicate class %s not found. Skipping predicate.", predicateClassName);
                 }
             }
         } catch (XmlPullParserException | IOException | Resources.NotFoundException | NullPointerException e) {
             // Note: NullPointerException can occur in rare circumstances further down the call stack
-            Logger.error("Failed to parse ActionEntry:" + e.getMessage());
+            Logger.error(e, "Failed to parse ActionEntry.");
         }
     }
 

@@ -512,7 +512,7 @@ public class AirshipConfigOptions {
                 ConfigParser configParser = PropertiesConfigParser.fromAssets(context, propertiesFile);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
+                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
             }
 
             return this;
@@ -532,7 +532,7 @@ public class AirshipConfigOptions {
                 ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
+                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
             }
 
             return this;
@@ -568,7 +568,7 @@ public class AirshipConfigOptions {
                 applyConfigParser(context, configParser);
                 configParser.close();
             } catch (Exception e) {
-                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
+                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
             }
 
             return this;
@@ -710,7 +710,7 @@ public class AirshipConfigOptions {
                             break;
                     }
                 } catch (Exception e) {
-                    Logger.error("Unable to set config field '" + configParser.getName(i) + "' due to invalid configuration value.", e);
+                    Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
                 }
             }
 
@@ -1152,9 +1152,9 @@ public class AirshipConfigOptions {
             }
 
             if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
-                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may decrease battery life.");
+                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
             } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
-                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may provide less detailed analytic reports.");
+                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
             }
 
             if (productionAppKey != null && productionAppKey.equals(developmentAppKey)) {

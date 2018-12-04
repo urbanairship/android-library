@@ -192,7 +192,7 @@ class InboxJobHandler {
                                           .setIfModifiedSince(dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0))
                                           .execute();
 
-        Logger.verbose("InboxJobHandler - Fetch inbox messages response: " + response);
+        Logger.verbose("InboxJobHandler - Fetch inbox messages response: %s", response);
 
         int status = response == null ? -1 : response.getStatus();
 
@@ -211,14 +211,14 @@ class InboxJobHandler {
                     serverMessages = responseJson.opt("messages").getList();
                 }
             } catch (JsonException e) {
-                Logger.error("Failed to update inbox. Unable to parse response body: " + response.getResponseBody());
+                Logger.error("Failed to update inbox. Unable to parse response body: %s", response.getResponseBody());
                 return false;
             }
 
             if (serverMessages == null) {
                 Logger.debug("Inbox message list is empty.");
             } else {
-                Logger.info("Received " + serverMessages.size() + " inbox messages.");
+                Logger.info("Received %s inbox messages.", serverMessages.size());
                 updateInbox(serverMessages);
                 dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.getLastModifiedTime());
             }
@@ -242,13 +242,13 @@ class InboxJobHandler {
 
         for (JsonValue message : serverMessages) {
             if (!message.isJsonMap()) {
-                Logger.error("InboxJobHandler - Invalid message payload: " + message);
+                Logger.error("InboxJobHandler - Invalid message payload: %s", message);
                 continue;
             }
 
             String messageId = message.optMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
             if (messageId == null) {
-                Logger.error("InboxJobHandler - Invalid message payload, missing message ID: " + message);
+                Logger.error("InboxJobHandler - Invalid message payload, missing message ID: %s", message);
                 continue;
             }
 
@@ -289,7 +289,7 @@ class InboxJobHandler {
             return;
         }
 
-        Logger.verbose("InboxJobHandler - Found " + idsToDelete.size() + " messages to delete.");
+        Logger.verbose("InboxJobHandler - Found %s messages to delete.", idsToDelete.size());
 
         /*
          * Note: If we can't delete the messages on the server, leave them untouched
@@ -297,7 +297,7 @@ class InboxJobHandler {
          */
         JsonMap payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
 
-        Logger.verbose("InboxJobHandler - Deleting inbox messages with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Deleting inbox messages with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
@@ -305,7 +305,7 @@ class InboxJobHandler {
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxJobHandler - Delete inbox messages response: " + response);
+        Logger.verbose("InboxJobHandler - Delete inbox messages response: %s", response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             resolver.deleteMessages(idsToDelete);
         }
@@ -328,7 +328,7 @@ class InboxJobHandler {
             return;
         }
 
-        Logger.verbose("InboxJobHandler - Found " + idsToUpdate.size() + " messages to mark read.");
+        Logger.verbose("InboxJobHandler - Found %s messages to mark read.", idsToUpdate.size());
 
         /*
          * Note: If we can't mark the messages read on the server, leave them untouched
@@ -336,7 +336,7 @@ class InboxJobHandler {
          */
         JsonMap payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
 
-        Logger.verbose("InboxJobHandler - Marking inbox messages read request with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Marking inbox messages read request with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
@@ -344,7 +344,7 @@ class InboxJobHandler {
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxJobHandler - Mark inbox messages read response: " + response);
+        Logger.verbose("InboxJobHandler - Mark inbox messages read response: %s", response);
 
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             resolver.markMessagesReadOrigin(idsToUpdate);
@@ -394,7 +394,7 @@ class InboxJobHandler {
         }
 
         String payload = createNewUserPayload(channelId);
-        Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", userCreationURL)
                                           .setCredentials(airship.getAirshipConfigOptions().getAppKey(), airship.getAirshipConfigOptions().getAppSecret())
                                           .setRequestBody(payload, "application/json")
@@ -403,7 +403,7 @@ class InboxJobHandler {
 
         // Check for failure
         if (response == null || response.getStatus() != HttpURLConnection.HTTP_CREATED) {
-            Logger.debug("InboxJobHandler - Rich Push user creation failed: " + response);
+            Logger.debug("InboxJobHandler - Rich Push user creation failed: %s", response);
             return false;
         }
 
@@ -417,16 +417,16 @@ class InboxJobHandler {
                 userToken = credentials.opt("password").getString();
             }
         } catch (JsonException ex) {
-            Logger.error("InboxJobHandler - Unable to parse Rich Push user response: " + response);
+            Logger.error("InboxJobHandler - Unable to parse Rich Push user response: %s", response);
             return false;
         }
 
         if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
-            Logger.debug("InboxJobHandler - Rich Push user creation failed: " + response);
+            Logger.debug("InboxJobHandler - Rich Push user creation failed: %s", response);
             return false;
         }
 
-        Logger.info("Created Rich Push user: " + userId);
+        Logger.info("Created Rich Push user: %s", userId);
         dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME);
         user.setUser(userId, userToken);
@@ -454,14 +454,14 @@ class InboxJobHandler {
         }
 
         String payload = createUpdateUserPayload(channelId);
-        Logger.verbose("InboxJobHandler - Updating user with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Updating user with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", userUpdateURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxJobHandler - Update Rich Push user response: " + response);
+        Logger.verbose("InboxJobHandler - Update Rich Push user response: %s", response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
             dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
@@ -526,7 +526,7 @@ class InboxJobHandler {
         try {
             return new URL(urlString);
         } catch (MalformedURLException e) {
-            Logger.error("Invalid userURL", e);
+            Logger.error(e, "Invalid userURL");
         }
         return null;
     }

@@ -61,7 +61,7 @@ public class NotificationIdGenerator {
     public static void setRange(@IntRange(from = 0, to = MAX_RANGE) int newRange) {
 
         if (newRange > MAX_RANGE) {
-            Logger.error("The maximum number of notifications allowed is " + MAX_RANGE + ". Limiting alert id range to conform.");
+            Logger.error("The maximum number of notifications allowed is %s. Limiting alert id range to conform.", MAX_RANGE);
             newRange = MAX_RANGE;
         }
 
@@ -112,7 +112,7 @@ public class NotificationIdGenerator {
             putInt(NEXT_ID_KEY, start);
         }
 
-        Logger.verbose("NotificationIdGenerator - Notification ID: " + id);
+        Logger.verbose("NotificationIdGenerator - Notification ID: %s", id);
 
         return id;
     }

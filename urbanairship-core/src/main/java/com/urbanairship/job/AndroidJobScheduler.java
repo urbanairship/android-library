@@ -84,7 +84,7 @@ class AndroidJobScheduler implements Scheduler {
                 throw new SchedulerException("Android JobScheduler failed to schedule job.");
             }
 
-            Logger.verbose("AndroidJobScheduler: Scheduling jobInfo: " + jobInfo + " scheduleId: " + scheduleId);
+            Logger.verbose("AndroidJobScheduler: Scheduling jobInfo: %s scheduleId: %s", jobInfo, scheduleId);
 
         } catch (RuntimeException e) {
             throw new SchedulerException("Android JobScheduler failed to schedule job: ", e);

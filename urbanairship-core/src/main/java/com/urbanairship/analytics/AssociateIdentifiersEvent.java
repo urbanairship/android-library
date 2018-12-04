@@ -35,18 +35,18 @@ class AssociateIdentifiersEvent extends Event {
         boolean isValid = true;
 
         if (ids.size() > AssociatedIdentifiers.MAX_IDS) {
-            Logger.error("Associated identifiers exceeds " + AssociatedIdentifiers.MAX_IDS);
+            Logger.error("Associated identifiers exceeds %s", AssociatedIdentifiers.MAX_IDS);
             isValid = false;
         }
 
         for (Map.Entry<String, String> entry : ids.entrySet()) {
             if (entry.getKey().length() > AssociatedIdentifiers.MAX_CHARACTER_COUNT) {
-                Logger.error("Associated identifiers key " + entry.getKey() + " exceeds " + AssociatedIdentifiers.MAX_CHARACTER_COUNT + "  characters.");
+                Logger.error("Associated identifiers key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
                 isValid = false;
             }
 
             if (entry.getValue().length() > AssociatedIdentifiers.MAX_CHARACTER_COUNT) {
-                Logger.error("Associated identifiers for key " + entry.getKey() + " exceeds " + AssociatedIdentifiers.MAX_CHARACTER_COUNT + " characters.");
+                Logger.error("Associated identifiers for key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
                 isValid = false;
             }
         }

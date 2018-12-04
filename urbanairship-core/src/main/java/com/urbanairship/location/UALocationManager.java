@@ -204,9 +204,9 @@ public class UALocationManager extends AirshipComponent {
             try {
                 options = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
             } catch (JsonException e) {
-                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error(e, "UALocationManager - Failed parsing LocationRequestOptions from JSON.");
             } catch (IllegalArgumentException e) {
-                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error(e, "UALocationManager - Invalid LocationRequestOptions from JSON.");
             }
         }
 
@@ -279,7 +279,7 @@ public class UALocationManager extends AirshipComponent {
             @Override
             public void onResult(@Nullable Location result) {
                 if (result != null) {
-                    Logger.info("Received single location update: " + result);
+                    Logger.info("Received single location update: %s", result);
                     UAirship.shared().getAnalytics().recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
                 }
             }
@@ -364,9 +364,9 @@ public class UALocationManager extends AirshipComponent {
             try {
                 lastUpdateOptions = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
             } catch (JsonException e) {
-                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error(e, "UALocationManager - Failed parsing LocationRequestOptions from JSON.");
             } catch (IllegalArgumentException e) {
-                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error(e, "UALocationManager - Invalid LocationRequestOptions from JSON.");
             }
         }
 
@@ -395,7 +395,7 @@ public class UALocationManager extends AirshipComponent {
             int coarseLocationPermissionCheck = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION);
             return fineLocationPermissionCheck == PackageManager.PERMISSION_GRANTED || coarseLocationPermissionCheck == PackageManager.PERMISSION_GRANTED;
         } catch (RuntimeException e) {
-            Logger.error("UALocationManager - Unable to retrieve location permissions: " + e.getMessage());
+            Logger.error(e, "UALocationManager - Unable to retrieve location permissions.");
             return false;
         }
     }
@@ -410,7 +410,7 @@ public class UALocationManager extends AirshipComponent {
             return;
         }
 
-        Logger.info("Received location update: " + location);
+        Logger.info("Received location update: %s", location);
 
         // Notify the listeners of the new location
         synchronized (locationListeners) {

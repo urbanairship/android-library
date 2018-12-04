@@ -94,7 +94,7 @@ class IncomingPushRunnable implements Runnable {
      * @param airship The airship instance.
      */
     private void processPush(UAirship airship) {
-        Logger.info("Processing push: " + message);
+        Logger.info("Processing push: %s", message);
 
         if (!airship.getPushManager().isPushEnabled()) {
             Logger.debug("Push disabled, ignoring message");
@@ -107,7 +107,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         if (!airship.getPushManager().isUniqueCanonicalId(message.getCanonicalPushId())) {
-            Logger.debug("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
+            Logger.debug("Received a duplicate push with canonical ID: %s", message.getCanonicalPushId());
             return;
         }
         if (message.isExpired()) {
@@ -151,7 +151,7 @@ class IncomingPushRunnable implements Runnable {
      */
     private void postProcessPush(UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
-            Logger.info("User notifications opted out. Unable to display notification for message: " + message);
+            Logger.info("User notifications opted out. Unable to display notification for message: %s", message);
             sendPushResultBroadcast(null);
             return;
         }
@@ -159,13 +159,13 @@ class IncomingPushRunnable implements Runnable {
         final NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory == null) {
-            Logger.error("NotificationFactory is null. Unable to display notification for message: " + message);
+            Logger.error("NotificationFactory is null. Unable to display notification for message: %s", message);
             sendPushResultBroadcast(null);
             return;
         }
 
         if (!isLongRunning && factory.requiresLongRunningTask(message)) {
-            Logger.debug("Push requires a long running task. Scheduled for a later time: " + message);
+            Logger.debug("Push requires a long running task. Scheduled for a later time: %s", message);
             reschedulePush(message);
             return;
         }
@@ -177,11 +177,11 @@ class IncomingPushRunnable implements Runnable {
             notificationId = factory.getNextId(message);
             result = factory.createNotificationResult(message, notificationId, isLongRunning);
         } catch (Exception e) {
-            Logger.error("Cancelling notification display to create and display notification.", e);
+            Logger.error(e, "Cancelling notification display to create and display notification.");
             result = NotificationFactory.Result.cancel();
         }
 
-        Logger.debug("IncomingPushRunnable - Received result status " + result.getStatus() + " for push message: " + message);
+        Logger.debug("IncomingPushRunnable - Received result status %s for push message: %s", result.getStatus(), message);
 
         switch (result.getStatus()) {
             case NotificationFactory.Result.OK:
@@ -194,7 +194,7 @@ class IncomingPushRunnable implements Runnable {
                 sendPushResultBroadcast(null);
                 break;
             case NotificationFactory.Result.RETRY:
-                Logger.debug("Scheduling notification to be retried for a later time: " + message);
+                Logger.debug("Scheduling notification to be retried for a later time: %s", message);
                 reschedulePush(message);
                 break;
         }
@@ -248,7 +248,7 @@ class IncomingPushRunnable implements Runnable {
         notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
-        Logger.info("Posting notification: " + notification + " id: " + notificationId + " tag: " + message.getNotificationTag());
+        Logger.info("Posting notification: %s id: %s tag: %s", notification, notificationId, message.getNotificationTag());
         notificationManager.notify(message.getNotificationTag(), notificationId, notification);
     }
 
@@ -298,7 +298,7 @@ class IncomingPushRunnable implements Runnable {
         PushProvider provider = airship.getPushManager().getPushProvider();
 
         if (provider == null || !provider.getClass().toString().equals(providerClass)) {
-            Logger.error("Received message callback from unexpected provider " + providerClass + ". Ignoring.");
+            Logger.error("Received message callback from unexpected provider %s. Ignoring.", providerClass);
             return false;
         }
 
@@ -313,7 +313,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         if (!airship.getPushManager().getPushProvider().isUrbanAirshipMessage(context, airship, message)) {
-            Logger.debug("Ignoring push: " + message);
+            Logger.debug("Ignoring push: %s", message);
             return false;
         }
 

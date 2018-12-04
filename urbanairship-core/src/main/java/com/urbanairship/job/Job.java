@@ -61,7 +61,7 @@ class Job implements Runnable {
     public void run() {
         final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
         if (airship == null) {
-            Logger.error("JobDispatcher - UAirship not ready. Rescheduling job: " + jobInfo);
+            Logger.error("JobDispatcher - UAirship not ready. Rescheduling job: %s", jobInfo);
             if (callback != null) {
                 callback.onFinish(this, JobInfo.JOB_RETRY);
             }
@@ -70,7 +70,7 @@ class Job implements Runnable {
 
         final AirshipComponent component = findAirshipComponent(airship, jobInfo.getAirshipComponentName());
         if (component == null) {
-            Logger.error("JobDispatcher - Unavailable to find airship components for jobInfo: " + jobInfo);
+            Logger.error("JobDispatcher - Unavailable to find airship components for jobInfo: %s", jobInfo);
             if (callback != null) {
                 callback.onFinish(this, JobInfo.JOB_FINISHED);
             }
@@ -78,7 +78,7 @@ class Job implements Runnable {
         }
 
         if (!component.isComponentEnabled()) {
-            Logger.debug("JobDispatcher - Component disabled. Dropping jobInfo: " + jobInfo);
+            Logger.debug("JobDispatcher - Component disabled. Dropping jobInfo: %s", jobInfo);
             if (callback != null) {
                 callback.onFinish(this, JobInfo.JOB_FINISHED);
             }
@@ -89,7 +89,7 @@ class Job implements Runnable {
             @Override
             public void run() {
                 int result = component.onPerformJob(airship, jobInfo);
-                Logger.verbose("Job - Finished: " + jobInfo + " with result: " + result);
+                Logger.verbose("Job - Finished: %s with result: %s", jobInfo, result);
 
                 if (callback != null) {
                     callback.onFinish(Job.this, result);

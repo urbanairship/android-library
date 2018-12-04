@@ -84,7 +84,7 @@ class InAppRemoteDataObserver {
                                                   processPayload(payload, scheduler);
                                                   Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
                                               } catch (Exception e) {
-                                                  Logger.error("InAppRemoteDataObserver - Failed to process payload: ", e);
+                                                  Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
                                               }
                                           }
                                       });
@@ -120,13 +120,13 @@ class InAppRemoteDataObserver {
                 createdTimeStamp = DateUtils.parseIso8601(messageJson.optMap().opt(CREATED_JSON_KEY).getString());
                 lastUpdatedTimeStamp = DateUtils.parseIso8601(messageJson.optMap().opt(UPDATED_JSON_KEY).getString());
             } catch (ParseException e) {
-                Logger.error("Failed to parse in-app message timestamps: " + messageJson, e);
+                Logger.error(e, "Failed to parse in-app message timestamps: %s", messageJson);
                 continue;
             }
 
             String messageId = InAppMessageScheduleInfo.parseMessageId(messageJson);
             if (UAStringUtil.isEmpty(messageId)) {
-                Logger.error("Missing in-app message ID: " + messageJson);
+                Logger.error("Missing in-app message ID: %s", messageJson);
                 continue;
             }
 
@@ -144,7 +144,7 @@ class InAppRemoteDataObserver {
                 if (schedules != null && !schedules.isEmpty()) {
                     // Make sure we only have a single schedule for the message ID
                     if (schedules.size() > 1) {
-                        Logger.debug("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
+                        Logger.debug("InAppRemoteDataObserver - Duplicate schedules for in-app message: %s", messageId);
                         continue;
                     }
 
@@ -157,10 +157,10 @@ class InAppRemoteDataObserver {
                     InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson, InAppMessage.SOURCE_REMOTE_DATA);
                     if (checkSchedule(scheduleInfo, createdTimeStamp)) {
                         newSchedules.add(scheduleInfo);
-                        Logger.debug("New in-app message: " + scheduleInfo);
+                        Logger.debug("New in-app message: %s", scheduleInfo);
                     }
                 } catch (JsonException e) {
-                    Logger.error("Failed to parse in-app message: " + messageJson, e);
+                    Logger.error(e, "Failed to parse in-app message: %s", messageJson);
                 }
             } else if (scheduleIdMap.containsKey(messageId)) {
                 String scheduleId = scheduleIdMap.get(messageId);
@@ -177,10 +177,10 @@ class InAppRemoteDataObserver {
 
                     InAppMessageSchedule schedule = scheduler.editSchedule(scheduleId, edits).get();
                     if (schedule != null) {
-                        Logger.debug("Updated in-app message: " + messageId + " with edits: " + edits);
+                        Logger.debug("Updated in-app message: %s with edits: %s", messageId, edits);
                     }
                 } catch (JsonException e) {
-                    Logger.error("Failed ot parse in-app message edits: " + messageId, e);
+                    Logger.error(e, "Failed to parse in-app message edits: %s", messageId);
                 }
             }
         }

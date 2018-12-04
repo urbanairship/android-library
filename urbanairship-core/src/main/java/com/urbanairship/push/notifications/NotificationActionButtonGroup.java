@@ -58,7 +58,7 @@ public class NotificationActionButtonGroup {
             try {
                 notificationActionMap = JsonValue.parseString(actionsPayload).optMap();
             } catch (JsonException e) {
-                Logger.error("Failed to parse notification actions payload: " + actionsPayload, e);
+                Logger.error(e, "Failed to parse notification actions payload: %s", actionsPayload);
             }
         }
 

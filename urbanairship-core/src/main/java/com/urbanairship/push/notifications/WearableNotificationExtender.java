@@ -68,7 +68,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         try {
             wearableJson = JsonValue.parseString(wearablePayload).optMap();
         } catch (JsonException e) {
-            Logger.error("Failed to parse wearable payload.", e);
+            Logger.error(e, "Failed to parse wearable payload.");
             return builder;
         }
 
@@ -97,7 +97,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
                     extender.setBackground(bitmap);
                 }
             } catch (IOException e) {
-                Logger.error("Unable to fetch background image: ", e);
+                Logger.error(e, "Unable to fetch background image: ");
             }
         }
 

@@ -339,7 +339,7 @@ public class UAirship {
                 sb.append(element.toString());
             }
 
-            Log.d(Logger.TAG, "Takeoff stack trace: " + sb.toString());
+            Logger.debug("Takeoff stack trace: %s", sb.toString());
         }
 
         synchronized (airshipLock) {
@@ -385,8 +385,8 @@ public class UAirship {
         Logger.TAG = UAirship.getAppName() + " - UALib";
 
         Logger.info("Airship taking off!");
-        Logger.info("Airship log level: " + Logger.logLevel);
-        Logger.info("UA Version: " + getVersion() + " / App key = " + options.getAppKey() + " Production = " + options.inProduction);
+        Logger.info("Airship log level: %s", Logger.logLevel);
+        Logger.info("UA Version: %s / App key = %s Production = %s", getVersion(), options.getAppKey(), options.inProduction);
         Logger.verbose(BuildConfig.SDK_VERSION);
 
         sharedAirship = new UAirship(options);
@@ -497,7 +497,7 @@ public class UAirship {
         try {
             return getPackageManager().getPackageInfo(getPackageName(), 0);
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.warn("UAirship - Unable to get package info.", e);
+            Logger.warn(e, "UAirship - Unable to get package info.");
             return null;
         }
     }
@@ -629,7 +629,7 @@ public class UAirship {
         PushProvider pushProvider = determinePushProvider(platform, providers);
 
         if (pushProvider != null) {
-            Logger.info("Using push provider: " + pushProvider);
+            Logger.info("Using push provider: %s", pushProvider);
         }
 
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -710,8 +710,7 @@ public class UAirship {
         String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
 
         if (previousVersion != null && !previousVersion.equals(currentVersion)) {
-            Logger.info("Urban Airship library changed from " + previousVersion +
-                    " to " + currentVersion + ".");
+            Logger.info("Urban Airship library changed from %s to %s.", previousVersion, currentVersion);
         }
 
         // store current version as library version once check is performed
@@ -981,7 +980,7 @@ public class UAirship {
         PushProvider bestProvider = providers.getBestProvider();
         if (bestProvider != null) {
             platform = PlatformUtils.parsePlatform(bestProvider.getPlatform());
-            Logger.info("Setting platform to " + PlatformUtils.asString(platform) + " for push provider: " + bestProvider);
+            Logger.info("Setting platform to %s for push provider: %s", PlatformUtils.asString(platform), bestProvider);
         } else if (PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
             Logger.info("Google Play Store available. Setting platform to Android.");
             platform = ANDROID_PLATFORM;
@@ -1008,13 +1007,13 @@ public class UAirship {
                 return (AirshipComponent) component;
             }
         } catch (InstantiationException e) {
-            Logger.error("Unable to create component " + className, e);
+            Logger.error(e, "Unable to create component %s", className);
         } catch (IllegalAccessException e) {
-            Logger.error("Unable to create component " + className, e);
+            Logger.error(e, "Unable to create component %s", className);
         } catch (NoSuchMethodException e) {
-            Logger.error("Unable to create component " + className, e);
+            Logger.error(e, "Unable to create component %s", className);
         } catch (InvocationTargetException e) {
-            Logger.error("Unable to create component " + className, e);
+            Logger.error(e, "Unable to create component %s", className);
         } catch (ClassNotFoundException e) {
             return null;
         }

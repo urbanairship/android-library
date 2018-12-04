@@ -91,15 +91,13 @@ public class ProximityRegion {
         }
 
         if (!RegionEvent.regionEventLatitudeIsValid(latitude)) {
-            Logger.error("The latitude must be greater than or equal to " + RegionEvent.MIN_LATITUDE +
-                    " and less than or equal to " + RegionEvent.MAX_LATITUDE + " degrees.");
+            Logger.error("The latitude must be greater than or equal to %s and less than or equal to %s degrees.", RegionEvent.MIN_LATITUDE, RegionEvent.MAX_LATITUDE);
             this.latitude = null;
             return;
         }
 
         if (!RegionEvent.regionEventLongitudeIsValid(longitude)) {
-            Logger.error("The longitude must be greater than or equal to " + RegionEvent.MIN_LONGITUDE +
-                    " and less than or equal to " + RegionEvent.MAX_LONGITUDE + " degrees.");
+            Logger.error("The longitude must be greater than or equal to %s and less than or equal to %s degrees.", RegionEvent.MIN_LONGITUDE, RegionEvent.MAX_LONGITUDE);
             this.longitude = null;
             return;
         }
@@ -120,8 +118,7 @@ public class ProximityRegion {
         }
 
         if (rssi > MAX_RSSI || rssi < MIN_RSSI) {
-            Logger.error("The rssi must be greater than or equal to " + MIN_RSSI +
-                    " and less than or equal to " + MAX_RSSI + " dBm.");
+            Logger.error("The rssi must be greater than or equal to %s and less than or equal to %s dBm.", MIN_RSSI, MAX_RSSI);
             this.rssi = null;
             return;
         }
@@ -201,8 +198,7 @@ public class ProximityRegion {
         }
 
         if (!RegionEvent.regionEventCharacterCountIsValid(proximityId)) {
-            Logger.error("The proximity ID must not be greater than " + RegionEvent.MAX_CHARACTER_LENGTH +
-                    " or less than " + 1 + " characters in length.");
+            Logger.error("The proximity ID must not be greater than %s or less than %s characters in length.", RegionEvent.MAX_CHARACTER_LENGTH, 1);
             return false;
         }
 
@@ -213,8 +209,7 @@ public class ProximityRegion {
         }
 
         if (minor > MAX_MAJOR_MINOR_VALUE || minor < 0) {
-            Logger.error("The minor must not be greater than " + MAX_MAJOR_MINOR_VALUE +
-                    " or less than " + 0 + ".");
+            Logger.error("The minor must not be greater than %s or less than %s.", MAX_MAJOR_MINOR_VALUE, 0);
             return false;
         }
 

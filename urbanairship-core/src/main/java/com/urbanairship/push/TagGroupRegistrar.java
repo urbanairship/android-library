@@ -147,7 +147,7 @@ public class TagGroupRegistrar {
             notifyListeners(mutation);
             mutationStore.pop();
             int status = response.getStatus();
-            Logger.debug("Update tag groups finished with status: " + status);
+            Logger.debug("Update tag groups finished with status: %s", status);
         }
 
         return true;

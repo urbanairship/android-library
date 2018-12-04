@@ -62,7 +62,7 @@ abstract class BaseApiClient {
         try {
             return new URL(configOptions.hostURL + path);
         } catch (MalformedURLException e) {
-            Logger.error("Invalid URL: " + path, e);
+            Logger.error(e, "Invalid URL: %s", path);
             return null;
         }
     }

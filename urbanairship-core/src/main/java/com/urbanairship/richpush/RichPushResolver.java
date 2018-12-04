@@ -71,7 +71,7 @@ class RichPushResolver extends UrbanAirshipResolver {
                     messages.add(message);
                 }
             } catch (JsonException e) {
-                Logger.error("RichPushResolver - Failed to parse message from the database.", e);
+                Logger.error(e, "RichPushResolver - Failed to parse message from the database.");
             }
         }
 
@@ -273,14 +273,14 @@ class RichPushResolver extends UrbanAirshipResolver {
     @Nullable
     private ContentValues parseMessageContentValues(@Nullable JsonValue messagePayload) {
         if (messagePayload == null || !messagePayload.isJsonMap()) {
-            Logger.error("RichPushResolver - Unexpected message: " + messagePayload);
+            Logger.error("RichPushResolver - Unexpected message: %s", messagePayload);
             return null;
         }
 
         JsonMap messageMap = messagePayload.optMap();
 
         if (UAStringUtil.isEmpty(messageMap.opt(RichPushMessage.MESSAGE_ID_KEY).getString())) {
-            Logger.error("RichPushResolver - Message is missing an ID: " + messagePayload);
+            Logger.error("RichPushResolver - Message is missing an ID: %s", messagePayload);
             return null;
         }
 

@@ -67,7 +67,7 @@ public class CoreReceiver extends BroadcastReceiver {
             return;
         }
 
-        Logger.verbose("CoreReceiver - Received intent: " + intent.getAction());
+        Logger.verbose("CoreReceiver - Received intent: %s", intent.getAction());
 
         switch (intent.getAction()) {
             case PushManager.ACTION_NOTIFICATION_OPENED_PROXY:
@@ -95,13 +95,13 @@ public class CoreReceiver extends BroadcastReceiver {
     private void onNotificationOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
-        Logger.info("Notification opened ID: " + notificationId);
+        Logger.info("Notification opened ID: %s", notificationId);
 
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
@@ -130,7 +130,7 @@ public class CoreReceiver extends BroadcastReceiver {
     private void onNotificationButtonOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
@@ -138,7 +138,7 @@ public class CoreReceiver extends BroadcastReceiver {
 
         String notificationActionId = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID);
         if (notificationActionId == null) {
-            Logger.error("CoreReceiver - Intent is missing notification button ID: " + intent.getAction());
+            Logger.error("CoreReceiver - Intent is missing notification button ID: %s", intent.getAction());
             return;
         }
 
@@ -146,7 +146,7 @@ public class CoreReceiver extends BroadcastReceiver {
         boolean isForegroundAction = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
         String description = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION);
 
-        Logger.info("Notification opened ID: " + notificationId + " action button Id: " + notificationActionId);
+        Logger.info("Notification opened ID: %s action button Id: %s", notificationId, notificationActionId);
 
         // Set the conversion push id and metadata
         if (isForegroundAction) {
@@ -190,13 +190,13 @@ public class CoreReceiver extends BroadcastReceiver {
     private void onNotificationDismissedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
-        Logger.info("Notification dismissed ID: " + notificationId);
+        Logger.info("Notification dismissed ID: %s", notificationId);
 
 
         PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
@@ -228,7 +228,7 @@ public class CoreReceiver extends BroadcastReceiver {
         PushMessage message = PushMessage.fromIntent(intent);
 
         if (message == null) {
-            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
@@ -355,7 +355,7 @@ public class CoreReceiver extends BroadcastReceiver {
                         Logger.error("Application took too long to run push actions. App may get closed.");
                     }
                 } catch (InterruptedException e) {
-                    Logger.error("Failed to wait for actions", e);
+                    Logger.error(e, "Failed to wait for actions");
                 }
 
                 callback.run();
@@ -381,7 +381,7 @@ public class CoreReceiver extends BroadcastReceiver {
                 }
             }
         } catch (JsonException e) {
-            Logger.error("Failed to parse actions for push.", e);
+            Logger.error(e, "Failed to parse actions for push.");
         }
 
 

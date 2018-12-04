@@ -312,69 +312,69 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         boolean isValid = true;
         if (UAStringUtil.isEmpty(eventName) || eventName.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Event name must not be null, empty, or larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            Logger.error("Event name must not be null, empty, or larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (eventValue != null) {
             if (eventValue.compareTo(MAX_VALUE) > 0) {
-                Logger.error("Event value is bigger than " + MAX_VALUE);
+                Logger.error("Event value is bigger than %s", MAX_VALUE);
                 isValid = false;
             } else if (eventValue.compareTo(MIN_VALUE) < 0) {
-                Logger.error("Event value is smaller than " + MIN_VALUE);
+                Logger.error("Event value is smaller than %s", MIN_VALUE);
                 isValid = false;
             }
         }
 
         if (transactionId != null && transactionId.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Transaction ID is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            Logger.error("Transaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (interactionId != null && interactionId.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Interaction ID is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            Logger.error("Interaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (interactionType != null && interactionType.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Interaction type is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            Logger.error("Interaction type is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (templateType != null && templateType.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Template type is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            Logger.error("Template type is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (properties.size() > MAX_PROPERTIES) {
-            Logger.error("Number of custom properties exceeds " + MAX_PROPERTIES);
+            Logger.error("Number of custom properties exceeds %s", MAX_PROPERTIES);
             isValid = false;
         }
 
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             if (entry.getKey().length() > MAX_CHARACTER_LENGTH) {
-                Logger.error("The custom property " + entry.getKey() + " is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+                Logger.error("The custom property %s is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
                 isValid = false;
             }
 
             if (entry.getValue() instanceof Collection) {
                 Collection collection = (Collection) entry.getValue();
                 if (collection.size() > MAX_PROPERTY_COLLECTION_SIZE) {
-                    Logger.error("The custom property " + entry.getKey() + " contains a Collection<String> that is larger than  " + MAX_PROPERTY_COLLECTION_SIZE);
+                    Logger.error("The custom property %s contains a Collection<String> that is larger than %s", entry.getKey(), MAX_PROPERTY_COLLECTION_SIZE);
                     isValid = false;
                 }
 
                 for (Object object : collection) {
                     String string = String.valueOf(object);
                     if (string != null && string.length() > MAX_CHARACTER_LENGTH) {
-                        Logger.error("The custom property " + entry.getKey() + " contains a value that is larger than  " + MAX_CHARACTER_LENGTH + " characters.");
+                        Logger.error("The custom property %s contains a value that is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
                         isValid = false;
                     }
                 }
             } else if (entry.getValue() instanceof String) {
                 String stringValue = (String) entry.getValue();
                 if (stringValue.length() > MAX_CHARACTER_LENGTH) {
-                    Logger.error("The custom property " + entry.getKey() + " contains a value that is larger than  " + MAX_CHARACTER_LENGTH + " characters.");
+                    Logger.error("The custom property %s contains a value that is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
                     isValid = false;
                 }
             }
