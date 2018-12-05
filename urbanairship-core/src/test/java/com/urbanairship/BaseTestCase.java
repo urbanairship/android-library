@@ -16,7 +16,8 @@ import org.robolectric.annotation.Config;
 import org.robolectric.internal.ManifestFactory;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(shadows = { ShadowNotificationManagerExtension.class },
+@Config(sdk = 27,
+        shadows = { ShadowNotificationManagerExtension.class },
         application = TestApplication.class
 )
 public abstract class BaseTestCase {

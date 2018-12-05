@@ -3,6 +3,24 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.6.0 - December 5, 2018
+================================
+Minor release that targets Android P and updates dependencies.
+
+Changes
+-------
+- Updated compile and target SDK version 28 (Android P)
+- Updated urbanairship-core dependencies:
+  - Support library version to 28.0.0
+  - Optional play-services-location to 16.0.0
+  - Optional play-services-ads-identifier to 16.0.0
+- Updated urbanairship-fcm dependencies:
+  - firebase-messaging to 17.3.4
+  - play-services-base to 16.0.1
+- Updated urbanairship-gcm dependencies:
+  - play-services-gcm to 16.0.0
+
+
 Version 9.5.6 - November 20, 2018
 =================================
 
