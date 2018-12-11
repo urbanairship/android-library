@@ -194,6 +194,7 @@ public class ActionRunRequest {
             semaphore.acquire();
         } catch (InterruptedException ex) {
             Logger.error("Failed to run action with arguments %s", arguments);
+            Thread.currentThread().interrupt();
             return ActionResult.newErrorResult(ex);
         }
 

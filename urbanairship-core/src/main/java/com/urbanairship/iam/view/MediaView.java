@@ -25,8 +25,8 @@ import android.widget.ProgressBar;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.MediaInfo;
+import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.messagecenter.ImageLoader;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
@@ -146,7 +146,8 @@ public class MediaView extends FrameLayout {
                 addView(imageView);
 
                 String url = cachedMediaUrl == null ? mediaInfo.getUrl() : cachedMediaUrl;
-                ImageLoader.shared(getContext()).load(url, 0, imageView);
+                UAirship.shared().getImageLoader()
+                        .load(getContext(), imageView, ImageRequestOptions.newBuilder(url).build());
                 break;
 
             case MediaInfo.TYPE_VIDEO:

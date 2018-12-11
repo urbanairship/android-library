@@ -28,6 +28,8 @@ import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
+import com.urbanairship.images.DefaultImageLoader;
+import com.urbanairship.images.ImageLoader;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -132,6 +134,7 @@ public class UAirship {
     MessageCenter messageCenter;
     NamedUser namedUser;
     Automation automation;
+    ImageLoader imageLoader;
 
     @Platform
     int platform;
@@ -605,6 +608,29 @@ public class UAirship {
     }
 
     /**
+     * Gets the image loader.
+     *
+     * @return The image loader.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public ImageLoader getImageLoader() {
+        if (imageLoader == null) {
+            imageLoader = new DefaultImageLoader(getApplicationContext());
+        }
+        return imageLoader;
+    }
+
+    /**
+     * Sets the image loader.
+     *
+     * @param imageLoader The image loader.
+     */
+    public void setImageLoader(@NonNull ImageLoader imageLoader) {
+        this.imageLoader = imageLoader;
+    }
+
+    /**
      * Returns the current Urban Airship version.
      *
      * @return The Urban Airship version number.
@@ -807,7 +833,9 @@ public class UAirship {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public RemoteData getRemoteData() { return remoteData; }
+    public RemoteData getRemoteData() {
+        return remoteData;
+    }
 
 
     /**
@@ -855,7 +883,9 @@ public class UAirship {
      * @return The default message center.
      */
     @NonNull
-    public MessageCenter getMessageCenter() { return messageCenter; }
+    public MessageCenter getMessageCenter() {
+        return messageCenter;
+    }
 
     /**
      * Returns the {@link com.urbanairship.automation.Automation} instance.

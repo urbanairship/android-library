@@ -1270,6 +1270,7 @@ public class AutomationEngine<T extends Schedule> {
             latch.await();
         } catch (InterruptedException ex) {
             Logger.error(ex, "Failed to execute schedule. ");
+            Thread.currentThread().interrupt();
         }
 
         if (runnable.exception != null) {

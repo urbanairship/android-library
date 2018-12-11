@@ -20,6 +20,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.urbanairship.R;
+import com.urbanairship.UAirship;
+import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
@@ -161,8 +163,13 @@ public class MessageItemView extends FrameLayout {
             checkBox.setChecked(isActivated());
         }
 
+
         if (iconView != null) {
-            ImageLoader.shared(getContext()).load(message.getListIconUrl(), placeholder, iconView);
+            ImageRequestOptions options = ImageRequestOptions.newBuilder(message.getListIconUrl())
+                    .setPlaceHolder(placeholder)
+                    .build();
+
+            UAirship.shared().getImageLoader().load(getContext(), iconView, options);
         }
     }
 

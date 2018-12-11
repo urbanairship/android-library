@@ -15,7 +15,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.BitmapUtils;
+import com.urbanairship.util.ImageUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -92,7 +92,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         String backgroundUrl = wearableJson.opt(BACKGROUND_IMAGE_KEY).getString();
         if (!UAStringUtil.isEmpty(backgroundUrl)) {
             try {
-                Bitmap bitmap = BitmapUtils.fetchScaledBitmap(context, new URL(backgroundUrl), BACKGROUND_IMAGE_WIDTH_PX, BACKGROUND_IMAGE_HEIGHT_PX);
+                Bitmap bitmap = ImageUtils.fetchScaledBitmap(context, new URL(backgroundUrl), BACKGROUND_IMAGE_WIDTH_PX, BACKGROUND_IMAGE_HEIGHT_PX);
                 if (bitmap != null) {
                     extender.setBackground(bitmap);
                 }

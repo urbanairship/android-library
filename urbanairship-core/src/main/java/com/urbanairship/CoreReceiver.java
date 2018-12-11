@@ -356,6 +356,7 @@ public class CoreReceiver extends BroadcastReceiver {
                     }
                 } catch (InterruptedException e) {
                     Logger.error(e, "Failed to wait for actions");
+                    Thread.currentThread().interrupt();
                 }
 
                 callback.run();

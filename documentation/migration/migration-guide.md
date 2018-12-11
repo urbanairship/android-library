@@ -45,6 +45,40 @@ methods had to be changed to move the lambda to the last parameter.
     public static Cancelable shared(@Nullable Looper looper, @NonNull final OnReadyCallback)
 ```
 
+#### ActionRegistry#Entry
+
+```java
+    // 9.x
+    public void addSituationOverride(@NonNull Action action, @Action.Situation int situation)
+
+    // 10.x
+    public void setSituationOverride(@Action.Situation int situation, @Nullable Action action)
+```
+
+#### ActionRunner#ActionRunRequest
+
+```java
+    // 9.x
+    public void run(final ActionCompletionCallback callback, Looper looper)
+
+    // 10.x
+    public void run(@Nullable Looper looper, @Nullable final ActionCompletionCallback callback)
+```
+
+#### RichPushInbox
+
+```java
+    // 9.x
+    public Cancelable fetchMessages(final FetchMessagesCallback callback, Looper looper)
+
+    // 10.x
+    public Cancelable fetchMessages(@Nullable Looper looper, @NonNull FetchMessagesCallback callback)
+```
+
+### From Json method normalization
+
+All from/parse JSON methods have been updated to have a consistent signature.
+
 #### ActionScheduleInfo
 
 ```java
@@ -199,37 +233,11 @@ methods had to be changed to move the lambda to the last parameter.
     public static DisableInfo fromJson(@NonNull JsonValue value) throws JsonException
 ```
 
-#### ActionRegistry#Entry
 
-```java
-    // 9.x
-    public void addSituationOverride(@NonNull Action action, @Action.Situation int situation)
+### Removed Methods
 
-    // 10.x
-    public void setSituationOverride(@Action.Situation int situation, @Nullable Action action)
-```
 
-#### ActionRunner#ActionRunRequest
-
-```java
-    // 9.x
-    public void run(final ActionCompletionCallback callback, Looper looper)
-
-    // 10.x
-    public void run(@Nullable Looper looper, @Nullable final ActionCompletionCallback callback)
-```
-
-#### RichPushInbox
-
-```java
-    // 9.x
-    public Cancelable fetchMessages(final FetchMessagesCallback callback, Looper looper)
-
-    // 10.x
-    public Cancelable fetchMessages(@Nullable Looper looper, @NonNull FetchMessagesCallback callback)
-```
-
-### Removed ActionRegistry method
+#### ActionRegistry
 
 Removed:
 ```java
@@ -243,6 +251,10 @@ Instead, you can set the predicate after registering the action:
             .registerAction(SomeAction.class, "some-action-name")
             .setPredicate(predicate);
 ```
+
+### Renamed Classes
+
+BitmapUtils is now ImageUtils
 
 ### FCM provider changes
 

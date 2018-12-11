@@ -149,6 +149,7 @@ public abstract class PushProviderBridge {
                 countDownLatch.await();
             } catch (InterruptedException e) {
                 Logger.error(e, "Failed to wait for push.");
+                Thread.currentThread().interrupt();
             }
         }
     }

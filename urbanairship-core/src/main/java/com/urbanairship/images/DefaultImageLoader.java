@@ -1,0 +1,71 @@
+/* Copyright 2018 Urban Airship and Contributors */
+
+package com.urbanairship.images;
+
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
+import android.widget.ImageView;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+/**
+ * Asynchronous bitmap loader for image views.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class DefaultImageLoader implements ImageLoader {
+
+    private final Executor executor;
+    private final Map<ImageView, ImageRequest> requestMap;
+    private final ImageCache imageCache;
+
+    /**
+     * Creates an ImageLoader.
+     *
+     * @param context The application context.
+     */
+    public DefaultImageLoader(@NonNull Context context) {
+        this.requestMap = new WeakHashMap<>();
+        this.executor = Executors.newFixedThreadPool(2);
+        this.imageCache = new ImageCache(context);
+    }
+
+    /**
+     * Cancels a request.
+     *
+     * @param imageView The imageView.
+     */
+    private void cancelRequest(@Nullable ImageView imageView) {
+        if (imageView == null) {
+            return;
+        }
+
+        ImageRequest request = requestMap.remove(imageView);
+        if (request != null) {
+            request.cancel();
+        }
+    }
+
+    @Override
+    public void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull ImageRequestOptions imageRequestOptions) {
+        cancelRequest(imageView);
+
+        ImageRequest request = new ImageRequest(context, imageCache, imageView, imageRequestOptions) {
+            @Override
+            void onFinish(ImageView imageView) {
+                if (imageView != null) {
+                    requestMap.remove(imageView);
+                }
+            }
+        };
+
+        requestMap.put(imageView, request);
+        request.execute(executor);
+    }
+}

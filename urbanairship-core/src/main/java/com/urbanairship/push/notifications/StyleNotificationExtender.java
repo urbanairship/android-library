@@ -17,7 +17,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.BitmapUtils;
+import com.urbanairship.util.ImageUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.MalformedURLException;
@@ -262,7 +262,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             @Nullable
             @Override
             public Bitmap call() throws Exception {
-                return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
+                return ImageUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
             }
         });
 
