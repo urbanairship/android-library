@@ -335,7 +335,7 @@ public class PushManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
+        if (Logger.getLogLevel() < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
         }
 

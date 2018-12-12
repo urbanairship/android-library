@@ -57,6 +57,13 @@ public class Logger {
     }
 
     /**
+     * Gets the log level.
+     */
+    public static int getLogLevel() {
+        return logLevel;
+    }
+
+    /**
      * Send a warning log message.
      *
      * @param message The message you would like logged.
