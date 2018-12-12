@@ -384,11 +384,12 @@ public class UAirship {
         }
 
         // set sane log level based on production flag
-        Logger.logLevel = options.getLoggerLevel();
-        Logger.TAG = UAirship.getAppName() + " - UALib";
+        int logLevel = options.getLoggerLevel();
+        Logger.setLogLevel(logLevel);
+        Logger.setTag(UAirship.getAppName() + " - " + Logger.DEFAULT_TAG);
 
         Logger.info("Airship taking off!");
-        Logger.info("Airship log level: %s", Logger.logLevel);
+        Logger.info("Airship log level: %s", logLevel);
         Logger.info("UA Version: %s / App key = %s Production = %s", getVersion(), options.getAppKey(), options.inProduction);
         Logger.verbose(BuildConfig.SDK_VERSION);
 
