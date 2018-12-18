@@ -73,7 +73,7 @@ public interface InAppMessageAdapter {
     boolean isReady(@NonNull Activity activity);
 
     /**
-     * Called to display an in-app message. The display handler's {@link DisplayHandler#requestDisplayLock(Activity)} must
+     * Called to display an in-app message. The display handler's {@link DisplayHandler#isDisplayAllowed(Activity)} must
      * be called during `onStart()` in either the activity or fragment, and if the request is denied must
      * immediately dismiss the component without any other calls to the display handler. Once the activity
      * or fragment is finished being displayed call {@link DisplayHandler#finished(ResolutionInfo)}.
@@ -81,11 +81,9 @@ public interface InAppMessageAdapter {
      * @param activity The current resumed activity.
      * @param isRedisplay {@code true} If the in-app message is being redisplayed, otherwise {@code false}.
      * @param displayHandler The display handler.
-     * @return {@code true} if the in-app message was able to be displayed, otherwise {@code false} to
-     * try again later.
      */
     @MainThread
-    boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+    void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
 
     /**
      * Called after the in-app message is finished displaying.

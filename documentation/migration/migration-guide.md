@@ -4,6 +4,38 @@
 
 ## UrbanAirship Library 9.x to 10.0.0
 
+### In App Automation/Message changes
+
+Several updates have been made to the In App automation frameworks. Most apps will
+not be affected by these changes, only those that have implemented custom display
+logic.
+
+#### DisplayHandler
+
+The `requestDisplayLock` method has been renamed to `isDisplayAllowed`:
+
+```java
+    // 9.x
+   public boolean requestDisplayLock(@NonNull Activity activity)
+
+    // 10.x
+   public boolean isDisplayAllowed(@NonNull Activity activity)
+```
+
+#### InAppMessageAdapter
+
+The adapter's `onDisplay` no longer returns a boolean. Any checks that might prevent
+the in-app message from displaying should be moved into `isReady`.
+
+```java
+    // 9.x
+   public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+
+    // 10.x
+   public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+```
+
+
 ### Packages Removed
 
 Both `urbanairship-gcm` and `urbanairship-sdk` have been removed. Please

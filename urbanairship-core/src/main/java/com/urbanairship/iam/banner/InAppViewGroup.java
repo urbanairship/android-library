@@ -85,7 +85,7 @@ public abstract class InAppViewGroup extends FrameLayout {
     protected void onResume(@NonNull Activity activity) {
         isResumed = true;
 
-        if (!displayHandler.requestDisplayLock(activity)) {
+        if (!displayHandler.isDisplayAllowed(activity)) {
             dismiss(true);
         }
     }
@@ -155,7 +155,7 @@ public abstract class InAppViewGroup extends FrameLayout {
                 @Override
                 public void onActivityResumed(@NonNull Activity activity) {
                     if (getContext() == activity && !isDismissed) {
-                        if (!displayHandler.requestDisplayLock(activity)) {
+                        if (!displayHandler.isDisplayAllowed(activity)) {
                             dismiss(false);
                         } else {
                             onResume(activity);

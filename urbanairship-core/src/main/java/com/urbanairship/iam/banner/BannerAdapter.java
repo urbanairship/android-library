@@ -57,10 +57,9 @@ public class BannerAdapter extends MediaDisplayAdapter {
         return new BannerAdapter(message, displayContent);
     }
 
-
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
+    public boolean isReady(@NonNull Activity activity) {
+        if (!super.isReady(activity)) {
             return false;
         }
 
@@ -70,8 +69,13 @@ public class BannerAdapter extends MediaDisplayAdapter {
             return false;
         }
 
-        Logger.info("BannerAdapter - Displaying in-app message.");
+        return true;
+    }
 
+    @Override
+    public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
+        int id = getContainerId(activity);
+        Logger.info("BannerAdapter - Displaying in-app message.");
 
         BannerView view = new BannerView(activity, displayHandler, displayContent, getCache());
         if (lastActivity == null || lastActivity.get() != activity) {
@@ -85,7 +89,6 @@ public class BannerAdapter extends MediaDisplayAdapter {
         ViewGroup viewGroup = activity.getWindow().getDecorView().findViewById(id);
         viewGroup.addView(view);
         lastActivity = new WeakReference<>(activity);
-        return true;
     }
 
     /**

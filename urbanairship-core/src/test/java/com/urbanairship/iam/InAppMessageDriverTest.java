@@ -50,7 +50,7 @@ public class InAppMessageDriverTest extends BaseTestCase {
     @Test
     public void testIsMessageReady() {
         assertFalse(driver.isScheduleReadyToExecute(schedule));
-        when(listener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage())).thenReturn(true);
+        when(listener.isScheduleReady(schedule)).thenReturn(true);
         assertTrue(driver.isScheduleReadyToExecute(schedule));
     }
 
@@ -64,13 +64,13 @@ public class InAppMessageDriverTest extends BaseTestCase {
         verifyZeroInteractions(executionCallback);
 
         // Verify the callback is called to display the in-app message
-        verify(listener).onDisplay(schedule.getId());
+        verify(listener).onExecuteSchedule(schedule);
     }
 
     @Test
     public void testDisplayFinished() {
         testExecuteTriggeredSchedule();
-        driver.displayFinished(schedule.getId());
+        driver.scheduleExecuted(schedule.getId());
         verify(executionCallback).onFinish();
     }
 

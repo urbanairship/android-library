@@ -44,21 +44,17 @@ public class TestActivityMonitor extends ActivityMonitor {
 
     public void startActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityStarted(activity);
-        Robolectric.flushForegroundThreadScheduler();
     }
 
     public void resumeActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityResumed(activity);
-        Robolectric.flushForegroundThreadScheduler();
     }
 
     public void pauseActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityPaused(activity);
-        Robolectric.flushForegroundThreadScheduler();
     }
 
     public void stopActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityStopped(activity);
-        Robolectric.flushForegroundThreadScheduler();
     }
 }

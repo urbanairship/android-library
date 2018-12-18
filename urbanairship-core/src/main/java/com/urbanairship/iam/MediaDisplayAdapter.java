@@ -65,15 +65,6 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        if (mediaInfo == null || MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
-            return true;
-        } else {
-            return Network.isConnected();
-        }
-    }
-
-    @Override
     @CallSuper
     public void onFinish() {
         if (cache != null) {
@@ -103,7 +94,17 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     public boolean isReady(@NonNull Activity activity) {
-        return true;
+        if (mediaInfo == null) {
+            return true;
+        }
+
+        // Image files are normally cached
+        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) && cache.file(IMAGE_FILE_NAME).exists()) {
+            return true;
+        }
+
+        // Video and Youtube require a network connection
+        return Network.isConnected();
     }
 
     /**

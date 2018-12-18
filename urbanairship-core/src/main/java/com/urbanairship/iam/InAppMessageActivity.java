@@ -67,7 +67,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
             return;
         }
 
-        if (!displayHandler.requestDisplayLock(this)) {
+        if (!displayHandler.isDisplayAllowed(this)) {
             finish();
             return;
         }
@@ -97,7 +97,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     protected void onStart() {
         super.onStart();
 
-        if (!displayHandler.requestDisplayLock(this)) {
+        if (!displayHandler.isDisplayAllowed(this)) {
             finish();
         }
     }

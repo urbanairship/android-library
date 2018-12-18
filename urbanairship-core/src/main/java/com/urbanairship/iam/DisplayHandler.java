@@ -16,7 +16,7 @@ import com.urbanairship.UAirship;
 /**
  * Display handler for in-app message displays.
  * <p>
- * In-app message should call {@link #requestDisplayLock(Activity)} before displaying the in-app
+ * In-app message should call {@link #isDisplayAllowed(Activity)} before displaying the in-app
  * message. Typically, this should be done in an Activity's or Fragment's onStart method, or if
  * using a view, request the display lock when the attached activity visibility changes to
  * VISIBLE in onWindowVisibilityChanged.
@@ -117,16 +117,15 @@ public class DisplayHandler implements Parcelable {
     }
 
     /**
-     * Called to obtain the display lock. If the in-app message is being displayed in a fragment or
+     * Called to verify display is still allowed. If the in-app message is being displayed in a fragment or
      * directly in an activity, it should be called in the onStart method. If the in-app message is
      * attached directly to a view it should be called in the view's onWindowVisibilityChanged when
      * the window becomes visible.
      *
      * @param activity The activity.
-     * @return {@code true} if the display lock was granted or the in-app message already contained
-     * the lock. Otherwise {@code false}.
+     * @return {@code true} if the message should continue displaying, otherwise {@code false}.
      */
-    public boolean requestDisplayLock(@NonNull Activity activity) {
+    public boolean isDisplayAllowed(@NonNull Activity activity) {
         Autopilot.automaticTakeOff(activity.getApplication());
 
         InAppMessageManager manager = getInAppMessagingManager();
@@ -135,7 +134,7 @@ public class DisplayHandler implements Parcelable {
             return false;
         }
 
-        return manager.requestDisplayLock(activity, scheduleId);
+        return manager.isDisplayAllowed(activity, scheduleId);
     }
 
     @Nullable

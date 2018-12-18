@@ -45,11 +45,7 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
 
 
     @Override
-    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
-            return false;
-        }
-
+    public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
         Intent intent = new Intent(activity, FullScreenActivity.class)
                 .putExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(FullScreenActivity.IN_APP_MESSAGE_KEY, getMessage());
@@ -59,6 +55,5 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
         }
 
         activity.startActivity(intent);
-        return true;
     }
 }
