@@ -2,12 +2,10 @@
 
 package com.urbanairship;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class ApplicationMetricsTest extends BaseTestCase {
@@ -19,15 +17,8 @@ public class ApplicationMetricsTest extends BaseTestCase {
     public void setup() {
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(TestApplication.getApplication(), mock(UrbanAirshipResolver.class));
         activityMonitor = new TestActivityMonitor();
-        activityMonitor.register();
-
         metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore, activityMonitor);
         metrics.init();
-    }
-
-    @After
-    public void takeDown() {
-        activityMonitor.unregister();
     }
 
     /**
@@ -46,9 +37,9 @@ public class ApplicationMetricsTest extends BaseTestCase {
     @Test
     public void testLastOpenTimeTracking() {
         // Foreground the app to update last open time
-        activityMonitor.startActivity();
+        activityMonitor.foreground(1000);
 
         // Make sure the time is greater than 0
-        assertTrue("Last open time should of updated", metrics.getLastOpenTimeMillis() > 0);
+        assertEquals("Last open time should've updated", 1000, metrics.getLastOpenTimeMillis());
     }
 }

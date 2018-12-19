@@ -122,7 +122,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -154,7 +154,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -186,7 +186,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -212,7 +212,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Should fail to create the event and result in error
         ActionResult result = action.run(args);
-        assertEquals("Action should of fail", ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
+        assertEquals("Action should've fail", ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
     }
 
 
@@ -238,7 +238,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -280,7 +280,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);

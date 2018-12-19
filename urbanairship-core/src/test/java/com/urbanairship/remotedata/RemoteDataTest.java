@@ -52,7 +52,6 @@ public class RemoteDataTest extends BaseTestCase {
     @Before
     public void setup() {
         activityMonitor = new TestActivityMonitor();
-        activityMonitor.register();
 
         mockDispatcher = mock(JobDispatcher.class);
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
@@ -72,7 +71,6 @@ public class RemoteDataTest extends BaseTestCase {
     @After
     public void teardown() {
         remoteData.tearDown();
-        activityMonitor.unregister();
     }
 
     /**
@@ -82,7 +80,7 @@ public class RemoteDataTest extends BaseTestCase {
     public void testForegroundTransition() {
         remoteData.init();
         clearInvocations(mockDispatcher);
-        activityMonitor.startActivity();
+        activityMonitor.foreground();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -105,10 +103,7 @@ public class RemoteDataTest extends BaseTestCase {
         clearInvocations(mockDispatcher);
         remoteData.setForegroundRefreshInterval(100000);
 
-
-        activityMonitor.startActivity();
-        activityMonitor.stopActivity();
-
+        activityMonitor.foreground();
 
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -116,9 +111,6 @@ public class RemoteDataTest extends BaseTestCase {
                 return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
             }
         }));
-
-
-
     }
 
     /**

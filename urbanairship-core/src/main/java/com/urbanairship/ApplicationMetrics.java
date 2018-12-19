@@ -5,6 +5,12 @@ package com.urbanairship;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.SimpleApplicationListener;
+
 /**
  * ApplicationMetrics stores metric information about the application.
  */
@@ -14,14 +20,14 @@ public class ApplicationMetrics extends AirshipComponent {
     private static final String LAST_APP_VERSION_KEY = "com.urbanairship.application.metrics.APP_VERSION";
 
     private final PreferenceDataStore preferenceDataStore;
-    private final ActivityMonitor.Listener listener;
+    private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
     private boolean appVersionUpdated;
 
     ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
-        this.listener = new ActivityMonitor.SimpleListener() {
+        this.listener = new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
                 preferenceDataStore.put(LAST_OPEN_KEY, time);
@@ -35,12 +41,12 @@ public class ApplicationMetrics extends AirshipComponent {
     protected void init() {
         super.init();
         checkAppVersion();
-        activityMonitor.addListener(listener);
+        activityMonitor.addApplicationListener(listener);
     }
 
     @Override
     protected void tearDown() {
-        activityMonitor.removeListener(listener);
+        activityMonitor.removeApplicationListener(listener);
     }
 
     /**

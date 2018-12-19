@@ -11,6 +11,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.data.EventApiClient;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
@@ -68,14 +69,14 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
 
         UAirship.sharedAirship.analytics = Analytics.newBuilder(this)
-                .setActivityMonitor(ActivityMonitor.shared(this))
+                .setActivityMonitor(new TestActivityMonitor())
                 .setConfigOptions(airshipConfigOptions)
                 .setJobDispatcher(JobDispatcher.shared(this))
                 .setPlatform(UAirship.ANDROID_PLATFORM)
                 .setPreferenceDataStore(preferenceDataStore)
                 .setEventManager(EventManager.newBuilder()
                         .setEventResolver(new EventResolver(this))
-                        .setActivityMonitor(ActivityMonitor.shared(this))
+                        .setActivityMonitor(new TestActivityMonitor())
                         .setJobDispatcher(JobDispatcher.shared(this))
                         .setPreferenceDataStore(preferenceDataStore)
                         .setApiClient(new EventApiClient(this))
@@ -86,22 +87,21 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.ANDROID_PLATFORM, airshipConfigOptions, preferenceDataStore);
 
-        UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
+        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, new TestActivityMonitor());
+        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), tagGroupRegistrar);
-        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.messageCenter = new MessageCenter(this, preferenceDataStore);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar);
-        UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,  new TestActivityMonitor());
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
-        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore,
-                airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()),
-                UAirship.sharedAirship.remoteData, UAirship.sharedAirship.pushManager, tagGroupRegistrar);
+        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor());
+        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,
+                UAirship.sharedAirship.remoteData,  new TestActivityMonitor(), UAirship.sharedAirship.pushManager, tagGroupRegistrar);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();

@@ -12,12 +12,16 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
@@ -75,7 +79,7 @@ public class RemoteData extends AirshipComponent {
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
 
-    private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
+    private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
         public void onForeground(long time) {
             RemoteData.this.onForeground();
@@ -134,7 +138,7 @@ public class RemoteData extends AirshipComponent {
         super.init();
         backgroundThread.start();
         backgroundHandler = new Handler(this.backgroundThread.getLooper());
-        activityMonitor.addListener(activityListener);
+        activityMonitor.addApplicationListener(applicationListener);
 
         int appVersion = preferenceDataStore.getInt(LAST_REFRESH_APP_VERSION_KEY, 0);
         PackageInfo packageInfo = UAirship.getPackageInfo();
@@ -145,7 +149,7 @@ public class RemoteData extends AirshipComponent {
 
     @Override
     protected void tearDown() {
-        activityMonitor.removeListener(activityListener);
+        activityMonitor.removeApplicationListener(applicationListener);
         backgroundThread.quit();
     }
 

@@ -17,15 +17,17 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
-import android.util.Log;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.data.EventApiClient;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.images.DefaultImageLoader;
@@ -665,14 +667,14 @@ public class UAirship {
 
         // Airship components
         this.analytics = Analytics.newBuilder(application)
-                .setActivityMonitor(ActivityMonitor.shared(application))
+                .setActivityMonitor(GlobalActivityMonitor.shared(application))
                 .setConfigOptions(airshipConfigOptions)
                 .setJobDispatcher(JobDispatcher.shared(application))
                 .setPlatform(getPlatformType())
                 .setPreferenceDataStore(preferenceDataStore)
                 .setEventManager(EventManager.newBuilder()
                         .setEventResolver(new EventResolver(application))
-                        .setActivityMonitor(ActivityMonitor.shared(application))
+                        .setActivityMonitor(GlobalActivityMonitor.shared(application))
                         .setJobDispatcher(JobDispatcher.shared(application))
                         .setPreferenceDataStore(preferenceDataStore)
                         .setApiClient(new EventApiClient(application))
@@ -682,13 +684,13 @@ public class UAirship {
                 .build();
         components.add(this.analytics);
 
-        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
-        this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.inbox = new RichPushInbox(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.inbox);
 
-        this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.locationManager);
 
 
@@ -701,23 +703,23 @@ public class UAirship {
         this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar);
         components.add(this.namedUser);
 
-        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
         this.messageCenter = new MessageCenter(application, preferenceDataStore);
         components.add(this.messageCenter);
 
-        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, GlobalActivityMonitor.shared(application));
         components.add(this.automation);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
+        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application));
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, this.remoteData);
         components.add(this.remoteConfigManager);
 
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions,
-                analytics, ActivityMonitor.shared(application), this.remoteData, this.pushManager, tagGroupRegistrar);
+                analytics, this.remoteData, InAppActivityMonitor.shared(application), this.pushManager, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, this.inAppMessageManager, this.analytics);

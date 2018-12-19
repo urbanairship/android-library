@@ -13,6 +13,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.analytics.data.EventsStorage;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.richpush.RichPushDataManager;
 import com.urbanairship.richpush.RichPushTable;
 import com.urbanairship.util.DataManager;
@@ -131,7 +133,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
         Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
 
         UAirship.isMainProcess = true;
-        ActivityMonitor.shared(getContext().getApplicationContext());
+        GlobalActivityMonitor.shared(getContext().getApplicationContext());
         return true;
     }
 

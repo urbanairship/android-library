@@ -4,7 +4,6 @@ package com.urbanairship.iam;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IntRange;
@@ -14,7 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AlarmOperationScheduler;
@@ -24,6 +23,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
@@ -38,10 +38,8 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.RetryingExecutor;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,11 +62,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     public static final long DEFAULT_DISPLAY_INTERVAL_MS = 30000;
 
-    /**
-     * Metadata an app can use to prevent an in-app message from showing on a specific activity.
-     */
-    @NonNull
-    public final static String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
 
     /**
      * Preference key for enabling/disabling the in-app message manager.
@@ -81,7 +74,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
 
     // State
-    private WeakReference<Activity> resumedActivity;
     private final Stack<String> carryOverScheduleIds = new Stack<>();
     private final Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private final InAppRemoteDataObserver remoteDataSubscriber;
@@ -128,7 +120,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions configOptions,
-                               @NonNull Analytics analytics, @NonNull ActivityMonitor activityMonitor, @NonNull RemoteData remoteData,
+                               @NonNull Analytics analytics, @NonNull RemoteData remoteData, ActivityMonitor activityMonitor,
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
@@ -250,50 +242,18 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                finishInit();
-            }
-        });
-    }
-
-    /**
-     * Called during {@link #init()} to finish any initialization
-     * that needs to happen on the main thread.
-     */
-    @MainThread
-    private void finishInit() {
-        // Get the current resumed activity
-        Activity activity = activityMonitor.getResumedActivity();
-        if (activity != null && !shouldIgnoreActivity(activity)) {
-            resumedActivity = new WeakReference<>(activity);
-        }
-
-        // Add the activity listener
-        activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
-            @Override
-            public void onActivityPaused(@NonNull Activity activity) {
-                if (activity == getResumedActivity()) {
-                    resumedActivity = null;
-                }
-            }
-
-            @Override
-            public void onActivityResumed(@NonNull Activity activity) {
-                if (shouldIgnoreActivity(activity)) {
-                    return;
-                }
-
-                resumedActivity = new WeakReference<>(activity);
                 automationEngine.checkPendingSchedules();
-                displayCarryOvers();
+
+                activityMonitor.addActivityListener(new SimpleActivityListener() {
+                    @Override
+                    public void onActivityResumed(@NonNull Activity activity) {
+                        automationEngine.checkPendingSchedules();
+                        displayCarryOvers();
+                    }
+                });
             }
         });
-
-        // If we are already in the foreground check pending schedules.
-        if (activityMonitor.isAppForegrounded()) {
-            automationEngine.checkPendingSchedules();
-        }
     }
-
 
     /**
      * @hide
@@ -889,28 +849,18 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @return The resumed activity.
      */
     private Activity getResumedActivity() {
-        if (resumedActivity != null) {
-            return resumedActivity.get();
+        if (!activityMonitor.isAppForegrounded()) {
+            return null;
         }
 
-        return null;
-    }
-
-    /**
-     * Helper method to check if the activity is marked as do not use.
-     *
-     * @param activity The activity.
-     * @return {@code true} if the activity should be ignored for in-app messaging, otherwise {@code false}.
-     */
-    private boolean shouldIgnoreActivity(Activity activity) {
-        ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
-        if (info != null && info.metaData != null && info.metaData.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
-            Logger.verbose("InAppMessagingManager - Activity contains metadata to exclude it from auto showing an in-app message");
-            return true;
+        List<Activity> activities = activityMonitor.getResumedActivities();
+        if (activities.isEmpty()) {
+            return null;
         }
 
-        return false;
+        return activities.get(0);
     }
+
 
     /**
      * Updates the automation engine pause state with user enable and component enable flags.

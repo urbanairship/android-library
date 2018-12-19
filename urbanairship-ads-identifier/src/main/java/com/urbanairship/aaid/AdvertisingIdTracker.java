@@ -4,23 +4,23 @@ package com.urbanairship.aaid;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AssociatedIdentifiers;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        ActivityMonitor.shared(getContext()).addListener(new ActivityMonitor.SimpleListener() {
+        GlobalActivityMonitor.shared(getContext()).addApplicationListener(new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
                 update();

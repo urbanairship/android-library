@@ -12,6 +12,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
@@ -40,7 +45,7 @@ public class ChannelCapture extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private final PushManager pushManager;
     private ClipboardManager clipboardManager;
-    private final ActivityMonitor.Listener listener;
+    private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
 
@@ -62,7 +67,7 @@ public class ChannelCapture extends AirshipComponent {
         this.configOptions = configOptions;
         this.pushManager = pushManager;
 
-        this.listener = new ActivityMonitor.SimpleListener() {
+        this.listener = new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
                 checkClipboard();
@@ -85,7 +90,7 @@ public class ChannelCapture extends AirshipComponent {
                     checkClipboard();
                 }
 
-                activityMonitor.addListener(listener);
+                activityMonitor.addApplicationListener(listener);
             }
         });
     }
@@ -110,7 +115,7 @@ public class ChannelCapture extends AirshipComponent {
 
     @Override
     protected void tearDown() {
-        activityMonitor.removeListener(listener);
+        activityMonitor.removeApplicationListener(listener);
     }
 
     private void checkClipboard() {

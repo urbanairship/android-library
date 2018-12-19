@@ -4,37 +4,6 @@
 
 ## UrbanAirship Library 9.x to 10.0.0
 
-### In App Automation/Message changes
-
-Several updates have been made to the In App automation frameworks. Most apps will
-not be affected by these changes, only those that have implemented custom display
-logic.
-
-#### DisplayHandler
-
-The `requestDisplayLock` method has been renamed to `isDisplayAllowed`:
-
-```java
-    // 9.x
-   public boolean requestDisplayLock(@NonNull Activity activity)
-
-    // 10.x
-   public boolean isDisplayAllowed(@NonNull Activity activity)
-```
-
-#### InAppMessageAdapter
-
-The adapter's `onDisplay` no longer returns a boolean. Any checks that might prevent
-the in-app message from displaying should be moved into `isReady`.
-
-```java
-    // 9.x
-   public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
-
-    // 10.x
-   public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
-```
-
 
 ### Packages Removed
 
@@ -106,6 +75,70 @@ methods had to be changed to move the lambda to the last parameter.
     // 10.x
     public Cancelable fetchMessages(@Nullable Looper looper, @NonNull FetchMessagesCallback callback)
 ```
+
+### In App Automation/Message changes
+
+Several updates have been made to the In App automation frameworks. Most apps will
+not be affected by these changes, only those that have implemented custom display
+logic.
+
+#### DisplayHandler
+
+The `requestDisplayLock` method has been renamed to `isDisplayAllowed`:
+
+```java
+    // 9.x
+   public boolean requestDisplayLock(@NonNull Activity activity)
+
+    // 10.x
+   public boolean isDisplayAllowed(@NonNull Activity activity)
+```
+
+### ActivityMonitor changes
+
+ActivityMonitor is now an interface and is located in com.urbanairship.app package. GlobalActivityMonitor
+is a replacement for the old ActivityMonitor singleton. The old ActivityMonitor.Listener has been broken
+out into two listener classes - ActivityListener and ApplicationListener. ApplicationListener contains calls
+for app foreground/background events while the ActivityListener is used only for activity events.
+
+#### InAppMessageAdapter
+
+The adapter's `onDisplay` no longer returns a boolean. Any checks that might prevent
+the in-app message from displaying should be moved into `isReady`.
+
+```java
+    // 9.x
+   public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+
+    // 10.x
+   public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+```
+
+### Removed Methods
+
+
+#### ActionRegistry
+
+Removed:
+```java
+public Entry registerAction(@NonNull Class<? extends Action> c, Predicate predicate, @NonNull String... names)
+```
+
+Instead, you can set the predicate after registering the action:
+
+```java
+    UAirship.shared().getActionRegistry()
+            .registerAction(SomeAction.class, "some-action-name")
+            .setPredicate(predicate);
+```
+
+### Renamed Classes
+
+BitmapUtils is now ImageUtils
+
+### FCM provider changes
+
+`AirshipFirebaseInstanceIdService` was removed to avoid using the deprecated `FirebaseInstanceIdService`. To notify Urban Airship of token changes, please use the new `AirshipFirebaseMessagingService.processNewToken(Context)` method.
 
 ### From Json method normalization
 
@@ -264,30 +297,3 @@ All from/parse JSON methods have been updated to have a consistent signature.
     // 10.x
     public static DisableInfo fromJson(@NonNull JsonValue value) throws JsonException
 ```
-
-
-### Removed Methods
-
-
-#### ActionRegistry
-
-Removed:
-```java
-public Entry registerAction(@NonNull Class<? extends Action> c, Predicate predicate, @NonNull String... names)
-```
-
-Instead, you can set the predicate after registering the action:
-
-```java
-    UAirship.shared().getActionRegistry()
-            .registerAction(SomeAction.class, "some-action-name")
-            .setPredicate(predicate);
-```
-
-### Renamed Classes
-
-BitmapUtils is now ImageUtils
-
-### FCM provider changes
-
-`AirshipFirebaseInstanceIdService` was removed to avoid using the deprecated `FirebaseInstanceIdService`. To notify Urban Airship of token changes, please use the new `AirshipFirebaseMessagingService.processNewToken(Context)` method.

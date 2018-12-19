@@ -66,7 +66,6 @@ public class AutomationEngineTest extends BaseTestCase {
                                          .addAction("test_action", JsonValue.wrap("action_value"))
                                          .build();
         activityMonitor = new TestActivityMonitor();
-        activityMonitor.register();
 
         mockMetrics = mock(ApplicationMetrics.class);
         TestApplication.getApplication().setApplicationMetrics(mockMetrics);
@@ -96,7 +95,6 @@ public class AutomationEngineTest extends BaseTestCase {
     @After
     public void teardown() {
         automationEngine.stop();
-        activityMonitor.unregister();
     }
 
     @Test

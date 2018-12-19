@@ -11,7 +11,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,9 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -38,13 +35,11 @@ public class AnalyticsTest extends BaseTestCase {
     private Analytics analytics;
     private JobDispatcher mockJobDispatcher;
     private EventManager mockEventManager;
-    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
         this.mockJobDispatcher = Mockito.mock(JobDispatcher.class);
         this.mockEventManager = Mockito.mock(EventManager.class);
-        this.activityMonitor = new TestActivityMonitor();
 
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")

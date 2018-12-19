@@ -15,7 +15,8 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.ContextCompat;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
@@ -24,6 +25,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -44,7 +47,7 @@ public class UALocationManager extends AirshipComponent {
 
     private final Context context;
     private final UALocationProvider locationProvider;
-    private final ActivityMonitor.Listener listener;
+    private final ApplicationListener listener;
     private final PreferenceDataStore preferenceDataStore;
     private final ActivityMonitor activityMonitor;
     private final List<LocationListener> locationListeners = new ArrayList<>();
@@ -87,7 +90,7 @@ public class UALocationManager extends AirshipComponent {
 
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
-        this.listener = new ActivityMonitor.SimpleListener() {
+        this.listener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
                 UALocationManager.this.updateServiceConnection();
@@ -112,7 +115,7 @@ public class UALocationManager extends AirshipComponent {
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
 
         preferenceDataStore.addListener(preferenceChangeListener);
-        activityMonitor.addListener(listener);
+        activityMonitor.addApplicationListener(listener);
         updateServiceConnection();
     }
 
@@ -129,7 +132,7 @@ public class UALocationManager extends AirshipComponent {
 
     @Override
     protected void tearDown() {
-        activityMonitor.removeListener(listener);
+        activityMonitor.removeApplicationListener(listener);
         backgroundThread.quit();
     }
 

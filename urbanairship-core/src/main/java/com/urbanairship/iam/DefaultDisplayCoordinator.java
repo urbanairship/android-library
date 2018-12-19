@@ -9,7 +9,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.SimpleActivityListener;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +73,7 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
     @MainThread
     private void init() {
         // Add the activity listener
-        activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
+        activityMonitor.addActivityListener(new SimpleActivityListener() {
             @Override
             public void onActivityStopped(@NonNull Activity activity) {
                 // If the activity is not changing configuration, then it's either being

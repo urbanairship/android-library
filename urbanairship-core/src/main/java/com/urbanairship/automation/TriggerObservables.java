@@ -4,8 +4,11 @@ package com.urbanairship.automation;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Function;
@@ -55,19 +58,19 @@ class TriggerObservables {
             @NonNull
             @Override
             public Subscription apply(@NonNull final Observer<JsonSerializable> observer) {
-                final ActivityMonitor.SimpleListener listener = new ActivityMonitor.SimpleListener() {
+                final ApplicationListener listener = new SimpleApplicationListener() {
                     @Override
                     public void onForeground(long time) {
                         observer.onNext(JsonValue.NULL);
                     }
                 };
 
-                monitor.addListener(listener);
+                monitor.addApplicationListener(listener);
 
                 return Subscription.create(new Runnable() {
                     @Override
                     public void run() {
-                        monitor.removeListener(listener);
+                        monitor.removeApplicationListener(listener);
                     }
                 });
             }

@@ -1,6 +1,6 @@
 package com.urbanairship.analytics.data;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;

@@ -6,7 +6,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AlarmOperationScheduler;

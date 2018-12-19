@@ -15,7 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ResolutionInfo;
 
@@ -144,7 +145,7 @@ public abstract class InAppViewGroup extends FrameLayout {
         }
 
         if (visibility == VISIBLE && !isDismissed) {
-            ActivityMonitor.shared(getContext()).addListener(new ActivityMonitor.SimpleListener() {
+            GlobalActivityMonitor.shared(getContext()).addActivityListener(new SimpleActivityListener() {
                 @Override
                 public void onActivityPaused(@NonNull Activity activity) {
                     if (getContext() == activity && !isDismissed) {
@@ -171,7 +172,7 @@ public abstract class InAppViewGroup extends FrameLayout {
                         dismiss(false);
                     }
 
-                    ActivityMonitor.shared(activity).removeListener(this);
+                    GlobalActivityMonitor.shared(activity).removeActivityListener(this);
                 }
             });
 

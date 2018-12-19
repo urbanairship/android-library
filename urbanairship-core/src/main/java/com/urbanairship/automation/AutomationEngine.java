@@ -13,7 +13,8 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 import android.util.SparseArray;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.OperationScheduler;
@@ -22,6 +23,8 @@ import com.urbanairship.Predicate;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
@@ -186,7 +189,7 @@ public class AutomationEngine<T extends Schedule> {
     private Subscription compoundTriggerSubscription;
     private Scheduler backgroundScheduler;
 
-    private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
+    private final ApplicationListener applicationListener = new ApplicationListener() {
         @Override
         public void onForeground(long time) {
             AutomationEngine.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
@@ -268,7 +271,7 @@ public class AutomationEngine<T extends Schedule> {
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
 
-        activityMonitor.addListener(activityListener);
+        activityMonitor.addApplicationListener(applicationListener);
         analytics.addAnalyticsListener(analyticsListener);
 
         backgroundHandler.post(new Runnable() {
@@ -312,7 +315,7 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         compoundTriggerSubscription.cancel();
-        activityMonitor.removeListener(activityListener);
+        activityMonitor.removeApplicationListener(applicationListener);
         analytics.removeAnalyticsListener(analyticsListener);
         cancelAlarms();
         backgroundThread.quit();

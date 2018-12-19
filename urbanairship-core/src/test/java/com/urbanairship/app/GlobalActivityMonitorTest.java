@@ -1,8 +1,11 @@
 /* Copyright 2018 Urban Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.app;
 
 import android.app.Activity;
+
+import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestApplication;
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,19 +20,19 @@ import static org.junit.Assert.assertTrue;
  * This class tests the monitoring the activities going into the foreground
  *
  */
-public class ActivityMonitorTest extends BaseTestCase {
+public class GlobalActivityMonitorTest extends BaseTestCase {
 
-    private ActivityMonitor activityMonitor;
+    private GlobalActivityMonitor activityMonitor;
     private boolean isForeground;
 
 
     @Before
     public void setUp() {
         isForeground = false;
-        activityMonitor = new ActivityMonitor();
+        activityMonitor = new GlobalActivityMonitor();
 
         activityMonitor.registerListener(TestApplication.getApplication());
-        activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
+        activityMonitor.addApplicationListener(new SimpleApplicationListener() {
             @Override
             public void onForeground(long timeMS) {
                 isForeground = true;

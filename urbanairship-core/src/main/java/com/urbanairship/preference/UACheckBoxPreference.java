@@ -16,8 +16,10 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityListener;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.app.SimpleActivityListener;
 
 /**
  * Urban Airship check box preference.
@@ -26,7 +28,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     protected boolean isChecked = false;
     private static final long PREFERENCE_DELAY_MS = 1000;
 
-    private ActivityMonitor.Listener listener;
+    private ActivityListener listener;
     private Runnable applyAirshipPreferenceRunnable;
     private Handler handler;
 
@@ -47,7 +49,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     }
 
     private void init() {
-        listener = new ActivityMonitor.SimpleListener() {
+        listener = new SimpleActivityListener() {
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
                 applyAirshipPreferenceRunnable.run();
@@ -59,7 +61,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
             public void run() {
                 handler.removeCallbacks(applyAirshipPreferenceRunnable);
                 if (listener != null) {
-                    ActivityMonitor.shared(getContext().getApplicationContext()).removeListener(listener);
+                    GlobalActivityMonitor.shared(getContext().getApplicationContext()).removeActivityListener(listener);
                 }
 
                 onApplyAirshipPreference(UAirship.shared(), isChecked);
@@ -91,7 +93,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
         isChecked = value;
 
         if (listener != null) {
-            ActivityMonitor.shared(getContext().getApplicationContext()).addListener(listener);
+            GlobalActivityMonitor.shared(getContext()).addActivityListener(listener);
         }
 
         handler.removeCallbacks(applyAirshipPreferenceRunnable);

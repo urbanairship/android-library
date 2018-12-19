@@ -47,7 +47,6 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         mockPushManager = mock(PushManager.class);
         activityMonitor = new TestActivityMonitor();
-        activityMonitor.register();
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
         capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, dataStore, activityMonitor);
@@ -65,7 +64,6 @@ public class ChannelCaptureTest extends BaseTestCase {
 
     @After
     public void takeDown() {
-        activityMonitor.unregister();
         capture.disable();
     }
 
@@ -121,7 +119,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken("/oh_hi")));
 
-        activityMonitor.startActivity();
+        activityMonitor.foreground();
 
         Intent intent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
 
@@ -143,7 +141,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         // Set the token without a Url
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-        activityMonitor.startActivity();
+        activityMonitor.foreground();
 
         Intent intent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
 
@@ -184,7 +182,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-        activityMonitor.startActivity();
+        activityMonitor.foreground();
 
         // Verify we did not post a notification TODO
         assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);

@@ -13,7 +13,8 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -21,6 +22,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.actions.OverlayRichPushMessageAction;
+import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
@@ -128,7 +131,7 @@ public class RichPushInbox extends AirshipComponent {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
-    private final ActivityMonitor.Listener listener;
+    private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
 
     private boolean isFetchingMessages = false;
@@ -163,7 +166,7 @@ public class RichPushInbox extends AirshipComponent {
         this.richPushResolver = resolver;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
-        this.listener = new ActivityMonitor.SimpleListener() {
+        this.listener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()
@@ -208,7 +211,7 @@ public class RichPushInbox extends AirshipComponent {
 
         refresh(false);
 
-        activityMonitor.addListener(listener);
+        activityMonitor.addApplicationListener(listener);
     }
 
     /**
@@ -228,7 +231,7 @@ public class RichPushInbox extends AirshipComponent {
 
     @Override
     protected void tearDown() {
-        activityMonitor.removeListener(listener);
+        activityMonitor.removeApplicationListener(listener);
     }
 
     /**

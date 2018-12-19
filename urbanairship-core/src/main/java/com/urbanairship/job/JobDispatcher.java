@@ -15,9 +15,10 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.ActivityMonitor;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.GlobalActivityMonitor;
 
 /**
  * Dispatches jobs. When a job is dispatched with a delay or specifies that it requires network activity,
@@ -72,7 +73,7 @@ public class JobDispatcher {
     }
 
     private JobDispatcher(@NonNull Context context) {
-        this(context, new DefaultSchedulerFactory(), ActivityMonitor.shared(context));
+        this(context, new DefaultSchedulerFactory(), GlobalActivityMonitor.shared(context));
     }
 
     @VisibleForTesting
