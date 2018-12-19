@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.text.TextUtils;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
@@ -34,7 +35,7 @@ import java.util.concurrent.Executors;
  */
 public class PassRequest {
 
-    private static final Executor DEFAULT_REQUEST_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final Executor DEFAULT_REQUEST_EXECUTOR = AirshipExecutors.newSerialExecutor();
 
     private static final String DEPRECATED_PATH_FORMAT = "v1/pass/%s?api_key=%s";
     private static final String PATH_FORMAT = "v1/pass/%s";

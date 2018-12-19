@@ -30,6 +30,7 @@ import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
+import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,7 +73,6 @@ public class RemoteData extends AirshipComponent {
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
 
-    private final Context context;
     private final JobDispatcher jobDispatcher;
     private RemoteDataJobHandler jobHandler;
     private final PreferenceDataStore preferenceDataStore;
@@ -124,11 +124,10 @@ public class RemoteData extends AirshipComponent {
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
                @NonNull JobDispatcher dispatcher) {
         super(context, preferenceDataStore);
-        this.context = context;
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getAppKey(), DATABASE_NAME);
         this.preferenceDataStore = preferenceDataStore;
-        this.backgroundThread = new HandlerThread("remote data store");
+        this.backgroundThread = new AirshipHandlerThread("remote data store");
         this.payloadUpdates = Subject.create();
         this.activityMonitor = activityMonitor;
     }

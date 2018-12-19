@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
  * PreferenceDataStore stores and retrieves all the Urban Airship preferences through the
  * {@link UrbanAirshipProvider}.
@@ -35,7 +33,7 @@ public final class PreferenceDataStore {
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
-    Executor executor = Executors.newSingleThreadExecutor();
+    Executor executor = AirshipExecutors.newSerialExecutor();
 
     private final Map<String, Preference> preferences = new HashMap<>();
     private final UrbanAirshipResolver resolver;

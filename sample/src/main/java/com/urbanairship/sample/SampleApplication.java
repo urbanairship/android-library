@@ -14,17 +14,15 @@ public class SampleApplication extends Application {
 
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                    .detectDiskReads()
-                    .detectDiskWrites()
-                    .detectNetwork()   // or .detectAll() for all detectable problems
+                    .detectAll()
                     .penaltyLog()
                     .build());
 
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
                     .detectLeakedClosableObjects()
+                    .detectUntaggedSockets()
                     .penaltyLog()
-                    .penaltyDeath()
                     .build());
         }
     }

@@ -16,6 +16,7 @@ import android.support.annotation.WorkerThread;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.PreferenceDataStore;
@@ -149,7 +150,7 @@ public class RichPushInbox extends AirshipComponent {
      */
     public RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull ActivityMonitor activityMonitor) {
         this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)),
-                new RichPushResolver(context), Executors.newSingleThreadExecutor(), activityMonitor);
+                new RichPushResolver(context), AirshipExecutors.newSerialExecutor(), activityMonitor);
     }
 
     /**

@@ -49,7 +49,7 @@ public class ChannelCapture extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
 
-    Executor executor = Executors.newSingleThreadExecutor();
+    Executor executor = AirshipExecutors.THREAD_POOL_EXECUTOR;
 
     /**
      * Default constructor.

@@ -29,6 +29,7 @@ import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,7 +106,7 @@ public class UALocationManager extends AirshipComponent {
 
         Intent updateIntent = new Intent(context, LocationService.class).setAction(ACTION_LOCATION_UPDATE);
         this.locationProvider = new UALocationProvider(context, updateIntent);
-        this.backgroundThread = new HandlerThread("location");
+        this.backgroundThread = new AirshipHandlerThread("location");
     }
 
     @Override

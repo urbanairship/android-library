@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,7 +44,7 @@ public class CoreReceiver extends BroadcastReceiver {
 
 
     public CoreReceiver() {
-        this(Executors.newSingleThreadExecutor());
+        this(AirshipExecutors.THREAD_POOL_EXECUTOR);
     }
 
     @VisibleForTesting

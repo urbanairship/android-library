@@ -5,13 +5,12 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 
 /**
  * Contains information for a job run.
@@ -21,7 +20,7 @@ import java.util.concurrent.Executors;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class Job implements Runnable {
 
-    static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
+    static final Executor EXECUTOR = AirshipExecutors.newSerialExecutor();
 
     private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
 

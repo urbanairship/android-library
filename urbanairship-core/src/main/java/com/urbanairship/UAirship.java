@@ -360,14 +360,12 @@ public class UAirship {
 
             UAirship.application = application;
 
-            Thread thread = new Thread(new Runnable() {
+            AirshipExecutors.THREAD_POOL_EXECUTOR.execute(new Runnable() {
                 @Override
                 public void run() {
                     executeTakeOff(application, options, readyCallback);
                 }
             });
-
-            thread.start();
         }
     }
 

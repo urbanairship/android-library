@@ -13,6 +13,7 @@ import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -97,7 +98,7 @@ public class Analytics extends AirshipComponent {
         this.jobDispatcher = builder.jobDispatcher;
         this.activityMonitor = builder.activityMonitor;
         this.eventManager = builder.eventManager;
-        this.executor = builder.executor == null ? Executors.newSingleThreadExecutor() : builder.executor;
+        this.executor = builder.executor == null ? AirshipExecutors.newSerialExecutor() : builder.executor;
         this.sessionId = UUID.randomUUID().toString();
 
         this.listener = new ApplicationListener() {

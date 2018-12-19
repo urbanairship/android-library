@@ -21,7 +21,6 @@ import java.util.concurrent.Executors;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class DefaultImageLoader implements ImageLoader {
 
-    private final Executor executor;
     private final Map<ImageView, ImageRequest> requestMap;
     private final ImageCache imageCache;
 
@@ -32,7 +31,6 @@ public class DefaultImageLoader implements ImageLoader {
      */
     public DefaultImageLoader(@NonNull Context context) {
         this.requestMap = new WeakHashMap<>();
-        this.executor = Executors.newFixedThreadPool(2);
         this.imageCache = new ImageCache(context);
     }
 
@@ -66,6 +64,6 @@ public class DefaultImageLoader implements ImageLoader {
         };
 
         requestMap.put(imageView, request);
-        request.execute(executor);
+        request.execute();
     }
 }

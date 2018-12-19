@@ -11,6 +11,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.WindowManager;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -258,7 +259,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         // Big images have a max height of 240dp
         final int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
 
-        Future<Bitmap> future = NotificationFactory.EXECUTOR.submit(new Callable<Bitmap>() {
+        Future<Bitmap> future = AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Callable<Bitmap>() {
             @Nullable
             @Override
             public Bitmap call() throws Exception {

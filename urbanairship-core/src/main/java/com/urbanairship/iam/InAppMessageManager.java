@@ -16,6 +16,7 @@ import android.support.annotation.VisibleForTesting;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -131,7 +132,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.pushManager = pushManager;
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.mainHandler = new Handler(Looper.getMainLooper());
-        this.executor = new RetryingExecutor(this.mainHandler, Executors.newSingleThreadExecutor());
+        this.executor = new RetryingExecutor(this.mainHandler, AirshipExecutors.newSerialExecutor());
         this.driver = new InAppMessageDriver();
         this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
                 .setAnalytics(analytics)

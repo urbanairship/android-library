@@ -7,14 +7,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -35,15 +36,12 @@ import java.util.concurrent.Semaphore;
  * convenient way of running actions from another action.
  */
 public class ActionRunRequest {
-
-    @VisibleForTesting
-    static Executor executor = Executors.newCachedThreadPool();
-
     private ActionRegistry registry;
     private String actionName;
     private Action action;
     private ActionValue actionValue;
     private Bundle metadata;
+    private Executor executor = AirshipExecutors.THREAD_POOL_EXECUTOR;
     private @Action.Situation
     int situation = Action.SITUATION_MANUAL_INVOCATION;
 
@@ -163,6 +161,19 @@ public class ActionRunRequest {
     @NonNull
     public ActionRunRequest setSituation(@Action.Situation int situation) {
         this.situation = situation;
+        return this;
+    }
+
+    /**
+     * Sets the executor.
+     * @param executor The executor.
+     * @return The request object.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public ActionRunRequest setExecutor(@NonNull Executor executor) {
+        this.executor = executor;
         return this;
     }
 

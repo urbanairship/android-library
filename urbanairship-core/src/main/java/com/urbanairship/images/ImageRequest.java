@@ -15,6 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.util.ImageUtils;
 
@@ -83,11 +84,9 @@ abstract class ImageRequest {
 
     /**
      * Executes the request.
-     *
-     * @param executor The executor to perform any background work on.
      */
     @MainThread
-    void execute(final Executor executor) {
+    void execute() {
         if (isCancelled) {
             return;
         }
@@ -116,7 +115,7 @@ abstract class ImageRequest {
                             if (imageView.getHeight() == 0 && imageView.getWidth() == 0) {
                                 onFinish(imageView);
                             } else {
-                                execute(executor);
+                                execute();
                             }
                         }
                     }
@@ -142,7 +141,7 @@ abstract class ImageRequest {
             }
 
             this.task = new ImageRequestAsyncTask(this);
-            task.executeOnExecutor(executor);
+            task.executeOnExecutor(AirshipExecutors.THREAD_POOL_EXECUTOR);
         }
     }
 

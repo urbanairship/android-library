@@ -68,9 +68,7 @@ public abstract class PushProviderBridge {
 
         private final Class<? extends PushProvider> provider;
         private final PushMessage pushMessage;
-        private boolean allowWakeLocks;
         private long maxCallbackWaitTime;
-
 
         private ProcessPushRequest(@NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage) {
             this.provider = provider;

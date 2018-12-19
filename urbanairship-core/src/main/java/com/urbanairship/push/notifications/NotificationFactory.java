@@ -18,6 +18,7 @@ import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -50,12 +51,6 @@ public class NotificationFactory {
      */
     @NonNull
     public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
-
-    /**
-     * Executor used to fetch notification resources.
-     */
-    @NonNull
-    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     private int titleId;
     private int smallIconId;

@@ -5,6 +5,7 @@ package com.urbanairship.job;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.TrafficStats;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -15,7 +16,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
+import com.urbanairship.util.AirshipHandlerThread;
+import com.urbanairship.util.AirshipThreadFactory;
 
 /**
  * Urban Airship Service.
@@ -69,7 +73,7 @@ public class AirshipService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        HandlerThread thread = new HandlerThread("Airship Service");
+        HandlerThread thread = new AirshipHandlerThread("Airship Service");
         thread.start();
 
         looper = thread.getLooper();
@@ -136,7 +140,6 @@ public class AirshipService extends Service {
 
         Logger.verbose("AirshipService - Running job: %s", jobInfo);
         Job.EXECUTOR.execute(job);
-
     }
 
     /**

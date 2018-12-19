@@ -35,6 +35,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
+import com.urbanairship.util.AirshipHandlerThread;
 import com.urbanairship.util.Checks;
 
 import java.math.BigDecimal;
@@ -254,7 +255,7 @@ public class AutomationEngine<T extends Schedule> {
         this.driver = builder.driver;
         this.scheduleLimit = builder.limit;
         this.scheduler = builder.scheduler;
-        this.backgroundThread = new HandlerThread("automation");
+        this.backgroundThread = new AirshipHandlerThread("automation");
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 

@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
@@ -234,7 +235,7 @@ public class PushManager extends AirshipComponent {
      */
     private final String DEFAULT_TAG_GROUP = "device";
 
-    static final ExecutorService PUSH_EXECUTOR = Executors.newCachedThreadPool();
+    static final ExecutorService PUSH_EXECUTOR = AirshipExecutors.THREAD_POOL_EXECUTOR;
 
     static final String KEY_PREFIX = "com.urbanairship.push";
     static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
