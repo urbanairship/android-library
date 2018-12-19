@@ -3,6 +3,29 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.6.0 - December 5, 2018
+================================
+Minor release that targets Android P and updates dependencies.
+
+Changes
+-------
+- Updated compile and target SDK version 28 (Android P)
+- Updated urbanairship-core dependencies:
+  - Support library version to 28.0.0
+  - Optional play-services-location to 16.0.0
+  - Optional play-services-ads-identifier to 16.0.0
+- Updated urbanairship-fcm dependencies:
+  - firebase-messaging to 17.3.4
+  - play-services-base to 16.0.1
+- Updated urbanairship-gcm dependencies:
+  - play-services-gcm to 16.0.0
+
+
+Version 9.5.6 - November 20, 2018
+=================================
+
+Patch release that fixes a race condition when a named user ID changes at the same time as a named user tag group update is being POSTed. Any apps that are using named user tag groups should update.
+
 Version 9.5.5 - November 14, 2018
 =================================
 
@@ -16,7 +39,6 @@ Changes
 - Attempt automatic take off when receiving a new push or token from FCM.
 - Marked `RichPushUser#update(boolean)` as library only. Applications should not call this method. It
   is handled internally by the SDK.
-
 
 Version 9.5.4 - October 25, 2018
 ================================

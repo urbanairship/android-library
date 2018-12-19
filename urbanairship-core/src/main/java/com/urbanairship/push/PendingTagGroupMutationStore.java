@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 

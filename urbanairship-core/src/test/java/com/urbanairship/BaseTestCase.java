@@ -15,8 +15,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.internal.ManifestFactory;
 
-
-
 // Current robolectric does not support API 28
 @Config(sdk = 27,
         shadows = { ShadowNotificationManagerExtension.class },

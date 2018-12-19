@@ -11,6 +11,8 @@ import com.urbanairship.http.Response;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -145,6 +147,32 @@ public class TagGroupRegistrarTests extends BaseTestCase {
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
+    }
+
+    @Test
+    public void testClearTagsDuringUpload() {
+        final Response response = new Response.Builder(200)
+                .create();
+
+        TestListener listener = new TestListener();
+        registrar.addListener(listener);
+
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        registrar.addMutations(TagGroupRegistrar.NAMED_USER, Collections.singletonList(mutation));
+
+        when(mockClient.updateTagGroups(TagGroupRegistrar.NAMED_USER, "identifier", mutation)).thenAnswer(new Answer<Response>() {
+            @Override
+            public Response answer(InvocationOnMock invocation) throws Throwable {
+                namedUserStore.clear();
+                return response;
+            }
+        });
+
+        registrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "identifier");
+
+        assertEquals(1, listener.mutations.size());
+        assertEquals(mutation, listener.mutations.get(0));
+        registrar.removeListener(listener);
     }
 
     private void verifyRequest(Response response, @TagGroupRegistrar.TagGroupType int type, PendingTagGroupMutationStore store, boolean expectedResult) {

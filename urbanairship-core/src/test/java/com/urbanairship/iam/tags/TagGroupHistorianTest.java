@@ -3,8 +3,11 @@
 package com.urbanairship.iam.tags;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.push.TagGroupsMutation;
 
@@ -147,6 +150,15 @@ public class TagGroupHistorianTest extends BaseTestCase {
     }
 
 
+    @Test
+    public void testNullRecord() {
+        PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore.put(TagGroupHistorian.RECORDS_KEY, JsonValue.wrapOpt(Arrays.asList(JsonMap.EMPTY_MAP)));
 
+        Map<String, Set<String>> tags = new HashMap<>();
+
+        // Apply records in the past 10 seconds (should include both)
+        historian.applyLocalData(tags, clock.currentTimeMillis - 10);
+    }
 }
 

@@ -3,7 +3,6 @@
 package com.urbanairship.iam.tags;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 class TagGroupHistorian {
 
-    private static final String RECORDS_KEY = "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS";
+    static final String RECORDS_KEY = "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS";
 
     private final Object recordLock = new Object();
 
@@ -191,17 +190,16 @@ class TagGroupHistorian {
          * @return The mutation record.
          */
         @NonNull
-        static MutationRecord fromJsonValue(JsonValue jsonValue) throws JsonException {
+        static MutationRecord fromJsonValue(@NonNull JsonValue jsonValue) throws JsonException {
             JsonMap jsonMap = jsonValue.optMap();
 
             long time = jsonMap.opt(TIME_KEY).getLong(0);
-            TagGroupsMutation mutation = TagGroupsMutation.fromJsonValue(jsonMap.opt(MUTATION));
-
-            if (time >= 0 && mutation != null) {
-                return new MutationRecord(time, mutation);
-            } else {
+            if (time < 0) {
                 throw new JsonException("Invalid record: " + jsonValue);
             }
+
+            TagGroupsMutation mutation = TagGroupsMutation.fromJsonValue(jsonMap.opt(MUTATION));
+            return new MutationRecord(time, mutation);
         }
 
         /**
@@ -211,17 +209,15 @@ class TagGroupHistorian {
          * @return A list of mutation records.
          */
         @NonNull
-        static List<MutationRecord> fromJsonList(@Nullable JsonList jsonList) {
+        static List<MutationRecord> fromJsonList(@NonNull JsonList jsonList) {
             List<MutationRecord> records = new ArrayList<>();
 
-            if (jsonList != null) {
-                for (JsonValue value : jsonList) {
-                    try {
-                        MutationRecord record = fromJsonValue(value);
-                        records.add(record);
-                    } catch (JsonException e) {
-                        Logger.error(e, "Failed to parse tag group record.");
-                    }
+            for (JsonValue value : jsonList) {
+                try {
+                    MutationRecord record = fromJsonValue(value);
+                    records.add(record);
+                } catch (JsonException e) {
+                    Logger.error(e, "Failed to parse tag group record.");
                 }
             }
 
