@@ -152,7 +152,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testClearTagsDuringUpload() {
         final Response response = new Response.Builder(200)
-                .create();
+                .build();
 
         TestListener listener = new TestListener();
         registrar.addListener(listener);
