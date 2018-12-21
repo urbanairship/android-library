@@ -1,3 +1,5 @@
+/* Copyright 2018 Urban Airship and Contributors */
+
 package com.urbanairship.app;
 
 import android.app.Activity;
@@ -6,6 +8,9 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Predicate;
 
+/**
+ * Activity listener that filters events with a predicate.
+ */
 public class FilteredActivityListener implements ActivityListener {
 
     private final ActivityListener listener;

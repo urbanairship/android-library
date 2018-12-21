@@ -68,12 +68,12 @@ final class AdapterWrapper {
     /**
      * Checks if the adapter and coordinator are ready for display.
      *
-     * @param activity The activity.
+     * @param context The context.
      * @return {@code true} if the coordinator and adapter are ready for display, otherwise {@code false}.
      */
-    boolean isReady(@NonNull Activity activity) {
+    boolean isReady(@NonNull Context context) {
         try {
-            return adapter.isReady(activity) && coordinator.isReady(message, displayed);
+            return adapter.isReady(context) && coordinator.isReady();
         } catch (Exception e) {
             Logger.error(e, "AdapterWrapper - Exception during isReady(Activity).");
             return false;
@@ -83,35 +83,21 @@ final class AdapterWrapper {
     /**
      * Displays the in-app message.
      *
-     * @param activity The activity.
      * @throws DisplayException if the adapter throws an exception.
      */
-    void display(@NonNull Activity activity) throws DisplayException {
+    void display(@NonNull Context context) throws DisplayException {
         Logger.debug("AdapterWrapper - Displaying schedule: %s message: %s", scheduleId, message.getId());
+        displayed = true;
+
         try {
             DisplayHandler displayHandler = new DisplayHandler(scheduleId);
-            adapter.onDisplay(activity, displayed, displayHandler);
-            coordinator.onDisplayStarted(activity, message);
-            displayed = true;
+            adapter.onDisplay(context, displayHandler);
+            coordinator.onDisplayStarted(message);
         } catch (Exception e) {
             throw new DisplayException("Adapter onDisplay(Activity, boolean, DisplayHandler) unexpected exception", e);
         }
     }
 
-    /**
-     * Checks with the coordinator if display is still allowed.
-     *
-     * @param activity The activity.
-     * @return {@code true} if the message is allowed to display, otherwise {@code false}.
-     */
-    boolean isDisplayAllowed(@NonNull Activity activity) {
-        try {
-            return coordinator.onAllowDisplay(activity, message);
-        } catch (Exception e) {
-            Logger.error(e, "AdapterWrapper - Exception during isDisplayAllowed(Activity).");
-            return false;
-        }
-    }
 
     /**
      * Notifies the coordinator the display is finished.
@@ -130,10 +116,10 @@ final class AdapterWrapper {
      * Cleans up the adapter.
      */
     @WorkerThread
-    void adapterFinished() {
+    void adapterFinished(@NonNull Context context) {
         Logger.debug("AdapterWrapper - Adapter finished: %s message: %s", scheduleId, message.getId());
         try {
-            adapter.onFinish();
+            adapter.onFinish(context);
         } catch (Exception e) {
             Logger.error(e, "AdapterWrapper - Exception during finish().");
         }

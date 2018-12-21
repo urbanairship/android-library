@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -16,15 +16,12 @@ import com.urbanairship.UAirship;
 /**
  * Display handler for in-app message displays.
  * <p>
- * In-app message should call {@link #isDisplayAllowed(Activity)} before displaying the in-app
- * message. Typically, this should be done in an Activity's or Fragment's onStart method, or if
- * using a view, request the display lock when the attached activity visibility changes to
- * VISIBLE in onWindowVisibilityChanged.
+ * In-app message should call {@link #isDisplayAllowed(Context)} before displaying the in-app
+ * message if the in-app message is displayed in its own activity. Typically, this should be done in
+ * an Activity's or Fragment's onCreate callbacks.
  * <p>
  * When the in-app message is finished, call {@link #finished(ResolutionInfo)}. This will finish the display of an
- * in-app message and allow it to be triggered again by one of the in-app message triggers. If the
- * hosting Activity finishes before the in-app message is able to be displayed, call {@link #continueOnNextActivity()}
- * to have the in-app message redisplay on the next activity.
+ * in-app message and allow it to be triggered again by one of the in-app message triggers.
  */
 public class DisplayHandler implements Parcelable {
 
@@ -73,20 +70,6 @@ public class DisplayHandler implements Parcelable {
     };
 
     /**
-     * Called when the in-app message needs to be displayed on the next activity. After calling this
-     * method, the in-app message should immediately dismiss its view.
-     */
-    public void continueOnNextActivity() {
-        InAppMessageManager manager = getInAppMessagingManager();
-        if (manager == null) {
-            Logger.error("Takeoff not called. Unable to continue message on next activity: %s", scheduleId);
-            return;
-        }
-
-        manager.continueOnNextActivity(scheduleId);
-    }
-
-    /**
      * Called when the in-app message is finished displaying. After calling this method, the in-app
      * message should immediately dismiss its view to prevent the current activity from redisplaying
      * the in-app message if still on the back stack.
@@ -122,11 +105,10 @@ public class DisplayHandler implements Parcelable {
      * attached directly to a view it should be called in the view's onWindowVisibilityChanged when
      * the window becomes visible.
      *
-     * @param activity The activity.
      * @return {@code true} if the message should continue displaying, otherwise {@code false}.
      */
-    public boolean isDisplayAllowed(@NonNull Activity activity) {
-        Autopilot.automaticTakeOff(activity.getApplication());
+    public boolean isDisplayAllowed(@NonNull Context context) {
+        Autopilot.automaticTakeOff(context);
 
         InAppMessageManager manager = getInAppMessagingManager();
         if (manager == null) {
@@ -134,7 +116,7 @@ public class DisplayHandler implements Parcelable {
             return false;
         }
 
-        return manager.isDisplayAllowed(activity, scheduleId);
+        return manager.isDisplayAllowed(scheduleId);
     }
 
     @Nullable

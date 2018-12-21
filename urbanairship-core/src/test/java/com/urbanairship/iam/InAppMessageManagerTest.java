@@ -50,7 +50,6 @@ import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
@@ -70,7 +69,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     private InAppMessageManager manager;
 
-    private TestActivityMonitor activityMonitor;
     private InAppMessageDriver mockDriver;
     private AutomationEngine<InAppMessageSchedule> mockEngine;
     private InAppMessageDriver.Listener driverListener;
@@ -88,7 +86,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        activityMonitor = new TestActivityMonitor();
         mockDriver = mock(InAppMessageDriver.class);
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
@@ -98,7 +95,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockTagManager = mock(TagGroupManager.class);
         mockCoordinator = mock(DisplayCoordinator.class);
 
-        when(mockCoordinator.isReady(any(InAppMessage.class), anyBoolean())).thenReturn(true);
+        when(mockCoordinator.isReady()).thenReturn(true);
 
         ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
@@ -124,7 +121,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
             }
         });
 
-        manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor,
+        manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, new TestActivityMonitor(),
                 executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager);
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
@@ -162,20 +159,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testIsScheduleReady() {
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
         verify(mockAdapter).onPrepare(any(Context.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
-
-        // Resumed activity is required
-        assertFalse(driverListener.isScheduleReady(schedule));
-
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
 
         // Verify the schedule is ready
         assertTrue(driverListener.isScheduleReady(schedule));
@@ -184,17 +173,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testDisplayAdapterNotReady() {
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(false);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(false);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
         verify(mockAdapter).onPrepare(any(Context.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
-
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
 
         // Verify the schedule is not ready
         assertFalse(driverListener.isScheduleReady(schedule));
@@ -203,7 +187,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testCoordinatorNotReady() {
         final DisplayCoordinator mockDisplayCoordinator = mock(DisplayCoordinator.class);
-        when(mockDisplayCoordinator.isReady(any(InAppMessage.class), anyBoolean())).thenReturn(false);
+        when(mockDisplayCoordinator.isReady()).thenReturn(false);
         manager.setOnRequestDisplayCoordinatorCallback(new OnRequestDisplayCoordinatorCallback() {
             @Nullable
             @Override
@@ -215,11 +199,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
 
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
@@ -230,11 +209,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
     public void testIsPaused() {
         // Pause display
         manager.setPaused(true);
-
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
 
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
@@ -249,17 +223,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
         ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
 
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
         assertTrue(driverListener.isScheduleReady(schedule));
 
         // Display the schedule
@@ -272,7 +241,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockListener).onMessageFinished(schedule.getId(), schedule.getInfo().getInAppMessage(), resolutionInfo);
         verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
         verify(mockCoordinator).onDisplayFinished(schedule.getInfo().getInAppMessage());
-        verify(mockAdapter).onFinish();
+        verify(mockAdapter).onFinish(any(Context.class));
 
         // Verify the display actions ran
         verify(actionRunRequest).run();
@@ -280,17 +249,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testOnExecuteSchedule() {
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
         assertTrue(driverListener.isScheduleReady(schedule));
 
         // Execute the schedule
@@ -300,123 +264,36 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAnalytics).addEvent(any(DisplayEvent.class));
 
         // Verify the adapter onDisplay was called
-        verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
+        verify(mockAdapter).onDisplay(any(Context.class), any(DisplayHandler.class));
     }
 
 
     @Test
     public void testDisplayException() {
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
         assertTrue(driverListener.isScheduleReady(schedule));
 
         // Throw an exception when displaying
         doThrow(new RuntimeException("COOL"))
                 .when(mockAdapter)
-                .onDisplay(any(Activity.class), anyBoolean(), any(DisplayHandler.class));
+                .onDisplay(any(Context.class), any(DisplayHandler.class));
 
         driverListener.onExecuteSchedule(schedule);
 
         // Verify the adapter onDisplay was called
-        verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
-        verify(mockAdapter).onFinish();
+        verify(mockAdapter).onDisplay(any(Context.class), any(DisplayHandler.class));
+        verify(mockAdapter).onFinish(any(Context.class));
 
         // Verify the coordinator was not notified
-        verify(mockCoordinator, never()).onDisplayStarted(activity, schedule.getInfo().getInAppMessage());
+        verify(mockCoordinator, never()).onDisplayStarted(eq(schedule.getInfo().getInAppMessage()));
 
         // Verify the schedule was finished
         verify(mockDriver).scheduleExecuted(schedule.getId());
-    }
-
-    @Test
-    public void testRedisplay() {
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-        // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
-
-        // Make sure it's ready
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
-        assertTrue(driverListener.isScheduleReady(schedule));
-
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
-
-        // Execute the schedule
-        driverListener.onExecuteSchedule(schedule);
-
-        // Verify it was displayed on the first activity
-        verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
-        verify(mockCoordinator).onDisplayStarted(activity, schedule.getInfo().getInAppMessage());
-
-        // Notify the manager to display on next activity
-        activityMonitor.pauseActivity(activity);
-        manager.continueOnNextActivity(schedule.getId());
-        verify(mockCoordinator).onDisplayFinished(schedule.getInfo().getInAppMessage());
-
-        // Resume a new activity
-        Activity anotherActivity = new Activity();
-        activityMonitor.startActivity(anotherActivity);
-        activityMonitor.resumeActivity(anotherActivity);
-
-        // Verify the schedule is displayed on the new activity
-        verify(mockAdapter).onDisplay(eq(anotherActivity), eq(true), any(DisplayHandler.class));
-        verify(mockCoordinator).onDisplayStarted(anotherActivity, schedule.getInfo().getInAppMessage());
-    }
-
-    @Test
-    public void testRedisplayWhenActivityIsStoppedBeforeFragment() {
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-        // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
-
-        // Make sure it's ready
-        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
-        assertTrue(driverListener.isScheduleReady(schedule));
-
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
-
-        // Execute the schedule
-        driverListener.onExecuteSchedule(schedule);
-
-        // Stop the activity
-        activityMonitor.pauseActivity(activity);
-        activityMonitor.stopActivity(activity);
-
-        // Notify the manager to display on next activity
-        manager.continueOnNextActivity(schedule.getId());
-        verify(mockCoordinator).onDisplayFinished(schedule.getInfo().getInAppMessage());
-
-        // Verify isScheduleReady returns false when there is no resumed activity
-        assertFalse(driverListener.isScheduleReady(schedule));
-
-        // Resume a new activity
-        Activity anotherActivity = new Activity();
-        activityMonitor.startActivity(anotherActivity);
-        activityMonitor.resumeActivity(anotherActivity);
-
-        // Verify the schedule is displayed
-        verify(mockAdapter).onDisplay(eq(anotherActivity), eq(true), any(DisplayHandler.class));
-        verify(mockAdapter).onDisplay(eq(anotherActivity), eq(true), any(DisplayHandler.class));
     }
 
     @Test
@@ -476,11 +353,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckDefaultMissBehavior() {
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-
         // Schedule that requires notification opt-in to be true
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -501,11 +373,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorCancel() {
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-
         // Schedule that requires notification opt-in to be true
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -527,11 +394,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorSkip() {
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-
         // Schedule that requires notification opt-in to be true
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -553,11 +415,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorPenalize() {
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-
         // Schedule that requires notification opt-in to be true
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -580,11 +437,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testAudienceConditionCheckWithTagGroups() {
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
 
         Map<String, Set<String>> tagGroups = new HashMap<>();
         tagGroups.put("expected group", tagSet("expected tag"));
@@ -625,11 +477,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         InAppMessageAdapter.Factory factory = mock(InAppMessageAdapter.Factory.class);
         manager.setAdapterFactory(schedule.getInfo().getInAppMessage().getType(), factory);
-
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
 
         // Prepare the message
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);

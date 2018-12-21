@@ -66,7 +66,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     @CallSuper
-    public void onFinish() {
+    public void onFinish(@NonNull Context context) {
         if (cache != null) {
             cache.delete();
         }
@@ -93,13 +93,13 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public boolean isReady(@NonNull Activity activity) {
+    public boolean isReady(@NonNull Context context) {
         if (mediaInfo == null) {
             return true;
         }
 
         // Image files are normally cached
-        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) && cache.file(IMAGE_FILE_NAME).exists()) {
+        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
             return true;
         }
 

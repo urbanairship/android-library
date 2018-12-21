@@ -63,7 +63,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     public static final long DEFAULT_DISPLAY_INTERVAL_MS = 30000;
 
-
     /**
      * Preference key for enabling/disabling the in-app message manager.
      */
@@ -75,13 +74,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
 
     // State
-    private final Stack<String> carryOverScheduleIds = new Stack<>();
     private final Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private final InAppRemoteDataObserver remoteDataSubscriber;
 
     private final RetryingExecutor executor;
     private final ActionRunRequestFactory actionRunRequestFactory;
-    private final ActivityMonitor activityMonitor;
     private final RemoteData remoteData;
     private final Analytics analytics;
     private final PushManager pushManager;
@@ -103,7 +100,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final DisplayCoordinator.OnDisplayReadyCallback displayReadyCallback = new DisplayCoordinator.OnDisplayReadyCallback() {
         @Override
         public void onReady() {
-            displayCarryOvers();
             automationEngine.checkPendingSchedules();
         }
     };
@@ -126,7 +122,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
-        this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;
         this.analytics = analytics;
         this.pushManager = pushManager;
@@ -162,7 +157,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
         this.analytics = analytics;
-        this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;
         this.pushManager = pushManager;
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
@@ -198,13 +192,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
             @Override
             public boolean isScheduleReady(@NonNull InAppMessageSchedule schedule) {
-                displayCarryOvers();
                 return InAppMessageManager.this.isScheduleReady(schedule.getId());
             }
 
             @Override
             public void onExecuteSchedule(@NonNull InAppMessageSchedule schedule) {
-                InAppMessageManager.this.executeSchedule(getResumedActivity(), schedule.getId());
+                InAppMessageManager.this.executeSchedule(schedule.getId());
             }
         });
 
@@ -238,22 +231,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
             remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? System.currentTimeMillis() : 0);
         }
-
-        // Finish init on the main thread
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                automationEngine.checkPendingSchedules();
-
-                activityMonitor.addActivityListener(new SimpleActivityListener() {
-                    @Override
-                    public void onActivityResumed(@NonNull Activity activity) {
-                        automationEngine.checkPendingSchedules();
-                        displayCarryOvers();
-                    }
-                });
-            }
-        });
     }
 
     /**
@@ -265,6 +242,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super.onAirshipReady(airship);
         executor.setPaused(false);
         remoteDataSubscriber.subscribe(remoteData, this);
+        automationEngine.checkPendingSchedules();
     }
 
     @Override
@@ -495,21 +473,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.displayCoordinatorCallback = callback;
     }
 
-    private boolean isScheduleReady(@NonNull String scheduleId) {
-        // Prevent display on pause.
-        if (isPaused()) {
-            return false;
-        }
-
-        // Make sure we have a resumed activity
-        Activity resumedActivity = getResumedActivity();
-        if (resumedActivity == null) {
-            return false;
-        }
-
-        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        return adapterWrapper != null && adapterWrapper.isReady(resumedActivity);
-    }
 
     /**
      * Prepares a schedule to be displayed.
@@ -621,6 +584,60 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
+     * Checks if the schedule is ready to be executed.
+     *
+     * @param scheduleId The schedule ID.
+     * @return {@code true} to execute the schedule, otherwise {@code false}.
+     */
+    private boolean isScheduleReady(@NonNull String scheduleId) {
+        // Prevent display on pause.
+        if (isPaused()) {
+            return false;
+        }
+
+        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        return adapterWrapper != null && adapterWrapper.isReady(getContext());
+    }
+
+    /**
+     * Helper method to display the in-app message.
+     *
+     * @param scheduleId The schedule ID to display.
+     */
+    @MainThread
+    private void executeSchedule(@NonNull String scheduleId) {
+        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+
+        if (adapterWrapper == null) {
+            driver.scheduleExecuted(scheduleId);
+            return;
+        }
+
+        try {
+            adapterWrapper.display(getContext());
+        } catch (AdapterWrapper.DisplayException e) {
+            Logger.error(e, "Failed to display in-app message: %s, schedule: %s", adapterWrapper.scheduleId, adapterWrapper.message.getId());
+            driver.scheduleExecuted(scheduleId);
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    adapterWrapper.adapterFinished(getContext());
+                }
+            });
+            return;
+        }
+
+        analytics.addEvent(new DisplayEvent(adapterWrapper.message));
+        synchronized (listeners) {
+            for (InAppMessageListener listener : new ArrayList<>(listeners)) {
+                listener.onMessageDisplayed(scheduleId, adapterWrapper.message);
+            }
+        }
+
+        Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: %s", scheduleId);
+    }
+
+    /**
      * Creates an adapter wrapper.
      *
      * @param schedule The schedule.
@@ -689,27 +706,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Called by the display handler when an in-app message is unable to finish displaying on the current activity
-     * and needs to be redisplayed on the next.
-     *
-     * @param scheduleId The schedule ID.
-     * @hide
+     * Updates the automation engine pause state with user enable and component enable flags.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @MainThread
-    void continueOnNextActivity(@NonNull String scheduleId) {
-        Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: %s", scheduleId);
-
-        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-
-        // No record
-        if (adapterWrapper == null) {
-            return;
-        }
-
-        carryOverScheduleIds.add(scheduleId);
-        adapterWrapper.displayFinished();
-        displayCarryOvers();
+    private void updateEnginePauseState() {
+        automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
     }
 
     /**
@@ -746,12 +746,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         // Finish the schedule
         driver.scheduleExecuted(scheduleId);
-        carryOverScheduleIds.remove(scheduleId);
         adapterWrapper.displayFinished();
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                adapterWrapper.adapterFinished();
+                adapterWrapper.adapterFinished(getContext());
             }
         });
 
@@ -762,112 +761,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Called by the display handler to check if the message can still be displayed.
+     * Called by the display handler to see if an in-app message is allowed to display.
      *
-     * @param activity The activity.
      * @param scheduleId The schedule ID.
-     * @return {@code true} if the in-app message should continue displaying, otherwise {@code false}.
+     * @return {@code true} To allow the message to display, otherwise {@code false}.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    boolean isDisplayAllowed(@NonNull Activity activity, @NonNull String scheduleId) {
-        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-
-        // No record
-        if (adapterWrapper == null) {
-            Logger.verbose("InAppMessagingManager - Display not allowed. No record for schedule: %s", scheduleId);
-            return false;
-        }
-
-        boolean result = adapterWrapper.isDisplayAllowed(activity);
-        Logger.verbose("InAppMessagingManager - isResultAllowed %b for schedule: %s message: %s", result, scheduleId, adapterWrapper.message.getId());
-        return result;
+    boolean isDisplayAllowed(String scheduleId) {
+        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        return adapterWrapper != null && adapterWrapper.displayed;
     }
-
-    @MainThread
-    private void displayCarryOvers() {
-        if (!carryOverScheduleIds.isEmpty()) {
-            for (String scheduleId : new ArrayList<>(carryOverScheduleIds)) {
-                if (isScheduleReady(scheduleId)) {
-                    executeSchedule(getResumedActivity(), scheduleId);
-                    carryOverScheduleIds.remove(scheduleId);
-                }
-            }
-        }
-    }
-
-    /**
-     * Helper method to display the in-app message.
-     *
-     * @param activity The resumed activity.
-     * @param scheduleId The schedule ID to display.
-     */
-    @MainThread
-    private void executeSchedule(@Nullable Activity activity, @NonNull String scheduleId) {
-        if (activity == null) {
-            return;
-        }
-
-        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-
-        if (adapterWrapper == null) {
-            driver.scheduleExecuted(scheduleId);
-            return;
-        }
-
-        boolean isRedisplay = adapterWrapper.displayed;
-        try {
-            adapterWrapper.display(activity);
-        } catch (AdapterWrapper.DisplayException e) {
-            Logger.error(e,"Failed to display in-app message: %s, schedule: %s", adapterWrapper.scheduleId, adapterWrapper.message.getId());
-            driver.scheduleExecuted(scheduleId);
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    adapterWrapper.adapterFinished();
-                }
-            });
-            return;
-        }
-
-        if (!isRedisplay) {
-            analytics.addEvent(new DisplayEvent(adapterWrapper.message));
-
-            synchronized (listeners) {
-                for (InAppMessageListener listener : new ArrayList<>(listeners)) {
-                    listener.onMessageDisplayed(scheduleId, adapterWrapper.message);
-                }
-            }
-        }
-
-        Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: %s", scheduleId);
-    }
-
-    /**
-     * Get the resumed, in-app message allowed activity.
-     *
-     * @return The resumed activity.
-     */
-    private Activity getResumedActivity() {
-        if (!activityMonitor.isAppForegrounded()) {
-            return null;
-        }
-
-        List<Activity> activities = activityMonitor.getResumedActivities();
-        if (activities.isEmpty()) {
-            return null;
-        }
-
-        return activities.get(0);
-    }
-
-
-    /**
-     * Updates the automation engine pause state with user enable and component enable flags.
-     */
-    private void updateEnginePauseState() {
-        automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
-    }
-
 }

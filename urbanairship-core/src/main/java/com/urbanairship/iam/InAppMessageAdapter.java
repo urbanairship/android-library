@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
@@ -32,9 +31,10 @@ public interface InAppMessageAdapter {
         InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
     }
 
-    @IntDef({ RETRY, OK, CANCEL })
+    @IntDef({RETRY, OK, CANCEL})
     @Retention(RetentionPolicy.SOURCE)
-    @interface PrepareResult {}
+    @interface PrepareResult {
+    }
 
     /**
      * Indicates a successful result.
@@ -53,7 +53,7 @@ public interface InAppMessageAdapter {
 
 
     /**
-     * Called before {@link #onDisplay(Activity, boolean, DisplayHandler)} to prepare the message to be displayed.
+     * Called to prepare the message to be displayed.
      *
      * @param context The application context.
      * @return {@link #OK} if the in-app message is ready to be displayed, {@link #RETRY} if the message
@@ -67,28 +67,26 @@ public interface InAppMessageAdapter {
     /**
      * Called before displaying but after the message is prepared.
      *
-     * @param activity The current resumed activity.
+     * @param context The application context.
      * @return {@code true} if the message is ready to be displayed, otherwise {@code false}.
      */
-    boolean isReady(@NonNull Activity activity);
+    boolean isReady(@NonNull Context context);
 
     /**
-     * Called to display an in-app message. The display handler's {@link DisplayHandler#isDisplayAllowed(Activity)} must
-     * be called during `onStart()` in either the activity or fragment, and if the request is denied must
-     * immediately dismiss the component without any other calls to the display handler. Once the activity
-     * or fragment is finished being displayed call {@link DisplayHandler#finished(ResolutionInfo)}.
+     * Called to display an in-app message.
      *
-     * @param activity The current resumed activity.
-     * @param isRedisplay {@code true} If the in-app message is being redisplayed, otherwise {@code false}.
+     * @param context The application context.
      * @param displayHandler The display handler.
      */
     @MainThread
-    void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler);
+    void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler);
 
     /**
      * Called after the in-app message is finished displaying.
      * Perform any cache clean up here.
+     *
+     * @param context The application context.
      */
     @WorkerThread
-    void onFinish();
+    void onFinish(@NonNull Context context);
 }

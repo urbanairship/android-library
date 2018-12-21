@@ -143,10 +143,6 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         InAppActionUtils.runActions(buttonInfo);
-        if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
-            getDisplayHandler().cancelFutureDisplays();
-        }
-
         getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo, getDisplayTime()));
         finish();
     }

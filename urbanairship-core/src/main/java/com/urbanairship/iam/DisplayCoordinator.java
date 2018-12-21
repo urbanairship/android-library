@@ -1,12 +1,12 @@
+/* Copyright 2018 Urban Airship and Contributors */
+
 package com.urbanairship.iam;
 
-import android.app.Activity;
 import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
-import android.view.Display;
 
 /**
  * Handles display coordination for in-app messages.
@@ -53,33 +53,21 @@ public abstract class DisplayCoordinator {
     }
 
     /**
-     * Called to check if a message is ready to display.
+     * Called to check if a the display is ready.
      *
-     * @param message The in-app message.
-     * @param isRedisplay {@code true} if the message was already displayed, otherwise {@code false}.
-     * @return {@code true} to allow the message to display, otherwise {@code false}.
+     * @return {@code true} if the display is ready, otherwise {@code false}.
      */
     @MainThread
-    public abstract boolean isReady(@NonNull InAppMessage message, boolean isRedisplay);
+    public abstract boolean isReady();
 
     /**
      * Notifies the coordinator that message display has begun.
      *
-     * @param activity The activity.
      * @param message The in-app message.
      */
     @MainThread
-    public abstract void onDisplayStarted(@NonNull Activity activity, @NonNull InAppMessage message);
+    public abstract void onDisplayStarted(@NonNull InAppMessage message);
 
-    /**
-     * Called when a message checks to see if it should still display. This is normally called from
-     * the activity's onStart method.
-     *
-     * @param activity The activity.
-     * @param message The in-app message.
-     */
-    @MainThread
-    public abstract boolean onAllowDisplay(@NonNull Activity activity, @NonNull InAppMessage message);
 
     /**
      * Notifies the coordinator that message display has finished.

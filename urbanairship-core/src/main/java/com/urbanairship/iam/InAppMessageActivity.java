@@ -79,6 +79,14 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         onCreateMessage(savedInstanceState);
     }
 
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        if (!displayHandler.isDisplayAllowed(this)) {
+            finish();
+        }
+    }
+
     /**
      * Called during {@link #onCreate(Bundle)} after the in-app message and display handler are parsed
      * from the intent.
@@ -93,14 +101,6 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         outState.putLong(DISPLAY_TIME_KEY, displayTime);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (!displayHandler.isDisplayAllowed(this)) {
-            finish();
-        }
-    }
 
     @Override
     protected void onResume() {

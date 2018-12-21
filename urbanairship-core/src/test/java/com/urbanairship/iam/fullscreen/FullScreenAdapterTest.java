@@ -3,6 +3,7 @@
 package com.urbanairship.iam.fullscreen;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
@@ -49,10 +50,10 @@ public class FullScreenAdapterTest extends BaseTestCase {
 
     @Test
     public void testDisplay() {
-        Activity activity = mock(Activity.class);
-        adapter.onDisplay(activity, false, displayHandler);
+        Context context = mock(Context.class);
+        adapter.onDisplay(context, displayHandler);
 
-        verify(activity).startActivity(Mockito.argThat(new ArgumentMatcher<Intent>() {
+        verify(context).startActivity(Mockito.argThat(new ArgumentMatcher<Intent>() {
             @Override
             public boolean matches(Intent argument) {
                 if (!displayHandler.equals(argument.getParcelableExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY))) {

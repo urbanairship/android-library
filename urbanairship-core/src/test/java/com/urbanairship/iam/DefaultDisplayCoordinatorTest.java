@@ -42,110 +42,42 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
     @Test
     public void isReady() {
-        assertTrue(coordinator.isReady(messageOne, false));
-        assertTrue(coordinator.isReady(messageOne, true));
-        assertTrue(coordinator.isReady(messageTwo, false));
-        assertTrue(coordinator.isReady(messageTwo, true));
+        assertFalse(coordinator.isReady());
+
+        Activity activity = new Activity();
+        activityMonitor.resumeActivity(activity);
+
+        assertTrue(coordinator.isReady());
     }
 
     @Test
-    public void onDisplayStarted() {
+    public void onDisplay() {
         Activity activity = new Activity();
-        coordinator.onDisplayStarted(activity, messageOne);
+        activityMonitor.resumeActivity(activity);
 
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageOne, true));
-        assertFalse(coordinator.isReady(messageTwo, false));
-        assertFalse(coordinator.isReady(messageTwo, true));
-    }
-
-    @Test
-    public void onAllowDisplayNoCurrentMessage() {
-        Activity activity = new Activity();
-        assertTrue(coordinator.onAllowDisplay(activity, messageOne));
-
-        assertFalse(coordinator.onAllowDisplay(activity, messageTwo));
-
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageOne, true));
-        assertFalse(coordinator.isReady(messageTwo, false));
-        assertFalse(coordinator.isReady(messageTwo, true));
-    }
-
-    @Test
-    public void onAllowDisplayCurrentMessage() {
-        Activity activity = new Activity();
-        coordinator.onDisplayStarted(activity, messageTwo);
-        assertTrue(coordinator.onAllowDisplay(activity, messageTwo));
-
-        assertFalse(coordinator.onAllowDisplay(activity, messageOne));
-
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageOne, true));
-        assertFalse(coordinator.isReady(messageTwo, false));
-        assertFalse(coordinator.isReady(messageTwo, true));
+        assertTrue(coordinator.isReady());
+        coordinator.onDisplayStarted(messageOne);
+        assertFalse(coordinator.isReady());
     }
 
     @Test
     public void onDisplayFinished() {
         Activity activity = new Activity();
-        coordinator.onDisplayStarted(activity, messageTwo);
+        activityMonitor.resumeActivity(activity);
+
+        assertTrue(coordinator.isReady());
+        coordinator.onDisplayStarted(messageTwo);
+
+        assertFalse(coordinator.isReady());
         coordinator.onDisplayFinished(messageTwo);
 
         // Display should still be locked until the interval
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageTwo, false));
-
-        // Message redisplays should bypass the lock
-        assertTrue(coordinator.isReady(messageOne, true));
-        assertTrue(coordinator.isReady(messageTwo, true));
+        assertFalse(coordinator.isReady());
 
         // Advance the looper to free up the display lock
         mainLooper.runToEndOfTasks();
 
-        // All messages should be ready
-        assertTrue(coordinator.isReady(messageOne, false));
-        assertTrue(coordinator.isReady(messageOne, true));
-        assertTrue(coordinator.isReady(messageTwo, false));
-        assertTrue(coordinator.isReady(messageTwo, true));
-    }
-
-    @Test
-    public void activityStopped() {
-        // Resume an activity
-        Activity activity = new Activity();
-        activityMonitor.startActivity(activity);
-        activityMonitor.resumeActivity(activity);
-
-        // Display message one
-        assertTrue(coordinator.isReady(messageOne, false));
-        coordinator.onDisplayStarted(activity, messageOne);
-
-        // Display should be locked with an active message
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageOne, true));
-        assertFalse(coordinator.isReady(messageTwo, false));
-        assertFalse(coordinator.isReady(messageTwo, true));
-
-        // Stop the activity
-        activityMonitor.pauseActivity(activity);
-        activityMonitor.stopActivity(activity);
-
-        // Display should still be locked until the interval
-        assertFalse(coordinator.isReady(messageOne, false));
-        assertFalse(coordinator.isReady(messageTwo, false));
-
-        // Message redisplays should bypass the lock
-        assertTrue(coordinator.isReady(messageOne, true));
-        assertTrue(coordinator.isReady(messageTwo, true));
-
-        // Advance the looper to free up the display lock
-        mainLooper.runToEndOfTasks();
-
-        // All messages should be ready
-        assertTrue(coordinator.isReady(messageOne, false));
-        assertTrue(coordinator.isReady(messageOne, true));
-        assertTrue(coordinator.isReady(messageTwo, false));
-        assertTrue(coordinator.isReady(messageTwo, true));
+        // Display should be ready
+        assertTrue(coordinator.isReady());
     }
 }

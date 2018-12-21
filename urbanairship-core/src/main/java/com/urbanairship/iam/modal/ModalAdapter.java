@@ -2,8 +2,7 @@
 
 package com.urbanairship.iam.modal;
 
-
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
@@ -43,8 +42,9 @@ public class ModalAdapter extends MediaDisplayAdapter {
     }
 
     @Override
-    public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        Intent intent = new Intent(activity, ModalActivity.class)
+    public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
+        Intent intent = new Intent(context, ModalActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(ModalActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(ModalActivity.IN_APP_MESSAGE_KEY, getMessage());
 
@@ -52,6 +52,6 @@ public class ModalAdapter extends MediaDisplayAdapter {
             intent.putExtra(ModalActivity.IN_APP_CACHE_KEY, getCache());
         }
 
-        activity.startActivity(intent);
+        context.startActivity(intent);
     }
 }

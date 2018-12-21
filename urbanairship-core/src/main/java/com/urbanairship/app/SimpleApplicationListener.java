@@ -1,5 +1,6 @@
-package com.urbanairship.app;
+/* Copyright 2018 Urban Airship and Contributors */
 
+package com.urbanairship.app;
 
 /**
  * A convenience class to extend when you only want to listen for a subset

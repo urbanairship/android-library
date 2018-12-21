@@ -4,6 +4,7 @@ package com.urbanairship.iam.fullscreen;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
@@ -45,8 +46,9 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
 
 
     @Override
-    public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        Intent intent = new Intent(activity, FullScreenActivity.class)
+    public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
+        Intent intent = new Intent(context, FullScreenActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(FullScreenActivity.IN_APP_MESSAGE_KEY, getMessage());
 
@@ -54,6 +56,6 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
             intent.putExtra(FullScreenActivity.IN_APP_CACHE_KEY, getCache());
         }
 
-        activity.startActivity(intent);
+        context.startActivity(intent);
     }
 }

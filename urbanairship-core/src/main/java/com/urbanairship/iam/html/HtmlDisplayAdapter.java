@@ -2,8 +2,6 @@
 
 package com.urbanairship.iam.html;
 
-
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -60,19 +58,20 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public boolean isReady(@NonNull Activity activity) {
+    public boolean isReady(@NonNull Context context) {
         return Network.isConnected();
     }
 
     @Override
-    public void onDisplay(@NonNull Activity activity, boolean isRedisplay, @NonNull DisplayHandler displayHandler) {
-        Intent intent = new Intent(activity, HtmlActivity.class)
+    public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
+        Intent intent = new Intent(context, HtmlActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(HtmlActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(HtmlActivity.IN_APP_MESSAGE_KEY, message);
 
-        activity.startActivity(intent);
+        context.startActivity(intent);
     }
 
     @Override
-    public void onFinish() {}
+    public void onFinish(@NonNull Context context) {}
 }

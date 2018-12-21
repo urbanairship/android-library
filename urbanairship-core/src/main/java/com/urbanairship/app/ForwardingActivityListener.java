@@ -1,3 +1,5 @@
+/* Copyright 2018 Urban Airship and Contributors */
+
 package com.urbanairship.app;
 
 import android.app.Activity;

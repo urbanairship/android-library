@@ -1,13 +1,20 @@
-package com.urbanairship.iam.banner;
 /* Copyright 2018 Urban Airship and Contributors */
 
+package com.urbanairship.iam.banner;
+
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.AnimatorRes;
+import android.support.annotation.CallSuper;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.ColorUtils;
@@ -19,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -34,12 +42,14 @@ import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.iam.view.MediaView;
 
+import java.util.List;
+
 /**
  * Banner view.
  */
-public class BannerView extends InAppViewGroup implements InAppButtonLayout.ButtonClickListener,
-                                                          View.OnClickListener,
-                                                          BannerDismissLayout.Listener {
+public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonClickListener,
+        View.OnClickListener,
+        BannerDismissLayout.Listener {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
 
@@ -52,16 +62,68 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
     @NonNull
     private Timer timer;
 
+    @AnimatorRes
+    private int animationIn;
+
+    @AnimatorRes
+    private int animationOut;
+
+    private boolean isDismissed = false;
+    private boolean isResumed = false;
+
+    @Nullable
+    private View subView;
+
+    @Nullable
+    private Listener listener;
+
+    /**
+     * Banner view listener.
+     */
+    public interface Listener {
+        /**
+         * Called when a button is clicked.
+         *
+         * @param view The banner view.
+         * @param buttonInfo The button info.
+         */
+        @MainThread
+        void onButtonClicked(@NonNull BannerView view, @NonNull ButtonInfo buttonInfo);
+
+        /**
+         * Called when the banner is clicked.
+         *
+         * @param view The banner view.
+         */
+        @MainThread
+        void onBannerClicked(@NonNull BannerView view);
+
+        /**
+         * Called when the banner times out.
+         *
+         * @param view The banner view.
+         */
+        @MainThread
+        void onTimedOut(@NonNull BannerView view);
+
+        /**
+         * Called when the banner is dismissed by the user.
+         *
+         * @param view The banner view.
+         */
+        @MainThread
+        void onUserDismissed(@NonNull BannerView view);
+    }
+
     /**
      * Default constructor.
      *
      * @param context The context.
-     * @param displayHandler The display handler.
      * @param displayContent The banner display content.
      * @param cache The IAM cache.
      */
-    public BannerView(@NonNull Context context, @NonNull DisplayHandler displayHandler, @NonNull BannerDisplayContent displayContent, @Nullable InAppMessageCache cache) {
-        super(context, displayHandler);
+    public BannerView(@NonNull Context context, @NonNull BannerDisplayContent displayContent, @Nullable InAppMessageCache cache) {
+        super(context);
         this.displayContent = displayContent;
         this.cache = cache;
 
@@ -69,15 +131,32 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
         this.timer = new Timer(duration) {
             @Override
             protected void onFinish() {
-                if (isResumed()) {
-                    dismiss(true, ResolutionInfo.timedOut(duration));
+                dismiss(true);
+                Listener listener = BannerView.this.listener;
+                if (listener != null) {
+                    listener.onTimedOut(BannerView.this);
                 }
             }
         };
     }
 
+    /**
+     * Sets the banner listener.
+     *
+     * @param listener The banner listener.
+     */
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * Called to inflate and attach the in-app message view.
+     *
+     * @param inflater The inflater.
+     * @return The view.
+     */
     @NonNull
-    @Override
+    @MainThread
     protected View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
         // Main view
         BannerDismissLayout view = (BannerDismissLayout) inflater.inflate(getLayout(), container, false);
@@ -151,37 +230,116 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
         return view;
     }
 
-    @Override
-    protected void onResume(@NonNull Activity activity) {
-        super.onResume(activity);
-        timer.start();
+    /**
+     * Resumes the banner's timer.
+     */
+    @MainThread
+    @CallSuper
+    protected void onResume() {
+        isResumed = true;
+        if (isDismissed) {
+            getTimer().start();
+        }
+    }
+
+    /**
+     * Pauses the banner's timer.
+     */
+    @MainThread
+    @CallSuper
+    protected void onPause() {
+        isResumed = false;
+        getTimer().stop();
+    }
+
+    /**
+     * Used to dismiss the message.
+     *
+     * @param animate {@code true} to animate the view out, otherwise {@code false}.
+     */
+    @MainThread
+    protected void dismiss(boolean animate) {
+        isDismissed = true;
+        getTimer().stop();
+
+        if (animate && subView != null && animationOut != 0) {
+            clearAnimation();
+            Animator animator = AnimatorInflater.loadAnimator(getContext(), animationOut);
+            animator.setTarget(subView);
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    removeSelf();
+                }
+            });
+
+            animator.start();
+        } else {
+            removeSelf();
+        }
+    }
+
+    /**
+     * Helper method to remove the view from the parent.
+     */
+    @MainThread
+    private void removeSelf() {
+        if (this.getParent() instanceof ViewGroup) {
+            final ViewGroup parent = (ViewGroup) this.getParent();
+            parent.removeView(this);
+            subView = null;
+        }
     }
 
     @Override
-    protected void onPause(@NonNull Activity activity) {
-        super.onPause(activity);
-        timer.stop();
+    protected void onWindowVisibilityChanged(int visibility) {
+        final Activity activity = (Activity) getContext();
+        if (activity == null) {
+            return;
+        }
+
+        if (visibility == VISIBLE && !isDismissed) {
+            if (subView == null) {
+                subView = onCreateView(LayoutInflater.from(getContext()), this);
+                addView(subView);
+                if (animationIn != 0) {
+                    Animator animator = AnimatorInflater.loadAnimator(getContext(), animationIn);
+                    animator.setTarget(subView);
+                    animator.start();
+                }
+
+                onResume();
+            }
+        }
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        timer.stop();
+    /**
+     * Sets the animation.
+     *
+     * @param in The animation in.
+     * @param out The animation out.
+     */
+    public void setAnimations(@AnimatorRes int in, @AnimatorRes int out) {
+        this.animationIn = in;
+        this.animationOut = out;
     }
+
 
     @Override
     public void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo) {
-        InAppActionUtils.runActions(buttonInfo);
-        dismiss(true, ResolutionInfo.buttonPressed(buttonInfo, timer.getRunTime()));
-
-        if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
-            getDisplayHandler().cancelFutureDisplays();
+        Listener listener = this.listener;
+        if (listener != null) {
+            listener.onButtonClicked(this, buttonInfo);
         }
     }
 
     @Override
     public void onDismissed(@NonNull View view) {
-        dismiss(false, ResolutionInfo.dismissed(timer.getRunTime()));
+        Listener listener = this.listener;
+        if (listener != null) {
+            listener.onUserDismissed(this);
+        }
+        dismiss(false);
     }
 
     @Override
@@ -191,7 +349,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
                 getTimer().stop();
                 break;
             case ViewDragHelper.STATE_IDLE:
-                if (isResumed()) {
+                if (isResumed) {
                     getTimer().start();
                 }
                 break;
@@ -200,12 +358,10 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
 
     @Override
     public void onClick(@NonNull View view) {
-        if (displayContent.getActions().isEmpty()) {
-            return;
+        Listener listener = this.listener;
+        if (listener != null) {
+            listener.onBannerClicked(this);
         }
-
-        InAppActionUtils.runActions(displayContent.getActions());
-        dismiss(true, ResolutionInfo.messageClicked(timer.getRunTime()));
     }
 
     /**
@@ -292,7 +448,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
             return false;
         }
 
-        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation });
+        TypedArray a = getContext().obtainStyledAttributes(new int[]{android.R.attr.windowTranslucentNavigation});
         boolean isEnabled = a.getBoolean(0, false);
         a.recycle();
         return isEnabled;
@@ -305,7 +461,7 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
      */
     private boolean isActionBarEnabled() {
         int compatWindowActionBarAttr = getContext().getResources().getIdentifier("windowActionBar", "attr", getContext().getPackageName());
-        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowActionBar, compatWindowActionBarAttr });
+        TypedArray a = getContext().obtainStyledAttributes(new int[]{android.R.attr.windowActionBar, compatWindowActionBarAttr});
         boolean isEnabled = a.getBoolean(0, false) || a.getBoolean(1, false);
         a.recycle();
 
@@ -341,10 +497,10 @@ public class BannerView extends InAppViewGroup implements InAppButtonLayout.Butt
         int borderRadiusFlag = BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement()) ? BorderRadius.BOTTOM : BorderRadius.TOP;
 
         return BackgroundDrawableBuilder.newBuilder(getContext())
-                                        .setBackgroundColor(displayContent.getBackgroundColor())
-                                        .setPressedColor(pressedColor)
-                                        .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
-                                        .build();
+                .setBackgroundColor(displayContent.getBackgroundColor())
+                .setPressedColor(pressedColor)
+                .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
+                .build();
     }
 
     /**
