@@ -75,15 +75,16 @@ public class DisplayHandler implements Parcelable {
      * the in-app message if still on the back stack.
      *
      * @param resolutionInfo Info on why the message has finished.
+     * @param displayMilliseconds The display time in milliseconds
      */
-    public void finished(@NonNull ResolutionInfo resolutionInfo) {
+    public void finished(@NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
         InAppMessageManager manager = getInAppMessagingManager();
         if (manager == null) {
             Logger.error("Takeoff not called. Unable to finish display for schedule: %s", scheduleId);
             return;
         }
 
-        manager.messageFinished(scheduleId, resolutionInfo);
+        manager.messageFinished(scheduleId, resolutionInfo, displayMilliseconds);
     }
 
     /**

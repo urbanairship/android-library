@@ -107,10 +107,12 @@ class ResolutionEvent extends InAppMessageEvent {
      * @param resolutionInfo The resolution info.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent messageResolution(@NonNull InAppMessage message, ResolutionInfo resolutionInfo) {
+    static ResolutionEvent messageResolution(@NonNull InAppMessage message, ResolutionInfo resolutionInfo, long displayMilliseconds) {
+        displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
+
         JsonMap.Builder resolutionDataBuilder = JsonMap.newBuilder()
                                                        .put(RESOLUTION_TYPE, resolutionInfo.getType())
-                                                       .put(DISPLAY_TIME, millisecondsToSecondsString(resolutionInfo.getDisplayMilliseconds()));
+                                                       .put(DISPLAY_TIME, millisecondsToSecondsString(displayMilliseconds));
 
 
         if (ResolutionInfo.RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.getType()) && resolutionInfo.getButtonInfo() != null) {

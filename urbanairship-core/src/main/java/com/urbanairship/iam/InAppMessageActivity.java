@@ -119,7 +119,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        displayHandler.finished(ResolutionInfo.dismissed(getDisplayTime()));
+        displayHandler.finished(ResolutionInfo.dismissed(), getDisplayTime());
         finish();
     }
 

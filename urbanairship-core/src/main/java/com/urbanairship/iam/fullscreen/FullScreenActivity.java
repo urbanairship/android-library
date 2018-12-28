@@ -114,7 +114,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
             @Override
             public void onClick(View view) {
                 if (getDisplayHandler() != null) {
-                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(), getDisplayTime());
                 }
                 finish();
             }
@@ -143,7 +143,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         InAppActionUtils.runActions(buttonInfo);
-        getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo, getDisplayTime()));
+        getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo), getDisplayTime());
         finish();
     }
 

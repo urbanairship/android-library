@@ -197,7 +197,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param url The url being loaded.
      * @return <code>true</code> if the url was loaded, otherwise <code>false</code>.
      */
-    private boolean interceptUrl(@NonNull WebView webView, @Nullable String url) {
+    protected boolean interceptUrl(@NonNull WebView webView, @Nullable String url) {
         if (url == null) {
             return false;
         }
@@ -453,7 +453,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param url The URL being loaded.
      * @return <code>true</code> if the URL is white listed, otherwise <code>false</code>.
      */
-    private boolean isWhiteListed(@Nullable String url) {
+    protected boolean isWhiteListed(@Nullable String url) {
         return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
     }
 

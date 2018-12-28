@@ -717,12 +717,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      *
      * @param scheduleId The schedule ID.
      * @param resolutionInfo Info on why the event is finished.
+     * @param displayMilliseconds The display time in milliseconds
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    void messageFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo) {
-        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: %s", scheduleId);
+    void messageFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
+        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: " + scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 
@@ -732,7 +733,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         // Add resolution event
-        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo));
+        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo, displayMilliseconds));
 
         // Run Actions
         InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);

@@ -6,13 +6,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
+
+import org.json.JSONException;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
  * Info used to generate an event when a message is finished.
  */
-public final class ResolutionInfo {
+public final class ResolutionInfo implements JsonSerializable {
 
     @StringDef({ RESOLUTION_BUTTON_CLICK, RESOLUTION_MESSAGE_CLICK, RESOLUTION_USER_DISMISSED, RESOLUTION_TIMED_OUT })
     @Retention(RetentionPolicy.SOURCE)
@@ -42,34 +49,82 @@ public final class ResolutionInfo {
     @NonNull
     public static final String RESOLUTION_TIMED_OUT = "timed_out";
 
+    /**
+     * Type key.
+     */
+    @NonNull
+    public static final String TYPE_KEY = "type";
+
+    /**
+     * Button info key.
+     */
+    @NonNull
+    public static final String BUTTON_INFO_KEY = "button_info";
+
     @NonNull
     private final String type;
     @Nullable
     private final ButtonInfo buttonInfo;
-    private final long displayMilliseconds;
 
     /**
      * Default constructor.
      *
      * @param type The resolution type.
-     * @param displayMilliseconds The display time in milliseconds.
      */
-    private ResolutionInfo(@Type @NonNull String type, long displayMilliseconds) {
+    private ResolutionInfo(@Type @NonNull String type) {
         this.type = type;
-        this.displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
         this.buttonInfo = null;
+    }
+
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                      .put(TYPE_KEY, getType())
+                      .putOpt(BUTTON_INFO_KEY, getButtonInfo().toJsonValue())
+                      .build()
+                      .toJsonValue();
+    }
+
+    /**
+     * Parses an {@link ResolutionInfo} from a {@link JsonValue}.
+     *
+     * @param value The json value.
+     * @return The parsed resolution info.
+     * @throws JsonException If the resolution info was unable to be parsed.
+     */
+    @NonNull
+    public static ResolutionInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        String type = null;
+        ButtonInfo buttonInfo = null;
+
+        JsonMap content = value.optMap();
+
+        // Type
+        if (content.opt(TYPE_KEY).isString()) {
+            type = content.opt(TYPE_KEY).getString();
+
+            if (type == null) {
+                throw new JsonException("ResolutionInfo must contain a type");
+            }
+        }
+
+        // Button Info
+        if (content.opt(BUTTON_INFO_KEY).isJsonMap()) {
+            buttonInfo = ButtonInfo.fromJson(content.opt(BUTTON_INFO_KEY).toJsonValue());
+        }
+
+        return new ResolutionInfo(type, buttonInfo);
     }
 
     /**
      * Default constructor.
      *
      * @param type The resolution type.
-     * @param displayMilliseconds The display time in milliseconds.
      * @param buttonInfo The optional button info.
      */
-    private ResolutionInfo(@Type @NonNull String type, long displayMilliseconds, @NonNull ButtonInfo buttonInfo) {
+    private ResolutionInfo(@Type @NonNull String type, @NonNull ButtonInfo buttonInfo) {
         this.type = type;
-        this.displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
         this.buttonInfo = buttonInfo;
     }
 
@@ -77,45 +132,41 @@ public final class ResolutionInfo {
      * Factory method to create a resolution info for a button press.
      *
      * @param buttonInfo The button info.
-     * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
     @NonNull
-    public static ResolutionInfo buttonPressed(@NonNull ButtonInfo buttonInfo, long displayMilliseconds) {
-        return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, displayMilliseconds, buttonInfo);
+    public static ResolutionInfo buttonPressed(@NonNull ButtonInfo buttonInfo) {
+        return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, buttonInfo);
     }
 
     /**
      * Factory method to create a resolution info for when a clickable in-app message was clicked.
      *
-     * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
     @NonNull
-    public static ResolutionInfo messageClicked(long displayMilliseconds) {
-        return new ResolutionInfo(RESOLUTION_MESSAGE_CLICK, displayMilliseconds);
+    public static ResolutionInfo messageClicked() {
+        return new ResolutionInfo(RESOLUTION_MESSAGE_CLICK);
     }
 
     /**
      * Factory method to create a resolution info for when the user dismissed the in-app message.
      *
-     * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
     @NonNull
-    public static ResolutionInfo dismissed(long displayMilliseconds) {
-        return new ResolutionInfo(RESOLUTION_USER_DISMISSED, displayMilliseconds);
+    public static ResolutionInfo dismissed() {
+        return new ResolutionInfo(RESOLUTION_USER_DISMISSED);
     }
 
     /**
      * Factory method to create a resolution info for when the in-app message times out and auto dismisses.
      *
-     * @param displayMilliseconds How long in milliseconds the in-app message was displayed.
      * @return The resolution info.
      */
     @NonNull
-    public static ResolutionInfo timedOut(long displayMilliseconds) {
-        return new ResolutionInfo(RESOLUTION_TIMED_OUT, displayMilliseconds);
+    public static ResolutionInfo timedOut() {
+        return new ResolutionInfo(RESOLUTION_TIMED_OUT);
     }
 
     /**
@@ -137,14 +188,5 @@ public final class ResolutionInfo {
     @Nullable
     public ButtonInfo getButtonInfo() {
         return buttonInfo;
-    }
-
-    /**
-     * The elapsed time the message was displayed in milliseconds.
-     *
-     * @return The display time in milliseconds.
-     */
-    public long getDisplayMilliseconds() {
-        return displayMilliseconds;
     }
 }
