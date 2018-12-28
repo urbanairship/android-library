@@ -11,8 +11,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
-import org.json.JSONException;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -33,6 +31,7 @@ public final class ResolutionInfo implements JsonSerializable {
 
     /**
      * Message click resolution
+
      */
     @NonNull
     public static final String RESOLUTION_MESSAGE_CLICK = "message_click";
@@ -188,5 +187,29 @@ public final class ResolutionInfo implements JsonSerializable {
     @Nullable
     public ButtonInfo getButtonInfo() {
         return buttonInfo;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ResolutionInfo that = (ResolutionInfo) o;
+
+        if (!type.equals(that.type)) {
+            return false;
+        }
+        return buttonInfo != null ? buttonInfo.equals(that.buttonInfo) : that.buttonInfo == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type.hashCode();
+        result = 31 * result + (buttonInfo != null ? buttonInfo.hashCode() : 0);
+        return result;
     }
 }

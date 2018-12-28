@@ -9,10 +9,15 @@ import android.support.annotation.RestrictTo;
 import android.webkit.WebView;
 
 import com.urbanairship.Logger;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.widget.UAWebViewClient;
 
+/**
+ * A version of the {@link UAWebViewClient} for HTML in-app messages, which adds a command
+ * for dismissing the message with resolution info represented as URL-encoded JSON.
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class HtmlWebViewClient extends UAWebViewClient {
 
@@ -22,7 +27,28 @@ public abstract class HtmlWebViewClient extends UAWebViewClient {
     @NonNull
     public static final String DISMISS_COMMAND = "dismiss";
 
+    /**
+     * Default constructor.
+     */
+    public HtmlWebViewClient() {
+        super();
+    }
 
+    /**
+     * Constructs an HtmlWebViewClient with the specified ActionRunRequestFactory.
+     *
+     * @param actionRunRequestFactory The action run request factory.
+     */
+    protected HtmlWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
+        super(actionRunRequestFactory);
+    }
+
+    /**
+     * Called when the dismiss command is invoked from the native bridge. Override to
+     * customize the handling of this event.
+     *
+     * @param argument The argument data passed in the dismiss call.
+     */
     public abstract void onMessageDismissed(@NonNull JsonValue argument);
 
     /**

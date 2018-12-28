@@ -143,7 +143,7 @@ public class UAWebViewClient extends WebViewClient {
      *
      * @param actionRunRequestFactory The action run request factory.
      */
-    UAWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
+    protected UAWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
         this.actionRunRequestFactory = actionRunRequestFactory;
     }
 
