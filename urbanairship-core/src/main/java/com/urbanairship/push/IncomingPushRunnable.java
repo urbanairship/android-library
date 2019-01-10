@@ -194,8 +194,9 @@ class IncomingPushRunnable implements Runnable {
 
         switch (result.getStatus()) {
             case NotificationFactory.Result.OK:
-                postNotification(airship, result.getNotification(), notificationId);
-                sendPushResultBroadcast(notificationId);
+                if (postNotification(airship, result.getNotification(), notificationId)) {
+                    sendPushResultBroadcast(notificationId);
+                }
                 break;
             case NotificationFactory.Result.CANCEL:
                 sendPushResultBroadcast(null);
@@ -213,8 +214,9 @@ class IncomingPushRunnable implements Runnable {
      * @param airship The airship instance.
      * @param notification The notification.
      * @param notificationId The notification ID.
+     * @return {@code true} if the notification posted, otherwise {@code false}.
      */
-    private void postNotification(UAirship airship, Notification notification, int notificationId) {
+    private boolean postNotification(UAirship airship, Notification notification, int notificationId) {
 
         if (Build.VERSION.SDK_INT < 26) {
             if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
@@ -256,7 +258,13 @@ class IncomingPushRunnable implements Runnable {
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
         Logger.info("Posting notification: " + notification + " id: " + notificationId + " tag: " + message.getNotificationTag());
-        notificationManager.notify(message.getNotificationTag(), notificationId, notification);
+        try {
+            notificationManager.notify(message.getNotificationTag(), notificationId, notification);
+            return true;
+        } catch (Exception e) {
+            Logger.error("Failed to post notification.", e);
+            return false;
+        }
     }
 
     /**
