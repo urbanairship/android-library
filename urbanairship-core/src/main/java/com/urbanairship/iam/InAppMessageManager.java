@@ -723,7 +723,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void messageFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
-        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: " + scheduleId);
+        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: %s", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 
