@@ -42,7 +42,7 @@ public class ResolutionEventTest extends BaseTestCase {
                                           .build();
 
 
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo, 3500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -69,7 +69,7 @@ public class ResolutionEventTest extends BaseTestCase {
                                           .build();
 
 
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo, 3500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -86,7 +86,7 @@ public class ResolutionEventTest extends BaseTestCase {
      */
     @Test
     public void testClickedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.messageClicked(5500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.messageClicked(), 5500);
 
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
@@ -102,7 +102,7 @@ public class ResolutionEventTest extends BaseTestCase {
      */
     @Test
     public void testUserDismissedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.dismissed(3500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.dismissed(), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "user_dismissed")
@@ -117,7 +117,7 @@ public class ResolutionEventTest extends BaseTestCase {
      */
     @Test
     public void testTimedOutResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.timedOut(15000));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.timedOut(), 15000);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "timed_out")

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.View;
@@ -26,6 +27,8 @@ import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
@@ -93,7 +96,23 @@ public class HtmlActivity extends InAppMessageActivity {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        webView.setWebViewClient(new UAWebViewClient() {
+        webView.setWebViewClient(new HtmlWebViewClient() {
+            @Override
+            public void onMessageDismissed(@NonNull JsonValue argument) {
+                try {
+                    ResolutionInfo info = ResolutionInfo.fromJson(argument);
+
+                    if (getDisplayHandler() != null) {
+                        getDisplayHandler().finished(info, getDisplayTime());
+                    }
+
+                    finish();
+
+                } catch (JsonException e) {
+                    Logger.error("Unable to parse message resolution JSON", e);
+                }
+            }
+
             @Override
             public void onPageFinished(final WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -146,7 +165,7 @@ public class HtmlActivity extends InAppMessageActivity {
             @Override
             public void onClick(View view) {
                 if (getDisplayHandler() != null) {
-                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(), getDisplayTime());
                 }
                 finish();
             }

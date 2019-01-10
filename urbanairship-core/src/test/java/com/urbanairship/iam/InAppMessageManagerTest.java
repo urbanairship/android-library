@@ -236,8 +236,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockListener).onMessageDisplayed(schedule.getId(), schedule.getInfo().getInAppMessage());
 
         // Finish displaying the in-app message
-        ResolutionInfo resolutionInfo = ResolutionInfo.dismissed(100);
-        manager.messageFinished(schedule.getId(), resolutionInfo);
+        ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
+        manager.messageFinished(schedule.getId(), resolutionInfo, 100);
         verify(mockListener).onMessageFinished(schedule.getId(), schedule.getInfo().getInAppMessage(), resolutionInfo);
         verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
         verify(mockCoordinator).onDisplayFinished(schedule.getInfo().getInAppMessage());

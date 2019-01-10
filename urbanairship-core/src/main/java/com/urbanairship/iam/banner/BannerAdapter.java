@@ -152,7 +152,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
             @Override
             public void onButtonClicked(BannerView view, ButtonInfo buttonInfo) {
                 InAppActionUtils.runActions(buttonInfo);
-                displayHandler.finished(ResolutionInfo.buttonPressed(buttonInfo, view.getTimer().getRunTime()));
+                displayHandler.finished(ResolutionInfo.buttonPressed(buttonInfo), view.getTimer().getRunTime());
                 onDisplayFinished(view.getContext());
             }
 
@@ -160,7 +160,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
             public void onBannerClicked(BannerView view) {
                 if (!displayContent.getActions().isEmpty()) {
                     InAppActionUtils.runActions(displayContent.getActions());
-                    displayHandler.finished(ResolutionInfo.messageClicked(view.getTimer().getRunTime()));
+                    displayHandler.finished(ResolutionInfo.messageClicked(), view.getTimer().getRunTime());
                 }
 
                 onDisplayFinished(view.getContext());
@@ -168,13 +168,13 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
             @Override
             public void onTimedOut(BannerView view) {
-                displayHandler.finished(ResolutionInfo.messageClicked(view.getTimer().getRunTime()));
+                displayHandler.finished(ResolutionInfo.messageClicked(), view.getTimer().getRunTime());
                 onDisplayFinished(view.getContext());
             }
 
             @Override
             public void onUserDismissed(BannerView view) {
-                displayHandler.finished(ResolutionInfo.dismissed(view.getTimer().getRunTime()));
+                displayHandler.finished(ResolutionInfo.dismissed(), view.getTimer().getRunTime());
                 onDisplayFinished(view.getContext());
             }
         });

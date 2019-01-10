@@ -146,7 +146,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             @Override
             public void onClick(View view) {
                 if (getDisplayHandler() != null) {
-                    getDisplayHandler().finished(ResolutionInfo.dismissed(getDisplayTime()));
+                    getDisplayHandler().finished(ResolutionInfo.dismissed(), getDisplayTime());
                 }
                 finish();
             }
@@ -160,7 +160,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         }
 
         InAppActionUtils.runActions(buttonInfo);
-        getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo, getDisplayTime()));
+        getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo), getDisplayTime());
         finish();
     }
 
