@@ -103,7 +103,7 @@ class AnalyticsJobHandler {
 
                     advertisingId = adInfo.getId();
                     limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
-                } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
+                } catch (Exception e) {
                     Logger.error("AnalyticsJobHandler - Failed to retrieve and update advertising ID.", e);
                     return JobInfo.JOB_RETRY;
                 }
