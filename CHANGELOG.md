@@ -3,6 +3,19 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.6.1 - January 10, 2019
+================================
+
+Changes
+-------
+- SDK will now catch any exceptions when attempting to post a notification. None of the notification
+  factories provided by the SDK exhibit this behavior, but it's possible that a custom notification
+  factory could produce an exception.
+- Fix potential crash when attempting to register with FCM if proguard is not configured properly.
+- Fix modal In-App Automation message animations.
+- The UAWebViewClient will no longer attempt to fetch favicons.
+
+
 Version 9.6.0 - December 5, 2018
 ================================
 Minor release that targets Android P and updates dependencies.
@@ -24,7 +37,8 @@ Changes
 Version 9.5.6 - November 20, 2018
 =================================
 
-Patch release that fixes a race condition when a named user ID changes at the same time as a named user tag group update is being POSTed. Any apps that are using named user tag groups should update.
+Patch release that fixes a race condition when a named user ID changes at the same time as a named
+user tag group update is being POSTed. Any apps that are using named user tag groups should update.
 
 Version 9.5.5 - November 14, 2018
 =================================
