@@ -55,11 +55,16 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
             String senderId = getSenderId(app);
             if (senderId == null) {
-                Logger.error("The FCM sender ID is not set. Unable to register for FCM.");
+                Logger.error("The FCM sender ID is not set. Unable to register with FCM.");
                 return null;
             }
 
             FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance(app);
+            if (instanceId == null) {
+                Logger.error("The FirebaseInstanceId is null, most likely a proguard issue. Unable to register with FCM.");
+                return null;
+            }
+
             token = instanceId.getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
 
             // Validate the token
@@ -95,7 +100,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
                 return false;
             }
         } catch (IllegalStateException e) {
-            // Missing version tag
             Logger.error(e, "Unable to register with FCM.");
             return false;
         }

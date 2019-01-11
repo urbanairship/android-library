@@ -15,6 +15,8 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -176,6 +178,41 @@ public class UAWebViewClient extends WebViewClient {
     public boolean shouldOverrideUrlLoading(@NonNull WebView webView, @Nullable String url) {
         return interceptUrl(webView, url);
     }
+
+    /**
+     * Intercepts the favicon request and returns a null favicon
+     *
+     * @param webView The web view.
+     * @param url The url being loaded.
+     * @return The null favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
+     */
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView webView, String url) {
+        if(url.toLowerCase().endsWith("/favicon.ico")) {
+            return new WebResourceResponse("image/png", null, null);
+        }
+
+        return null;
+    }
+
+    /**
+     * Intercepts the favicon request and returns null favicon
+     *
+     * @param webView The web view.
+     * @param request The WebResourceRequest being loaded.
+     * @return The tiny favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
+     */
+    @Override
+    @SuppressLint("NewApi")
+    public WebResourceResponse shouldInterceptRequest(WebView webView, WebResourceRequest request) {
+
+        if(!request.isForMainFrame() && request.getUrl().getPath().endsWith("/favicon.ico")) {
+            return new WebResourceResponse("image/png", null, null);
+        }
+
+        return null;
+    }
+
 
     @CallSuper
     @Override

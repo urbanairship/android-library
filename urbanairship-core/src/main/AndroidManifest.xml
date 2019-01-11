@@ -14,12 +14,13 @@
         <activity android:name="com.urbanairship.iam.fullscreen.FullScreenActivity" android:theme="@style/UrbanAirship.InAppFullscreen.Activity"/>
         <activity android:name="com.urbanairship.iam.modal.ModalActivity" android:theme="@style/UrbanAirship.InAppModal.Activity"/>
 
-        <activity android:name="com.urbanairship.CoreActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity android:name="com.urbanairship.CoreActivity" android:theme="@android:style/Theme.NoDisplay" />
+
 
         <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
         <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
-        <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+        <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />

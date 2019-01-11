@@ -208,7 +208,6 @@ class IncomingPushRunnable implements Runnable {
      * @param notificationId The notification ID.
      */
     private void postNotification(@NonNull UAirship airship, @NonNull Notification notification, int notificationId) {
-
         if (Build.VERSION.SDK_INT < 26) {
             if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
                 // Remove both the vibrate and the DEFAULT_VIBRATE flag
@@ -249,7 +248,11 @@ class IncomingPushRunnable implements Runnable {
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
         Logger.info("Posting notification: %s id: %s tag: %s", notification, notificationId, message.getNotificationTag());
-        notificationManager.notify(message.getNotificationTag(), notificationId, notification);
+        try {
+            notificationManager.notify(message.getNotificationTag(), notificationId, notification);
+        } catch (Exception e) {
+            Logger.error(e, "Failed to post notification.");
+        }
     }
 
     /**
@@ -280,10 +283,10 @@ class IncomingPushRunnable implements Runnable {
         for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
 
             ActionRunRequest.createRequest(action.getKey())
-                            .setMetadata(metadata)
-                            .setValue(action.getValue())
-                            .setSituation(Action.SITUATION_PUSH_RECEIVED)
-                            .run();
+                    .setMetadata(metadata)
+                    .setValue(action.getValue())
+                    .setSituation(Action.SITUATION_PUSH_RECEIVED)
+                    .run();
         }
     }
 
@@ -331,15 +334,15 @@ class IncomingPushRunnable implements Runnable {
         }
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
-                                 .generateUniqueId(context)
-                                 .setAirshipComponent(PushManager.class)
-                                 .setPersistent(true)
-                                 .setExtras(JsonMap.newBuilder()
-                                                   .putOpt(EXTRA_PUSH, message)
-                                                   .put(EXTRA_PROVIDER_CLASS, providerClass)
-                                                   .build())
-                                 .build();
+                .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
+                .generateUniqueId(context)
+                .setAirshipComponent(PushManager.class)
+                .setPersistent(true)
+                .setExtras(JsonMap.newBuilder()
+                        .putOpt(EXTRA_PUSH, message)
+                        .put(EXTRA_PROVIDER_CLASS, providerClass)
+                        .build())
+                .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
