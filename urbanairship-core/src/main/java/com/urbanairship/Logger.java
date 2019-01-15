@@ -2,10 +2,13 @@
 
 package com.urbanairship;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -31,9 +34,39 @@ public class Logger {
     public static String TAG = "UALib";
 
     /**
+     * A list of listeners.
+     */
+    private static ArrayList<LoggerListener> listeners = new ArrayList<>();
+
+    /**
      * Private, unused constructor
      */
     private Logger() { }
+
+    /**
+     * Adds a listener.
+     *
+     * @note Listener callbacks are synchronized but will be made from the originating thread.
+     * Responsibility for any additional threading guarantees falls on the application.
+     *
+     * @param listener The listener.
+     */
+    public static void addListener(@NonNull LoggerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param listener The listener.
+     */
+    public static void removeListener(@NonNull LoggerListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
 
     /**
      * Send a warning log message.
@@ -42,7 +75,7 @@ public class Logger {
      */
     public static void warn(String s) {
         if (logLevel <= Log.WARN && s != null) {
-            Log.w(TAG, s);
+            log(Log.WARN, s);
         }
     }
 
@@ -54,7 +87,7 @@ public class Logger {
      */
     public static void warn(String s, Throwable t) {
         if (logLevel <= Log.WARN && s != null && t != null) {
-            Log.w(TAG, s, t);
+            log(Log.WARN, s, t);
         }
     }
 
@@ -65,7 +98,7 @@ public class Logger {
      */
     public static void warn(Throwable t) {
         if (logLevel <= Log.WARN && t != null) {
-            Log.w(TAG, t);
+            log(Log.WARN, t);
         }
     }
 
@@ -76,7 +109,7 @@ public class Logger {
      */
     public static void verbose(String s) {
         if (logLevel <= Log.VERBOSE && s != null) {
-            Log.v(TAG, s);
+            log(Log.VERBOSE, s);
         }
     }
 
@@ -87,7 +120,7 @@ public class Logger {
      */
     public static void debug(String s) {
         if (logLevel <= Log.DEBUG && s != null) {
-            Log.d(TAG, s);
+            log(Log.DEBUG, s);
         }
     }
 
@@ -99,7 +132,7 @@ public class Logger {
      */
     public static void debug(String s, Throwable t) {
         if (logLevel <= Log.DEBUG && s != null && t != null) {
-            Log.d(TAG, s, t);
+            log(Log.DEBUG, s, t);
         }
     }
 
@@ -110,7 +143,7 @@ public class Logger {
      */
     public static void info(String s) {
         if (logLevel <= Log.INFO && s != null) {
-            Log.i(TAG, s);
+            log(Log.INFO, s);
         }
     }
 
@@ -122,7 +155,7 @@ public class Logger {
      */
     public static void info(String s, Throwable t) {
         if (logLevel <= Log.INFO && s != null && t != null) {
-            Log.i(TAG, s, t);
+            log(Log.INFO, s, t);
         }
     }
 
@@ -133,7 +166,7 @@ public class Logger {
      */
     public static void error(String s) {
         if (logLevel <= Log.ERROR && s != null) {
-            Log.e(TAG, s);
+            log(Log.ERROR, s);
         }
     }
 
@@ -144,7 +177,7 @@ public class Logger {
      */
     public static void error(Throwable t) {
         if (logLevel <= Log.ERROR && t != null) {
-            Log.e(TAG, "", t);
+            log(Log.ERROR, t);
         }
     }
 
@@ -156,7 +189,7 @@ public class Logger {
      */
     public static void error(String s, Throwable t) {
         if (logLevel <= Log.ERROR && s != null && t != null) {
-            Log.e(TAG, s, t);
+            log(Log.ERROR, s, t);
         }
     }
 
@@ -199,6 +232,61 @@ public class Logger {
             return defaultValue;
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException("Invalid log level: " + value);
+        }
+    }
+
+    private static void log(int priority, @Nullable Throwable throwable) {
+        log(priority, null, throwable);
+    }
+
+    private static void log(int priority, @Nullable String message) {
+        log(priority, message, null);
+    }
+
+    private static void log(int priority, @Nullable String message, @Nullable Throwable throwable) {
+        if (logLevel > priority) {
+            return;
+        }
+
+        String formattedMessage = UAStringUtil.isEmpty(message) ? "" : message;
+
+        // Call through to listeners
+        synchronized (listeners) {
+            for (LoggerListener listener : new ArrayList<>(listeners)) {
+                listener.onLog(priority, throwable, formattedMessage);
+            }
+        }
+
+        // Log directly if we do not have a throwable
+        if (throwable == null) {
+            if (priority == Log.ASSERT) {
+                Log.wtf(TAG, formattedMessage);
+            } else {
+                Log.println(priority, TAG, formattedMessage);
+            }
+            return;
+        }
+
+        // Log using one of the provided log methods
+        switch (priority) {
+            case Log.INFO:
+                Log.i(TAG, formattedMessage, throwable);
+                break;
+            case Log.DEBUG:
+                Log.d(TAG, formattedMessage, throwable);
+                break;
+            case Log.VERBOSE:
+                Log.v(TAG, formattedMessage, throwable);
+                break;
+            case Log.WARN:
+                Log.w(TAG, formattedMessage, throwable);
+                break;
+            case Log.ERROR:
+                Log.e(TAG, formattedMessage, throwable);
+                break;
+            case Log.ASSERT:
+                Log.wtf(TAG, formattedMessage, throwable);
+                break;
         }
     }
 }
