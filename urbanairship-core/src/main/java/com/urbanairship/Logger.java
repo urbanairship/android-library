@@ -72,6 +72,9 @@ public class Logger {
     /**
      * Adds a listener.
      *
+     * @note Listener callbacks are synchronized but will be made from the originating thread.
+     * Responsibility for any additional threading guarantees falls on the application.
+     *
      * @param listener The listener.
      */
     public static void addListener(@NonNull LoggerListener listener) {
