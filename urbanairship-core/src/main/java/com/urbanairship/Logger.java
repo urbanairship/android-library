@@ -9,6 +9,7 @@ import android.util.Log;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -36,7 +37,7 @@ public class Logger {
     /**
      * A list of listeners.
      */
-    private static ArrayList<LoggerListener> listeners = new ArrayList<>();
+    private static List<LoggerListener> listeners = new ArrayList<>();
 
     /**
      * Private, unused constructor
