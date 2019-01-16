@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -31,6 +32,11 @@ public class Logger {
      * Defaults to <code>android.util.Log.ERROR</code>.
      */
     private static int logLevel = Log.ERROR;
+
+    /**
+     * A list of listeners.
+     */
+    private static ArrayList<LoggerListener> listeners = new ArrayList<>();
 
     /**
      * Private, unused constructor
@@ -61,6 +67,31 @@ public class Logger {
      */
     public static int getLogLevel() {
         return logLevel;
+    }
+
+    /**
+     * Adds a listener.
+     *
+     * @note Listener callbacks are synchronized but will be made from the originating thread.
+     * Responsibility for any additional threading guarantees falls on the application.
+     *
+     * @param listener The listener.
+     */
+    public static void addListener(@NonNull LoggerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param listener The listener.
+     */
+    public static void removeListener(@NonNull LoggerListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     /**
@@ -196,6 +227,13 @@ public class Logger {
         } else {
             // Format the message if we have arguments
             formattedMessage = (args == null || args.length == 0) ? message : String.format(Locale.ROOT, message, args);
+        }
+
+        // Call through to listeners
+        synchronized (listeners) {
+            for (LoggerListener listener : new ArrayList<>(listeners)) {
+                listener.onLog(priority, throwable, formattedMessage);
+            }
         }
 
         // Log directly if we do not have a throwable
