@@ -2,6 +2,8 @@ package com.urbanairship.push;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -136,7 +138,6 @@ class IncomingPushRunnable implements Runnable {
 
         // Notify components of the push
         airship.getLegacyInAppMessageManager().onPushReceived(message);
-        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
         airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
 
         // Finish processing the push
@@ -185,10 +186,26 @@ class IncomingPushRunnable implements Runnable {
 
         switch (result.getStatus()) {
             case NotificationFactory.Result.OK:
+                Notification notification = result.getNotification();
+
                 if (result.getNotification() != null) {
-                    postNotification(airship, result.getNotification(), notificationId);
+                    postNotification(airship, notification, notificationId);
                 }
+
                 sendPushResultBroadcast(notificationId);
+
+                final PushArrivedEvent pushArrivedEvent;
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    pushArrivedEvent = new PushArrivedEvent(message);
+                } else {
+                    NotificationManager notificationManager = (NotificationManager) UAirship.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    NotificationChannel channel = notificationManager.getNotificationChannel(notification.getChannelId());
+                    pushArrivedEvent = new PushArrivedEvent(message, channel);
+                }
+
+                airship.getAnalytics().addEvent(pushArrivedEvent);
+
                 break;
             case NotificationFactory.Result.CANCEL:
                 sendPushResultBroadcast(null);
