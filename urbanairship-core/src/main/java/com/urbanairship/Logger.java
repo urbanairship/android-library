@@ -4,12 +4,14 @@ package com.urbanairship;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Shared logging wrapper for all Urban Airship log entries.
@@ -36,7 +38,51 @@ public class Logger {
     /**
      * A list of listeners.
      */
-    private static ArrayList<LoggerListener> listeners = new ArrayList<>();
+    private static final List<LoggerListener> listeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * Default logger.
+     */
+    private static final LoggerListener defaultLogger = new LoggerListener() {
+        @Override
+        public void onLog(int priority, @Nullable Throwable throwable, @Nullable String message) {
+            // Log directly if we do not have a throwable
+            if (throwable == null) {
+                if (priority == Log.ASSERT) {
+                    Log.wtf(tag, message);
+                } else {
+                    Log.println(priority, tag, message);
+                }
+                return;
+            }
+
+            // Log using one of the provided log methods
+            switch (priority) {
+                case Log.INFO:
+                    Log.i(tag, message, throwable);
+                    break;
+                case Log.DEBUG:
+                    Log.d(tag, message, throwable);
+                    break;
+                case Log.VERBOSE:
+                    Log.v(tag, message, throwable);
+                    break;
+                case Log.WARN:
+                    Log.w(tag, message, throwable);
+                    break;
+                case Log.ERROR:
+                    Log.e(tag, message, throwable);
+                    break;
+                case Log.ASSERT:
+                    Log.wtf(tag, message, throwable);
+                    break;
+            }
+        }
+    };
+
+    static {
+        listeners.add(defaultLogger);
+    }
 
     /**
      * Private, unused constructor
@@ -57,30 +103,38 @@ public class Logger {
      * Sets the log level.
      *
      * @param logLevel The log level.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void setLogLevel(int logLevel) {
         Logger.logLevel = logLevel;
     }
 
     /**
      * Gets the log level.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static int getLogLevel() {
         return logLevel;
     }
 
     /**
+     * Disables Urban Airship from using the standard {@link Log} for logging.
+     */
+    public static void disableDefaultLogger() {
+        removeListener(defaultLogger);
+    }
+
+    /**
      * Adds a listener.
      *
+     * @param listener The listener.
      * @note Listener callbacks are synchronized but will be made from the originating thread.
      * Responsibility for any additional threading guarantees falls on the application.
-     *
-     * @param listener The listener.
      */
     public static void addListener(@NonNull LoggerListener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     /**
@@ -89,9 +143,7 @@ public class Logger {
      * @param listener The listener.
      */
     public static void removeListener(@NonNull LoggerListener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
+        listeners.remove(listener);
     }
 
     /**
@@ -99,7 +151,9 @@ public class Logger {
      *
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void warn(@NonNull String message, @Nullable Object... args) {
         log(Log.WARN, null, message, args);
     }
@@ -110,7 +164,9 @@ public class Logger {
      * @param t An exception to log
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void warn(@NonNull Throwable t, @NonNull String message, @Nullable Object... args) {
         log(Log.WARN, t, message, args);
     }
@@ -119,7 +175,9 @@ public class Logger {
      * Send a warning log message.
      *
      * @param t An exception to log
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void warn(@NonNull Throwable t) {
         log(Log.WARN, t, null);
     }
@@ -129,7 +187,9 @@ public class Logger {
      *
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void verbose(@NonNull String message, @Nullable Object... args) {
         log(Log.VERBOSE, null, message, args);
     }
@@ -139,7 +199,9 @@ public class Logger {
      *
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void debug(@NonNull String message, @Nullable Object... args) {
         log(Log.DEBUG, null, message, args);
     }
@@ -150,7 +212,9 @@ public class Logger {
      * @param t An exception to log
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void debug(@NonNull Throwable t, @NonNull String message, @Nullable Object... args) {
         log(Log.DEBUG, t, message, args);
     }
@@ -160,7 +224,9 @@ public class Logger {
      *
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void info(@NonNull String message, @NonNull Object... args) {
         log(Log.INFO, null, message, args);
     }
@@ -171,7 +237,9 @@ public class Logger {
      * @param t An exception to log
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void info(@NonNull Throwable t, @NonNull String message, @Nullable Object... args) {
         log(Log.INFO, t, message, args);
     }
@@ -181,7 +249,9 @@ public class Logger {
      *
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void error(@NonNull String message, @Nullable Object... args) {
         log(Log.ERROR, null, message, args);
     }
@@ -190,7 +260,9 @@ public class Logger {
      * Send an error log message.
      *
      * @param t An exception to log
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void error(@NonNull Throwable t) {
         log(Log.ERROR, t, null);
     }
@@ -201,7 +273,9 @@ public class Logger {
      * @param t An exception to log
      * @param message The message you would like logged.
      * @param args The message args.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void error(@NonNull Throwable t, @NonNull String message, @Nullable Object... args) {
         log(Log.ERROR, t, message, args);
     }
@@ -219,6 +293,10 @@ public class Logger {
             return;
         }
 
+        if (message == null && throwable == null) {
+            return;
+        }
+
         String formattedMessage;
 
         if (UAStringUtil.isEmpty(message)) {
@@ -229,43 +307,8 @@ public class Logger {
             formattedMessage = (args == null || args.length == 0) ? message : String.format(Locale.ROOT, message, args);
         }
 
-        // Call through to listeners
-        synchronized (listeners) {
-            for (LoggerListener listener : new ArrayList<>(listeners)) {
-                listener.onLog(priority, throwable, formattedMessage);
-            }
-        }
-
-        // Log directly if we do not have a throwable
-        if (throwable == null) {
-            if (priority == Log.ASSERT) {
-                Log.wtf(tag, formattedMessage);
-            } else {
-                Log.println(priority, tag, formattedMessage);
-            }
-            return;
-        }
-
-        // Log using one of the provided log methods
-        switch (priority) {
-            case Log.INFO:
-                Log.i(tag, formattedMessage, throwable);
-                break;
-            case Log.DEBUG:
-                Log.d(tag, formattedMessage, throwable);
-                break;
-            case Log.VERBOSE:
-                Log.v(tag, formattedMessage, throwable);
-                break;
-            case Log.WARN:
-                Log.w(tag, formattedMessage, throwable);
-                break;
-            case Log.ERROR:
-                Log.e(tag, formattedMessage, throwable);
-                break;
-            case Log.ASSERT:
-                Log.wtf(tag, formattedMessage, throwable);
-                break;
+        for (LoggerListener listener : listeners) {
+            listener.onLog(priority, throwable, formattedMessage);
         }
     }
 

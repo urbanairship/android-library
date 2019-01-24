@@ -20,7 +20,7 @@
         <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
         <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
-        <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+        <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@style/UrbanAirship.HelperActivity">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />

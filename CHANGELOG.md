@@ -3,6 +3,17 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.7.0 - January 22, 2019
+================================
+Minor release that allows listing for Urban Airship log messages.
+
+Changes
+-------
+- Added ability to listen for logs using a LoggerListener on the Logger class.
+- Modal, HTML in-app automation window animations are now defined in the style sheets to
+  make them easier to override.
+
+
 Version 9.6.1 - January 10, 2019
 ================================
 

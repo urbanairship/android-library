@@ -15,10 +15,11 @@
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
         <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
         <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
     </style>
 
-
     <style name="UrbanAirship.InAppModal.Activity.Fullscreen">
+        <item name="android:windowAnimationStyle">@android:style/Animation.Activity</item>
         <item name="android:windowIsTranslucent">false</item>
     </style>
 

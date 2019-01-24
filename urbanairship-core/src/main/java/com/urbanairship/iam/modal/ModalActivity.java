@@ -171,20 +171,9 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Override animation to fade_in and fade_out
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
         this.mediaView.onPause();
-
-        // Override animation to fade_in and fade_out
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     /**
