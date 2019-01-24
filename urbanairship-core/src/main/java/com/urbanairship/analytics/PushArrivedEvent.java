@@ -86,19 +86,19 @@ public class PushArrivedEvent extends Event {
     private String importanceString(int importance) {
         switch (importance) {
             case 0:
-                return "none";
+                return "NONE";
             case 1:
-                return "min";
+                return "MIN";
             case 2:
-                return "low";
+                return "LOW";
             case 3:
-                return "default";
+                return "DEFAULT";
             case 4:
-                return "high";
+                return "HIGH";
             case 5:
-                return "max";
+                return "MAX";
             default:
-                return "unknown";
+                return "UNKNOWN";
         }
     }
 
