@@ -29,6 +29,7 @@ import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.Checks;
 
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,8 @@ public class Analytics extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private final Executor executor;
     private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
+    private final List<EventListener> eventListeners = new ArrayList<>();
+
     private final Object associatedIdentifiersLock = new Object();
 
     private AnalyticsJobHandler analyticsJobHandler;
@@ -113,6 +116,38 @@ public class Analytics extends AirshipComponent {
             }
         };
     }
+
+    /**
+     * Listener for all Urban Airship events.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public interface EventListener {
+        void onEventAdded(@NonNull Event event, @NonNull String sessionId);
+    }
+
+    /**
+     * Adds an event listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addEventListener(@NonNull EventListener eventListener) {
+        synchronized (eventListeners) {
+            eventListeners.add(eventListener);
+        }
+    }
+
+    /**
+     * Removes an event listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeEventListener(@NonNull EventListener eventListener) {
+        synchronized (eventListeners) {
+            eventListeners.remove(eventListener);
+        }
+    }
+
 
     @Override
     protected void init() {
@@ -473,6 +508,10 @@ public class Analytics extends AirshipComponent {
      * @param event The event.
      */
     private void applyListeners(@NonNull Event event) {
+        for (EventListener listener : new ArrayList<>(eventListeners)) {
+            listener.onEventAdded(event, getSessionId());
+        }
+
         for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
             switch (event.getType()) {
                 case CustomEvent.TYPE:
