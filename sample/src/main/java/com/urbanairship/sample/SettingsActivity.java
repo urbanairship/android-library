@@ -3,9 +3,9 @@
 package com.urbanairship.sample;
 
 import android.os.Bundle;
-import android.preference.PreferenceFragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceFragmentCompat;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -19,17 +19,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         if (savedInstanceState == null) {
-            getFragmentManager().beginTransaction()
+            getSupportFragmentManager()
+                    .beginTransaction()
                                 .replace(android.R.id.content, new SettingsFragment())
                                 .commit();
         }
     }
 
-    public static class SettingsFragment extends PreferenceFragment {
+    public static class SettingsFragment extends PreferenceFragmentCompat {
         @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            
+        public void onCreatePreferences(Bundle bundle, String s) {
             addPreferencesFromResource(R.xml.preferences);
         }
     }

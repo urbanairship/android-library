@@ -24,8 +24,6 @@ import java.lang.ref.WeakReference;
  */
 public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
-    private static final String CONTENT_DESCRIPTION = "LOCATION_UPDATES_ENABLED";
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -72,12 +70,6 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getLocationManager().setLocationUpdatesEnabled(enabled);
-    }
-
-    @NonNull
-    @Override
-    protected String getContentDescription() {
-        return CONTENT_DESCRIPTION;
     }
 
     private static class RequestPermissionsTask extends AsyncTask<String[], Void, Boolean> {

@@ -25,8 +25,8 @@
     <string name="advanced_preference_category_title">Advanced</string>
     <string name="channel_id_preference_title">Channel ID</string>
     <string name="user_id_preference_title">User ID</string>
-    <string name="set_named_user_preference_title">Set Named User</string>
-    <string name="add_tags_preference_title">Add Tags</string>
+    <string name="set_named_user_preference_title">Named User</string>
+    <string name="add_tags_preference_title">Tags</string>
     <string name="duplicate_tag_warning">Tag already exists</string>
     <string name="location_request_priority">Request Priority:</string>
     <string name="location_high_accuracy">High Accuracy</string>
@@ -39,6 +39,7 @@
     <string name="button_preferences">Preferences</string>
     <string name="button_view_location">View Location</string>
     <string name="toast_channel_clipboard">Channel copied to clipboard</string>
+    <string name="current_tags">Current Tags</string>
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>

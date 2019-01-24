@@ -7,13 +7,10 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.Preference;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.preference.Preference;
 import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.urbanairship.UAirship;
 
 import java.lang.ref.WeakReference;
@@ -35,8 +32,6 @@ public class ChannelIdPreference extends Preference {
      */
     private final static int CHANNEL_ID_RETRY_DELAY = 1000;
 
-    private static final String CONTENT_DESCRIPTION = "CHANNEL_ID";
-
     private int channelRetries;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -53,9 +48,8 @@ public class ChannelIdPreference extends Preference {
     }
 
     @Override
-    protected void onAttachedToActivity() {
-        super.onAttachedToActivity();
-
+    public void onAttached() {
+        super.onAttached();
         final WeakReference<ChannelIdPreference> weakThis = new WeakReference<>(this);
         final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -75,13 +69,5 @@ public class ChannelIdPreference extends Preference {
                 }
             }
         });
-    }
-
-    @NonNull
-    @Override
-    public View onCreateView(@NonNull ViewGroup parent) {
-        View view = super.onCreateView(parent);
-        view.setContentDescription(CONTENT_DESCRIPTION);
-        return view;
     }
 }

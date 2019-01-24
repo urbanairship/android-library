@@ -16,8 +16,6 @@ import com.urbanairship.UAirship;
  */
 public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPreference {
 
-    private static final String CONTENT_DESCRIPTION = "LOCATION_BACKGROUND_UPDATES_ALLOWED";
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public LocationBackgroundUpdatesAllowedPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -39,11 +37,5 @@ public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPrefer
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getLocationManager().setBackgroundLocationAllowed(enabled);
-    }
-
-    @NonNull
-    @Override
-    protected String getContentDescription() {
-        return CONTENT_DESCRIPTION;
     }
 }

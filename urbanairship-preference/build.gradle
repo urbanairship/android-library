@@ -1,0 +1,8 @@
+description = "Urban Airship Android SDK preference extension."
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+    api "com.android.support:preference-v7:${airshipProperties.supportLibVersion}"
+}

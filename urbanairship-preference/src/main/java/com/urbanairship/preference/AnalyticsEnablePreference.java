@@ -16,8 +16,6 @@ import com.urbanairship.UAirship;
  */
 public class AnalyticsEnablePreference extends UACheckBoxPreference {
 
-    private static final String CONTENT_DESCRIPTION = "ANALYTICS_ENABLED";
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public AnalyticsEnablePreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -39,12 +37,6 @@ public class AnalyticsEnablePreference extends UACheckBoxPreference {
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getAnalytics().setEnabled(enabled);
-    }
-
-    @NonNull
-    @Override
-    protected String getContentDescription() {
-        return CONTENT_DESCRIPTION;
     }
 
 }

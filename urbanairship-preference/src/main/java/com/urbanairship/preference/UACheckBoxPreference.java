@@ -2,22 +2,19 @@
 
 package com.urbanairship.preference;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.CheckBoxPreference;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.preference.CheckBoxPreference;
 import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewGroup;
 
-import com.urbanairship.app.ActivityListener;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleActivityListener;
 
@@ -74,14 +71,6 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
         setDefaultValue(isChecked);
     }
 
-    @SuppressLint("UnknownNullness")
-    @Override
-    public View onCreateView(ViewGroup parent) {
-        View view = super.onCreateView(parent);
-        view.setContentDescription(getClass().getSimpleName());
-        return view;
-    }
-
     @Override
     protected boolean shouldPersist() {
         return false;
@@ -116,11 +105,4 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
      */
     protected abstract void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled);
 
-    /**
-     * Called to get the content description of the preference's view.
-     *
-     * @return The content description.
-     */
-    @NonNull
-    protected abstract String getContentDescription();
 }

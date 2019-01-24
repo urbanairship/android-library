@@ -1,0 +1,113 @@
+/* Copyright 2019 Urban Airship and Contributors */
+
+package com.urbanairship.sample.preference;
+
+import android.arch.lifecycle.ViewModelProviders;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+
+import com.urbanairship.sample.databinding.FragmentTagsBinding;
+import com.urbanairship.util.UAStringUtil;
+
+/**
+ * Fragment that manages Urban Airship tags.
+ */
+public class TagsFragment extends Fragment {
+
+    private TagsViewModel viewModel;
+    private ImageButton addTagButton;
+    private EditText addTagEditText;
+    private RecyclerView recyclerView;
+
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        viewModel = ViewModelProviders.of(this).get(TagsViewModel.class);
+        FragmentTagsBinding binding = FragmentTagsBinding.inflate(inflater, container, false);
+        binding.setLifecycleOwner(this);
+        binding.setViewModel(viewModel);
+
+        this.addTagButton = binding.addTagButton;
+        this.addTagEditText = binding.addTagText;
+        this.recyclerView = binding.recyclerView;
+
+        initAddTag();
+        initTagList();
+
+        return binding.getRoot();
+    }
+
+    private void initTagList() {
+        final TagAdapter tagAdapter = new TagAdapter();
+        viewModel.getTags().observe(this, tagAdapter::submitList);
+
+        recyclerView.setAdapter(tagAdapter);
+        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayout.VERTICAL));
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                return makeMovementFlags(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder viewHolder1) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+                String tag = ((TagAdapter.ViewHolder) viewHolder).getTag();
+                viewModel.removeTag(tag);
+            }
+        });
+
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+    }
+
+    private void initAddTag() {
+        addTagButton.setOnClickListener(v -> {
+            addTag();
+            addTagEditText.getText().clear();
+        });
+
+        addTagEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                addTag();
+                return true;
+            }
+            return false;
+        });
+
+        addTagEditText.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    addTag();
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void addTag() {
+        String tag = addTagEditText.getText().toString().trim();
+        if (!UAStringUtil.isEmpty(tag)) {
+            viewModel.addTag(tag);
+        }
+        addTagEditText.getText().clear();
+    }
+}

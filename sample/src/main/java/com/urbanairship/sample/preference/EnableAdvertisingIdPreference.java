@@ -10,7 +10,6 @@ import android.util.AttributeSet;
 import com.urbanairship.UAirship;
 import com.urbanairship.aaid.AdvertisingIdTracker;
 import com.urbanairship.preference.UACheckBoxPreference;
-import com.urbanairship.sample.R;
 
 public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
 
@@ -34,11 +33,5 @@ public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         AdvertisingIdTracker.shared().setEnabled(enabled);
-    }
-
-    @NonNull
-    @Override
-    protected String getContentDescription() {
-        return getContext().getString(R.string.analytics_ad_id_preference_title);
     }
 }

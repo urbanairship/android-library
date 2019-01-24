@@ -72,6 +72,7 @@
 
         </activity>
 
+        <activity android:name=".preference.TagsActivity" />
         <!-- Optional: This is an example of one of the many ways to handle deep
         linking in the application. To use with your application, update the data
         scheme to be unique for the application and modify ParseDeepLinkActivity.parseDeepLink

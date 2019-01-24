@@ -17,8 +17,6 @@ import com.urbanairship.UAirship;
  */
 public class PushEnablePreference extends UACheckBoxPreference {
 
-    private static final String CONTENT_DESCRIPTION = "USER_NOTIFICATIONS_ENABLED";
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public PushEnablePreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -40,11 +38,5 @@ public class PushEnablePreference extends UACheckBoxPreference {
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getPushManager().setUserNotificationsEnabled(enabled);
-    }
-
-    @NonNull
-    @Override
-    protected String getContentDescription() {
-        return CONTENT_DESCRIPTION;
     }
 }
