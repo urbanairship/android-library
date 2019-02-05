@@ -22,6 +22,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
@@ -51,6 +52,9 @@ public class EventApiClient {
     private final RequestFactory requestFactory;
 
     @NonNull
+    private final LocaleManager localeManager;
+
+    @NonNull
     private final Context context;
 
     /**
@@ -59,7 +63,7 @@ public class EventApiClient {
      * @param context The application context.
      */
     public EventApiClient(@NonNull Context context) {
-        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY);
+        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared());
     }
 
     /**
@@ -67,11 +71,13 @@ public class EventApiClient {
      *
      * @param context The application context.
      * @param requestFactory The requestFactory.
+     * @param localeManager The locale manager.
      */
     @VisibleForTesting
-    EventApiClient(@NonNull Context context, @NonNull RequestFactory requestFactory) {
+    EventApiClient(@NonNull Context context, @NonNull RequestFactory requestFactory, @NonNull LocaleManager localeManager) {
         this.requestFactory = requestFactory;
         this.context = context;
+        this.localeManager = localeManager;
     }
 
     /**
@@ -153,7 +159,7 @@ public class EventApiClient {
                                         .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
 
 
-        Locale locale = Locale.getDefault();
+        Locale locale = localeManager.getDefaultLocale(context);
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             request.setHeader("X-UA-Locale-Language", locale.getLanguage());
 

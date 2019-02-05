@@ -25,6 +25,7 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
@@ -564,7 +565,7 @@ public class PushManager extends AirshipComponent {
 
         builder.setTimezone(TimeZone.getDefault().getID());
 
-        Locale locale = Locale.getDefault();
+        Locale locale = LocaleManager.shared().getDefaultLocale(context);
 
         if (!UAStringUtil.isEmpty(locale.getCountry())) {
             builder.setCountry(locale.getCountry());

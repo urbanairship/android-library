@@ -25,6 +25,8 @@ import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.locale.LocaleChangedListener;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
@@ -37,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,11 +72,17 @@ public class RemoteData extends AirshipComponent {
     private static final String LAST_REFRESH_TIME_KEY = "com.urbanairship.remotedata.LAST_REFRESH_TIME";
 
     /**
+     * The key for getting and setting the last refresh locale.
+     */
+    private static final String LAST_REFRESH_LOCALE = "com.urbanairship.remotedata.LAST_REFRESH_LOCALE";
+
+    /**
      * The key for getting and setting the app version of the last refresh from the preference datastore.
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
 
     private final JobDispatcher jobDispatcher;
+    private final LocaleManager localeManager;
     private RemoteDataJobHandler jobHandler;
     private final PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
@@ -108,7 +117,7 @@ public class RemoteData extends AirshipComponent {
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor) {
-        this(context, preferenceDataStore, configOptions, activityMonitor, JobDispatcher.shared(context));
+        this(context, preferenceDataStore, configOptions, activityMonitor, JobDispatcher.shared(context), LocaleManager.shared());
     }
 
     /**
@@ -117,12 +126,13 @@ public class RemoteData extends AirshipComponent {
      * @param context The application context.
      * @param preferenceDataStore The preference data store
      * @param activityMonitor The activity monitor.
-     * @param dispatcher A job dispatcher.
+     * @param dispatcher The job dispatcher.
+     * @param localeManager The locale manager.
      */
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher) {
+               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getAppKey(), DATABASE_NAME);
@@ -130,6 +140,7 @@ public class RemoteData extends AirshipComponent {
         this.backgroundThread = new AirshipHandlerThread("remote data store");
         this.payloadUpdates = Subject.create();
         this.activityMonitor = activityMonitor;
+        this.localeManager = localeManager;
     }
 
     @Override
@@ -139,9 +150,16 @@ public class RemoteData extends AirshipComponent {
         backgroundHandler = new Handler(this.backgroundThread.getLooper());
         activityMonitor.addApplicationListener(applicationListener);
 
-        int appVersion = preferenceDataStore.getInt(LAST_REFRESH_APP_VERSION_KEY, 0);
-        PackageInfo packageInfo = UAirship.getPackageInfo();
-        if (packageInfo != null && packageInfo.versionCode != appVersion) {
+        localeManager.addListener(new LocaleChangedListener() {
+            @Override
+            public void onLocaleChanged(@NonNull Locale locale) {
+                if (shouldRefresh()) {
+                    refresh();
+                }
+            }
+        });
+
+        if (shouldRefresh()) {
             refresh();
         }
     }
@@ -157,7 +175,7 @@ public class RemoteData extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (jobHandler == null) {
-            jobHandler = new RemoteDataJobHandler(airship);
+            jobHandler = new RemoteDataJobHandler(getContext(), airship);
         }
 
 
@@ -169,7 +187,7 @@ public class RemoteData extends AirshipComponent {
      */
     private void onForeground() {
         long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
-        if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
+        if (getForegroundRefreshInterval() <= timeSinceLastRefresh || shouldRefresh()) {
             refresh();
         }
     }
@@ -197,11 +215,11 @@ public class RemoteData extends AirshipComponent {
      */
     public void refresh() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(RemoteDataJobHandler.ACTION_REFRESH)
-                                 .setId(JobInfo.REMOTE_DATA_REFRESH)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(RemoteData.class)
-                                 .build();
+                .setAction(RemoteDataJobHandler.ACTION_REFRESH)
+                .setId(JobInfo.REMOTE_DATA_REFRESH)
+                .setNetworkAccessRequired(true)
+                .setAirshipComponent(RemoteData.class)
+                .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
@@ -250,38 +268,38 @@ public class RemoteData extends AirshipComponent {
     @NonNull
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
         return Observable.concat(cachedPayloads(types), payloadUpdates)
-                         .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
-                             @NonNull
-                             @Override
-                             public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
-                                 Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
-                                 for (RemoteDataPayload payload : payloads) {
-                                     if (!map.containsKey(payload.getType())) {
-                                         map.put(payload.getType(), new HashSet<RemoteDataPayload>());
-                                     }
-                                     map.get(payload.getType()).add(payload);
-                                 }
+                .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
+                    @NonNull
+                    @Override
+                    public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
+                        Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
+                        for (RemoteDataPayload payload : payloads) {
+                            if (!map.containsKey(payload.getType())) {
+                                map.put(payload.getType(), new HashSet<RemoteDataPayload>());
+                            }
+                            map.get(payload.getType()).add(payload);
+                        }
 
-                                 return map;
-                             }
-                         })
-                         .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
-                             @NonNull
-                             @Override
-                             public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
-                                 Set<RemoteDataPayload> payloads = new HashSet<>();
-                                 for (String type : new HashSet<>(types)) {
-                                     if (payloadMap.containsKey(type)) {
-                                         payloads.addAll(payloadMap.get(type));
-                                     } else {
-                                         payloads.add(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
-                                     }
-                                 }
+                        return map;
+                    }
+                })
+                .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
+                    @NonNull
+                    @Override
+                    public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
+                        Set<RemoteDataPayload> payloads = new HashSet<>();
+                        for (String type : new HashSet<>(types)) {
+                            if (payloadMap.containsKey(type)) {
+                                payloads.addAll(payloadMap.get(type));
+                            } else {
+                                payloads.add(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
+                            }
+                        }
 
-                                 return payloads;
-                             }
-                         })
-                         .distinctUntilChanged();
+                        return payloads;
+                    }
+                })
+                .distinctUntilChanged();
     }
 
     /**
@@ -318,12 +336,34 @@ public class RemoteData extends AirshipComponent {
         return preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
     }
 
+    public boolean shouldRefresh() {
+        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
+        if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
+            return true;
+        }
+
+        int appVersion = preferenceDataStore.getInt(LAST_REFRESH_APP_VERSION_KEY, 0);
+        PackageInfo packageInfo = UAirship.getPackageInfo();
+        if (packageInfo != null && packageInfo.versionCode != appVersion) {
+            return true;
+        }
+
+        String lastRefreshLocale = preferenceDataStore.getString(LAST_REFRESH_LOCALE, null);
+        Locale locale = LocaleManager.shared().getDefaultLocale(getContext());
+        if (lastRefreshLocale == null || lastRefreshLocale.equals(locale.toString())) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Called when the job is finished refreshing the remote data.
      */
     @WorkerThread
     void onRefreshFinished() {
         preferenceDataStore.put(LAST_REFRESH_TIME_KEY, System.currentTimeMillis());
+        preferenceDataStore.put(LAST_REFRESH_LOCALE, LocaleManager.shared().getDefaultLocale(getContext()).toString());
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
             preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
@@ -343,7 +383,7 @@ public class RemoteData extends AirshipComponent {
             @Override
             public Observable<Set<RemoteDataPayload>> apply() {
                 return Observable.just(dataStore.getPayloads(types))
-                                 .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
+                        .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
             }
         });
     }

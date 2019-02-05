@@ -90,6 +90,14 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name="com.urbanairship.locale.LocaleChangeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:exported="false"
             android:name="com.urbanairship.UrbanAirshipProvider"

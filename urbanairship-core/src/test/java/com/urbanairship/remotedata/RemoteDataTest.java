@@ -10,9 +10,11 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestLocaleManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
 
@@ -30,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static org.mockito.Mockito.clearInvocations;
@@ -48,6 +51,7 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload payload;
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
+    private TestLocaleManager localeManager;
 
     @Before
     public void setup() {
@@ -56,12 +60,15 @@ public class RemoteDataTest extends BaseTestCase {
         mockDispatcher = mock(JobDispatcher.class);
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
+        localeManager = new TestLocaleManager();
+
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options, activityMonitor, mockDispatcher);
+        remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
+                activityMonitor, mockDispatcher, localeManager);
 
         payload = new RemoteDataPayload("type", 123, JsonMap.newBuilder().put("foo", "bar").build());
         otherPayload = new RemoteDataPayload("otherType", 234, JsonMap.newBuilder().put("baz", "boz").build());
@@ -92,6 +99,25 @@ public class RemoteDataTest extends BaseTestCase {
         verifyNoMoreInteractions(mockDispatcher);
     }
 
+    /**
+     * Test that a locale change results in a refresh.
+     */
+    @Test
+    public void testLocaleChangeRefresh() {
+        remoteData.init();
+        clearInvocations(mockDispatcher);
+
+        localeManager.setDefaultLocale(new Locale("de"));
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+            }
+        }));
+
+        verifyNoMoreInteractions(mockDispatcher);
+    }
 
     /**
      * Test a foreground transition will not trigger a refresh if its before the foreground refresh

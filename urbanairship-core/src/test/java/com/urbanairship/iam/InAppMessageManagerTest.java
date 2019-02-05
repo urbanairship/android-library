@@ -267,7 +267,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAdapter).onDisplay(any(Context.class), any(DisplayHandler.class));
     }
 
-
     @Test
     public void testDisplayException() {
         // Prepare the schedule

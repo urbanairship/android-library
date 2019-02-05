@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
@@ -36,10 +37,11 @@ public class RemoteDataJobHandler {
     /**
      * RemoteDataJobHandler constructor.
      *
+     * @param context The application context.
      * @param airship A UAirship instance.
      */
-    RemoteDataJobHandler(UAirship airship) {
-        this(airship.getRemoteData(), new RemoteDataApiClient(airship.getAirshipConfigOptions()));
+    RemoteDataJobHandler(@NonNull Context context, @NonNull UAirship airship) {
+        this(airship.getRemoteData(), new RemoteDataApiClient(context, airship.getAirshipConfigOptions()));
     }
 
     /**
@@ -47,9 +49,10 @@ public class RemoteDataJobHandler {
      *
      * @param apiClient The RemoteDataApiClient.
      * @param remoteData The remote data instance.
+     *
      */
     @VisibleForTesting
-    RemoteDataJobHandler(RemoteData remoteData, RemoteDataApiClient apiClient) {
+    RemoteDataJobHandler(@NonNull RemoteData remoteData, @NonNull RemoteDataApiClient apiClient) {
         this.apiClient = apiClient;
         this.remoteData = remoteData;
     }

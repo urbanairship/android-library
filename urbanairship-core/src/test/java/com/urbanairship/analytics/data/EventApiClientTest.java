@@ -7,10 +7,12 @@ import android.os.Build;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestLocaleManager;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
@@ -39,6 +41,7 @@ public class EventApiClientTest extends BaseTestCase {
     private List<String> events = new ArrayList<>();
     private EventApiClient client;
     private TestRequest testRequest;
+    private TestLocaleManager localeManager;
 
 
     @Before
@@ -57,8 +60,8 @@ public class EventApiClientTest extends BaseTestCase {
         when(inbox.getUser()).thenReturn(richPushUser);
         TestApplication.getApplication().setInbox(inbox);
 
-
-        client = new EventApiClient(TestApplication.getApplication(), mockRequestFactory);
+        localeManager = new TestLocaleManager();
+        client = new EventApiClient(TestApplication.getApplication(), mockRequestFactory, localeManager);
     }
 
     /**
@@ -92,7 +95,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaders() {
-        Locale.setDefault(new Locale("en", "US", "POSIX"));
+        localeManager.setDefaultLocale(new Locale("en", "US", "POSIX"));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
@@ -152,7 +155,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLocaleCountryHeaders() {
-        Locale.setDefault(new Locale("en", "", "POSIX"));
+        localeManager.setDefaultLocale(new Locale("en", "", "POSIX"));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
@@ -171,7 +174,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLocaleVariantHeaders() {
-        Locale.setDefault(new Locale("en", "US", ""));
+        localeManager.setDefaultLocale(new Locale("en", "US", ""));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
@@ -190,7 +193,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLanguageLocaleHeaders() {
-        Locale.setDefault(new Locale("", "US", "POSIX"));
+        localeManager.setDefaultLocale(new Locale("", "US", "POSIX"));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
