@@ -23,6 +23,6 @@ public class LocaleChangeReceiver extends BroadcastReceiver {
         }
 
         Autopilot.automaticTakeOff(context);
-        LocaleManager.shared().notifyLocaleChanged(context);
+        LocaleManager.shared(context).notifyLocaleChanged();
     }
 }

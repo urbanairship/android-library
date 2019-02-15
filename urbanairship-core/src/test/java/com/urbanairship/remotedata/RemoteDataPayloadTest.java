@@ -19,8 +19,9 @@ public class RemoteDataPayloadTest extends BaseTestCase {
 
     private JsonValue payloads;
     private JsonValue payload;
-    String timestamp;
+    private String timestamp;
     private JsonMap data;
+    private JsonMap metadata;
 
     @Before
     public void setup() {
@@ -28,17 +29,18 @@ public class RemoteDataPayloadTest extends BaseTestCase {
         data = JsonMap.newBuilder().put("foo", "bar").build();
         payload = JsonMap.newBuilder().put("type", "test").put("timestamp", timestamp).put("data", data).build().toJsonValue();
         payloads = new JsonList(Arrays.asList(payload)).toJsonValue();
+        metadata = JsonMap.newBuilder().put("foo", "bar").build();
     }
 
     @Test
     public void testParsePayload() throws Exception {
-        RemoteDataPayload parsedPayload = RemoteDataPayload.parsePayload(payload);
+        RemoteDataPayload parsedPayload = RemoteDataPayload.parsePayload(payload, metadata);
         verifyPayload(parsedPayload);
     }
 
     @Test
     public void testParsePayloads() {
-        Set<RemoteDataPayload> parsedPayloads = RemoteDataPayload.parsePayloads(payloads);
+        Set<RemoteDataPayload> parsedPayloads = RemoteDataPayload.parsePayloads(payloads, metadata);
         Assert.assertEquals("Parsed payloads should have a size of one", parsedPayloads.size(), 1);
         for (RemoteDataPayload parsedPayload : parsedPayloads) {
             verifyPayload(parsedPayload);
@@ -49,5 +51,6 @@ public class RemoteDataPayloadTest extends BaseTestCase {
         Assert.assertEquals("Payload should have type 'test'", parsedPayload.getType(), "test");
         Assert.assertEquals("Payload should have timestamp: " + timestamp, DateUtils.createIso8601TimeStamp(parsedPayload.getTimestamp()), timestamp);
         Assert.assertEquals("Payload should have data: " + data, parsedPayload.getData(), data);
+        Assert.assertEquals("Payload should have metadata: " + metadata, parsedPayload.getData(), metadata);
     }
 }

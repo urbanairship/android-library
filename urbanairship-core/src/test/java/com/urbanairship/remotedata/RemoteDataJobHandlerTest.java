@@ -4,19 +4,25 @@ package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
+import org.apache.tools.ant.taskdefs.Local;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.reset;
@@ -29,13 +35,15 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
     private RemoteData remoteData;
     private RemoteDataJobHandler jobHandler;
     private JsonMap responsePayload;
+    private TestLocaleManager testLocaleManager;
 
     @Before
     public void setup() {
         client = Mockito.mock(RemoteDataApiClient.class);
         remoteData = Mockito.mock(RemoteData.class);
+        testLocaleManager = new TestLocaleManager();
 
-        jobHandler = new RemoteDataJobHandler(remoteData, client);
+        jobHandler = new RemoteDataJobHandler(remoteData, client, testLocaleManager);
 
         when(remoteData.getLastModified()).thenReturn("lastModifiedRequest");
 
@@ -82,27 +90,28 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
     }
 
     private void validateRemoteDataSuccess(int status) {
+        Locale locale = new Locale("de");
+        testLocaleManager.setDefaultLocale(locale);
+        JsonMap metadata = RemoteData.createMetadata(locale);
+
         clearInvocations(remoteData);
 
         Response response = refreshSuccessResponse(status);
 
-        when(client.fetchRemoteData("lastModifiedRequest")).thenReturn(response);
+        when(client.fetchRemoteData("lastModifiedRequest", locale)).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteDataJobHandler.ACTION_REFRESH).build();
         Assert.assertEquals("Job should finish", JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify the update was performed
-        verify(client).fetchRemoteData("lastModifiedRequest");
+        verify(client).fetchRemoteData("lastModifiedRequest", locale);
 
         if (status == 200) {
-            verify(remoteData).setLastModified("lastModifiedResponse");
-            verify(remoteData).handleRefreshResponse(RemoteDataPayload.parsePayloads(responsePayload.get("payloads")));
+            verify(remoteData).onNewData(RemoteDataPayload.parsePayloads(responsePayload.get("payloads"), metadata), "lastModifiedResponse", metadata);
         }
 
         verify(remoteData).onRefreshFinished();
-
-
         reset(client);
     }
 

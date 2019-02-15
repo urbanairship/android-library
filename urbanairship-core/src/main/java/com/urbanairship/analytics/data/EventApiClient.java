@@ -63,7 +63,7 @@ public class EventApiClient {
      * @param context The application context.
      */
     public EventApiClient(@NonNull Context context) {
-        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared());
+        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared(context));
     }
 
     /**
@@ -159,7 +159,7 @@ public class EventApiClient {
                                         .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
 
 
-        Locale locale = localeManager.getDefaultLocale(context);
+        Locale locale = localeManager.getDefaultLocale();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             request.setHeader("X-UA-Locale-Language", locale.getLanguage());
 

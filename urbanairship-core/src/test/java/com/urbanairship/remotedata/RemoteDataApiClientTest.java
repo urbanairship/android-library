@@ -45,7 +45,6 @@ public class RemoteDataApiClientTest extends BaseTestCase {
 
     private TestRequest testRequest;
     private RemoteDataApiClient client;
-    private TestLocaleManager localeManager;
 
     @Before
     public void setUp() {
@@ -55,7 +54,6 @@ public class RemoteDataApiClientTest extends BaseTestCase {
                 .setInProduction(false)
                 .build();
 
-        localeManager = new TestLocaleManager();
         testRequest = new TestRequest();
         RequestFactory requestFactory = new RequestFactory() {
             @NonNull
@@ -67,7 +65,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
             }
         };
 
-        client = new RemoteDataApiClient(TestApplication.getApplication(), configOptions, requestFactory, localeManager);
+        client = new RemoteDataApiClient(configOptions, requestFactory);
     }
 
     /**
@@ -91,7 +89,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
                 .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
-        Response response = client.fetchRemoteData(requestTimestamp);
+        Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
 
         assertEquals("Headers should contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"), requestTimestamp);
         assertNotNull("Response should not be null", response);
@@ -105,7 +103,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSdkVersion() {
-        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()));
+        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
         assertEquals(uri.getQueryParameter("sdk_version"), UAirship.getVersion());
@@ -116,8 +114,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      */
     @Test
     public void testLocale() {
-        localeManager.setDefaultLocale(new Locale("en", "US"));
-        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()));
+        Locale locale = new Locale("en", "US");
+        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
         assertEquals(uri.getQueryParameter("language"), "en");
@@ -129,8 +127,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      */
     @Test
     public void testLocaleMissingCountry() {
-        localeManager.setDefaultLocale(new Locale("de"));
-        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()));
+        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("de"));
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
         assertEquals(uri.getQueryParameter("language"), "de");
@@ -142,8 +139,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      */
     @Test
     public void testLocaleMissingLanguage() {
-        localeManager.setDefaultLocale(new Locale("", "US"));
-        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()));
+        Locale locale = new Locale("", "US");
+        client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
         assertNull(uri.getQueryParameter("language"));
@@ -170,7 +167,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
                 .setResponseBody(list.toString())
                 .build();
 
-        Response response = client.fetchRemoteData(null);
+        Response response = client.fetchRemoteData(null, new Locale("en"));
 
         assertNull("Headers should not contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"));
         assertNotNull("Response should not be null", response);
@@ -192,7 +189,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
                 .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
-        Response response = client.fetchRemoteData(requestTimestamp);
+        Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED, response.getStatus());

@@ -12,15 +12,13 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -33,6 +31,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.AirshipHandlerThread;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,9 +71,9 @@ public class RemoteData extends AirshipComponent {
     private static final String LAST_REFRESH_TIME_KEY = "com.urbanairship.remotedata.LAST_REFRESH_TIME";
 
     /**
-     * The key for getting and setting the last refresh locale.
+     * The key for getting and setting the last refresh metadata.
      */
-    private static final String LAST_REFRESH_LOCALE = "com.urbanairship.remotedata.LAST_REFRESH_LOCALE";
+    private static final String LAST_REFRESH_METADATA = "com.urbanairship.remotedata.LAST_REFRESH_METADATA";
 
     /**
      * The key for getting and setting the app version of the last refresh from the preference datastore.
@@ -117,7 +116,8 @@ public class RemoteData extends AirshipComponent {
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor) {
-        this(context, preferenceDataStore, configOptions, activityMonitor, JobDispatcher.shared(context), LocaleManager.shared());
+        this(context, preferenceDataStore, configOptions, activityMonitor,
+                JobDispatcher.shared(context), LocaleManager.shared(context));
     }
 
     /**
@@ -243,7 +243,6 @@ public class RemoteData extends AirshipComponent {
         });
     }
 
-
     /**
      * Produces an Observable of a List of RemoteDataPayload objects corresponding to the provided types.
      * Subscribers will be notified of any cached data upon subscription, as well as subsequent changes
@@ -274,10 +273,12 @@ public class RemoteData extends AirshipComponent {
                     public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
                         Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
                         for (RemoteDataPayload payload : payloads) {
-                            if (!map.containsKey(payload.getType())) {
-                                map.put(payload.getType(), new HashSet<RemoteDataPayload>());
+                            Collection<RemoteDataPayload> mappedPayloads = map.get(payload.getType());
+                            if (mappedPayloads == null) {
+                                mappedPayloads = new HashSet<>();
+                                map.put(payload.getType(), mappedPayloads);
                             }
-                            map.get(payload.getType()).add(payload);
+                            mappedPayloads.add(payload);
                         }
 
                         return map;
@@ -289,10 +290,11 @@ public class RemoteData extends AirshipComponent {
                     public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
                         Set<RemoteDataPayload> payloads = new HashSet<>();
                         for (String type : new HashSet<>(types)) {
-                            if (payloadMap.containsKey(type)) {
-                                payloads.addAll(payloadMap.get(type));
+                            Collection<RemoteDataPayload> mappedPayloads = payloadMap.get(type);
+                            if (mappedPayloads != null) {
+                                payloads.addAll(mappedPayloads);
                             } else {
-                                payloads.add(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
+                                payloads.add(RemoteDataPayload.emptyPayload(type));
                             }
                         }
 
@@ -303,37 +305,17 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
-     * Refresh response callback for use from the RemoteDataJobHandler.
-     *
-     * @param newPayloads A list of new payloads.
-     */
-    void handleRefreshResponse(@NonNull final Set<RemoteDataPayload> newPayloads) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                overwriteCachedData(newPayloads);
-                payloadUpdates.onNext(newPayloads);
-            }
-        });
-    }
-
-    /**
-     * Saves the last modified timestamp received in a refresh request.
-     *
-     * @param lastModified The timestamp in RFC 1123 format.
-     */
-    void setLastModified(String lastModified) {
-        preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
-    }
-
-    /**
      * Retrieves the mostly recent last modified timestamp received from the server.
      *
      * @return A timestamp in RFC 1123 format, or <code>null</code> if one has not been received.
      */
     @Nullable
-    public String getLastModified() {
-        return preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
+    String getLastModified() {
+        if (isLastMetadataCurrent()) {
+            return preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
+        } else {
+            return null;
+        }
     }
 
     public boolean shouldRefresh() {
@@ -348,9 +330,7 @@ public class RemoteData extends AirshipComponent {
             return true;
         }
 
-        String lastRefreshLocale = preferenceDataStore.getString(LAST_REFRESH_LOCALE, null);
-        Locale locale = LocaleManager.shared().getDefaultLocale(getContext());
-        if (lastRefreshLocale == null || lastRefreshLocale.equals(locale.toString())) {
+        if (!isLastMetadataCurrent()) {
             return true;
         }
 
@@ -361,9 +341,31 @@ public class RemoteData extends AirshipComponent {
      * Called when the job is finished refreshing the remote data.
      */
     @WorkerThread
+    void onNewData(@NonNull final Set<RemoteDataPayload> payloads, @Nullable String lastModified, @NonNull JsonMap metadata) {
+        preferenceDataStore.put(LAST_REFRESH_METADATA, metadata);
+        preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
+
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                // Clear the cache
+                if (!dataStore.deletePayloads()) {
+                    Logger.error("Unable to delete existing payload data");
+                    return;
+                }
+                // If successful, save the new payload data.
+                if (!dataStore.savePayloads(payloads)) {
+                    Logger.error("Unable to save remote data payloads");
+                }
+                payloadUpdates.onNext(payloads);
+            }
+        });
+    }
+
+    @WorkerThread
     void onRefreshFinished() {
         preferenceDataStore.put(LAST_REFRESH_TIME_KEY, System.currentTimeMillis());
-        preferenceDataStore.put(LAST_REFRESH_LOCALE, LocaleManager.shared().getDefaultLocale(getContext()).toString());
+
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
             preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
@@ -388,16 +390,24 @@ public class RemoteData extends AirshipComponent {
         });
     }
 
-    @WorkerThread
-    private void overwriteCachedData(@NonNull final Set<RemoteDataPayload> newPayloads) {
-        // Clear the cache
-        if (!dataStore.deletePayloads()) {
-            Logger.error("Unable to delete existing payload data");
-            return;
-        }
-        // If successful, save the new payload data.
-        if (!dataStore.savePayloads(newPayloads)) {
-            Logger.error("Unable to save remote data payloads");
-        }
+    /**
+     * Creates the client metadata used to fetch the request.
+     *
+     * @param locale The locale.
+     * @return The metadata map.
+     */
+    @NonNull
+    static JsonMap createMetadata(@NonNull Locale locale) {
+        return JsonMap.newBuilder()
+                .putOpt(RemoteDataPayload.METADATA_SDK_VERSION, UAirship.getVersion())
+                .putOpt(RemoteDataPayload.METADATA_COUNTRY, UAStringUtil.nullIfEmpty(locale.getCountry()))
+                .putOpt(RemoteDataPayload.METADATA_LANGUAGE, UAStringUtil.nullIfEmpty(locale.getLanguage()))
+                .build();
+    }
+
+    private boolean isLastMetadataCurrent() {
+        JsonMap lastRefreshMetadata = preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap();
+        Locale locale = localeManager.getDefaultLocale();
+        return lastRefreshMetadata.equals(createMetadata(locale));
     }
 }

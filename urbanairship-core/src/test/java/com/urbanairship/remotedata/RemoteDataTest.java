@@ -14,7 +14,6 @@ import com.urbanairship.TestLocaleManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
 
@@ -70,9 +69,23 @@ public class RemoteDataTest extends BaseTestCase {
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
                 activityMonitor, mockDispatcher, localeManager);
 
-        payload = new RemoteDataPayload("type", 123, JsonMap.newBuilder().put("foo", "bar").build());
-        otherPayload = new RemoteDataPayload("otherType", 234, JsonMap.newBuilder().put("baz", "boz").build());
-        emptyPayload = new RemoteDataPayload("type", 0, JsonMap.newBuilder().build());
+        payload = RemoteDataPayload.newBuilder()
+                .setType("type")
+                .setTimeStamp(123)
+                .setData(JsonMap.newBuilder()
+                        .put("foo", "bar")
+                        .build())
+                .build();
+        otherPayload = RemoteDataPayload.newBuilder()
+                .setType("otherType")
+                .setTimeStamp(234)
+                .setData(JsonMap.newBuilder()
+                        .put("baz", "boz")
+                        .build())
+                .build();
+        emptyPayload = RemoteDataPayload.emptyPayload("type");
+
+        remoteData.init();
     }
 
     @After
@@ -85,7 +98,6 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testForegroundTransition() {
-        remoteData.init();
         clearInvocations(mockDispatcher);
         activityMonitor.foreground();
 
@@ -104,10 +116,10 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLocaleChangeRefresh() {
-        remoteData.init();
         clearInvocations(mockDispatcher);
 
         localeManager.setDefaultLocale(new Locale("de"));
+        localeManager.notifyLocaleChange();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -125,7 +137,6 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshInterval() {
-        remoteData.init();
         clearInvocations(mockDispatcher);
         remoteData.setForegroundRefreshInterval(100000);
 
@@ -144,7 +155,6 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypeWithEmptyCache() {
-        remoteData.init();
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
@@ -164,7 +174,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         // The second callback should be the refreshed data
@@ -176,9 +186,8 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that a type missing in the response will result in an empty model object in the callback.
      */
     @Test
-    public void testPayloadsForTypeWithMissingTypeInResponse() throws Exception {
-        remoteData.init();
-        remoteData.dataStore.savePayload(payload);
+    public void testPayloadsForTypeWithMissingTypeInResponse() {
+        remoteData.dataStore.savePayloads(asSet(payload));
 
         Assert.assertEquals(remoteData.dataStore.getPayloads().size(), 1);
 
@@ -203,7 +212,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(asSet(otherPayload));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", JsonMap.EMPTY_MAP);
 
         runLooperTasks();
 
@@ -217,8 +226,6 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypeDistinctness() {
-        remoteData.init();
-
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
@@ -235,7 +242,7 @@ public class RemoteDataTest extends BaseTestCase {
         // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         // We should get a second callback with the refreshed data
@@ -245,13 +252,19 @@ public class RemoteDataTest extends BaseTestCase {
         subscribedPayloads.clear();
 
         // Replaying the response should not result in another callback because the data hasn't changed
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
         Assert.assertEquals(subscribedPayloads.size(), 0);
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
-        RemoteDataPayload freshPayload = new RemoteDataPayload(payload.getType(), payload.getTimestamp() + 100000, payload.getData());
-        remoteData.handleRefreshResponse(asSet(freshPayload, otherPayload));
+        RemoteDataPayload freshPayload = RemoteDataPayload.newBuilder()
+                .setType(payload.getType())
+                .setTimeStamp(payload.getTimestamp() + 100000)
+                .setData(payload.getData())
+                .build();
+
+
+        remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         Assert.assertEquals(subscribedPayloads.size(), 1);
@@ -263,12 +276,11 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesWithEmptyCache() {
-        remoteData.init();
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
 
-        payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
+        payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
             @Override
             public void onNext(@NonNull Collection<RemoteDataPayload> value) {
                 subscribedPayloads.add(value);
@@ -288,7 +300,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         // The second callback should be the refreshed data
@@ -303,9 +315,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesWithMissingTypeInResponse() throws Exception {
-        remoteData.init();
-        remoteData.dataStore.savePayload(payload);
-        remoteData.dataStore.savePayload(otherPayload);
+        remoteData.dataStore.savePayloads(asSet(payload, otherPayload));
 
         Assert.assertEquals(remoteData.dataStore.getPayloads().size(), 2);
 
@@ -331,9 +341,13 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        RemoteDataPayload freshOtherPayload = new RemoteDataPayload(otherPayload.getType(), otherPayload.getTimestamp() + 10000, otherPayload.getData());
+        RemoteDataPayload freshOtherPayload = RemoteDataPayload.newBuilder()
+                .setType(otherPayload.getType())
+                .setTimeStamp(otherPayload.getTimestamp() + 100000)
+                .setData(otherPayload.getData())
+                .build();
 
-        remoteData.handleRefreshResponse(asSet(freshOtherPayload));
+        remoteData.onNewData(asSet(freshOtherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         // The second callback should have an empty placeholder for the first payload
@@ -347,12 +361,10 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesDistinctness() {
-        remoteData.init();
-
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
-        payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
+        payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
             @Override
             public void onNext(@NonNull Collection<RemoteDataPayload> value) {
                 subscribedPayloads.add(value);
@@ -364,42 +376,50 @@ public class RemoteDataTest extends BaseTestCase {
         // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
 
         // Replaying the response should not result in another callback because the timestamp hasn't changed
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
         Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
 
         subscribedPayloads.clear();
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
-        RemoteDataPayload freshPayload = new RemoteDataPayload(payload.getType(), payload.getTimestamp() + 100000, payload.getData());
-        remoteData.handleRefreshResponse(asSet(freshPayload, otherPayload));
+        RemoteDataPayload freshPayload = RemoteDataPayload.newBuilder()
+                .setType(payload.getType())
+                .setTimeStamp(payload.getTimestamp() + 100000)
+                .setData(payload.getData())
+                .build();
+
+        remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(freshPayload, otherPayload)));
     }
 
     /**
-     * Test setting the last modified timestamp.
+     * Test last modified is updating when onNewData is called.
      */
     @Test
-    public void testSetLastModified() {
-        remoteData.setLastModified("lastModified");
-        Assert.assertEquals(preferenceDataStore.getString("com.urbanairship.remotedata.LAST_MODIFIED", ""), "lastModified");
+    public void testLastModified() {
+        remoteData.onNewData(asSet(otherPayload), "lastModified",  RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        Assert.assertEquals(remoteData.getLastModified(), "lastModified");
     }
 
     /**
-     * Test getting the last modified timestamp.
+     * Test last modified is ignored if the metadata changes.
      */
     @Test
-    public void testGetLastModified() {
-        remoteData.setLastModified("lastModified again");
-        Assert.assertEquals(remoteData.getLastModified(), "lastModified again");
+    public void testLastModifiedMetadataChanges() {
+        remoteData.onNewData(asSet(otherPayload), "lastModified",  RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        Assert.assertEquals("lastModified", remoteData.getLastModified());
+
+        localeManager.setDefaultLocale(new Locale("de"));
+        Assert.assertNull(remoteData.getLastModified());
     }
 
     /**
@@ -407,8 +427,6 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testHandleRefreshResponse() {
-        remoteData.init();
-
         final Set<RemoteDataPayload> subscribedPayloads = new HashSet<>();
 
         remoteData.payloadUpdates.subscribe(new Subscriber<Set<RemoteDataPayload>>() {
@@ -418,7 +436,7 @@ public class RemoteDataTest extends BaseTestCase {
             }
         });
 
-        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         Assert.assertEquals(asSet(payload, otherPayload), subscribedPayloads);
@@ -427,7 +445,7 @@ public class RemoteDataTest extends BaseTestCase {
         subscribedPayloads.clear();
 
         // Subsequent refresh response missing previously known types
-        remoteData.handleRefreshResponse(asSet(otherPayload));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
 
         Assert.assertEquals(asSet(otherPayload), subscribedPayloads);

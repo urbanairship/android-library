@@ -239,7 +239,7 @@ public class Request {
         return String.format(Locale.US, USER_AGENT_FORMAT, UAirship.getPackageName(),
                 Build.MODEL, Build.VERSION.RELEASE, platform, UAirship.getVersion(),
                 UAirship.shared().getAirshipConfigOptions().getAppKey(),
-                LocaleManager.shared().getDefaultLocale(UAirship.getApplicationContext()));
+                LocaleManager.shared(UAirship.getApplicationContext()).getDefaultLocale());
     }
 
     @Nullable

@@ -26,8 +26,8 @@ public class LocaleManagerTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        localeManager = new LocaleManager();
         context = TestApplication.getApplication();
+        localeManager = new LocaleManager(context);
     }
 
     @Test
@@ -35,7 +35,7 @@ public class LocaleManagerTest extends BaseTestCase {
         Locale de = new Locale("de");
         context.getResources().getConfiguration().setLocale(de);
 
-        assertEquals(de, localeManager.getDefaultLocale(context));
+        assertEquals(de, localeManager.getDefaultLocale());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class LocaleManagerTest extends BaseTestCase {
         LocaleChangedListener listener = mock(LocaleChangedListener.class);
         localeManager.addListener(listener);
 
-        localeManager.notifyLocaleChanged(context);
+        localeManager.notifyLocaleChanged();
 
         verify(listener).onLocaleChanged(en);
     }

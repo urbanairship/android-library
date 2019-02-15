@@ -260,7 +260,12 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         public RemoteDataPayload build() {
             JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
-            return new RemoteDataPayload("in_app_messages", timeStamp, data);
+
+            return RemoteDataPayload.newBuilder()
+                    .setType("in_app_messages")
+                    .setTimeStamp(timeStamp)
+                    .setData(data)
+                    .build();
         }
     }
 

@@ -565,7 +565,7 @@ public class PushManager extends AirshipComponent {
 
         builder.setTimezone(TimeZone.getDefault().getID());
 
-        Locale locale = LocaleManager.shared().getDefaultLocale(context);
+        Locale locale = LocaleManager.shared(context).getDefaultLocale();
 
         if (!UAStringUtil.isEmpty(locale.getCountry())) {
             builder.setCountry(locale.getCountry());

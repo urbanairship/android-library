@@ -14,8 +14,10 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -33,6 +35,8 @@ public class RemoteDataJobHandler {
 
     private final RemoteDataApiClient apiClient;
     private final RemoteData remoteData;
+    private final LocaleManager localeManager;
+
 
     /**
      * RemoteDataJobHandler constructor.
@@ -41,7 +45,7 @@ public class RemoteDataJobHandler {
      * @param airship A UAirship instance.
      */
     RemoteDataJobHandler(@NonNull Context context, @NonNull UAirship airship) {
-        this(airship.getRemoteData(), new RemoteDataApiClient(context, airship.getAirshipConfigOptions()));
+        this(airship.getRemoteData(), new RemoteDataApiClient(airship.getAirshipConfigOptions()), LocaleManager.shared(context));
     }
 
     /**
@@ -49,12 +53,13 @@ public class RemoteDataJobHandler {
      *
      * @param apiClient The RemoteDataApiClient.
      * @param remoteData The remote data instance.
-     *
+     * @param localeManager The locale manager.
      */
     @VisibleForTesting
-    RemoteDataJobHandler(@NonNull RemoteData remoteData, @NonNull RemoteDataApiClient apiClient) {
+    RemoteDataJobHandler(@NonNull RemoteData remoteData, @NonNull RemoteDataApiClient apiClient, @NonNull LocaleManager localeManager) {
         this.apiClient = apiClient;
         this.remoteData = remoteData;
+        this.localeManager = localeManager;
     }
 
     /**
@@ -82,7 +87,8 @@ public class RemoteDataJobHandler {
     @JobInfo.JobResult
     private int onRefresh() {
         String lastModified = remoteData.getLastModified();
-        Response response = apiClient.fetchRemoteData(lastModified);
+        Locale locale = localeManager.getDefaultLocale();
+        Response response = apiClient.fetchRemoteData(lastModified, locale);
 
         if (response == null) {
             Logger.debug("Unable to connect to remote data server, retrying later");
@@ -102,14 +108,14 @@ public class RemoteDataJobHandler {
             Logger.debug("Received remote data response: %s", body);
 
             lastModified = response.getResponseHeader("Last-Modified");
-            remoteData.setLastModified(lastModified);
+            JsonMap metadata = RemoteData.createMetadata(locale);
 
             try {
                 JsonValue json = JsonValue.parseString(body);
                 JsonMap map = json.optMap();
                 if (map.containsKey("payloads")) {
-                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.opt("payloads"));
-                    remoteData.handleRefreshResponse(payloads);
+                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
+                    remoteData.onNewData(payloads, lastModified, metadata);
                     remoteData.onRefreshFinished();
                     return JobInfo.JOB_FINISHED;
                 }

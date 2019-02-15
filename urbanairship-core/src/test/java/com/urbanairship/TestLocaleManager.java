@@ -1,10 +1,11 @@
 package com.urbanairship;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
+
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.List;
 import java.util.Locale;
@@ -14,6 +15,10 @@ public class TestLocaleManager extends LocaleManager {
 
     private List<LocaleChangedListener> localeChangedListeners = new CopyOnWriteArrayList<>();
     private Locale locale;
+
+    public TestLocaleManager() {
+        super(RuntimeEnvironment.application);
+    }
 
     @Override
     public void addListener(@NonNull LocaleChangedListener listener) {
@@ -27,17 +32,19 @@ public class TestLocaleManager extends LocaleManager {
 
     public void setDefaultLocale(Locale locale) {
         this.locale = locale;
+    }
 
+    public void notifyLocaleChange() {
         for (LocaleChangedListener listener : localeChangedListeners) {
-            listener.onLocaleChanged(locale);
+            listener.onLocaleChanged(getDefaultLocale());
         }
     }
 
     @NonNull
     @Override
-    public Locale getDefaultLocale(@NonNull Context context) {
+    public Locale getDefaultLocale() {
         if (locale == null) {
-            locale = super.getDefaultLocale(context);
+            locale = new Locale("en", "US");
         }
         return locale;
     }

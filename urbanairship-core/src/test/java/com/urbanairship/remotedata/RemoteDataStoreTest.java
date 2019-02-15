@@ -23,9 +23,21 @@ public class RemoteDataStoreTest extends BaseTestCase {
     @Before
     public void setUp() {
         dataStore = new RemoteDataStore(RuntimeEnvironment.application, "appKey", "test");
+        RemoteDataPayload payload = RemoteDataPayload.newBuilder()
+                .setType("type")
+                .setTimeStamp(123)
+                .setData(JsonMap.newBuilder()
+                        .put("foo", "bar")
+                        .build())
+                .build();
 
-        RemoteDataPayload payload = new RemoteDataPayload("type", 123, JsonMap.newBuilder().put("foo", "bar").build());
-        RemoteDataPayload otherPayload = new RemoteDataPayload("otherType", 234, JsonMap.newBuilder().put("baz", "boz").build());
+        RemoteDataPayload otherPayload = RemoteDataPayload.newBuilder()
+                .setType("otherType")
+                .setTimeStamp(234)
+                .setData(JsonMap.newBuilder()
+                        .put("baz", "boz")
+                        .build())
+                .build();
         payloads = new HashSet<>(Arrays.asList(payload, otherPayload));
     }
 

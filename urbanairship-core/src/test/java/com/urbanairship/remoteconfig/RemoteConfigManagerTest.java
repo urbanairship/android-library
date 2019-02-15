@@ -64,7 +64,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         assertTrue(testModuleAdapter.disabledModules.containsAll(Modules.ALL_MODULES));
 
         // Clear common
-        common = new RemoteDataPayload("app_config:common", 0, JsonMap.EMPTY_MAP);
+        common = createRemoteDataPayload("app_config:common", 0, JsonMap.EMPTY_MAP);
         testModuleAdapter.reset();
 
         // Notify the updates
@@ -103,8 +103,8 @@ public class RemoteConfigManagerTest extends BaseTestCase {
                                      .put("module_one", "android")
                                      .build();
 
-        RemoteDataPayload common = new RemoteDataPayload("app_config:common", System.currentTimeMillis(), commonData);
-        RemoteDataPayload android = new RemoteDataPayload("app_config:android", System.currentTimeMillis(), androidData);
+        RemoteDataPayload common = createRemoteDataPayload("app_config:common", System.currentTimeMillis(), commonData);
+        RemoteDataPayload android = createRemoteDataPayload("app_config:android", System.currentTimeMillis(), androidData);
 
 
         // Notify the updates
@@ -121,6 +121,15 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         assertEquals(expectedModuleTwoConfig, config.get("module_two"));
     }
 
+
+    static RemoteDataPayload createRemoteDataPayload(String type, long timeStamp, JsonMap data) {
+        return RemoteDataPayload.newBuilder()
+                .setType(type)
+                .setTimeStamp(timeStamp)
+                .setData(data)
+                .build();
+    }
+
     static RemoteDataPayload createDisablePayload(String type, long refreshInterval, Collection<String> modules) {
         JsonMap disable = JsonMap.newBuilder()
                                  .put("modules", JsonValue.wrapOpt(modules))
@@ -131,7 +140,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
                               .put("disable_features", JsonValue.wrapOpt(Collections.singletonList(disable)))
                               .build();
 
-        return new RemoteDataPayload(type, System.currentTimeMillis(), data);
+        return createRemoteDataPayload(type, System.currentTimeMillis(), data);
     }
 
     static RemoteDataPayload createDisablePayload(String type, long refreshInterval, String... modules) {

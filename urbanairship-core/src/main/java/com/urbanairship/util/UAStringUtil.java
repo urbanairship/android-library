@@ -180,4 +180,13 @@ public abstract class UAStringUtil {
             return null;
         }
     }
+
+    @Nullable
+    public static String nullIfEmpty(@Nullable String value) {
+        if (UAStringUtil.isEmpty(value)) {
+            return null;
+        }
+
+        return value;
+    }
 }

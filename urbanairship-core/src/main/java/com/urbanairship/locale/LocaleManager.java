@@ -1,5 +1,6 @@
 package com.urbanairship.locale;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -7,6 +8,8 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.os.ConfigurationCompat;
 
 import com.urbanairship.Logger;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.job.JobDispatcher;
 
 import java.util.List;
 import java.util.Locale;
@@ -18,22 +21,36 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LocaleManager {
+    private final Context context;
     private volatile Locale locale;
-    private static LocaleManager instance = new LocaleManager();
+    @SuppressLint("StaticFieldLeak")
+    private static LocaleManager instance;
     private List<LocaleChangedListener> localeChangedListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Gets the shared instance.
      *
-     * @return The LocaleManager.
+     * @param context The application context.
+     * @return The Local Manager.
      */
     @NonNull
-    public static LocaleManager shared() {
+    public static LocaleManager shared(@NonNull Context context) {
+        if (instance == null) {
+            synchronized (JobDispatcher.class) {
+                if (instance == null) {
+                    instance = new LocaleManager(context);
+                }
+            }
+        }
+
         return instance;
     }
 
     @VisibleForTesting
-    protected LocaleManager() {}
+    protected LocaleManager(Context context) {
+        this.context = context.getApplicationContext();
+    }
+
 
     /**
      * Adds a locale change listener.
@@ -55,16 +72,11 @@ public class LocaleManager {
 
     /**
      * Called by {@link LocaleChangeReceiver} to notify the locale changed.
-     *
-     * @param context The application context.
      */
-    void notifyLocaleChanged(@NonNull Context context) {
+    void notifyLocaleChanged() {
         synchronized (this) {
             locale = ConfigurationCompat.getLocales(context.getResources().getConfiguration()).get(0);
-            Logger.debug("Locale changed. Default locale: %s.", locale);
-            Logger.debug("Locale: %s.", locale);
-            Logger.debug("Locales: %s.", ConfigurationCompat.getLocales(context.getResources().getConfiguration()));
-            Logger.debug("System Locale: %s.", Locale.getDefault());
+            Logger.debug("Locale changed. Locale: %s.", locale);
             for (LocaleChangedListener listener : localeChangedListeners) {
                 listener.onLocaleChanged(locale);
             }
@@ -74,11 +86,10 @@ public class LocaleManager {
     /**
      * Gets the current default locale.
      *
-     * @param context The application context.
      * @return The locale.
      */
     @NonNull
-    public Locale getDefaultLocale(@NonNull Context context) {
+    public Locale getDefaultLocale() {
         if (locale == null) {
             locale = ConfigurationCompat.getLocales(context.getResources().getConfiguration()).get(0);
             Logger.debug("Locale: %s.", locale);

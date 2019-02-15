@@ -2,7 +2,6 @@
 
 package com.urbanairship.remotedata;
 
-import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,7 +14,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.MalformedURLException;
@@ -43,8 +41,6 @@ public class RemoteDataApiClient {
 
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;
-    private final Context context;
-    private final LocaleManager localeManager;
 
     @Nullable
     private URL url;
@@ -52,28 +48,22 @@ public class RemoteDataApiClient {
     /**
      * RemoteDataApiClient constructor.
      *
-     * @param context The application context.
      * @param configOptions The config options.
      */
-    RemoteDataApiClient(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
-        this(context, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared());
+    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions) {
+        this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     /**
      * RemoteDataApiClient constructor.
      *
-     * @param context The application context.
      * @param configOptions The config options.
      * @param requestFactory A RequestFactory.
-     * @param localeManager The locale manager.
      */
     @VisibleForTesting
-    RemoteDataApiClient(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
-                        @NonNull RequestFactory requestFactory, @NonNull LocaleManager localeManager) {
+    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         this.configOptions = configOptions;
         this.requestFactory = requestFactory;
-        this.context = context;
-        this.localeManager = localeManager;
     }
 
 
@@ -81,16 +71,16 @@ public class RemoteDataApiClient {
      * Executes a remote data request.
      *
      * @param lastModified An optional last-modified timestamp in ISO-8601 format.
+     * @param locale The current locale.
      * @return A Response.
      */
     @Nullable
-    Response fetchRemoteData(@Nullable String lastModified) {
-        URL url = getRemoteDataURL();
+    Response fetchRemoteData(@Nullable String lastModified, @NonNull Locale locale) {
+        URL url = getRemoteDataURL(locale);
 
         if (url == null) {
             return null;
         }
-
 
         Request request = requestFactory.createRequest("GET", url)
                 .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret());
@@ -105,10 +95,11 @@ public class RemoteDataApiClient {
     /**
      * Gets a device url for a given path.
      *
+     * @param locale The current locale.
      * @return The device URL or {@code null} if the URL is invalid.
      */
     @Nullable
-    private URL getRemoteDataURL() {
+    private URL getRemoteDataURL(@NonNull Locale locale) {
         if (url != null) {
             return url;
         }
@@ -123,7 +114,6 @@ public class RemoteDataApiClient {
                     .appendPath(UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
                     .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
 
-            Locale locale = localeManager.getDefaultLocale(context);
             if (!UAStringUtil.isEmpty(locale.getLanguage())) {
                 builder.appendQueryParameter(LANGUAGE_QUERY_PARAM, locale.getLanguage());
             }
