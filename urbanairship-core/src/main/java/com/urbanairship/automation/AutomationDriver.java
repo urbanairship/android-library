@@ -21,30 +21,58 @@ import java.lang.annotation.RetentionPolicy;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface AutomationDriver<T extends Schedule> {
 
-    @IntDef({ RESULT_CONTINUE, RESULT_CANCEL, RESULT_PENALIZE, RESULT_SKIP })
+    @IntDef({PREPARE_RESULT_CONTINUE, PREPARE_RESULT_CANCEL, PREPARE_RESULT_PENALIZE, PREPARE_RESULT_SKIP, PREPARE_RESULT_INVALIDATE})
     @Retention(RetentionPolicy.SOURCE)
-    @interface PrepareResult {}
+    @interface PrepareResult {
+    }
+
+
+    @IntDef({READY_RESULT_CONTINUE, READY_RESULT_NOT_READY, READY_RESULT_INVALIDATE})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ReadyResult {
+    }
 
     /**
      * Indicates a successful result.
      */
-    int RESULT_CONTINUE = 0;
+    int PREPARE_RESULT_CONTINUE = 0;
 
     /**
      * Indicates that the schedule should be canceled.
      */
-    int RESULT_CANCEL = 1;
+    int PREPARE_RESULT_CANCEL = 1;
 
     /**
      * Indicates that the schedule execution should be skipped but the schedule's execution
      * count should be incremented and to handle any execution interval set on the schedule.
      */
-    int RESULT_PENALIZE = 2;
+    int PREPARE_RESULT_PENALIZE = 2;
 
     /**
      * Indicates that the schedule execution should be skipped.
      */
-    int RESULT_SKIP = 3;
+    int PREPARE_RESULT_SKIP = 3;
+
+    /**
+     * Indicates that the schedule is out of date and should be reloaded before being prepared again.
+     */
+    int PREPARE_RESULT_INVALIDATE = 4;
+
+    /**
+     * Schedule is ready for execution.
+     */
+    int READY_RESULT_CONTINUE = 1;
+
+    /**
+     * Schedule is not ready for execution.
+     */
+    int READY_RESULT_NOT_READY = 0;
+
+    /**
+     * Schedule is out of date and should be prepared again before it is able to be ready for execution.
+     */
+    int READY_RESULT_INVALIDATE = -1;
+
 
     /**
      * The execution callback.
@@ -84,11 +112,11 @@ public interface AutomationDriver<T extends Schedule> {
      * but after the schedule's delay conditions are met.
      *
      * @param schedule The schedule.
-     * @return {@code true} if the schedule is ready, otherwise {@code false}.
+     * @return The ready result.
      */
     @MainThread
-    boolean isScheduleReadyToExecute(@NonNull T schedule);
-
+    @ReadyResult
+    int onCheckExecutionReadiness(@NonNull T schedule);
 
     /**
      * Executes a schedule. The callback should be called after the schedule's execution is complete.

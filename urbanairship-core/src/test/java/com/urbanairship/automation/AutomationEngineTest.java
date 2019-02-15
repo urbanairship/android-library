@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -477,7 +478,7 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         runLooperTasks();
         driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
@@ -567,7 +568,7 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         runLooperTasks();
         driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
@@ -619,7 +620,7 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CANCEL);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
         runLooperTasks();
 
         // Verify it's cancelled (Deleted)
@@ -639,7 +640,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
         runLooperTasks();
 
         // Verify it's idle
@@ -669,15 +670,48 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_PENALIZE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
         runLooperTasks();
 
         // Verify it's finished
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PAUSED);
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 1);
-
     }
 
+    @Test
+    public void testInvalidatePrepareResult() throws ExecutionException, InterruptedException {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                        .setCountGoal(1)
+                        .setEventName("event")
+                        .build())
+                .addAction("test_action", JsonValue.wrap("action_value"))
+                .setInterval(10, TimeUnit.SECONDS)
+                .setLimit(2)
+                .build();
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                .build()
+                .track();
+
+        runLooperTasks();
+
+        // Edit the schedule
+        final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
+                .setPriority(300)
+                .build();
+
+        automationEngine.editSchedule(schedule.getId(), edits);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+        runLooperTasks();
+
+        // Verify the updated schedule is being prepared
+        ActionSchedule updated = driver.preparedSchedulesMap.get(schedule.getId());
+        assertEquals(300, updated.getInfo().getPriority());
+    }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
@@ -720,7 +754,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Preparing schedule
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         runLooperTasks();
 
         // Waiting on conditions - the rest of the delay
@@ -770,7 +804,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify it started preparing the schedule
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         runLooperTasks();
 
         // Verify it started executing the schedule
@@ -828,6 +862,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         Map<String, ExecutionCallback> executionCallbackMap = new HashMap<>();
         Map<String, PrepareScheduleCallback> prepareCallbackMap = new HashMap<>();
+        Map<String, ActionSchedule> preparedSchedulesMap = new HashMap<>();
 
         ArrayList<Integer> priorityList = new ArrayList<>();
 
@@ -840,6 +875,7 @@ public class AutomationEngineTest extends BaseTestCase {
         public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback prepareCallback) {
             prepareCallbackMap.put(schedule.getId(), prepareCallback);
             priorityList.add(schedule.getInfo().getPriority());
+            preparedSchedulesMap.put(schedule.getId(), schedule);
         }
     }
 }

@@ -59,9 +59,7 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
             return CANCEL;
         }
 
-        // Videos require network
-        return Network.isConnected() ? OK : RETRY;
-
+        return OK;
     }
 
     @Override

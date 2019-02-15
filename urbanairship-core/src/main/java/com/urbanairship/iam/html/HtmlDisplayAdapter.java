@@ -54,7 +54,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
             return CANCEL;
         }
 
-        return Network.isConnected() ? OK : RETRY;
+        return OK;
     }
 
     @Override

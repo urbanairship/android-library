@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -164,10 +165,10 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
         verify(mockAdapter).onPrepare(any(Context.class));
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Verify the schedule is ready
-        assertTrue(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
     }
 
     @Test
@@ -178,10 +179,10 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
         verify(mockAdapter).onPrepare(any(Context.class));
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Verify the schedule is not ready
-        assertFalse(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
     }
 
     @Test
@@ -202,7 +203,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
-        assertFalse(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
     }
 
     @Test
@@ -212,10 +213,10 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        assertFalse(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
 
         // Paused = message is unable to be ready
-        assertFalse(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
     }
 
     @Test
@@ -229,7 +230,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
-        assertTrue(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
 
         // Display the schedule
         driverListener.onExecuteSchedule(schedule);
@@ -255,7 +256,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
-        assertTrue(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
 
         // Execute the schedule
         driverListener.onExecuteSchedule(schedule);
@@ -275,7 +276,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
-        assertTrue(driverListener.isScheduleReady(schedule));
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
 
         // Throw an exception when displaying
         doThrow(new RuntimeException("COOL"))
@@ -343,7 +344,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verifyNoMoreInteractions(mockAdapter);
 
         // Return cancel result
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
 
         // Advance the looper to make sure its not called again
         ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
@@ -367,7 +368,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_PENALIZE);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
 
     @Test
@@ -388,7 +389,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
     }
 
     @Test
@@ -409,7 +410,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_SKIP);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_SKIP);
     }
 
     @Test
@@ -430,7 +431,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
 
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_PENALIZE);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
 
     @Test
@@ -461,7 +462,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         driverListener.onPrepareSchedule(schedule);
 
         // Verify its prepared
-        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
 
     @Test

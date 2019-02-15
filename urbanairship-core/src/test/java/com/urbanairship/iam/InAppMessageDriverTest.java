@@ -48,12 +48,10 @@ public class InAppMessageDriverTest extends BaseTestCase {
     }
 
     @Test
-    public void testIsMessageReady() {
-        assertFalse(driver.isScheduleReadyToExecute(schedule));
-        when(listener.isScheduleReady(schedule)).thenReturn(true);
-        assertTrue(driver.isScheduleReadyToExecute(schedule));
+    public void testOnCheckExecutionReadiness() {
+        when(listener.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
     }
-
 
     @Test
     public void testExecuteTriggeredSchedule() {

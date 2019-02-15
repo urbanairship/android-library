@@ -13,6 +13,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleChangedListener;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
@@ -26,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -250,7 +253,7 @@ class InAppRemoteDataObserver {
                 continue;
             }
 
-            idMap.put(entry.getKey(), entry.getValue().getString());
+            idMap.put(entry.getKey(), entry.getValue().optString());
         }
 
         return idMap;
@@ -284,5 +287,9 @@ class InAppRemoteDataObserver {
      */
     void setScheduleNewUserCutOffTime(long time) {
         preferenceDataStore.put(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, time);
+    }
+
+    public boolean shouldInvalidateSchedule(InAppMessageSchedule schedule) {
+        return false;
     }
 }

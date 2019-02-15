@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,8 +11,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
@@ -24,7 +23,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
@@ -48,9 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -185,16 +182,21 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         });
 
         driver.setListener(new InAppMessageDriver.Listener() {
+
+            @WorkerThread
             @Override
             public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule) {
                 InAppMessageManager.this.prepareSchedule(schedule);
             }
 
+            @MainThread
+            @AutomationDriver.ReadyResult
             @Override
-            public boolean isScheduleReady(@NonNull InAppMessageSchedule schedule) {
-                return InAppMessageManager.this.isScheduleReady(schedule.getId());
+            public int onCheckExecutionReadiness(@NonNull InAppMessageSchedule schedule) {
+                return InAppMessageManager.this.checkExecutionReadiness(schedule.getId());
             }
 
+            @MainThread
             @Override
             public void onExecuteSchedule(@NonNull InAppMessageSchedule schedule) {
                 InAppMessageManager.this.executeSchedule(schedule.getId());
@@ -490,7 +492,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                 // Skip if we were unable to create an adapter
                 if (adapter == null) {
-                    driver.schedulePrepared(schedule.getId(), AutomationDriver.RESULT_PENALIZE);
+                    driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
                     return RetryingExecutor.RESULT_CANCEL;
                 }
 
@@ -529,16 +531,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
-                @AutomationDriver.PrepareResult int result = AutomationDriver.RESULT_PENALIZE;
+                @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
                 switch (message.getAudience().getMissBehavior()) {
                     case Audience.MISS_BEHAVIOR_CANCEL:
-                        result = AutomationDriver.RESULT_CANCEL;
+                        result = AutomationDriver.PREPARE_RESULT_CANCEL;
                         break;
                     case Audience.MISS_BEHAVIOR_SKIP:
-                        result = AutomationDriver.RESULT_SKIP;
+                        result = AutomationDriver.PREPARE_RESULT_SKIP;
                         break;
                     case Audience.MISS_BEHAVIOR_PENALIZE:
-                        result = AutomationDriver.RESULT_PENALIZE;
+                        result = AutomationDriver.PREPARE_RESULT_PENALIZE;
                         break;
                 }
                 driver.schedulePrepared(schedule.getId(), result);
@@ -564,7 +566,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                         // Store the adapter
                         adapterWrappers.put(schedule.getId(), adapter);
-                        driver.schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
+                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
@@ -573,7 +575,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                     case InAppMessageAdapter.CANCEL:
                     default:
-                        driver.schedulePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL);
+                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
             }
@@ -587,16 +589,26 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Checks if the schedule is ready to be executed.
      *
      * @param scheduleId The schedule ID.
-     * @return {@code true} to execute the schedule, otherwise {@code false}.
+     * @return The ready result.
      */
-    private boolean isScheduleReady(@NonNull String scheduleId) {
+    @MainThread
+    @AutomationDriver.ReadyResult
+    private int checkExecutionReadiness(@NonNull String scheduleId) {
         // Prevent display on pause.
         if (isPaused()) {
-            return false;
+            return AutomationDriver.READY_RESULT_NOT_READY;
         }
 
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        return adapterWrapper != null && adapterWrapper.isReady(getContext());
+        if (adapterWrapper == null) {
+            return AutomationDriver.READY_RESULT_INVALIDATE;
+        }
+
+        if (adapterWrapper.isReady(getContext())) {
+            return AutomationDriver.READY_RESULT_CONTINUE;
+        } else {
+            return AutomationDriver.READY_RESULT_NOT_READY;
+        }
     }
 
     /**
@@ -616,7 +628,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         try {
             adapterWrapper.display(getContext());
         } catch (AdapterWrapper.DisplayException e) {
-            Logger.error(e, "Failed to display in-app message: %s, schedule: %s", adapterWrapper.scheduleId, adapterWrapper.message.getId());
+            Logger.error(e, "Failed to display in-app message: %s, schedule: %s", adapterWrapper.schedule.getId(), adapterWrapper.message.getId());
             driver.scheduleExecuted(scheduleId);
             executor.execute(new Runnable() {
                 @Override
@@ -685,7 +697,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         coordinator.setDisplayReadyCallback(displayReadyCallback);
-        return new AdapterWrapper(schedule.getId(), message, adapter, coordinator);
+        return new AdapterWrapper(schedule, adapter, coordinator);
     }
 
     /**

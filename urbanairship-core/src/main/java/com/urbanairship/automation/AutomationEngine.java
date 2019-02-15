@@ -13,7 +13,6 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 import android.util.SparseArray;
 
-import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
@@ -24,7 +23,6 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
@@ -105,11 +103,12 @@ public class AutomationEngine<T extends Schedule> {
 
          After the callback, it will move to either (in order):
             - STATE_FINISHED: If the schedule has expired.
-            - STATE_FINISHED: If the adapter's prepare results is RESULT_CANCEL.
-            - STATE_FINISHED: If the adapter's prepare result is RESULT_PENALIZE and the schedule is at its limit.
-            - STATE_PAUSED: If the adapter's prepare result is RESULT_PENALIZE and the schedule has an execution interval.
-            - STATE_IDLE: If the result is RESULT_PENALIZE or RESULT_SKIP.
-            - STATE_WAITING_SCHEDULE_CONDITIONS: If the result is RESULT_CONTINUE.
+            - STATE_FINISHED: If the adapter's prepare result is PREPARE_RESULT_CANCEL.
+            - STATE_FINISHED: If the adapter's prepare result is PREPARE_RESULT_PENALIZE and the schedule is at its limit.
+            - STATE_PAUSED: If the adapter's prepare result is PREPARE_RESULT_PENALIZE and the schedule has an execution interval.
+            - STATE_IDLE: If the result is RESULT_PENALIZE or PREPARE_RESULT_SKIP.
+            - STATE_WAITING_SCHEDULE_CONDITIONS: If the result is PREPARE_RESULT_CONTINUE.
+            - STATE_PREPARING_SCHEDULE: If the result is PREPARE_RESULT_INVALIDATE.
 
      STATE_WAITING_SCHEDULE_CONDITIONS:
          The schedule is waiting for other state delay conditions. The conditions are evaluated on the main thread
@@ -121,6 +120,7 @@ public class AutomationEngine<T extends Schedule> {
          After the conditions are met, it will move to either (in order):
             - STATE_FINISHED: If the schedule has expired.
             - STATE_EXECUTING: If the schedule's conditions are met and the driver is ready to execute.
+            - STATE_PREPARING_SCHEDULE: If the ready result is READY_RESULT_INVALIDATE.
 
      STATE_EXECUTING:
         The schedule is executing. The adapter is responsible for this step.
@@ -719,14 +719,14 @@ public class AutomationEngine<T extends Schedule> {
 
         for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
             Observable<TriggerUpdate> observable = createEventObservable(type).observeOn(backgroundScheduler)
-                                                                              .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                                                                  @NonNull
-                                                                                  @Override
-                                                                                  public TriggerUpdate apply(@NonNull JsonSerializable json) {
-                                                                                      stateChangeTimeStamps.put(type, System.currentTimeMillis());
-                                                                                      return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
-                                                                                  }
-                                                                              });
+                    .map(new Function<JsonSerializable, TriggerUpdate>() {
+                        @NonNull
+                        @Override
+                        public TriggerUpdate apply(@NonNull JsonSerializable json) {
+                            stateChangeTimeStamps.put(type, System.currentTimeMillis());
+                            return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
+                        }
+                    });
             eventObservables.add(observable);
         }
 
@@ -734,12 +734,12 @@ public class AutomationEngine<T extends Schedule> {
         this.stateObservableUpdates = Subject.create();
 
         this.compoundTriggerSubscription = Observable.merge(eventStream, stateObservableUpdates)
-                                                     .subscribe(new Subscriber<TriggerUpdate>() {
-                                                         @Override
-                                                         public void onNext(@NonNull TriggerUpdate update) {
-                                                             updateTriggers(update.triggerEntries, update.json, update.value);
-                                                         }
-                                                     });
+                .subscribe(new Subscriber<TriggerUpdate>() {
+                    @Override
+                    public void onNext(@NonNull TriggerUpdate update) {
+                        updateTriggers(update.triggerEntries, update.json, update.value);
+                    }
+                });
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -793,42 +793,42 @@ public class AutomationEngine<T extends Schedule> {
     @WorkerThread
     private void subscribeStateObservables(@NonNull final ScheduleEntry entry, final long lastStateChangeTime) {
         Observable.from(COMPOUND_TRIGGER_TYPES)
-                  .filter(new Predicate<Integer>() {
-                      @Override
-                      public boolean apply(Integer triggerType) {
-                          if (stateChangeTimeStamps.get(triggerType, startTime) <= lastStateChangeTime) {
-                              return false;
-                          }
+                .filter(new Predicate<Integer>() {
+                    @Override
+                    public boolean apply(Integer triggerType) {
+                        if (stateChangeTimeStamps.get(triggerType, startTime) <= lastStateChangeTime) {
+                            return false;
+                        }
 
-                          for (TriggerEntry triggerEntry : entry.triggerEntries) {
-                              if (triggerEntry.type == triggerType) {
-                                  return true;
-                              }
-                          }
-                          return false;
-                      }
-                  })
-                  .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
-                      @NonNull
-                      @Override
-                      public Observable<TriggerUpdate> apply(@NonNull final Integer type) {
-                          return createStateObservable(type)
-                                  .observeOn(backgroundScheduler)
-                                  .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                      @NonNull
-                                      @Override
-                                      public TriggerUpdate apply(@NonNull JsonSerializable json) {
-                                          return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
-                                      }
-                                  });
-                      }
-                  })
-                  .subscribe(new Subscriber<TriggerUpdate>() {
-                      @Override
-                      public void onNext(@NonNull TriggerUpdate value) {
-                          stateObservableUpdates.onNext(value);
-                      }
-                  });
+                        for (TriggerEntry triggerEntry : entry.triggerEntries) {
+                            if (triggerEntry.type == triggerType) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                })
+                .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
+                    @NonNull
+                    @Override
+                    public Observable<TriggerUpdate> apply(@NonNull final Integer type) {
+                        return createStateObservable(type)
+                                .observeOn(backgroundScheduler)
+                                .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                    @NonNull
+                                    @Override
+                                    public TriggerUpdate apply(@NonNull JsonSerializable json) {
+                                        return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
+                                    }
+                                });
+                    }
+                })
+                .subscribe(new Subscriber<TriggerUpdate>() {
+                    @Override
+                    public void onNext(@NonNull TriggerUpdate value) {
+                        stateObservableUpdates.onNext(value);
+                    }
+                });
     }
 
 
@@ -1193,23 +1193,27 @@ public class AutomationEngine<T extends Schedule> {
                             }
 
                             switch (result) {
-                                case AutomationDriver.RESULT_CANCEL:
+                                case AutomationDriver.PREPARE_RESULT_CANCEL:
                                     dataManager.deleteSchedule(scheduleId);
                                     break;
 
-                                case AutomationDriver.RESULT_CONTINUE:
+                                case AutomationDriver.PREPARE_RESULT_CONTINUE:
                                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS);
                                     dataManager.saveSchedule(scheduleEntry);
                                     attemptExecution(scheduleEntry);
                                     break;
 
-                                case AutomationDriver.RESULT_SKIP:
+                                case AutomationDriver.PREPARE_RESULT_SKIP:
                                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                                     dataManager.saveSchedule(scheduleEntry);
                                     break;
 
-                                case AutomationDriver.RESULT_PENALIZE:
+                                case AutomationDriver.PREPARE_RESULT_PENALIZE:
                                     onScheduleFinishedExecuting(scheduleEntry);
+                                    break;
+
+                                case AutomationDriver.PREPARE_RESULT_INVALIDATE:
+                                    prepareSchedules(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
                                     break;
                             }
                         }
@@ -1238,11 +1242,11 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         final CountDownLatch latch = new CountDownLatch(1);
-        ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(scheduleEntry.scheduleId, scheduleEntry.group) {
+        ScheduleRunnable<Integer> runnable = new ScheduleRunnable<Integer>(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
             public void run() {
                 T schedule = null;
-                result = false;
+                result = AutomationDriver.READY_RESULT_NOT_READY;
 
                 if (isPaused.get()) {
                     return;
@@ -1251,10 +1255,7 @@ public class AutomationEngine<T extends Schedule> {
                 if (isScheduleConditionsSatisfied(scheduleEntry)) {
                     try {
                         schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
-
-                        if (driver.isScheduleReadyToExecute(schedule)) {
-                            result = true;
-                        }
+                        result = driver.onCheckExecutionReadiness(schedule);
                     } catch (ParseScheduleException e) {
                         Logger.error(e, "Unable to create schedule.");
                         this.exception = e;
@@ -1262,7 +1263,7 @@ public class AutomationEngine<T extends Schedule> {
                 }
                 latch.countDown();
 
-                if (result && schedule != null) {
+                if (AutomationDriver.READY_RESULT_CONTINUE == result && schedule != null) {
                     driver.onExecuteTriggeredSchedule(schedule, new ScheduleExecutorCallback(scheduleEntry.scheduleId));
                 }
             }
@@ -1280,10 +1281,26 @@ public class AutomationEngine<T extends Schedule> {
         if (runnable.exception != null) {
             Logger.error("Failed to check conditions. Deleting schedule: %s", scheduleEntry.scheduleId);
             dataManager.deleteSchedule(scheduleEntry.scheduleId);
-        } else if (runnable.result) {
-            Logger.verbose("AutomationEngine - Schedule executing: %s", scheduleEntry.scheduleId);
-            scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
-            dataManager.saveSchedule(scheduleEntry);
+        } else {
+            int result = runnable.result == null ? AutomationDriver.READY_RESULT_NOT_READY : runnable.result;
+            switch (result) {
+                case AutomationDriver.READY_RESULT_INVALIDATE:
+                    Logger.verbose("AutomationEngine - Schedule invalidated: %s", scheduleEntry.scheduleId);
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_PREPARING_SCHEDULE);
+                    dataManager.saveSchedule(scheduleEntry);
+                    prepareSchedules(dataManager.getScheduleEntries(Collections.singleton(scheduleEntry.scheduleId)));
+                    break;
+
+                case AutomationDriver.READY_RESULT_CONTINUE:
+                    Logger.verbose("AutomationEngine - Schedule executing: %s", scheduleEntry.scheduleId);
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
+                    dataManager.saveSchedule(scheduleEntry);
+                    break;
+
+                case AutomationDriver.READY_RESULT_NOT_READY:
+                    Logger.verbose("AutomationEngine - Schedule not ready for execution: %s", scheduleEntry.scheduleId);
+                    break;
+            }
         }
     }
 

@@ -36,10 +36,11 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
          * Called to check if a schedule is ready to execute.
          *
          * @param schedule The in-app message schedule.
-         * @return {@code true} if the schedule is ready to execute, othewrise {@code false}.
+         * @return The ready result.
          */
+        @ReadyResult
         @MainThread
-        boolean isScheduleReady(@NonNull InAppMessageSchedule schedule);
+        int onCheckExecutionReadiness(@NonNull InAppMessageSchedule schedule);
 
         /**
          * Called to execute the schedule. After execution is complete,
@@ -78,12 +79,13 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
 
     @Override
     @MainThread
-    public boolean isScheduleReadyToExecute(@NonNull final InAppMessageSchedule schedule) {
+    @ReadyResult
+    public int onCheckExecutionReadiness(@NonNull final InAppMessageSchedule schedule) {
         if (listener == null) {
-            return false;
+            return READY_RESULT_NOT_READY;
         }
 
-        return listener.isScheduleReady(schedule);
+        return listener.onCheckExecutionReadiness(schedule);
     }
 
 
@@ -101,13 +103,13 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
     public InAppMessageSchedule createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException {
         try {
             InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
-                                                                            .addTriggers(info.getTriggers())
-                                                                            .setDelay(info.getDelay())
-                                                                            .setEnd(info.getEnd())
-                                                                            .setStart(info.getStart())
-                                                                            .setLimit(info.getLimit())
-                                                                            .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
-                                                                            .build();
+                    .addTriggers(info.getTriggers())
+                    .setDelay(info.getDelay())
+                    .setEnd(info.getEnd())
+                    .setStart(info.getStart())
+                    .setLimit(info.getLimit())
+                    .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
+                    .build();
 
             return new InAppMessageSchedule(scheduleId, scheduleInfo);
         } catch (Exception e) {

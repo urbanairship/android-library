@@ -58,14 +58,14 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
 
     @Override
     public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback callback) {
-        callback.onFinish(RESULT_CONTINUE);
+        callback.onFinish(PREPARE_RESULT_CONTINUE);
     }
 
+    @ReadyResult
     @Override
-    public boolean isScheduleReadyToExecute(@NonNull ActionSchedule schedule) {
-        return true;
+    public int onCheckExecutionReadiness(@NonNull ActionSchedule schedule) {
+        return READY_RESULT_CONTINUE;
     }
-
 
     /**
      * Helper class that calls the callback after all actions have run.

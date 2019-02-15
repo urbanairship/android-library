@@ -33,17 +33,16 @@ final class AdapterWrapper {
     }
 
 
-    public final String scheduleId;
+    public final InAppMessageSchedule schedule;
     public final InAppMessage message;
-
     public final InAppMessageAdapter adapter;
     public final DisplayCoordinator coordinator;
 
     public boolean displayed = false;
 
-    AdapterWrapper(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull InAppMessageAdapter adapter, @NonNull DisplayCoordinator coordinator) {
-        this.scheduleId = scheduleId;
-        this.message = message;
+    AdapterWrapper(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessageAdapter adapter, @NonNull DisplayCoordinator coordinator) {
+        this.schedule = schedule;
+        this.message = schedule.getInfo().getInAppMessage();
         this.adapter = adapter;
         this.coordinator = coordinator;
     }
@@ -57,7 +56,7 @@ final class AdapterWrapper {
     @InAppMessageAdapter.PrepareResult
     int prepare(Context context) {
         try {
-            Logger.debug("AdapterWrapper - Preparing schedule: %s message: %s", scheduleId, message.getId());
+            Logger.debug("AdapterWrapper - Preparing schedule: %s message: %s", schedule.getId(), message.getId());
             return adapter.onPrepare(context);
         } catch (Exception e) {
             Logger.error(e, "AdapterWrapper - Exception during prepare(Context).");
@@ -86,11 +85,11 @@ final class AdapterWrapper {
      * @throws DisplayException if the adapter throws an exception.
      */
     void display(@NonNull Context context) throws DisplayException {
-        Logger.debug("AdapterWrapper - Displaying schedule: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Displaying schedule: %s message: %s", schedule.getId(), message.getId());
         displayed = true;
 
         try {
-            DisplayHandler displayHandler = new DisplayHandler(scheduleId);
+            DisplayHandler displayHandler = new DisplayHandler(schedule.getId());
             adapter.onDisplay(context, displayHandler);
             coordinator.onDisplayStarted(message);
         } catch (Exception e) {
@@ -104,7 +103,7 @@ final class AdapterWrapper {
      */
     @MainThread
     void displayFinished() {
-        Logger.debug("AdapterWrapper - Display finished: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Display finished: %s message: %s", schedule.getId(), message.getId());
         try {
             coordinator.onDisplayFinished(message);
         } catch (Exception e) {
@@ -117,7 +116,7 @@ final class AdapterWrapper {
      */
     @WorkerThread
     void adapterFinished(@NonNull Context context) {
-        Logger.debug("AdapterWrapper - Adapter finished: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Adapter finished: %s message: %s", schedule.getId(), message.getId());
         try {
             adapter.onFinish(context);
         } catch (Exception e) {
