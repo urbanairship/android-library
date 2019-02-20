@@ -187,6 +187,31 @@ public class ScheduleDelay implements Parcelable {
         return cancellationTriggers;
     }
 
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ScheduleDelay that = (ScheduleDelay) o;
+
+        if (seconds != that.seconds) return false;
+        if (appState != that.appState) return false;
+        if (screens != null ? !screens.equals(that.screens) : that.screens != null) return false;
+        if (regionId != null ? !regionId.equals(that.regionId) : that.regionId != null)
+            return false;
+        return cancellationTriggers.equals(that.cancellationTriggers);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (seconds ^ (seconds >>> 32));
+        result = 31 * result + (screens != null ? screens.hashCode() : 0);
+        result = 31 * result + appState;
+        result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
+        result = 31 * result + cancellationTriggers.hashCode();
+        return result;
+    }
+
     /**
      * Parses a ScheduleDelay from JSON.
      * <p>

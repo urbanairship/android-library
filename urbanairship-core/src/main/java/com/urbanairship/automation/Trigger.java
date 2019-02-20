@@ -309,4 +309,27 @@ public class Trigger implements Parcelable {
 
         return new Trigger(type, goal, predicate);
     }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Trigger trigger = (Trigger) o;
+
+        if (type != trigger.type) return false;
+        if (Double.compare(trigger.goal, goal) != 0) return false;
+        return predicate != null ? predicate.equals(trigger.predicate) : trigger.predicate == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = type;
+        temp = Double.doubleToLongBits(goal);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (predicate != null ? predicate.hashCode() : 0);
+        return result;
+    }
 }

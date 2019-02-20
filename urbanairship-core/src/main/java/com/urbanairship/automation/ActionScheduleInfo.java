@@ -108,7 +108,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         dest.writeLong(editGracePeriod);
         dest.writeLong(interval);
         dest.writeParcelable(JsonValue.wrapOpt(actions), flags);
-        dest.writeParcelable(JsonValue.wrapOpt(delay), flags);
+        dest.writeParcelable(delay, flags);
     }
 
     @Override
@@ -164,7 +164,9 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * {@inheritDoc}
      */
     @Override
-    public int getPriority() { return priority; }
+    public int getPriority() {
+        return priority;
+    }
 
     /**
      * {@inheritDoc}
@@ -214,6 +216,41 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     @Override
     public long getInterval() {
         return interval;
+    }
+
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ActionScheduleInfo info = (ActionScheduleInfo) o;
+
+        if (limit != info.limit) return false;
+        if (priority != info.priority) return false;
+        if (start != info.start) return false;
+        if (end != info.end) return false;
+        if (editGracePeriod != info.editGracePeriod) return false;
+        if (interval != info.interval) return false;
+        if (!triggers.equals(info.triggers)) return false;
+        if (!actions.equals(info.actions)) return false;
+        if (group != null ? !group.equals(info.group) : info.group != null) return false;
+        return delay != null ? delay.equals(info.delay) : info.delay == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = triggers.hashCode();
+        result = 31 * result + actions.hashCode();
+        result = 31 * result + limit;
+        result = 31 * result + priority;
+        result = 31 * result + (group != null ? group.hashCode() : 0);
+        result = 31 * result + (int) (start ^ (start >>> 32));
+        result = 31 * result + (int) (end ^ (end >>> 32));
+        result = 31 * result + (delay != null ? delay.hashCode() : 0);
+        result = 31 * result + (int) (editGracePeriod ^ (editGracePeriod >>> 32));
+        result = 31 * result + (int) (interval ^ (interval >>> 32));
+        return result;
     }
 
     /**
