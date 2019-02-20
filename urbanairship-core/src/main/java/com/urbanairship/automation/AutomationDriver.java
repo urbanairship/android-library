@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.json.JsonMap;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -131,11 +133,12 @@ public interface AutomationDriver<T extends Schedule> {
      * Creates a typed schedule from a generic schedule info and ID.
      *
      * @param scheduleId The schedule ID.
+     * @param metadata The schedule's metadata.
      * @param info The generic schedule info.
      * @return A typed schedule.
      * @throws ParseScheduleException If the scheduleInfo failed to be parsed. The automation engine will delete
      * the schedule.
      */
     @NonNull
-    T createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException;
+    T createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) throws ParseScheduleException;
 }

@@ -11,6 +11,7 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
@@ -41,7 +42,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
 
     @NonNull
     @Override
-    public ActionSchedule createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) {
+    public ActionSchedule createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) {
         ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                             .setEnd(info.getEnd())
                                                             .setStart(info.getStart())
@@ -53,7 +54,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                                                             .addTriggers(info.getTriggers())
                                                             .build();
 
-        return new ActionSchedule(scheduleId, scheduleInfo);
+        return new ActionSchedule(scheduleId, metadata, scheduleInfo);
     }
 
     @Override

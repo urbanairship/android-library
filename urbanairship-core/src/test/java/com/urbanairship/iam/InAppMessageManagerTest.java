@@ -7,7 +7,9 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.AirshipLoopers;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -47,8 +49,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -84,6 +84,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private InAppMessageListener mockListener;
     private TagGroupManager mockTagManager;
     private DisplayCoordinator mockCoordinator;
+    private TestInAppRemoteDataObserver testObserver;
 
     @Before
     public void setup() {
@@ -95,6 +96,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         actionRunRequestFactory = mock(ActionRunRequestFactory.class);
         mockTagManager = mock(TagGroupManager.class);
         mockCoordinator = mock(DisplayCoordinator.class);
+        testObserver = new TestInAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore);
 
         when(mockCoordinator.isReady()).thenReturn(true);
 
@@ -123,16 +125,17 @@ public class InAppMessageManagerTest extends BaseTestCase {
         });
 
         manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, new TestActivityMonitor(),
-                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager);
+                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager, testObserver);
 
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .addAction("action_name", JsonValue.wrap("action_value"))
-                        .build())
-                .build());
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .addAction("action_name", JsonValue.wrap("action_value"))
+                                                                                        .build())
+                                                                .build();
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         manager.setAdapterFactory(InAppMessage.TYPE_CUSTOM, new InAppMessageAdapter.Factory() {
             @NonNull
@@ -299,7 +302,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testSchedule() {
         manager.scheduleMessage(schedule.getInfo());
-        verify(mockEngine).schedule(schedule.getInfo());
+        verify(mockEngine).schedule(schedule.getInfo(), JsonMap.EMPTY_MAP);
     }
 
     @Test
@@ -353,17 +356,19 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckDefaultMissBehavior() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setAudience(Audience.newBuilder()
+                                                                                                             .setNotificationsOptIn(true)
+                                                                                                             .build())
+                                                                                        .build())
+                                                                .build();
+
         // Schedule that requires notification opt-in to be true
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .setAudience(Audience.newBuilder()
-                                .setNotificationsOptIn(true)
-                                .build())
-                        .build())
-                .build());
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
@@ -373,18 +378,20 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorCancel() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setAudience(Audience.newBuilder()
+                                                                                                             .setNotificationsOptIn(true)
+                                                                                                             .setMissBehavior("cancel")
+                                                                                                             .build())
+                                                                                        .build())
+                                                                .build();
+
         // Schedule that requires notification opt-in to be true
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .setAudience(Audience.newBuilder()
-                                .setNotificationsOptIn(true)
-                                .setMissBehavior("cancel")
-                                .build())
-                        .build())
-                .build());
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
@@ -394,18 +401,20 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorSkip() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setAudience(Audience.newBuilder()
+                                                                                                             .setNotificationsOptIn(true)
+                                                                                                             .setMissBehavior("skip")
+                                                                                                             .build())
+                                                                                        .build())
+                                                                .build();
+
         // Schedule that requires notification opt-in to be true
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .setAudience(Audience.newBuilder()
-                                .setNotificationsOptIn(true)
-                                .setMissBehavior("skip")
-                                .build())
-                        .build())
-                .build());
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
@@ -415,18 +424,20 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorPenalize() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setAudience(Audience.newBuilder()
+                                                                                                             .setNotificationsOptIn(true)
+                                                                                                             .setMissBehavior(Audience.MISS_BEHAVIOR_PENALIZE)
+                                                                                                             .build())
+                                                                                        .build())
+                                                                .build();
+
         // Schedule that requires notification opt-in to be true
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .setAudience(Audience.newBuilder()
-                                .setNotificationsOptIn(true)
-                                .setMissBehavior("penalize")
-                                .build())
-                        .build())
-                .build());
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
@@ -442,18 +453,20 @@ public class InAppMessageManagerTest extends BaseTestCase {
         tagGroups.put("expected group", tagSet("expected tag"));
 
         Audience audience = Audience.newBuilder()
-                .setTagSelector(TagSelector.tag("expected tag", "expected group"))
-                .build();
+                                    .setTagSelector(TagSelector.tag("expected tag", "expected group"))
+                                    .build();
 
 
-        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                .setMessage(InAppMessage.newBuilder()
-                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                        .setId("message id")
-                        .setAudience(audience)
-                        .build())
-                .build());
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setAudience(audience)
+                                                                                        .build())
+                                                                .build();
+
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
 
         when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
@@ -508,21 +521,21 @@ public class InAppMessageManagerTest extends BaseTestCase {
     public void testNewConfig() {
         JsonList config = new JsonList(Arrays.asList(
                 JsonMap.newBuilder()
-                        .put("tag_groups", JsonMap.newBuilder()
-                                .put("enabled", true)
-                                .put("cache_max_age_seconds", 100)
-                                .put("cache_stale_read_age_seconds", 11)
-                                .put("cache_prefer_local_until_seconds", 1)
-                                .build())
-                        .build().toJsonValue(),
+                       .put("tag_groups", JsonMap.newBuilder()
+                                                 .put("enabled", true)
+                                                 .put("cache_max_age_seconds", 100)
+                                                 .put("cache_stale_read_age_seconds", 11)
+                                                 .put("cache_prefer_local_until_seconds", 1)
+                                                 .build())
+                       .build().toJsonValue(),
                 JsonMap.newBuilder()
-                        .put("tag_groups", JsonMap.newBuilder()
-                                .put("enabled", true)
-                                .put("cache_max_age_seconds", 1)
-                                .put("cache_stale_read_age_seconds", 11)
-                                .put("cache_prefer_local_until_seconds", 200)
-                                .build())
-                        .build().toJsonValue()));
+                       .put("tag_groups", JsonMap.newBuilder()
+                                                 .put("enabled", true)
+                                                 .put("cache_max_age_seconds", 1)
+                                                 .put("cache_stale_read_age_seconds", 11)
+                                                 .put("cache_prefer_local_until_seconds", 200)
+                                                 .build())
+                       .build().toJsonValue()));
 
 
         manager.onNewConfig(config);
@@ -533,4 +546,104 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockTagManager).setPreferLocalTagDataTime(200, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void testInvalidScheduleOnExecution() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("cool", "story")
+                                  .build();
+
+        testObserver.setLastPayloadMetadata(metadata);
+        when(mockRemoteData.getLastMetadata()).thenReturn(JsonMap.EMPTY_MAP);
+        when(mockRemoteData.isLastMetadataCurrent()).thenReturn(true);
+
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .addAction("action_name", JsonValue.wrap("action_value"))
+                                                                                        .build())
+                                                                .build();
+
+        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", JsonMap.EMPTY_MAP, info);
+
+        // Prepare the schedule
+        driverListener.onPrepareSchedule(schedule);
+
+        // Verify the schedule is prepared
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        // Change the metadata
+        when(mockRemoteData.getLastMetadata()).thenReturn(metadata);
+
+        // Verify it returns an invalidate result
+        assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, driverListener.onCheckExecutionReadiness(schedule));
+    }
+
+    @Test
+    public void testInvalidScheduleOnPrepare() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("cool", "story")
+                                  .build();
+
+        testObserver.setLastPayloadMetadata(metadata);
+        when(mockRemoteData.getLastMetadata()).thenReturn(metadata);
+
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .addAction("action_name", JsonValue.wrap("action_value"))
+                                                                                        .build())
+                                                                .build();
+
+        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", JsonMap.EMPTY_MAP, info);
+
+        // Prepare the schedule
+        driverListener.onPrepareSchedule(schedule);
+        runLooperTasks();
+
+        // Verify the schedule is invalidated
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
+    }
+
+    /**
+     * Helper method to run all the looper tasks.
+     */
+    private void runLooperTasks() {
+        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        ShadowLooper backgroundLooper = Shadows.shadowOf(AirshipLoopers.getBackgroundLooper());
+
+        do {
+            mainLooper.runToEndOfTasks();
+            backgroundLooper.runToEndOfTasks();
+        }
+        while (mainLooper.getScheduler().areAnyRunnable() || backgroundLooper.getScheduler().areAnyRunnable());
+    }
+
+    public static class TestInAppRemoteDataObserver extends InAppRemoteDataObserver {
+
+        private JsonMap metadata;
+
+        /**
+         * Default constructor.
+         *
+         * @param preferenceDataStore The preference data store.
+         */
+        TestInAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore) {
+            super(preferenceDataStore);
+        }
+
+        void setLastPayloadMetadata(JsonMap metadata) {
+            this.metadata = metadata;
+        }
+
+        @Override
+        public JsonMap getLastPayloadMetadata() {
+            return metadata;
+        }
+    }
 }

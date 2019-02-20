@@ -40,7 +40,7 @@ public class AutomationDataManager extends DataManager {
     /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     /**
      * Appended to the end of schedules GET queries to group rows by schedule ID.
@@ -80,6 +80,7 @@ public class AutomationDataManager extends DataManager {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + ScheduleEntry.TABLE_NAME + " ("
                 + ScheduleEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT UNIQUE,"
+                + ScheduleEntry.COLUMN_NAME_METADATA + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_DATA + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
@@ -329,8 +330,12 @@ public class AutomationDataManager extends DataManager {
                 db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_INTERVAL + " INTEGER;");
                 db.execSQL("COMMIT;");
 
-                break;
+            case 4:
+                db.execSQL("BEGIN TRANSACTION;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_METADATA + " TEXT;");
+                db.execSQL("COMMIT;");
 
+                break;
             default:
                 // Kills the table and existing data
                 db.execSQL("DROP TABLE IF EXISTS " + ScheduleEntry.TABLE_NAME);

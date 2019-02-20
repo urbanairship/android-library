@@ -28,6 +28,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
     private final Integer priority;
     private final Long interval;
     private final Long editGracePeriod;
+    private final JsonMap metadata;
 
     private ActionScheduleEdits(@NonNull Builder builder) {
         this.limit = builder.limit;
@@ -37,6 +38,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
         this.priority = builder.priority;
         this.editGracePeriod = builder.editGracePeriod;
         this.interval = builder.interval;
+        this.metadata = builder.metadata;
     }
 
     /**
@@ -91,6 +93,12 @@ public class ActionScheduleEdits implements ScheduleEdits {
     @Override
     public Long getEditGracePeriod() {
         return editGracePeriod;
+    }
+
+    @Nullable
+    @Override
+    public JsonMap getMetadata() {
+        return metadata;
     }
 
     @Nullable
@@ -186,6 +194,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
         private Long interval;
 
         private Map<String, JsonValue> actions;
+        private JsonMap metadata;
 
         private Builder() {}
 
@@ -272,6 +281,18 @@ public class ActionScheduleEdits implements ScheduleEdits {
         @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the metadata.
+         *
+         * @param metadata The metadata.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder setMetadata(@Nullable JsonMap metadata) {
+            this.metadata = metadata;
             return this;
         }
 

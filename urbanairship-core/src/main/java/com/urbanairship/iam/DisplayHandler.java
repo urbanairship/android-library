@@ -20,7 +20,7 @@ import com.urbanairship.UAirship;
  * message if the in-app message is displayed in its own activity. Typically, this should be done in
  * an Activity's or Fragment's onCreate callbacks.
  * <p>
- * When the in-app message is finished, call {@link #finished(ResolutionInfo)}. This will finish the display of an
+ * When the in-app message is finished, call {@link #finished(ResolutionInfo, long)}. This will finish the display of an
  * in-app message and allow it to be triggered again by one of the in-app message triggers.
  */
 public class DisplayHandler implements Parcelable {

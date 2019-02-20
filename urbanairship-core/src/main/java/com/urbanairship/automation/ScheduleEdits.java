@@ -6,6 +6,7 @@ package com.urbanairship.automation;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 
 /**
@@ -69,4 +70,12 @@ public interface ScheduleEdits {
      */
     @Nullable
     Long getEditGracePeriod();
+
+    /**
+     * Gets the schedule's metadata.
+     *
+     * @return The schedule's metadata.
+     */
+    @Nullable
+    JsonMap getMetadata();
 }

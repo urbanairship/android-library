@@ -15,6 +15,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.json.JsonMap;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -107,13 +108,26 @@ public class Automation extends AirshipComponent {
      */
     @NonNull
     public PendingResult<ActionSchedule> schedule(@NonNull final ActionScheduleInfo scheduleInfo) {
+        return schedule(scheduleInfo, JsonMap.EMPTY_MAP);
+    }
+
+    /**
+     * Schedules a single action schedule.
+     *
+     * @param scheduleInfo The {@link ActionScheduleInfo} instance.
+     * @param metadata The schedule's metadata.
+     * @return A pending result.
+     */
+    @NonNull
+    public PendingResult<ActionSchedule> schedule(@NonNull final ActionScheduleInfo scheduleInfo, @NonNull JsonMap metadata) {
         if (!UAirship.isMainProcess()) {
             Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
-        return automationEngine.schedule(scheduleInfo);
+        return automationEngine.schedule(scheduleInfo, metadata);
     }
+
 
     /**
      * Schedules a list of action schedules.
@@ -123,14 +137,25 @@ public class Automation extends AirshipComponent {
      */
     @NonNull
     public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
+        return schedule(scheduleInfos, JsonMap.EMPTY_MAP);
+    }
+
+    /**
+     * Schedules a list of action schedules.
+     *
+     * @param scheduleInfos A list of {@link ActionScheduleInfo}.
+     * @param metadata The schedule's metadata.
+     * @return A pending result.
+     */
+    @NonNull
+    public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos, @NonNull JsonMap metadata) {
         if (!UAirship.isMainProcess()) {
             Logger.error("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
         }
 
-        return automationEngine.schedule(scheduleInfos);
+        return automationEngine.schedule(scheduleInfos, metadata);
     }
-
 
     /**
      * Cancels a schedule for a given schedule ID.

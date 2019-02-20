@@ -28,6 +28,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
     private final Integer priority;
     private final Long editGracePeriod;
     private final Long interval;
+    private final JsonMap metadata;
 
     private InAppMessageScheduleEdits(@NonNull Builder builder) {
         this.limit = builder.limit;
@@ -37,6 +38,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         this.priority = builder.priority;
         this.interval = builder.interval;
         this.editGracePeriod = builder.editGracePeriod;
+        this.metadata = builder.metadata;
     }
 
     /**
@@ -100,6 +102,12 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
     @Override
     public Long getEditGracePeriod() {
         return editGracePeriod;
+    }
+
+    @Nullable
+    @Override
+    public JsonMap getMetadata() {
+        return metadata;
     }
 
     /**
@@ -199,6 +207,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         private Integer priority;
         private Long editGracePeriod;
         private Long interval;
+        private JsonMap metadata;
 
         private Builder() {}
 
@@ -293,6 +302,18 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         @NonNull
         public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the metadata.
+         *
+         * @param metadata The metadata.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder setMetadata(@Nullable JsonMap metadata) {
+            this.metadata = metadata;
             return this;
         }
 

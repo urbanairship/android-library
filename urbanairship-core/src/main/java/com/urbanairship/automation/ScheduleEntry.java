@@ -10,7 +10,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
@@ -27,6 +29,7 @@ import java.util.List;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ScheduleEntry implements ScheduleInfo {
+
 
     @IntDef({ STATE_IDLE, STATE_WAITING_SCHEDULE_CONDITIONS, STATE_EXECUTING, STATE_PAUSED,
               STATE_FINISHED, STATE_PREPARING_SCHEDULE, STATE_TIME_DELAYED })
@@ -59,6 +62,7 @@ class ScheduleEntry implements ScheduleInfo {
     static final String TABLE_NAME = "action_schedules";
     // Schedule
     static final String COLUMN_NAME_SCHEDULE_ID = "s_id";
+    static final String COLUMN_NAME_METADATA = "s_metadata";
 
     // Schedule Info
     static final String COLUMN_NAME_DATA = "s_data";
@@ -83,7 +87,6 @@ class ScheduleEntry implements ScheduleInfo {
     static final String COLUMN_NAME_COUNT = "s_count";
     static final String COLUMN_NAME_ID = "s_row_id";
 
-
     public final String scheduleId;
     public final String group;
     public final long seconds;
@@ -92,6 +95,7 @@ class ScheduleEntry implements ScheduleInfo {
     public final List<TriggerEntry> triggerEntries = new ArrayList<>();
     public final String regionId;
 
+    public JsonMap metadata;
     private JsonSerializable data;
     private int limit;
     private int priority;
@@ -110,8 +114,9 @@ class ScheduleEntry implements ScheduleInfo {
     private boolean isDirty;
     private boolean isEdit;
 
-    ScheduleEntry(@NonNull String scheduleId, @NonNull ScheduleInfo scheduleInfo) {
+    ScheduleEntry(@NonNull String scheduleId, @NonNull ScheduleInfo scheduleInfo, @NonNull JsonMap metadata) {
         this.scheduleId = scheduleId;
+        this.metadata = metadata;
         this.data = scheduleInfo.getData();
         this.limit = scheduleInfo.getLimit();
         this.priority = scheduleInfo.getPriority();
@@ -144,23 +149,16 @@ class ScheduleEntry implements ScheduleInfo {
         }
     }
 
-    private ScheduleEntry(Cursor cursor) {
+    private ScheduleEntry(Cursor cursor) throws JsonException {
         this.id = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_ID));
+        this.metadata = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA))).optMap();
         this.scheduleId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCHEDULE_ID));
         this.count = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_COUNT));
         this.limit = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_LIMIT));
         this.priority = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_PRIORITY));
         this.group = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_GROUP));
         this.editGracePeriod = cursor.getLong(cursor.getColumnIndex(COLUMN_EDIT_GRACE_PERIOD));
-
-        JsonValue parsedData;
-        try {
-            parsedData = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA)));
-        } catch (JsonException e) {
-            parsedData = JsonValue.NULL;
-        }
-
-        this.data = parsedData;
+        this.data = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA)));
         this.end = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_END));
         this.start = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_START));
         this.executionState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE));
@@ -169,32 +167,27 @@ class ScheduleEntry implements ScheduleInfo {
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
         this.interval = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_INTERVAL));
+        this.seconds = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_SECONDS));
+        this.screens = parseScreens(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCREEN))));
+    }
 
-        JsonValue parsedScreens;
-
-        try {
-            parsedScreens = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCREEN)));
-        } catch (JsonException e) {
-            parsedScreens = JsonValue.NULL;
-        }
-
-        this.screens = new ArrayList<>();
-
-        if (parsedScreens.isJsonList()) {
-            for (JsonValue value : parsedScreens.optList()) {
+    private List<String> parseScreens(JsonValue json) {
+        List<String> screens  = new ArrayList<>();
+        if (json.isJsonList()) {
+            for (JsonValue value : json.optList()) {
                 if (value.getString() != null) {
-                    this.screens.add(value.getString());
+                    screens.add(value.getString());
                 }
             }
         } else {
             // Migrate old screen name data
-            String oldScreenName = parsedScreens.getString();
+            String oldScreenName = json.getString();
             if (oldScreenName != null) {
-                this.screens.add(oldScreenName);
+                screens.add(oldScreenName);
             }
         }
 
-        this.seconds = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_SECONDS));
+        return screens;
     }
 
     /**
@@ -275,6 +268,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.priority = edits.getPriority() == null ? this.priority : edits.getPriority();
         this.interval = edits.getInterval() == null ? this.interval : edits.getInterval();
         this.editGracePeriod = edits.getEditGracePeriod() == null ? this.editGracePeriod : edits.getEditGracePeriod();
+        this.metadata = edits.getMetadata() == null ? this.metadata : edits.getMetadata();
 
         isDirty = true;
         isEdit = true;
@@ -318,6 +312,7 @@ class ScheduleEntry implements ScheduleInfo {
         if (id == -1) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_NAME_SCHEDULE_ID, scheduleId);
+            contentValues.put(COLUMN_NAME_METADATA, metadata.toString());
             contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
             contentValues.put(COLUMN_NAME_LIMIT, limit);
             contentValues.put(COLUMN_NAME_PRIORITY, priority);
@@ -347,6 +342,7 @@ class ScheduleEntry implements ScheduleInfo {
 
             if (isEdit) {
                 contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
+                contentValues.put(COLUMN_NAME_METADATA, metadata.toString());
                 contentValues.put(COLUMN_NAME_LIMIT, limit);
                 contentValues.put(COLUMN_NAME_PRIORITY, priority);
                 contentValues.put(COLUMN_NAME_START, start);
@@ -391,7 +387,12 @@ class ScheduleEntry implements ScheduleInfo {
         while (!cursor.isAfterLast()) {
 
             if (scheduleEntry == null) {
-                scheduleEntry = new ScheduleEntry(cursor);
+                try {
+                    scheduleEntry = new ScheduleEntry(cursor);
+                } catch (JsonException e) {
+                    Logger.error(e, "Failed to parse schedule entry.");
+                    return null;
+                }
             }
 
             if (scheduleEntry.scheduleId == null || !scheduleEntry.scheduleId.equals(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCHEDULE_ID)))) {

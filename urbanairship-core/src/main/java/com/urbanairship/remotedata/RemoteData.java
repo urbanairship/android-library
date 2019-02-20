@@ -405,9 +405,23 @@ public class RemoteData extends AirshipComponent {
                 .build();
     }
 
-    private boolean isLastMetadataCurrent() {
-        JsonMap lastRefreshMetadata = preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap();
+    /**
+     * Checks if the last metadata is current.
+     *
+     * @return {@code true} if the metadata is current, otherwise {@code false}.
+     */
+    public boolean isLastMetadataCurrent() {
+        JsonMap lastRefreshMetadata = getLastMetadata();
         Locale locale = localeManager.getDefaultLocale();
         return lastRefreshMetadata.equals(createMetadata(locale));
+    }
+
+    /**
+     * Gets the metadata used to fetch the last payload.
+     *
+     * @return The last used metadata.
+     */
+    public JsonMap getLastMetadata() {
+        return preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap();
     }
 }

@@ -3,6 +3,7 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
@@ -15,6 +16,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
@@ -49,11 +51,17 @@ class InAppRemoteDataObserver {
 
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
+    private static final String LAST_PAYLOAD_METADATA = "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA";
     private static final String SCHEDULED_MESSAGES_KEY = "com.urbanairship.iam.data.SCHEDULED_MESSAGES";
     private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
 
     private final PreferenceDataStore preferenceDataStore;
     private Subscription subscription;
+    private List<Listener> listeners = new ArrayList<>();
+
+    interface Listener {
+        void onSchedulesUpdated();
+    }
 
     /**
      * Default constructor.
@@ -65,21 +73,56 @@ class InAppRemoteDataObserver {
     }
 
     /**
+     * Adds a listener.
+     * <p>
+     * Updates will be called on the looper provided in
+     * {@link #subscribe(RemoteData, Looper, InAppMessageScheduler)}.
+     *
+     * @param listener The listener to add.
+     */
+    void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param listener The listener to remove.
+     */
+    void removeListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    /**
      * Subscribes to remote data.
      *
      * @param remoteData The remote data.
+     * @param looper The looper to process updates and callbacks on.
      * @param scheduler Scheduler.
      */
-    void subscribe(@NonNull final RemoteData remoteData, @NonNull final InAppMessageScheduler scheduler) {
+    void subscribe(@NonNull final RemoteData remoteData, @NonNull Looper looper, @NonNull final InAppMessageScheduler scheduler) {
         cancel();
 
         this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
                                       .filter(new Predicate<RemoteDataPayload>() {
                                           @Override
                                           public boolean apply(@NonNull RemoteDataPayload payload) {
-                                              return payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
+                                              if (payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1)) {
+                                                  return true;
+                                              }
+
+                                              if (!payload.getMetadata().equals(getLastPayloadMetadata())) {
+                                                  return true;
+                                              }
+
+                                              return false;
                                           }
                                       })
+                                      .observeOn(Schedulers.looper(looper))
                                       .subscribe(new Subscriber<RemoteDataPayload>() {
                                           @Override
                                           public void onNext(@NonNull RemoteDataPayload payload) {
@@ -108,9 +151,11 @@ class InAppRemoteDataObserver {
      * @param payload The remote data payload.
      * @param scheduler The scheduler.
      */
-    @WorkerThread
     private void processPayload(RemoteDataPayload payload, InAppMessageScheduler scheduler) throws ExecutionException, InterruptedException {
         long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
+        JsonMap lastPayloadMetadata = getLastPayloadMetadata();
+
+        boolean isMetadataUpToDate = payload.getMetadata().equals(lastPayloadMetadata);
 
         List<String> messageIds = new ArrayList<>();
         List<InAppMessageScheduleInfo> newSchedules = new ArrayList<>();
@@ -136,7 +181,7 @@ class InAppRemoteDataObserver {
             messageIds.add(messageId);
 
             // Ignore any messages that have not updated since the last payload
-            if (lastUpdatedTimeStamp <= lastUpdate) {
+            if (isMetadataUpToDate && lastUpdatedTimeStamp <= lastUpdate) {
                 continue;
             }
 
@@ -168,15 +213,13 @@ class InAppRemoteDataObserver {
             } else if (scheduleIdMap.containsKey(messageId)) {
                 String scheduleId = scheduleIdMap.get(messageId);
                 try {
-                    InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.fromJson(messageJson);
-
-                    // Since we cancel a schedule by setting the end time to 0 (1970), we need to clear
-                    // it (-1) if the edits/schedule does not define an end time.
-                    if (edits.getEnd() == null) {
-                        edits = InAppMessageScheduleEdits.newBuilder(edits)
-                                                         .setEnd(-1)
-                                                         .build();
-                    }
+                    InAppMessageScheduleEdits originalEdits = InAppMessageScheduleEdits.fromJson(messageJson);
+                    InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder(originalEdits)
+                                                                               .setMetadata(payload.getMetadata())
+                                                                               // Since we cancel a schedule by setting the end time to 0 (1970), we need to clear
+                                                                               // it (-1) if the edits/schedule does not define an end time.
+                                                                               .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
+                                                                               .build();
 
                     InAppMessageSchedule schedule = scheduler.editSchedule(scheduleId, edits).get();
                     if (schedule != null) {
@@ -190,7 +233,7 @@ class InAppRemoteDataObserver {
 
         // Schedule new in-app messages
         if (!newSchedules.isEmpty()) {
-            List<InAppMessageSchedule> schedules = scheduler.schedule(newSchedules).get();
+            List<InAppMessageSchedule> schedules = scheduler.schedule(newSchedules, payload.getMetadata()).get();
             if (schedules != null) {
                 for (InAppMessageSchedule schedule : schedules) {
                     String messageId = schedule.getInfo().getInAppMessage().getId();
@@ -210,6 +253,7 @@ class InAppRemoteDataObserver {
             // If the schedule comes back, the edits will reapply the start time from the schedule
             // if it is set.
             InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder()
+                                                                       .setMetadata(payload.getMetadata())
                                                                        .setStart(-1)
                                                                        .setEnd(0)
                                                                        .build();
@@ -222,6 +266,16 @@ class InAppRemoteDataObserver {
         // Store data
         setScheduleIdMap(scheduleIdMap);
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
+        preferenceDataStore.put(LAST_PAYLOAD_METADATA, payload.getMetadata());
+
+        synchronized (listeners) {
+            if (!listeners.isEmpty()) {
+                List<Listener> listeners = new ArrayList<>(this.listeners);
+                for (Listener listener : listeners) {
+                    listener.onSchedulesUpdated();
+                }
+            }
+        }
     }
 
     /**
@@ -289,7 +343,12 @@ class InAppRemoteDataObserver {
         preferenceDataStore.put(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, time);
     }
 
-    public boolean shouldInvalidateSchedule(InAppMessageSchedule schedule) {
-        return false;
+    /**
+     * Gets the last payload metadata.
+     *
+     * @return The last payload metadata.
+     */
+    public JsonMap getLastPayloadMetadata() {
+        return preferenceDataStore.getJsonValue(LAST_PAYLOAD_METADATA).optMap();
     }
 }

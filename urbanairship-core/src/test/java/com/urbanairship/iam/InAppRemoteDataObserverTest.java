@@ -1,6 +1,9 @@
-/* Copyright 2018 Urban Airship and Contributors */
+/* Copyright 2010-2019 Urban Airship and Contributors */
 
 package com.urbanairship.iam;
+
+import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -58,23 +61,25 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         PendingResult<List<InAppMessageSchedule>> scheduleResult = new PendingResult<>();
         scheduleResult.setResult(Collections.emptyList());
-        when(scheduler.schedule(ArgumentMatchers.<InAppMessageScheduleInfo>anyList())).thenReturn(scheduleResult);
+        when(scheduler.schedule(ArgumentMatchers.<InAppMessageScheduleInfo>anyList(), any(JsonMap.class))).thenReturn(scheduleResult);
 
         PendingResult<Void> cancelResult = new PendingResult<>();
         cancelResult.setResult(null);
         when(scheduler.cancelMessages(ArgumentMatchers.<String>anyCollection())).thenReturn(cancelResult);
 
         observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore);
-        observer.subscribe(remoteData, scheduler);
+        observer.subscribe(remoteData, Looper.getMainLooper(), scheduler);
     }
 
     @Test
     public void testSchedule() {
+        JsonMap metadata = JsonMap.newBuilder().putOpt("meta", "data").build();
         // Create a payload with foo and bar.
         RemoteDataPayload payload = new TestPayloadBuilder()
                 .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .addScheduleInfo("bar", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata)
                 .build();
 
 
@@ -96,7 +101,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 List<String> ids = Arrays.asList(argument.get(0).getInAppMessage().getId(), argument.get(1).getInAppMessage().getId());
                 return ids.contains("foo") && ids.contains("bar");
             }
-        }));
+        }), eq(metadata));
 
         // Create another payload with added baz
         payload = new TestPayloadBuilder()
@@ -104,6 +109,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .addScheduleInfo("bar", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .addScheduleInfo("baz", TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(2))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
+                .setMetadata(metadata)
                 .build();
 
         when(scheduler.getSchedules("baz")).thenReturn(createMessagesPendingResult());
@@ -120,7 +126,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 }
                 return argument.get(0).getInAppMessage().getId().equals("baz");
             }
-        }));
+        }), eq(metadata));
     }
 
     @Test
@@ -186,9 +192,9 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         // Update the message with newer foo
         final InAppMessage message = InAppMessage.newBuilder()
-                                           .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                           .setId("foo")
-                                           .build();
+                                                 .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
+                                                 .setId("foo")
+                                                 .build();
 
         payload = new TestPayloadBuilder()
                 .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
@@ -213,6 +219,54 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
     }
 
     @Test
+    public void testMetadataChange() {
+        final InAppMessage message = InAppMessage.newBuilder()
+                                                 .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
+                                                 .setId("foo")
+                                                 .build();
+
+        // Schedule messages
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(JsonMap.newBuilder().putOpt("cool", "story").build())
+                .build();
+
+
+        // Return empty pending results when the message is requested
+        PendingResult<Collection<InAppMessageSchedule>> pendingResult = createMessagesPendingResult("foo");
+        String scheduleId = pendingResult.getResult().iterator().next().getId();
+        when(scheduler.getSchedules("foo")).thenReturn(pendingResult);
+
+        // Process payload
+        updates.onNext(payload);
+
+        // Update the metadata
+        payload = new TestPayloadBuilder()
+                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(JsonMap.newBuilder().putOpt("fun", "fun").build())
+                .build();
+
+
+        // Return pending result for the edit
+        PendingResult<InAppMessageSchedule> editPendingResult = createMessagePendingResult(message, scheduleId);
+        when(scheduler.editSchedule(eq(scheduleId), any(InAppMessageScheduleEdits.class)))
+                .thenReturn(editPendingResult);
+
+        updates.onNext(payload);
+
+        // Verify callback is called to cancel bar
+        verify(scheduler).editSchedule(eq(scheduleId), Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleEdits>() {
+            @Override
+            public boolean matches(InAppMessageScheduleEdits argument) {
+                return argument.getMessage().equals(message) && argument.getMetadata().equals(JsonMap.newBuilder().putOpt("fun", "fun").build());
+            }
+        }));
+    }
+
+
+    @Test
     public void testDefaultNewUserCutoffTime() {
         assertEquals(-1, observer.getScheduleNewUserCutOffTime());
     }
@@ -224,6 +278,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         List<JsonValue> schedules = new ArrayList<>();
         long timeStamp = System.currentTimeMillis();
+        JsonMap metadata = JsonMap.EMPTY_MAP;
 
         public TestPayloadBuilder setTimeStamp(long timeStamp) {
             this.timeStamp = timeStamp;
@@ -253,6 +308,11 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             return this;
         }
 
+        public TestPayloadBuilder setMetadata(@NonNull JsonMap metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
         public TestPayloadBuilder addScheduleInfo(String messageId, long created, long updated) {
             InAppMessage message = createMessage(messageId);
             return addScheduleInfo(message, created, updated);
@@ -262,10 +322,11 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
 
             return RemoteDataPayload.newBuilder()
-                    .setType("in_app_messages")
-                    .setTimeStamp(timeStamp)
-                    .setData(data)
-                    .build();
+                                    .setType("in_app_messages")
+                                    .setTimeStamp(timeStamp)
+                                    .setMetadata(metadata)
+                                    .setData(data)
+                                    .build();
         }
     }
 
@@ -277,7 +338,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                                                                         .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                                         .build();
 
-        pendingResult.setResult(new InAppMessageSchedule(scheduleId, scheduleInfo));
+        pendingResult.setResult(new InAppMessageSchedule(scheduleId, JsonMap.EMPTY_MAP, scheduleInfo));
         return pendingResult;
     }
 
@@ -294,7 +355,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                                                 .build();
 
-                collection.add(new InAppMessageSchedule(UUID.randomUUID().toString(), scheduleInfo));
+                collection.add(new InAppMessageSchedule(UUID.randomUUID().toString(), JsonMap.EMPTY_MAP, scheduleInfo));
             }
         }
 

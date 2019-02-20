@@ -7,6 +7,7 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.ScheduleInfo;
+import com.urbanairship.json.JsonMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -100,7 +101,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
 
     @NonNull
     @Override
-    public InAppMessageSchedule createSchedule(@NonNull String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException {
+    public InAppMessageSchedule createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) throws ParseScheduleException {
         try {
             InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
                     .addTriggers(info.getTriggers())
@@ -111,7 +112,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
                     .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
                     .build();
 
-            return new InAppMessageSchedule(scheduleId, scheduleInfo);
+            return new InAppMessageSchedule(scheduleId, metadata, scheduleInfo);
         } catch (Exception e) {
             throw new ParseScheduleException("Unable to parse in-app message for schedule: " + scheduleId + "info data: " + info.getData(), e);
         }

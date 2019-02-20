@@ -3,8 +3,10 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.PendingResult;
+import com.urbanairship.json.JsonMap;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,11 +20,22 @@ public interface InAppMessageScheduler {
      * Schedules an in-app message.
      *
      * @param messageScheduleInfo The in-app message schedule info.
-     * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be nil if
+     * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be null if
      * the message's audience
      */
     @NonNull
     PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo);
+
+    /**
+     * Schedules an in-app message.
+     *
+     * @param messageScheduleInfo The in-app message schedule info.
+     * @param metadata The schedule metadata.
+     * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be null if
+     * the message's audience
+     */
+    @NonNull
+    PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo, @NonNull JsonMap metadata);
 
     /**
      * Cancels an in-app message schedule.
@@ -60,6 +73,17 @@ public interface InAppMessageScheduler {
      */
     @NonNull
     PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos);
+
+
+    /**
+     * New schedules that need to be scheduled.
+     *
+     * @param scheduleInfos The list of schedule infos.
+     * @param metadata The schedule metadata.
+     * @return A pending result.
+     */
+    @NonNull
+    PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos,  @NonNull JsonMap metadata);
 
     /**
      * Gets the schedules associated with the message ID.

@@ -102,7 +102,7 @@ public class ScheduleActionTest extends BaseTestCase {
         ActionScheduleInfo scheduleInfo = ActionScheduleInfo.fromJson(JsonValue.wrap(scheduleJson));
 
         PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
-        pendingResult.setResult(new ActionSchedule("automation id", scheduleInfo));
+        pendingResult.setResult(new ActionSchedule("automation id", JsonMap.EMPTY_MAP, scheduleInfo));
 
         when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(pendingResult);
 

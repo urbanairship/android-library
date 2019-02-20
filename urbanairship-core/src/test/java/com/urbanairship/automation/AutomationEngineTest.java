@@ -19,8 +19,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.RegionEvent;
 
-import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -100,14 +97,18 @@ public class AutomationEngineTest extends BaseTestCase {
 
     @Test
     public void testSchedule() throws Exception {
-        Future<ActionSchedule> pendingResult = automationEngine.schedule(scheduleInfo);
+        JsonMap metadata = JsonMap.newBuilder().putOpt("cool", "story").build();
+        Future<ActionSchedule> pendingResult = automationEngine.schedule(scheduleInfo, metadata);
         runLooperTasks();
 
         // Verify the pendingResult
         assertTrue(pendingResult.isDone());
         assertFalse(pendingResult.isCancelled());
         assertNotNull(pendingResult.get());
-        assertNotNull(automationDataManager.getScheduleEntry(pendingResult.get().getId()));
+
+        ScheduleEntry entry = automationDataManager.getScheduleEntry(pendingResult.get().getId());
+        assertNotNull(entry);
+        assertEquals(metadata, entry.metadata);
     }
 
     @Test
@@ -354,7 +355,7 @@ public class AutomationEngineTest extends BaseTestCase {
     public void testPriority() throws Exception {
         ArrayList<ActionSchedule> schedules = new ArrayList<>();
 
-        Integer[] addedPriorityLevels = new Integer[] { 5, 2, 1, 0, 0, 4, 3, 3, 2 };
+        Integer[] addedPriorityLevels = new Integer[]{5, 2, 1, 0, 0, 4, 3, 3, 2};
         ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
         Collections.sort(expectedExecutionOrder);
 
@@ -371,7 +372,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                       .setPriority(priority)
                                                                       .build();
 
-            Assert.assertEquals(scheduleInfo.getPriority(), priority);
+            assertEquals(scheduleInfo.getPriority(), priority);
             schedules.add(schedule(scheduleInfo));
         }
 
@@ -681,28 +682,28 @@ public class AutomationEngineTest extends BaseTestCase {
     @Test
     public void testInvalidatePrepareResult() throws ExecutionException, InterruptedException {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
-                .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                        .setCountGoal(1)
-                        .setEventName("event")
-                        .build())
-                .addAction("test_action", JsonValue.wrap("action_value"))
-                .setInterval(10, TimeUnit.SECONDS)
-                .setLimit(2)
-                .build();
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setInterval(10, TimeUnit.SECONDS)
+                                                                  .setLimit(2)
+                                                                  .build();
 
         ActionSchedule schedule = schedule(scheduleInfo);
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
-                .build()
-                .track();
+                   .build()
+                   .track();
 
         runLooperTasks();
 
         // Edit the schedule
         final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
-                .setPriority(300)
-                .build();
+                                                             .setPriority(300)
+                                                             .build();
 
         automationEngine.editSchedule(schedule.getId(), edits);
         driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
@@ -853,7 +854,7 @@ public class AutomationEngineTest extends BaseTestCase {
     }
 
     private ActionSchedule schedule(ActionScheduleInfo scheduleInfo) throws ExecutionException, InterruptedException {
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo, JsonMap.EMPTY_MAP);
         runLooperTasks();
         return future.get();
     }

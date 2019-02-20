@@ -5,6 +5,7 @@ import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -44,7 +45,7 @@ public class InAppMessageDriverTest extends BaseTestCase {
                                                                                                 .build())
                                                                         .build();
 
-        schedule = new InAppMessageSchedule("schedule id", scheduleInfo);
+        schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, scheduleInfo);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class InAppMessageDriverTest extends BaseTestCase {
 
     @Test
     public void testCreateSchedule() throws ParseScheduleException {
-        InAppMessageSchedule fromDriver = driver.createSchedule("some id", schedule.getInfo());
+        InAppMessageSchedule fromDriver = driver.createSchedule("some id", schedule.getMetadata(), schedule.getInfo());
 
         assertEquals("some id", fromDriver.getId());
         assertEquals(schedule.getInfo().getInAppMessage(), fromDriver.getInfo().getInAppMessage());

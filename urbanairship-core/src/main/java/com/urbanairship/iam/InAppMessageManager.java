@@ -16,6 +16,7 @@ import android.support.annotation.WorkerThread;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
+import com.urbanairship.AirshipLoopers;
 import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -35,6 +36,7 @@ import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
@@ -47,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -71,7 +74,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
 
     // State
-    private final Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
+    private final Map<String, AdapterWrapper> adapterWrappers = new ConcurrentHashMap<>();
     private final InAppRemoteDataObserver remoteDataSubscriber;
 
     private final RetryingExecutor executor;
@@ -87,6 +90,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final List<InAppMessageListener> listeners = new ArrayList<>();
     private final TagGroupManager tagGroupManager;
     private final DefaultDisplayCoordinator defaultCoordinator;
+    private final Handler backgroundHandler;
 
     @Nullable
     private InAppMessageExtender messageExtender;
@@ -124,6 +128,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.pushManager = pushManager;
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.mainHandler = new Handler(Looper.getMainLooper());
+        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
+
         this.executor = new RetryingExecutor(this.mainHandler, AirshipExecutors.newSerialExecutor());
         this.driver = new InAppMessageDriver();
         this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
@@ -149,17 +155,18 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
                         RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory,
-                        TagGroupManager tagGroupManager) {
+                        TagGroupManager tagGroupManager, InAppRemoteDataObserver observer) {
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
         this.analytics = analytics;
         this.remoteData = remoteData;
         this.pushManager = pushManager;
-        this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
+        this.remoteDataSubscriber = observer;
         this.driver = driver;
         this.automationEngine = engine;
         this.mainHandler = new Handler(Looper.getMainLooper());
+        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.executor = executor;
         this.actionRunRequestFactory = actionRunRequestFactory;
         this.tagGroupManager = tagGroupManager;
@@ -185,8 +192,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
             @WorkerThread
             @Override
-            public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule) {
-                InAppMessageManager.this.prepareSchedule(schedule);
+            public void onPrepareSchedule(final @NonNull InAppMessageSchedule schedule) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        InAppMessageManager.this.prepareSchedule(schedule);
+                    }
+                });
+
             }
 
             @MainThread
@@ -243,7 +256,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     public void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
         executor.setPaused(false);
-        remoteDataSubscriber.subscribe(remoteData, this);
+        remoteDataSubscriber.subscribe(remoteData, backgroundHandler.getLooper(), this);
         automationEngine.checkPendingSchedules();
     }
 
@@ -284,15 +297,34 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @NonNull
     @Override
     public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos) {
-        return automationEngine.schedule(scheduleInfos);
+        return automationEngine.schedule(scheduleInfos, JsonMap.EMPTY_MAP);
     }
 
     /**
      * {@inheritDoc}
      */
     @NonNull
+    @Override
+    public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos, @NonNull JsonMap metadata) {
+        return automationEngine.schedule(scheduleInfos, metadata);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
     public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo) {
-        return automationEngine.schedule(messageScheduleInfo);
+        return automationEngine.schedule(messageScheduleInfo, JsonMap.EMPTY_MAP);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo, @Nullable JsonMap metadata) {
+        return automationEngine.schedule(messageScheduleInfo, metadata);
     }
 
     /**
@@ -475,41 +507,23 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.displayCoordinatorCallback = callback;
     }
 
-
     /**
      * Prepares a schedule to be displayed.
      *
      * @param schedule The schedule.
      */
-    private void prepareSchedule(@NonNull final InAppMessageSchedule schedule) {
-
-        // Create the adapter
-        final RetryingExecutor.Operation createAdapter = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                // Create the adapter with the extended message
-                AdapterWrapper adapter = createAdapterWrapper(schedule);
-
-                // Skip if we were unable to create an adapter
-                if (adapter == null) {
-                    driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
-                    return RetryingExecutor.RESULT_CANCEL;
-                }
-
-                adapterWrappers.put(schedule.getId(), adapter);
-                return RetryingExecutor.RESULT_FINISHED;
-            }
-        };
+    private void prepareSchedule(final @NonNull InAppMessageSchedule schedule) {
+        final AdapterWrapper adapter = createAdapterWrapper(schedule);
+        if (adapter == null) {
+            // Failed
+            driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
+            return;
+        }
 
         // Audience checks
-        RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
+        PrepareScheduleOperation checkAudience = new PrepareScheduleOperation(schedule) {
             @Override
-            public int run() {
-                AdapterWrapper adapter = adapterWrappers.get(schedule.getId());
-                if (adapter == null) {
-                    return RetryingExecutor.RESULT_CANCEL;
-                }
-
+            public int onPrepare() {
                 InAppMessage message = adapter.message;
                 if (message.getAudience() == null) {
                     return RetryingExecutor.RESULT_FINISHED;
@@ -527,7 +541,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     tagGroups = result.tagGroups;
                 }
 
-                if (AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience(), tagGroups)) {
+                if (AudienceChecks.checkAudience(getContext(), message.getAudience(), tagGroups)) {
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
@@ -549,14 +563,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         };
 
         // Prepare Adapter
-        RetryingExecutor.Operation prepareAdapter = new RetryingExecutor.Operation() {
+        PrepareScheduleOperation prepareAdapter = new PrepareScheduleOperation(schedule) {
             @Override
-            public int run() {
-                AdapterWrapper adapter = adapterWrappers.get(schedule.getId());
-                if (adapter == null) {
-                    return RetryingExecutor.RESULT_CANCEL;
-                }
-
+            public int onPrepare() {
                 @InAppMessageAdapter.PrepareResult
                 int result = adapter.prepare(getContext());
 
@@ -582,7 +591,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         };
 
         // Execute the operations
-        executor.execute(createAdapter, checkAudience, prepareAdapter);
+        executor.execute(checkAudience, prepareAdapter);
     }
 
     /**
@@ -601,6 +610,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
+            return AutomationDriver.READY_RESULT_INVALIDATE;
+        }
+
+        if (isScheduleInvalid(adapterWrapper.schedule)) {
+            adapterWrappers.remove(scheduleId);
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
@@ -786,4 +800,72 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         return adapterWrapper != null && adapterWrapper.displayed;
     }
+
+    /**
+     * Checks to see if a schedule from remote-data is still valid by checking
+     * the schedule metadata.
+     *
+     * @param schedule The in-app schedule.
+     * @return {@code true} if the schedule is valid, otherwise {@code false}.
+     */
+    private boolean isScheduleInvalid(InAppMessageSchedule schedule) {
+        if (!InAppMessage.SOURCE_REMOTE_DATA.equals(schedule.getInfo().getInAppMessage().getSource())) {
+            return false;
+        }
+
+        if (!remoteData.isLastMetadataCurrent()) {
+            return true;
+        }
+
+        if (!remoteData.getLastMetadata().equals(schedule.getMetadata())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Operation to prepare a schedule.
+     */
+    private abstract class PrepareScheduleOperation implements RetryingExecutor.Operation {
+
+        private final InAppMessageSchedule schedule;
+
+        PrepareScheduleOperation(@NonNull InAppMessageSchedule schedule) {
+            this.schedule = schedule;
+        }
+
+        @Override
+        public int run() {
+            if (isScheduleInvalid(schedule)) {
+                // Posted on the background handler to avoid race conditions if the remote data
+                // were to update at the same time as checking the last metadata.
+                backgroundHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // If the subscriber is already up to date, invalidate immediately
+                        if (remoteData.getLastMetadata().equals(remoteDataSubscriber.getLastPayloadMetadata())) {
+                            driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                        } else {
+                            // Otherwise wait to invalidate
+                            remoteDataSubscriber.addListener(new InAppRemoteDataObserver.Listener() {
+                                @Override
+                                public void onSchedulesUpdated() {
+                                    driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                                    remoteDataSubscriber.removeListener(this);
+                                }
+                            });
+                        }
+                    }
+                });
+                return RetryingExecutor.RESULT_CANCEL;
+            }
+
+            return onPrepare();
+        }
+
+        @RetryingExecutor.Result
+        abstract int onPrepare();
+    }
+
 }

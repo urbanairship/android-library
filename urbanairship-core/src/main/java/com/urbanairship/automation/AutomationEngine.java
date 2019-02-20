@@ -23,6 +23,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
@@ -327,10 +328,11 @@ public class AutomationEngine<T extends Schedule> {
      * Schedules a single action schedule.
      *
      * @param scheduleInfo The {@link ScheduleInfo} instance.
+     * @param metadata The schedule metadata.
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<T> schedule(@NonNull final ScheduleInfo scheduleInfo) {
+    public PendingResult<T> schedule(@NonNull final ScheduleInfo scheduleInfo, @NonNull final JsonMap metadata) {
         final PendingResult<T> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -345,7 +347,7 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 String scheduleId = UUID.randomUUID().toString();
-                ScheduleEntry entry = new ScheduleEntry(scheduleId, scheduleInfo);
+                ScheduleEntry entry = new ScheduleEntry(scheduleId, scheduleInfo, metadata);
 
                 List<ScheduleEntry> entries = Collections.singletonList(entry);
                 dataManager.saveSchedules(entries);
@@ -364,10 +366,11 @@ public class AutomationEngine<T extends Schedule> {
      * Schedules a list of action schedules.
      *
      * @param scheduleInfos A list of {@link ScheduleInfo}.
+     * @param metadata The schedule metadata.
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<List<T>> schedule(@NonNull final List<? extends ScheduleInfo> scheduleInfos) {
+    public PendingResult<List<T>> schedule(@NonNull final List<? extends ScheduleInfo> scheduleInfos, final @NonNull JsonMap metadata) {
         final PendingResult<List<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -384,7 +387,7 @@ public class AutomationEngine<T extends Schedule> {
                 List<ScheduleEntry> entries = new ArrayList<>();
                 for (ScheduleInfo info : scheduleInfos) {
                     String scheduleId = UUID.randomUUID().toString();
-                    entries.add(new ScheduleEntry(scheduleId, info));
+                    entries.add(new ScheduleEntry(scheduleId, info, metadata));
                 }
 
 
@@ -719,14 +722,14 @@ public class AutomationEngine<T extends Schedule> {
 
         for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
             Observable<TriggerUpdate> observable = createEventObservable(type).observeOn(backgroundScheduler)
-                    .map(new Function<JsonSerializable, TriggerUpdate>() {
-                        @NonNull
-                        @Override
-                        public TriggerUpdate apply(@NonNull JsonSerializable json) {
-                            stateChangeTimeStamps.put(type, System.currentTimeMillis());
-                            return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
-                        }
-                    });
+                                                                              .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                                                                  @NonNull
+                                                                                  @Override
+                                                                                  public TriggerUpdate apply(@NonNull JsonSerializable json) {
+                                                                                      stateChangeTimeStamps.put(type, System.currentTimeMillis());
+                                                                                      return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
+                                                                                  }
+                                                                              });
             eventObservables.add(observable);
         }
 
@@ -734,12 +737,12 @@ public class AutomationEngine<T extends Schedule> {
         this.stateObservableUpdates = Subject.create();
 
         this.compoundTriggerSubscription = Observable.merge(eventStream, stateObservableUpdates)
-                .subscribe(new Subscriber<TriggerUpdate>() {
-                    @Override
-                    public void onNext(@NonNull TriggerUpdate update) {
-                        updateTriggers(update.triggerEntries, update.json, update.value);
-                    }
-                });
+                                                     .subscribe(new Subscriber<TriggerUpdate>() {
+                                                         @Override
+                                                         public void onNext(@NonNull TriggerUpdate update) {
+                                                             updateTriggers(update.triggerEntries, update.json, update.value);
+                                                         }
+                                                     });
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -793,42 +796,42 @@ public class AutomationEngine<T extends Schedule> {
     @WorkerThread
     private void subscribeStateObservables(@NonNull final ScheduleEntry entry, final long lastStateChangeTime) {
         Observable.from(COMPOUND_TRIGGER_TYPES)
-                .filter(new Predicate<Integer>() {
-                    @Override
-                    public boolean apply(Integer triggerType) {
-                        if (stateChangeTimeStamps.get(triggerType, startTime) <= lastStateChangeTime) {
-                            return false;
-                        }
+                  .filter(new Predicate<Integer>() {
+                      @Override
+                      public boolean apply(Integer triggerType) {
+                          if (stateChangeTimeStamps.get(triggerType, startTime) <= lastStateChangeTime) {
+                              return false;
+                          }
 
-                        for (TriggerEntry triggerEntry : entry.triggerEntries) {
-                            if (triggerEntry.type == triggerType) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                })
-                .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
-                    @NonNull
-                    @Override
-                    public Observable<TriggerUpdate> apply(@NonNull final Integer type) {
-                        return createStateObservable(type)
-                                .observeOn(backgroundScheduler)
-                                .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                    @NonNull
-                                    @Override
-                                    public TriggerUpdate apply(@NonNull JsonSerializable json) {
-                                        return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
-                                    }
-                                });
-                    }
-                })
-                .subscribe(new Subscriber<TriggerUpdate>() {
-                    @Override
-                    public void onNext(@NonNull TriggerUpdate value) {
-                        stateObservableUpdates.onNext(value);
-                    }
-                });
+                          for (TriggerEntry triggerEntry : entry.triggerEntries) {
+                              if (triggerEntry.type == triggerType) {
+                                  return true;
+                              }
+                          }
+                          return false;
+                      }
+                  })
+                  .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
+                      @NonNull
+                      @Override
+                      public Observable<TriggerUpdate> apply(@NonNull final Integer type) {
+                          return createStateObservable(type)
+                                  .observeOn(backgroundScheduler)
+                                  .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                      @NonNull
+                                      @Override
+                                      public TriggerUpdate apply(@NonNull JsonSerializable json) {
+                                          return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
+                                      }
+                                  });
+                      }
+                  })
+                  .subscribe(new Subscriber<TriggerUpdate>() {
+                      @Override
+                      public void onNext(@NonNull TriggerUpdate value) {
+                          stateObservableUpdates.onNext(value);
+                      }
+                  });
     }
 
 
@@ -1254,7 +1257,7 @@ public class AutomationEngine<T extends Schedule> {
 
                 if (isScheduleConditionsSatisfied(scheduleEntry)) {
                     try {
-                        schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
+                        schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry.metadata, scheduleEntry);
                         result = driver.onCheckExecutionReadiness(schedule);
                     } catch (ParseScheduleException e) {
                         Logger.error(e, "Unable to create schedule.");
@@ -1469,7 +1472,7 @@ public class AutomationEngine<T extends Schedule> {
         List<T> schedules = new ArrayList<>();
         for (ScheduleEntry entry : entries) {
             try {
-                schedules.add(driver.createSchedule(entry.scheduleId, entry));
+                schedules.add(driver.createSchedule(entry.scheduleId, entry.metadata, entry));
             } catch (Exception e) {
                 Logger.error(e, "Unable to create schedule.");
                 cancel(Collections.singletonList(entry.scheduleId));

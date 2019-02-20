@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
@@ -123,7 +124,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .addTrigger(trigger)
                                                             .build();
 
-            ScheduleEntry scheduleEntry = new ScheduleEntry("shedule_entry " + i, schedule);
+            ScheduleEntry scheduleEntry = new ScheduleEntry("shedule_entry " + i, schedule, JsonMap.EMPTY_MAP);
             schedules.add(scheduleEntry);
         }
 
@@ -159,7 +160,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                               .setGroup("group")
                                                               .setStart(System.currentTimeMillis() + 1000000)
                                                               .build();
-        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule);
+        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule, JsonMap.EMPTY_MAP);
 
         dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
         List<ScheduleEntry> schedules = createSchedules(20);
@@ -178,7 +179,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                               .setStart(System.currentTimeMillis())
                                                               .build();
 
-        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule);
+        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule, JsonMap.EMPTY_MAP);
 
         dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
         List<ScheduleEntry> schedules = createSchedules(20);
@@ -218,8 +219,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                         .addTrigger(secondTrigger)
                                                                         .build();
 
-        ScheduleEntry firstScheduleEntry = new ScheduleEntry("schedule_id_1", firstActionScheduleInfo);
-        ScheduleEntry secondScheduleEntry = new ScheduleEntry("schedule_id_2", secondActionScheduleInfo);
+        ScheduleEntry firstScheduleEntry = new ScheduleEntry("schedule_id_1", firstActionScheduleInfo, JsonMap.EMPTY_MAP);
+        ScheduleEntry secondScheduleEntry = new ScheduleEntry("schedule_id_2", secondActionScheduleInfo, JsonMap.EMPTY_MAP);
         List<ScheduleEntry> scheduleEntries = Arrays.asList(firstScheduleEntry, secondScheduleEntry);
         dataManager.saveSchedules(scheduleEntries);
 
@@ -355,7 +356,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                         .addTrigger(background)
                                                         .build();
 
-        return new ScheduleEntry(id, schedule);
+        return new ScheduleEntry(id, schedule, JsonMap.EMPTY_MAP);
 
     }
 
