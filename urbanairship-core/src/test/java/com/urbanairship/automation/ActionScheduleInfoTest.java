@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.os.Parcel;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -27,8 +29,8 @@ public class ActionScheduleInfoTest extends BaseTestCase {
                                 .build());
 
         JsonMap actions = JsonMap.newBuilder()
-               .put("tag_action", "cat")
-               .build();
+                                 .put("tag_action", "cat")
+                                 .build();
 
         JsonMap scheduleJson = JsonMap.newBuilder()
                                       .put("actions", actions)
@@ -68,5 +70,35 @@ public class ActionScheduleInfoTest extends BaseTestCase {
         new ActionScheduleInfo.Builder()
                 .addAction("cool", JsonValue.wrap("story"))
                 .build();
+    }
+
+    @Test
+    public void testParcelable() {
+        ActionScheduleInfo info = new ActionScheduleInfo.Builder()
+                .addAction("cool", JsonValue.wrap("story"))
+                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                .setDelay(ScheduleDelay.newBuilder().setScreen("cool")
+                                       .build())
+                .setEnd(100)
+                .setStart(0)
+                .setGroup("group")
+                .setEditGracePeriod(100, TimeUnit.DAYS)
+                .setLimit(1)
+                .setPriority(100)
+                .build();
+
+
+        // Write the push message to a parcel
+        Parcel parcel = Parcel.obtain();
+        info.writeToParcel(parcel, 0);
+
+        // Reset the parcel so we can read it
+        parcel.setDataPosition(0);
+
+        // Create the schedule from the parcel
+        ActionScheduleInfo fromParcel = ActionScheduleInfo.CREATOR.createFromParcel(parcel);
+
+        // Validate the data
+        assertEquals(info, fromParcel);
     }
 }
