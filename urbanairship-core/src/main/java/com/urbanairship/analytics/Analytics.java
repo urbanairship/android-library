@@ -398,8 +398,10 @@ public class Analytics extends AirshipComponent {
             void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
                     Map<String, String> ids = new HashMap<>();
+                    AssociatedIdentifiers associatedIdentifiers = getAssociatedIdentifiers();
+
                     if (!clear) {
-                        Map<String, String> currentIds = getAssociatedIdentifiers().getIds();
+                        Map<String, String> currentIds = associatedIdentifiers.getIds();
                         ids.putAll(currentIds);
                     }
 
@@ -410,6 +412,13 @@ public class Analytics extends AirshipComponent {
                     }
 
                     AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
+                    AssociatedIdentifiers prev = associatedIdentifiers;
+
+                    if (prev.getIds().equals(identifiers.getIds())) {
+                        Logger.info("Skipping analytics event addition for duplicate associated identifiers.");
+                        return;
+                    }
+
                     preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
                     addEvent(new AssociateIdentifiersEvent(identifiers));
                 }

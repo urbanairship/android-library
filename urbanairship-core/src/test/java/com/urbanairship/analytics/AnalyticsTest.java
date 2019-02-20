@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -209,7 +210,7 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     /**
-     * Test editAssociatedIdentifiers  dispatches a job to add a new associate_identifiers event.
+     * Test editAssociatedIdentifiers dispatches a job to add a new associate_identifiers event.
      */
     @Test
     public void testEditAssociatedIdentifiers() {
@@ -217,7 +218,7 @@ public class AnalyticsTest extends BaseTestCase {
                  .addIdentifier("customKey", "customValue")
                  .apply();
 
-        // Verify we started created an add event job
+        // Verify we started an add event job
         verify(mockEventManager).addEvent(Mockito.any(AssociateIdentifiersEvent.class), Mockito.anyString());
 
         // Verify identifiers are stored
@@ -225,6 +226,28 @@ public class AnalyticsTest extends BaseTestCase {
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
         assertEquals(storedIds.getIds().size(), 1);
     }
+
+    /**
+     * Test editAssociatedIdentifiers doesn't dispatch a job when adding a duplicate associate_identifier.
+     */
+    @Test
+    public void testEditDuplicateAssociatedIdentifiers() {
+        analytics.editAssociatedIdentifiers()
+                 .addIdentifier("customKey", "customValue")
+                 .apply();
+
+        // Verify we started an add event job
+        verify(mockEventManager).addEvent(Mockito.any(AssociateIdentifiersEvent.class), Mockito.anyString());
+
+        // Edit with a duplicate identifier
+        analytics.editAssociatedIdentifiers()
+                 .addIdentifier("customKey", "customValue")
+                 .apply();
+
+        // Verify we don't add an event more than once
+        verify(mockEventManager, times(1)).addEvent(Mockito.any(AssociateIdentifiersEvent.class), Mockito.anyString());
+    }
+
 
     /**
      * Test that tracking event adds itself on background
@@ -238,7 +261,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Make call to background
         analytics.onBackground(0);
 
-        // Verify we started created an add event job
+        // Verify we started an add event job
         verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
             public boolean matches(Event argument) {
@@ -257,7 +280,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Add another screen
         analytics.trackScreen("test_screen_2");
 
-        // Verify we started created an add event job
+        // Verify we started an add event job
         verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
             public boolean matches(Event argument) {
