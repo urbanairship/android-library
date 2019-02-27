@@ -1,4 +1,4 @@
-package com.urbanairship.actions;/* Copyright 2018 Urban Airship and Contributors */
+package com.urbanairship.actions;/* Copyright Urban Airship and Contributors */
 
 
 import android.content.Intent;

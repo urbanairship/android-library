@@ -1,4 +1,4 @@
-package com.urbanairship.iam.tags;/* Copyright 2018 Urban Airship and Contributors */
+package com.urbanairship.iam.tags;/* Copyright Urban Airship and Contributors */
 
 
 import android.support.annotation.NonNull;

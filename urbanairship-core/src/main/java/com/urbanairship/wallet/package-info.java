@@ -1,4 +1,4 @@
-/* Copyright 2018 Urban Airship and Contributors */
+/* Copyright Urban Airship and Contributors */
 
 /**
  * Contains classes for creating wallet passes with the Urban Airship API and deep linking them
