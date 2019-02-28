@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.debug.DebugFragment;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.messagecenter.MessageCenterFragment;
 import com.urbanairship.richpush.RichPushInbox;
@@ -218,6 +219,12 @@ public class MainActivity extends AppCompatActivity {
                 setTitle(R.string.location_title);
                 fragment = new LocationFragment();
                 break;
+
+            case R.id.nav_debug:
+                setTitle(R.string.debug_title);
+                fragment = new DebugFragment();
+                break;
+
             default:
                 Log.e(TAG, "Unexpected navigation item");
                 return null;

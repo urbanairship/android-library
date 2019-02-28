@@ -1,0 +1,52 @@
+description = "Urban Airship Android Debug Library"
+
+buildscript {
+
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$airshipProperties.kotlinVersion"
+    }
+}
+
+
+apply from: "../common-build.gradle"
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+
+android.dataBinding.enabled = true
+
+dependencies {
+    api project(':urbanairship-core')
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$airshipProperties.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$airshipProperties.kotlinCoroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$airshipProperties.kotlinCoroutinesVersion"
+
+    // Room screens
+    implementation "android.arch.persistence.room:runtime:$airshipProperties.roomVersion"
+    kapt "android.arch.persistence.room:compiler:$airshipProperties.roomVersion"
+
+    // Constraint layout
+    implementation "com.android.support.constraint:constraint-layout:$airshipProperties.constraintLayoutVersion"
+
+    // Lifecycle screens
+    implementation "android.arch.lifecycle:extensions:$airshipProperties.lifeCycleVersion"
+    kapt "android.arch.lifecycle:compiler:$airshipProperties.lifeCycleVersion"
+
+    // Paging
+    implementation "android.arch.paging:runtime:$airshipProperties.pagingVersion"
+
+    // Support libraries
+    implementation "com.android.support:appcompat-v7:$airshipProperties.supportLibVersion"
+    implementation "com.android.support:design:$airshipProperties.supportLibVersion"
+    implementation "com.android.support:support-vector-drawable:$airshipProperties.supportLibVersion"
+
+}
+

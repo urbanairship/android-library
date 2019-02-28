@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ua_custom_event">#f44336</color>
+    <color name="ua_location_event">#e91e63</color>
+    <color name="ua_region_event">#9c27b0</color>
+    <color name="ua_screen_event">#673ab7</color>
+    <color name="ua_in_app_resolution_event">#3f51b5</color>
+    <color name="ua_in_app_display_event">#2196f3</color>
+    <color name="ua_app_background_event">#009688</color>
+    <color name="ua_app_foreground_event">#4caf50</color>
+    <color name="ua_push_arrived_event">#afb42b</color>
+    <color name="ua_associate_identifiers_event">#ffc107</color>
+    <color name="ua_install_attribution_event">#ff9800</color>
+    <color name="ua_event">#607d8b</color>
+</resources>

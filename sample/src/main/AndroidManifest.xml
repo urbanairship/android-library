@@ -43,6 +43,7 @@
             </intent-filter>
 
 
+
             <!-- The open inbox action will attempt to start an activity with
            "com.urbanairship.VIEW_RICH_PUSH_INBOX" filter when requesting to view the inbox.-->
             <intent-filter>

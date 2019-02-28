@@ -3,4 +3,5 @@ include ':urbanairship-core',
         ':urbanairship-fcm',
         ':urbanairship-ads-identifier',
         ':urbanairship-preference',
+        ':urbanairship-debug',
         ":sample"

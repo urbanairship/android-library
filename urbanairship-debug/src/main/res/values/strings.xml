@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="ua_custom_event_name">Custom Event</string>
+    <string name="ua_location_event_name">Location</string>
+    <string name="ua_region_event_name">Region</string>
+    <string name="ua_screen_event_name">Screen</string>
+    <string name="ua_in_app_resolution_event_name">In-App Resolution</string>
+    <string name="ua_in_app_display_event_name">In-App Display</string>
+    <string name="ua_app_background_event_name">App Background</string>
+    <string name="ua_app_foreground_event_name">App Foreground</string>
+    <string name="ua_push_arrived_event_name">Push Arrived</string>
+    <string name="ua_associate_identifiers_event_name">Associate Identifiers</string>
+    <string name="ua_install_attribution_event_name">Install Attribution</string>
+    <string name="ua_event_name">%s</string>
+    <string name="active_filters">%d Active Filters</string>
+    <string name="no_filters">Filters</string>
+    <string name="event_details">Event Details</string>
+    <string name="clear">Clear</string>
+
+    <string name="debug_title">Urban Airship Debug</string>
+    <string name="debug_short_title">UA Debug</string>
+
+    <string name="event_view_title">Events</string>
+    <string name="event_view_description">Search and filter a list of recent events</string>
+</resources>

@@ -61,8 +61,10 @@ import java.util.List;
  */
 public class UAirship {
 
-    // Advertising ID tracker
-    private static final String AD_ID_CLASS = "com.urbanairship.aaid.AdvertisingIdTracker";
+    private static final String[] OPTIONAL_COMPONENTS = {
+            "com.urbanairship.aaid.AdvertisingIdTracker",
+            "com.urbanairship.debug.ComponentManager"
+    };
 
     /**
      * Broadcast that is sent when UAirship is finished taking off.
@@ -71,9 +73,10 @@ public class UAirship {
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
 
-    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
+    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Platform {}
+    public @interface Platform {
+    }
 
     /**
      * Amazon platform type. Only ADM transport will be allowed.
@@ -723,9 +726,11 @@ public class UAirship {
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, this.inAppMessageManager, this.analytics);
         components.add(this.legacyInAppMessageManager);
 
-        AirshipComponent adIdTracker = createOptionalComponent(AD_ID_CLASS, application, preferenceDataStore);
-        if (adIdTracker != null) {
-            components.add(adIdTracker);
+        for (String className : OPTIONAL_COMPONENTS) {
+            AirshipComponent component = createOptionalComponent(className, application, preferenceDataStore);
+            if (component != null) {
+                components.add(component);
+            }
         }
 
         for (AirshipComponent component : components) {

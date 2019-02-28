@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="filter"
+            type="com.urbanairship.debug.event.EventFilter" />
+
+    </data>
+
+
+    <android.support.design.chip.Chip
+        android:layout_margin="8dp"
+        android:id="@+id/chip"
+        style="@style/Widget.MaterialComponents.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:checked="@={filter.isChecked}"
+        app:checkedIconTint="@{@android:color/white}"
+        app:eventFilter="@{filter}" />
+
+</layout>

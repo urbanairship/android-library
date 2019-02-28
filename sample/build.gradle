@@ -48,20 +48,25 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:1.1.1"
     implementation "android.arch.lifecycle:viewmodel:1.1.1"
 
-    // Urban Airship - ADM
+    // Urban Airship ADM
     implementation project(':urbanairship-adm')
 
-    // Urban Airship - FCM
+    // Urban Airship FCM
     implementation project(':urbanairship-fcm')
 
-    // Urban Airship - Advertising ID tracking
+    // Urban Airship Debug: Normally this is a debug only dependency but we
+    // embed the view in sample app
+    implementation project(':urbanairship-debug')
+
+    // Urban Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')
 
-    // Urban Airship - Preferences
+    // Urban Airship Preferences
     implementation project(':urbanairship-preference')
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
+
 
     // Testing-only dependencies
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

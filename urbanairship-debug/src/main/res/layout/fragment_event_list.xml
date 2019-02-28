@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.urbanairship.debug.event.EventListViewModel" />
+
+        <variable
+            name="isFilterSheetVisible"
+            type="android.databinding.ObservableBoolean" />
+
+        <variable
+            name="expandAlpha"
+            type="android.databinding.ObservableFloat" />
+
+        <variable
+            name="collapseAlpha"
+            type="android.databinding.ObservableFloat" />
+    </data>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/events"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:splitMotionEvents="false"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_event" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_filter"
+            app:fabSize="auto"
+            app:fabVisibility="@{!isFilterSheetVisible}"
+            app:hoveredFocusedTranslationZ="0dp"
+            app:pressedTranslationZ="0dp" />
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/filter_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/filter_sheet_background"
+            android:clickable="true"
+            android:elevation="8dp"
+            android:focusable="true"
+            app:behavior_hideable="true"
+            app:behavior_peekHeight="48dp"
+            app:behavior_skipCollapsed="true"
+            app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
+            tools:layout_behavior="">
+
+            <android.support.constraint.Guideline
+                android:id="@+id/guide_peek_height"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_begin="48dp" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@{viewModel.activeFiltersLiveData.size > 0 ? @string/active_filters(viewModel.activeFiltersLiveData.size) : @string/no_filters}"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="?android:textColorPrimary"
+                app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/clear"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:enabled="@{viewModel.activeFiltersLiveData.size > 0}"
+                android:onClick="@{() -> viewModel.clearFilters()}"
+                android:text="@string/clear"
+                app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/collapse"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="4dp"
+                android:alpha="@{collapseAlpha}"
+                android:background="?selectableItemBackgroundBorderless"
+                android:clickable="@{collapseAlpha > 0f}"
+                android:enabled="false"
+                android:scaleType="center"
+                android:tint="?colorAccent"
+                app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_chevron_down" />
+
+            <ImageButton
+                android:id="@+id/expand"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="4dp"
+                android:alpha="@{expandAlpha}"
+                android:background="@android:color/white"
+                android:clickable="@{expandAlpha > 0f}"
+                android:scaleType="center"
+                android:tint="?colorAccent"
+                app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_chevron_up" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/event_filters"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                app:layoutManager="android.support.v7.widget.GridLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/guide_peek_height"
+                app:spanCount="2"
+                tools:listitem="@layout/item_event_filter" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+</layout>

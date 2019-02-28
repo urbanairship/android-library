@@ -1,0 +1,31 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.urbanairship.debug"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application>
+
+        <activity
+            android:name="com.urbanairship.debug.event.DebugActivity"
+            android:label="@string/debug_short_title"
+            android:taskAffinity="com.urbanairship.debug.${applicationId}">
+
+            <intent-filter android:priority="-100">
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.urbanairship.debug.event.EventActivity" />
+
+        <activity android:name="com.urbanairship.debug.event.EventDetailsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <data android:scheme="event" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
