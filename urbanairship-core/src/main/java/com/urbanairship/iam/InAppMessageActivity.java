@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.messagecenter.ThemedActivity;
 
 /**
@@ -28,10 +29,10 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     public static final String IN_APP_MESSAGE_KEY = "in_app_message";
 
     /**
-     * Cache intent extra key.
+     * Assets intent extra key.
      */
     @NonNull
-    public static final String IN_APP_CACHE_KEY = "cache";
+    public static final String IN_APP_ASSETS = "assets";
 
     /**
      * Display time instance state key.
@@ -40,7 +41,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
 
     private DisplayHandler displayHandler;
     private InAppMessage inAppMessage;
-    private InAppMessageCache cache;
+    private Assets assets;
 
     private long resumeTime = 0;
     private long displayTime = 0;
@@ -59,10 +60,10 @@ public abstract class InAppMessageActivity extends ThemedActivity {
 
         displayHandler = getIntent().getParcelableExtra(DISPLAY_HANDLER_EXTRA_KEY);
         inAppMessage = getIntent().getParcelableExtra(IN_APP_MESSAGE_KEY);
-        cache = getIntent().getParcelableExtra(IN_APP_CACHE_KEY);
+        assets = getIntent().getParcelableExtra(IN_APP_ASSETS);
 
         if (displayHandler == null || inAppMessage == null) {
-            Logger.error("%s unable to show message. Missing display handler or in-app message.", getClass());
+            Logger.error("%s unable to show message. Missing display handler or in-app message", getClass());
             finish();
             return;
         }
@@ -159,12 +160,12 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     }
 
     /**
-     * Gets the in-app message cache.
+     * Gets the in-app message assets.
      *
-     * @return The in-app message cache.
+     * @return The in-app message assets.
      */
     @Nullable
-    protected InAppMessageCache getCache() {
-        return cache;
+    protected Assets getMessageAssets() {
+        return assets;
     }
 }

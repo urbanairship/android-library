@@ -8,6 +8,8 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.iam.assets.Assets;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -16,22 +18,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public interface InAppMessageAdapter {
 
-    /**
-     * Factory interface for InAppMessageAdapters.
-     */
-    interface Factory {
-
-        /**
-         * Creates an InAppMessageAdapter for the given message.
-         *
-         * @param message The in-app message.
-         * @return A InAppMessageAdapter.
-         */
-        @NonNull
-        InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
-    }
-
-    @IntDef({RETRY, OK, CANCEL})
+    @IntDef({OK, RETRY, CANCEL})
     @Retention(RetentionPolicy.SOURCE)
     @interface PrepareResult {
     }
@@ -51,18 +38,35 @@ public interface InAppMessageAdapter {
      */
     int CANCEL = 2;
 
+    /**
+     * Factory interface for InAppMessageAdapters.
+     */
+    interface Factory {
+
+        /**
+         * Creates an InAppMessageAdapter for the given message.
+         *
+         * @param message The in-app message.
+         * @return A InAppMessageAdapter.
+         */
+        @NonNull
+        InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
+    }
+
 
     /**
      * Called to prepare the message to be displayed.
      *
      * @param context The application context.
+     * @param assets Any assets that were prepared for the message.
+     *
      * @return {@link #OK} if the in-app message is ready to be displayed, {@link #RETRY} if the message
      * was unable to be prepared and needs to be retried, or {@link #CANCEL} if the message was unable to
      * be prepared and should be canceled.
      */
     @WorkerThread
     @PrepareResult
-    int onPrepare(@NonNull Context context);
+    int onPrepare(@NonNull Context context, @NonNull Assets assets);
 
     /**
      * Called before displaying but after the message is prepared.

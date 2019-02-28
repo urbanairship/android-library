@@ -9,6 +9,7 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
+import com.urbanairship.iam.assets.Assets;
 
 /**
  * Helper class that keeps track of the schedule's adapter, coordinator, and schedule. Provides safe wrapper
@@ -53,10 +54,10 @@ final class AdapterWrapper {
      * @return The prepare result.
      */
     @InAppMessageAdapter.PrepareResult
-    int prepare(Context context) {
+    int prepare(Context context, Assets assets) {
         try {
             Logger.debug("AdapterWrapper - Preparing schedule: %s message: %s", schedule.getId(), message.getId());
-            return adapter.onPrepare(context);
+            return adapter.onPrepare(context, assets);
         } catch (Exception e) {
             Logger.error(e, "AdapterWrapper - Exception during prepare(Context).");
             return InAppMessageAdapter.RETRY;

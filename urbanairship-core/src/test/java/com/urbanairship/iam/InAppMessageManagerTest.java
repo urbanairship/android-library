@@ -20,6 +20,8 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
+import com.urbanairship.iam.assets.AssetManager;
+import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
@@ -45,12 +47,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
@@ -69,6 +73,7 @@ import static org.mockito.Mockito.when;
 public class InAppMessageManagerTest extends BaseTestCase {
 
     private InAppMessageManager manager;
+    private AutomationEngine.ScheduleListener<InAppMessageSchedule> scheduleListener;
 
     private InAppMessageDriver mockDriver;
     private AutomationEngine<InAppMessageSchedule> mockEngine;
@@ -85,9 +90,14 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private TagGroupManager mockTagManager;
     private DisplayCoordinator mockCoordinator;
     private TestInAppRemoteDataObserver testObserver;
+    private AssetManager mockAssetManager;
+
 
     @Before
     public void setup() {
+        mockAssetManager = mock(AssetManager.class);
+        Assets assets = mock(Assets.class);
+        when(mockAssetManager.getAssets(anyString())).thenReturn(assets);
         mockDriver = mock(InAppMessageDriver.class);
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
@@ -112,6 +122,15 @@ public class InAppMessageManagerTest extends BaseTestCase {
         }).when(mockDriver).setListener(any(InAppMessageDriver.Listener.class));
 
         mockEngine = mock(AutomationEngine.class);
+
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                scheduleListener = invocation.getArgument(0);
+                return null;
+            }
+        }).when(mockEngine).setScheduleListener(any(AutomationEngine.ScheduleListener.class));
+
         mockRemoteData = mock(RemoteData.class);
         Subject<RemoteDataPayload> subject = Subject.create();
         when(mockRemoteData.payloadsForType(any(String.class))).thenReturn(subject);
@@ -125,7 +144,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         });
 
         manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, new TestActivityMonitor(),
-                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager, testObserver);
+                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager, testObserver, mockAssetManager);
 
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -162,12 +181,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testIsScheduleReady() {
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
-        verify(mockAdapter).onPrepare(any(Context.class));
+        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Verify the schedule is ready
@@ -176,12 +195,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testDisplayAdapterNotReady() {
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         when(mockAdapter.isReady(any(Context.class))).thenReturn(false);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
-        verify(mockAdapter).onPrepare(any(Context.class));
+        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Verify the schedule is not ready
@@ -200,7 +219,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
             }
         });
 
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
 
         // Prepare the schedule
@@ -215,7 +234,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         manager.setPaused(true);
 
         // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
 
         // Paused = message is unable to be ready
@@ -228,7 +247,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
 
         // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
@@ -246,6 +265,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
         verify(mockCoordinator).onDisplayFinished(schedule.getInfo().getInAppMessage());
         verify(mockAdapter).onFinish(any(Context.class));
+        verify(mockAssetManager).onDisplayFinished(schedule);
 
         // Verify the display actions ran
         verify(actionRunRequest).run();
@@ -254,7 +274,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testOnExecuteSchedule() {
         // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
@@ -274,7 +294,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testDisplayException() {
         // Prepare the schedule
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         // Make sure it's ready
@@ -318,33 +338,71 @@ public class InAppMessageManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testRetryPrepareMessage() {
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.RETRY);
+    public void testRetryAdapterPrepareMessage() {
+        when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.RETRY);
 
         // Prepare the adapter
         driverListener.onPrepareSchedule(schedule);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
-        verify(mockAdapter, times(1)).onPrepare(any(Context.class));
+        verify(mockAdapter, times(1)).onPrepare(any(Context.class), any(Assets.class));
 
         // Advance the looper
         ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
         mainLooper.runToEndOfTasks();
 
         // Verify it was called again
-        verify(mockAdapter, times(2)).onPrepare(any(Context.class));
+        verify(mockAdapter, times(2)).onPrepare(any(Context.class), any(Assets.class));
     }
 
     @Test
-    public void testCancelPrepare() {
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.CANCEL);
+    public void testRetryAssetsPrepare() {
+        when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_RETRY);
+
+        // Prepare the adapter
+        driverListener.onPrepareSchedule(schedule);
+
+        // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
+        verify(mockAssetManager, times(1)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
+
+        // Advance the looper
+        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        mainLooper.runToEndOfTasks();
+
+        // Verify it was called again
+        verify(mockAssetManager, times(2)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
+    }
+
+    @Test
+    public void testCancelAdapterPrepare() {
+        when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.CANCEL);
 
         // Start preparing
         driverListener.onPrepareSchedule(schedule);
 
         // Should call it once
-        verify(mockAdapter, times(1)).onPrepare(any(Context.class));
+        verify(mockAdapter, times(1)).onPrepare(any(Context.class), any(Assets.class));
         verifyNoMoreInteractions(mockAdapter);
+
+        // Return cancel result
+        verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
+
+        // Advance the looper to make sure its not called again
+        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        mainLooper.runToEndOfTasks();
+    }
+
+    @Test
+    public void testCancelAssetsPrepare() {
+        when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_CANCEL);
+
+        // Start preparing
+        driverListener.onPrepareSchedule(schedule);
+
+        // Should call it once
+        verify(mockAssetManager, times(1)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
 
         // Return cancel result
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
@@ -447,7 +505,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testAudienceConditionCheckWithTagGroups() {
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
 
         Map<String, Set<String>> tagGroups = new HashMap<>();
         tagGroups.put("expected group", tagSet("expected tag"));
@@ -492,7 +550,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         manager.setAdapterFactory(schedule.getInfo().getInAppMessage().getType(), factory);
 
         // Prepare the message
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
         driverListener.onPrepareSchedule(schedule);
 
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
@@ -608,6 +666,41 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Verify the schedule is invalidated
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
+    }
+
+    @Test
+    public void testNotifyAssetManagerNewSchedule() {
+        final InAppMessage extended = InAppMessage.newBuilder(schedule.getInfo().getInAppMessage()).setId("some other id").build();
+        manager.setMessageExtender(new InAppMessageExtender() {
+            @NonNull
+            @Override
+            public InAppMessage extend(@NonNull InAppMessage message) {
+                return extended;
+            }
+        });
+
+
+        scheduleListener.onNewSchedule(schedule);
+        verify(mockAssetManager).onSchedule(eq(schedule), Mockito.argThat(new ArgumentMatcher<Callable<InAppMessage>>() {
+            @Override
+            public boolean matches(Callable<InAppMessage> argument) {
+                // Verify it produces the extended message
+                try {
+                    return argument.call().equals(extended);
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }));
+    }
+
+    @Test
+    public void testNotifyScheduleFinished() {
+        scheduleListener.onScheduleCancelled(schedule);
+        scheduleListener.onScheduleExpired(schedule);
+        scheduleListener.onScheduleLimitReached(schedule);
+
+        verify(mockAssetManager, times(3)).onScheduleFinished(schedule);
     }
 
     /**

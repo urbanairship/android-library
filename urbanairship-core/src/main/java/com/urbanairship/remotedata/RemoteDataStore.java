@@ -82,9 +82,19 @@ public class RemoteDataStore extends DataManager {
         switch (oldVersion) {
             case 1:
                 db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COLUMN_NAME_METADATA + " TEXT;");
+                break;
             default:
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+                onCreate(db);
         }
+    }
+
+
+    @Override
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        super.onDowngrade(db, oldVersion, newVersion);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        onCreate(db);
     }
 
     /**

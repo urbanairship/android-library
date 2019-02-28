@@ -56,6 +56,7 @@ public class RichPushDataManager extends DataManager {
                 break;
             default:
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+                onCreate(db);
         }
     }
 

@@ -62,6 +62,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                              .setEventName("event")
                                                              .build())
                                          .addAction("test_action", JsonValue.wrap("action_value"))
+                                         .setGroup("group")
                                          .build();
         activityMonitor = new TestActivityMonitor();
 
@@ -400,8 +401,8 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                          .setEnd(System.currentTimeMillis() - 1)
                                                                          .build();
 
-        AutomationEngine.ScheduleExpiryListener<ActionSchedule> expiryListener = mock(AutomationEngine.ScheduleExpiryListener.class);
-        automationEngine.setScheduleExpiryListener(expiryListener);
+        AutomationEngine.ScheduleListener<ActionSchedule> expiryListener = mock(AutomationEngine.ScheduleListener.class);
+        automationEngine.setScheduleListener(expiryListener);
 
         // Schedule it
         schedule(expiredScheduleInfo);
@@ -417,6 +418,66 @@ public class AutomationEngineTest extends BaseTestCase {
         verify(expiryListener).onScheduleExpired(any(ActionSchedule.class));
     }
 
+    @Test
+    public void testNewScheduleListener() throws ExecutionException, InterruptedException {
+        AutomationEngine.ScheduleListener<ActionSchedule> listener = mock(AutomationEngine.ScheduleListener.class);
+        automationEngine.setScheduleListener(listener);
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Verify the listener was called
+        verify(listener).onNewSchedule(schedule);
+    }
+
+    @Test
+    public void testCancelScheduleGroupListener() throws ExecutionException, InterruptedException {
+        AutomationEngine.ScheduleListener<ActionSchedule> listener = mock(AutomationEngine.ScheduleListener.class);
+        automationEngine.setScheduleListener(listener);
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+        automationEngine.cancelGroup(scheduleInfo.getGroup());
+        runLooperTasks();
+
+        // Verify the listener was called
+        verify(listener).onScheduleCancelled(any(ActionSchedule.class));
+    }
+
+    @Test
+    public void testCancelScheduleListener() throws ExecutionException, InterruptedException {
+        AutomationEngine.ScheduleListener<ActionSchedule> listener = mock(AutomationEngine.ScheduleListener.class);
+        automationEngine.setScheduleListener(listener);
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+        automationEngine.cancel(Collections.singleton(schedule.getId()));
+        runLooperTasks();
+
+        // Verify the listener was called
+        verify(listener).onScheduleCancelled(any(ActionSchedule.class));
+    }
+
+    @Test
+    public void testReachLimitScheduleListener() throws Exception {
+        AutomationEngine.ScheduleListener<ActionSchedule> listener = mock(AutomationEngine.ScheduleListener.class);
+        automationEngine.setScheduleListener(listener);
+
+        final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
+                                        .setCountGoal(1)
+                                        .setEventName("name")
+                                        .build();
+
+        verifyTrigger(trigger, new Runnable() {
+            @Override
+            public void run() {
+                // Trigger the schedules
+                CustomEvent.newBuilder("name")
+                           .build()
+                           .track();
+            }
+        });
+
+        // Verify the listener was called
+        verify(listener).onScheduleLimitReached(any(ActionSchedule.class));
+    }
 
     @Test
     public void testPause() throws Exception {

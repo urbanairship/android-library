@@ -69,31 +69,31 @@ public class ImageUtils {
 
             Drawable drawable = new BitmapDrawable(context.getResources(), bitmap);
             return new DrawableResult(drawable, bitmap.getByteCount());
-        }
+        } else {
+            return fetchImage(context, url, new ImageProcessor<DrawableResult>() {
+                @Override
+                public DrawableResult onProcessFile(File imageFile) throws IOException {
+                    ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
+                    Drawable drawable = ImageDecoder.decodeDrawable(source, new ImageDecoder.OnHeaderDecodedListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.P)
+                        @Override
+                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
+                            decoder.setTargetSize(reqWidth, reqHeight);
+                            decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
+                        }
+                    });
 
-        return fetchImage(context, url, new ImageProcessor<DrawableResult>() {
-            @Override
-            public DrawableResult onProcessFile(File imageFile) throws IOException {
-                ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
-                Drawable drawable = ImageDecoder.decodeDrawable(source, new ImageDecoder.OnHeaderDecodedListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.P)
-                    @Override
-                    public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
-                        decoder.setTargetSize(reqWidth, reqHeight);
-                        decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
+                    long byteCount;
+                    if (drawable instanceof BitmapDrawable) {
+                        byteCount = ((BitmapDrawable) drawable).getBitmap().getByteCount();
+                    } else {
+                        byteCount = imageFile.length();
                     }
-                });
 
-                long byteCount;
-                if (drawable instanceof BitmapDrawable) {
-                    byteCount = ((BitmapDrawable) drawable).getBitmap().getByteCount();
-                } else {
-                    byteCount = imageFile.length();
+                    return new DrawableResult(drawable, byteCount);
                 }
-
-                return new DrawableResult(drawable, byteCount);
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -124,19 +124,20 @@ public class ImageUtils {
                     options.inJustDecodeBounds = false;
 
                     return BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+                } else {
+
+                    ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
+                    Bitmap bitmap = ImageDecoder.decodeBitmap(source, new ImageDecoder.OnHeaderDecodedListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.P)
+                        @Override
+                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
+                            decoder.setTargetSize(reqWidth, reqHeight);
+                            decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
+                        }
+                    });
+
+                    return bitmap;
                 }
-
-                ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
-                Bitmap bitmap = ImageDecoder.decodeBitmap(source, new ImageDecoder.OnHeaderDecodedListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.P)
-                    @Override
-                    public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
-                        decoder.setTargetSize(reqWidth, reqHeight);
-                        decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
-                    }
-                });
-
-                return bitmap;
             }
         });
 

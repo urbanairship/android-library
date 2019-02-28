@@ -79,7 +79,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         // Media
         if (displayContent.getMedia() != null) {
             mediaView.setChromeClient(new UAWebChromeClient(this));
-            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), getCache());
+            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), getMessageAssets());
         } else {
             mediaView.setVisibility(View.GONE);
         }

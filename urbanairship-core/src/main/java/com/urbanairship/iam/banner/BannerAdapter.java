@@ -120,8 +120,8 @@ public class BannerAdapter extends MediaDisplayAdapter {
         }
 
         return !InAppActivityMonitor.shared(context)
-                .getResumedActivities(activityPredicate)
-                .isEmpty();
+                                    .getResumedActivities(activityPredicate)
+                                    .isEmpty();
     }
 
     @MainThread
@@ -186,7 +186,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
     }
 
     protected BannerView createView(@NonNull Activity activity) {
-        BannerView view = new BannerView(activity, displayContent, getCache());
+        BannerView view = new BannerView(activity, displayContent, getAssets());
         if (getLastActivity() != activity) {
             if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
                 view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);
@@ -282,4 +282,5 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
         return lastActivity.get();
     }
+
 }

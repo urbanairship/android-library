@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,11 +33,14 @@ import android.widget.TextView;
 import com.urbanairship.Fonts;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
-import com.urbanairship.iam.InAppMessageCache;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
+import com.urbanairship.iam.assets.AirshipPrepareAssetsDelegate;
+import com.urbanairship.iam.assets.Assets;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
@@ -45,6 +49,7 @@ import java.util.List;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class InAppViewUtils {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
@@ -236,11 +241,11 @@ public class InAppViewUtils {
      *
      * @param mediaView The media view.
      * @param mediaInfo The media info.
-     * @param cache THe cache containing the cached image and/or height/width info.
+     * @param assets The cached assets.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void loadMediaInfo(@NonNull MediaView mediaView, @NonNull final MediaInfo mediaInfo, @Nullable final InAppMessageCache cache) {
+    public static void loadMediaInfo(@NonNull MediaView mediaView, @NonNull final MediaInfo mediaInfo, @Nullable final Assets assets) {
         if (mediaView.getWidth() == 0) {
             final WeakReference<MediaView> weakReference = new WeakReference<>(mediaView);
             mediaView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
@@ -248,7 +253,7 @@ public class InAppViewUtils {
                 public boolean onPreDraw() {
                     MediaView mediaView = weakReference.get();
                     if (mediaView != null) {
-                        loadMediaInfo(mediaView, mediaInfo, cache);
+                        loadMediaInfo(mediaView, mediaInfo, assets);
                         mediaView.getViewTreeObserver().removeOnPreDrawListener(this);
                     }
                     return false;
@@ -263,14 +268,17 @@ public class InAppViewUtils {
 
         String cachedLocation = null;
 
-        if (cache != null) {
-            width = cache.getBundle().getInt(InAppMessageCache.IMAGE_WIDTH_CACHE_KEY, width);
-            height = cache.getBundle().getInt(InAppMessageCache.IMAGE_HEIGHT_CACHE_KEY, height);
-            cachedLocation = cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY);
+        if (assets != null) {
+            File cachedFile = assets.file(mediaInfo.getUrl());
+            if (cachedFile.exists()) {
+                JsonMap metadata = assets.getMetadata(mediaInfo.getUrl()).optMap();
+                width = metadata.opt(AirshipPrepareAssetsDelegate.IMAGE_WIDTH_CACHE_KEY).getInt(width);
+                height = metadata.opt(AirshipPrepareAssetsDelegate.IMAGE_HEIGHT_CACHE_KEY).getInt(height);
+                cachedLocation = Uri.fromFile(cachedFile).toString();
+            }
         }
 
         ViewGroup.LayoutParams params = mediaView.getLayoutParams();
-
 
         // Check if we can grow the image horizontally to fit the width
         if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {

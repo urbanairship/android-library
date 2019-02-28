@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaDisplayAdapter;
+import com.urbanairship.iam.assets.Assets;
 
 /**
  * Modal adapter.
@@ -46,11 +47,8 @@ public class ModalAdapter extends MediaDisplayAdapter {
         Intent intent = new Intent(context, ModalActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(ModalActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
-                .putExtra(ModalActivity.IN_APP_MESSAGE_KEY, getMessage());
-
-        if (getCache() != null) {
-            intent.putExtra(ModalActivity.IN_APP_CACHE_KEY, getCache());
-        }
+                .putExtra(ModalActivity.IN_APP_MESSAGE_KEY, getMessage())
+                .putExtra(ModalActivity.IN_APP_ASSETS, getAssets());
 
         context.startActivity(intent);
     }

@@ -32,17 +32,12 @@ import android.widget.TextView;
 
 import com.urbanairship.R;
 import com.urbanairship.iam.ButtonInfo;
-import com.urbanairship.iam.DisplayHandler;
-import com.urbanairship.iam.InAppActionUtils;
-import com.urbanairship.iam.InAppMessageCache;
-import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.view.BackgroundDrawableBuilder;
 import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.iam.view.MediaView;
-
-import java.util.List;
 
 /**
  * Banner view.
@@ -54,7 +49,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     private static final float PRESSED_ALPHA_PERCENT = .2f;
 
     @Nullable
-    private final InAppMessageCache cache;
+    private final Assets assets;
 
     @NonNull
     private BannerDisplayContent displayContent;
@@ -120,12 +115,12 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      *
      * @param context The context.
      * @param displayContent The banner display content.
-     * @param cache The IAM cache.
+     * @param assets The in-app message assets.
      */
-    public BannerView(@NonNull Context context, @NonNull BannerDisplayContent displayContent, @Nullable InAppMessageCache cache) {
+    public BannerView(@NonNull Context context, @NonNull BannerDisplayContent displayContent, @Nullable Assets assets) {
         super(context);
         this.displayContent = displayContent;
-        this.cache = cache;
+        this.assets = assets;
 
         final long duration = displayContent.getDuration();
         this.timer = new Timer(duration) {
@@ -202,7 +197,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         // Media
         MediaView mediaView = view.findViewById(R.id.media);
         if (displayContent.getMedia() != null) {
-            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), cache);
+            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), assets);
         } else {
             mediaView.setVisibility(View.GONE);
         }

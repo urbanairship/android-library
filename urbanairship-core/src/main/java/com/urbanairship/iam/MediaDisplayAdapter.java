@@ -2,35 +2,25 @@
 
 package com.urbanairship.iam;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.util.FileUtils;
 import com.urbanairship.util.Network;
-import com.urbanairship.util.UAHttpStatusUtil;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Display adapter that handles caching an in-app message.
  */
 public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 
-    private final static String IMAGE_FILE_NAME = "image";
-
     private final InAppMessage message;
     private final MediaInfo mediaInfo;
-    private InAppMessageCache cache;
+    private Assets assets;
 
     /**
      * Default constructor.
@@ -44,20 +34,18 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public int onPrepare(@NonNull Context context) {
+    @PrepareResult
+    public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
+        this.assets = assets;
         if (mediaInfo == null) {
             return OK;
         }
 
-        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
-            return cacheMedia(context, mediaInfo);
-        }
-
-        // Video URLs, check whitelist
-        if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
+        if (!MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) && isWhiteListed(mediaInfo.getUrl())) {
             Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
             return CANCEL;
         }
+
 
         return OK;
     }
@@ -65,19 +53,6 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     @Override
     @CallSuper
     public void onFinish(@NonNull Context context) {
-        if (cache != null) {
-            cache.delete();
-        }
-    }
-
-    /**
-     * Gets the cache.
-     *
-     * @return The cache.
-     */
-    @Nullable
-    protected InAppMessageCache getCache() {
-        return cache;
     }
 
     /**
@@ -96,67 +71,27 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
             return true;
         }
 
-        // Image files are normally cached
-        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
-            return true;
+        if (assets == null || !assets.file(mediaInfo.getUrl()).exists()) {
+            return Network.isConnected();
         }
 
-        // Video and Youtube require a network connection
-        return Network.isConnected();
+        return true;
     }
 
-    /**
-     * Creates the cache.
-     *
-     * @param context The application context.
-     * @throws IOException If the cache fails to create.
-     */
-    protected void createCache(@NonNull Context context) throws IOException {
-        if (cache == null) {
-            cache = InAppMessageCache.newCache(context, message);
-        }
+    @Nullable
+    public Assets getAssets() {
+        return assets;
     }
 
+
     /**
-     * Caches the media info.
+     * Checks if a URL is whitelisted.
      *
-     * @param context The application context.
-     * @param mediaInfo The media info.
-     * @return {@link #OK} if the media was null, did not contain a cacheable resource, or if the
-     * resource was cached. {@link #RETRY} if it failed to cache the resource.
+     * @param url The URL.
+     * @return {@code true} if whitelisted, otherwise {@code false}.
      */
-    @PrepareResult
-    protected int cacheMedia(@NonNull Context context, @Nullable MediaInfo mediaInfo) {
-        if (mediaInfo == null || !mediaInfo.getType().equals(MediaInfo.TYPE_IMAGE)) {
-            return OK;
-        }
-
-        try {
-            createCache(context);
-
-            File file = cache.file(IMAGE_FILE_NAME);
-            FileUtils.DownloadResult result = FileUtils.downloadFile(new URL(mediaInfo.getUrl()), file);
-
-            if (!result.isSuccess) {
-                if (UAHttpStatusUtil.inClientErrorRange(result.statusCode)) {
-                    return CANCEL;
-                }
-
-                return RETRY;
-            }
-            cache.getBundle().putString(InAppMessageCache.MEDIA_CACHE_KEY, Uri.fromFile(file).toString());
-
-            // Cache the width and height for view resizing
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-            cache.getBundle().putInt(InAppMessageCache.IMAGE_WIDTH_CACHE_KEY, options.outWidth);
-            cache.getBundle().putInt(InAppMessageCache.IMAGE_HEIGHT_CACHE_KEY, options.outHeight);
-            return OK;
-        } catch (IOException e) {
-            Logger.debug(e, "Failed to cache media.");
-            return RETRY;
-        }
+    private static boolean isWhiteListed(String url) {
+        return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_OPEN_URL);
     }
 }
 

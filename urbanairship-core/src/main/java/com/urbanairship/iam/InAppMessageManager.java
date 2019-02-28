@@ -28,6 +28,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
+import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
@@ -49,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -91,6 +93,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final TagGroupManager tagGroupManager;
     private final DefaultDisplayCoordinator defaultCoordinator;
     private final Handler backgroundHandler;
+    private final AssetManager assetManager;
 
     @Nullable
     private InAppMessageExtender messageExtender;
@@ -143,6 +146,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
         this.tagGroupManager = new TagGroupManager(configOptions, pushManager, tagGroupRegistrar, preferenceDataStore);
+        this.assetManager = new AssetManager(context);
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_FULLSCREEN, new FullScreenAdapterFactory());
@@ -155,7 +159,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
                         RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory,
-                        TagGroupManager tagGroupManager, InAppRemoteDataObserver observer) {
+                        TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
@@ -170,6 +174,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.executor = executor;
         this.actionRunRequestFactory = actionRunRequestFactory;
         this.tagGroupManager = tagGroupManager;
+        this.assetManager = assetManager;
     }
 
     /**
@@ -181,10 +186,52 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super.init();
         executor.setPaused(true);
 
-        this.automationEngine.setScheduleExpiryListener(new AutomationEngine.ScheduleExpiryListener<InAppMessageSchedule>() {
+        this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener<InAppMessageSchedule>() {
             @Override
-            public void onScheduleExpired(@NonNull InAppMessageSchedule schedule) {
+            public void onScheduleExpired(@NonNull final InAppMessageSchedule schedule) {
                 analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
+
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        assetManager.onScheduleFinished(schedule);
+                    }
+                });
+            }
+
+            @Override
+            public void onScheduleCancelled(@NonNull final InAppMessageSchedule schedule) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        assetManager.onScheduleFinished(schedule);
+                    }
+                });
+            }
+
+            @Override
+            public void onScheduleLimitReached(@NonNull final InAppMessageSchedule schedule) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        assetManager.onScheduleFinished(schedule);
+                    }
+                });
+            }
+
+            @Override
+            public void onNewSchedule(@NonNull final InAppMessageSchedule schedule) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        assetManager.onSchedule(schedule, new Callable<InAppMessage>() {
+                            @Override
+                            public InAppMessage call() {
+                                return extendMessage(schedule.getInfo().getInAppMessage());
+                            }
+                        });
+                    }
+                });
             }
         });
 
@@ -423,6 +470,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
+     * Gets the asset manager.
+     *
+     * @return The asset manager.
+     */
+    @NonNull
+    public AssetManager getAssetManager() {
+        return assetManager;
+    }
+
+    /**
      * Adds a listener.
      *
      * @param listener The listener.
@@ -562,16 +619,40 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         };
 
+        // Prepare Assets
+        PrepareScheduleOperation prepareAssets = new PrepareScheduleOperation(schedule) {
+            @Override
+            public int onPrepare() {
+                int result = assetManager.onPrepare(schedule, adapter.message);
+
+                switch (result) {
+                    case AssetManager.PREPARE_RESULT_OK:
+                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        return RetryingExecutor.RESULT_FINISHED;
+
+                    case AssetManager.PREPARE_RESULT_RETRY:
+                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        return RetryingExecutor.RESULT_RETRY;
+
+                    case AssetManager.PREPARE_RESULT_CANCEL:
+                    default:
+                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        assetManager.onDisplayFinished(schedule);
+                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
+                        return RetryingExecutor.RESULT_CANCEL;
+                }
+            }
+        };
+
         // Prepare Adapter
         PrepareScheduleOperation prepareAdapter = new PrepareScheduleOperation(schedule) {
             @Override
             public int onPrepare() {
-                @InAppMessageAdapter.PrepareResult
-                int result = adapter.prepare(getContext());
+                int result = adapter.prepare(getContext(), assetManager.getAssets(schedule.getId()));
 
                 switch (result) {
                     case InAppMessageAdapter.OK:
-                        Logger.debug("InAppMessageManager - Scheduled message prepared for display: %s", schedule.getId());
+                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s message %s", schedule.getId(), adapter.message.getId());
 
                         // Store the adapter
                         adapterWrappers.put(schedule.getId(), adapter);
@@ -579,11 +660,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
-                        Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: %s", schedule.getId());
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s message %s. Will retry.", schedule.getId(), adapter.message.getId());
                         return RetryingExecutor.RESULT_RETRY;
 
                     case InAppMessageAdapter.CANCEL:
                     default:
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s message %s", schedule.getId(), adapter.message.getId());
                         driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
@@ -591,7 +673,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         };
 
         // Execute the operations
-        executor.execute(checkAudience, prepareAdapter);
+        executor.execute(checkAudience, prepareAssets, prepareAdapter);
     }
 
     /**
@@ -778,6 +860,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             @Override
             public void run() {
                 adapterWrapper.adapterFinished(getContext());
+                // Notify the asset manager
+                assetManager.onDisplayFinished(adapterWrapper.schedule);
             }
         });
 

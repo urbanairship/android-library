@@ -13,7 +13,6 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 import android.util.SparseArray;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.OperationScheduler;
@@ -22,6 +21,7 @@ import com.urbanairship.Predicate;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -174,7 +174,7 @@ public class AutomationEngine<T extends Schedule> {
     private boolean isStarted;
     private Handler backgroundHandler;
     private final Handler mainHandler;
-    private ScheduleExpiryListener<T> expiryListener;
+    private ScheduleListener<T> scheduleListener;
     private final AtomicBoolean isPaused = new AtomicBoolean(false);
 
     private long startTime;
@@ -233,15 +233,40 @@ public class AutomationEngine<T extends Schedule> {
     };
 
     /**
-     * Expired schedule listener.
+     * Schedule listener.
      */
-    public interface ScheduleExpiryListener<T extends Schedule> {
+    public interface ScheduleListener<T> {
         /**
          * Called when a schedule is expired.
          *
-         * @param schedule The expired schedule.
+         * @param schedule The schedule.
          */
+        @MainThread
         void onScheduleExpired(@NonNull T schedule);
+
+        /**
+         * Called when a schedule is cancelled.
+         *
+         * @param schedule The schedule.
+         */
+        @MainThread
+        void onScheduleCancelled(@NonNull T schedule);
+
+        /**
+         * Called when a schedule's limit is reached.
+         *
+         * @param schedule The schedule.
+         */
+        @MainThread
+        void onScheduleLimitReached(@NonNull T schedule);
+
+        /**
+         * Called when a new schedule is available.
+         *
+         * @param schedule The schedule.
+         */
+        @MainThread
+        void onNewSchedule(@NonNull T schedule);
     }
 
     /**
@@ -354,6 +379,8 @@ public class AutomationEngine<T extends Schedule> {
                 subscribeStateObservables(entries);
 
                 List<T> result = convertEntries(entries);
+                notifyNewSchedule(result);
+
                 Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
@@ -395,15 +422,17 @@ public class AutomationEngine<T extends Schedule> {
                 subscribeStateObservables(entries);
 
                 List<T> result = convertEntries(entries);
+                notifyNewSchedule(result);
+
                 Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
                 pendingResult.setResult(convertEntries(entries));
+
 
             }
         });
 
         return pendingResult;
     }
-
 
     /**
      * Cancels schedules.
@@ -418,12 +447,13 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                notifyCancelledSchedule(dataManager.getScheduleEntries(new HashSet<>(ids)));
+
                 dataManager.deleteSchedules(ids);
                 cancelScheduleAlarms(ids);
 
                 Logger.verbose("AutomationEngine - Cancelled schedules: %s", ids);
                 pendingResult.setResult(null);
-
             }
         });
 
@@ -443,6 +473,8 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                notifyCancelledSchedule(dataManager.getScheduleEntries(group));
+
                 cancelGroupAlarms(Collections.singletonList(group));
 
                 if (dataManager.deleteGroup(group)) {
@@ -471,6 +503,10 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                for (String group : groups) {
+                    notifyCancelledSchedule(dataManager.getScheduleEntries(group));
+                }
+
                 cancelGroupAlarms(groups);
                 dataManager.deleteGroups(groups);
                 Logger.verbose("AutomationEngine - Canceled schedule groups: %s", groups);
@@ -493,6 +529,8 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                notifyCancelledSchedule(dataManager.getScheduleEntries());
+
                 dataManager.deleteAllSchedules();
                 cancelAlarms();
                 Logger.verbose("AutomationEngine - Canceled all schedules.");
@@ -502,7 +540,6 @@ public class AutomationEngine<T extends Schedule> {
 
         return pendingResult;
     }
-
 
     /**
      * Gets a schedule for the given schedule ID.
@@ -606,6 +643,12 @@ public class AutomationEngine<T extends Schedule> {
                     entry.setExecutionState(ScheduleEntry.STATE_IDLE);
                 } else if (entry.getExecutionState() != ScheduleEntry.STATE_FINISHED && (isOverLimit || isExpired)) {
                     entry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+
+                    if (isOverLimit) {
+                        notifyScheduleLimitReached(entry);
+                    } else {
+                        notifyExpiredSchedules(Collections.singleton(entry));
+                    }
                 }
 
                 dataManager.saveSchedule(entry);
@@ -652,13 +695,13 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
-     * Sets the schedule expiry listener.
+     * Sets the schedule listener.
      *
-     * @param expiryListener The listener.
+     * @param scheduleListener The listener.
      */
-    public void setScheduleExpiryListener(@Nullable ScheduleExpiryListener<T> expiryListener) {
+    public void setScheduleListener(@Nullable ScheduleListener<T> scheduleListener) {
         synchronized (this) {
-            this.expiryListener = expiryListener;
+            this.scheduleListener = scheduleListener;
         }
     }
 
@@ -834,7 +877,6 @@ public class AutomationEngine<T extends Schedule> {
                   });
     }
 
-
     /**
      * Resets the schedules that were executing back to pending execution.
      */
@@ -964,7 +1006,6 @@ public class AutomationEngine<T extends Schedule> {
         dataManager.saveSchedules(schedulesToUpdate);
     }
 
-
     /**
      * Reschedule interval operations.
      */
@@ -1089,7 +1130,6 @@ public class AutomationEngine<T extends Schedule> {
         });
     }
 
-
     /**
      * Processes a list of cancelled schedule entries.
      *
@@ -1198,6 +1238,7 @@ public class AutomationEngine<T extends Schedule> {
                             switch (result) {
                                 case AutomationDriver.PREPARE_RESULT_CANCEL:
                                     dataManager.deleteSchedule(scheduleId);
+                                    notifyCancelledSchedule(Collections.singleton(scheduleEntry));
                                     break;
 
                                 case AutomationDriver.PREPARE_RESULT_CONTINUE:
@@ -1284,6 +1325,7 @@ public class AutomationEngine<T extends Schedule> {
         if (runnable.exception != null) {
             Logger.error("Failed to check conditions. Deleting schedule: %s", scheduleEntry.scheduleId);
             dataManager.deleteSchedule(scheduleEntry.scheduleId);
+            notifyCancelledSchedule(Collections.singleton(scheduleEntry));
         } else {
             int result = runnable.result == null ? AutomationDriver.READY_RESULT_NOT_READY : runnable.result;
             switch (result) {
@@ -1307,27 +1349,93 @@ public class AutomationEngine<T extends Schedule> {
         }
     }
 
-
     /**
-     * Helper method to notify the expiry listener for expired schedule entries.
+     * Helper method to notify the schedule listener for expired schedule entries.
      *
-     * @param expiredScheduleEntries Expired schedule entries.
+     * @param entries Expired schedule entries.
      */
     @WorkerThread
-    private void notifyExpiredSchedules(@NonNull Collection<ScheduleEntry> expiredScheduleEntries) {
-        final List<T> schedules = convertEntries(expiredScheduleEntries);
-        if (schedules.isEmpty()) {
+    private void notifyExpiredSchedules(@NonNull Collection<ScheduleEntry> entries) {
+        notifyHelper(convertEntries(entries), new Notify<T>() {
+            @Override
+            public void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule) {
+                listener.onScheduleExpired(schedule);
+            }
+        });
+    }
+
+    /**
+     * Helper method to notify the schedule listener for cancelled schedule entries.
+     *
+     * @param entries Cancelled schedule entries.
+     */
+    @WorkerThread
+    private void notifyCancelledSchedule(@NonNull Collection<ScheduleEntry> entries) {
+        notifyHelper(convertEntries(entries), new Notify<T>() {
+            @Override
+            public void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule) {
+                listener.onScheduleCancelled(schedule);
+            }
+        });
+    }
+
+    /**
+     * Helper method to notify the schedule listener for schedule who reached its execution limit.
+     *
+     * @param entry The schedule.
+     */
+    @WorkerThread
+    private void notifyScheduleLimitReached(@NonNull ScheduleEntry entry) {
+        notifyHelper(convertEntries(Collections.singleton(entry)), new Notify<T>() {
+            @Override
+            public void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule) {
+                listener.onScheduleLimitReached(schedule);
+            }
+        });
+    }
+
+    /**
+     * Helper method to notify the schedule listener for new schedules.
+     *
+     * @param schedules The new schedules.
+     */
+    @WorkerThread
+    private void notifyNewSchedule(@NonNull final List<T> schedules) {
+        notifyHelper(schedules, new Notify<T>() {
+            @Override
+            public void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule) {
+                listener.onNewSchedule(schedule);
+            }
+        });
+    }
+
+    /**
+     * Called to notify the schedule listener.
+     *
+     * @param <T> The schedule.
+     */
+    private interface Notify<T> {
+        void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule);
+    }
+
+    /**
+     * Notify helper. Calls the listener on the main thread and handles any null checks.
+     *
+     * @param entries The entries.
+     * @param notify The notify method.
+     */
+    @WorkerThread
+    private void notifyHelper(@NonNull final Collection<T> entries, @NonNull final Notify<T> notify) {
+        if (this.scheduleListener == null || entries.isEmpty()) {
             return;
         }
-
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                for (T schedule : schedules) {
-                    synchronized (this) {
-                        if (expiryListener != null) {
-                            expiryListener.onScheduleExpired(schedule);
-                        }
+                for (T schedule : entries) {
+                    ScheduleListener<T> listener = AutomationEngine.this.scheduleListener;
+                    if (listener != null) {
+                        notify.notify(listener, schedule);
                     }
                 }
             }
@@ -1361,6 +1469,7 @@ public class AutomationEngine<T extends Schedule> {
         if (isOverLimit) {
             // At limit
             scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+            notifyScheduleLimitReached(scheduleEntry);
 
             // Delete the schedule if its finished and no edit grace period is defined
             if (scheduleEntry.getEditGracePeriod() <= 0) {
@@ -1481,7 +1590,6 @@ public class AutomationEngine<T extends Schedule> {
 
         return schedules;
     }
-
 
     /**
      * Checks if the schedule entry's conditions are met.
