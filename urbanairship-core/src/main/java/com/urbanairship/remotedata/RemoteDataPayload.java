@@ -43,7 +43,7 @@ public class RemoteDataPayload {
      * Key for the SDK version used to fetch the remote data payload.
      */
     @NonNull
-    public static final String METADATA_SDK_VERSION = "sdkVersion";
+    public static final String METADATA_SDK_VERSION = "sdk_version";
     
     @NonNull
     private final String type;
