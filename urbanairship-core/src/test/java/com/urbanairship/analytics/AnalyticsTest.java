@@ -50,8 +50,6 @@ public class AnalyticsTest extends BaseTestCase {
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                                   .setActivityMonitor(new TestActivityMonitor())
                                   .setConfigOptions(airshipConfigOptions)
-                                  .setJobDispatcher(mockJobDispatcher)
-                                  .setPlatform(UAirship.ANDROID_PLATFORM)
                                   .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
                                   .setEventManager(mockEventManager)
                                   .setExecutor(new Executor() {
@@ -152,8 +150,6 @@ public class AnalyticsTest extends BaseTestCase {
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                                   .setActivityMonitor(new TestActivityMonitor())
                                   .setConfigOptions(options)
-                                  .setJobDispatcher(mockJobDispatcher)
-                                  .setPlatform(UAirship.ANDROID_PLATFORM)
                                   .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
                                   .setEventManager(mockEventManager)
                                   .build();

@@ -67,7 +67,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         RequestFactory requestFactory = new RequestFactory() {
             @NonNull
-            public Request createRequest(String requestMethod, URL url) {
+            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
                 TestRequest request = new TestRequest();
                 request.setURL(url);
                 request.setRequestMethod(requestMethod);

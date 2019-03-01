@@ -46,11 +46,12 @@ public class TagGroupUtils {
      */
     public static void addAll(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
         for (Map.Entry<String, Set<String>> entry : rh.entrySet()) {
-            if (!lh.containsKey(entry.getKey())) {
-                lh.put(entry.getKey(), new HashSet<String>());
+            Set<String> tags = lh.get(entry.getKey());
+            if (tags == null) {
+                tags = new HashSet<>();
+                lh.put(entry.getKey(), tags);
             }
-
-            lh.get(entry.getKey()).addAll(entry.getValue());
+            tags.addAll(entry.getValue());
         }
     }
 
@@ -64,11 +65,8 @@ public class TagGroupUtils {
     public static boolean containsAll(@NonNull Map<String, Set<String>> lh, @NonNull Map<String, Set<String>> rh) {
         for (Map.Entry<String, Set<String>> entry : rh.entrySet()) {
 
-            if (!lh.containsKey(entry.getKey())) {
-                return false;
-            }
-
-            if (!lh.get(entry.getKey()).containsAll(entry.getValue())) {
+            Set<String> tags = lh.get(entry.getKey());
+            if (tags == null || !tags.containsAll(entry.getValue())) {
                 return false;
             }
         }
@@ -115,11 +113,12 @@ public class TagGroupUtils {
         }
 
         for (Map.Entry<String, JsonValue> entry : value.optMap()) {
-            if (!tagGroups.containsKey(entry.getKey())) {
-                tagGroups.put(entry.getKey(), new HashSet<String>());
-            }
-
             Set<String> tagSet = tagGroups.get(entry.getKey());
+
+            if (tagSet == null) {
+                tagSet = new HashSet<>();
+                tagGroups.put(entry.getKey(), tagSet);
+            }
 
             for (JsonValue tag : entry.getValue().optList()) {
                 if (tag.isString()) {

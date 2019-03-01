@@ -2,7 +2,6 @@
 
 package com.urbanairship.location;
 
-import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
@@ -204,7 +203,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         return minDistance;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return "LocationRequestOptions: Priority " + priority + " minTime " + minTime + " minDistance " + minDistance;
@@ -287,7 +286,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      * @throws JsonException If the string is unable to be parsed to a {@link JsonValue}.
      */
     @NonNull
-    public static LocationRequestOptions fromJson(@Nullable JsonValue value) throws JsonException {
+    public static LocationRequestOptions fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.getMap();
 
         if (jsonMap == null) {

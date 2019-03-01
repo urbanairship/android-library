@@ -110,10 +110,12 @@ public class RemoteConfigManager extends AirshipComponent {
                 }
 
                 // Treat it like its config
-                if (!config.containsKey(key)) {
-                    config.put(key, new ArrayList<JsonValue>());
+                List<JsonValue> moduleConfig = config.get(key);
+                if (moduleConfig == null) {
+                    moduleConfig = new ArrayList<>();
+                    config.put(key, moduleConfig);
                 }
-                config.get(key).add(value);
+                moduleConfig.add(value);
             }
         }
 

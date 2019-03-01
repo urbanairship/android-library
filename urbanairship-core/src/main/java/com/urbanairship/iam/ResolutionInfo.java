@@ -78,7 +78,7 @@ public final class ResolutionInfo implements JsonSerializable {
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
                       .put(TYPE_KEY, getType())
-                      .putOpt(BUTTON_INFO_KEY, getButtonInfo().toJsonValue())
+                      .putOpt(BUTTON_INFO_KEY, getButtonInfo())
                       .build()
                       .toJsonValue();
     }
@@ -92,23 +92,18 @@ public final class ResolutionInfo implements JsonSerializable {
      */
     @NonNull
     public static ResolutionInfo fromJson(@NonNull JsonValue value) throws JsonException {
-        String type = null;
-        ButtonInfo buttonInfo = null;
-
         JsonMap content = value.optMap();
 
         // Type
-        if (content.opt(TYPE_KEY).isString()) {
-            type = content.opt(TYPE_KEY).getString();
-
-            if (type == null) {
-                throw new JsonException("ResolutionInfo must contain a type");
-            }
+        String type = content.opt(TYPE_KEY).getString();
+        if (type == null) {
+            throw new JsonException("ResolutionInfo must contain a type");
         }
 
         // Button Info
+        ButtonInfo buttonInfo = null;
         if (content.opt(BUTTON_INFO_KEY).isJsonMap()) {
-            buttonInfo = ButtonInfo.fromJson(content.opt(BUTTON_INFO_KEY).toJsonValue());
+            buttonInfo = ButtonInfo.fromJson(content.opt(BUTTON_INFO_KEY));
         }
 
         return new ResolutionInfo(type, buttonInfo);
@@ -120,7 +115,7 @@ public final class ResolutionInfo implements JsonSerializable {
      * @param type The resolution type.
      * @param buttonInfo The optional button info.
      */
-    private ResolutionInfo(@Type @NonNull String type, @NonNull ButtonInfo buttonInfo) {
+    private ResolutionInfo(@Type @NonNull String type, @Nullable ButtonInfo buttonInfo) {
         this.type = type;
         this.buttonInfo = buttonInfo;
     }

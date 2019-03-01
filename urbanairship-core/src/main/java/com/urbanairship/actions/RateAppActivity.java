@@ -153,7 +153,7 @@ public class RateAppActivity extends ThemedActivity {
      * @param uri The URI of the intent.
      * @param extras The extras bundle.
      */
-    private void restartActivity(@NonNull Uri uri, @Nullable Bundle extras) {
+    private void restartActivity(@Nullable Uri uri, @Nullable Bundle extras) {
         Logger.debug("Relaunching activity");
 
         finish();

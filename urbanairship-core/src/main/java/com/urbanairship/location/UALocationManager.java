@@ -197,23 +197,10 @@ public class UALocationManager extends AirshipComponent {
      */
     @NonNull
     public LocationRequestOptions getLocationRequestOptions() {
-        LocationRequestOptions options = null;
-
-        String jsonString = preferenceDataStore.getString(LOCATION_OPTIONS_KEY, null);
-        if (jsonString != null) {
-            try {
-                options = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
-            } catch (JsonException e) {
-                Logger.error(e, "UALocationManager - Failed parsing LocationRequestOptions from JSON.");
-            } catch (IllegalArgumentException e) {
-                Logger.error(e, "UALocationManager - Invalid LocationRequestOptions from JSON.");
-            }
-        }
-
+        LocationRequestOptions options = parseLocationRequests(LOCATION_OPTIONS_KEY);
         if (options == null) {
             options = LocationRequestOptions.newBuilder().build();
         }
-
         return options;
     }
 
@@ -355,20 +342,7 @@ public class UALocationManager extends AirshipComponent {
      */
     @Nullable
     LocationRequestOptions getLastUpdateOptions() {
-        String jsonString = preferenceDataStore.getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
-        LocationRequestOptions lastUpdateOptions = null;
-
-        if (jsonString != null) {
-            try {
-                lastUpdateOptions = LocationRequestOptions.fromJson(JsonValue.parseString(jsonString));
-            } catch (JsonException e) {
-                Logger.error(e, "UALocationManager - Failed parsing LocationRequestOptions from JSON.");
-            } catch (IllegalArgumentException e) {
-                Logger.error(e, "UALocationManager - Invalid LocationRequestOptions from JSON.");
-            }
-        }
-
-        return lastUpdateOptions;
+        return parseLocationRequests(LAST_REQUESTED_LOCATION_OPTIONS_KEY);
     }
 
     /**
@@ -447,6 +421,30 @@ public class UALocationManager extends AirshipComponent {
      */
     public boolean isOptIn() {
         return isLocationPermitted() && isLocationUpdatesEnabled();
+    }
+
+    /**
+     * Helper method to parse {@link LocationRequestOptions} from the preference data store.
+     *
+     * @param key The preference key.
+     * @return The parsed location requests options or null.
+     */
+    @Nullable
+    private LocationRequestOptions parseLocationRequests(@NonNull String key) {
+        JsonValue jsonValue = preferenceDataStore.getJsonValue(key);
+        if (jsonValue.isNull()) {
+            return null;
+        }
+
+        try {
+            return LocationRequestOptions.fromJson(jsonValue);
+        } catch (JsonException e) {
+            Logger.error(e, "UALocationManager - Failed parsing LocationRequestOptions from JSON.");
+        } catch (IllegalArgumentException e) {
+            Logger.error(e, "UALocationManager - Invalid LocationRequestOptions from JSON.");
+        }
+
+        return null;
     }
 
 }

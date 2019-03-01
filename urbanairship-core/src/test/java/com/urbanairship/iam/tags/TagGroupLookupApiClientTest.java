@@ -65,7 +65,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
         requestFactory = new RequestFactory() {
             @NonNull
             @Override
-            public Request createRequest(String requestMethod, URL url) {
+            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
                 testRequest.setURL(url);
                 testRequest.setRequestMethod(requestMethod);
 

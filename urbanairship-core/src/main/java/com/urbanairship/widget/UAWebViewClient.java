@@ -205,8 +205,11 @@ public class UAWebViewClient extends WebViewClient {
     @SuppressLint("NewApi")
     public WebResourceResponse shouldInterceptRequest(WebView webView, WebResourceRequest request) {
 
-        if (!request.isForMainFrame() && request.getUrl().getPath().endsWith("/favicon.ico")) {
-            return new WebResourceResponse("image/png", null, null);
+        if (!request.isForMainFrame()) {
+            String path = request.getUrl().getPath();
+            if (path != null && path.endsWith("/favicon.ico")) {
+                return new WebResourceResponse("image/png", null, null);
+            }
         }
 
         return null;
@@ -238,7 +241,7 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         Uri uri = Uri.parse(url);
-        if (uri.getHost() == null || !uri.getScheme().equals(UA_ACTION_SCHEME) || !isWhiteListed(webView.getUrl())) {
+        if (uri.getHost() == null || !UA_ACTION_SCHEME.equals(uri.getScheme()) || !isWhiteListed(webView.getUrl())) {
             return false;
         }
 
@@ -296,7 +299,11 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         for (String actionName : arguments.keySet()) {
-            for (ActionValue arg : arguments.get(actionName)) {
+            List<ActionValue> args = arguments.get(actionName);
+            if (args == null) {
+                continue;
+            }
+            for (ActionValue arg : args) {
                 actionRunRequestFactory.createActionRequest(actionName)
                                        .setValue(arg)
                                        .setMetadata(metadata)
@@ -433,7 +440,11 @@ public class UAWebViewClient extends WebViewClient {
                 return null;
             }
 
-            for (String arg : options.get(actionName)) {
+            List<String> args = options.get(actionName);
+            if (args == null) {
+                continue;
+            }
+            for (String arg : args) {
                 try {
                     JsonValue jsonValue = basicEncoding ? JsonValue.wrap(arg) : JsonValue.parseString(arg);
                     decodedActionArguments.add(new ActionValue(jsonValue));

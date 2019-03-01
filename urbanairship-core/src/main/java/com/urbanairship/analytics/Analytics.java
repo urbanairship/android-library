@@ -18,7 +18,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -58,12 +57,9 @@ public class Analytics extends AirshipComponent {
     private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
 
     private final PreferenceDataStore preferenceDataStore;
-    private final Context context;
-    private final JobDispatcher jobDispatcher;
     private final ActivityMonitor activityMonitor;
     private final EventManager eventManager;
     private final ApplicationListener listener;
-    private final int platform;
     private final AirshipConfigOptions configOptions;
     private final Executor executor;
     private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
@@ -90,11 +86,8 @@ public class Analytics extends AirshipComponent {
      */
     private Analytics(@NonNull Builder builder) {
         super(builder.context, builder.preferenceDataStore);
-        this.context = builder.context.getApplicationContext();
         this.preferenceDataStore = builder.preferenceDataStore;
         this.configOptions = builder.configOptions;
-        this.platform = builder.platform;
-        this.jobDispatcher = builder.jobDispatcher;
         this.activityMonitor = builder.activityMonitor;
         this.eventManager = builder.eventManager;
         this.executor = builder.executor == null ? AirshipExecutors.newSerialExecutor() : builder.executor;
@@ -173,7 +166,7 @@ public class Analytics extends AirshipComponent {
     @JobInfo.JobResult
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (analyticsJobHandler == null) {
-            analyticsJobHandler = new AnalyticsJobHandler(context, airship, eventManager);
+            analyticsJobHandler = new AnalyticsJobHandler(airship, eventManager);
         }
 
         return analyticsJobHandler.performJob(jobInfo);
@@ -557,10 +550,8 @@ public class Analytics extends AirshipComponent {
 
         private PreferenceDataStore preferenceDataStore;
         private final Context context;
-        private JobDispatcher jobDispatcher;
         private ActivityMonitor activityMonitor;
         private EventManager eventManager;
-        private int platform;
         private AirshipConfigOptions configOptions;
         private Executor executor;
 
@@ -586,18 +577,6 @@ public class Analytics extends AirshipComponent {
         }
 
         /**
-         * Sets the {@link JobDispatcher}.
-         *
-         * @param jobDispatcher The {@link JobDispatcher}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
-            this.jobDispatcher = jobDispatcher;
-            return this;
-        }
-
-        /**
          * Sets the {@link ActivityMonitor}.
          *
          * @param activityMonitor The {@link ActivityMonitor}.
@@ -618,18 +597,6 @@ public class Analytics extends AirshipComponent {
         @NonNull
         public Builder setEventManager(@NonNull EventManager eventManager) {
             this.eventManager = eventManager;
-            return this;
-        }
-
-        /**
-         * Sets the device platform.
-         *
-         * @param platform The device's platform.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setPlatform(@UAirship.Platform int platform) {
-            this.platform = platform;
             return this;
         }
 
@@ -665,7 +632,6 @@ public class Analytics extends AirshipComponent {
         @NonNull
         public Analytics build() {
             Checks.checkNotNull(context, "Missing context.");
-            Checks.checkNotNull(jobDispatcher, "Missing job dispatcher.");
             Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
             Checks.checkNotNull(eventManager, "Missing event manager.");
             Checks.checkNotNull(configOptions, "Missing config options.");

@@ -493,7 +493,6 @@ public class UAirship {
      * @return The PackageInfo for this Application
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
-    @SuppressLint("UnknownNullness")
     @Nullable
     public static PackageInfo getPackageInfo() {
         try {
@@ -664,8 +663,6 @@ public class UAirship {
         this.analytics = Analytics.newBuilder(application)
                                   .setActivityMonitor(GlobalActivityMonitor.shared(application))
                                   .setConfigOptions(airshipConfigOptions)
-                                  .setJobDispatcher(JobDispatcher.shared(application))
-                                  .setPlatform(getPlatformType())
                                   .setPreferenceDataStore(preferenceDataStore)
                                   .setEventManager(EventManager.newBuilder()
                                                                .setEventResolver(new EventResolver(application))

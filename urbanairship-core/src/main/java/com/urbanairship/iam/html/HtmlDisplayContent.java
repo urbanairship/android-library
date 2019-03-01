@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.html;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -148,7 +147,7 @@ public class HtmlDisplayContent implements DisplayContent {
         return backgroundColor;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

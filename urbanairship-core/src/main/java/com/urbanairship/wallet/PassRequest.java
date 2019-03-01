@@ -229,7 +229,7 @@ public class PassRequest {
         return new URL(uri.toString());
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return "PassRequest{ templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", externalId: " + externalId + ", headers: " + headers + " }";

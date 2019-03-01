@@ -336,20 +336,15 @@ public final class PreferenceDataStore {
      */
     @NonNull
     private Preference getPreference(@NonNull String key) {
-        Preference preference;
-
         synchronized (preferences) {
-            if (preferences.containsKey(key)) {
-                preference = preferences.get(key);
-            } else {
+            Preference preference = preferences.get(key);
+            if (preference == null) {
                 preference = new Preference(key, null);
                 preference.registerObserver();
-
                 preferences.put(key, preference);
             }
+            return preference;
         }
-
-        return preference;
     }
 
     /**

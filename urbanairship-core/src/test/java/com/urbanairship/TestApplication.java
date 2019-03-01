@@ -67,8 +67,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.analytics = Analytics.newBuilder(this)
                                                     .setActivityMonitor(new TestActivityMonitor())
                                                     .setConfigOptions(airshipConfigOptions)
-                                                    .setJobDispatcher(JobDispatcher.shared(this))
-                                                    .setPlatform(UAirship.ANDROID_PLATFORM)
                                                     .setPreferenceDataStore(preferenceDataStore)
                                                     .setEventManager(EventManager.newBuilder()
                                                                                  .setEventResolver(new EventResolver(this))

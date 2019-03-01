@@ -301,8 +301,8 @@ public class UAWebView extends WebView {
     @NonNull
     private String getCachePath() {
         File cacheDirectory = new File(UAirship.getApplicationContext().getCacheDir(), CACHE_DIRECTORY);
-        if (!cacheDirectory.exists()) {
-            cacheDirectory.mkdirs();
+        if (!cacheDirectory.exists() && !cacheDirectory.mkdirs()) {
+            Logger.error("Failed to create the web cache directory.");
         }
 
         return cacheDirectory.getAbsolutePath();
@@ -322,7 +322,9 @@ public class UAWebView extends WebView {
             UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClientCompat();
 
             String host = Uri.parse(url).getHost();
-            webViewClient.addAuthRequestCredentials(host, username, password);
+            if (host != null) {
+                webViewClient.addAuthRequestCredentials(host, username, password);
+            }
         }
     }
 

@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -534,6 +533,9 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public int getPriority() {
         try {
             String value = data.get(EXTRA_PRIORITY);
+            if (UAStringUtil.isEmpty(value)) {
+                return 0;
+            }
             return UAMathUtil.constrain(Integer.parseInt(value), MIN_PRIORITY, MAX_PRIORITY);
         } catch (NumberFormatException e) {
             return 0;
@@ -550,6 +552,9 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public int getVisibility() {
         try {
             String value = data.get(EXTRA_VISIBILITY);
+            if (UAStringUtil.isEmpty(value)) {
+                return VISIBILITY_PUBLIC;
+            }
             return UAMathUtil.constrain(Integer.parseInt(value), MIN_VISIBILITY, MAX_VISIBILITY);
         } catch (NumberFormatException e) {
             return VISIBILITY_PUBLIC;
@@ -703,7 +708,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return data.toString();
@@ -730,7 +735,8 @@ public class PushMessage implements Parcelable, JsonSerializable {
         @NonNull
         @Override
         public PushMessage createFromParcel(@NonNull Parcel in) {
-            return new PushMessage(in.readBundle(PushMessage.class.getClassLoader()));
+            Bundle bundle = in.readBundle(PushMessage.class.getClassLoader());
+            return new PushMessage(bundle == null ? new Bundle() : bundle);
         }
 
         @NonNull
@@ -757,7 +763,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         Map<String, String> data = new HashMap<>();
         for (Map.Entry<String, JsonValue> entry : jsonValue.optMap().entrySet()) {
             if (entry.getValue().isString()) {
-                data.put(entry.getKey(), entry.getValue().getString());
+                data.put(entry.getKey(), entry.getValue().optString());
             } else {
                 data.put(entry.getKey(), entry.getValue().toString());
             }

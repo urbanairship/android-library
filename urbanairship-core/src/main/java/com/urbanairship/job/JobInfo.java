@@ -2,7 +2,6 @@
 
 package com.urbanairship.job;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -294,7 +293,7 @@ public class JobInfo {
         return null;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return "JobInfo{" +
@@ -342,7 +341,7 @@ public class JobInfo {
          * @return The job builder.
          */
         @NonNull
-        public Builder setAction(@NonNull String action) {
+        public Builder setAction(@Nullable String action) {
             this.action = action;
             return this;
         }
@@ -440,7 +439,7 @@ public class JobInfo {
          * @return The job builder.
          */
         @NonNull
-        Builder setAirshipComponent(@NonNull String componentName) {
+        Builder setAirshipComponent(@Nullable String componentName) {
             this.airshipComponentName = componentName;
             return this;
         }

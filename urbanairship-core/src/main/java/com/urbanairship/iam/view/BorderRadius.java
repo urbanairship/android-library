@@ -124,7 +124,7 @@ public abstract class BorderRadius {
      */
     public static void applyBorderRadiusPadding(@NonNull View view, final float borderRadius, @BorderRadiusFlag final int borderRadiusFlag) {
         if (view.getWidth() == 0) {
-            final WeakReference<View> weakReference = new WeakReference<View>(view);
+            final WeakReference<View> weakReference = new WeakReference<>(view);
             view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 @Override
                 public boolean onPreDraw() {

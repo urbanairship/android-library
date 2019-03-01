@@ -1,6 +1,5 @@
 package com.urbanairship.automation;
 
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -482,7 +481,7 @@ class ScheduleEntry implements ScheduleInfo {
         return delayBuilder.build();
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return scheduleId;

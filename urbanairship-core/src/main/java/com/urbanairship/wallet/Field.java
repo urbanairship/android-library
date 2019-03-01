@@ -2,7 +2,6 @@
 
 package com.urbanairship.wallet;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Size;
@@ -55,7 +54,7 @@ public class Field implements JsonSerializable {
         return name;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

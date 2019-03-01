@@ -84,7 +84,7 @@ public class UrbanAirshipResolver {
      * at or below the specified URI will also trigger a match.
      * @param observer The ContentObserver you want to alert when the supplied URI is updated.
      */
-    public void registerContentObserver(@Nullable Uri uri, boolean notifyForDescendants, @NonNull ContentObserver observer) {
+    public void registerContentObserver(@NonNull Uri uri, boolean notifyForDescendants, @NonNull ContentObserver observer) {
         try {
             this.getResolver().registerContentObserver(uri, notifyForDescendants, observer);
         } catch (IllegalArgumentException e) {

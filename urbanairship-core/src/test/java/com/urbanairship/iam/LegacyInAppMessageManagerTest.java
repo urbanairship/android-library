@@ -167,7 +167,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         legacyInAppMessageManager.setMessageBuilderExtender(new LegacyInAppMessageManager.MessageBuilderExtender() {
             @NonNull
             @Override
-            public InAppMessage.Builder extend(Context context, InAppMessage.Builder builder, LegacyInAppMessage legacyMessage) {
+            public InAppMessage.Builder extend(@NonNull Context context, @NonNull InAppMessage.Builder builder, @NonNull LegacyInAppMessage legacyMessage) {
                 throw new RuntimeException("exception!");
             }
         });
@@ -184,7 +184,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         legacyInAppMessageManager.setScheduleBuilderExtender(new LegacyInAppMessageManager.ScheduleInfoBuilderExtender() {
             @NonNull
             @Override
-            public InAppMessageScheduleInfo.Builder extend(Context context, InAppMessageScheduleInfo.Builder builder, LegacyInAppMessage legacyMessage) {
+            public InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage) {
                 throw new RuntimeException("exception!");
             }
         });

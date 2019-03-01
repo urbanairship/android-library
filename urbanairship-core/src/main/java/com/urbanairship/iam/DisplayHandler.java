@@ -59,7 +59,8 @@ public class DisplayHandler implements Parcelable {
         @NonNull
         @Override
         public DisplayHandler createFromParcel(@NonNull Parcel in) {
-            return new DisplayHandler(in.readString());
+            String scheduleId = in.readString();
+            return new DisplayHandler(scheduleId == null ? "" : scheduleId);
         }
 
         @NonNull

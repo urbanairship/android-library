@@ -2,7 +2,6 @@
 
 package com.urbanairship.json;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -194,7 +193,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      */
     protected abstract boolean apply(@NonNull JsonValue jsonValue, boolean ignoreCase);
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

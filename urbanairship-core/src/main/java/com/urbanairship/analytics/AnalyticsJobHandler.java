@@ -2,7 +2,6 @@
 
 package com.urbanairship.analytics;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
@@ -15,13 +14,11 @@ import com.urbanairship.job.JobInfo;
  */
 class AnalyticsJobHandler {
 
-    private final Context context;
     private final UAirship airship;
     private final EventManager eventManager;
 
-    AnalyticsJobHandler(@NonNull Context context, @NonNull UAirship airship, @NonNull EventManager eventManager) {
+    AnalyticsJobHandler(@NonNull UAirship airship, @NonNull EventManager eventManager) {
         this.airship = airship;
-        this.context = context;
         this.eventManager = eventManager;
     }
 

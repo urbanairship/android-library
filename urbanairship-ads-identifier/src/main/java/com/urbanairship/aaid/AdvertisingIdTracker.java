@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -46,6 +47,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
      * @param dataStore The preference data store.
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AdvertisingIdTracker(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
         super(context, dataStore);
     }

@@ -142,7 +142,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      *
      * @param listener The banner listener.
      */
-    public void setListener(Listener listener) {
+    public void setListener(@Nullable Listener listener) {
         this.listener = listener;
     }
 

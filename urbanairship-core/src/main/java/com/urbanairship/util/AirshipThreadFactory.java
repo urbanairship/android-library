@@ -45,7 +45,9 @@ public class AirshipThreadFactory implements ThreadFactory {
             @Override
             public void run() {
                 TrafficStats.setThreadStatsTag(THREAD_STATS_TAG);
-                runnable.run();
+                if (runnable != null) {
+                    runnable.run();
+                }
             }
         };
 

@@ -284,7 +284,7 @@ public class ObservableTest extends BaseTestCase {
         Observable<Pair<Integer, Integer>> zipped = Observable.zip(first, second, new BiFunction<Integer, Integer, Pair<Integer, Integer>>() {
             @NonNull
             @Override
-            public Pair<Integer, Integer> apply(Integer lh, Integer rh) {
+            public Pair<Integer, Integer> apply(@NonNull Integer lh, @NonNull Integer rh) {
                 return new Pair<>(lh, rh);
             }
         });

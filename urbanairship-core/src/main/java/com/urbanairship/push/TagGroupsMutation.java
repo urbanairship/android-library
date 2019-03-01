@@ -174,26 +174,29 @@ public class TagGroupsMutation implements JsonSerializable {
                     }
 
                     // Add to the set tag groups if we can
-                    if (setTags.containsKey(group)) {
-                        setTags.get(group).addAll(tags);
+                    Set<String> existingSetTags = setTags.get(group);
+                    if (existingSetTags != null) {
+                        existingSetTags.addAll(tags);
                         continue;
                     }
 
                     // Remove from remove tag groups
-                    if (removeTags.containsKey(group)) {
-                        removeTags.get(group).removeAll(tags);
-
-                        if (removeTags.get(group).isEmpty()) {
+                    Set<String> existingRemoveTags = removeTags.get(group);
+                    if (existingRemoveTags != null) {
+                        existingRemoveTags.removeAll(tags);
+                        if (existingRemoveTags.isEmpty()) {
                             removeTags.remove(group);
                         }
                     }
 
                     // Add to add tags
-                    if (!addTags.containsKey(group)) {
-                        addTags.put(group, new HashSet<String>());
+                    Set<String> existingAddTags = addTags.get(group);
+                    if (existingAddTags == null) {
+                        existingAddTags = new HashSet<>();
+                        addTags.put(group, existingAddTags);
                     }
+                    existingAddTags.addAll(tags);
 
-                    addTags.get(group).addAll(tags);
                 }
             }
 
@@ -208,26 +211,28 @@ public class TagGroupsMutation implements JsonSerializable {
                     }
 
                     // Remove from the set tag groups if we can
-                    if (setTags.containsKey(group)) {
-                        setTags.get(group).removeAll(tags);
+                    Set<String> existingSetTags = setTags.get(group);
+                    if (existingSetTags != null) {
+                        existingSetTags.removeAll(tags);
                         continue;
                     }
 
                     // Remove from add tag groups
-                    if (addTags.containsKey(group)) {
-                        addTags.get(group).removeAll(tags);
-
-                        if (addTags.get(group).isEmpty()) {
+                    Set<String> existingAddTags = addTags.get(group);
+                    if (existingAddTags != null) {
+                        existingAddTags.removeAll(tags);
+                        if (existingAddTags.isEmpty()) {
                             addTags.remove(group);
                         }
                     }
 
                     // Add to remove tags
-                    if (!removeTags.containsKey(group)) {
-                        removeTags.put(group, new HashSet<String>());
+                    Set<String> existingRemoveTags = removeTags.get(group);
+                    if (existingRemoveTags == null) {
+                        existingRemoveTags = new HashSet<>();
+                        removeTags.put(group, existingRemoveTags);
                     }
-
-                    removeTags.get(group).addAll(tags);
+                    existingRemoveTags.addAll(tags);
                 }
             }
 
@@ -355,22 +360,23 @@ public class TagGroupsMutation implements JsonSerializable {
         // Add tags
         if (addTags != null) {
             for (Map.Entry<String, Set<String>> entry : addTags.entrySet()) {
-                if (!tagGroups.containsKey(entry.getKey())) {
-                    tagGroups.put(entry.getKey(), new HashSet<String>());
+                Set<String> tags = tagGroups.get(entry.getKey());
+                if (tags == null) {
+                    tags = new HashSet<>();
+                    tagGroups.put(entry.getKey(),tags);
                 }
 
-                tagGroups.get(entry.getKey()).addAll(entry.getValue());
+                tags.addAll(entry.getValue());
             }
         }
 
         // Remove tags
         if (removeTags != null) {
             for (Map.Entry<String, Set<String>> entry : removeTags.entrySet()) {
-                if (!tagGroups.containsKey(entry.getKey())) {
-                    continue;
+                Set<String> tags = tagGroups.get(entry.getKey());
+                if (tags != null) {
+                    tags.removeAll(entry.getValue());
                 }
-
-                tagGroups.get(entry.getKey()).removeAll(entry.getValue());
             }
         }
 

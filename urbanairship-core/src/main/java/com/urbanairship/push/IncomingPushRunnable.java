@@ -187,7 +187,7 @@ class IncomingPushRunnable implements Runnable {
             case NotificationFactory.Result.OK:
                 Notification notification = result.getNotification();
 
-                if (result.getNotification() != null) {
+                if (notification != null) {
                     postNotification(airship, notification, notificationId);
                 }
 
@@ -195,7 +195,7 @@ class IncomingPushRunnable implements Runnable {
 
                 final PushArrivedEvent pushArrivedEvent;
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || notification == null) {
                     pushArrivedEvent = new PushArrivedEvent(message);
                 } else {
                     NotificationManager notificationManager = (NotificationManager) UAirship.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);

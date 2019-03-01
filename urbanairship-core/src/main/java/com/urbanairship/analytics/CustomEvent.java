@@ -366,7 +366,7 @@ public class CustomEvent extends Event implements JsonSerializable {
 
                 for (Object object : collection) {
                     String string = String.valueOf(object);
-                    if (string != null && string.length() > MAX_CHARACTER_LENGTH) {
+                    if (string.length() > MAX_CHARACTER_LENGTH) {
                         Logger.error("The custom property %s contains a value that is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
                         isValid = false;
                     }

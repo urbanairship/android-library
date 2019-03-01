@@ -397,7 +397,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     @Override
-    public boolean equals(@NonNull Object object) {
+    public boolean equals(@Nullable Object object) {
         if (!(object instanceof JsonValue)) {
             return false;
         }

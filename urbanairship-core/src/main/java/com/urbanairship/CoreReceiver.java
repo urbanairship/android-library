@@ -92,7 +92,7 @@ public class CoreReceiver extends BroadcastReceiver {
      */
     private void onNotificationOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
-        if (message == null) {
+        if (intent.getExtras() == null || message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
@@ -127,7 +127,7 @@ public class CoreReceiver extends BroadcastReceiver {
      */
     private void onNotificationButtonOpenedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
-        if (message == null) {
+        if (intent.getExtras() == null || message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
@@ -186,7 +186,7 @@ public class CoreReceiver extends BroadcastReceiver {
      */
     private void onNotificationDismissedProxy(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
-        if (message == null) {
+        if (intent.getExtras() == null || message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
@@ -223,7 +223,7 @@ public class CoreReceiver extends BroadcastReceiver {
 
         PushMessage message = PushMessage.fromIntent(intent);
 
-        if (message == null) {
+        if (intent.getExtras() == null || message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }

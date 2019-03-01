@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
@@ -343,7 +342,7 @@ public class TextInfo implements JsonSerializable {
         return result;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

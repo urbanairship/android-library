@@ -97,7 +97,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
 
         if (value.isJsonMap()) {
             for (Map.Entry<String, JsonValue> entry : value.optMap()) {
-                ids.put(entry.getKey(), entry.getValue().getString());
+                ids.put(entry.getKey(), entry.getValue().optString());
             }
         } else {
             throw new JsonException("Associated identifiers not found in JsonValue: " + value);

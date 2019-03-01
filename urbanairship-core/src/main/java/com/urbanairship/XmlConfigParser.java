@@ -11,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Xml;
 
+import com.urbanairship.util.UAStringUtil;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -137,7 +139,11 @@ class XmlConfigParser implements ConfigParser {
 
     @Override
     public long getLong(int index) {
-        return Long.parseLong(getString(index));
+        String value = getString(index);
+        if (UAStringUtil.isEmpty(value)) {
+            throw new NumberFormatException("Invalid value: " + value);
+        }
+        return Long.parseLong(value);
     }
 
     /**

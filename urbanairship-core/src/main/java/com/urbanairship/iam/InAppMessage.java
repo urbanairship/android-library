@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -377,7 +376,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return 0;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

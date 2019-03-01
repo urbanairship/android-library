@@ -146,6 +146,10 @@ public class ChannelCapture extends AirshipComponent {
     private void attemptChannelCapture() {
         String channel = pushManager.getChannelId();
 
+        if (UAStringUtil.isEmpty(channel)) {
+            return;
+        }
+
         // Only perform checks if notifications are enabled for the app.
         if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
             if (!this.configOptions.channelCaptureEnabled) {
@@ -158,9 +162,6 @@ public class ChannelCapture extends AirshipComponent {
                 return;
             }
 
-            if (UAStringUtil.isEmpty(channel)) {
-                return;
-            }
 
             // Clipboard is null on a few VodaPhone devices
             if (clipboardManager == null) {

@@ -20,7 +20,7 @@ class AdmWrapper {
      *
      * @return The value returned by {@link ADM#isSupported()}.
      */
-    public static boolean isSupported() {
+    static boolean isSupported() {
         try {
             return new ADM(UAirship.getApplicationContext()).isSupported();
         } catch (RuntimeException ex) {
@@ -32,7 +32,7 @@ class AdmWrapper {
     /**
      * Wraps {@link ADM#startRegister()}.
      */
-    public static void startRegistration(@NonNull Context context) {
+    static void startRegistration(@NonNull Context context) {
         new ADM(context).startRegister();
     }
 
@@ -43,7 +43,7 @@ class AdmWrapper {
      * @return The registration ID or null if ADM has not registered yet.
      */
     @Nullable
-    public static String getRegistrationId(Context context) {
+    static String getRegistrationId(Context context) {
         return new ADM(context).getRegistrationId();
     }
 

@@ -42,11 +42,12 @@ public class UriUtils {
 
             if (!UAStringUtil.isEmpty(name)) {
 
-                if (!parameters.containsKey(name)) {
-                    parameters.put(name, new ArrayList<String>());
+                List<String> values = parameters.get(name);
+                if (values == null) {
+                    values = new ArrayList<>();
+                    parameters.put(name, values);
                 }
-
-                parameters.get(name).add(value);
+                values.add(value);
             }
         }
 

@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -247,7 +246,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
      *
      * @return The JSON formatted payload as a string
      */
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return this.toJsonValue().toString();

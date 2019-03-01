@@ -12,6 +12,7 @@ import android.support.annotation.XmlRes;
 import android.util.Log;
 
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.reflect.Field;
@@ -698,6 +699,7 @@ public class AirshipConfigOptions {
 
                         case FIELD_CUSTOM_PUSH_PROVIDER:
                             String className = configParser.getString(i);
+                            Checks.checkNotNull(className, "Missing custom push provider class name");
                             Class<? extends PushProvider> providerClass = Class.forName(className).asSubclass(PushProvider.class);
                             this.setCustomPushProvider(providerClass.newInstance());
                             break;

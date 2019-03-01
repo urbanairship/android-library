@@ -2,7 +2,6 @@
 
 package com.urbanairship.actions;
 
-import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -232,7 +231,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      *
      * @return The value as a JSON encoded String.
      */
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return jsonValue.toString();

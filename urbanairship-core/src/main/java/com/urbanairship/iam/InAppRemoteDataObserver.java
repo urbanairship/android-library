@@ -53,7 +53,7 @@ class InAppRemoteDataObserver {
 
     private final PreferenceDataStore preferenceDataStore;
     private Subscription subscription;
-    private List<Listener> listeners = new ArrayList<>();
+    private final List<Listener> listeners = new ArrayList<>();
 
     interface Listener {
 
@@ -198,6 +198,8 @@ class InAppRemoteDataObserver {
                 }
             }
 
+            String existingScheduleId = scheduleIdMap.get(messageId);
+
             if (createdTimeStamp > lastUpdate) {
                 try {
                     InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson, InAppMessage.SOURCE_REMOTE_DATA);
@@ -208,8 +210,7 @@ class InAppRemoteDataObserver {
                 } catch (JsonException e) {
                     Logger.error(e, "Failed to parse in-app message: %s", messageJson);
                 }
-            } else if (scheduleIdMap.containsKey(messageId)) {
-                String scheduleId = scheduleIdMap.get(messageId);
+            } else if (existingScheduleId != null) {
                 try {
                     InAppMessageScheduleEdits originalEdits = InAppMessageScheduleEdits.fromJson(messageJson);
                     InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder(originalEdits)
@@ -219,7 +220,7 @@ class InAppRemoteDataObserver {
                                                                                .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
                                                                                .build();
 
-                    InAppMessageSchedule schedule = scheduler.editSchedule(scheduleId, edits).get();
+                    InAppMessageSchedule schedule = scheduler.editSchedule(existingScheduleId, edits).get();
                     if (schedule != null) {
                         Logger.debug("Updated in-app message: %s with edits: %s", messageId, edits);
                     }
@@ -257,7 +258,9 @@ class InAppRemoteDataObserver {
                                                                        .build();
             for (String messageId : removedMessageIds) {
                 String scheduleId = scheduleIdMap.remove(messageId);
-                scheduler.editSchedule(scheduleId, edits).get();
+                if (scheduleId != null) {
+                    scheduler.editSchedule(scheduleId, edits).get();
+                }
             }
         }
 

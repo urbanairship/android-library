@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.banner;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -462,7 +461,7 @@ public class BannerDisplayContent implements DisplayContent {
         return result;
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return toJsonValue().toString();

@@ -50,6 +50,10 @@ public class ManifestUtils {
      */
     @Nullable
     public static ActivityInfo getActivityInfo(@NonNull Class activity) {
+        if (activity.getCanonicalName() == null) {
+            return null;
+        }
+
         ComponentName componentName = new ComponentName(UAirship.getPackageName(),
                 activity.getCanonicalName());
         try {

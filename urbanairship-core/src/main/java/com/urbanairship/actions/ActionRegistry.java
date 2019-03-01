@@ -2,7 +2,6 @@
 
 package com.urbanairship.actions;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
@@ -381,7 +380,7 @@ public final class ActionRegistry {
             }
         }
 
-        @SuppressLint("UnknownNullness")
+        @NonNull
         @Override
         public String toString() {
             return "Action Entry: " + names;

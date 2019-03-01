@@ -2,7 +2,6 @@
 
 package com.urbanairship.push.adm;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -101,13 +100,13 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         return false;
     }
 
-    @Nullable
+
     @Override
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
         return message.containsAirshipKeys();
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return "Adm Push Provider";

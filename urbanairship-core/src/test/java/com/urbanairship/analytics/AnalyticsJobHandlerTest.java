@@ -45,7 +45,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(mockPushManager);
 
         channelId = "some channel ID";
-        jobHandler = new AnalyticsJobHandler(TestApplication.getApplication(), UAirship.shared(), mockEventManager);
+        jobHandler = new AnalyticsJobHandler(UAirship.shared(), mockEventManager);
     }
 
     /**

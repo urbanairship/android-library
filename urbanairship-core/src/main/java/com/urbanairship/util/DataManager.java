@@ -371,8 +371,8 @@ public abstract class DataManager {
 
         if (Build.VERSION.SDK_INT >= 21) {
             File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
-            if (!urbanAirshipNoBackupDirectory.exists()) {
-                urbanAirshipNoBackupDirectory.mkdirs();
+            if (!urbanAirshipNoBackupDirectory.exists() && !urbanAirshipNoBackupDirectory.mkdirs()) {
+                Logger.error("Failed to create UA no backup directory.");
             }
 
             target = new File(urbanAirshipNoBackupDirectory, targetName);
@@ -412,7 +412,9 @@ public abstract class DataManager {
             // Move the journal file if it exists
             File journal = new File(oldFile.getAbsolutePath() + "-journal");
             if (journal.exists()) {
-                journal.renameTo(new File(target.getAbsolutePath() + "-journal"));
+                if (!journal.renameTo(new File(target.getAbsolutePath() + "-journal"))) {
+                    Logger.error("Failed to move the journal file: " + journal);
+                }
             }
         }
 

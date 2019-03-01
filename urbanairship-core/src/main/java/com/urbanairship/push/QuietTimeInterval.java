@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -130,12 +129,9 @@ class QuietTimeInterval implements JsonSerializable {
      * @param value The JSON value.
      * @return The deserialized QuietTimeInterval instance.
      */
-    public static QuietTimeInterval fromJson(@Nullable JsonValue value) throws JsonException {
-
-        JsonMap jsonMap;
-        jsonMap = value.getMap();
-
-        if (jsonMap == null || jsonMap.isEmpty()) {
+    public static QuietTimeInterval fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
+        if (jsonMap.isEmpty()) {
             throw new JsonException("Invalid quiet time interval: " + value);
         }
 
@@ -147,7 +143,7 @@ class QuietTimeInterval implements JsonSerializable {
                 .build();
     }
 
-    @SuppressLint("UnknownNullness")
+    @NonNull
     @Override
     public String toString() {
         return "QuietTimeInterval{" +

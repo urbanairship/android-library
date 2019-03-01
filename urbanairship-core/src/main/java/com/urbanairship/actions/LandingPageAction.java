@@ -143,7 +143,7 @@ public class LandingPageAction extends Action {
                     public void run() {
                         UAWebView webView = new UAWebView(UAirship.getApplicationContext());
 
-                        if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+                        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
                             String messageId = uri.getSchemeSpecificPart();
                             RichPushMessage message = UAirship.shared()
                                                               .getInbox()

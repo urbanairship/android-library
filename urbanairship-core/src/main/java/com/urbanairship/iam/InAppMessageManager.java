@@ -370,7 +370,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @NonNull
     @Override
-    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo, @Nullable JsonMap metadata) {
+    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo, @NonNull JsonMap metadata) {
         return automationEngine.schedule(messageScheduleInfo, metadata);
     }
 

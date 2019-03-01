@@ -66,7 +66,7 @@ public abstract class HtmlWebViewClient extends UAWebViewClient {
 
         Uri uri = Uri.parse(url);
 
-        if (uri.getHost() == null || !uri.getScheme().equals(UA_ACTION_SCHEME) || !isWhiteListed(webView.getUrl())) {
+        if (uri.getHost() == null || !UA_ACTION_SCHEME.equals(uri.getScheme()) || !isWhiteListed(webView.getUrl())) {
             return false;
         }
 
