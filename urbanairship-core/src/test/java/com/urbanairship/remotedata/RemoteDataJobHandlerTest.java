@@ -3,26 +3,20 @@
 package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestLocaleManager;
-import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
-import org.apache.tools.ant.taskdefs.Local;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.reset;
@@ -122,4 +116,5 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
 
         reset(client);
     }
+
 }

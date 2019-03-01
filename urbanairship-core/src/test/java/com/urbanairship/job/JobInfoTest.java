@@ -1,19 +1,14 @@
 package com.urbanairship.job;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
 
 import static junit.framework.Assert.assertEquals;
-
 
 public class JobInfoTest extends BaseTestCase {
 
@@ -27,10 +22,10 @@ public class JobInfoTest extends BaseTestCase {
         // Verify the generated ID is between 49-99
         for (int i = 49; i < 99; i++) {
             JobInfo jobInfo = JobInfo.newBuilder()
-                             .setAction("test_action")
-                             .generateUniqueId(TestApplication.getApplication())
-                             .setAirshipComponent(PushManager.class)
-                             .build();
+                                     .setAction("test_action")
+                                     .generateUniqueId(TestApplication.getApplication())
+                                     .setAirshipComponent(PushManager.class)
+                                     .build();
 
             assertEquals(jobInfo.getId(), i);
         }
@@ -46,4 +41,5 @@ public class JobInfoTest extends BaseTestCase {
             assertEquals(jobInfo.getId(), i);
         }
     }
+
 }

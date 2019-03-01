@@ -56,4 +56,5 @@ class AnalyticsJobHandler {
 
         return JobInfo.JOB_RETRY;
     }
+
 }

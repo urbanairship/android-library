@@ -549,7 +549,6 @@ public class Observable<T> {
                     }
                 };
 
-
                 compoundSubscription.add(lh.subscribe(new Subscriber<T>() {
                     @Override
                     public void onNext(@NonNull T value) {
@@ -671,17 +670,24 @@ public class Observable<T> {
      * @param <T> The type contained.
      */
     private static class Holder<T> {
+
         private T value;
 
-        Holder() {}
+        Holder() {
+        }
 
         Holder(T initial) {
             this.value = initial;
         }
 
-        T getValue() { return value; }
+        T getValue() {
+            return value;
+        }
 
-        void setValue(T v) { value = v; }
+        void setValue(T v) {
+            value = v;
+        }
+
     }
 
     /**
@@ -690,6 +696,7 @@ public class Observable<T> {
      * @param <T> The underlying type of the Observables
      */
     private static class ObservableTracker<T> {
+
         private final Observer<T> observer;
         private final CompoundSubscription compoundSubscription;
         private final AtomicInteger observableCount = new AtomicInteger(1);
@@ -730,5 +737,7 @@ public class Observable<T> {
                 compoundSubscription.remove(subscription);
             }
         }
+
     }
+
 }

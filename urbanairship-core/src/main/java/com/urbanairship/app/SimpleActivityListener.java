@@ -40,4 +40,5 @@ public class SimpleActivityListener implements ActivityListener {
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
     }
+
 }

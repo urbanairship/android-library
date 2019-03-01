@@ -6,7 +6,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AlarmOperationScheduler;
@@ -15,6 +14,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.json.JsonMap;
 
 import java.util.Collection;
@@ -128,7 +128,6 @@ public class Automation extends AirshipComponent {
         return automationEngine.schedule(scheduleInfo, metadata);
     }
 
-
     /**
      * Schedules a list of action schedules.
      *
@@ -168,7 +167,6 @@ public class Automation extends AirshipComponent {
         return cancel(Collections.singletonList(id));
     }
 
-
     /**
      * Cancels schedules for a given list of schedule IDs.
      *
@@ -184,7 +182,6 @@ public class Automation extends AirshipComponent {
 
         return automationEngine.cancel(ids);
     }
-
 
     /**
      * Cancels a group of schedules.
@@ -219,7 +216,6 @@ public class Automation extends AirshipComponent {
         return automationEngine.cancelAll();
     }
 
-
     /**
      * Gets a schedule for the given schedule ID.
      *
@@ -237,7 +233,6 @@ public class Automation extends AirshipComponent {
 
         return automationEngine.getSchedule(scheduleId);
     }
-
 
     /**
      * Gets a list of schedules with the given IDs.
@@ -310,4 +305,5 @@ public class Automation extends AirshipComponent {
 
         return automationEngine.editSchedule(scheduleId, edits);
     }
+
 }

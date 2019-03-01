@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">ใช่</string>
@@ -56,20 +57,20 @@
         <item quantity="other">เลือกแล้ว<xliff:g example="3" id="count">%1$d</xliff:g></item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">รีเฟรช</string>
     <string name="ua_open">เปิด</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">ให้คะแนน</string>
     <string name="ua_rate_app_action_default_rate_negative_button">ไม่เป็นไรขอบคุณ</string>
     <string name="ua_rate_app_action_default_title">เอ็นจอยกับ <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">แตะ <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> เพื่อให้คะแนนไว้ในแอปสโตร์</string>
     <string name="ua_rate_app_action_generic_display_name">แอปนี้</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">การแจ้งเตือน</string>
     <string name="ua_default_channel_description">การอัปเดตแอปทั่วไป</string>
     <string name="ua_channel_id">ช่องไอดี</string>
-    
+
 </resources>

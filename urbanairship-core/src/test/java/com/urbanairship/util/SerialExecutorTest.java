@@ -11,10 +11,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class SerialExecutorTest extends BaseTestCase {
+
     Executor executor;
+
     @Before
     public void setup() {
         executor = new SerialExecutor(Executors.newFixedThreadPool(4));
@@ -42,4 +44,5 @@ public class SerialExecutorTest extends BaseTestCase {
         latch.await();
         assertEquals(expected, actual);
     }
+
 }

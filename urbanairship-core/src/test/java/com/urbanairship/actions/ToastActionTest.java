@@ -124,4 +124,5 @@ public class ToastActionTest extends BaseTestCase {
         assertEquals("totes", ShadowToast.getTextOfLatestToast());
         assertEquals(Toast.LENGTH_SHORT, ShadowToast.getLatestToast().getDuration());
     }
+
 }

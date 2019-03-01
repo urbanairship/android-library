@@ -60,4 +60,5 @@ public class InteractiveNotificationEventTest extends BaseTestCase {
         validateNestedEventValue(event, "user_input", "input_one", "cool");
         validateNestedEventValue(event, "user_input", "input_two", "story");
     }
+
 }

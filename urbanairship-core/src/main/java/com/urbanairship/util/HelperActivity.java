@@ -220,6 +220,7 @@ public class HelperActivity extends Activity {
      * for a result.
      */
     public static class ActivityResult {
+
         private int resultCode = Activity.RESULT_CANCELED;
         private Intent intent;
 
@@ -246,5 +247,7 @@ public class HelperActivity extends Activity {
             this.resultCode = resultCode;
             this.intent = intent;
         }
+
     }
+
 }

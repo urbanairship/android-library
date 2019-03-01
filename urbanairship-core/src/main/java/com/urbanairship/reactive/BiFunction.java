@@ -15,6 +15,7 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface BiFunction<T, U, R> {
+
     /**
      * Applies the function.
      *
@@ -24,4 +25,5 @@ public interface BiFunction<T, U, R> {
      */
     @NonNull
     R apply(@NonNull T t, @NonNull U u);
+
 }

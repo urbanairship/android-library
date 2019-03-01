@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.analytics.data.EventsStorage;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.richpush.RichPushDataManager;
 import com.urbanairship.richpush.RichPushTable;
@@ -67,9 +66,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     private DatabaseModel preferencesDataModel;
     private DatabaseModel eventsDataModel;
 
-
     private static String authorityString;
-
 
     /**
      * Creates the rich push content URI.
@@ -115,7 +112,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
         return authorityString;
     }
-
 
     @Override
     public boolean onCreate() {
@@ -249,7 +245,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
         }
     }
 
-
     /**
      * Gets the database model according to the URI.
      *
@@ -296,15 +291,14 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 return eventsDataModel;
         }
 
-
         throw new IllegalArgumentException("Invalid URI: " + uri);
     }
-
 
     /**
      * A class that wraps the two different database sources for the content provider.
      */
     private static class DatabaseModel {
+
         final DataManager dataManager;
         final String table;
         private final String notificationColumnId;
@@ -346,10 +340,11 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, PreferencesDataManager.COLUMN_NAME_KEY);
         }
 
-
         static DatabaseModel createEventsDataModel(@NonNull Context context, @NonNull String appKey) {
             DataManager model = new EventsStorage(context, appKey);
             return new DatabaseModel(model, EventsStorage.Events.TABLE_NAME, EventsStorage.Events._ID);
         }
+
     }
+
 }

@@ -84,7 +84,6 @@ public class InAppViewUtils {
         ViewCompat.setBackground(button, background);
     }
 
-
     /**
      * Applies text info to a text view.
      *
@@ -136,7 +135,6 @@ public class InAppViewUtils {
             textView.setText(textInfo.getText());
         }
 
-
         int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
         int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
@@ -183,10 +181,12 @@ public class InAppViewUtils {
      * Span that removes underline.
      */
     private static class RemoveUnderlineSpan extends CharacterStyle {
+
         @Override
         public void updateDrawState(@NonNull TextPaint textPaint) {
             textPaint.setUnderlineText(false);
         }
+
     }
 
     /**
@@ -210,6 +210,7 @@ public class InAppViewUtils {
 
             canvas.restore();
         }
+
     }
 
     /**
@@ -300,4 +301,5 @@ public class InAppViewUtils {
         mediaView.setLayoutParams(params);
         mediaView.setMediaInfo(mediaInfo, cachedLocation);
     }
+
 }

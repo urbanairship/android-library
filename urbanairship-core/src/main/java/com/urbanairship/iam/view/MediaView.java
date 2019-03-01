@@ -242,6 +242,7 @@ public class MediaView extends FrameLayout {
     }
 
     private static abstract class MediaWebViewClient extends WebViewClient {
+
         static final long START_RETRY_DELAY = 1000;
 
         private final Runnable onRetry;
@@ -272,5 +273,7 @@ public class MediaView extends FrameLayout {
         }
 
         protected abstract void onPageFinished(WebView webView);
+
     }
+
 }

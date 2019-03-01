@@ -92,7 +92,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
                 requestFactory, mock(RichPushResolver.class));
     }
 
-
     /**
      * Test when user has not been created returns an error code.
      */
@@ -260,7 +259,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(true);
 
@@ -301,7 +299,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(false);
 
@@ -314,7 +311,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
         assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
-
 
     @Test
     public void testSyncReadMessageState() {
@@ -363,7 +359,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
 
-
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
@@ -397,7 +392,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
 
-
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
@@ -429,7 +423,6 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseMessage("Created")
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
-
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
@@ -575,13 +568,14 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Listener that captures the last update user result
      */
     private class TestUserListener implements RichPushUser.Listener {
+
         Boolean lastUpdateUserResult = null;
 
         @Override
         public void onUserUpdated(boolean success) {
             lastUpdateUserResult = success;
         }
-    }
 
+    }
 
 }

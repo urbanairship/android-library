@@ -69,6 +69,7 @@ public class Audience implements JsonSerializable {
 
     /**
      * Default constructor.
+     *
      * @param builder The builder.
      */
     private Audience(@NonNull Builder builder) {
@@ -180,7 +181,6 @@ public class Audience implements JsonSerializable {
             if (!content.opt(MISS_BEHAVIOR_KEY).isString()) {
                 throw new JsonException("miss_behavior must be a string: " + content.get(MISS_BEHAVIOR_KEY));
             }
-
 
             switch (content.opt(MISS_BEHAVIOR_KEY).optString()) {
                 case MISS_BEHAVIOR_CANCEL:
@@ -354,7 +354,8 @@ public class Audience implements JsonSerializable {
         private TagSelector tagSelector;
         private JsonPredicate versionPredicate;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the new user audience condition for scheduling the in-app message.
@@ -481,5 +482,7 @@ public class Audience implements JsonSerializable {
         public Audience build() {
             return new Audience(this);
         }
+
     }
+
 }

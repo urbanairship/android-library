@@ -194,7 +194,6 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-
         // Verify the action "action" ran with a map
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("key", "value");
@@ -555,4 +554,5 @@ public class UAWebViewClientTest extends BaseTestCase {
             verify(webView).evaluateJavascript(s, null);
         }
     }
+
 }

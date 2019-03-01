@@ -24,20 +24,20 @@ public class RemoteDataStoreTest extends BaseTestCase {
     public void setUp() {
         dataStore = new RemoteDataStore(RuntimeEnvironment.application, "appKey", "test");
         RemoteDataPayload payload = RemoteDataPayload.newBuilder()
-                .setType("type")
-                .setTimeStamp(123)
-                .setData(JsonMap.newBuilder()
-                        .put("foo", "bar")
-                        .build())
-                .build();
+                                                     .setType("type")
+                                                     .setTimeStamp(123)
+                                                     .setData(JsonMap.newBuilder()
+                                                                     .put("foo", "bar")
+                                                                     .build())
+                                                     .build();
 
         RemoteDataPayload otherPayload = RemoteDataPayload.newBuilder()
-                .setType("otherType")
-                .setTimeStamp(234)
-                .setData(JsonMap.newBuilder()
-                        .put("baz", "boz")
-                        .build())
-                .build();
+                                                          .setType("otherType")
+                                                          .setTimeStamp(234)
+                                                          .setData(JsonMap.newBuilder()
+                                                                          .put("baz", "boz")
+                                                                          .build())
+                                                          .build();
         payloads = new HashSet<>(Arrays.asList(payload, otherPayload));
     }
 
@@ -79,4 +79,5 @@ public class RemoteDataStoreTest extends BaseTestCase {
         dataStore.deletePayloads();
         Assert.assertTrue(dataStore.getPayloads(Arrays.asList("type", "otherType")).size() == 0);
     }
+
 }

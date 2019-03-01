@@ -60,7 +60,6 @@ public class LocationServiceTest extends BaseTestCase {
         verify(locationManager, times(0)).onLocationUpdate(any(Location.class));
     }
 
-
     /**
      * Test UALocationProvider is notified of changes to the availability of system location providers.
      */

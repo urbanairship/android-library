@@ -23,9 +23,9 @@ public class InAppMessageScheduleEditsTest extends BaseTestCase {
     @Test
     public void testFromJson() throws JsonException {
         InAppMessage message = InAppMessage.newBuilder()
-                                                 .setId("message id")
-                                                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                                 .build();
+                                           .setId("message id")
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
         JsonMap editJson = JsonMap.newBuilder()
                                   .put("message", message)
                                   .put("group", "group id")
@@ -36,7 +36,6 @@ public class InAppMessageScheduleEditsTest extends BaseTestCase {
                                   .put("edit_grace_period", 10)
                                   .put("interval", 20)
                                   .build();
-
 
         InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.fromJson(editJson.toJsonValue());
 
@@ -50,4 +49,5 @@ public class InAppMessageScheduleEditsTest extends BaseTestCase {
         assertEquals(TimeUnit.SECONDS.toMillis(20), edits.getInterval().longValue());
 
     }
+
 }

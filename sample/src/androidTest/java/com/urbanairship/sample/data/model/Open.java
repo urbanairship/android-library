@@ -30,4 +30,5 @@ public class Open {
     public void setContent(Content content) {
         this.content = content;
     }
+
 }

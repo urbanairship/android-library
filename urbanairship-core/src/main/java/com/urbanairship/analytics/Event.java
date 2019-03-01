@@ -71,7 +71,6 @@ public abstract class Event {
      */
     public static final int HIGH_PRIORITY = 2;
 
-
     /**
      * Constructor for Event.
      *
@@ -299,4 +298,5 @@ public abstract class Event {
     public int getPriority() {
         return NORMAL_PRIORITY;
     }
+
 }

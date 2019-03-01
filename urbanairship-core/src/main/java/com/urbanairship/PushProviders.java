@@ -24,7 +24,8 @@ class PushProviders {
     private final List<PushProvider> supportedProviders = new ArrayList<>();
     private final List<PushProvider> availableProviders = new ArrayList<>();
 
-    private PushProviders() {}
+    private PushProviders() {
+    }
 
     /**
      * Factory method to load push providers.
@@ -172,4 +173,5 @@ class PushProviders {
 
         return null;
     }
+
 }

@@ -31,7 +31,6 @@ interface Scheduler {
      */
     void schedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId) throws SchedulerException;
 
-
     /**
      * Called when the job needs to be rescheduled.
      *
@@ -42,4 +41,5 @@ interface Scheduler {
      * @throws SchedulerException if the scheduler fails to reschedule the job.
      */
     void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, @Nullable Bundle extras) throws SchedulerException;
+
 }

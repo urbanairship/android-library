@@ -311,7 +311,6 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         assertNotEquals(changeToken, dataStore.getString(NamedUserJobHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
-
     /**
      * Test update named user tags succeeds when the registrar returns true.
      */

@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-
 import android.support.annotation.NonNull;
 import android.view.View;
 
@@ -33,7 +32,6 @@ public class MessageViewAdapterTest extends BaseTestCase {
         };
     }
 
-
     @Test
     public void testGetItem() {
         // Test empty message view adapter
@@ -44,8 +42,8 @@ public class MessageViewAdapterTest extends BaseTestCase {
         messageViewAdapter.set(Arrays.asList(RichPushTestUtils.createMessage("id-0", null, false), RichPushTestUtils.createMessage("id-1", null, false)));
 
         // Verify messages are available
-        assertEquals("id-0", ((RichPushMessage)messageViewAdapter.getItem(0)).getMessageId());
-        assertEquals("id-1", ((RichPushMessage)messageViewAdapter.getItem(1)).getMessageId());
+        assertEquals("id-0", ((RichPushMessage) messageViewAdapter.getItem(0)).getMessageId());
+        assertEquals("id-1", ((RichPushMessage) messageViewAdapter.getItem(1)).getMessageId());
 
         // Test non-empty message view adapter
         assertNull(messageViewAdapter.getItem(2));
@@ -69,4 +67,5 @@ public class MessageViewAdapterTest extends BaseTestCase {
         assertEquals(-1, messageViewAdapter.getItemId(2));
         assertEquals(-1, messageViewAdapter.getItemId(-1));
     }
+
 }

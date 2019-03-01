@@ -115,6 +115,7 @@ public class LocalizableRemoteInput {
      * Builds the LocalizableRemoteInput.
      */
     public static final class Builder {
+
         private final String resultKey;
         private int labelId;
         private int[] choices;
@@ -191,5 +192,7 @@ public class LocalizableRemoteInput {
         public LocalizableRemoteInput build() {
             return new LocalizableRemoteInput(this);
         }
+
     }
+
 }

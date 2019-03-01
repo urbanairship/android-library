@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -12,14 +11,14 @@
         style="@style/UrbanAirship.InAppModal.MediaView.MediaHeaderBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:src="@drawable/ua_ic_image_placeholder"/>
+        tools:src="@drawable/ua_ic_image_placeholder" />
 
 
     <TextView
         android:id="@+id/heading"
         style="@style/UrbanAirship.InAppModal.Heading.MediaHeaderBody"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" />
 
 
     <TextView
@@ -27,6 +26,6 @@
         style="@style/UrbanAirship.InAppModal.Body.MediaHeaderBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="Body text"/>
+        tools:text="Body text" />
 
 </LinearLayout>

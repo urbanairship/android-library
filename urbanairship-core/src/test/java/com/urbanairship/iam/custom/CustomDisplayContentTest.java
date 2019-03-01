@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.custom;
 
-
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -23,4 +22,5 @@ public class CustomDisplayContentTest {
         assertEquals(content, fromJson);
         assertEquals(content.hashCode(), fromJson.hashCode());
     }
+
 }

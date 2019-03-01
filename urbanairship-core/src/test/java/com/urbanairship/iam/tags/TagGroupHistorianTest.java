@@ -19,7 +19,6 @@ import org.mockito.stubbing.Answer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +40,6 @@ public class TagGroupHistorianTest extends BaseTestCase {
     private TagGroupRegistrar mockRegistrar;
     private TestClock clock;
 
-
     private List<TagGroupsMutation> pendingNamedUserMutations;
     private List<TagGroupsMutation> pendingChannelMutations;
     private TagGroupRegistrar.Listener listener;
@@ -62,7 +60,6 @@ public class TagGroupHistorianTest extends BaseTestCase {
                 return null;
             }
         }).when(mockRegistrar).addListener(any(TagGroupRegistrar.Listener.class));
-
 
         clock = new TestClock();
 
@@ -149,7 +146,6 @@ public class TagGroupHistorianTest extends BaseTestCase {
         assertTrue(historyTags.contains("three"));
     }
 
-
     @Test
     public void testNullRecord() {
         PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
@@ -160,5 +156,6 @@ public class TagGroupHistorianTest extends BaseTestCase {
         // Apply records in the past 10 seconds (should include both)
         historian.applyLocalData(tags, clock.currentTimeMillis - 10);
     }
+
 }
 

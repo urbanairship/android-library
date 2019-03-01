@@ -82,7 +82,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setMetadata(metadata)
                 .build();
 
-
         // Return empty pending results when the message is requested
         when(scheduler.getSchedules("foo")).thenReturn(createMessagesPendingResult());
         when(scheduler.getSchedules("bar")).thenReturn(createMessagesPendingResult());
@@ -137,7 +136,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .addScheduleInfo("bar", 100, 100)
                 .build();
 
-
         // Return empty pending results when the message is requested
         PendingResult<Collection<InAppMessageSchedule>> barPendingResult = createMessagesPendingResult("bar");
         when(scheduler.getSchedules("bar")).thenReturn(barPendingResult);
@@ -151,7 +149,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         payload = new TestPayloadBuilder()
                 .addScheduleInfo("foo", 100, 100)
                 .build();
-
 
         String scheduleId = barPendingResult.getResult().iterator().next().getId();
         InAppMessage message = barPendingResult.getResult().iterator().next().getInfo().getInAppMessage();
@@ -180,7 +177,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .build();
 
-
         // Return empty pending results when the message is requested
         PendingResult<Collection<InAppMessageSchedule>> pendingResult = createMessagesPendingResult("foo");
         String scheduleId = pendingResult.getResult().iterator().next().getId();
@@ -188,7 +184,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         // Process payload
         updates.onNext(payload);
-
 
         // Update the message with newer foo
         final InAppMessage message = InAppMessage.newBuilder()
@@ -200,7 +195,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
                 .build();
-
 
         // Return pending result for the edit
         PendingResult<InAppMessageSchedule> editPendingResult = createMessagePendingResult(message, scheduleId);
@@ -232,7 +226,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setMetadata(JsonMap.newBuilder().putOpt("cool", "story").build())
                 .build();
 
-
         // Return empty pending results when the message is requested
         PendingResult<Collection<InAppMessageSchedule>> pendingResult = createMessagesPendingResult("foo");
         String scheduleId = pendingResult.getResult().iterator().next().getId();
@@ -247,7 +240,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(JsonMap.newBuilder().putOpt("fun", "fun").build())
                 .build();
-
 
         // Return pending result for the edit
         PendingResult<InAppMessageSchedule> editPendingResult = createMessagePendingResult(message, scheduleId);
@@ -264,7 +256,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             }
         }));
     }
-
 
     @Test
     public void testDefaultNewUserCutoffTime() {
@@ -291,7 +282,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                                     .put("type", "foreground")
                                     .put("goal", 20.0)
                                     .build());
-
 
             JsonMap scheduleJson = JsonMap.newBuilder()
                                           .put("created", DateUtils.createIso8601TimeStamp(created))
@@ -328,6 +318,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                                     .setData(data)
                                     .build();
         }
+
     }
 
     private static PendingResult<InAppMessageSchedule> createMessagePendingResult(InAppMessage message, String scheduleId) {
@@ -341,7 +332,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         pendingResult.setResult(new InAppMessageSchedule(scheduleId, JsonMap.EMPTY_MAP, scheduleInfo));
         return pendingResult;
     }
-
 
     private static PendingResult<Collection<InAppMessageSchedule>> createMessagesPendingResult(String... ids) {
         PendingResult<Collection<InAppMessageSchedule>> pendingResult = new PendingResult<>();
@@ -370,4 +360,5 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                            .build();
 
     }
+
 }

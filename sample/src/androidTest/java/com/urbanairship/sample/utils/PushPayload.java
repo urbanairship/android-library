@@ -21,7 +21,6 @@ public class PushPayload implements JsonSerializable {
     static final String MESSAGE = "message";
     static final String IN_APP = "in_app";
 
-
     private JsonSerializable audience;
     private String alert;
     private RichPushPayload richPushPayload;
@@ -127,6 +126,7 @@ public class PushPayload implements JsonSerializable {
      * Builds the PushPayload
      */
     public static class Builder {
+
         private JsonSerializable audience;
         private String alert;
         private RichPushPayload richPushPayload;
@@ -192,7 +192,7 @@ public class PushPayload implements JsonSerializable {
         public PushPayload build() {
             return new PushPayload(this);
         }
-    }
 
+    }
 
 }

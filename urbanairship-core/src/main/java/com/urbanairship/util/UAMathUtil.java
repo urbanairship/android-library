@@ -26,4 +26,5 @@ public abstract class UAMathUtil {
 
         return value;
     }
+
 }

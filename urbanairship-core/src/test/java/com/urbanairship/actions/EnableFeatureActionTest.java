@@ -1,6 +1,5 @@
 package com.urbanairship.actions;
 
-
 import android.Manifest;
 import android.content.Context;
 
@@ -30,8 +29,10 @@ import static org.mockito.Mockito.when;
 public class EnableFeatureActionTest extends BaseTestCase {
 
     private EnableFeatureAction action;
-    private @Action.Situation int[] acceptedSituations;
-    private @Action.Situation int[] rejectedSituations;
+    private @Action.Situation
+    int[] acceptedSituations;
+    private @Action.Situation
+    int[] rejectedSituations;
     private PushManager pushManager;
     private UALocationManager locationManager;
 
@@ -63,7 +64,6 @@ public class EnableFeatureActionTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setLocationManager(locationManager);
     }
-
 
     /**
      * Test accepts arguments.
@@ -109,7 +109,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     @Test
     public void testEnableLocation() {
         when(permissionsRequester.requestPermissions(any(Context.class), eq(Arrays.asList(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))))
-                .thenReturn(new int[] {PERMISSION_GRANTED, PERMISSION_GRANTED});
+                .thenReturn(new int[] { PERMISSION_GRANTED, PERMISSION_GRANTED });
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
@@ -123,7 +123,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     @Test
     public void testEnableLocationPermissionDenied() {
         when(permissionsRequester.requestPermissions(any(Context.class), eq(Arrays.asList(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))))
-                .thenReturn(new int[] {PERMISSION_DENIED, PERMISSION_DENIED});
+                .thenReturn(new int[] { PERMISSION_DENIED, PERMISSION_DENIED });
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
@@ -137,7 +137,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     @Test
     public void testEnableBackgroundLocation() {
         when(permissionsRequester.requestPermissions(any(Context.class), eq(Arrays.asList(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))))
-                .thenReturn(new int[] {PERMISSION_GRANTED, PERMISSION_GRANTED});
+                .thenReturn(new int[] { PERMISSION_GRANTED, PERMISSION_GRANTED });
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);
@@ -153,7 +153,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     @Test
     public void testEnableBackgroundLocationPermissionDenied() {
         when(permissionsRequester.requestPermissions(any(Context.class), eq(Arrays.asList(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))))
-                .thenReturn(new int[] {PERMISSION_DENIED, PERMISSION_DENIED});
+                .thenReturn(new int[] { PERMISSION_DENIED, PERMISSION_DENIED });
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);

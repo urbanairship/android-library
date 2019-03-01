@@ -12,7 +12,7 @@ public class Interactive {
 
     @SerializedName("button_actions")
     @Expose
-    private Map<String, ButtonAction>buttonActions = new HashMap<>();
+    private Map<String, ButtonAction> buttonActions = new HashMap<>();
 
     @SerializedName("type")
     @Expose

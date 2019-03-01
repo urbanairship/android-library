@@ -85,4 +85,5 @@ interface ConfigParser {
      * @return The long value of the config element at the given index.
      */
     long getLong(int index);
+
 }

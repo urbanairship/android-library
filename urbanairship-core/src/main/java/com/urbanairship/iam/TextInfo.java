@@ -38,7 +38,6 @@ public class TextInfo implements JsonSerializable {
     private static final String FONT_FAMILY_KEY = "font_family";
     private static final String ANDROID_DRAWABLE_RES_ID_KEY = "android_drawable_res_id";
 
-
     @StringDef({ ALIGNMENT_RIGHT, ALIGNMENT_LEFT, ALIGNMENT_CENTER })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Alignment {}
@@ -60,7 +59,6 @@ public class TextInfo implements JsonSerializable {
      */
     @NonNull
     public static final String ALIGNMENT_CENTER = "center";
-
 
     @StringDef({ STYLE_BOLD, STYLE_UNDERLINE, STYLE_ITALIC })
     @Retention(RetentionPolicy.SOURCE)
@@ -376,6 +374,7 @@ public class TextInfo implements JsonSerializable {
      * Text info builder.
      */
     public static class Builder {
+
         private String text;
         @ColorInt
         private Integer color;
@@ -388,7 +387,8 @@ public class TextInfo implements JsonSerializable {
         private List<String> styles = new ArrayList<>();
         private List<String> fontFamilies = new ArrayList<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull TextInfo textInfo) {
             this.text = textInfo.text;
@@ -498,5 +498,7 @@ public class TextInfo implements JsonSerializable {
             Checks.checkArgument(drawable != 0 || text != null, "Missing text.");
             return new TextInfo(this);
         }
+
     }
+
 }

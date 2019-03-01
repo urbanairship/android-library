@@ -6,14 +6,10 @@ import android.os.Bundle;
 
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
-import junit.textui.TestRunner;
-
 import org.junit.Assert;
 import org.junit.runner.RunWith;
-import org.junit.runners.model.InitializationError;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import org.robolectric.internal.ManifestFactory;
 
 // Current robolectric does not support API 28
 @Config(sdk = 27,
@@ -22,7 +18,6 @@ import org.robolectric.internal.ManifestFactory;
 )
 @RunWith(RobolectricTestRunner.class)
 public abstract class BaseTestCase {
-
 
     public static void assertBundlesEquals(Bundle expected, Bundle actual) {
         assertBundlesEquals(null, expected, actual);
@@ -74,4 +69,5 @@ public abstract class BaseTestCase {
 
         return true;
     }
+
 }

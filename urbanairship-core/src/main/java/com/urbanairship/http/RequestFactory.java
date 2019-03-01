@@ -9,6 +9,7 @@ import java.net.URL;
 
 /**
  * Class that creates the request.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -31,4 +32,5 @@ public class RequestFactory {
     public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
         return new Request(requestMethod, url);
     }
+
 }

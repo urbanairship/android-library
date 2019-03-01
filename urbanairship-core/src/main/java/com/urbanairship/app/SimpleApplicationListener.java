@@ -15,4 +15,5 @@ public class SimpleApplicationListener implements ApplicationListener {
     @Override
     public void onBackground(long time) {
     }
+
 }

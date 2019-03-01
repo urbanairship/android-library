@@ -118,7 +118,6 @@ public class HtmlDisplayContent implements DisplayContent {
                       .toJsonValue();
     }
 
-
     /**
      * Returns the url.
      *
@@ -242,7 +241,8 @@ public class HtmlDisplayContent implements DisplayContent {
         private float borderRadius;
         private boolean isFullscreenDisplayAllowed;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull HtmlDisplayContent displayContent) {
             this.url = displayContent.url;
@@ -324,5 +324,7 @@ public class HtmlDisplayContent implements DisplayContent {
             Checks.checkArgument(url != null, "Missing URL");
             return new HtmlDisplayContent(this);
         }
+
     }
+
 }

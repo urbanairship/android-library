@@ -70,19 +70,19 @@ public class RemoteDataTest extends BaseTestCase {
                 activityMonitor, mockDispatcher, localeManager);
 
         payload = RemoteDataPayload.newBuilder()
-                .setType("type")
-                .setTimeStamp(123)
-                .setData(JsonMap.newBuilder()
-                        .put("foo", "bar")
-                        .build())
-                .build();
+                                   .setType("type")
+                                   .setTimeStamp(123)
+                                   .setData(JsonMap.newBuilder()
+                                                   .put("foo", "bar")
+                                                   .build())
+                                   .build();
         otherPayload = RemoteDataPayload.newBuilder()
-                .setType("otherType")
-                .setTimeStamp(234)
-                .setData(JsonMap.newBuilder()
-                        .put("baz", "boz")
-                        .build())
-                .build();
+                                        .setType("otherType")
+                                        .setTimeStamp(234)
+                                        .setData(JsonMap.newBuilder()
+                                                        .put("baz", "boz")
+                                                        .build())
+                                        .build();
         emptyPayload = RemoteDataPayload.emptyPayload("type");
 
         remoteData.init();
@@ -258,11 +258,10 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
         RemoteDataPayload freshPayload = RemoteDataPayload.newBuilder()
-                .setType(payload.getType())
-                .setTimeStamp(payload.getTimestamp() + 100000)
-                .setData(payload.getData())
-                .build();
-
+                                                          .setType(payload.getType())
+                                                          .setTimeStamp(payload.getTimestamp() + 100000)
+                                                          .setData(payload.getData())
+                                                          .build();
 
         remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
@@ -342,10 +341,10 @@ public class RemoteDataTest extends BaseTestCase {
         subscribedPayloads.clear();
 
         RemoteDataPayload freshOtherPayload = RemoteDataPayload.newBuilder()
-                .setType(otherPayload.getType())
-                .setTimeStamp(otherPayload.getTimestamp() + 100000)
-                .setData(otherPayload.getData())
-                .build();
+                                                               .setType(otherPayload.getType())
+                                                               .setTimeStamp(otherPayload.getTimestamp() + 100000)
+                                                               .setData(otherPayload.getData())
+                                                               .build();
 
         remoteData.onNewData(asSet(freshOtherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
@@ -390,10 +389,10 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
         RemoteDataPayload freshPayload = RemoteDataPayload.newBuilder()
-                .setType(payload.getType())
-                .setTimeStamp(payload.getTimestamp() + 100000)
-                .setData(payload.getData())
-                .build();
+                                                          .setType(payload.getType())
+                                                          .setTimeStamp(payload.getTimestamp() + 100000)
+                                                          .setData(payload.getData())
+                                                          .build();
 
         remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
         runLooperTasks();
@@ -406,7 +405,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLastModified() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified",  RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
         Assert.assertEquals(remoteData.getLastModified(), "lastModified");
     }
 
@@ -415,7 +414,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLastModifiedMetadataChanges() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified",  RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
         Assert.assertEquals("lastModified", remoteData.getLastModified());
 
         localeManager.setDefaultLocale(new Locale("de"));
@@ -468,8 +467,8 @@ public class RemoteDataTest extends BaseTestCase {
         while (mainLooper.getScheduler().areAnyRunnable() || backgroundLooper.getScheduler().areAnyRunnable());
     }
 
-
     private static <T> Set<T> asSet(T... items) {
         return new HashSet<T>(Arrays.asList(items));
     }
+
 }

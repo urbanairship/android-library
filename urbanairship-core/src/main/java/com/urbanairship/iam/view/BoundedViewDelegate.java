@@ -47,13 +47,11 @@ class BoundedViewDelegate {
     int getWidthMeasureSpec(int widthMeasureSpec) {
         int width = View.MeasureSpec.getSize(widthMeasureSpec);
 
-
         if (maxWidth > 0 && maxWidth < width) {
             widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.getMode(widthMeasureSpec));
         }
 
         return widthMeasureSpec;
-
 
     }
 
@@ -72,4 +70,5 @@ class BoundedViewDelegate {
 
         return heightMeasureSpec;
     }
+
 }

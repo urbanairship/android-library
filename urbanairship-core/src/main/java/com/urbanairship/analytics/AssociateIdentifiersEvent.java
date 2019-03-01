@@ -59,4 +59,5 @@ class AssociateIdentifiersEvent extends Event {
     protected JsonMap getEventData() {
         return JsonValue.wrapOpt(ids).optMap();
     }
+
 }

@@ -36,4 +36,5 @@ public class ActionValueTest extends BaseTestCase {
         // Validate the data
         assertEquals(actionValue, fromParcel);
     }
+
 }

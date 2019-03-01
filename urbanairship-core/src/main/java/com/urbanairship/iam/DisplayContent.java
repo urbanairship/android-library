@@ -82,4 +82,5 @@ public interface DisplayContent extends JsonSerializable {
      */
     @NonNull
     String ALLOW_FULLSCREEN_DISPLAY_KEY = "allow_fullscreen_display";
+
 }

@@ -14,6 +14,7 @@ import java.util.Map;
  * Request class used for testing.
  */
 public class TestRequest extends Request {
+
     public Response response;
     private long ifModifiedSince;
 
@@ -80,7 +81,6 @@ public class TestRequest extends Request {
         return requestMethod;
     }
 
-
     @NonNull
     @Override
     public Request setIfModifiedSince(long milliseconds) {
@@ -92,4 +92,5 @@ public class TestRequest extends Request {
     public long getIfModifiedSince() {
         return ifModifiedSince;
     }
+
 }

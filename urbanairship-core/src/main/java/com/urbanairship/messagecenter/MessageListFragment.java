@@ -38,18 +38,19 @@ import java.util.List;
  */
 public class MessageListFragment extends Fragment {
 
-
     /**
      * Interface that defines the callback when the
      * list view is ready. See {@link #getAbsListViewAsync(OnListViewReadyCallback)}.
      */
     public interface OnListViewReadyCallback {
+
         /**
          * Called when the list view is ready.
          *
          * @param absListView The abstract list view.
          */
         void onListViewReady(@NonNull AbsListView absListView);
+
     }
 
     private SwipeRefreshLayout refreshLayout;
@@ -291,12 +292,10 @@ public class MessageListFragment extends Fragment {
             }
         });
 
-
         if (refreshLayout != null) {
             refreshLayout.setRefreshing(true);
         }
     }
-
 
     /**
      * Returns the {@link AbsListView} for the fragment.
@@ -398,4 +397,5 @@ public class MessageListFragment extends Fragment {
             updateAdapterMessages();
         }
     }
+
 }

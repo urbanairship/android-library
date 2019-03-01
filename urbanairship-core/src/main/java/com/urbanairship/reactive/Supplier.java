@@ -13,6 +13,7 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Supplier<T> {
+
     /**
      * Applies the function.
      *
@@ -20,4 +21,5 @@ public interface Supplier<T> {
      */
     @NonNull
     T apply();
+
 }

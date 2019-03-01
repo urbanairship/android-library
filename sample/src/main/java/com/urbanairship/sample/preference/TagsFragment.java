@@ -32,7 +32,6 @@ public class TagsFragment extends Fragment {
     private EditText addTagEditText;
     private RecyclerView recyclerView;
 
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this).get(TagsViewModel.class);
@@ -110,4 +109,5 @@ public class TagsFragment extends Fragment {
         }
         addTagEditText.getText().clear();
     }
+
 }

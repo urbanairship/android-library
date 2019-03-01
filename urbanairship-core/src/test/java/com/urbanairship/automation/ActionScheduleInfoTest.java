@@ -87,7 +87,6 @@ public class ActionScheduleInfoTest extends BaseTestCase {
                 .setPriority(100)
                 .build();
 
-
         // Write the push message to a parcel
         Parcel parcel = Parcel.obtain();
         info.writeToParcel(parcel, 0);
@@ -101,4 +100,5 @@ public class ActionScheduleInfoTest extends BaseTestCase {
         // Validate the data
         assertEquals(info, fromParcel);
     }
+
 }

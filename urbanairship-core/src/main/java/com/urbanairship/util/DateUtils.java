@@ -2,7 +2,6 @@
 
 package com.urbanairship.util;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -25,7 +24,8 @@ public class DateUtils {
         ALT_ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    private DateUtils() {}
+    private DateUtils() {
+    }
 
     /**
      * Parses an ISO 8601 timestamp.
@@ -74,4 +74,5 @@ public class DateUtils {
     public static String createIso8601TimeStamp(long milliseconds) {
         return ISO_DATE_FORMAT.format(new Date(milliseconds));
     }
+
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_gravity="center"
     android:paddingTop="32dp"
     android:orientation="vertical"
@@ -13,7 +12,7 @@
         android:layout_height="wrap_content"
         android:paddingBottom="8dp"
         android:text="@string/ua_channel_notification_ticker"
-        android:textAppearance="?android:attr/textAppearanceMedium"/>
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/channel_id"
@@ -33,7 +32,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/ua_notification_button_share"
-            style="?android:attr/borderlessButtonStyle"/>
+            style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/copy_button"
@@ -41,7 +40,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/ua_notification_button_copy"
-            style="?android:attr/borderlessButtonStyle"/>
+            style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/open_button"
@@ -50,7 +49,7 @@
             android:layout_height="wrap_content"
             android:text="@string/ua_open"
             android:enabled="false"
-            style="?android:attr/borderlessButtonStyle"/>
+            style="?android:attr/borderlessButtonStyle" />
 
 
     </LinearLayout>
@@ -58,7 +57,7 @@
     <ListView
         android:id="@+id/channel_information"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" />
 
 </LinearLayout>
 

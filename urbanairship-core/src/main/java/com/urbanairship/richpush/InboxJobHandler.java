@@ -54,7 +54,6 @@ class InboxJobHandler {
      */
     static final String EXTRA_FORCEFULLY = "EXTRA_FORCEFULLY";
 
-
     static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
 
     private static final String DELETE_MESSAGES_PATH = "api/user/%s/messages/delete/";
@@ -230,7 +229,6 @@ class InboxJobHandler {
         return false;
     }
 
-
     /**
      * Update the Rich Push Inbox.
      *
@@ -322,7 +320,6 @@ class InboxJobHandler {
             return;
         }
 
-
         URL markMessagesReadURL = getUserURL(MARK_READ_MESSAGES_PATH, user.getId());
         if (markMessagesReadURL == null) {
             return;
@@ -374,7 +371,6 @@ class InboxJobHandler {
         Logger.verbose(payload.toString());
         return payload;
     }
-
 
     /**
      * Create the user.
@@ -447,7 +443,6 @@ class InboxJobHandler {
             return false;
         }
 
-
         URL userUpdateURL = getUserURL(USER_UPDATE_PATH, user.getId());
         if (userUpdateURL == null) {
             return false;
@@ -512,7 +507,6 @@ class InboxJobHandler {
         }
     }
 
-
     /**
      * Gets the URL for inbox/user api calls
      *
@@ -530,4 +524,5 @@ class InboxJobHandler {
         }
         return null;
     }
+
 }

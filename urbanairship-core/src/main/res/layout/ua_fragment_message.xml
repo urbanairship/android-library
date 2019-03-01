@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <com.urbanairship.widget.UAWebView
         android:id="@android:id/message"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:layout_gravity="center_horizontal"
@@ -24,7 +23,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="@string/ua_mc_failed_to_load"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
 
 
         <Button
@@ -32,7 +31,7 @@
             android:layout_height="wrap_content"
             android:text="@string/ua_retry_button"
             android:id="@+id/retry_button"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
 
 
     </LinearLayout>
@@ -42,6 +41,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:progressBarStyleLarge"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center" />
 
 </FrameLayout>

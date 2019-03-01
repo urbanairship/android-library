@@ -1,4 +1,5 @@
 /* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.remoteconfig;
 
 import java.util.Arrays;
@@ -46,4 +47,5 @@ interface Modules {
 
     List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE,
             MESSAGE_CENTER, IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE);
+
 }

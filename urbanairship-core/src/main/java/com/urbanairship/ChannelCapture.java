@@ -12,18 +12,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * ChannelCapture checks the device clipboard for a String that is prefixed by
@@ -216,7 +212,6 @@ public class ChannelCapture extends AirshipComponent {
             Logger.debug(e, "Unable to clear clipboard.");
         }
 
-
         startChannelCaptureActivity(channel, url);
     }
 
@@ -226,7 +221,7 @@ public class ChannelCapture extends AirshipComponent {
      * @param channel The channel string.
      * @param url The channel url.
      */
-    private void startChannelCaptureActivity(@Nullable String channel,@Nullable  String url) {
+    private void startChannelCaptureActivity(@Nullable String channel, @Nullable String url) {
         Intent intent = new Intent(context, ChannelCaptureActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(CHANNEL, channel)
@@ -253,4 +248,5 @@ public class ChannelCapture extends AirshipComponent {
 
         return code.toString();
     }
+
 }

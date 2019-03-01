@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Evet</string>
@@ -57,20 +58,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> seçildi</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Yenile</string>
     <string name="ua_open">Aç</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Oran</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Hayır Teşekkürler</string>
     <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g> uygulamasını sevdiniz mi?</string>
     <string name="ua_rate_app_action_default_body">App Store üzerinde oy vermek için <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> düğmesine dokunun.</string>
     <string name="ua_rate_app_action_generic_display_name">Bu uygulama</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Bildirimler</string>
     <string name="ua_default_channel_description">Genel uygulama güncellemeleri</string>
     <string name="ua_channel_id">Kanal kimliği</string>
-    
+
 </resources>

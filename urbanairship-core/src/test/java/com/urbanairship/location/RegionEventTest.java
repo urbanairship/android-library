@@ -13,7 +13,6 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-
 public class RegionEventTest extends BaseTestCase {
 
     /**
@@ -75,7 +74,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with an empty region ID.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testEmptyRegionID() {
 
         String regionId = "";
@@ -93,7 +92,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with a null region ID.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testNullRegionID() {
 
         String source = createFixedSizeString('b', 255);
@@ -110,7 +109,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with a region ID greater than maximum allowed length.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMaxRegionID() {
 
         String regionId = createFixedSizeString('a', 256);
@@ -128,7 +127,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with an empty source.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testEmptySource() {
 
         String regionId = createFixedSizeString('a', 255);
@@ -143,11 +142,10 @@ public class RegionEventTest extends BaseTestCase {
 
     }
 
-
     /**
      * Test creating a region event with a null source.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testNullSource() {
 
         String regionId = createFixedSizeString('b', 255);
@@ -163,7 +161,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test creating a region event with a source greater than maximum allowed length.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMaxSource() {
 
         String regionId = createFixedSizeString('a', 255);
@@ -181,7 +179,7 @@ public class RegionEventTest extends BaseTestCase {
     /**
      * Test a creating a region event with an invalid boundary event.
      */
-    @Test(expected= IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidBoundaryEvent() {
 
         String regionId = createFixedSizeString('a', 255);
@@ -210,9 +208,9 @@ public class RegionEventTest extends BaseTestCase {
         proximityRegion.setRssi(-59);
 
         RegionEvent event = RegionEvent.newBuilder().setRegionId(regionId)
-                                                  .setSource(source)
-                                                  .setBoundaryEvent(boundaryEvent)
-                                                  .setProximityRegion(proximityRegion).build();
+                                       .setSource(source)
+                                       .setBoundaryEvent(boundaryEvent)
+                                       .setProximityRegion(proximityRegion).build();
 
         EventTestUtils.validateEventValue(event, "region_id", regionId);
         EventTestUtils.validateEventValue(event, "source", source);
@@ -373,4 +371,5 @@ public class RegionEventTest extends BaseTestCase {
 
         return builder.toString();
     }
+
 }

@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaDisplayAdapter;
-import com.urbanairship.iam.assets.Assets;
 
 /**
  * Modal adapter.
@@ -52,4 +51,5 @@ public class ModalAdapter extends MediaDisplayAdapter {
 
         context.startActivity(intent);
     }
+
 }

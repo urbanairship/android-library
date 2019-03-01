@@ -55,4 +55,5 @@ public class InAppMessageSchedule implements Schedule<InAppMessageScheduleInfo> 
     public JsonMap getMetadata() {
         return metadata;
     }
+
 }

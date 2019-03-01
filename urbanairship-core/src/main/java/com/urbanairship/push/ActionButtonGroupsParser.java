@@ -107,9 +107,9 @@ class ActionButtonGroupsParser {
                 TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.UrbanAirshipActionButton);
 
                 NotificationActionButton.Builder builder = NotificationActionButton.newBuilder(buttonId)
-                        .setPerformsInForeground(parser.getAttributeBooleanValue(null, FOREGROUND_ATTRIBUTE, true))
-                        .setIcon(typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_icon, 0))
-                        .setDescription(parser.getAttributeValue(null, DESCRIPTION_ATTRIBUTE));
+                                                                                   .setPerformsInForeground(parser.getAttributeBooleanValue(null, FOREGROUND_ATTRIBUTE, true))
+                                                                                   .setIcon(typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_icon, 0))
+                                                                                   .setDescription(parser.getAttributeValue(null, DESCRIPTION_ATTRIBUTE));
 
                 int labelId = typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_label, 0);
                 if (labelId != 0) {
@@ -129,7 +129,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.END_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 NotificationActionButtonGroup group = groupBuilder.build();
                 if (group.getNotificationActionButtons().isEmpty()) {
-                    Logger.error("%s %s missing action buttons.",BUTTON_GROUP_TAG, groupId);
+                    Logger.error("%s %s missing action buttons.", BUTTON_GROUP_TAG, groupId);
                     continue;
                 }
 

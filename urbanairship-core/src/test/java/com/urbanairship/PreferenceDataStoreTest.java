@@ -136,4 +136,5 @@ public class PreferenceDataStoreTest extends BaseTestCase {
         testPrefs.put("value", testObject);
         assertTrue(testPrefs.getJsonValue("value").isNull());
     }
+
 }

@@ -18,7 +18,6 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-
 public class AssociatedIdentifiersTest extends BaseTestCase {
 
     private AssociatedIdentifiers identifiers;
@@ -146,4 +145,5 @@ public class AssociatedIdentifiersTest extends BaseTestCase {
         assertEquals(0, idsToRemove.size());
         assertTrue(clear);
     }
+
 }

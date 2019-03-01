@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.fullscreen;
 
-
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -15,7 +14,6 @@ import com.urbanairship.iam.MediaDisplayAdapter;
  * Full screen adapter.
  */
 public class FullScreenAdapter extends MediaDisplayAdapter {
-
 
     /**
      * Default constructor.
@@ -43,7 +41,6 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
         return new FullScreenAdapter(message, displayContent);
     }
 
-
     @Override
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
         Intent intent = new Intent(context, FullScreenActivity.class)
@@ -54,4 +51,5 @@ public class FullScreenAdapter extends MediaDisplayAdapter {
 
         context.startActivity(intent);
     }
+
 }

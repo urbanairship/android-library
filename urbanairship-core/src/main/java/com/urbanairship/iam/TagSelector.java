@@ -262,7 +262,6 @@ public class TagSelector implements JsonSerializable {
         return apply(tags, EMPTY_TAG_GROUPS);
     }
 
-
     /**
      * Applies the tag selector to a collection of tags.
      *
@@ -306,7 +305,6 @@ public class TagSelector implements JsonSerializable {
                 return false;
         }
     }
-
 
     /**
      * Checks if the selector defines any tag groups.
@@ -394,4 +392,5 @@ public class TagSelector implements JsonSerializable {
     public String toString() {
         return toJsonValue().toString();
     }
+
 }

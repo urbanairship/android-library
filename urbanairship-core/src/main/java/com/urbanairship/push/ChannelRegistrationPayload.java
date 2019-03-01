@@ -19,6 +19,7 @@ import java.util.Set;
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
  */
 class ChannelRegistrationPayload implements JsonSerializable {
+
     static final String CHANNEL_KEY = "channel";
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String OPT_IN_KEY = "opt_in";
@@ -45,11 +46,11 @@ class ChannelRegistrationPayload implements JsonSerializable {
     private final String language;
     private final String country;
 
-
     /**
      * Builds the ChannelRegistrationPayload
      */
     static class Builder {
+
         private boolean optIn;
         private boolean backgroundEnabled;
         private String deviceType;
@@ -85,7 +86,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
             this.backgroundEnabled = enabled;
             return this;
         }
-
 
         /**
          * Set the device type
@@ -173,7 +173,6 @@ class ChannelRegistrationPayload implements JsonSerializable {
             return this;
         }
 
-
         /**
          * Set the apid
          *
@@ -190,6 +189,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
         ChannelRegistrationPayload build() {
             return new ChannelRegistrationPayload(this);
         }
+
     }
 
     private ChannelRegistrationPayload(Builder builder) {
@@ -225,12 +225,10 @@ class ChannelRegistrationPayload implements JsonSerializable {
             channel.put(TAGS_KEY, JsonValue.wrapOpt(tags).getList());
         }
 
-
         // Identity hints
         JsonMap.Builder identityHints = JsonMap.newBuilder()
                                                .put(USER_ID_KEY, userId)
                                                .put(APID_KEY, apid);
-
 
         // Full payload
         JsonMap.Builder data = JsonMap.newBuilder()
@@ -352,4 +350,5 @@ class ChannelRegistrationPayload implements JsonSerializable {
                             .setApid(identityHints.opt(APID_KEY).getString())
                             .build();
     }
+
 }

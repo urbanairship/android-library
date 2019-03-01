@@ -14,6 +14,7 @@ import static junit.framework.Assert.assertEquals;
  * {@link ResolutionInfo} tests.
  */
 public class ResolutionInfoTest extends BaseTestCase {
+
     @Test
     public void testJson() throws JsonException {
         ButtonInfo button = ButtonInfo.newBuilder()

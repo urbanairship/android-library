@@ -64,7 +64,6 @@ public class RemoteConfigManager extends AirshipComponent {
         this.moduleAdapter = moduleAdapter;
     }
 
-
     @Override
     protected void init() {
         super.init();
@@ -109,7 +108,6 @@ public class RemoteConfigManager extends AirshipComponent {
                     }
                     continue;
                 }
-
 
                 // Treat it like its config
                 if (!config.containsKey(key)) {

@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,6 +16,7 @@ import com.urbanairship.richpush.RichPushInbox;
  * Message Center implementation.
  */
 public class MessageCenter extends AirshipComponent {
+
     private RichPushInbox.Predicate predicate;
 
     /**
@@ -49,4 +49,5 @@ public class MessageCenter extends AirshipComponent {
     public void setPredicate(@Nullable RichPushInbox.Predicate predicate) {
         this.predicate = predicate;
     }
+
 }

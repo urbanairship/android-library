@@ -14,7 +14,7 @@ import com.urbanairship.push.PushMessage;
 public class SampleAirshipReceiver extends AirshipReceiver {
 
     private static final String TAG = "SampleAirshipReceiver";
-    
+
     /**
      * Intent action sent as a local broadcast to update the channel.
      */
@@ -72,4 +72,5 @@ public class SampleAirshipReceiver extends AirshipReceiver {
     protected void onNotificationDismissed(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {
         Log.i(TAG, "Notification dismissed. Alert: " + notificationInfo.getMessage().getAlert() + ". Notification ID: " + notificationInfo.getNotificationId());
     }
+
 }

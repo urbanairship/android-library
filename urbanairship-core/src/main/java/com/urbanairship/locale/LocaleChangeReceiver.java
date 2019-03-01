@@ -11,6 +11,7 @@ import com.urbanairship.Autopilot;
 
 /**
  * Broadcast receiver that listens for {@link Intent#ACTION_LOCALE_CHANGED}.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -25,4 +26,5 @@ public class LocaleChangeReceiver extends BroadcastReceiver {
         Autopilot.automaticTakeOff(context);
         LocaleManager.shared(context).notifyLocaleChanged();
     }
+
 }

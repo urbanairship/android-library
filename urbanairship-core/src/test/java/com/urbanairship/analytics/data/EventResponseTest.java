@@ -3,7 +3,6 @@
 package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.analytics.data.EventResponse;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;
@@ -90,7 +89,7 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES /1024));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES / 1024));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxBatchSize(),
@@ -181,4 +180,5 @@ public class EventResponseTest extends BaseTestCase {
                 eventResponse.getMinBatchInterval(),
                 EventResponse.MIN_BATCH_INTERVAL_MS + 1);
     }
+
 }

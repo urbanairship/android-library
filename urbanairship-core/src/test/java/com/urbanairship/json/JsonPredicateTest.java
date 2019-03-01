@@ -217,12 +217,12 @@ public class JsonPredicateTest extends BaseTestCase {
                                         .build();
 
         JsonPredicate not = JsonPredicate.newBuilder()
-                .setPredicateType(JsonPredicate.NOT_PREDICATE_TYPE)
-                .addMatcher(JsonMatcher.newBuilder()
-                           .setKey("tail")
-                           .setValueMatcher(ValueMatcher.newNumberRangeMatcher(0.0, 2.0))
-                           .build())
-                .build();
+                                         .setPredicateType(JsonPredicate.NOT_PREDICATE_TYPE)
+                                         .addMatcher(JsonMatcher.newBuilder()
+                                                                .setKey("tail")
+                                                                .setValueMatcher(ValueMatcher.newNumberRangeMatcher(0.0, 2.0))
+                                                                .build())
+                                         .build();
 
         JsonPredicate and = JsonPredicate.newBuilder()
                                          .setPredicateType(JsonPredicate.AND_PREDICATE_TYPE)
@@ -288,7 +288,6 @@ public class JsonPredicateTest extends BaseTestCase {
                                                                   .build())
                                            .addPredicate(andOr)
                                            .build();
-
 
         JsonPredicate not = JsonPredicate.newBuilder()
                                          .setPredicateType(JsonPredicate.NOT_PREDICATE_TYPE)
@@ -364,7 +363,6 @@ public class JsonPredicateTest extends BaseTestCase {
                                            .addPredicate(andOr)
                                            .build();
 
-
         JsonPredicate not = JsonPredicate.newBuilder()
                                          .setPredicateType(JsonPredicate.NOT_PREDICATE_TYPE)
                                          .addPredicate(notOr)
@@ -378,11 +376,11 @@ public class JsonPredicateTest extends BaseTestCase {
                                         .build();
 
         JsonPredicate predicate = JsonPredicate.newBuilder()
-                                         .setPredicateType(JsonPredicate.AND_PREDICATE_TYPE)
-                                         .addMatcher(nameMatcher)
-                                         .addMatcher(sleepMatcher)
-                                         .addPredicate(or)
-                                         .build();
+                                               .setPredicateType(JsonPredicate.AND_PREDICATE_TYPE)
+                                               .addMatcher(nameMatcher)
+                                               .addMatcher(sleepMatcher)
+                                               .addPredicate(or)
+                                               .build();
 
         assertEquals(predicate, JsonPredicate.parse(predicate.toJsonValue()));
     }
@@ -393,8 +391,8 @@ public class JsonPredicateTest extends BaseTestCase {
     @Test
     public void testParseJsonMatcher() throws JsonException {
         JsonMatcher matcher = JsonMatcher.newBuilder()
-                .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("mittens")))
-                .build();
+                                         .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("mittens")))
+                                         .build();
 
         JsonPredicate predicate = JsonPredicate.parse(matcher.toJsonValue());
         assertNotNull(predicate);
@@ -416,4 +414,5 @@ public class JsonPredicateTest extends BaseTestCase {
     public void testParseInvalidJson() throws JsonException {
         JsonPredicate.parse(JsonValue.wrap("not valid"));
     }
+
 }

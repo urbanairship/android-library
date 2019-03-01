@@ -54,9 +54,9 @@ public class NamedUserApiClientTest extends BaseTestCase {
     @Test
     public void testAssociateSucceeds() {
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\": true}")
-                .build();
+                                       .setResponseMessage("OK")
+                                       .setResponseBody("{ \"ok\": true}")
+                                       .build();
 
         Response response = client.associate(fakeNamedUserId, fakeChannelId);
 
@@ -70,9 +70,9 @@ public class NamedUserApiClientTest extends BaseTestCase {
     @Test
     public void testDisassociateSucceeds() {
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\": true}")
-                .build();
+                                       .setResponseMessage("OK")
+                                       .setResponseBody("{ \"ok\": true}")
+                                       .build();
 
         Response response = client.disassociate(fakeChannelId);
 
@@ -95,7 +95,6 @@ public class NamedUserApiClientTest extends BaseTestCase {
                 .setHostURL("files://thisIsMalformed")
                 .build();
 
-
         client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
 
         Response response = client.associate(fakeNamedUserId, fakeChannelId);
@@ -104,4 +103,5 @@ public class NamedUserApiClientTest extends BaseTestCase {
         response = client.disassociate(fakeChannelId);
         assertNull("Response should be null", response);
     }
+
 }

@@ -89,4 +89,5 @@ class EventResponse {
         }
         return MIN_BATCH_INTERVAL_MS;
     }
+
 }

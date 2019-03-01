@@ -58,4 +58,5 @@ public class TagsViewModel extends ViewModel {
     private void updateList() {
         tagsLiveData.setValue(new ArrayList<>(tags));
     }
+
 }

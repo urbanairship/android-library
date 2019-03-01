@@ -142,7 +142,6 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
         return list.hashCode();
     }
 
-
     /**
      * Returns the JsonList as a JSON encoded String.
      *
@@ -181,4 +180,5 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
     public JsonValue toJsonValue() {
         return JsonValue.wrap(this);
     }
+
 }

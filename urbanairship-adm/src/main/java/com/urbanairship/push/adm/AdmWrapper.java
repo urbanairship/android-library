@@ -46,4 +46,5 @@ class AdmWrapper {
     public static String getRegistrationId(Context context) {
         return new ADM(context).getRegistrationId();
     }
+
 }

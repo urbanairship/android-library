@@ -50,5 +50,7 @@ public class EventTest extends BaseTestCase {
         protected JsonMap getEventData() {
             return JsonMap.newBuilder().put("some key", "some value").build();
         }
+
     }
+
 }

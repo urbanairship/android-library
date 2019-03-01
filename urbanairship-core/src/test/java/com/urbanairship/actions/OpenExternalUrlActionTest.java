@@ -23,14 +23,12 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
     private OpenExternalUrlAction action;
     private Whitelist whitelist;
 
-
     @Before
     public void setup() {
         action = new OpenExternalUrlAction();
         whitelist = UAirship.shared().getWhitelist();
         whitelist.setOpenUrlWhitelistingEnabled(true);
     }
-
 
     /**
      * Test accepts arguments
@@ -90,4 +88,5 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
         assertEquals(Intent.ACTION_VIEW, intent.getAction());
         assertEquals(expectedUri, intent.getDataString());
     }
+
 }

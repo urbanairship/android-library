@@ -10,8 +10,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
-import org.json.JSONException;
-
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_CUSTOM} in-app message.
  */
@@ -81,4 +79,5 @@ public class CustomDisplayContent implements DisplayContent {
     public int hashCode() {
         return value.hashCode();
     }
+
 }

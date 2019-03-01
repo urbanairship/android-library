@@ -14,7 +14,6 @@ import com.urbanairship.json.JsonMap;
  */
 class ScreenTrackingEvent extends Event {
 
-
     /**
      * The screen tracking type key.
      */
@@ -109,4 +108,5 @@ class ScreenTrackingEvent extends Event {
                       .put(PREVIOUS_SCREEN_KEY, previousScreen)
                       .build();
     }
+
 }

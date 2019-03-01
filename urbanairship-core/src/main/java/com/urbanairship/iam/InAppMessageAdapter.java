@@ -18,10 +18,9 @@ import java.lang.annotation.RetentionPolicy;
  */
 public interface InAppMessageAdapter {
 
-    @IntDef({OK, RETRY, CANCEL})
+    @IntDef({ OK, RETRY, CANCEL })
     @Retention(RetentionPolicy.SOURCE)
-    @interface PrepareResult {
-    }
+    @interface PrepareResult {}
 
     /**
      * Indicates a successful result.
@@ -51,15 +50,14 @@ public interface InAppMessageAdapter {
          */
         @NonNull
         InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
-    }
 
+    }
 
     /**
      * Called to prepare the message to be displayed.
      *
      * @param context The application context.
      * @param assets Any assets that were prepared for the message.
-     *
      * @return {@link #OK} if the in-app message is ready to be displayed, {@link #RETRY} if the message
      * was unable to be prepared and needs to be retried, or {@link #CANCEL} if the message was unable to
      * be prepared and should be canceled.
@@ -93,4 +91,5 @@ public interface InAppMessageAdapter {
      */
     @WorkerThread
     void onFinish(@NonNull Context context);
+
 }

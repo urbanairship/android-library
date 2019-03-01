@@ -10,6 +10,7 @@ import com.urbanairship.Logger;
  * A CircularRegion defines a circular region with a radius, latitude and longitude.
  */
 public class CircularRegion {
+
     /**
      * The maximum radius for a region event in meters.
      */
@@ -96,4 +97,5 @@ public class CircularRegion {
 
         return true;
     }
+
 }

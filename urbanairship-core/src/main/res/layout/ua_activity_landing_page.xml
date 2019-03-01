@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             tools:ignore="MergeRootFrame"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:paddingBottom="32dp"
-             android:paddingEnd="16dp"
-             android:paddingLeft="32dp"
-             android:paddingRight="16dp"
-             android:paddingStart="32dp"
-             android:paddingTop="16dp"
-             tools:context="com.urbanairship.actions.LandingPageActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MergeRootFrame"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="32dp"
+    android:paddingEnd="16dp"
+    android:paddingLeft="32dp"
+    android:paddingRight="16dp"
+    android:paddingStart="32dp"
+    android:paddingTop="16dp"
+    tools:context="com.urbanairship.actions.LandingPageActivity">
 
 
     <FrameLayout
@@ -28,14 +28,14 @@
             android:layout_height="fill_parent"
             android:layout_marginRight="16dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="16dp" />
 
         <!-- Optional progress view with id @android:id/progress -->
         <ProgressBar
             android:id="@android:id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
 
         <!-- Optional close button -->
         <ImageButton
@@ -48,7 +48,7 @@
             android:onClick="onCloseButtonClick"
             android:padding="8dp"
             android:src="@drawable/ua_ic_close"
-            tools:ignore="OnClick"/>
+            tools:ignore="OnClick" />
 
     </FrameLayout>
 

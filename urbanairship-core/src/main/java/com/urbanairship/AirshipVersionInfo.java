@@ -28,4 +28,5 @@ public interface AirshipVersionInfo {
      */
     @NonNull
     String getPackageVersion();
+
 }

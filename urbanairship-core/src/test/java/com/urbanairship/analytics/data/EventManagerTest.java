@@ -1,11 +1,11 @@
 package com.urbanairship.analytics.data;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.location.RegionEvent;
@@ -28,8 +28,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 public class EventManagerTest extends BaseTestCase {
+
     private EventManager eventManager;
     private EventApiClient mockClient;
     private EventResolver mockEventResolver;
@@ -47,14 +47,14 @@ public class EventManagerTest extends BaseTestCase {
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
         eventManager = EventManager.newBuilder()
-                .setEventResolver(mockEventResolver)
-                .setActivityMonitor(mockActivityMonitor)
-                .setApiClient(mockClient)
-                .setPreferenceDataStore(dataStore)
-                .setJobDispatcher(mockDispatcher)
-                .setBackgroundReportingIntervalMS(400)
-                .setJobAction("upload")
-                .build();
+                                   .setEventResolver(mockEventResolver)
+                                   .setActivityMonitor(mockActivityMonitor)
+                                   .setApiClient(mockClient)
+                                   .setPreferenceDataStore(dataStore)
+                                   .setJobDispatcher(mockDispatcher)
+                                   .setBackgroundReportingIntervalMS(400)
+                                   .setJobAction("upload")
+                                   .build();
     }
 
     /**
@@ -99,7 +99,6 @@ public class EventManagerTest extends BaseTestCase {
             }
         }));
     }
-
 
     /**
      * Tests sending events
@@ -188,7 +187,6 @@ public class EventManagerTest extends BaseTestCase {
 
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
 
-
         // Start the upload process
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(null);
 
@@ -234,4 +232,5 @@ public class EventManagerTest extends BaseTestCase {
         eventManager.deleteEvents();
         verify(mockEventResolver).deleteAllEvents();
     }
+
 }

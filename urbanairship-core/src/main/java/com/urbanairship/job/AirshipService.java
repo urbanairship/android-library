@@ -5,7 +5,6 @@ package com.urbanairship.job;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.TrafficStats;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -16,10 +15,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.util.AirshipHandlerThread;
-import com.urbanairship.util.AirshipThreadFactory;
 
 /**
  * Urban Airship Service.
@@ -49,8 +46,8 @@ public class AirshipService extends Service {
     private int lastStartId = 0;
     private int runningJobs;
 
-
     private final class IncomingHandler extends Handler {
+
         IncomingHandler(Looper looper) {
             super(looper);
         }
@@ -67,6 +64,7 @@ public class AirshipService extends Service {
                     break;
             }
         }
+
     }
 
     @Override
@@ -127,16 +125,16 @@ public class AirshipService extends Service {
         runningJobs++;
 
         Job job = Job.newBuilder(jobInfo)
-                .setCallback(new Job.Callback() {
-                    @Override
-                    public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
-                        handler.sendMessage(msg);
-                        if (result == JobInfo.JOB_RETRY) {
-                            JobDispatcher.shared(getApplicationContext()).reschedule(jobInfo, intent.getBundleExtra(EXTRA_RESCHEDULE_EXTRAS));
-                        }
-                    }
-                })
-                .build();
+                     .setCallback(new Job.Callback() {
+                         @Override
+                         public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
+                             handler.sendMessage(msg);
+                             if (result == JobInfo.JOB_RETRY) {
+                                 JobDispatcher.shared(getApplicationContext()).reschedule(jobInfo, intent.getBundleExtra(EXTRA_RESCHEDULE_EXTRAS));
+                             }
+                         }
+                     })
+                     .build();
 
         Logger.verbose("AirshipService - Running job: %s", jobInfo);
         Job.EXECUTOR.execute(job);

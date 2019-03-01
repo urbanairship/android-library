@@ -42,4 +42,5 @@ public class SerialSubscription extends Subscription {
             currentSubscription.cancel();
         }
     }
+
 }

@@ -173,6 +173,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
      * Builder class.
      */
     public static class Builder {
+
         private String type = OR_PREDICATE_TYPE;
         private final List<Predicate<JsonSerializable>> items = new ArrayList<>();
 
@@ -232,6 +233,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
 
             return new JsonPredicate(this);
         }
+
     }
 
     @Override
@@ -258,4 +260,5 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
         result = 31 * result + (type != null ? type.hashCode() : 0);
         return result;
     }
+
 }

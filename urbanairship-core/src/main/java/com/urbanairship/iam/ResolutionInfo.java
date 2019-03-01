@@ -1,7 +1,6 @@
 package com.urbanairship.iam;
 /* Copyright Urban Airship and Contributors */
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
@@ -31,7 +30,6 @@ public final class ResolutionInfo implements JsonSerializable {
 
     /**
      * Message click resolution
-
      */
     @NonNull
     public static final String RESOLUTION_MESSAGE_CLICK = "message_click";
@@ -212,4 +210,5 @@ public final class ResolutionInfo implements JsonSerializable {
         result = 31 * result + (buttonInfo != null ? buttonInfo.hashCode() : 0);
         return result;
     }
+
 }

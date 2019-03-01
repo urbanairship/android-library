@@ -2,7 +2,6 @@
 
 package com.urbanairship.util;
 
-
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -69,4 +68,5 @@ public class UriUtils {
 
         return Uri.parse(String.valueOf(value));
     }
+
 }

@@ -16,4 +16,5 @@ public interface OnRequestDisplayCoordinatorCallback {
      */
     @Nullable
     DisplayCoordinator onRequestDisplayCoordinator(@NonNull InAppMessage message);
+
 }

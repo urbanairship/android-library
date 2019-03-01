@@ -185,11 +185,13 @@ public class MediaInfo implements JsonSerializable {
      * Media info builder.
      */
     public static class Builder {
+
         private String url;
         private String type;
         private String description;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(MediaInfo mediaInfo) {
             this.url = mediaInfo.url;
@@ -208,7 +210,6 @@ public class MediaInfo implements JsonSerializable {
             this.url = url;
             return this;
         }
-
 
         /**
          * Sets the media type.
@@ -234,7 +235,6 @@ public class MediaInfo implements JsonSerializable {
             return this;
         }
 
-
         /**
          * Builds the media info.
          *
@@ -248,5 +248,7 @@ public class MediaInfo implements JsonSerializable {
             Checks.checkArgument(!UAStringUtil.isEmpty(description), "Missing description");
             return new MediaInfo(this);
         }
+
     }
+
 }

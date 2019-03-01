@@ -23,7 +23,6 @@ import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.location.LocationRequestOptions;
 
-
 /**
  * Fragment that lets the user get its current location using
  * the Urban Airship location APIs.
@@ -78,8 +77,8 @@ public class LocationFragment extends Fragment {
         progress.setVisibility(View.VISIBLE);
 
         LocationRequestOptions options = LocationRequestOptions.newBuilder()
-                .setPriority(getPriority())
-                .build();
+                                                               .setPriority(getPriority())
+                                                               .build();
 
         pendingResult = UAirship.shared()
                                 .getLocationManager()
@@ -141,4 +140,5 @@ public class LocationFragment extends Fragment {
 
         return LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
     }
+
 }

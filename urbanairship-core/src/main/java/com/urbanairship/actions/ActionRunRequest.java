@@ -36,6 +36,7 @@ import java.util.concurrent.Semaphore;
  * convenient way of running actions from another action.
  */
 public class ActionRunRequest {
+
     private ActionRegistry registry;
     private String actionName;
     private Action action;
@@ -166,6 +167,7 @@ public class ActionRunRequest {
 
     /**
      * Sets the executor.
+     *
      * @param executor The executor.
      * @return The request object.
      * @hide
@@ -372,5 +374,7 @@ public class ActionRunRequest {
          * @param result The action result.
          */
         abstract void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result);
+
     }
+
 }

@@ -140,4 +140,5 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
     public void testInServerErrorRangeNegative() {
         assertFalse("UAHttpStatusUtil inServerErrorRange should return false.", UAHttpStatusUtil.inServerErrorRange(-1));
     }
+
 }

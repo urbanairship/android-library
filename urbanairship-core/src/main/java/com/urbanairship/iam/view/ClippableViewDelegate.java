@@ -1,4 +1,5 @@
 /* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.iam.view;
 
 import android.graphics.Canvas;
@@ -92,4 +93,5 @@ class ClippableViewDelegate {
             this.borderRadius = borderRadiusPixels;
         }
     }
+
 }

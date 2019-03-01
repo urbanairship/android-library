@@ -6,13 +6,13 @@
             description="thumbs up emoji"
             foreground="false"
             android:label="@string/ua_emoji_thumbs_up"
-            id="up"/>
+            id="up" />
 
         <UrbanAirshipActionButton
             description="thumbs down emoji"
             android:label="@string/ua_emoji_thumbs_down"
             foreground="false"
-            id="down"/>
+            id="down" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -23,13 +23,13 @@
             foreground="false"
             android:label="@string/ua_emoji_happy"
 
-            id="happy"/>
+            id="happy" />
 
         <UrbanAirshipActionButton
             description="sad emoji"
             foreground="false"
             android:label="@string/ua_emoji_sad"
-            id="sad"/>
+            id="sad" />
 
     </UrbanAirshipActionButtonGroup>
 </resources>

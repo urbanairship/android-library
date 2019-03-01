@@ -28,4 +28,5 @@ public interface CachePolicyDelegate {
      * @return {@code true} to clear the cache, otherwise {@code false}.
      */
     boolean shouldPersistCacheAfterDisplay(@NonNull InAppMessageSchedule schedule);
+
 }

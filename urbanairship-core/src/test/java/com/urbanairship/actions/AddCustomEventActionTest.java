@@ -30,11 +30,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 public class AddCustomEventActionTest extends BaseTestCase {
 
     AddCustomEventAction action;
-    @Action.Situation int[] acceptedSituations;
+    @Action.Situation
+    int[] acceptedSituations;
     Analytics analytics;
     RichPushMessage message;
 
@@ -54,7 +54,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         analytics = mock(Analytics.class);
         TestApplication.getApplication().setAnalytics(analytics);
-
 
         RichPushInbox richPushInbox = mock(RichPushInbox.class);
         message = mock(RichPushMessage.class);
@@ -184,7 +183,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
-
         ActionResult result = action.perform(args);
         assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
@@ -214,7 +212,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
         ActionResult result = action.run(args);
         assertEquals("Action should've fail", ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
     }
-
 
     /**
      * Test performing with the PushMessage metadata creates an event with the send id from the message.
@@ -308,5 +305,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
         assertEquals("true", array.get(1).getString());
         assertEquals("124", array.get(2).getString());
     }
+
 }
 

@@ -23,16 +23,13 @@ import java.lang.annotation.RetentionPolicy;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface AutomationDriver<T extends Schedule> {
 
-    @IntDef({PREPARE_RESULT_CONTINUE, PREPARE_RESULT_CANCEL, PREPARE_RESULT_PENALIZE, PREPARE_RESULT_SKIP, PREPARE_RESULT_INVALIDATE})
+    @IntDef({ PREPARE_RESULT_CONTINUE, PREPARE_RESULT_CANCEL, PREPARE_RESULT_PENALIZE, PREPARE_RESULT_SKIP, PREPARE_RESULT_INVALIDATE })
     @Retention(RetentionPolicy.SOURCE)
-    @interface PrepareResult {
-    }
+    @interface PrepareResult {}
 
-
-    @IntDef({READY_RESULT_CONTINUE, READY_RESULT_NOT_READY, READY_RESULT_INVALIDATE})
+    @IntDef({ READY_RESULT_CONTINUE, READY_RESULT_NOT_READY, READY_RESULT_INVALIDATE })
     @Retention(RetentionPolicy.SOURCE)
-    @interface ReadyResult {
-    }
+    @interface ReadyResult {}
 
     /**
      * Indicates a successful result.
@@ -75,7 +72,6 @@ public interface AutomationDriver<T extends Schedule> {
      */
     int READY_RESULT_INVALIDATE = -1;
 
-
     /**
      * The execution callback.
      */
@@ -85,6 +81,7 @@ public interface AutomationDriver<T extends Schedule> {
          * Call when the schedule is finished executing.
          */
         void onFinish();
+
     }
 
     /**
@@ -96,6 +93,7 @@ public interface AutomationDriver<T extends Schedule> {
          * Call when the schedule is finished preparing the schedule.
          */
         void onFinish(@PrepareResult int result);
+
     }
 
     /**
@@ -141,4 +139,5 @@ public interface AutomationDriver<T extends Schedule> {
      */
     @NonNull
     T createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) throws ParseScheduleException;
+
 }

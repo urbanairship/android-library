@@ -66,7 +66,6 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         return this.displayInterval;
     }
 
-
     @MainThread
     @Override
     public boolean isReady() {
@@ -98,4 +97,5 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         currentMessage = null;
         mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
+
 }

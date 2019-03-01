@@ -121,7 +121,6 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();

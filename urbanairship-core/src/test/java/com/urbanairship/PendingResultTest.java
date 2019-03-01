@@ -84,5 +84,7 @@ public class PendingResultTest extends BaseTestCase {
         public void onResult(@Nullable T result) {
             this.results.add(result);
         }
+
     }
+
 }

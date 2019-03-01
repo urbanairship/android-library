@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.urbanairship"
-          android:versionCode="1"
-          android:versionName="1.0">
+    package="com.urbanairship"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="25"/>
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="25" />
 
-    <application android:name=".TestApplication"/>
+    <application android:name=".TestApplication" />
 
 </manifest>

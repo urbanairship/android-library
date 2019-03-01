@@ -4,9 +4,6 @@ package com.urbanairship.json;
 
 import com.urbanairship.BaseTestCase;
 
-import junit.framework.Assert;
-
-import org.json.JSONArray;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -29,52 +26,52 @@ public class ValueMatcherTest extends BaseTestCase {
         ValueMatcher matcher = ValueMatcher.newValueMatcher(value);
 
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(6);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         value = JsonValue.wrap(true);
         matcher = ValueMatcher.newValueMatcher(value);
 
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(false);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         value = JsonValue.wrap("test");
         matcher = ValueMatcher.newValueMatcher(value);
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap("TEST");
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap("wrong");
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         value = JsonValue.wrap(5.0);
         matcher = ValueMatcher.newValueMatcher(value);
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(6.0);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         value = JsonValue.wrap(new Object[] { "first-value", "second-value", null });
         assertNotNull(value);
@@ -82,15 +79,15 @@ public class ValueMatcherTest extends BaseTestCase {
         assertNotNull(matcher);
 
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(new Object[] { "FIRST-Value", "Second-Value", null });
         assertNotNull(value);
 
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         Map<String, Object> map = new HashMap<>();
         map.put("null-key", null);
@@ -103,8 +100,8 @@ public class ValueMatcherTest extends BaseTestCase {
         assertNotNull(matcher);
 
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         map = new HashMap<>();
         map.put("null-key", null);
@@ -115,8 +112,8 @@ public class ValueMatcherTest extends BaseTestCase {
         assertNotNull(value);
 
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
     }
 
     @Test
@@ -126,39 +123,39 @@ public class ValueMatcherTest extends BaseTestCase {
         JsonValue value = JsonValue.wrap(6.0);
         ValueMatcher matcher = ValueMatcher.newNumberRangeMatcher(min, max);
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(4.0);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         min = 5.0;
         max = 7.0;
         value = JsonValue.wrap(6.0);
         matcher = ValueMatcher.newNumberRangeMatcher(min, max);
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(4.0);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         min = null;
         max = 7.0;
         value = JsonValue.wrap(6.0);
         matcher = ValueMatcher.newNumberRangeMatcher(min, max);
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         value = JsonValue.wrap(8.0);
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
     }
 
     @Test
@@ -166,23 +163,23 @@ public class ValueMatcherTest extends BaseTestCase {
         JsonValue value = JsonValue.NULL;
         ValueMatcher matcher = ValueMatcher.newIsAbsentMatcher();
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         matcher = ValueMatcher.newIsPresentMatcher();
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
 
         value = JsonValue.wrap("value");
         assertTrue(matcher.apply(value));
-        assertTrue(matcher.apply(value,false));
-        assertTrue(matcher.apply(value,true));
+        assertTrue(matcher.apply(value, false));
+        assertTrue(matcher.apply(value, true));
 
         matcher = ValueMatcher.newIsAbsentMatcher();
         assertFalse(matcher.apply(value));
-        assertFalse(matcher.apply(value,false));
-        assertFalse(matcher.apply(value,true));
+        assertFalse(matcher.apply(value, false));
+        assertFalse(matcher.apply(value, true));
     }
 
     @Test
@@ -190,12 +187,12 @@ public class ValueMatcherTest extends BaseTestCase {
         ValueMatcher matcher = ValueMatcher.newVersionMatcher("1.+");
 
         assertTrue(matcher.apply(JsonValue.wrap("1.2.4")));
-        assertTrue(matcher.apply(JsonValue.wrap("1.2.4"),false));
-        assertTrue(matcher.apply(JsonValue.wrap("1.2.4"),true));
+        assertTrue(matcher.apply(JsonValue.wrap("1.2.4"), false));
+        assertTrue(matcher.apply(JsonValue.wrap("1.2.4"), true));
 
         assertFalse(matcher.apply(JsonValue.wrap("2.0.0")));
-        assertFalse(matcher.apply(JsonValue.wrap("2.0.0"),false));
-        assertFalse(matcher.apply(JsonValue.wrap("2.0.0"),true));
+        assertFalse(matcher.apply(JsonValue.wrap("2.0.0"), false));
+        assertFalse(matcher.apply(JsonValue.wrap("2.0.0"), true));
     }
 
     @Test
@@ -207,11 +204,11 @@ public class ValueMatcherTest extends BaseTestCase {
                                                .build();
 
         JsonPredicate ignoreCasePredicate = JsonPredicate.newBuilder()
-                                               .addMatcher(JsonMatcher.newBuilder()
-                                                                      .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt("bingo")))
-                                                                      .setIgnoreCase(true)
-                                                                      .build())
-                                               .build();
+                                                         .addMatcher(JsonMatcher.newBuilder()
+                                                                                .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt("bingo")))
+                                                                                .setIgnoreCase(true)
+                                                                                .build())
+                                                         .build();
 
         JsonValue elements = JsonValue.wrapOpt(Arrays.asList("that's", "a", "bingo"));
 
@@ -262,7 +259,6 @@ public class ValueMatcherTest extends BaseTestCase {
 
         matcher = ValueMatcher.newIsPresentMatcher();
         assertEquals(matcher, ValueMatcher.parse(json));
-
 
         json = JsonMap.newBuilder()
                       .put("equals", "string")
@@ -315,16 +311,13 @@ public class ValueMatcherTest extends BaseTestCase {
                                                                       .build())
                                                .build();
 
-
         JsonValue json = JsonMap.newBuilder()
                                 .put("array_contains", predicate)
                                 .build()
                                 .toJsonValue();
 
-
         ValueMatcher matcher = ValueMatcher.newArrayContainsMatcher(predicate);
         assertEquals(matcher, ValueMatcher.parse(json));
-
 
         json = JsonMap.newBuilder()
                       .put("array_contains", predicate)
@@ -332,8 +325,8 @@ public class ValueMatcherTest extends BaseTestCase {
                       .build()
                       .toJsonValue();
 
-
         matcher = ValueMatcher.newArrayContainsMatcher(predicate, 50);
         assertEquals(matcher, ValueMatcher.parse(json));
     }
+
 }

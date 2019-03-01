@@ -30,7 +30,6 @@ import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.widget.UAWebView;
-import com.urbanairship.widget.UAWebViewClient;
 
 /**
  * HTML in-app message activity.
@@ -223,7 +222,6 @@ public class HtmlActivity extends InAppMessageActivity {
         }
     }
 
-
     /**
      * Loads the page.
      */
@@ -253,4 +251,5 @@ public class HtmlActivity extends InAppMessageActivity {
         error = null;
         webView.loadUrl(url);
     }
+
 }

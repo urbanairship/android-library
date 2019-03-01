@@ -19,4 +19,5 @@ public interface Predicate<T> {
      */
     @SuppressLint("UnknownNullness")
     boolean apply(T object);
+
 }

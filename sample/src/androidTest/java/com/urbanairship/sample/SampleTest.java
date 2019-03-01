@@ -324,7 +324,7 @@ public class SampleTest {
         // Wait for in-app message to be displayed
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 
-        clickAndVerifyTagAdded("Yes","YES_INTERACTIVE_BUTTON_TAG");
+        clickAndVerifyTagAdded("Yes", "YES_INTERACTIVE_BUTTON_TAG");
 
         // Test in-app message with interactive buttons
         pushSender.send(pushPayload);
@@ -781,5 +781,7 @@ public class SampleTest {
                 channelUpdateLock.wait(10000);
             }
         }
+
     }
+
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.job;
 
-
 /**
  * Exceptions thrown by the Schedulers.
  */
@@ -26,4 +25,5 @@ class SchedulerException extends Exception {
     SchedulerException(String message) {
         super(message);
     }
+
 }

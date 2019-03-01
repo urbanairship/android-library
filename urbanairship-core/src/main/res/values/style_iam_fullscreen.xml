@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Parent Style -->
-    <style name="UrbanAirship.InAppFullscreen"/>
+    <style name="UrbanAirship.InAppFullscreen" />
 
     <!-- Default Activity -->
     <style name="UrbanAirship.InAppFullscreen.Activity">
@@ -10,7 +10,8 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
         <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent
+        </item>
     </style>
 
     <!-- Scroll View - wraps the main layout -->
@@ -26,7 +27,7 @@
     </style>
 
     <!-- Layout overrides for HEADER_MEDIA_BODY templates -->
-    <style name="UrbanAirship.InAppFullscreen.Layout.HeaderMediaBody"/>
+    <style name="UrbanAirship.InAppFullscreen.Layout.HeaderMediaBody" />
 
     <!-- Layout overrides for HEADER_BODY_MEDIA templates -->
     <style name="UrbanAirship.InAppFullscreen.Layout.HeaderBodyMedia" />
@@ -59,7 +60,7 @@
     </style>
 
     <!-- Media overrides for HEADER_MEDIA_BODY templates -->
-    <style name="UrbanAirship.InAppFullscreen.MediaView.HeaderMediaBody"/>
+    <style name="UrbanAirship.InAppFullscreen.MediaView.HeaderMediaBody" />
 
     <!-- Media overrides for HEADER_BODY_MEDIA templates -->
     <style name="UrbanAirship.InAppFullscreen.MediaView.HeaderBodyMedia" />
@@ -78,10 +79,10 @@
     </style>
 
     <!-- Heading overrides for HEADER_MEDIA_BODY templates -->
-    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderMediaBody"/>
+    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderMediaBody" />
 
     <!-- Heading overrides for HEADER_BODY_MEDIA templates -->
-    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderBodyMedia"/>
+    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderBodyMedia" />
 
     <!-- Heading overrides for MEDIA_HEADER_BODY templates -->
     <style name="UrbanAirship.InAppFullscreen.Heading.MediaHeaderBody">
@@ -105,10 +106,10 @@
     </style>
 
     <!-- Body overrides for HEADER_BODY_MEDIA templates -->
-    <style name="UrbanAirship.InAppFullscreen.Body.HeaderBodyMedia"/>
+    <style name="UrbanAirship.InAppFullscreen.Body.HeaderBodyMedia" />
 
     <!-- Body overrides for MEDIA_HEADER_BODY templates -->
-    <style name="UrbanAirship.InAppFullscreen.Body.MediaHeaderBody"/>
+    <style name="UrbanAirship.InAppFullscreen.Body.MediaHeaderBody" />
 
     <!-- Button Layout -->
     <style name="UrbanAirship.InAppFullscreen.ButtonLayout">

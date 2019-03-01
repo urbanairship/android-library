@@ -81,6 +81,7 @@ public class Whitelist {
      * Interface that defines a callback that can be used to reject whitelisting of a URL.
      */
     public interface OnWhitelistCallback {
+
         /**
          * Called when the url has passed the isWhitelisted() check.
          *
@@ -89,6 +90,7 @@ public class Whitelist {
          * @return <code>true</code> to accept the whitelisting, <code>false</code> to reject the whitelisting.
          */
         boolean acceptWhitelisting(@NonNull String url, @Scope int scope);
+
     }
 
     @Nullable
@@ -398,16 +400,19 @@ public class Whitelist {
             result = 31 * result + (path != null ? path.hashCode() : 0);
             return result;
         }
+
     }
 
     private static class Entry {
+
         private final int scope;
         private final UriPattern pattern;
-
 
         private Entry(UriPattern pattern, @Scope int scope) {
             this.scope = scope;
             this.pattern = pattern;
         }
+
     }
+
 }

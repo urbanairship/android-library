@@ -26,10 +26,9 @@ import java.util.concurrent.Callable;
  */
 public class AssetManager {
 
-    @IntDef({PREPARE_RESULT_OK, PREPARE_RESULT_RETRY, PREPARE_RESULT_CANCEL})
+    @IntDef({ PREPARE_RESULT_OK, PREPARE_RESULT_RETRY, PREPARE_RESULT_CANCEL })
     @Retention(RetentionPolicy.SOURCE)
-    @interface PrepareResult {
-    }
+    public @interface PrepareResult {}
 
     /**
      * Indicates a successful result.
@@ -45,7 +44,6 @@ public class AssetManager {
      * Indicates that the prepare step failed and the schedule should be canceled.
      */
     public static final int PREPARE_RESULT_CANCEL = 2;
-
 
     @Nullable
     private PrepareAssetsDelegate assetsDelegate;
@@ -177,7 +175,6 @@ public class AssetManager {
         assetStorage.clearAssets(schedule.getId());
     }
 
-
     /**
      * Gets the assets for a schedule.
      *
@@ -190,5 +187,6 @@ public class AssetManager {
         Assets assets = activeAssets.get(scheduleId);
         return assets == null ? assetStorage.getAssets(scheduleId) : assets;
     }
+
 }
 

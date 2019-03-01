@@ -113,4 +113,5 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         assertEquals(true, result.get(FetchDeviceInfoAction.LOCATION_ENABLED_KEY).getBoolean(false));
         assertEquals(namedUserId, result.get(FetchDeviceInfoAction.NAMED_USER_ID_KEY).getString());
     }
+
 }

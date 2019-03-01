@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class CustomEventTest extends BaseTestCase {
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -57,11 +58,11 @@ public class CustomEventTest extends BaseTestCase {
         String templateType = createFixedSizeString('e', 255);
 
         CustomEvent event = CustomEvent.newBuilder(eventName)
-                .setTransactionId(transactionId)
-                .setInteraction(interactionType, interactionId)
-                .setEventValue(100.123456)
-                .setTemplateType(templateType)
-                .build();
+                                       .setTransactionId(transactionId)
+                                       .setInteraction(interactionType, interactionId)
+                                       .setEventValue(100.123456)
+                                       .setTemplateType(templateType)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "event_name", eventName);
         EventTestUtils.validateEventValue(event, "event_value", 100123456L);
@@ -106,8 +107,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testInteractionIDExceedsMaxLength() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction("interaction type", createFixedSizeString('a', 256))
-                .build();
+                                       .setInteraction("interaction type", createFixedSizeString('a', 256))
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -118,8 +119,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testInteractionTypeExceedsMaxLength() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction(createFixedSizeString('a', 256), "interaction id")
-                .build();
+                                       .setInteraction(createFixedSizeString('a', 256), "interaction id")
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -130,8 +131,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testTransactionIDExceedsMaxLength() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setTransactionId(createFixedSizeString('a', 256))
-                .build();
+                                       .setTransactionId(createFixedSizeString('a', 256))
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -205,8 +206,8 @@ public class CustomEventTest extends BaseTestCase {
         when(message.getMessageId()).thenReturn("message id");
 
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction(message)
-                .build();
+                                       .setInteraction(message)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "interaction_id", "message id");
         EventTestUtils.validateEventValue(event, "interaction_type", "ua_mcrap");
@@ -218,8 +219,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testCustomInteraction() throws JSONException {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction("interaction type", "interaction id")
-                .build();
+                                       .setInteraction("interaction type", "interaction id")
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "interaction_id", "interaction id");
         EventTestUtils.validateEventValue(event, "interaction_type", "interaction type");
@@ -231,8 +232,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testCustomInteractionNullID() throws JSONException {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction("interaction type", null)
-                .build();
+                                       .setInteraction("interaction type", null)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "interaction_id", null);
         EventTestUtils.validateEventValue(event, "interaction_type", "interaction type");
@@ -244,8 +245,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testCustomInteractionNullType() throws JSONException {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setInteraction(null, "interaction id")
-                .build();
+                                       .setInteraction(null, "interaction id")
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "interaction_type", null);
         EventTestUtils.validateEventValue(event, "interaction_id", "interaction id");
@@ -260,7 +261,7 @@ public class CustomEventTest extends BaseTestCase {
         when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
 
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .build();
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "interaction_type", null);
         EventTestUtils.validateEventValue(event, "interaction_id", null);
@@ -333,7 +334,6 @@ public class CustomEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", null);
     }
 
-
     /**
      * Test setting event value to positive infinity throws an exception.
      */
@@ -367,8 +367,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueDoubleAboveMax() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(Integer.MAX_VALUE + .000001)
-                .build();
+                                       .setEventValue(Integer.MAX_VALUE + .000001)
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -379,8 +379,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueDoubleBelowMin() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(Integer.MIN_VALUE - .000001)
-                .build();
+                                       .setEventValue(Integer.MIN_VALUE - .000001)
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -400,8 +400,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueStringAboveMax() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(String.valueOf(Integer.MAX_VALUE + 0.000001))
-                .build();
+                                       .setEventValue(String.valueOf(Integer.MAX_VALUE + 0.000001))
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -412,8 +412,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueStringBelowMin() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(String.valueOf(Integer.MIN_VALUE - 0.000001))
-                .build();
+                                       .setEventValue(String.valueOf(Integer.MIN_VALUE - 0.000001))
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -424,8 +424,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueBigDecimalAboveMax() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(new BigDecimal(Integer.MAX_VALUE).add(BigDecimal.valueOf(0.000001)))
-                .build();
+                                       .setEventValue(new BigDecimal(Integer.MAX_VALUE).add(BigDecimal.valueOf(0.000001)))
+                                       .build();
 
         assertFalse(event.isValid());
     }
@@ -436,8 +436,8 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testEventValueBigDecimalBelowMin() {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setEventValue(new BigDecimal(Integer.MIN_VALUE).subtract(BigDecimal.valueOf(0.000001)))
-                .build();
+                                       .setEventValue(new BigDecimal(Integer.MIN_VALUE).subtract(BigDecimal.valueOf(0.000001)))
+                                       .build();
 
         assertFalse(event.isValid());
 
@@ -453,8 +453,8 @@ public class CustomEventTest extends BaseTestCase {
         PushMessage pushMessage = new PushMessage(pushBundle);
 
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .setAttribution(pushMessage)
-                .build();
+                                       .setAttribution(pushMessage)
+                                       .build();
 
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
     }
@@ -465,14 +465,14 @@ public class CustomEventTest extends BaseTestCase {
     @Test
     public void testPropertiesValues() throws JSONException {
         CustomEvent event = CustomEvent.newBuilder("event name")
-                .addProperty("true_boolean", true)
-                .addProperty("false_boolean", false)
-                .addProperty("double", 1234567.498765)
-                .addProperty("string", "some string value")
-                .addProperty("int", Integer.MIN_VALUE)
-                .addProperty("long", Long.MAX_VALUE)
-                .addProperty("array", Arrays.asList("value", "another value"))
-                .build();
+                                       .addProperty("true_boolean", true)
+                                       .addProperty("false_boolean", false)
+                                       .addProperty("double", 1234567.498765)
+                                       .addProperty("string", "some string value")
+                                       .addProperty("int", Integer.MIN_VALUE)
+                                       .addProperty("long", Long.MAX_VALUE)
+                                       .addProperty("array", Arrays.asList("value", "another value"))
+                                       .build();
 
         assertTrue(event.isValid());
 
@@ -521,7 +521,7 @@ public class CustomEventTest extends BaseTestCase {
     public void testPropertyNameLengthExceedsMaxLength() throws JSONException {
         // Add a property name at max length
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder("event name")
-                .addProperty(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH), "value");
+                                                      .addProperty(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH), "value");
 
         // Make sure its valid
         assertTrue(eventBuilder.build().isValid());
@@ -541,7 +541,7 @@ public class CustomEventTest extends BaseTestCase {
     public void testPropertyStringValueExceedsMaxLength() throws JSONException {
         // Add a property value at max length
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder("event name")
-                .addProperty("at max", createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH));
+                                                      .addProperty("at max", createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH));
 
         // Make sure its valid
         assertTrue(eventBuilder.build().isValid());
@@ -561,7 +561,7 @@ public class CustomEventTest extends BaseTestCase {
     public void testPropertyStringArrayExceedsMaxCount() throws JSONException {
         // Add a property value at max length
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder("event name")
-                .addProperty("at max", Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE]));
+                                                      .addProperty("at max", Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE]));
 
         // Make sure its valid
         assertTrue(eventBuilder.build().isValid());
@@ -581,7 +581,7 @@ public class CustomEventTest extends BaseTestCase {
     public void testPropertyStringArrayValueExceedsMaxLength() throws JSONException {
         // Add a property value at max length
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder("event name")
-                .addProperty("at max", Arrays.asList(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH)));
+                                                      .addProperty("at max", Arrays.asList(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH)));
 
         // Make sure its valid
         assertTrue(eventBuilder.build().isValid());
@@ -607,4 +607,5 @@ public class CustomEventTest extends BaseTestCase {
         }
         return builder.toString();
     }
+
 }

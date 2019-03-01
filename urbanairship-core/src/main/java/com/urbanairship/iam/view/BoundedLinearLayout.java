@@ -98,4 +98,5 @@ public class BoundedLinearLayout extends LinearLayout {
     public void setClipPathBorderRadius(final float borderRadius) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
     }
+
 }

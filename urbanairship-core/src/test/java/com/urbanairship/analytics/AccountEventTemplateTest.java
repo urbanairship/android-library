@@ -44,6 +44,7 @@ public class AccountEventTemplateTest extends BaseTestCase {
 
     /**
      * Test AccountEvent with optional value and properties.
+     *
      * @throws JSONException
      */
     @Test
@@ -61,4 +62,5 @@ public class AccountEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"Premium\"");
     }
+
 }

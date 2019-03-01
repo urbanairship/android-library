@@ -20,7 +20,6 @@ import java.util.Set;
  */
 public class TagGroupsEditor {
 
-
     private final List<TagGroupsMutation> mutations = new ArrayList<>();
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -161,6 +160,7 @@ public class TagGroupsEditor {
         return true;
     }
 
-    protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {}
+    protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
+    }
 
 }

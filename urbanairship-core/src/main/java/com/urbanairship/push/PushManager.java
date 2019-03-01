@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -116,7 +115,6 @@ public class PushManager extends AirshipComponent {
      */
     @NonNull
     public static final String EXTRA_PUSH_MESSAGE_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE_BUNDLE";
-
 
     /**
      * The interactive notification action button identifier extra.
@@ -218,7 +216,6 @@ public class PushManager extends AirshipComponent {
     @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
-
     private final String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
 
     /**
@@ -256,13 +253,14 @@ public class PushManager extends AirshipComponent {
 
     static final String OLD_QUIET_TIME_ENABLED = KEY_PREFIX + ".QuietTime.Enabled";
 
-
     static final class QuietTime {
+
         public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
         public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
         public static final String END_HOUR_KEY = KEY_PREFIX + ".QuietTime.END_HOUR";
         public static final String END_MIN_KEY = KEY_PREFIX + ".QuietTime.END_MINUTE";
         public static final int NOT_SET_VAL = -1;
+
     }
 
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
@@ -273,7 +271,6 @@ public class PushManager extends AirshipComponent {
     // As of version 8.0.0
     static final String REGISTRATION_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
     static final String REGISTRATION_TOKEN_MIGRATED_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_MIGRATED_KEY";
-
 
     //singleton stuff
     private final Context context;
@@ -290,9 +287,7 @@ public class PushManager extends AirshipComponent {
     private final PushProvider pushProvider;
     private PushManagerJobHandler jobHandler;
 
-
     private final Object tagLock = new Object();
-
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -831,8 +826,8 @@ public class PushManager extends AirshipComponent {
      */
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                .setQuietTimeInterval(startTime, endTime)
-                .build();
+                                                               .setQuietTimeInterval(startTime, endTime)
+                                                               .build();
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
@@ -961,7 +956,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public NotificationActionButtonGroup getNotificationActionGroup(@Nullable String id) {
-        if (id  == null) {
+        if (id == null) {
             return null;
         }
         return actionGroupMap.get(id);
@@ -1098,11 +1093,11 @@ public class PushManager extends AirshipComponent {
         Logger.debug("Migrating quiet time interval");
 
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                .setStartHour(startHr)
-                .setStartMin(startMin)
-                .setEndHour(endHr)
-                .setEndMin(endMin)
-                .build();
+                                                               .setStartHour(startHr)
+                                                               .setStartMin(startMin)
+                                                               .setEndHour(endHr)
+                                                               .setEndMin(endMin)
+                                                               .build();
 
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
         preferenceDataStore.remove(QuietTime.START_HOUR_KEY);
@@ -1148,7 +1143,6 @@ public class PushManager extends AirshipComponent {
         return pushProvider;
     }
 
-
     /**
      * Check to see if we've seen this ID before. If we have,
      * return false. If not, add the ID to our history and return true.
@@ -1189,4 +1183,5 @@ public class PushManager extends AirshipComponent {
 
         return true;
     }
+
 }

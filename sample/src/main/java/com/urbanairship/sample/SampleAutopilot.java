@@ -57,4 +57,5 @@ public class SampleAutopilot extends Autopilot {
         // defaults to loading config from airshipconfig.properties file
         return super.createAirshipConfigOptions(context);
     }
+
 }

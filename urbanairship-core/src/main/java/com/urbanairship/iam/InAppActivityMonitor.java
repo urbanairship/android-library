@@ -8,10 +8,10 @@ import android.content.pm.ActivityInfo;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
+import com.urbanairship.app.ActivityListener;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.FilteredActivityListener;
 import com.urbanairship.app.ForwardingActivityListener;
@@ -151,4 +151,5 @@ public class InAppActivityMonitor implements ActivityMonitor {
 
         return false;
     }
+
 }

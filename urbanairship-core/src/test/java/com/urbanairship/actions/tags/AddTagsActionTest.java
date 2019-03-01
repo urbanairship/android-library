@@ -98,9 +98,10 @@ public class AddTagsActionTest extends BaseTestCase {
         assertTrue(added.get("group1").contains("tag2"));
         assertTrue(added.get("group1").contains("tag3"));
 
-        assertTrue( added.keySet().contains("group2"));
+        assertTrue(added.keySet().contains("group2"));
         assertTrue(added.get("group2").contains("tag1"));
         assertTrue(added.get("group2").contains("tag2"));
         assertTrue(added.get("group2").contains("tag3"));
     }
+
 }

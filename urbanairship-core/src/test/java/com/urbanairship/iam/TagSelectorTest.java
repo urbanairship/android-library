@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-
 /**
  * {@link TagSelector} tests.
  */
@@ -67,7 +66,7 @@ public class TagSelectorTest extends BaseTestCase {
     @Test
     public void testSelectorWithTagGroups() throws JsonException {
         TagSelector selector = TagSelector.and(
-                TagSelector.tag( "some-tag", "some-group-tag"),
+                TagSelector.tag("some-tag", "some-group-tag"),
                 TagSelector.tag("some-tag"),
                 TagSelector.not(TagSelector.tag("not-tag")));
 
@@ -130,4 +129,5 @@ public class TagSelectorTest extends BaseTestCase {
         assertTrue(tagGroups.get("some-other-group").contains("some-other-tag"));
         assertTrue(tagGroups.get("some-other-group").contains("not-tag"));
     }
+
 }

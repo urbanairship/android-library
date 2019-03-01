@@ -114,7 +114,6 @@ public class EventResolver extends UrbanAirshipResolver {
         return builder.toString();
     }
 
-
     /**
      * Gets the oldest session id in the
      * database
@@ -190,7 +189,6 @@ public class EventResolver extends UrbanAirshipResolver {
         return result == null ? -1 : result;
     }
 
-
     /**
      * Inserts an event into the database.
      *
@@ -235,4 +233,5 @@ public class EventResolver extends UrbanAirshipResolver {
             }
         }
     }
+
 }

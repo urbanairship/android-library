@@ -22,11 +22,9 @@ import static org.mockito.Mockito.verify;
 @SuppressWarnings("ResourceType")
 public class UALocationManagerTest extends BaseTestCase {
 
-
     UALocationManager locationManager;
     LocationRequestOptions options;
     Analytics analytics;
-
 
     @Before
     public void setUp() {
@@ -68,7 +66,6 @@ public class UALocationManagerTest extends BaseTestCase {
         assertEquals("LocationRequestOptions not being restored properly.", options, locationManager.getLocationRequestOptions());
     }
 
-
     /**
      * Test location updates generate events.
      */
@@ -83,4 +80,5 @@ public class UALocationManagerTest extends BaseTestCase {
 
         verify(analytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
+
 }

@@ -25,4 +25,5 @@ public class Subscriber<T> implements Observer<T> {
     @Override
     public void onError(@NonNull Exception e) {
     }
+
 }

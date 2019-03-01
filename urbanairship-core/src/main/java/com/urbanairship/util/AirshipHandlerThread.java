@@ -26,4 +26,5 @@ public class AirshipHandlerThread extends HandlerThread {
         TrafficStats.setThreadStatsTag(AirshipThreadFactory.THREAD_STATS_TAG);
         super.run();
     }
+
 }

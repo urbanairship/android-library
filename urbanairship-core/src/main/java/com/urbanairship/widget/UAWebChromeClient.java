@@ -16,7 +16,6 @@ import android.widget.FrameLayout;
 
 import java.lang.ref.WeakReference;
 
-
 /**
  * Web Chrome Client that enables full screen video.
  */
@@ -79,4 +78,5 @@ public class UAWebChromeClient extends WebChromeClient {
         parent.removeView(customView);
         this.customView = null;
     }
+
 }

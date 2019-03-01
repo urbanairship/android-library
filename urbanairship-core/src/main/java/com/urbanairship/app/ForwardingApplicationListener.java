@@ -11,6 +11,7 @@ import java.util.List;
  * Activity listener that forwards application events to a list of listeners.
  */
 public class ForwardingApplicationListener implements ApplicationListener {
+
     private final List<ApplicationListener> listeners = new ArrayList<>();
 
     /**
@@ -48,4 +49,5 @@ public class ForwardingApplicationListener implements ApplicationListener {
             listener.onBackground(time);
         }
     }
+
 }

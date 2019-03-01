@@ -44,7 +44,7 @@ public class RemoteDataPayload {
      */
     @NonNull
     public static final String METADATA_SDK_VERSION = "sdk_version";
-    
+
     @NonNull
     private final String type;
     private final long timestamp;
@@ -69,10 +69,10 @@ public class RemoteDataPayload {
     @NonNull
     static RemoteDataPayload emptyPayload(@NonNull String type) {
         return RemoteDataPayload.newBuilder()
-                .setType(type)
-                .setTimeStamp(0)
-                .setData(JsonMap.EMPTY_MAP)
-                .build();
+                                .setType(type)
+                                .setTimeStamp(0)
+                                .setData(JsonMap.EMPTY_MAP)
+                                .build();
     }
 
     /**
@@ -93,11 +93,11 @@ public class RemoteDataPayload {
             if (type.isString() && isoTimestamp.isString() && data.isJsonMap()) {
                 long timestampMs = DateUtils.parseIso8601(isoTimestamp.getString());
                 return RemoteDataPayload.newBuilder()
-                        .setData(data.optMap())
-                        .setTimeStamp(timestampMs)
-                        .setType(type.optString())
-                        .setMetadata(metadata)
-                        .build();
+                                        .setData(data.optMap())
+                                        .setTimeStamp(timestampMs)
+                                        .setType(type.optString())
+                                        .setMetadata(metadata)
+                                        .build();
             } else {
                 throw new JsonException("Invalid remote data payload: " + value.toString());
             }
@@ -130,7 +130,6 @@ public class RemoteDataPayload {
 
         return Collections.emptySet();
     }
-
 
     @Override
     public boolean equals(@Nullable Object o) {
@@ -215,6 +214,7 @@ public class RemoteDataPayload {
     }
 
     public static class Builder {
+
         private String type;
         private long timestamp;
         private JsonMap data;
@@ -279,6 +279,7 @@ public class RemoteDataPayload {
             Checks.checkNotNull(data, "Missing data");
             return new RemoteDataPayload(this);
         }
+
     }
 
 }

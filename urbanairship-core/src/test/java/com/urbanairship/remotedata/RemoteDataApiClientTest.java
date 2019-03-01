@@ -3,13 +3,10 @@
 package com.urbanairship.remotedata;
 
 import android.net.Uri;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
-import com.urbanairship.TestLocaleManager;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
@@ -17,17 +14,13 @@ import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,9 +30,6 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 public class RemoteDataApiClientTest extends BaseTestCase {
 
@@ -83,10 +73,10 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseHeaders(headers)
-                .setResponseMessage("OK")
-                .setResponseBody(list.toString())
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("OK")
+                                       .setResponseBody(list.toString())
+                                       .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
@@ -162,10 +152,10 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseHeaders(headers)
-                .setResponseMessage("OK")
-                .setResponseBody(list.toString())
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("OK")
+                                       .setResponseBody(list.toString())
+                                       .build();
 
         Response response = client.fetchRemoteData(null, new Locale("en"));
 
@@ -184,9 +174,9 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
-                .setResponseHeaders(headers)
-                .setResponseMessage("Not Implemented")
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("Not Implemented")
+                                       .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
@@ -194,4 +184,5 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED, response.getStatus());
     }
+
 }

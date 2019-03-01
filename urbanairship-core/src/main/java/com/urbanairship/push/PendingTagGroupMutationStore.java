@@ -140,4 +140,5 @@ class PendingTagGroupMutationStore {
     List<TagGroupsMutation> getMutations() {
         return TagGroupsMutation.fromJsonList(dataStore.getJsonValue(storeKey).optList());
     }
+
 }

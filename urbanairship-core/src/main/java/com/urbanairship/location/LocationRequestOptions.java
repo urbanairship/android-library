@@ -177,7 +177,6 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
                 DEFAULT_UPDATE_INTERVAL_METERS);
     }
 
-
     /**
      * The priority of the request.
      *
@@ -204,7 +203,6 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     public float getMinDistance() {
         return minDistance;
     }
-
 
     @SuppressLint("UnknownNullness")
     @Override
@@ -273,7 +271,6 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         map.put("minDistance", getMinDistance());
         map.put("minTime", getMinTime());
 
-
         try {
             return JsonValue.wrap(map);
         } catch (JsonException e) {
@@ -340,10 +337,10 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      * Builder to construct LocationRequestOptions.
      */
     public static class Builder {
+
         private long minTime = DEFAULT_UPDATE_INTERVAL_MILLISECONDS;
         private float minDistance = DEFAULT_UPDATE_INTERVAL_METERS;
         private int priority = DEFAULT_REQUEST_PRIORITY;
-
 
         /**
          * Sets the min time between location updates.
@@ -404,5 +401,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         public LocationRequestOptions build() {
             return new LocationRequestOptions(this);
         }
+
     }
+
 }

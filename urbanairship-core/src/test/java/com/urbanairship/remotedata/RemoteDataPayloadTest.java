@@ -53,4 +53,5 @@ public class RemoteDataPayloadTest extends BaseTestCase {
         Assert.assertEquals("Payload should have data: " + data, parsedPayload.getData(), data);
         Assert.assertEquals("Payload should have metadata: " + metadata, parsedPayload.getData(), metadata);
     }
+
 }

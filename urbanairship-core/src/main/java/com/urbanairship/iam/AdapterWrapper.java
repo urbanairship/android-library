@@ -21,6 +21,7 @@ import com.urbanairship.iam.assets.Assets;
 final class AdapterWrapper {
 
     static class DisplayException extends Exception {
+
         /**
          * Default constructor.
          *
@@ -30,8 +31,8 @@ final class AdapterWrapper {
         DisplayException(String message, Exception e) {
             super(message, e);
         }
-    }
 
+    }
 
     public final InAppMessageSchedule schedule;
     public final InAppMessage message;
@@ -97,7 +98,6 @@ final class AdapterWrapper {
         }
     }
 
-
     /**
      * Notifies the coordinator the display is finished.
      */
@@ -123,4 +123,5 @@ final class AdapterWrapper {
             Logger.error(e, "AdapterWrapper - Exception during finish().");
         }
     }
+
 }

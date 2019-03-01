@@ -46,4 +46,5 @@ public class UAHttpStatusUtil {
     public static boolean inServerErrorRange(int statusCode) {
         return statusCode / 100 == 5;
     }
+
 }

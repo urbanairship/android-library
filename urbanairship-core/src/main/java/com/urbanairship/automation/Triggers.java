@@ -18,6 +18,7 @@ import com.urbanairship.util.VersionUtils;
  * Class providing factory methods and builder classes for {@link Trigger}.
  */
 public class Triggers {
+
     /**
      * Creates a new foreground trigger builder.
      *
@@ -113,6 +114,7 @@ public class Triggers {
      * Lifecycle trigger Builder class.
      */
     public static class LifeCycleTriggerBuilder {
+
         private double goal = 1;
         private final int type;
 
@@ -141,12 +143,14 @@ public class Triggers {
         public Trigger build() {
             return new Trigger(type, goal, null);
         }
+
     }
 
     /**
      * Region trigger Builder class.
      */
     public static class RegionTriggerBuilder {
+
         private final int type;
         private double goal = 1;
         private String regionId;
@@ -200,16 +204,19 @@ public class Triggers {
 
             return new Trigger(type, goal, predicate);
         }
+
     }
 
     /**
      * Screen trigger Builder class.
      */
     public static class ScreenTriggerBuilder {
+
         private double goal = 1;
         private String screenName;
 
-        private ScreenTriggerBuilder() {}
+        private ScreenTriggerBuilder() {
+        }
 
         /**
          * Sets the trigger goal.
@@ -256,17 +263,20 @@ public class Triggers {
 
             return new Trigger(Trigger.SCREEN_VIEW, goal, predicate);
         }
+
     }
 
     /**
      * Custom event trigger Builder class.
      */
     public static class CustomEventTriggerBuilder {
+
         private double goal = 1;
         private int type;
         private String eventName;
 
-        private CustomEventTriggerBuilder() {}
+        private CustomEventTriggerBuilder() {
+        }
 
         /**
          * Sets the goal for {@link Trigger#CUSTOM_EVENT_COUNT} triggers.
@@ -326,15 +336,18 @@ public class Triggers {
                                                    .build();
             return new Trigger(type, goal, predicate);
         }
+
     }
 
     /**
      * Active session trigger builder class.
      */
     public static class ActiveSessionTriggerBuilder {
+
         private double goal = 1;
 
-        private ActiveSessionTriggerBuilder() {}
+        private ActiveSessionTriggerBuilder() {
+        }
 
         /**
          * Sets the goal for {@link Trigger#ACTIVE_SESSION} triggers.
@@ -357,16 +370,20 @@ public class Triggers {
         public Trigger build() {
             return new Trigger(Trigger.ACTIVE_SESSION, goal, null);
         }
+
     }
 
     /**
      * Version trigger builder class.
      */
     public static class VersionTriggerBuilder {
+
         private double goal = 1;
         private final ValueMatcher versionMatcher;
 
-        private VersionTriggerBuilder(@Nullable ValueMatcher versionMatcher) { this.versionMatcher = versionMatcher; }
+        private VersionTriggerBuilder(@Nullable ValueMatcher versionMatcher) {
+            this.versionMatcher = versionMatcher;
+        }
 
         /**
          * Sets the goal for {@link Trigger#VERSION} triggers.
@@ -393,6 +410,7 @@ public class Triggers {
             }
             return new Trigger(Trigger.VERSION, goal, predicate);
         }
+
     }
 
 }

@@ -16,7 +16,8 @@ public abstract class TagEditor {
     private final Set<String> tagsToAdd = new HashSet<>();
     private final Set<String> tagsToRemove = new HashSet<>();
 
-    TagEditor() {}
+    TagEditor() {
+    }
 
     /**
      * Adds a tag.
@@ -103,4 +104,5 @@ public abstract class TagEditor {
      * @param tagsToRemove Tags to remove.
      */
     abstract void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove);
+
 }

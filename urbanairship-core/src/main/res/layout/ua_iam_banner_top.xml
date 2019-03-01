@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.urbanairship.iam.banner.BannerDismissLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.urbanairship.iam.banner.BannerDismissLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_gravity="center"
     android:layout_height="match_parent"
@@ -25,11 +24,11 @@
             android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/UrbanAirship.InAppBanner.ButtonLayout"/>
+            style="@style/UrbanAirship.InAppBanner.ButtonLayout" />
 
         <View
             android:id="@+id/banner_pull"
-            style="@style/UrbanAirship.InAppBanner.Pull.Top"/>
+            style="@style/UrbanAirship.InAppBanner.Pull.Top" />
 
     </com.urbanairship.iam.view.BoundedLinearLayout>
 

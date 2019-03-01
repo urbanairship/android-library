@@ -37,7 +37,6 @@ public class RemoteDataJobHandler {
     private final RemoteData remoteData;
     private final LocaleManager localeManager;
 
-
     /**
      * RemoteDataJobHandler constructor.
      *
@@ -137,4 +136,5 @@ public class RemoteDataJobHandler {
 
         return JobInfo.JOB_FINISHED;
     }
+
 }

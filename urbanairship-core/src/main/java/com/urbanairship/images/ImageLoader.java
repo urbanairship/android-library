@@ -21,4 +21,5 @@ public interface ImageLoader {
      */
     @MainThread
     void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull ImageRequestOptions imageRequestOptions);
+
 }

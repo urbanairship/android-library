@@ -55,7 +55,6 @@ public class RemoveTagsActionTest extends BaseTestCase {
 
         when(pushManager.getTags()).thenReturn(existingTags);
 
-
         // Remove tagOne and tagThree
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
         ActionResult result = action.perform(args);
@@ -102,9 +101,10 @@ public class RemoveTagsActionTest extends BaseTestCase {
         assertTrue(removed.get("group1").contains("tag2"));
         assertTrue(removed.get("group1").contains("tag3"));
 
-        assertTrue( removed.keySet().contains("group2"));
+        assertTrue(removed.keySet().contains("group2"));
         assertTrue(removed.get("group2").contains("tag1"));
         assertTrue(removed.get("group2").contains("tag2"));
         assertTrue(removed.get("group2").contains("tag3"));
     }
+
 }

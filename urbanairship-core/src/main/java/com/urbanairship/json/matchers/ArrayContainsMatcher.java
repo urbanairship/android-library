@@ -104,4 +104,5 @@ public class ArrayContainsMatcher extends ValueMatcher {
         result = 31 * result + predicate.hashCode();
         return result;
     }
+
 }

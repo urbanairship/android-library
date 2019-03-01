@@ -5,7 +5,6 @@ package com.urbanairship.push.fcm;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -74,4 +73,5 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
     public static void processNewToken(@NonNull Context context) {
         PushProviderBridge.requestRegistrationUpdate(context);
     }
+
 }

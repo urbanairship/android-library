@@ -4,10 +4,9 @@ package com.urbanairship.automation;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -98,4 +97,5 @@ class TriggerObservables {
             }
         });
     }
+
 }

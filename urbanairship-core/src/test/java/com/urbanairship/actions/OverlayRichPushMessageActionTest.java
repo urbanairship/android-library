@@ -21,13 +21,14 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
     private OverlayRichPushMessageAction action;
 
-    private @Action.Situation int[] acceptedSituations;
-    private @Action.Situation int[] rejectedSituations;
+    private @Action.Situation
+    int[] acceptedSituations;
+    private @Action.Situation
+    int[] rejectedSituations;
     private RichPushInbox mockInbox;
 
     @Before
@@ -139,7 +140,6 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         }
     }
 
-
     /**
      * Test rejects null argument value.
      */
@@ -208,4 +208,5 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
         assertEquals("message:the_message_id", startedIntent.getDataString());
     }
+
 }

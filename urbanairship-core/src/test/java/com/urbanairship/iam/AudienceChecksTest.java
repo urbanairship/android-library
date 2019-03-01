@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-
 import android.content.Context;
 import android.util.Base64;
 
@@ -121,20 +120,18 @@ public class AudienceChecksTest extends BaseTestCase {
         String testDevice = Base64.encodeToString(bytes, Base64.DEFAULT);
 
         Audience testDeviceAudience = Audience.newBuilder()
-                                           .addTestDevice(testDevice)
-                                           .build();
-
-        Audience someOtherTestDeviceAudience = Audience.newBuilder()
-                                              .addTestDevice(UAStringUtil.sha256("some other channel"))
+                                              .addTestDevice(testDevice)
                                               .build();
 
-        when(pushManager.getChannelId()).thenReturn("test channel");
+        Audience someOtherTestDeviceAudience = Audience.newBuilder()
+                                                       .addTestDevice(UAStringUtil.sha256("some other channel"))
+                                                       .build();
 
+        when(pushManager.getChannelId()).thenReturn("test channel");
 
         assertTrue(AudienceChecks.checkAudienceForScheduling(context, testDeviceAudience, false));
         assertFalse(AudienceChecks.checkAudienceForScheduling(context, someOtherTestDeviceAudience, false));
     }
-
 
     @Test
     public void testTagSelector() {
@@ -166,11 +163,9 @@ public class AudienceChecksTest extends BaseTestCase {
             }
         });
 
-
         Audience audience = Audience.newBuilder()
                                     .setTagSelector(TagSelector.tag("expected tag", "expected group"))
                                     .build();
-
 
         Map<String, Set<String>> tagGroups = new HashMap<>();
 
@@ -212,7 +207,6 @@ public class AudienceChecksTest extends BaseTestCase {
                                     .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
                                     .build();
 
-
         when(applicationMetrics.getCurrentAppVersion()).thenReturn(1);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
@@ -222,4 +216,5 @@ public class AudienceChecksTest extends BaseTestCase {
         when(applicationMetrics.getCurrentAppVersion()).thenReturn(3);
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
+
 }

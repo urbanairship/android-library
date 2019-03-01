@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Common Executors for Urban Airship.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -47,4 +48,5 @@ public class AirshipExecutors {
     public static Executor newSerialExecutor() {
         return new SerialExecutor(THREAD_POOL_EXECUTOR);
     }
+
 }

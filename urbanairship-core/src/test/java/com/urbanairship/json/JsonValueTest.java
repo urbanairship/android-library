@@ -26,9 +26,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
-
 
 public class JsonValueTest extends BaseTestCase {
 
@@ -142,7 +140,6 @@ public class JsonValueTest extends BaseTestCase {
 
         assertEquals(map.size(), jsonMap.size());
     }
-
 
     /**
      * Test wrapping a list.
@@ -301,7 +298,6 @@ public class JsonValueTest extends BaseTestCase {
         assertEquals(expected.getList(), JsonValue.wrap(list).getList());
     }
 
-
     /**
      * Test parsing a valid JSON String produces the equivalent JsonValue.
      */
@@ -333,7 +329,6 @@ public class JsonValueTest extends BaseTestCase {
         assertEquals(JsonValue.wrap(jsonArray), JsonValue.parseString(jsonArray.toString()));
     }
 
-
     /**
      * Test trying to wrap Double.NaN throws an exception.
      */
@@ -357,7 +352,6 @@ public class JsonValueTest extends BaseTestCase {
     public void testDoublePositiveInfinity() throws JsonException {
         assertEquals(JsonValue.NULL, JsonValue.wrap(Double.POSITIVE_INFINITY));
     }
-
 
     /**
      * Test saving and reading a JsonValue from a parcel.
@@ -482,4 +476,5 @@ public class JsonValueTest extends BaseTestCase {
         doubleValue = JsonValue.wrap(1.0);
         assertTrue(intValue.equals(doubleValue));
     }
+
 }

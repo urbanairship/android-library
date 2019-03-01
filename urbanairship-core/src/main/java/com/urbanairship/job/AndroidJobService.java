@@ -8,7 +8,6 @@ import android.support.annotation.RequiresApi;
 
 import com.urbanairship.Logger;
 
-
 /**
  * Android Job Service.
  *
@@ -27,13 +26,13 @@ public class AndroidJobService extends JobService {
         }
 
         Job job = Job.newBuilder(jobInfo)
-                .setCallback(new Job.Callback() {
-                    @Override
-                    public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
-                        jobFinished(jobParameters, result == JobInfo.JOB_RETRY);
-                    }
-                })
-                .build();
+                     .setCallback(new Job.Callback() {
+                         @Override
+                         public void onFinish(@NonNull Job job, @JobInfo.JobResult int result) {
+                             jobFinished(jobParameters, result == JobInfo.JOB_RETRY);
+                         }
+                     })
+                     .build();
 
         Logger.verbose("AndroidJobService - Running job: %s", jobInfo);
 
@@ -46,4 +45,5 @@ public class AndroidJobService extends JobService {
     public boolean onStopJob(@NonNull JobParameters jobParameters) {
         return false;
     }
+
 }

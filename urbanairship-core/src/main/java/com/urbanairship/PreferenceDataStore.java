@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
 /**
  * PreferenceDataStore stores and retrieves all the Urban Airship preferences through the
  * {@link UrbanAirshipProvider}.
@@ -42,18 +43,19 @@ public final class PreferenceDataStore {
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
 
-
     /**
      * Listener for when preferences changes either by the
      * current process or a different process.
      */
     public interface PreferenceChangeListener {
+
         /**
          * Called when a preference changes.
          *
          * @param key The key of the preference.
          */
         void onPreferenceChange(@NonNull String key);
+
     }
 
     /**
@@ -149,7 +151,6 @@ public final class PreferenceDataStore {
         String value = getPreference(key).get();
         return value == null ? defaultValue : value;
     }
-
 
     /**
      * Get the long preference.
@@ -516,5 +517,7 @@ public final class PreferenceDataStore {
         void unregisterObserver() {
             resolver.unregisterContentObserver(observer);
         }
+
     }
+
 }

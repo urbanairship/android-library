@@ -92,4 +92,5 @@ class AppCompatDelegateWrapper {
     ActionBar getSupportActionBar() {
         return delegate.getSupportActionBar();
     }
+
 }

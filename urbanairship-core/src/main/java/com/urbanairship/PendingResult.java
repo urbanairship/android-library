@@ -25,7 +25,6 @@ public class PendingResult<T> implements Cancelable, Future<T> {
     private boolean resultSet;
     private boolean runCallbacks = true;
 
-
     @Nullable
     private T result;
 
@@ -109,14 +108,12 @@ public class PendingResult<T> implements Cancelable, Future<T> {
         }
     }
 
-
     @Override
     public boolean isCancelled() {
         synchronized (this) {
             return isCanceled;
         }
     }
-
 
     @Override
     public boolean isDone() {
@@ -218,4 +215,5 @@ public class PendingResult<T> implements Cancelable, Future<T> {
 
         return this;
     }
+
 }

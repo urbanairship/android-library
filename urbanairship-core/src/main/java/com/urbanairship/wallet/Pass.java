@@ -124,4 +124,5 @@ public class Pass implements Parcelable {
         Logger.error("Pass - unable to parse URI from %s", pass);
         return null;
     }
+
 }

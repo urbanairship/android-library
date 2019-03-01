@@ -28,4 +28,5 @@ public class CoreActivity extends Activity {
 
         finish();
     }
+
 }

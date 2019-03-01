@@ -35,4 +35,5 @@ class PreferencesDataManager extends DataManager {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
+
 }

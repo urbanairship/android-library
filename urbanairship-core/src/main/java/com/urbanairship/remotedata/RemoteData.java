@@ -178,7 +178,6 @@ public class RemoteData extends AirshipComponent {
             jobHandler = new RemoteDataJobHandler(getContext(), airship);
         }
 
-
         return jobHandler.performJob(jobInfo);
     }
 
@@ -215,11 +214,11 @@ public class RemoteData extends AirshipComponent {
      */
     public void refresh() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(RemoteDataJobHandler.ACTION_REFRESH)
-                .setId(JobInfo.REMOTE_DATA_REFRESH)
-                .setNetworkAccessRequired(true)
-                .setAirshipComponent(RemoteData.class)
-                .build();
+                                 .setAction(RemoteDataJobHandler.ACTION_REFRESH)
+                                 .setId(JobInfo.REMOTE_DATA_REFRESH)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(RemoteData.class)
+                                 .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
@@ -267,41 +266,41 @@ public class RemoteData extends AirshipComponent {
     @NonNull
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
         return Observable.concat(cachedPayloads(types), payloadUpdates)
-                .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
-                    @NonNull
-                    @Override
-                    public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
-                        Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
-                        for (RemoteDataPayload payload : payloads) {
-                            Collection<RemoteDataPayload> mappedPayloads = map.get(payload.getType());
-                            if (mappedPayloads == null) {
-                                mappedPayloads = new HashSet<>();
-                                map.put(payload.getType(), mappedPayloads);
-                            }
-                            mappedPayloads.add(payload);
-                        }
+                         .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
+                             @NonNull
+                             @Override
+                             public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
+                                 Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
+                                 for (RemoteDataPayload payload : payloads) {
+                                     Collection<RemoteDataPayload> mappedPayloads = map.get(payload.getType());
+                                     if (mappedPayloads == null) {
+                                         mappedPayloads = new HashSet<>();
+                                         map.put(payload.getType(), mappedPayloads);
+                                     }
+                                     mappedPayloads.add(payload);
+                                 }
 
-                        return map;
-                    }
-                })
-                .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
-                    @NonNull
-                    @Override
-                    public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
-                        Set<RemoteDataPayload> payloads = new HashSet<>();
-                        for (String type : new HashSet<>(types)) {
-                            Collection<RemoteDataPayload> mappedPayloads = payloadMap.get(type);
-                            if (mappedPayloads != null) {
-                                payloads.addAll(mappedPayloads);
-                            } else {
-                                payloads.add(RemoteDataPayload.emptyPayload(type));
-                            }
-                        }
+                                 return map;
+                             }
+                         })
+                         .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
+                             @NonNull
+                             @Override
+                             public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
+                                 Set<RemoteDataPayload> payloads = new HashSet<>();
+                                 for (String type : new HashSet<>(types)) {
+                                     Collection<RemoteDataPayload> mappedPayloads = payloadMap.get(type);
+                                     if (mappedPayloads != null) {
+                                         payloads.addAll(mappedPayloads);
+                                     } else {
+                                         payloads.add(RemoteDataPayload.emptyPayload(type));
+                                     }
+                                 }
 
-                        return payloads;
-                    }
-                })
-                .distinctUntilChanged();
+                                 return payloads;
+                             }
+                         })
+                         .distinctUntilChanged();
     }
 
     /**
@@ -385,7 +384,7 @@ public class RemoteData extends AirshipComponent {
             @Override
             public Observable<Set<RemoteDataPayload>> apply() {
                 return Observable.just(dataStore.getPayloads(types))
-                        .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
+                                 .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
             }
         });
     }
@@ -399,10 +398,10 @@ public class RemoteData extends AirshipComponent {
     @NonNull
     static JsonMap createMetadata(@NonNull Locale locale) {
         return JsonMap.newBuilder()
-                .putOpt(RemoteDataPayload.METADATA_SDK_VERSION, UAirship.getVersion())
-                .putOpt(RemoteDataPayload.METADATA_COUNTRY, UAStringUtil.nullIfEmpty(locale.getCountry()))
-                .putOpt(RemoteDataPayload.METADATA_LANGUAGE, UAStringUtil.nullIfEmpty(locale.getLanguage()))
-                .build();
+                      .putOpt(RemoteDataPayload.METADATA_SDK_VERSION, UAirship.getVersion())
+                      .putOpt(RemoteDataPayload.METADATA_COUNTRY, UAStringUtil.nullIfEmpty(locale.getCountry()))
+                      .putOpt(RemoteDataPayload.METADATA_LANGUAGE, UAStringUtil.nullIfEmpty(locale.getLanguage()))
+                      .build();
     }
 
     /**
@@ -424,4 +423,5 @@ public class RemoteData extends AirshipComponent {
     public JsonMap getLastMetadata() {
         return preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap();
     }
+
 }

@@ -19,7 +19,8 @@ import com.urbanairship.util.IvyVersionMatcher;
  */
 public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSerializable> {
 
-    protected ValueMatcher() {}
+    protected ValueMatcher() {
+    }
 
     /**
      * Creates a new number range value matcher.
@@ -198,4 +199,5 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     public String toString() {
         return toJsonValue().toString();
     }
+
 }

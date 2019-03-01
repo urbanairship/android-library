@@ -115,8 +115,9 @@ public class ScheduleActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformInvalidJson() throws JsonException {
-        ActionResult result = action.perform( ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, JsonMap.EMPTY_MAP));
+        ActionResult result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, JsonMap.EMPTY_MAP));
         assertNotNull(result.getException());
         assertEquals(ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
     }
+
 }

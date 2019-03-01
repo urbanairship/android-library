@@ -41,7 +41,6 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                           .setGoal(1)
                           .build();
 
-
         delay = ScheduleDelay.newBuilder()
                              .setScreen("screen")
                              .setSeconds(100)
@@ -60,7 +59,6 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                            .setId("some-id")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
-
 
         JsonMap scheduleJson = JsonMap.newBuilder()
                                       .put("message", message)
@@ -102,7 +100,6 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
-
         JsonMap scheduleJson = JsonMap.newBuilder()
                                       .put("message", message)
                                       .put("triggers", JsonValue.wrapOpt(triggersJson))
@@ -114,7 +111,6 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
 
         assertEquals("some-id", InAppMessageScheduleInfo.parseMessageId(scheduleJson.toJsonValue()));
     }
-
 
     @Test
     public void testBuilder() {
@@ -200,4 +196,5 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                 .addTriggers(triggers)
                                 .build();
     }
+
 }

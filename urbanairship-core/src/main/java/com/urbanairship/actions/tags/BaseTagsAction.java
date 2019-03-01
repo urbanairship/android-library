@@ -160,4 +160,5 @@ abstract class BaseTagsAction extends Action {
      * @param tags The map of tag groups.
      */
     abstract void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags);
+
 }

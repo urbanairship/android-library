@@ -61,4 +61,5 @@ public class CompoundSubscription extends Subscription {
 
         super.cancel();
     }
+
 }

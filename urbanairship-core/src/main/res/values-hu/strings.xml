@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Igen</string>
@@ -57,20 +58,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> kiválasztva</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Frissítés</string>
     <string name="ua_open">Megnyitás</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Értékelés</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nem, köszönöm</string>
     <string name="ua_rate_app_action_default_title">Élvezi a(z) <xliff:g example="this App" id="app_name">%1$2s</xliff:g> alkalmazást?</string>
     <string name="ua_rate_app_action_default_body">Koppintson a <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>-re a webáruházban történő értékeléshez.</string>
     <string name="ua_rate_app_action_generic_display_name">Ez az alkalmazás</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Értesítések</string>
     <string name="ua_default_channel_description">Általános alkalmazásfrissítések</string>
     <string name="ua_channel_id">Csatornaazonosító</string>
-    
+
 </resources>

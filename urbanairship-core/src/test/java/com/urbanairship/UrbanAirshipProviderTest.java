@@ -42,7 +42,6 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         assertNull(this.resolver.getType(failureUri));
     }
 
-
     @Test
     public void testInsertRow() {
         ContentValues values = new ContentValues();
@@ -85,7 +84,6 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
 
         cursor.close();
     }
-
 
     @Test
     public void testUpdateAllData() {

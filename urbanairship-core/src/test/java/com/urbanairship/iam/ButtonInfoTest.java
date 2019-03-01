@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 
-
 /**
  * {@link ButtonInfo} tests.
  */
@@ -27,7 +26,6 @@ public class ButtonInfoTest extends BaseTestCase {
                                         .addAction("cool", JsonValue.wrap("story"))
                                         .build();
 
-
         ButtonInfo fromJson = ButtonInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
@@ -39,7 +37,6 @@ public class ButtonInfoTest extends BaseTestCase {
         ButtonInfo.newBuilder()
                   .build();
     }
-
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingId() {
@@ -61,7 +58,5 @@ public class ButtonInfoTest extends BaseTestCase {
                   .addAction("cool", JsonValue.wrap("story"))
                   .build();
     }
-
-
 
 }

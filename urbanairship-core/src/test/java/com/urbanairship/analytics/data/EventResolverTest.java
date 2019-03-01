@@ -187,6 +187,7 @@ public class EventResolverTest extends BaseTestCase {
      * Testing class for testing events
      */
     static class TestEvent extends Event {
+
         String id;
         String eventType;
 
@@ -224,6 +225,7 @@ public class EventResolverTest extends BaseTestCase {
         protected JsonMap getEventData() {
             return new JsonMap(null);
         }
+
     }
 
 }

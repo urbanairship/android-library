@@ -20,7 +20,8 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
     private boolean completed = false;
     private Exception error;
 
-    protected Subject() {}
+    protected Subject() {
+    }
 
     /**
      * Creates a new Subject.
@@ -102,4 +103,5 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
             }
         });
     }
+
 }

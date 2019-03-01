@@ -87,4 +87,5 @@ class NamedUserApiClient extends BaseApiClient {
                 return "android";
         }
     }
+
 }

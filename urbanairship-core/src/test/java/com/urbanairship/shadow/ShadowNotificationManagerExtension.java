@@ -10,8 +10,10 @@ import org.robolectric.shadows.ShadowNotificationManager;
 
 @Implements(NotificationManager.class)
 public class ShadowNotificationManagerExtension extends ShadowNotificationManager {
+
     @Implementation
     public boolean areNotificationsEnabled() {
         return true;
     }
+
 }

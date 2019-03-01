@@ -33,4 +33,5 @@ public class TagGroupResult {
         this.success = success;
         this.tagGroups = tagGroups == null ? Collections.<String, Set<String>>emptyMap() : tagGroups;
     }
+
 }

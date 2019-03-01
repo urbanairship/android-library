@@ -199,7 +199,8 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param channelId The channel ID.
      */
-    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {}
+    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
+    }
 
     /**
      * Called when a channel ID is created.
@@ -207,14 +208,16 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param channelId The channel ID.
      */
-    protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {}
+    protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
+    }
 
     /**
      * Called when channel registration fails.
      *
      * @param context The application context.
      */
-    protected void onChannelRegistrationFailed(@NonNull Context context) {}
+    protected void onChannelRegistrationFailed(@NonNull Context context) {
+    }
 
     /**
      * Called when a push is received.
@@ -225,7 +228,8 @@ public class AirshipReceiver extends BroadcastReceiver {
      * the notification was posted {@link #onNotificationPosted(Context, NotificationInfo)} will be called
      * immediately after this method with the {@link NotificationInfo}.
      */
-    protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, boolean notificationPosted) {}
+    protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, boolean notificationPosted) {
+    }
 
     /**
      * Called when a notification is posted.
@@ -233,7 +237,8 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param notificationInfo The notification info.
      */
-    protected void onNotificationPosted(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {}
+    protected void onNotificationPosted(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {
+    }
 
     /**
      * Called when a notification is opened.
@@ -270,12 +275,14 @@ public class AirshipReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param notificationInfo The notification info.
      */
-    protected void onNotificationDismissed(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {}
+    protected void onNotificationDismissed(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {
+    }
 
     /**
      * Contains information about a posted notification.
      */
     public static class NotificationInfo {
+
         private final PushMessage message;
         private final int notificationId;
 
@@ -312,12 +319,14 @@ public class AirshipReceiver extends BroadcastReceiver {
         public String getNotificationTag() {
             return message.getNotificationTag();
         }
+
     }
 
     /**
      * Contains info about a notification action button.
      */
     public static class ActionButtonInfo {
+
         private final String buttonId;
         private final boolean isForeground;
         private final Bundle remoteInput;
@@ -358,5 +367,7 @@ public class AirshipReceiver extends BroadcastReceiver {
         public Bundle getRemoteInput() {
             return remoteInput;
         }
+
     }
+
 }

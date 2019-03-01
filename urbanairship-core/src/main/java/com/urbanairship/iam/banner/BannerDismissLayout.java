@@ -36,14 +36,12 @@ public class BannerDismissLayout extends FrameLayout {
      */
     private static final float FLING_MIN_DRAG_PERCENT = .1f;
 
-
     private static final int DEFAULT_OVER_DRAG_DP = 24;
 
     private float overDragAmount;
 
     @BannerDisplayContent.Placement
     private String placement = BannerDisplayContent.PLACEMENT_BOTTOM;
-
 
     /**
      * Interface to listen for dismissing the message view.
@@ -63,6 +61,7 @@ public class BannerDismissLayout extends FrameLayout {
          * {@code ViewDragHelper.STATE_DRAGGING}, or {@code ViewDragHelper.STATE_SETTLING}.
          */
         void onDragStateChanged(@NonNull View view, int state);
+
     }
 
     private ViewDragHelper dragHelper;
@@ -151,7 +150,6 @@ public class BannerDismissLayout extends FrameLayout {
             this.listener = listener;
         }
     }
-
 
     /**
      * Gets the view's y translation as a fraction of its height.
@@ -300,6 +298,7 @@ public class BannerDismissLayout extends FrameLayout {
      * Helper class to handle the the callbacks from the ViewDragHelper.
      */
     private class ViewDragCallback extends ViewDragHelper.Callback {
+
         private int startTop;
         private int startLeft;
         private float dragPercent = 0;
@@ -394,5 +393,7 @@ public class BannerDismissLayout extends FrameLayout {
 
             invalidate();
         }
+
     }
+
 }

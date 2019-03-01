@@ -98,4 +98,5 @@ public class BoundedFrameLayout extends FrameLayout {
     public void setClipPathBorderRadius(final float borderRadius) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
     }
+
 }

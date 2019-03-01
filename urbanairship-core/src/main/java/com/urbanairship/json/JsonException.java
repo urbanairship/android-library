@@ -30,4 +30,5 @@ public class JsonException extends Exception {
     public JsonException(@NonNull String message, @Nullable Throwable cause) {
         super(message, cause);
     }
+
 }

@@ -46,12 +46,15 @@ public class StubbedActionRunRequest extends ActionRunRequest {
     }
 
     @Override
-    public void run() { }
+    public void run() {
+    }
 
     @Override
-    public void run(ActionCompletionCallback callback) { }
+    public void run(ActionCompletionCallback callback) {
+    }
 
     @Override
-    public void run(Looper looper, ActionCompletionCallback callback) { }
+    public void run(Looper looper, ActionCompletionCallback callback) {
+    }
 
 }

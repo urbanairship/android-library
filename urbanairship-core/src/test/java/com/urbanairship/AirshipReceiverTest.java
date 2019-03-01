@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 public class AirshipReceiverTest extends BaseTestCase {
 
     private Context context;
@@ -57,6 +56,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertEquals("channel id", channelId);
             }
+
             @Override
             protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
                 throw new RuntimeException();
@@ -82,6 +82,7 @@ public class AirshipReceiverTest extends BaseTestCase {
             protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
                 throw new RuntimeException();
             }
+
             @Override
             protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
                 callbackCount++;
@@ -239,7 +240,6 @@ public class AirshipReceiverTest extends BaseTestCase {
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true)
                 .putExtra(AirshipReceiver.EXTRA_REMOTE_INPUT, remoteInput);
 
-
         receiver = new AirshipReceiver() {
             @Override
             protected boolean onNotificationOpened(@NonNull Context context, @NonNull NotificationInfo notificationInfo, @NonNull ActionButtonInfo buttonInfo) {
@@ -307,7 +307,5 @@ public class AirshipReceiverTest extends BaseTestCase {
         receiver.onReceive(context, intent);
         assertEquals(1, callbackCount);
     }
-
-
 
 }

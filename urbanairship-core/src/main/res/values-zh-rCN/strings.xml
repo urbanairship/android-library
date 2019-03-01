@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">是</string>
@@ -56,20 +57,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>项已选</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">刷新</string>
     <string name="ua_open">打开</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">评价</string>
     <string name="ua_rate_app_action_default_rate_negative_button">不用了，谢谢</string>
     <string name="ua_rate_app_action_default_title">喜欢<xliff:g example="this App" id="app_name">%1$2s</xliff:g>？</string>
     <string name="ua_rate_app_action_default_body">点击<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>在应用程序商店进行评价。</string>
     <string name="ua_rate_app_action_generic_display_name">这款应用程序</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">通知</string>
     <string name="ua_default_channel_description">一般应用程序更新</string>
     <string name="ua_channel_id">通道ID</string>
-    
+
 </resources>

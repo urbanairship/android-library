@@ -69,7 +69,6 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
         return builder;
     }
 
-
     /**
      * Called to bind the content view to the push message.
      *
@@ -83,4 +82,5 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
         contentView.setTextViewText(android.R.id.summary, pushMessage.getSummary());
         contentView.setImageViewResource(android.R.id.icon, getSmallIconId());
     }
+
 }

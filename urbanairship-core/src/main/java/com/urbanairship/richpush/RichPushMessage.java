@@ -305,7 +305,6 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         return this.deleted;
     }
 
-
     /**
      * Gets the list icon URL if available.
      *
@@ -365,5 +364,6 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
 
         return result;
     }
+
 }
 

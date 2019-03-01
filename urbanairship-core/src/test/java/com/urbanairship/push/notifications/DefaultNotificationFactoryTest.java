@@ -65,7 +65,6 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         assertEquals("Small icon should match.", UAirship.getAppIcon(), factory.getSmallIconId());
     }
 
-
     /**
      * Test getNextId returns the constant notification ID.
      */
@@ -195,4 +194,5 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         assertEquals(20, factory.getColor());
         assertEquals("test_channel", factory.getNotificationChannel());
     }
+
 }

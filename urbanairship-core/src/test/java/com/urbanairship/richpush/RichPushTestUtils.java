@@ -47,5 +47,4 @@ public class RichPushTestUtils {
         return RichPushMessage.create(JsonValue.wrapOpt(payload), true, false);
     }
 
-
 }

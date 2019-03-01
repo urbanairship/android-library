@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -35,6 +34,7 @@ import static org.mockito.Mockito.when;
  * {@link RemoteConfigManager} tests.
  */
 public class RemoteConfigManagerTest extends BaseTestCase {
+
     private RemoteConfigManager remoteConfigManager;
     private RemoteData remoteData;
     private Subject<Collection<RemoteDataPayload>> updates;
@@ -106,7 +106,6 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         RemoteDataPayload common = createRemoteDataPayload("app_config:common", System.currentTimeMillis(), commonData);
         RemoteDataPayload android = createRemoteDataPayload("app_config:android", System.currentTimeMillis(), androidData);
 
-
         // Notify the updates
         updates.onNext(Arrays.asList(common, android));
 
@@ -121,13 +120,12 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         assertEquals(expectedModuleTwoConfig, config.get("module_two"));
     }
 
-
     static RemoteDataPayload createRemoteDataPayload(String type, long timeStamp, JsonMap data) {
         return RemoteDataPayload.newBuilder()
-                .setType(type)
-                .setTimeStamp(timeStamp)
-                .setData(data)
-                .build();
+                                .setType(type)
+                                .setTimeStamp(timeStamp)
+                                .setData(data)
+                                .build();
     }
 
     static RemoteDataPayload createDisablePayload(String type, long refreshInterval, Collection<String> modules) {
@@ -151,6 +149,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
      * Module adapter that just tracks calls from the data manager to the adapter.
      */
     public class TestModuleAdapter extends ModuleAdapter {
+
         List<String> enabledModules = new ArrayList<>();
         List<String> disabledModules = new ArrayList<>();
         Map<String, JsonList> sentConfig = new HashMap<>();
@@ -178,5 +177,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
             sentConfig.put(module, config);
         }
+
     }
+
 }

@@ -57,7 +57,6 @@ public class FullScreenDisplayContentTest extends BaseTestCase {
         assertEquals(content.hashCode(), fromJson.hashCode());
     }
 
-
     @Test(expected = IllegalArgumentException.class)
     public void testNoHeaderOrBody() {
         FullScreenDisplayContent.newBuilder()
@@ -153,4 +152,5 @@ public class FullScreenDisplayContentTest extends BaseTestCase {
 
         assertEquals(DisplayContent.BUTTON_LAYOUT_STACKED, displayContent.getButtonLayout());
     }
+
 }

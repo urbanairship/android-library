@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  * value from a Java-style properties file.
  */
 public class AirshipConfigOptionsTest extends BaseTestCase {
+
     public Context uaContext;
     static final String TEST_PROPERTIES_FILE = "valid.properties";
     static final String INVALID_PROPERTIES_FILE = "invalid.properties";
@@ -69,7 +70,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://test.wallet.url.com/", aco.walletUrl);
         assertEquals("test_channel", aco.notificationChannel);
         assertEquals("https://play.google.com/store/apps/topic?id=editors_choice", aco.appStoreUri.toString());
-
 
     }
 
@@ -139,9 +139,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
 
         assertEquals("fcm sender ID", aco.getFcmSenderId());
 
-
     }
-
 
     Properties getProperties(String file) throws IOException {
         InputStream stream = null;
@@ -156,4 +154,5 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
             }
         }
     }
+
 }

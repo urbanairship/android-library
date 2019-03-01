@@ -56,7 +56,6 @@ public class ModalDisplayContentTest extends BaseTestCase {
         assertEquals(content.hashCode(), fromJson.hashCode());
     }
 
-
     @Test(expected = IllegalArgumentException.class)
     public void testNoHeaderOrBody() {
         ModalDisplayContent.newBuilder()

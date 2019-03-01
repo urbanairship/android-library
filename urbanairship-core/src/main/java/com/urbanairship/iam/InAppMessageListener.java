@@ -25,4 +25,5 @@ public interface InAppMessageListener {
      * @param resolutionInfo The resolution info.
      */
     void onMessageFinished(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull ResolutionInfo resolutionInfo);
+
 }

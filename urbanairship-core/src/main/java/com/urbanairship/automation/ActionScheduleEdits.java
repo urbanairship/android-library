@@ -1,4 +1,5 @@
 /* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.automation;
 
 import android.support.annotation.IntRange;
@@ -118,7 +119,6 @@ public class ActionScheduleEdits implements ScheduleEdits {
         return actions;
     }
 
-
     /**
      * Creates a new builder.
      *
@@ -196,7 +196,8 @@ public class ActionScheduleEdits implements ScheduleEdits {
         private Map<String, JsonValue> actions;
         private JsonMap metadata;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Adds a map of actions.
@@ -305,5 +306,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
         public ActionScheduleEdits build() {
             return new ActionScheduleEdits(this);
         }
+
     }
+
 }

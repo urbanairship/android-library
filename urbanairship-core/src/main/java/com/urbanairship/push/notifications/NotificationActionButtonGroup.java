@@ -84,6 +84,7 @@ public class NotificationActionButtonGroup {
      * Builds the NotificationActionButtonGroup.
      */
     public static class Builder {
+
         private final List<NotificationActionButton> actionButtons = new ArrayList<>();
 
         /**
@@ -107,5 +108,7 @@ public class NotificationActionButtonGroup {
         public NotificationActionButtonGroup build() {
             return new NotificationActionButtonGroup(actionButtons);
         }
+
     }
+
 }

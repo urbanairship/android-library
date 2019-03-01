@@ -232,9 +232,11 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * Builder class for {@link com.urbanairship.json.JsonMap} Objects.
      */
     public static class Builder {
+
         private final Map<String, JsonValue> map = new HashMap<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Add a pre-existing JSON map to the JSON map.
@@ -370,5 +372,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
         public JsonMap build() {
             return new JsonMap(map);
         }
+
     }
+
 }

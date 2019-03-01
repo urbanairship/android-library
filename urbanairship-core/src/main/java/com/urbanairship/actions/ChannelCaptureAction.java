@@ -62,4 +62,5 @@ public class ChannelCaptureAction extends Action {
         }
         return ActionResult.newEmptyResult();
     }
+
 }

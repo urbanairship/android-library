@@ -81,7 +81,6 @@ public class ScheduleDelay implements Parcelable {
     private final String regionId;
     private final List<Trigger> cancellationTriggers;
 
-
     ScheduleDelay(@NonNull Builder builder) {
         this.seconds = builder.seconds;
         this.screens = builder.screens;
@@ -283,6 +282,7 @@ public class ScheduleDelay implements Parcelable {
      * Builder class.
      */
     public static class Builder {
+
         private long seconds;
         private List<String> screens;
         private int appState = APP_STATE_ANY;
@@ -391,5 +391,7 @@ public class ScheduleDelay implements Parcelable {
 
             return new ScheduleDelay(this);
         }
+
     }
+
 }

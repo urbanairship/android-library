@@ -36,7 +36,6 @@ import java.util.UUID;
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
 
-
 /**
  * Runnable that processes an incoming push.
  */
@@ -300,10 +299,10 @@ class IncomingPushRunnable implements Runnable {
         for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
 
             ActionRunRequest.createRequest(action.getKey())
-                    .setMetadata(metadata)
-                    .setValue(action.getValue())
-                    .setSituation(Action.SITUATION_PUSH_RECEIVED)
-                    .run();
+                            .setMetadata(metadata)
+                            .setValue(action.getValue())
+                            .setSituation(Action.SITUATION_PUSH_RECEIVED)
+                            .run();
         }
     }
 
@@ -351,15 +350,15 @@ class IncomingPushRunnable implements Runnable {
         }
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
-                .generateUniqueId(context)
-                .setAirshipComponent(PushManager.class)
-                .setPersistent(true)
-                .setExtras(JsonMap.newBuilder()
-                        .putOpt(EXTRA_PUSH, message)
-                        .put(EXTRA_PROVIDER_CLASS, providerClass)
-                        .build())
-                .build();
+                                 .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
+                                 .generateUniqueId(context)
+                                 .setAirshipComponent(PushManager.class)
+                                 .setPersistent(true)
+                                 .setExtras(JsonMap.newBuilder()
+                                                   .putOpt(EXTRA_PUSH, message)
+                                                   .put(EXTRA_PROVIDER_CLASS, providerClass)
+                                                   .build())
+                                 .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
@@ -368,6 +367,7 @@ class IncomingPushRunnable implements Runnable {
      * IncomingPushRunnable builder.
      */
     static class Builder {
+
         private final Context context;
         private PushMessage message;
         private String providerClass;
@@ -472,5 +472,7 @@ class IncomingPushRunnable implements Runnable {
 
             return new IncomingPushRunnable(this);
         }
+
     }
+
 }

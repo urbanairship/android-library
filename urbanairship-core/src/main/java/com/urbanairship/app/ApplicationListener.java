@@ -6,6 +6,7 @@ package com.urbanairship.app;
  * Listener for application foreground and backgrounds.
  */
 public interface ApplicationListener {
+
     /**
      * Called when the app is foregrounded.
      *
@@ -19,4 +20,5 @@ public interface ApplicationListener {
      * @param milliseconds Time in milliseconds when the background occurred.
      */
     void onBackground(long milliseconds);
+
 }

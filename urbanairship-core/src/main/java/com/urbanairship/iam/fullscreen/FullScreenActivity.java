@@ -123,7 +123,6 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         // Background color
         getWindow().getDecorView().setBackgroundColor(displayContent.getBackgroundColor());
 
-
         // Apply the insets but do not consume them. Allows for the dismiss button to also receive the insets.
         if (ViewCompat.getFitsSystemWindows(contentHolder)) {
             ViewCompat.setOnApplyWindowInsetsListener(contentHolder, new OnApplyWindowInsetsListener() {
@@ -205,4 +204,5 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
 
         return template;
     }
+
 }

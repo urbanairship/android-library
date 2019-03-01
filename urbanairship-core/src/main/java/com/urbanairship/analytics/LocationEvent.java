@@ -26,7 +26,6 @@ public class LocationEvent extends Event {
     @Retention(RetentionPolicy.SOURCE)
     public @interface UpdateType {}
 
-
     /**
      * Continuous location update type
      */

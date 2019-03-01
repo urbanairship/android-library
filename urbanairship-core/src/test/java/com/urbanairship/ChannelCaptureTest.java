@@ -224,4 +224,5 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         return Base64.encodeToString(token.toString().getBytes(), Base64.DEFAULT);
     }
+
 }

@@ -138,4 +138,5 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
                 .setStyle(style)
                 .build();
     }
+
 }

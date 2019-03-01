@@ -213,7 +213,6 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-
     /**
      * Dispatches a job to update the named user tag groups.
      */
@@ -227,4 +226,5 @@ public class NamedUser extends AirshipComponent {
 
         jobDispatcher.dispatch(jobInfo);
     }
+
 }

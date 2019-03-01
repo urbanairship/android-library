@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -11,7 +10,7 @@
         android:id="@+id/media"
         style="@style/UrbanAirship.InAppBanner.MediaView.Right"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"/>
+        android:layout_alignParentRight="true" />
 
 
     <TextView
@@ -23,7 +22,7 @@
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/media"
         android:layout_toStartOf="@+id/media"
-        tools:text="Banner Heading"/>
+        tools:text="Banner Heading" />
 
     <TextView
         android:id="@+id/body"
@@ -35,6 +34,6 @@
         android:layout_below="@+id/heading"
         android:layout_toLeftOf="@+id/media"
         android:layout_toStartOf="@+id/media"
-        tools:text="Banner Body"/>
+        tools:text="Banner Body" />
 
 </RelativeLayout>

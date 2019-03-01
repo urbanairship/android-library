@@ -8,5 +8,7 @@ import android.support.annotation.Nullable;
  * @param <T> The type of result.
  */
 public interface ResultCallback<T> {
+
     void onResult(@Nullable T result);
+
 }

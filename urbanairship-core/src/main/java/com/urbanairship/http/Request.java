@@ -29,6 +29,7 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * Http request wrapper.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -204,10 +205,9 @@ public class Request {
             }
 
             Response.Builder responseBuilder = Response.newBuilder(conn.getResponseCode())
-                    .setResponseMessage(conn.getResponseMessage())
-                    .setResponseHeaders(conn.getHeaderFields())
-                    .setLastModified(conn.getLastModified());
-
+                                                       .setResponseMessage(conn.getResponseMessage())
+                                                       .setResponseHeaders(conn.getHeaderFields())
+                                                       .setLastModified(conn.getLastModified());
 
             try {
                 responseBuilder.setResponseBody(readEntireStream(conn.getInputStream()));
@@ -268,6 +268,5 @@ public class Request {
 
         return sb.toString();
     }
-
 
 }

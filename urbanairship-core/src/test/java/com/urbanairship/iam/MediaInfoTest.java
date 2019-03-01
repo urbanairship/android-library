@@ -22,13 +22,11 @@ public class MediaInfoTest extends BaseTestCase {
                                       .setType(MediaInfo.TYPE_IMAGE)
                                       .build();
 
-
         MediaInfo fromJson = MediaInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());
     }
-
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingUrl() {
@@ -53,4 +51,5 @@ public class MediaInfoTest extends BaseTestCase {
                  .setDescription("Its cool.")
                  .build();
     }
+
 }

@@ -105,6 +105,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
      * A DialogFragment that wraps Google Play services error dialogs.
      */
     public static class ErrorDialogFragment extends DialogFragment {
+
         @NonNull
         private static final String DIALOG_ERROR = "dialog_error";
 
@@ -152,5 +153,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
                 getActivity().finish();
             }
         }
+
     }
+
 }

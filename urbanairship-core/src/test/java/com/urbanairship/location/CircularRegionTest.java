@@ -73,4 +73,5 @@ public class CircularRegionTest extends BaseTestCase {
         CircularRegion circularRegion = new CircularRegion(10, 0.0, -181.0);
         assertFalse(circularRegion.isValid());
     }
+
 }

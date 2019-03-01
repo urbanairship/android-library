@@ -243,4 +243,5 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a purchased retail event.\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"nike\"");
     }
+
 }

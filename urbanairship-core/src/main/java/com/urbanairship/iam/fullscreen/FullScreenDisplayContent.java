@@ -31,7 +31,6 @@ import java.util.List;
  */
 public class FullScreenDisplayContent implements DisplayContent {
 
-
     @StringDef({ TEMPLATE_HEADER_MEDIA_BODY, TEMPLATE_MEDIA_HEADER_BODY, TEMPLATE_HEADER_BODY_MEDIA })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Template {}
@@ -165,7 +164,6 @@ public class FullScreenDisplayContent implements DisplayContent {
             }
         }
 
-
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
@@ -207,7 +205,6 @@ public class FullScreenDisplayContent implements DisplayContent {
                       .build()
                       .toJsonValue();
     }
-
 
     /**
      * Returns the optional heading {@link TextInfo}.
@@ -260,7 +257,6 @@ public class FullScreenDisplayContent implements DisplayContent {
         return buttonLayout;
     }
 
-
     /**
      * Returns the template.
      *
@@ -271,7 +267,6 @@ public class FullScreenDisplayContent implements DisplayContent {
     public String getTemplate() {
         return template;
     }
-
 
     /**
      * Returns the background color.
@@ -401,8 +396,8 @@ public class FullScreenDisplayContent implements DisplayContent {
         private int dismissButtonColor = Color.BLACK;
         private ButtonInfo footer;
 
-
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(FullScreenDisplayContent displayContent) {
             this.heading = displayContent.heading;
@@ -495,7 +490,6 @@ public class FullScreenDisplayContent implements DisplayContent {
             return this;
         }
 
-
         /**
          * Sets the template. Defaults to {@link #TEMPLATE_HEADER_MEDIA_BODY}.
          *
@@ -560,5 +554,7 @@ public class FullScreenDisplayContent implements DisplayContent {
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             return new FullScreenDisplayContent(this);
         }
+
     }
+
 }

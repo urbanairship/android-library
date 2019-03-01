@@ -7,7 +7,6 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -117,12 +116,12 @@ class QuietTimeInterval implements JsonSerializable {
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-               .put(START_HOUR_KEY, startHour)
-               .put(START_MIN_KEY, startMin)
-               .put(END_HOUR_KEY, endHour)
-               .put(END_MIN_KEY, endMin)
-               .build()
-               .toJsonValue();
+                      .put(START_HOUR_KEY, startHour)
+                      .put(START_MIN_KEY, startMin)
+                      .put(END_HOUR_KEY, endHour)
+                      .put(END_MIN_KEY, endMin)
+                      .build()
+                      .toJsonValue();
     }
 
     /**
@@ -205,6 +204,7 @@ class QuietTimeInterval implements JsonSerializable {
      * QuietTimeInterval builder class.
      */
     public static class Builder {
+
         private int startHour = -1;
         private int startMin = -1;
         private int endHour = -1;
@@ -288,5 +288,7 @@ class QuietTimeInterval implements JsonSerializable {
         public QuietTimeInterval build() {
             return new QuietTimeInterval(this);
         }
+
     }
+
 }

@@ -52,7 +52,6 @@ public class AssetManagerTest extends BaseTestCase {
                                                                                                   .build());
     }
 
-
     /**
      * Test preparing assets when a new message is scheduled.
      */
@@ -141,6 +140,5 @@ public class AssetManagerTest extends BaseTestCase {
         assetManager.onScheduleFinished(schedule);
         verify(mockCache).clearAssets(schedule.getId());
     }
-
 
 }

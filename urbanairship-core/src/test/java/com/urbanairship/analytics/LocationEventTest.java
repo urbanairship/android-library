@@ -55,7 +55,6 @@ public class LocationEventTest extends BaseTestCase {
         passiveProviderLocation = createTestLocation("PASSIVE");
         unknownProviderLocation = createTestLocation("UNKNOWN");
 
-
         event = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
 
         backgroundEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, false);
@@ -142,7 +141,7 @@ public class LocationEventTest extends BaseTestCase {
     @Test
     public void testJSONKeys() throws JsonException {
         String[] expectedKeys = new String[] { "session_id", "lat", "long", "requested_accuracy", "update_type",
-                                               "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground" };
+                "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground" };
 
         JsonMap eventData = JsonValue.parseString(event.createEventPayload("sessionId")).optMap().get(Event.DATA_KEY).optMap();
 
@@ -159,4 +158,5 @@ public class LocationEventTest extends BaseTestCase {
         location.setLongitude(LON);
         return location;
     }
+
 }

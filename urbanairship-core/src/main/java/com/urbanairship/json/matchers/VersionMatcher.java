@@ -68,4 +68,5 @@ public class VersionMatcher extends ValueMatcher {
     public int hashCode() {
         return versionMatcher.hashCode();
     }
+
 }

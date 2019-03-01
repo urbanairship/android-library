@@ -10,8 +10,6 @@ import android.widget.ImageView;
 
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Asynchronous bitmap loader for image views.
@@ -66,4 +64,5 @@ public class DefaultImageLoader implements ImageLoader {
         requestMap.put(imageView, request);
         request.execute();
     }
+
 }

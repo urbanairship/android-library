@@ -112,6 +112,7 @@ public class Logger {
 
     /**
      * Gets the log level.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -353,4 +354,5 @@ public class Logger {
             throw new IllegalArgumentException("Invalid log level: " + value);
         }
     }
+
 }

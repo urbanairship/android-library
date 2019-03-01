@@ -104,5 +104,7 @@ public class RichPushPayload implements JsonSerializable {
         public RichPushPayload build() {
             return new RichPushPayload(this);
         }
+
     }
+
 }

@@ -123,7 +123,6 @@ public class UAWebViewClient extends WebViewClient {
     @NonNull
     public static final String CLOSE_COMMAND = "close";
 
-
     private final Map<String, Credentials> authRequestCredentials = new HashMap<>();
     private ActionCompletionCallback actionCompletionCallback;
     private final ActionRunRequestFactory actionRunRequestFactory;
@@ -188,7 +187,7 @@ public class UAWebViewClient extends WebViewClient {
      */
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView webView, String url) {
-        if(url.toLowerCase().endsWith("/favicon.ico")) {
+        if (url.toLowerCase().endsWith("/favicon.ico")) {
             return new WebResourceResponse("image/png", null, null);
         }
 
@@ -206,13 +205,12 @@ public class UAWebViewClient extends WebViewClient {
     @SuppressLint("NewApi")
     public WebResourceResponse shouldInterceptRequest(WebView webView, WebResourceRequest request) {
 
-        if(!request.isForMainFrame() && request.getUrl().getPath().endsWith("/favicon.ico")) {
+        if (!request.isForMainFrame() && request.getUrl().getPath().endsWith("/favicon.ico")) {
             return new WebResourceResponse("image/png", null, null);
         }
 
         return null;
     }
-
 
     @CallSuper
     @Override
@@ -511,7 +509,7 @@ public class UAWebViewClient extends WebViewClient {
      * @param username The auth user.
      * @param password The auth password.
      */
-    void addAuthRequestCredentials(@NonNull String expectedAuthHost, @Nullable  String username, @Nullable String password) {
+    void addAuthRequestCredentials(@NonNull String expectedAuthHost, @Nullable String username, @Nullable String password) {
         authRequestCredentials.put(expectedAuthHost, new Credentials(username, password));
     }
 
@@ -552,6 +550,7 @@ public class UAWebViewClient extends WebViewClient {
      * Credentials model class.
      */
     private static class Credentials {
+
         final String username;
         final String password;
 
@@ -559,6 +558,7 @@ public class UAWebViewClient extends WebViewClient {
             this.username = username;
             this.password = password;
         }
+
     }
 
     /**
@@ -608,7 +608,6 @@ public class UAWebViewClient extends WebViewClient {
               .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
               .append(createGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().getAppKey()))
               .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
-
 
             if (TextUtils.isEmpty(nativeBridge)) {
                 try {
@@ -667,5 +666,7 @@ public class UAWebViewClient extends WebViewClient {
                 }
             }
         }
+
     }
+
 }

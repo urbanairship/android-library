@@ -69,4 +69,5 @@ public class RichPushMessageTest extends BaseTestCase {
         assertEquals(10000l, message.getExpirationDateMS().longValue());
         assertTrue(message.isExpired());
     }
+
 }

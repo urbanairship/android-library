@@ -17,7 +17,7 @@ import org.mockito.stubbing.Answer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class PassTest extends BaseTestCase{
+public class PassTest extends BaseTestCase {
 
     @Test
     public void testParsePass() throws Exception {

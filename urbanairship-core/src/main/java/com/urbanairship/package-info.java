@@ -5,7 +5,7 @@
  *
  * This package provides a very high level interface to the Urban Airship API via
  * <code>UAirship</code> and the <code>Options</code> classes.
- *
  */
+
 package com.urbanairship;
 

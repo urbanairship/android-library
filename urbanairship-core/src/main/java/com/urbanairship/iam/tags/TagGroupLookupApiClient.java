@@ -101,7 +101,6 @@ class TagGroupLookupApiClient {
                                  .put(IF_MODIFIED_SINCE_KEY, cachedResponse != null ? cachedResponse.lastModifiedTime : null)
                                  .build();
 
-
         String tagPayload = payload.toString();
         Logger.debug("Looking up tags with payload: %s", tagPayload);
 
@@ -135,4 +134,5 @@ class TagGroupLookupApiClient {
 
         return parsedResponse;
     }
+
 }

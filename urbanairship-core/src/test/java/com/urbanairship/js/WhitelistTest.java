@@ -102,8 +102,6 @@ public class WhitelistTest extends BaseTestCase {
         assertFalse(whitelist.addEntry("file://"));
     }
 
-
-
     /**
      * Test international URLs.
      */
@@ -285,7 +283,6 @@ public class WhitelistTest extends BaseTestCase {
         whitelist.addEntry("https://urbanairship.com/what/index.html");
         whitelist.addEntry("wild://cool/*");
 
-
         // Reject
         assertFalse(whitelist.isWhitelisted("https://what.urbanairship.com/reject.html", Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/image.png", Whitelist.SCOPE_ALL));
@@ -303,7 +300,6 @@ public class WhitelistTest extends BaseTestCase {
         assertTrue(whitelist.isWhitelisted("wild://cool/path", Whitelist.SCOPE_ALL));
 
     }
-
 
     /**
      * Test scope.
@@ -436,6 +432,7 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     private class TestWhitelistCallback implements Whitelist.OnWhitelistCallback {
+
         public String matchingURLToAccept;
         public String matchingURLToReject;
         public String nonMatchingURL;
@@ -454,7 +451,9 @@ public class WhitelistTest extends BaseTestCase {
                 return false;
             }
         }
+
     }
+
 }
 
 

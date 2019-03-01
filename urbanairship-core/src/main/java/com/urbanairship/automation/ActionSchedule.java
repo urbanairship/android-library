@@ -102,4 +102,5 @@ public class ActionSchedule implements Schedule<ActionScheduleInfo>, Parcelable 
     public ActionScheduleInfo getInfo() {
         return info;
     }
+
 }

@@ -50,4 +50,5 @@ public class PlatformUtilsTest extends BaseTestCase {
         assertEquals("android", PlatformUtils.asString(UAirship.ANDROID_PLATFORM));
         assertEquals("amazon", PlatformUtils.asString(UAirship.AMAZON_PLATFORM));
     }
+
 }

@@ -122,4 +122,5 @@ public class CancelSchedulesAction extends Action {
 
         return ActionResult.newEmptyResult();
     }
+
 }

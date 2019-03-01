@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Ja</string>
@@ -57,20 +58,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> ausgewählt</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Neu laden</string>
     <string name="ua_open">Öffnen</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Bewerten</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nein danke</string>
     <string name="ua_rate_app_action_default_title">Gefällt Ihnen <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Tippen Sie auf <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, um die App zu bewerten.</string>
     <string name="ua_rate_app_action_generic_display_name">Diese App</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Benachrichtigungen</string>
     <string name="ua_default_channel_description">Allgemeine App-Updates</string>
     <string name="ua_channel_id">Kanal-ID</string>
-    
+
 </resources>

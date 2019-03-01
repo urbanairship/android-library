@@ -172,11 +172,11 @@ public class CancelableOperationTest extends BaseTestCase {
         assertTrue(onCancel.onCancelCalled);
     }
 
-
     /**
      * Implementation of CancelableOperation for testing.
      */
     static class TestOperation extends CancelableOperation {
+
         volatile boolean onRunCalled = false;
         volatile boolean onCancelCalled = false;
 
@@ -193,6 +193,7 @@ public class CancelableOperationTest extends BaseTestCase {
         protected void onCancel() {
             onCancelCalled = true;
         }
+
     }
 
 }

@@ -14,6 +14,7 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Observer<T> {
+
     /**
      * Notifies the observer that a new value is available
      *
@@ -34,4 +35,5 @@ public interface Observer<T> {
      * @param e The error as an exception.
      */
     void onError(@NonNull Exception e);
+
 }

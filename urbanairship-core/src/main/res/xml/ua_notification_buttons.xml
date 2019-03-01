@@ -8,13 +8,13 @@
             foreground="true"
             id="yes"
             android:icon="@drawable/ua_ic_notification_button_accept"
-            android:label="@string/ua_notification_button_yes"/>
+            android:label="@string/ua_notification_button_yes" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="no"
             android:icon="@drawable/ua_ic_notification_button_decline"
-            android:label="@string/ua_notification_button_no"/>
+            android:label="@string/ua_notification_button_no" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -24,13 +24,13 @@
             foreground="false"
             id="yes"
             android:icon="@drawable/ua_ic_notification_button_accept"
-            android:label="@string/ua_notification_button_yes"/>
+            android:label="@string/ua_notification_button_yes" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="no"
             android:icon="@drawable/ua_ic_notification_button_decline"
-            android:label="@string/ua_notification_button_no"/>
+            android:label="@string/ua_notification_button_no" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -40,13 +40,13 @@
             foreground="true"
             id="accept"
             android:icon="@drawable/ua_ic_notification_button_accept"
-            android:label="@string/ua_notification_button_accept"/>
+            android:label="@string/ua_notification_button_accept" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="decline"
             android:icon="@drawable/ua_ic_notification_button_decline"
-            android:label="@string/ua_notification_button_decline"/>
+            android:label="@string/ua_notification_button_decline" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -56,13 +56,13 @@
             foreground="false"
             id="accept"
             android:icon="@drawable/ua_ic_notification_button_accept"
-            android:label="@string/ua_notification_button_accept"/>
+            android:label="@string/ua_notification_button_accept" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="decline"
             android:icon="@drawable/ua_ic_notification_button_decline"
-            android:label="@string/ua_notification_button_decline"/>
+            android:label="@string/ua_notification_button_decline" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -72,13 +72,13 @@
             foreground="true"
             id="download"
             android:icon="@drawable/ua_ic_notification_button_download"
-            android:label="@string/ua_notification_button_download"/>
+            android:label="@string/ua_notification_button_download" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -89,13 +89,13 @@
             foreground="false"
             id="remind"
             android:icon="@drawable/ua_ic_notification_button_remind"
-            android:label="@string/ua_notification_button_remind"/>
+            android:label="@string/ua_notification_button_remind" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -105,15 +105,15 @@
             foreground="false"
             id="opt_in"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_opt_in"/>
+            android:label="@string/ua_notification_button_opt_in" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_opt_out_share">
 
@@ -121,15 +121,15 @@
             foreground="false"
             id="opt_out"
             android:icon="@drawable/ua_ic_notification_button_unfollow"
-            android:label="@string/ua_notification_button_opt_out"/>
+            android:label="@string/ua_notification_button_opt_out" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_follow_share">
 
@@ -137,15 +137,15 @@
             foreground="false"
             id="follow"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_follow"/>
+            android:label="@string/ua_notification_button_follow" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_unfollow_share">
 
@@ -153,15 +153,15 @@
             foreground="false"
             id="unfollow"
             android:icon="@drawable/ua_ic_notification_button_unfollow"
-            android:label="@string/ua_notification_button_unfollow"/>
+            android:label="@string/ua_notification_button_unfollow" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_shop_now_share">
 
@@ -169,15 +169,15 @@
             foreground="true"
             id="shop_now"
             android:icon="@drawable/ua_ic_notification_button_cart"
-            android:label="@string/ua_notification_button_shop_now"/>
+            android:label="@string/ua_notification_button_shop_now" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_buy_now_share">
 
@@ -185,15 +185,15 @@
             foreground="true"
             id="buy_now"
             android:icon="@drawable/ua_ic_notification_button_cart"
-            android:label="@string/ua_notification_button_buy_now"/>
+            android:label="@string/ua_notification_button_buy_now" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_more_like_less_like">
 
@@ -201,15 +201,15 @@
             foreground="false"
             id="more_like"
             android:icon="@drawable/ua_ic_notification_button_thumbs_up"
-            android:label="@string/ua_notification_button_more_like"/>
+            android:label="@string/ua_notification_button_more_like" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="less_like"
             android:icon="@drawable/ua_ic_notification_button_thumbs_down"
-            android:label="@string/ua_notification_button_less_like"/>
+            android:label="@string/ua_notification_button_less_like" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_like_dislike">
 
@@ -217,15 +217,15 @@
             foreground="false"
             id="like"
             android:icon="@drawable/ua_ic_notification_button_thumbs_up"
-            android:label="@string/ua_notification_button_like"/>
+            android:label="@string/ua_notification_button_like" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="dislike"
             android:icon="@drawable/ua_ic_notification_button_thumbs_down"
-            android:label="@string/ua_notification_button_dislike"/>
+            android:label="@string/ua_notification_button_dislike" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_like_share">
 
@@ -233,15 +233,15 @@
             foreground="false"
             id="like"
             android:icon="@drawable/ua_ic_notification_button_thumbs_up"
-            android:label="@string/ua_notification_button_like"/>
+            android:label="@string/ua_notification_button_like" />
 
         <UrbanAirshipActionButton
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
 
     <UrbanAirshipActionButtonGroup id="ua_shop_now">
@@ -250,9 +250,9 @@
             foreground="true"
             id="shop_now"
             android:icon="@drawable/ua_ic_notification_button_cart"
-            android:label="@string/ua_notification_button_shop_now"/>
+            android:label="@string/ua_notification_button_shop_now" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_buy_now">
 
@@ -260,9 +260,9 @@
             foreground="true"
             id="buy_now"
             android:icon="@drawable/ua_ic_notification_button_cart"
-            android:label="@string/ua_notification_button_buy_now"/>
+            android:label="@string/ua_notification_button_buy_now" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_follow">
 
@@ -270,9 +270,9 @@
             foreground="false"
             id="follow"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_follow"/>
+            android:label="@string/ua_notification_button_follow" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_unfollow">
 
@@ -280,9 +280,9 @@
             foreground="false"
             id="unfollow"
             android:icon="@drawable/ua_ic_notification_button_unfollow"
-            android:label="@string/ua_notification_button_unfollow"/>
+            android:label="@string/ua_notification_button_unfollow" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
 
     <UrbanAirshipActionButtonGroup id="ua_opt_in">
@@ -291,9 +291,9 @@
             foreground="false"
             id="opt_in"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_opt_in"/>
+            android:label="@string/ua_notification_button_opt_in" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_opt_out">
 
@@ -301,9 +301,9 @@
             foreground="false"
             id="opt_out"
             android:icon="@drawable/ua_ic_notification_button_unfollow"
-            android:label="@string/ua_notification_button_opt_out"/>
+            android:label="@string/ua_notification_button_opt_out" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_remind_me_later">
 
@@ -311,9 +311,9 @@
             foreground="false"
             id="remind"
             android:icon="@drawable/ua_ic_notification_button_remind"
-            android:label="@string/ua_notification_button_remind"/>
+            android:label="@string/ua_notification_button_remind" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_share">
 
@@ -321,9 +321,9 @@
             foreground="true"
             id="share"
             android:icon="@drawable/ua_ic_notification_button_share"
-            android:label="@string/ua_notification_button_share"/>
+            android:label="@string/ua_notification_button_share" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_download">
 
@@ -331,9 +331,9 @@
             foreground="true"
             id="download"
             android:icon="@drawable/ua_ic_notification_button_download"
-            android:label="@string/ua_notification_button_download"/>
+            android:label="@string/ua_notification_button_download" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_like">
 
@@ -341,7 +341,7 @@
             foreground="false"
             id="like"
             android:icon="@drawable/ua_ic_notification_button_thumbs_up"
-            android:label="@string/ua_notification_button_like"/>
+            android:label="@string/ua_notification_button_like" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -351,15 +351,15 @@
             description="thumbs up icon"
             foreground="false"
             id="up"
-            android:icon="@drawable/ua_ic_notification_button_thumbs_up"/>
+            android:icon="@drawable/ua_ic_notification_button_thumbs_up" />
 
         <UrbanAirshipActionButton
             description="thumbs down icon"
             foreground="false"
             id="down"
-            android:icon="@drawable/ua_ic_notification_button_thumbs_down"/>
+            android:icon="@drawable/ua_ic_notification_button_thumbs_down" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_icons_happy_sad">
 
@@ -367,15 +367,15 @@
             description="happy icon"
             foreground="false"
             id="happy"
-            android:icon="@drawable/ua_ic_notification_button_happy"/>
+            android:icon="@drawable/ua_ic_notification_button_happy" />
 
         <UrbanAirshipActionButton
             description="sad icon"
             foreground="false"
             id="sad"
-            android:icon="@drawable/ua_ic_notification_button_sad"/>
+            android:icon="@drawable/ua_ic_notification_button_sad" />
 
-   </UrbanAirshipActionButtonGroup>
+    </UrbanAirshipActionButtonGroup>
 
     <UrbanAirshipActionButtonGroup id="ua_add_calendar_remind">
 
@@ -383,14 +383,14 @@
             foreground="true"
             id="add_calendar"
             android:icon="@drawable/ua_ic_notification_button_event"
-            android:label="@string/ua_notification_button_add_to_calendar"/>
+            android:label="@string/ua_notification_button_add_to_calendar" />
 
 
         <UrbanAirshipActionButton
             foreground="false"
             id="remind"
             android:icon="@drawable/ua_ic_notification_button_remind"
-            android:label="@string/ua_notification_button_remind"/>
+            android:label="@string/ua_notification_button_remind" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -420,7 +420,7 @@
             foreground="false"
             id="follow"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_follow"/>
+            android:label="@string/ua_notification_button_follow" />
 
         <UrbanAirshipActionButton
             foreground="false"
@@ -437,13 +437,13 @@
             foreground="false"
             id="opt_in"
             android:icon="@drawable/ua_ic_notification_button_follow"
-            android:label="@string/ua_notification_button_opt_in"/>
+            android:label="@string/ua_notification_button_opt_in" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="remind"
             android:icon="@drawable/ua_ic_notification_button_remind"
-            android:label="@string/ua_notification_button_remind"/>
+            android:label="@string/ua_notification_button_remind" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -453,7 +453,7 @@
             foreground="true"
             id="more_info"
             android:icon="@drawable/ua_ic_notification_button_info"
-            android:label="@string/ua_notification_button_tell_me_more"/>
+            android:label="@string/ua_notification_button_tell_me_more" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -462,13 +462,13 @@
         <UrbanAirshipActionButton
             foreground="true"
             id="rate"
-            android:label="@string/ua_notification_button_rate_now"/>
+            android:label="@string/ua_notification_button_rate_now" />
 
         <UrbanAirshipActionButton
             foreground="false"
             id="remind"
             android:icon="@drawable/ua_ic_notification_button_remind"
-            android:label="@string/ua_notification_button_remind"/>
+            android:label="@string/ua_notification_button_remind" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -477,7 +477,7 @@
         <UrbanAirshipActionButton
             foreground="true"
             id="rate"
-            android:label="@string/ua_notification_button_rate_now"/>
+            android:label="@string/ua_notification_button_rate_now" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -487,7 +487,7 @@
             foreground="true"
             id="search"
             android:icon="@drawable/ua_ic_notification_button_search"
-            android:label="@string/ua_notification_button_search"/>
+            android:label="@string/ua_notification_button_search" />
 
     </UrbanAirshipActionButtonGroup>
 
@@ -497,7 +497,7 @@
             foreground="true"
             id="book"
             android:icon="@drawable/ua_ic_notification_button_book"
-            android:label="@string/ua_notification_button_book_now"/>
+            android:label="@string/ua_notification_button_book_now" />
 
     </UrbanAirshipActionButtonGroup>
 

@@ -12,7 +12,6 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonList;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Base class for Urban Airship components.
@@ -24,7 +23,6 @@ public abstract class AirshipComponent {
     private final PreferenceDataStore dataStore;
     private final String enableKey;
     private final Context context;
-
 
     /**
      * Default constructor.
@@ -70,7 +68,8 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void tearDown() {}
+    protected void tearDown() {
+    }
 
     /**
      * Gets the executor for the given job.
@@ -108,7 +107,8 @@ public abstract class AirshipComponent {
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onAirshipReady(@NonNull UAirship airship) {}
+    protected void onAirshipReady(@NonNull UAirship airship) {
+    }
 
     /**
      * Called when the component is enabled or disabled.
@@ -117,7 +117,8 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onComponentEnableChange(boolean isEnabled) {}
+    protected void onComponentEnableChange(boolean isEnabled) {
+    }
 
     /**
      * Enables/disables the component.
@@ -176,4 +177,5 @@ public abstract class AirshipComponent {
     public void onNewConfig(@NonNull JsonList value) {
 
     }
+
 }

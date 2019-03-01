@@ -67,7 +67,6 @@ dependencies {
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
 
-
     // Testing-only dependencies
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test:rules:1.0.2'

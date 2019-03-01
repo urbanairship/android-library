@@ -21,6 +21,7 @@ public class WalletActionTest extends BaseTestCase {
     private WalletAction action;
     private ActionArguments testArgs;
     private Whitelist whitelist;
+
     @Before
     public void setup() {
 

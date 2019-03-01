@@ -74,8 +74,8 @@ public class LocationService extends IntentService {
             }
 
             location = (Location) (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED) ?
-                                   intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
-                                   intent.getParcelableExtra("com.google.android.location.LOCATION"));
+                    intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
+                    intent.getParcelableExtra("com.google.android.location.LOCATION"));
         } catch (Exception e) {
             Logger.error(e, "Unable to extract location.");
             return;
@@ -85,4 +85,5 @@ public class LocationService extends IntentService {
             airship.getLocationManager().onLocationUpdate(location);
         }
     }
+
 }

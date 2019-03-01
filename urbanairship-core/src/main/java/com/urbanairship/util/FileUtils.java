@@ -38,7 +38,6 @@ public abstract class FileUtils {
             return file.delete();
         }
 
-
         File[] children = file.listFiles();
         if (children != null) {
             for (File child : file.listFiles()) {
@@ -55,6 +54,7 @@ public abstract class FileUtils {
      * Result for downloading a file.
      */
     public static class DownloadResult {
+
         /**
          * The status code if available.
          */
@@ -69,6 +69,7 @@ public abstract class FileUtils {
             this.isSuccess = isSuccess;
             this.statusCode = statusCode;
         }
+
     }
 
     /**
@@ -104,7 +105,6 @@ public abstract class FileUtils {
                 }
             }
 
-
             if (inputStream != null) {
                 outputStream = new FileOutputStream(file);
 
@@ -136,4 +136,5 @@ public abstract class FileUtils {
             }
         }
     }
+
 }

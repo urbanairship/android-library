@@ -16,6 +16,7 @@ import com.urbanairship.util.ManifestUtils;
 
 /**
  * Job scheduler using the Android Job's API.
+ *
  * @hide
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -90,7 +91,6 @@ class AndroidJobScheduler implements Scheduler {
             throw new SchedulerException("Android JobScheduler failed to schedule job: ", e);
         }
     }
-
 
     /**
      * Gets the job scheduler.

@@ -42,7 +42,6 @@ public class CoreReceiver extends BroadcastReceiver {
 
     private static final long ACTION_TIMEOUT_SECONDS = 10; // 10 seconds
 
-
     public CoreReceiver() {
         this(AirshipExecutors.THREAD_POOL_EXECUTOR);
     }
@@ -179,7 +178,6 @@ public class CoreReceiver extends BroadcastReceiver {
         context.sendOrderedBroadcast(openIntent, null);
     }
 
-
     /**
      * Handles notification dismissed intent.
      *
@@ -196,7 +194,6 @@ public class CoreReceiver extends BroadcastReceiver {
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         Logger.info("Notification dismissed ID: %s", notificationId);
-
 
         PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
         if (deleteIntent != null) {
@@ -294,7 +291,6 @@ public class CoreReceiver extends BroadcastReceiver {
         });
     }
 
-
     /**
      * Helper method that attempts to launch the application's launch intent.
      *
@@ -384,7 +380,7 @@ public class CoreReceiver extends BroadcastReceiver {
             Logger.error(e, "Failed to parse actions for push.");
         }
 
-
         return actionValueMap;
     }
+
 }

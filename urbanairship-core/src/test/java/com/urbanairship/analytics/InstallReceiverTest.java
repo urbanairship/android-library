@@ -78,4 +78,5 @@ public class InstallReceiverTest extends BaseTestCase {
 
         verifyZeroInteractions(mockAnalytics);
     }
+
 }

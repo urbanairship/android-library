@@ -1,4 +1,5 @@
 /* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.util;
 
 import android.support.annotation.NonNull;
@@ -10,7 +11,6 @@ import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.ValueMatcher;
-
 
 /**
  * Utils for automation.
@@ -53,7 +53,6 @@ public class VersionUtils {
                       .toJsonValue();
     }
 
-
     /**
      * Creates the version predicate.
      *
@@ -72,4 +71,5 @@ public class VersionUtils {
                                                    .build())
                             .build();
     }
+
 }

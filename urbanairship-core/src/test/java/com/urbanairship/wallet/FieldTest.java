@@ -19,16 +19,16 @@ public class FieldTest extends BaseTestCase {
         Integer value = 5;
 
         Field field = Field.newBuilder()
-                .setLabel(label)
-                .setName(name)
-                .setValue(value)
-                .build();
+                           .setLabel(label)
+                           .setName(name)
+                           .setValue(value)
+                           .build();
 
         JsonValue expectedJsonValue = JsonMap.newBuilder()
-                .put(label, label)
-                .put("value", value)
-                .build()
-                .toJsonValue();
+                                             .put(label, label)
+                                             .put("value", value)
+                                             .build()
+                                             .toJsonValue();
 
         assertEquals(name, field.getName());
         assertEquals(expectedJsonValue, field.toJsonValue());
@@ -37,20 +37,21 @@ public class FieldTest extends BaseTestCase {
     @Test
     public void testFieldVariations() {
         Field.newBuilder()
-                .setName("name")
-                .setValue(5)
-                .build();
+             .setName("name")
+             .setValue(5)
+             .build();
 
         Field.newBuilder()
-               .setName("name")
-               .setLabel("label")
-               .build();
+             .setName("name")
+             .setLabel("label")
+             .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testFieldOnlyLabel() {
         Field.newBuilder()
-              .setLabel("label")
-              .build();
+             .setLabel("label")
+             .build();
     }
+
 }

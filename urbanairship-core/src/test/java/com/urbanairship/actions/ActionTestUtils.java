@@ -31,7 +31,6 @@ public class ActionTestUtils {
         return createArgs(situation, value, null);
     }
 
-
     /**
      * Creates an ActionArgument.
      *

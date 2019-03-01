@@ -179,7 +179,6 @@ public class LegacyInAppMessage {
         return secondaryColor;
     }
 
-
     /**
      * Returns the message's ID.
      *
@@ -203,7 +202,6 @@ public class LegacyInAppMessage {
             return null;
         }
 
-
         JsonValue jsonValue = JsonValue.parseString(pushMessage.getExtra(PushMessage.EXTRA_IN_APP_MESSAGE, ""));
         JsonMap displayJson = jsonValue.optMap().opt(DISPLAY_KEY).optMap();
         JsonMap actionsJson = jsonValue.optMap().opt(ACTIONS_KEY).optMap();
@@ -216,7 +214,6 @@ public class LegacyInAppMessage {
 
         builder.setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                .setAlert(displayJson.opt(ALERT_KEY).getString());
-
 
         // Primary color
         if (displayJson.containsKey(PRIMARY_COLOR_KEY)) {
@@ -327,7 +324,8 @@ public class LegacyInAppMessage {
         /**
          * Default constructor.
          */
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the message's expiry in milliseconds. If no expiry is set, it will default
@@ -475,5 +473,7 @@ public class LegacyInAppMessage {
             Checks.checkArgument(durationMilliseconds == null || durationMilliseconds > 0, "Duration must be greater than 0");
             return new LegacyInAppMessage(this);
         }
+
     }
+
 }

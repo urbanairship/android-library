@@ -15,7 +15,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
 
-
 /**
  * Job handler for the NamedUser.
  */
@@ -80,7 +79,6 @@ class NamedUserJobHandler {
 
         return JobInfo.JOB_FINISHED;
     }
-
 
     /**
      * Handles associate/disassociate updates.
@@ -171,4 +169,5 @@ class NamedUserJobHandler {
 
         return JobInfo.JOB_RETRY;
     }
+
 }

@@ -49,5 +49,6 @@ public class TestAction extends Action {
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         return acceptsArguments;
     }
+
 }
 

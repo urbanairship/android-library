@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Parent Style -->
-    <style name="UrbanAirship.InAppBanner"/>
+    <style name="UrbanAirship.InAppBanner" />
 
     <!-- Main Layout, contains the content, buttons, and footer-->
     <style name="UrbanAirship.InAppBanner.Layout">

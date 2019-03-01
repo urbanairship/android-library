@@ -117,4 +117,5 @@ public interface ScheduleInfo {
      * @return The interval in ms.
      */
     long getInterval();
+
 }

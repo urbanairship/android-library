@@ -123,7 +123,6 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         return message;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -273,7 +272,8 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         private long editGracePeriod;
         private long interval;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull InAppMessageScheduleInfo info) {
             this.limit = info.limit;
@@ -439,5 +439,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
             Checks.checkArgument(triggers.size() <= TRIGGER_LIMIT, "No more than " + TRIGGER_LIMIT + " triggers allowed.");
             return new InAppMessageScheduleInfo(this);
         }
+
     }
+
 }

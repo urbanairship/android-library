@@ -120,7 +120,6 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         return message;
     }
 
-
     /**
      * Parses a json value for in-app message edits.
      *
@@ -161,7 +160,6 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
                 throw new JsonException("Invalid schedule start time", e);
             }
         }
-
 
         if (jsonMap.containsKey(InAppMessageScheduleInfo.EDIT_GRACE_PERIOD)) {
             builder.setEditGracePeriod(jsonMap.opt(InAppMessageScheduleInfo.EDIT_GRACE_PERIOD).getLong(0), TimeUnit.DAYS);
@@ -209,7 +207,8 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         private Long interval;
         private JsonMap metadata;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull InAppMessageScheduleEdits edits) {
             this.limit = edits.limit;
@@ -326,5 +325,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         public InAppMessageScheduleEdits build() {
             return new InAppMessageScheduleEdits(this);
         }
+
     }
+
 }

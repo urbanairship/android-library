@@ -24,7 +24,7 @@ public class FilteredActivityListenerTest extends BaseTestCase {
     public void setup() {
         //noinspection unchecked
         mockPredicate = (Predicate<Activity>) mock(Predicate.class);
-        mockListener =  mock(ActivityListener.class);
+        mockListener = mock(ActivityListener.class);
 
         filteredActivityListener = new FilteredActivityListener(mockListener, mockPredicate);
     }
@@ -75,4 +75,5 @@ public class FilteredActivityListenerTest extends BaseTestCase {
 
         verifyZeroInteractions(mockListener);
     }
+
 }

@@ -176,7 +176,6 @@ class RichPushResolver extends UrbanAirshipResolver {
         return this.delete(this.uri, query, messageIds.toArray(new String[0]));
     }
 
-
     /**
      * Inserts new messages into the database.
      *
@@ -234,7 +233,6 @@ class RichPushResolver extends UrbanAirshipResolver {
                 RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )",
                 messageIds.toArray(new String[0]));
     }
-
 
     /**
      * Get the message IDs.
@@ -302,4 +300,5 @@ class RichPushResolver extends UrbanAirshipResolver {
 
         return values;
     }
+
 }

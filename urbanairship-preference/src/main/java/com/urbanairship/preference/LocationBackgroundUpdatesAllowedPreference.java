@@ -38,4 +38,5 @@ public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPrefer
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getLocationManager().setBackgroundLocationAllowed(enabled);
     }
+
 }

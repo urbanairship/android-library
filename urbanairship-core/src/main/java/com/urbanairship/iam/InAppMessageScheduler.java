@@ -3,7 +3,6 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.json.JsonMap;
@@ -74,7 +73,6 @@ public interface InAppMessageScheduler {
     @NonNull
     PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos);
 
-
     /**
      * New schedules that need to be scheduled.
      *
@@ -83,7 +81,7 @@ public interface InAppMessageScheduler {
      * @return A pending result.
      */
     @NonNull
-    PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos,  @NonNull JsonMap metadata);
+    PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos, @NonNull JsonMap metadata);
 
     /**
      * Gets the schedules associated with the message ID.
@@ -102,7 +100,6 @@ public interface InAppMessageScheduler {
      */
     @NonNull
     PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId);
-
 
     /**
      * Gets all the schedules.

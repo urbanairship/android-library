@@ -92,7 +92,6 @@ public class RateAppAction extends Action {
     @NonNull
     public static final String SHOW_RATE_APP_INTENT_ACTION = "com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION";
 
-
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {

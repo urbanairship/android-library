@@ -87,7 +87,6 @@ class StandardLocationAdapter implements LocationAdapter {
         return REQUEST_CODE;
     }
 
-
     @Override
     public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -289,12 +288,14 @@ class StandardLocationAdapter implements LocationAdapter {
             //noinspection MissingPermission
             locationManager.removeUpdates(providerEnabledListeners);
         }
+
     }
 
     /**
      * Android location listener used to listen for changes on the current best provider.
      */
     private static class AndroidLocationListener implements android.location.LocationListener {
+
         @Override
         public void onLocationChanged(Location location) {
         }
@@ -310,5 +311,7 @@ class StandardLocationAdapter implements LocationAdapter {
         @Override
         public void onProviderDisabled(String provider) {
         }
+
     }
+
 }

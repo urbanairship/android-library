@@ -76,7 +76,6 @@ public class LandingPageActionTest extends BaseTestCase {
         verifyAcceptsArgumentValue("https://yep.example.com", true);
         verifyAcceptsArgumentValue("https://nope.example.com", false);
 
-
         // Payload
         Map<String, Object> payload = new HashMap<>();
         payload.put("url", "https://yep.example.com");
@@ -166,4 +165,5 @@ public class LandingPageActionTest extends BaseTestCase {
 
         }
     }
+
 }

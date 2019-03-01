@@ -24,6 +24,7 @@ import java.util.Locale;
  * proximityRegion and/or circularRegion.
  */
 public class RegionEvent extends Event implements JsonSerializable {
+
     /**
      * The event type.
      */
@@ -388,9 +389,9 @@ public class RegionEvent extends Event implements JsonSerializable {
         /**
          * Builds the region event.
          *
+         * @return The built region event.
          * @throws java.lang.IllegalArgumentException if the region ID or source is null, empty, or exceeds
          * max length
-         * @return The built region event.
          */
         @NonNull
         public RegionEvent build() {
@@ -409,5 +410,7 @@ public class RegionEvent extends Event implements JsonSerializable {
 
             return new RegionEvent(this);
         }
+
     }
+
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import com.google.common.collect.Lists;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -15,18 +14,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashSet;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -81,7 +75,6 @@ public class NamedUserTest extends BaseTestCase {
 
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
-
 
     /**
      * Test set invalid ID.
@@ -200,7 +193,6 @@ public class NamedUserTest extends BaseTestCase {
                  .addTag("tagGroup", "tag1")
                  .removeTag("tagGroup", "tag5")
                  .apply();
-
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override

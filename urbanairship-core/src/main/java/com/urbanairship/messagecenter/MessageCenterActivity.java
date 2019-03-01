@@ -86,6 +86,7 @@ public class MessageCenterActivity extends ThemedActivity {
         }
         return false;
     }
+
 }
 
 

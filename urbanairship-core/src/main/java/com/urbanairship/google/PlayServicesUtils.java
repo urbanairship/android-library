@@ -29,13 +29,11 @@ public class PlayServicesUtils {
      */
     public static final int MISSING_PLAY_SERVICE_DEPENDENCY = -1;
 
-
     private static Boolean isGooglePlayServicesDependencyAvailable;
     private static Boolean isGoogleCloudMessagingDependencyAvailable;
     private static Boolean isFusedLocationDependencyAvailable;
     private static Boolean isGooglePlayStoreAvailable;
     private static Boolean isGoogleAdsDependencyAvailable;
-
 
     /**
      * Checks and handles any user recoverable Google Play services errors.
@@ -118,7 +116,6 @@ public class PlayServicesUtils {
         return isGooglePlayServicesDependencyAvailable;
     }
 
-
     /**
      * Checks if Google Play services dependency is available for Fused Location.
      *
@@ -140,7 +137,6 @@ public class PlayServicesUtils {
 
         return isFusedLocationDependencyAvailable;
     }
-
 
     /**
      * Checks if Google Play services dependency is available for advertising ID tracking.
@@ -194,4 +190,5 @@ public class PlayServicesUtils {
             return false;
         }
     }
+
 }

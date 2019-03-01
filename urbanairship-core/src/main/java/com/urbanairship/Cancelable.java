@@ -35,4 +35,5 @@ public interface Cancelable {
      * @return <code>true</code> if canceled, otherwise <code>false</code>
      */
     boolean isCancelled();
+
 }

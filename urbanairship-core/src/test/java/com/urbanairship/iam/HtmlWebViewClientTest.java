@@ -37,6 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class HtmlWebViewClientTest extends BaseTestCase {
+
     ActionRunRequestFactory runRequestFactory;
     UAWebViewClient client;
     WebView webView;
@@ -79,11 +80,11 @@ public class HtmlWebViewClientTest extends BaseTestCase {
         String url = "uairship://dismiss/";
 
         ButtonInfo button = ButtonInfo.newBuilder()
-                                    .setId("foo")
-                                    .setLabel(TextInfo.newBuilder()
-                                                      .setText("bar")
-                                                      .build())
-                                    .build();
+                                      .setId("foo")
+                                      .setLabel(TextInfo.newBuilder()
+                                                        .setText("bar")
+                                                        .build())
+                                      .build();
 
         ResolutionInfo resolution = ResolutionInfo.buttonPressed(button);
 
@@ -121,4 +122,5 @@ public class HtmlWebViewClientTest extends BaseTestCase {
         verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
     }
+
 }

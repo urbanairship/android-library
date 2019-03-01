@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-
 /**
  * Urban Airship job for defining a unit of work to be performed in an {@link AirshipComponent}.
  *
@@ -37,11 +36,10 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobInfo {
 
-
     @IntDef({ ANALYTICS_EVENT_UPLOAD, ANALYTICS_UPDATE_ADVERTISING_ID, NAMED_USER_UPDATE_ID,
-              NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE_REGISTRATION,
-              CHANNEL_UPDATE_TAG_GROUPS, RICH_PUSH_UPDATE_USER, RICH_PUSH_UPDATE_MESSAGES,
-              RICH_PUSH_SYNC_MESSAGE_STATE, REMOTE_DATA_REFRESH })
+            NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE_REGISTRATION,
+            CHANNEL_UPDATE_TAG_GROUPS, RICH_PUSH_UPDATE_USER, RICH_PUSH_UPDATE_MESSAGES,
+            RICH_PUSH_SYNC_MESSAGE_STATE, REMOTE_DATA_REFRESH })
     @Retention(SOURCE)
     public @interface JobId {}
 
@@ -87,11 +85,9 @@ public class JobInfo {
     private final boolean persistent;
     private final int id;
 
-
     @IntDef({ JOB_FINISHED, JOB_RETRY })
     @Retention(SOURCE)
     public @interface JobResult {}
-
 
     /**
      * JobInfo is finished.
@@ -471,5 +467,7 @@ public class JobInfo {
             Checks.checkNotNull(action, "Missing action.");
             return new JobInfo(this);
         }
+
     }
+
 }

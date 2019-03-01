@@ -69,4 +69,5 @@ public interface ActivityMonitor {
     @NonNull
     @MainThread
     List<Activity> getResumedActivities(@NonNull Predicate<Activity> filter);
+
 }

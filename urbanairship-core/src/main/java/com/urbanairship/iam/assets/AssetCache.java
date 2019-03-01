@@ -59,7 +59,6 @@ class AssetCache {
         return Assets.load(getAssetsDirectory(scheduleId));
     }
 
-
     /**
      * Clears any stored assets for the schedule ID.
      *
@@ -113,4 +112,5 @@ class AssetCache {
             return null;
         }
     }
+
 }

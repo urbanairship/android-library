@@ -19,4 +19,5 @@ public interface PushService {
     })
     @POST("push")
     Call<ResponseBody> send(@Header("Authorization") String authorization, @Body PushPayload payload);
+
 }

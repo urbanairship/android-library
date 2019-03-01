@@ -149,8 +149,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
                 this.notifyAll();
             }
         }
+
     }
-
-
 
 }

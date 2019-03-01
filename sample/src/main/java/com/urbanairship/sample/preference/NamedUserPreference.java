@@ -20,7 +20,7 @@ public class NamedUserPreference extends EditTextPreference {
 
     @Override
     public void setText(String text) {
-        String namedUser  = UAStringUtil.isEmpty(text) ? null : text;
+        String namedUser = UAStringUtil.isEmpty(text) ? null : text;
         UAirship.shared().getNamedUser().setId(namedUser);
         notifyChanged();
     }
@@ -39,4 +39,5 @@ public class NamedUserPreference extends EditTextPreference {
     protected boolean shouldPersist() {
         return false;
     }
+
 }

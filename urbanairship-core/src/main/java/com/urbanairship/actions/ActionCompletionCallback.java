@@ -17,4 +17,5 @@ public interface ActionCompletionCallback {
      * @param result The result of the action.
      */
     void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result);
+
 }

@@ -23,14 +23,14 @@ public abstract class BorderRadius {
 
     @IntDef(flag = true,
             value = { TOP_LEFT,
-                      TOP_RIGHT,
-                      BOTTOM_RIGHT,
-                      BOTTOM_LEFT,
-                      ALL,
-                      LEFT,
-                      RIGHT,
-                      BOTTOM,
-                      TOP })
+                    TOP_RIGHT,
+                    BOTTOM_RIGHT,
+                    BOTTOM_LEFT,
+                    ALL,
+                    LEFT,
+                    RIGHT,
+                    BOTTOM,
+                    TOP })
     @Retention(RetentionPolicy.SOURCE)
     public @interface BorderRadiusFlag {}
 
@@ -115,7 +115,6 @@ public abstract class BorderRadius {
         return radii;
     }
 
-
     /**
      * Applies padding to the view to avoid from overlapping the border radius.
      *
@@ -152,7 +151,6 @@ public abstract class BorderRadius {
         int paddingRight = 0;
         int paddingTop = 0;
         int paddingBottom = 0;
-
 
         if ((borderRadiusFlag & TOP_LEFT) == TOP_LEFT) {
             paddingLeft = borderPaddingX;

@@ -26,7 +26,6 @@ import com.urbanairship.widget.UAWebView;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-
 /**
  * Action for launching a Landing Page.
  * <p>
@@ -290,6 +289,7 @@ public class LandingPageAction extends Action {
      * Default {@link LandingPageAction} predicate.
      */
     public static class LandingPagePredicate implements ActionRegistry.Predicate {
+
         @Override
         public boolean apply(@NonNull ActionArguments arguments) {
             if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
@@ -298,5 +298,7 @@ public class LandingPageAction extends Action {
             }
             return true;
         }
+
     }
+
 }

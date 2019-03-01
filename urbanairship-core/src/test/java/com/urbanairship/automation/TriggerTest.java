@@ -41,7 +41,7 @@ public class TriggerTest extends BaseTestCase {
         typeArray.put(Trigger.ACTIVE_SESSION, "active_session");
         typeArray.put(Trigger.VERSION, "version");
 
-        for(int i = 0; i < typeArray.size(); i++) {
+        for (int i = 0; i < typeArray.size(); i++) {
             int key = typeArray.keyAt(i);
 
             JsonMap triggerJson = JsonMap.newBuilder()
@@ -92,4 +92,5 @@ public class TriggerTest extends BaseTestCase {
 
         Trigger.fromJson(triggerJson.toJsonValue());
     }
+
 }

@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * A push message, usually created from handling a message intent from either GCM,
  * or another push notification service
@@ -241,7 +240,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * Default sound name.
      */
     private static final String DEFAULT_SOUND_NAME = "default";
-
 
     private Bundle pushBundle;
     private final Map<String, String> data;
@@ -640,7 +638,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
         return defaultIcon;
     }
 
-
     /**
      * Returns the notification tag that should be used when posting the notification.
      *
@@ -660,7 +657,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public String getNotificationChannel() {
         return data.get(EXTRA_NOTIFICATION_CHANNEL);
     }
-
 
     @Override
     public boolean equals(@Nullable Object o) {
@@ -779,4 +775,5 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public boolean containsKey(@NonNull String key) {
         return this.data.containsKey(key);
     }
+
 }

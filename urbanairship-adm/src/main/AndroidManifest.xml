@@ -1,19 +1,19 @@
 <manifest package="com.urbanairship.push.adm"
-          xmlns:amazon="http://schemas.amazon.com/apk/res/android"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:amazon="http://schemas.amazon.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE"/>
+    <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE" />
     <permission
         android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE"
-        android:protectionLevel="signature"/>
-    <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE"/>
+        android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" />
 
     <application>
 
         <!-- ADM -->
         <amazon:enable-feature
             android:name="com.amazon.device.messaging"
-            android:required="false"/>
+            android:required="false" />
 
 
         <receiver
@@ -21,8 +21,8 @@
             android:permission="com.amazon.device.messaging.permission.SEND">
 
             <intent-filter>
-                <action android:name="com.amazon.device.messaging.intent.RECEIVE"/>
-                <category android:name="${applicationId}"/>
+                <action android:name="com.amazon.device.messaging.intent.RECEIVE" />
+                <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
 

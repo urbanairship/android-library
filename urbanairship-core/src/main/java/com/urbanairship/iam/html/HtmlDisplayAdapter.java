@@ -11,7 +11,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
-import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.Network;
@@ -76,5 +75,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public void onFinish(@NonNull Context context) {}
+    public void onFinish(@NonNull Context context) {
+    }
+
 }

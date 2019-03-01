@@ -48,4 +48,5 @@ public class TestLocaleManager extends LocaleManager {
         }
         return locale;
     }
+
 }

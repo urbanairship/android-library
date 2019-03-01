@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class ChannelCaptureActivity extends ThemedActivity {
 
     private static final String ALIAS_HEADER = "Alias";
@@ -81,7 +80,6 @@ public class ChannelCaptureActivity extends ThemedActivity {
             }
         });
 
-
         Button urlButton = findViewById(R.id.open_button);
         if (urlString != null) {
             urlButton.setEnabled(true);
@@ -117,7 +115,6 @@ public class ChannelCaptureActivity extends ThemedActivity {
         return data;
     }
 
-
     private void addChannelAttribute(@NonNull List<Map<String, String>> channelDataList, @NonNull String header, @Nullable String data) {
         if (!UAStringUtil.isEmpty(data)) {
             Map<String, String> channelDataMap = new HashMap<>();
@@ -126,5 +123,6 @@ public class ChannelCaptureActivity extends ThemedActivity {
             channelDataList.add(channelDataMap);
         }
     }
+
 }
 

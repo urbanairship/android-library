@@ -236,6 +236,7 @@ public class AutomationEngine<T extends Schedule> {
      * Schedule listener.
      */
     public interface ScheduleListener<T> {
+
         /**
          * Called when a schedule is expired.
          *
@@ -267,6 +268,7 @@ public class AutomationEngine<T extends Schedule> {
          */
         @MainThread
         void onNewSchedule(@NonNull T schedule);
+
     }
 
     /**
@@ -417,7 +419,6 @@ public class AutomationEngine<T extends Schedule> {
                     entries.add(new ScheduleEntry(scheduleId, info, metadata));
                 }
 
-
                 dataManager.saveSchedules(entries);
                 subscribeStateObservables(entries);
 
@@ -426,7 +427,6 @@ public class AutomationEngine<T extends Schedule> {
 
                 Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
                 pendingResult.setResult(convertEntries(entries));
-
 
             }
         });
@@ -562,7 +562,6 @@ public class AutomationEngine<T extends Schedule> {
 
         return pendingResult;
     }
-
 
     /**
      * Gets a list of schedules.
@@ -1027,7 +1026,6 @@ public class AutomationEngine<T extends Schedule> {
                 continue;
             }
 
-
             scheduleIntervalAlarm(scheduleEntry, pausedTime - scheduleEntry.getInterval());
         }
 
@@ -1415,7 +1413,9 @@ public class AutomationEngine<T extends Schedule> {
      * @param <T> The schedule.
      */
     private interface Notify<T> {
+
         void notify(@NonNull ScheduleListener<T> listener, @NonNull T schedule);
+
     }
 
     /**
@@ -1664,6 +1664,7 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     private class ScheduleOperation extends CancelableOperation {
+
         final String scheduleId;
         final String group;
 
@@ -1672,9 +1673,11 @@ public class AutomationEngine<T extends Schedule> {
             this.scheduleId = scheduleId;
             this.group = group;
         }
+
     }
 
     private abstract class ScheduleRunnable<ReturnType> implements Runnable {
+
         final String scheduleId;
         final String group;
         ReturnType result;
@@ -1684,6 +1687,7 @@ public class AutomationEngine<T extends Schedule> {
             this.scheduleId = scheduleId;
             this.group = group;
         }
+
     }
 
     private class ScheduleExecutorCallback implements AutomationDriver.ExecutionCallback {
@@ -1703,12 +1707,14 @@ public class AutomationEngine<T extends Schedule> {
                 }
             });
         }
+
     }
 
     /**
      * Model object representing trigger update data.
      */
     private static class TriggerUpdate {
+
         final List<TriggerEntry> triggerEntries;
         final JsonSerializable json;
         final double value;
@@ -1718,6 +1724,7 @@ public class AutomationEngine<T extends Schedule> {
             this.json = json;
             this.value = value;
         }
+
     }
 
     /**
@@ -1726,6 +1733,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param <T> The schedule type.
      */
     public static class Builder<T extends Schedule> {
+
         private long limit;
         private ActivityMonitor activityMonitor;
         private AutomationDriver<T> driver;
@@ -1821,5 +1829,7 @@ public class AutomationEngine<T extends Schedule> {
 
             return new AutomationEngine<>(this);
         }
+
     }
+
 }

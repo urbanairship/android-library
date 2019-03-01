@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
@@ -18,6 +17,7 @@ import com.urbanairship.json.JsonValue;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 abstract class InAppMessageEvent extends Event {
+
     private static final String ID = "id";
     private static final String CONVERSION_SEND_ID = "conversion_send_id";
     private static final String CONVERSION_METADATA = "conversion_metadata";
@@ -27,13 +27,11 @@ abstract class InAppMessageEvent extends Event {
     private static final String MESSAGE_ID = "message_id";
     private static final String CAMPAIGNS = "campaigns";
 
-
     private static final String SOURCE_URBAN_AIRSHIP = "urban-airship";
     private static final String SOURCE_APP_DEFINED = "app-defined";
 
     private final JsonValue eventId;
     private final String source;
-
 
     InAppMessageEvent(@NonNull InAppMessage message) {
         this(createEventId(message), message.getSource());
@@ -84,4 +82,5 @@ abstract class InAppMessageEvent extends Event {
 
         return JsonValue.NULL;
     }
+
 }

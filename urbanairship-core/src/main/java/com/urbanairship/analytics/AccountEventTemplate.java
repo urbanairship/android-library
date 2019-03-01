@@ -39,7 +39,8 @@ public class AccountEventTemplate {
     private String category;
     private String transactionId;
 
-    private AccountEventTemplate() {}
+    private AccountEventTemplate() {
+    }
 
     /**
      * Creates a registered account event template.
@@ -172,4 +173,5 @@ public class AccountEventTemplate {
 
         return builder.build();
     }
+
 }

@@ -21,15 +21,18 @@ public class SettingsActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                                .replace(android.R.id.content, new SettingsFragment())
-                                .commit();
+                    .replace(android.R.id.content, new SettingsFragment())
+                    .commit();
         }
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
+
         @Override
         public void onCreatePreferences(Bundle bundle, String s) {
             addPreferencesFromResource(R.xml.preferences);
         }
+
     }
+
 }

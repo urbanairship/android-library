@@ -36,11 +36,11 @@ class Job implements Runnable {
          * @param result The job's result.
          */
         void onFinish(@NonNull Job job, @JobInfo.JobResult int result);
+
     }
 
     private final JobInfo jobInfo;
     private final Callback callback;
-
 
     /**
      * Default constructor.
@@ -169,6 +169,5 @@ class Job implements Runnable {
         }
 
     }
-
 
 }

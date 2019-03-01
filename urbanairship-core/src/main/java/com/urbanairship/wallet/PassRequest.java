@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Defines a request to fetch a {@link Pass}.
@@ -240,6 +239,7 @@ public class PassRequest {
      * Builds the {@link PassRequest} object.
      */
     public static class Builder {
+
         private String apiKey;
         private String templateId;
         private final List<Field> fields = new ArrayList<>();
@@ -247,7 +247,6 @@ public class PassRequest {
         private String tag;
         private String externalId;
         private String userName;
-
 
         /**
          * Sets the request auth.
@@ -383,7 +382,7 @@ public class PassRequest {
 
             return new PassRequest(this);
         }
-    }
 
+    }
 
 }

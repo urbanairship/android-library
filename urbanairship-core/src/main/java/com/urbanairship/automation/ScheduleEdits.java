@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation;
 
-
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
@@ -78,4 +77,5 @@ public interface ScheduleEdits {
      */
     @Nullable
     JsonMap getMetadata();
+
 }

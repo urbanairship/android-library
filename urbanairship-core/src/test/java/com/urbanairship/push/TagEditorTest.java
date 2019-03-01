@@ -130,10 +130,8 @@ public class TagEditorTest extends BaseTestCase {
               .removeTag("some_other_tag")
               .apply();
 
-
         assertEquals(1, tagsToRemove.size());
         assertTrue(tagsToRemove.contains("some_other_tag"));
-
 
         assertEquals(1, tagsToAdd.size());
         assertTrue(tagsToAdd.contains("some_tag"));
@@ -154,4 +152,5 @@ public class TagEditorTest extends BaseTestCase {
 
         assertTrue(clear);
     }
+
 }

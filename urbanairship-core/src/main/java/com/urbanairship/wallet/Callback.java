@@ -2,13 +2,13 @@
 
 package com.urbanairship.wallet;
 
-
 import android.support.annotation.NonNull;
 
 /**
  * Callback when executing a {@link PassRequest}.
  */
 public interface Callback {
+
     /**
      * Called when the {@link Pass} was successfully downloaded.
      *
@@ -22,4 +22,5 @@ public interface Callback {
      * @param errorCode The error code.
      */
     void onError(int errorCode);
+
 }

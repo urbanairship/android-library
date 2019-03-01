@@ -10,7 +10,6 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.ForwardingActivityListener;
 import com.urbanairship.app.ForwardingApplicationListener;
-import com.urbanairship.app.GlobalActivityMonitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +53,7 @@ public class TestActivityMonitor implements ActivityMonitor {
             }
 
             if (startedActivities == 0 && isAppForegrounded) {
-               isAppForegrounded = false;
+                isAppForegrounded = false;
                 applicationListener.onBackground(System.currentTimeMillis());
             }
 
@@ -155,4 +154,5 @@ public class TestActivityMonitor implements ActivityMonitor {
 
         return activities;
     }
+
 }

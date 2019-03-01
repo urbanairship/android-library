@@ -17,11 +17,11 @@ public class HtmlDisplayAdapterTest extends BaseTestCase {
     @Before
     public void setup() {
         htmlMessage = InAppMessage.newBuilder()
-                .setDisplayContent(HtmlDisplayContent.newBuilder()
-                                                     .setUrl("https://www.urbanairship.com")
-                                                     .build())
-                .setId("message id")
-                .build();
+                                  .setDisplayContent(HtmlDisplayContent.newBuilder()
+                                                                       .setUrl("https://www.urbanairship.com")
+                                                                       .build())
+                                  .setId("message id")
+                                  .build();
     }
 
     @Test
@@ -32,4 +32,5 @@ public class HtmlDisplayAdapterTest extends BaseTestCase {
             Assert.fail(e.getMessage());
         }
     }
+
 }

@@ -24,7 +24,6 @@ import java.util.concurrent.Executor;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -104,7 +103,6 @@ public class CoreReceiverTest extends BaseTestCase {
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle());
 
-
         receiver.onReceive(context, intent);
         verify(legacyInAppMessageManager).onPushResponse(message);
     }
@@ -171,7 +169,6 @@ public class CoreReceiverTest extends BaseTestCase {
 
         receiver.onReceive(context, intent);
 
-
         // Verify the conversion send id was set
         verify(analytics, Mockito.never()).setConversionSendId("sendId");
     }
@@ -211,4 +208,5 @@ public class CoreReceiverTest extends BaseTestCase {
             }
         }), isNull(String.class));
     }
+
 }

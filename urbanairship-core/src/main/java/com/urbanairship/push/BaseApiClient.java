@@ -70,4 +70,5 @@ abstract class BaseApiClient {
     public int getPlatform() {
         return platform;
     }
+
 }

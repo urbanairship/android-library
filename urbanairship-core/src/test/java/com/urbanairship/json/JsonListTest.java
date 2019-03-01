@@ -12,7 +12,6 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
-
 public class JsonListTest extends BaseTestCase {
 
     private JsonList jsonList;
@@ -49,4 +48,5 @@ public class JsonListTest extends BaseTestCase {
     public void testEmptyMapToString() {
         assertEquals("[]", new JsonList(null).toString());
     }
+
 }

@@ -36,7 +36,6 @@ public class AlarmSchedulerTest extends BaseTestCase {
         context = TestApplication.getApplication();
     }
 
-
     @Test
     public void testSchedule() throws SchedulerException {
         JobInfo jobInfo = JobInfo.newBuilder()
@@ -47,7 +46,7 @@ public class AlarmSchedulerTest extends BaseTestCase {
         scheduler.schedule(context, jobInfo, 20);
         verifyScheduledJob(jobInfo, 20, 1);
     }
-    
+
     @Test
     public void testReschedule() throws SchedulerException {
         JobInfo jobInfo = JobInfo.newBuilder()
@@ -83,4 +82,5 @@ public class AlarmSchedulerTest extends BaseTestCase {
         // Verify the alarm is within 100 milliseconds
         assertTrue(expectedTriggerTime - alarm.triggerAtTime <= 100);
     }
+
 }

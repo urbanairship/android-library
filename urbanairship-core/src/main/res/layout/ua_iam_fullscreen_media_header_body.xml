@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,14 +23,14 @@
                 style="@style/UrbanAirship.InAppFullscreen.MediaView.MediaHeaderBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"/>
+                android:layout_alignParentTop="true" />
 
             <TextView
                 android:id="@+id/heading"
                 style="@style/UrbanAirship.InAppFullscreen.Heading.MediaHeaderBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/media"/>
+                android:layout_below="@id/media" />
 
             <TextView
                 android:id="@+id/body"
@@ -39,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/heading"
-                tools:text="Body text"/>
+                tools:text="Body text" />
 
 
             <com.urbanairship.iam.view.InAppButtonLayout
@@ -47,7 +46,7 @@
                 style="@style/UrbanAirship.InAppFullscreen.ButtonLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/body"/>
+                android:layout_below="@id/body" />
 
             <FrameLayout
                 android:id="@+id/footer_holder"
@@ -61,7 +60,7 @@
                     android:id="@+id/footer"
                     style="@style/UrbanAirship.InAppFullscreen.Footer"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
 
             </FrameLayout>
 
@@ -79,7 +78,7 @@
             style="@style/UrbanAirship.InAppFullscreen.DismissButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/ua_cancel"/>
+            android:contentDescription="@string/ua_cancel" />
 
     </FrameLayout>
 

@@ -22,7 +22,6 @@ import com.urbanairship.util.ImageUtils;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.util.concurrent.Executor;
 
 /**
  * Request to load a bitmap into an ImageView.
@@ -171,7 +170,7 @@ abstract class ImageRequest {
         final ImageView imageView = imageViewReference.get();
         if (drawable != null && imageView != null) {
             // Transition drawable with a transparent drawable and the final drawable
-            TransitionDrawable td = new TransitionDrawable(new Drawable[]{
+            TransitionDrawable td = new TransitionDrawable(new Drawable[] {
                     new ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent)),
                     drawable
             });
@@ -212,6 +211,7 @@ abstract class ImageRequest {
      * Helper class. Just calls through to the request.
      */
     private static class ImageRequestAsyncTask extends AsyncTask<Void, Void, Drawable> {
+
         private final ImageRequest request;
 
         ImageRequestAsyncTask(@NonNull ImageRequest request) {
@@ -237,5 +237,7 @@ abstract class ImageRequest {
                 request.applyDrawable(drawable);
             }
         }
+
     }
+
 }

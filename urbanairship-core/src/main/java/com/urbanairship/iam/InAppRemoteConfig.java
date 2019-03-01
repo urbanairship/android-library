@@ -13,7 +13,6 @@ import com.urbanairship.json.JsonValue;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Remote config data for {@link InAppMessageManager}.
  */
@@ -86,6 +85,7 @@ class InAppRemoteConfig {
      * The in-app tag groups config.
      */
     public static class TagGroupsConfig {
+
         @NonNull
         private static final String TAG_GROUP_FETCH_ENABLED_KEY = "enabled";
         @NonNull
@@ -115,7 +115,6 @@ class InAppRemoteConfig {
          */
         public final long cachePreferLocalTagDataTimeSeconds;
 
-
         private TagGroupsConfig(boolean isEnabled,
                                 long cacheMaxAgeInSeconds,
                                 long cacheStaleReadTimeSeconds,
@@ -135,7 +134,6 @@ class InAppRemoteConfig {
                     Math.max(this.cachePreferLocalTagDataTimeSeconds, config.cachePreferLocalTagDataTimeSeconds));
         }
 
-
         @NonNull
         private static TagGroupsConfig fromJsonValue(@NonNull JsonValue jsonValue) {
             JsonMap map = jsonValue.optMap();
@@ -148,7 +146,7 @@ class InAppRemoteConfig {
 
             return new TagGroupsConfig(isTagGroupFetchEnabled, tagGroupCacheMaxAgeInSeconds, tagGroupCacheStaleReadTimeSeconds, tagGroupCachePreferLocalTagDataTimeSeconds);
         }
-    }
 
+    }
 
 }

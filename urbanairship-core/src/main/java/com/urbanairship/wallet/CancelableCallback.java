@@ -59,4 +59,5 @@ class CancelableCallback extends CancelableOperation {
         this.status = status;
         this.pass = pass;
     }
+
 }

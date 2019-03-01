@@ -25,8 +25,10 @@ public class ClipboardActionTest extends BaseTestCase {
 
     private ClipboardAction action;
 
-    private @Action.Situation int[] acceptedSituations;
-    private @Action.Situation int[] rejectedSituations;
+    private @Action.Situation
+    int[] acceptedSituations;
+    private @Action.Situation
+    int[] rejectedSituations;
     private ClipboardManager clipboardManager;
 
     @Before

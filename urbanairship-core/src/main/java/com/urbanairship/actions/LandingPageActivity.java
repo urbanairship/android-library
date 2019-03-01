@@ -136,7 +136,6 @@ public class LandingPageActivity extends Activity {
         handler = new Handler();
         uri = intent.getData();
 
-
         this.height = intent.getIntExtra(HEIGHT_KEY, 0);
         this.width = intent.getIntExtra(WIDTH_KEY, 0);
         this.aspectLock = intent.getBooleanExtra(ASPECT_LOCK_KEY, false) && height != 0 && width != 0;
@@ -170,7 +169,6 @@ public class LandingPageActivity extends Activity {
             finish();
             return;
         }
-
 
         // Workaround render issue with older android devices
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -277,7 +275,6 @@ public class LandingPageActivity extends Activity {
             fetchMessagesCallback = null;
         }
     }
-
 
     /**
      * Fades a view in while fading another view out.
@@ -459,7 +456,6 @@ public class LandingPageActivity extends Activity {
                     }
                 });
 
-
             }
         } else {
             if (UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
@@ -493,4 +489,5 @@ public class LandingPageActivity extends Activity {
 
         this.startActivity(restartIntent);
     }
+
 }

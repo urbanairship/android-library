@@ -11,7 +11,11 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * {@link InAppRemoteConfig} tests.
@@ -39,7 +43,6 @@ public class InAppRemoteConfigTest extends BaseTestCase {
         assertEquals(3, config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds);
     }
 
-
     @Test
     public void testFromJsonMultiple() {
         JsonList json = new JsonList(Arrays.asList(
@@ -59,7 +62,6 @@ public class InAppRemoteConfigTest extends BaseTestCase {
                                                  .put("cache_prefer_local_until_seconds", 200)
                                                  .build())
                        .build().toJsonValue()));
-
 
         InAppRemoteConfig config = InAppRemoteConfig.fromJsonList(json);
         assertNotNull(config);
@@ -98,4 +100,5 @@ public class InAppRemoteConfigTest extends BaseTestCase {
         assertEquals(TagGroupManager.DEFAULT_CACHE_STALE_READ_TIME_MS, config.tagGroupsConfig.cacheStaleReadTimeSeconds);
         assertEquals(TagGroupManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS, config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds);
     }
+
 }

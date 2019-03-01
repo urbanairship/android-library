@@ -44,7 +44,6 @@ public class ChannelApiClientTest extends BaseTestCase {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-
         // Set hostURL
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -67,10 +66,10 @@ public class ChannelApiClientTest extends BaseTestCase {
         headers.put("Location", Arrays.asList(new String[] { channelLocation }));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseHeaders(headers)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("OK")
+                                       .setResponseBody("{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
+                                       .build();
 
         Response response = client.createChannelWithPayload(payload);
 
@@ -92,9 +91,9 @@ public class ChannelApiClientTest extends BaseTestCase {
         Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
-                .setResponseHeaders(headers)
-                .setResponseMessage("Not Implemented")
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("Not Implemented")
+                                       .build();
 
         Response response = client.createChannelWithPayload(payload);
 
@@ -112,9 +111,9 @@ public class ChannelApiClientTest extends BaseTestCase {
         Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseHeaders(headers)
-                .setResponseMessage("OK")
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("OK")
+                                       .build();
 
         URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
         Response response = client.updateChannelWithPayload(channelLocation, payload);
@@ -133,9 +132,9 @@ public class ChannelApiClientTest extends BaseTestCase {
         Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
-                .setResponseHeaders(headers)
-                .setResponseMessage("Not Implemented")
-                .build();
+                                       .setResponseHeaders(headers)
+                                       .setResponseMessage("Not Implemented")
+                                       .build();
 
         URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
         Response response = client.updateChannelWithPayload(channelLocation, payload);
@@ -145,4 +144,5 @@ public class ChannelApiClientTest extends BaseTestCase {
         assertEquals("Channel response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED,
                 response.getStatus());
     }
+
 }

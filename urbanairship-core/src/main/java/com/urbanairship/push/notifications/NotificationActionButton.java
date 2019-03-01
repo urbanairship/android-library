@@ -189,6 +189,7 @@ public class NotificationActionButton {
      * Builds the NotificationAction.
      */
     public static class Builder {
+
         private final String buttonId;
         private int labelId = 0;
         private int iconId = 0;
@@ -322,5 +323,7 @@ public class NotificationActionButton {
 
             return new NotificationActionButton(this, extras);
         }
+
     }
+
 }

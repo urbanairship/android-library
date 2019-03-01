@@ -395,4 +395,5 @@ public class RetailEventTemplate {
 
         return builder.build();
     }
+
 }

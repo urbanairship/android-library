@@ -19,7 +19,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 
-
 /**
  * Location adapter for Google's fused location provider.
  *
@@ -29,7 +28,6 @@ class FusedLocationAdapter implements LocationAdapter {
 
     private static final int REQUEST_CODE = 1;
     private final FusedLocationProviderClient client;
-
 
     public FusedLocationAdapter(Context context) {
         this.client = LocationServices.getFusedLocationProviderClient(context);
@@ -159,5 +157,7 @@ class FusedLocationAdapter implements LocationAdapter {
             Logger.verbose("FusedLocationAdapter - Starting single location request.");
             client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         }
+
     }
+
 }

@@ -40,8 +40,8 @@ public class Trigger implements Parcelable {
     private static final String VERSION_NAME = "version";
 
     @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT,
-              CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT,
-              ACTIVE_SESSION, VERSION })
+            CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT,
+            ACTIVE_SESSION, VERSION })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -135,7 +135,6 @@ public class Trigger implements Parcelable {
         this.goal = goal;
         this.predicate = predicate;
     }
-
 
     public Trigger(@NonNull Parcel in) {
         double goal;
@@ -332,4 +331,5 @@ public class Trigger implements Parcelable {
         result = 31 * result + (predicate != null ? predicate.hashCode() : 0);
         return result;
     }
+
 }

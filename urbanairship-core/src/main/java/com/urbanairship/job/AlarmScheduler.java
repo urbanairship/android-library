@@ -99,4 +99,5 @@ class AlarmScheduler implements Scheduler {
             throw new SchedulerException("AlarmScheduler - Failed to schedule intent " + intent.getAction(), e);
         }
     }
+
 }

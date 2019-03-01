@@ -112,4 +112,5 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
 
         return builder;
     }
+
 }

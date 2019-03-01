@@ -22,4 +22,5 @@ public class InstallAttributionEventTest extends BaseTestCase {
         InstallAttributionEvent event = new InstallAttributionEvent("referrer");
         assertEquals("install_attribution", event.getType());
     }
+
 }

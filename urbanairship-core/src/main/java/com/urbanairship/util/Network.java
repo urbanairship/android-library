@@ -34,5 +34,6 @@ public class Network {
 
         return info != null && info.isConnected();
     }
+
 }
 

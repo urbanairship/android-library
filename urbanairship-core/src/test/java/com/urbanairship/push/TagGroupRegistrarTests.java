@@ -22,11 +22,9 @@ import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 
 /**
  * Tests for {@link TagGroupRegistrar}.
@@ -102,9 +100,9 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     public void testUpdate200Response() {
         // Set up a 200 response
         Response response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\": true}")
-                .build();
+                                    .setResponseMessage("OK")
+                                    .setResponseBody("{ \"ok\": true}")
+                                    .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
@@ -117,7 +115,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     public void testUpdate500Response() {
         // Set up a 500 response
         Response response = Response.newBuilder(500)
-                .build();
+                                    .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
@@ -130,7 +128,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     public void testUpdate429Response() {
         // Set up a 429 response
         Response response = Response.newBuilder(429)
-                .build();
+                                    .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
@@ -143,7 +141,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     public void testUpdate400Response() {
         // Set up a 400 response
         Response response = Response.newBuilder(400)
-                .build();
+                                    .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
@@ -197,11 +195,14 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     }
 
     private static class TestListener implements TagGroupRegistrar.Listener {
+
         List<TagGroupsMutation> mutations = new ArrayList<>();
 
         @Override
         public void onMutationUploaded(@NonNull TagGroupsMutation mutation) {
             mutations.add(mutation);
         }
+
     }
+
 }

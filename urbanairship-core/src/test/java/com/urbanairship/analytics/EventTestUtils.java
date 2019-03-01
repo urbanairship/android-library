@@ -120,10 +120,12 @@ public class EventTestUtils {
 
     /**
      * Gets the event's data.
+     *
      * @param event The event.
      * @return The event's data.
      */
     public static JsonMap getEventData(Event event) {
         return event.getEventData();
     }
+
 }

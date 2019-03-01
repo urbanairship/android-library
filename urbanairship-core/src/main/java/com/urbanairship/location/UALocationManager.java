@@ -15,8 +15,6 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.ContextCompat;
 
-import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
@@ -25,8 +23,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.AirshipHandlerThread;
@@ -57,7 +55,6 @@ public class UALocationManager extends AirshipComponent {
     final HandlerThread backgroundThread;
     private Handler backgroundHandler;
 
-
     /**
      * When preferences are changed on the current process or other processes,
      * it will trigger the PreferenceChangeListener.  Instead of dealing
@@ -76,7 +73,6 @@ public class UALocationManager extends AirshipComponent {
             }
         }
     };
-
 
     /**
      * Creates a UALocationManager. Normally only one UALocationManager instance should exist, and
@@ -221,7 +217,6 @@ public class UALocationManager extends AirshipComponent {
         return options;
     }
 
-
     /**
      * Adds a listener for locations updates.  The listener will only be notified
      * of continuous location updates, not single location requests.
@@ -288,7 +283,6 @@ public class UALocationManager extends AirshipComponent {
                 }
             }
         });
-
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -446,7 +440,6 @@ public class UALocationManager extends AirshipComponent {
         });
     }
 
-
     /**
      * Returns {@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
      *
@@ -455,4 +448,5 @@ public class UALocationManager extends AirshipComponent {
     public boolean isOptIn() {
         return isLocationPermitted() && isLocationUpdatesEnabled();
     }
+
 }

@@ -18,7 +18,6 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-
 public class TagGroupsMutationTest extends BaseTestCase {
 
     @Test
@@ -70,7 +69,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        expected  = "{ \"add\": { \"group\": [\"tag1\", \"tag2\"] } }";
+        expected = "{ \"add\": { \"group\": [\"tag1\", \"tag2\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
         // Collapse [set, add, remove] should result in a single mutation to set [tag2, tag3]
@@ -82,7 +81,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        expected  = "{ \"set\": { \"group\": [\"tag2\", \"tag3\"] } }";
+        expected = "{ \"set\": { \"group\": [\"tag2\", \"tag3\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
         // Collapse [add, set, remove] should result in single mutation to set [tag3]
@@ -94,7 +93,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        expected  = "{ \"set\": { \"group\": [\"tag3\"] } }";
+        expected = "{ \"set\": { \"group\": [\"tag3\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
         // Collapse [set, remove, add] should result in single mutation to set [tag3, tag1, tag2]
@@ -106,7 +105,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        expected  = "{ \"set\": { \"group\": [\"tag1\", \"tag2\", \"tag3\"] } }";
+        expected = "{ \"set\": { \"group\": [\"tag1\", \"tag2\", \"tag3\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
         // Collapse multiple adds should result in a single add [tag1, tag2]
@@ -119,7 +118,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        expected  = "{ \"add\": { \"group\": [\"tag1\", \"tag2\"] } }";
+        expected = "{ \"add\": { \"group\": [\"tag1\", \"tag2\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
     }
 
@@ -139,7 +138,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(2, collapsed.size());
 
-        String expected  = "{ \"set\": { \"group3\": [\"tag3\"] } }";
+        String expected = "{ \"set\": { \"group3\": [\"tag3\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
         // Collapse result with setGroup1 should result in 2 mutations
@@ -148,10 +147,10 @@ public class TagGroupsMutationTest extends BaseTestCase {
         collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(2, collapsed.size());
 
-        expected  = "{ \"set\": { \"group3\": [\"tag3\"], \"group1\": [\"tag4\"] } }";
+        expected = "{ \"set\": { \"group3\": [\"tag3\"], \"group1\": [\"tag4\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
 
-        expected  = "{ \"remove\": { \"group2\": [\"tag1\"] } }";
+        expected = "{ \"remove\": { \"group2\": [\"tag1\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(1).toJsonValue());
     }
 
@@ -175,7 +174,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        String expected  = "{ \"set\": { \"group\": [] } }";
+        String expected = "{ \"set\": { \"group\": [] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
     }
 
@@ -192,7 +191,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
         List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(1, collapsed.size());
 
-        String expected  = "{ \"set\": { \"group\": [\"tag2\"] } }";
+        String expected = "{ \"set\": { \"group\": [\"tag2\"] } }";
         assertEquals(JsonValue.parseString(expected), collapsed.get(0).toJsonValue());
     }
 
@@ -217,7 +216,6 @@ public class TagGroupsMutationTest extends BaseTestCase {
         assertEquals(mutation.toJsonValue(), fromJson.toJsonValue());
     }
 
-
     @Test
     public void testCollapseEmptySetMutation() {
         TagGroupsMutation mutation = TagGroupsMutation.newSetTagsMutation("empty", new HashSet<String>());
@@ -227,6 +225,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
 
     /**
      * Helper method to create a set.
+     *
      * @param tags The tags.
      * @return The set of tags.
      */

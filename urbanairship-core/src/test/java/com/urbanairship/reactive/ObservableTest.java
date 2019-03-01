@@ -12,16 +12,15 @@ import com.urbanairship.Predicate;
 
 import junit.framework.Assert;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ObservableTest extends BaseTestCase {
 
@@ -101,7 +100,6 @@ public class ObservableTest extends BaseTestCase {
         performAsserts(looper, expectedError, expectedValues, nextCount, completeCount, errorCount);
     }
 
-
     public <T> void validateObservable(Observable<T> observable, List<T> expectedValues,
                                        int nextCount, int completeCount, int errorCount) {
         validateObservable(observable, null, null, expectedValues, nextCount, completeCount, errorCount);
@@ -135,14 +133,12 @@ public class ObservableTest extends BaseTestCase {
         validateObservable(obs, new ArrayList<Integer>(), 0, 0, 0);
     }
 
-
     @Test
     public void testError() throws Exception {
         final Exception exception = new Exception("Oh no");
         Observable<Integer> obs = Observable.error(exception);
         validateObservable(obs, exception, new ArrayList<Integer>(), 0, 0, 1);
     }
-
 
     @Test
     public void testFromCollection() throws Exception {
@@ -165,7 +161,6 @@ public class ObservableTest extends BaseTestCase {
 
         validateObservable(mapped, Arrays.asList("1", "2", "3"), 3, 1, 0);
     }
-
 
     @Test
     public void testFilter() throws Exception {
@@ -310,4 +305,5 @@ public class ObservableTest extends BaseTestCase {
 
         performAsserts(null, null, expected, 3, 1, 0);
     }
+
 }

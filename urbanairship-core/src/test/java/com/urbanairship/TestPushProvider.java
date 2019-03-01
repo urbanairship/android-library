@@ -17,7 +17,6 @@ public class TestPushProvider implements PushProvider {
         return UAirship.ANDROID_PLATFORM;
     }
 
-
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         return registrationToken;
@@ -37,4 +36,5 @@ public class TestPushProvider implements PushProvider {
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
         return true;
     }
+
 }

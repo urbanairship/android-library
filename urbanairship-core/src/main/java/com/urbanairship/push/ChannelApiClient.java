@@ -21,7 +21,6 @@ class ChannelApiClient extends BaseApiClient {
 
     static final String CHANNEL_CREATION_PATH = "api/channels/";
 
-
     ChannelApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
@@ -57,4 +56,5 @@ class ChannelApiClient extends BaseApiClient {
         Logger.verbose("ChannelApiClient - Updating channel with payload: %s", payload);
         return performRequest(channelLocation, "PUT", payload);
     }
+
 }

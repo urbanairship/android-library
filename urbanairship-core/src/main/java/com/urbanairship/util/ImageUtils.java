@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Locale;
 
 /**
  * A class containing utility methods related to bitmaps.
@@ -46,6 +45,7 @@ public class ImageUtils {
             this.drawable = drawable;
             this.bytes = bytes;
         }
+
     }
 
     /**
@@ -180,7 +180,6 @@ public class ImageUtils {
         return inSampleSize;
     }
 
-
     /**
      * Interface used in the helper method {@link #fetchImage(Context, URL, ImageProcessor)} to convert
      * the file to a drawable or bitmap.
@@ -188,6 +187,7 @@ public class ImageUtils {
      * @param <T> The result.
      */
     private interface ImageProcessor<T> {
+
         /**
          * Called to process the file.
          *
@@ -196,6 +196,7 @@ public class ImageUtils {
          * @throws IOException
          */
         T onProcessFile(File imageFile) throws IOException;
+
     }
 
     /**
@@ -240,4 +241,5 @@ public class ImageUtils {
             }
         }
     }
+
 }

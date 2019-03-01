@@ -8,7 +8,6 @@ import android.support.annotation.RestrictTo;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 /**
  * ThreadFactory that sets the Urban Airship thread stats tags on each thread.
  *

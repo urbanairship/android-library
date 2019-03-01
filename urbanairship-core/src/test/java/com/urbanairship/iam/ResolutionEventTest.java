@@ -41,7 +41,6 @@ public class ResolutionEventTest extends BaseTestCase {
                                                             .build())
                                           .build();
 
-
         ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
@@ -68,7 +67,6 @@ public class ResolutionEventTest extends BaseTestCase {
                                                             .build())
                                           .build();
 
-
         ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
@@ -87,7 +85,6 @@ public class ResolutionEventTest extends BaseTestCase {
     @Test
     public void testClickedResolutionEvent() throws JSONException {
         ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.messageClicked(), 5500);
-
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "message_click")
@@ -126,7 +123,6 @@ public class ResolutionEventTest extends BaseTestCase {
 
         verifyEvent(expectedResolutionInfo, event);
     }
-
 
     /**
      * Test replaced resolution event.
@@ -178,4 +174,5 @@ public class ResolutionEventTest extends BaseTestCase {
         assertEquals(expectedResolutionInfo, EventTestUtils.getEventData(event).get("resolution"));
         assertEquals("in_app_resolution", event.getType());
     }
+
 }

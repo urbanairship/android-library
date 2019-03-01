@@ -126,7 +126,6 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             footer.setVisibility(View.GONE);
         }
 
-
         final Drawable background = BackgroundDrawableBuilder.newBuilder(this)
                                                              .setBackgroundColor(displayContent.getBackgroundColor())
                                                              .setBorderRadius(borderRadius, BorderRadius.ALL)
@@ -222,4 +221,5 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
 
         return template;
     }
+
 }

@@ -1,8 +1,6 @@
 package com.urbanairship.locale;
 
-
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -50,4 +48,5 @@ public class LocaleManagerTest extends BaseTestCase {
 
         verify(listener).onLocaleChanged(en);
     }
+
 }

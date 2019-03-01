@@ -96,7 +96,6 @@ class ResolutionEvent extends InAppMessageEvent {
                                         .put(EXPIRY, DateUtils.createIso8601TimeStamp(expiry))
                                         .build();
 
-
         return new ResolutionEvent(message, resolutionData);
     }
 
@@ -114,7 +113,6 @@ class ResolutionEvent extends InAppMessageEvent {
                                                        .put(RESOLUTION_TYPE, resolutionInfo.getType())
                                                        .put(DISPLAY_TIME, millisecondsToSecondsString(displayMilliseconds));
 
-
         if (ResolutionInfo.RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.getType()) && resolutionInfo.getButtonInfo() != null) {
             String description = resolutionInfo.getButtonInfo().getLabel().getText();
             if (description != null && description.length() > MAX_BUTTON_DESCRIPTION_LENGTH) {
@@ -126,7 +124,6 @@ class ResolutionEvent extends InAppMessageEvent {
 
         return new ResolutionEvent(message, resolutionDataBuilder.build());
     }
-
 
     @NonNull
     @Override
@@ -142,4 +139,5 @@ class ResolutionEvent extends InAppMessageEvent {
                       .put(RESOLUTION, resolutionData)
                       .build();
     }
+
 }

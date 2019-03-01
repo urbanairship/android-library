@@ -38,7 +38,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
     private ChannelRegistrationPayload payload;
 
-
     @Before
     public void setUp() throws Exception {
         testTags = new HashSet<>();
@@ -314,7 +313,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
 
-
     @Test
     public void testFromJsonEmptyAlias() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
@@ -328,4 +326,5 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
+
 }

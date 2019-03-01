@@ -36,7 +36,6 @@ public class ActionScheduleEditsTest extends BaseTestCase {
                                   .put("interval", 20)
                                   .build();
 
-
         ActionScheduleEdits edits = ActionScheduleEdits.fromJson(editJson.toJsonValue());
 
         assertEquals(actions.getMap(), edits.getActions());
@@ -48,4 +47,5 @@ public class ActionScheduleEditsTest extends BaseTestCase {
         assertEquals(TimeUnit.DAYS.toMillis(10), edits.getEditGracePeriod().longValue());
         assertEquals(TimeUnit.SECONDS.toMillis(20), edits.getInterval().longValue());
     }
+
 }

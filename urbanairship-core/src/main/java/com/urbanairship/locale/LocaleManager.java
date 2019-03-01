@@ -8,19 +8,18 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.os.ConfigurationCompat;
 
 import com.urbanairship.Logger;
-import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-
 /**
  * Locale manager. Handles listening for locale changes.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LocaleManager {
+
     private final Context context;
     private volatile Locale locale;
     @SuppressLint("StaticFieldLeak")
@@ -50,7 +49,6 @@ public class LocaleManager {
     protected LocaleManager(Context context) {
         this.context = context.getApplicationContext();
     }
-
 
     /**
      * Adds a locale change listener.
@@ -98,4 +96,5 @@ public class LocaleManager {
         }
         return locale;
     }
+
 }

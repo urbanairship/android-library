@@ -14,6 +14,7 @@ import org.junit.rules.ExpectedException;
 import static org.mockito.Mockito.mock;
 
 public class MediaEventTemplateTest extends BaseTestCase {
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -199,4 +200,5 @@ public class MediaEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "feature", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "\"November 4, 2015\"");
     }
+
 }

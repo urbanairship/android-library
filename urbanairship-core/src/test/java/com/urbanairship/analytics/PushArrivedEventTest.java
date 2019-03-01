@@ -18,7 +18,6 @@ public class PushArrivedEventTest extends BaseTestCase {
         extras.putString(PushMessage.EXTRA_SEND_ID, "push id");
         extras.putString(PushMessage.EXTRA_METADATA, "metadata");
 
-
         PushMessage pushMessage = new PushMessage(extras);
         PushArrivedEvent event = new PushArrivedEvent(pushMessage);
 
@@ -28,4 +27,5 @@ public class PushArrivedEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, Event.PUSH_ID_KEY, "push id");
         EventTestUtils.validateEventValue(event, Event.METADATA_KEY, "metadata");
     }
+
 }

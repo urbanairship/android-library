@@ -174,7 +174,6 @@ class UALocationProvider {
         isConnected = true;
     }
 
-
     /**
      * Called when a system location provider availability changes.
      *
@@ -207,4 +206,5 @@ class UALocationProvider {
 
         return getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE) != null;
     }
+
 }

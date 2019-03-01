@@ -54,4 +54,5 @@ public final class RichPushTable {
 
     @NonNull
     public static final String TABLE_NAME = "richpush";
+
 }

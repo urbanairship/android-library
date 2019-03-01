@@ -37,7 +37,6 @@ public class JobDispatcherTest extends BaseTestCase {
         mockFallbackScheduler = mock(Scheduler.class);
         context = TestApplication.getApplication();
 
-
         dispatcher = new JobDispatcher(TestApplication.getApplication(), new JobDispatcher.SchedulerFactory() {
             @NonNull
             @Override
@@ -65,7 +64,7 @@ public class JobDispatcherTest extends BaseTestCase {
     @Test
     public void testDispatch() throws SchedulerException {
         dispatcher.dispatch(jobInfo);
-        verify(mockScheduler).schedule(context,jobInfo, 3000002);
+        verify(mockScheduler).schedule(context, jobInfo, 3000002);
     }
 
     @Test
@@ -88,7 +87,7 @@ public class JobDispatcherTest extends BaseTestCase {
                 .schedule(context, jobInfo, 3000002);
 
         dispatcher.dispatch(jobInfo);
-        verify(mockFallbackScheduler).schedule(context,jobInfo, 3000002);
+        verify(mockFallbackScheduler).schedule(context, jobInfo, 3000002);
     }
 
     @Test
@@ -125,4 +124,5 @@ public class JobDispatcherTest extends BaseTestCase {
         dispatcher.cancel(JobInfo.RICH_PUSH_UPDATE_USER);
         verify(mockFallbackScheduler).cancel(context, 3000007);
     }
+
 }

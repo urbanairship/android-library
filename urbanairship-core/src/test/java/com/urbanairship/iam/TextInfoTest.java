@@ -27,17 +27,16 @@ public class TextInfoTest extends BaseTestCase {
                                     .setText("OH hi")
                                     .build();
 
-
         TextInfo fromJson = TextInfo.fromJson(original.toJsonValue());
 
         assertEquals(original, fromJson);
         assertEquals(original.hashCode(), fromJson.hashCode());
     }
 
-
     @Test(expected = IllegalArgumentException.class)
     public void testMissingTextAndDrawable() {
         TextInfo.newBuilder()
                 .build();
     }
+
 }

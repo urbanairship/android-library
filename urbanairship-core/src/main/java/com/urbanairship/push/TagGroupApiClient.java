@@ -62,7 +62,6 @@ class TagGroupApiClient extends BaseApiClient {
                                                            .build())
                                  .build();
 
-
         String tagPayload = payload.toString();
         Logger.verbose("Updating tag groups with payload: %s", tagPayload);
 
@@ -125,4 +124,5 @@ class TagGroupApiClient extends BaseApiClient {
 
         throw new IllegalArgumentException("Unknown type: " + type);
     }
+
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.util;
 
-
 import android.content.Context;
 import android.support.annotation.NonNull;
 
@@ -22,4 +21,5 @@ public interface PermissionsRequester {
      */
     @NonNull
     int[] requestPermissions(@NonNull Context context, @NonNull List<String> permissions);
+
 }

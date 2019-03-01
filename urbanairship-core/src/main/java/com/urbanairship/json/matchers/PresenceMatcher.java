@@ -18,7 +18,6 @@ import com.urbanairship.json.ValueMatcher;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PresenceMatcher extends ValueMatcher {
 
-
     @NonNull
     public static final String IS_PRESENT_VALUE_KEY = "is_present";
 
@@ -69,4 +68,5 @@ public class PresenceMatcher extends ValueMatcher {
     public int hashCode() {
         return (isPresent ? 1 : 0);
     }
+
 }

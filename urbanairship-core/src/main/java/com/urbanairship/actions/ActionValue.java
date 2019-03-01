@@ -256,6 +256,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
 
     /**
      * ActionValue parcel creator.
+     *
      * @hide
      */
     @NonNull
@@ -273,4 +274,5 @@ public class ActionValue implements JsonSerializable, Parcelable {
             return new ActionValue[size];
         }
     };
+
 }

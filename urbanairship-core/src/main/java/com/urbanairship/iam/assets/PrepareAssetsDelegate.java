@@ -34,4 +34,5 @@ public interface PrepareAssetsDelegate {
      * @param assets The assets.
      */
     void onSchedule(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessage message, @NonNull Assets assets);
+
 }

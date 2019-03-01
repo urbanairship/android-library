@@ -45,6 +45,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
          * @param buttonInfo The button info.
          */
         void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo);
+
     }
 
     private ButtonClickListener buttonClickListener;
@@ -197,4 +198,5 @@ public class InAppButtonLayout extends BoundedLinearLayout {
 
         requestLayout();
     }
+
 }

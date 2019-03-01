@@ -20,4 +20,5 @@ public interface OperationScheduler {
      * @param operation The operation.
      */
     void schedule(long delay, @NonNull CancelableOperation operation);
+
 }

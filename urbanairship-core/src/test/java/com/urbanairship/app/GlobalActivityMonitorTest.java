@@ -18,13 +18,11 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * This class tests the monitoring the activities going into the foreground
- *
  */
 public class GlobalActivityMonitorTest extends BaseTestCase {
 
     private GlobalActivityMonitor activityMonitor;
     private boolean isForeground;
-
 
     @Before
     public void setUp() {
@@ -62,7 +60,6 @@ public class GlobalActivityMonitorTest extends BaseTestCase {
 
         assertTrue(isForeground);
     }
-
 
     /**
      * This test verifies removing an activity calls the onBackground delegate call
@@ -113,4 +110,5 @@ public class GlobalActivityMonitorTest extends BaseTestCase {
         Robolectric.flushForegroundThreadScheduler();
         assertFalse(isForeground);
     }
+
 }

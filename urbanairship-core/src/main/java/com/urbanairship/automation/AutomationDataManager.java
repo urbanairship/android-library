@@ -100,7 +100,6 @@ public class AutomationDataManager extends DataManager {
 
                 + ");");
 
-
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TriggerEntry.TABLE_NAME + " ("
                 + TriggerEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + TriggerEntry.COLUMN_NAME_TYPE + " INTEGER,"
@@ -698,7 +697,6 @@ public class AutomationDataManager extends DataManager {
         return triggers;
     }
 
-
     /**
      * Returns the current schedule count.
      *
@@ -741,7 +739,9 @@ public class AutomationDataManager extends DataManager {
      * @param <T> The list element type.
      */
     interface SetOperation<T> {
+
         void perform(@NonNull List<T> subset);
+
     }
 
     /**
@@ -764,4 +764,5 @@ public class AutomationDataManager extends DataManager {
             }
         }
     }
+
 }

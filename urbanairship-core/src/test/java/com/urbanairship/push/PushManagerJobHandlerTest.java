@@ -40,7 +40,6 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
                                                    .build()
                                                    .toString();
 
-
     private PreferenceDataStore dataStore;
     private PushManager pushManager;
     private ChannelApiClient client;
@@ -165,7 +164,6 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Verify we update the user
         verify(richPushInbox.getUser()).update(true);
     }
-
 
     /**
      * Test creating channel returns a retry when the status code is 429.
@@ -368,4 +366,5 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
     }
+
 }

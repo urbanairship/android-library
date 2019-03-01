@@ -107,4 +107,5 @@ public class ClipboardAction extends Action {
     public boolean shouldRunOnMainThread() {
         return true;
     }
+
 }

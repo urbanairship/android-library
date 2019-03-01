@@ -9,20 +9,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
-import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.richpush.RichPushTable;
 import com.urbanairship.util.DataManager;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -89,7 +85,6 @@ public class RemoteDataStore extends DataManager {
         }
     }
 
-
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         super.onDowngrade(db, oldVersion, newVersion);
@@ -115,7 +110,6 @@ public class RemoteDataStore extends DataManager {
         }
 
         db.beginTransaction();
-
 
         for (RemoteDataPayload payload : payloads) {
             ContentValues value = new ContentValues();
@@ -193,7 +187,6 @@ public class RemoteDataStore extends DataManager {
         return success;
     }
 
-
     /**
      * Helper method to generate payload entries from a a cursor.
      *
@@ -209,11 +202,11 @@ public class RemoteDataStore extends DataManager {
 
             try {
                 RemoteDataPayload payload = RemoteDataPayload.newBuilder()
-                        .setType(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)))
-                        .setTimeStamp(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)))
-                        .setMetadata(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA))).optMap())
-                        .setData(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))).optMap())
-                        .build();
+                                                             .setType(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)))
+                                                             .setTimeStamp(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)))
+                                                             .setMetadata(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA))).optMap())
+                                                             .setData(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))).optMap())
+                                                             .build();
                 entries.add(payload);
             } catch (IllegalArgumentException | JsonException e) {
                 Logger.error(e, "RemoteDataStore - failed to retrieve payload");
@@ -224,4 +217,5 @@ public class RemoteDataStore extends DataManager {
 
         return entries;
     }
+
 }

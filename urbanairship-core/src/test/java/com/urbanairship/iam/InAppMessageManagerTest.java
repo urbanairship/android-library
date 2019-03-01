@@ -92,7 +92,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private TestInAppRemoteDataObserver testObserver;
     private AssetManager mockAssetManager;
 
-
     @Before
     public void setup() {
         mockAssetManager = mock(AssetManager.class);
@@ -134,7 +133,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockRemoteData = mock(RemoteData.class);
         Subject<RemoteDataPayload> subject = Subject.create();
         when(mockRemoteData.payloadsForType(any(String.class))).thenReturn(subject);
-
 
         RetryingExecutor executor = new RetryingExecutor(new Handler(Looper.getMainLooper()), new Executor() {
             @Override
@@ -514,7 +512,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                     .setTagSelector(TagSelector.tag("expected tag", "expected group"))
                                     .build();
 
-
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                                 .setMessage(InAppMessage.newBuilder()
@@ -525,7 +522,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                 .build();
 
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
-
 
         when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
 
@@ -594,7 +590,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                  .put("cache_prefer_local_until_seconds", 200)
                                                  .build())
                        .build().toJsonValue()));
-
 
         manager.onNewConfig(config);
 
@@ -679,7 +674,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
             }
         });
 
-
         scheduleListener.onNewSchedule(schedule);
         verify(mockAssetManager).onSchedule(eq(schedule), Mockito.argThat(new ArgumentMatcher<Callable<InAppMessage>>() {
             @Override
@@ -738,5 +732,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         public JsonMap getLastPayloadMetadata() {
             return metadata;
         }
+
     }
+
 }

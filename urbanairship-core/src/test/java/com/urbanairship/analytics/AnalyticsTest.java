@@ -48,19 +48,19 @@ public class AnalyticsTest extends BaseTestCase {
                 .build();
 
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
-                .setActivityMonitor(new TestActivityMonitor())
-                .setConfigOptions(airshipConfigOptions)
-                .setJobDispatcher(mockJobDispatcher)
-                .setPlatform(UAirship.ANDROID_PLATFORM)
-                .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
-                .setEventManager(mockEventManager)
-                .setExecutor(new Executor() {
-                    @Override
-                    public void execute(@NonNull Runnable runnable) {
-                        runnable.run();
-                    }
-                })
-                .build();
+                                  .setActivityMonitor(new TestActivityMonitor())
+                                  .setConfigOptions(airshipConfigOptions)
+                                  .setJobDispatcher(mockJobDispatcher)
+                                  .setPlatform(UAirship.ANDROID_PLATFORM)
+                                  .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
+                                  .setEventManager(mockEventManager)
+                                  .setExecutor(new Executor() {
+                                      @Override
+                                      public void execute(@NonNull Runnable runnable) {
+                                          runnable.run();
+                                      }
+                                  })
+                                  .build();
 
         analytics.init();
     }
@@ -150,13 +150,13 @@ public class AnalyticsTest extends BaseTestCase {
                 .build();
 
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
-                .setActivityMonitor(new TestActivityMonitor())
-                .setConfigOptions(options)
-                .setJobDispatcher(mockJobDispatcher)
-                .setPlatform(UAirship.ANDROID_PLATFORM)
-                .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
-                .setEventManager(mockEventManager)
-                .build();
+                                  .setActivityMonitor(new TestActivityMonitor())
+                                  .setConfigOptions(options)
+                                  .setJobDispatcher(mockJobDispatcher)
+                                  .setPlatform(UAirship.ANDROID_PLATFORM)
+                                  .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
+                                  .setEventManager(mockEventManager)
+                                  .build();
 
         analytics.addEvent(new AppForegroundEvent(100));
         verifyZeroInteractions(mockEventManager);
@@ -248,12 +248,11 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager, times(1)).addEvent(Mockito.any(AssociateIdentifiersEvent.class), Mockito.anyString());
     }
 
-
     /**
      * Test that tracking event adds itself on background
      */
     @Test
-    public void testTrackingEventBackground () {
+    public void testTrackingEventBackground() {
         analytics.setEnabled(true);
 
         analytics.trackScreen("test_screen");
@@ -274,7 +273,7 @@ public class AnalyticsTest extends BaseTestCase {
      * Test that tracking event adds itself upon adding a new screen
      */
     @Test
-    public void testTrackingEventAddNewScreen () {
+    public void testTrackingEventAddNewScreen() {
         analytics.trackScreen("test_screen_1");
 
         // Add another screen
@@ -304,4 +303,5 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify no jobs were created for the event
         verifyZeroInteractions(mockJobDispatcher);
     }
+
 }

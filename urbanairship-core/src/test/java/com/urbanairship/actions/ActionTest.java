@@ -28,7 +28,6 @@ public class ActionTest extends BaseTestCase {
         final ActionResult expectedResult = ActionResult.newResult(ActionValue.wrap("result"));
         final ActionArguments originalArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", metadata);
 
-
         // Create a test action that verifies the result, handle, and arguments
         // in each method
         TestAction action = new TestAction(true, expectedResult) {
@@ -107,7 +106,6 @@ public class ActionTest extends BaseTestCase {
                 action.onFinishCalled);
     }
 
-
     /**
      * Test unexpected runtime exceptions being thrown when an action is performing
      * returns a result with the exception as the value.
@@ -155,4 +153,5 @@ public class ActionTest extends BaseTestCase {
         assertEquals("Result should have the COMPLETED status",
                 ActionResult.STATUS_COMPLETED, result.getStatus());
     }
+
 }

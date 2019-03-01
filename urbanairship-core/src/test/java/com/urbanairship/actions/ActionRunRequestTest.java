@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +44,6 @@ public class ActionRunRequestTest extends BaseTestCase {
         actionRegistry = new ActionRegistry();
     }
 
-
     /**
      * Test running an action
      */
@@ -56,9 +54,9 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         // Run the action without a callback
         ActionRunRequest.createRequest(action)
-                .setValue("val")
-                .setExecutor(executor)
-                .run();
+                        .setValue("val")
+                        .setExecutor(executor)
+                        .run();
 
         assertTrue("Action failed to run", action.performCalled);
         assertNull("Action name should be null", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
@@ -75,9 +73,9 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         // Run the action with a callback
         ActionRunRequest.createRequest(action)
-                .setValue("val")
-                .setExecutor(executor)
-                .run(callback);
+                        .setValue("val")
+                        .setExecutor(executor)
+                        .run(callback);
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Result was not called with expected result", result, callback.lastResult);
@@ -98,9 +96,9 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         // Run the action without a callback
         ActionRunRequest.createRequest("action!", actionRegistry)
-                .setValue("val")
-                .setExecutor(executor)
-                .run();
+                        .setValue("val")
+                        .setExecutor(executor)
+                        .run();
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
@@ -120,9 +118,9 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         // Run the action with a callback
         ActionRunRequest.createRequest("action!", actionRegistry)
-                .setValue("val")
-                .setExecutor(executor)
-                .run(callback);
+                        .setValue("val")
+                        .setExecutor(executor)
+                        .run(callback);
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Result was not called with expected result", result, callback.lastResult);
@@ -184,7 +182,6 @@ public class ActionRunRequestTest extends BaseTestCase {
         ActionRunRequest.createRequest("action").setValue(new Object());
     }
 
-
     /**
      * Test running an action from the registry with a predicate
      * that rejects the arguments
@@ -206,9 +203,9 @@ public class ActionRunRequestTest extends BaseTestCase {
         });
 
         ActionRunRequest.createRequest("action!", actionRegistry)
-                .setValue("val")
-                .setExecutor(executor)
-                .run(callback);
+                        .setValue("val")
+                        .setExecutor(executor)
+                        .run(callback);
 
         ActionResult result = callback.lastResult;
 
@@ -229,8 +226,8 @@ public class ActionRunRequestTest extends BaseTestCase {
         TestAction action = new TestAction(true, null);
 
         ActionRunRequest.createRequest(action)
-                .setExecutor(executor)
-                .runSync();
+                        .setExecutor(executor)
+                        .runSync();
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Situation should default to MANUAL_INVOCATION", Action.SITUATION_MANUAL_INVOCATION, action.runArgs.getSituation());
@@ -242,8 +239,8 @@ public class ActionRunRequestTest extends BaseTestCase {
     @Test
     public void testRunActionNoEntry() {
         ActionResult result = ActionRunRequest.createRequest("action", actionRegistry)
-                .setExecutor(executor)
-                .runSync();
+                                              .setExecutor(executor)
+                                              .runSync();
 
         assertTrue("Running an action that does not exist should return a 'null' result",
                 result.getValue().isNull());
@@ -271,8 +268,8 @@ public class ActionRunRequestTest extends BaseTestCase {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         ActionRunRequest.createRequest(testAction)
-                .setExecutor(executorService)
-                .run(callback);
+                        .setExecutor(executorService)
+                        .run(callback);
 
         // Wait for the action to finish running
         executorService.shutdown();
@@ -302,9 +299,9 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         // Run the action by name
         ActionRunRequest.createRequest("action!", actionRegistry)
-                .setMetadata(metadata)
-                .setExecutor(executor)
-                .runSync();
+                        .setMetadata(metadata)
+                        .setExecutor(executor)
+                        .runSync();
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
@@ -324,5 +321,7 @@ public class ActionRunRequestTest extends BaseTestCase {
             lastArguments = arguments;
             onFinishCalled = true;
         }
+
     }
+
 }

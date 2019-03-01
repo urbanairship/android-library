@@ -63,7 +63,6 @@ public class TagGroupManager {
      */
     public static final long DEFAULT_PREFER_LOCAL_DATA_TIME_MS = 600000; // 10 minutes
 
-
     /**
      * Callback used to get the request tags when refreshing the cache.
      */
@@ -76,6 +75,7 @@ public class TagGroupManager {
          */
         @NonNull
         Map<String, Set<String>> getTags() throws Exception;
+
     }
 
     private final PreferenceDataStore dataStore;
@@ -279,7 +279,6 @@ public class TagGroupManager {
         return new TagGroupResult(false, null);
     }
 
-
     /**
      * Sets the cached response.
      *
@@ -386,4 +385,5 @@ public class TagGroupManager {
         Logger.verbose("Refreshed tag group with response: %s", response);
         setCachedResponse(response, requestTags);
     }
+
 }

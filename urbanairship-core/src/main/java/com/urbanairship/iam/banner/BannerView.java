@@ -76,6 +76,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      * Banner view listener.
      */
     public interface Listener {
+
         /**
          * Called when a button is clicked.
          *
@@ -108,6 +109,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
          */
         @MainThread
         void onUserDismissed(@NonNull BannerView view);
+
     }
 
     /**
@@ -319,7 +321,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         this.animationOut = out;
     }
 
-
     @Override
     public void onButtonClicked(@NonNull View view, @NonNull ButtonInfo buttonInfo) {
         Listener listener = this.listener;
@@ -408,7 +409,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
             }
         });
 
-
         view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(@NonNull View view) {
@@ -443,7 +443,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
             return false;
         }
 
-        TypedArray a = getContext().obtainStyledAttributes(new int[]{android.R.attr.windowTranslucentNavigation});
+        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation });
         boolean isEnabled = a.getBoolean(0, false);
         a.recycle();
         return isEnabled;
@@ -456,7 +456,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      */
     private boolean isActionBarEnabled() {
         int compatWindowActionBarAttr = getContext().getResources().getIdentifier("windowActionBar", "attr", getContext().getPackageName());
-        TypedArray a = getContext().obtainStyledAttributes(new int[]{android.R.attr.windowActionBar, compatWindowActionBarAttr});
+        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowActionBar, compatWindowActionBarAttr });
         boolean isEnabled = a.getBoolean(0, false) || a.getBoolean(1, false);
         a.recycle();
 
@@ -492,10 +492,10 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         int borderRadiusFlag = BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement()) ? BorderRadius.BOTTOM : BorderRadius.TOP;
 
         return BackgroundDrawableBuilder.newBuilder(getContext())
-                .setBackgroundColor(displayContent.getBackgroundColor())
-                .setPressedColor(pressedColor)
-                .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
-                .build();
+                                        .setBackgroundColor(displayContent.getBackgroundColor())
+                                        .setPressedColor(pressedColor)
+                                        .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
+                                        .build();
     }
 
     /**

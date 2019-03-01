@@ -4,28 +4,19 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 
 public class RateAppActionTest extends BaseTestCase {
 
@@ -96,7 +87,6 @@ public class RateAppActionTest extends BaseTestCase {
             }
         });
 
-
         // Test empty payload
         verifyPerform(null, new PerformCallback() {
             @Override
@@ -128,7 +118,6 @@ public class RateAppActionTest extends BaseTestCase {
             }
         });
 
-
         // Test customized prompt
         JsonMap customizedMessagePayload = JsonMap.newBuilder()
                                                   .put(RateAppAction.SHOW_LINK_PROMPT_KEY, true)
@@ -150,7 +139,9 @@ public class RateAppActionTest extends BaseTestCase {
     }
 
     private interface PerformCallback {
+
         void verify(Intent intent);
+
     }
 
     private void verifyPerform(JsonMap value, PerformCallback verifyCallback) {
@@ -196,4 +187,5 @@ public class RateAppActionTest extends BaseTestCase {
 
         }
     }
+
 }

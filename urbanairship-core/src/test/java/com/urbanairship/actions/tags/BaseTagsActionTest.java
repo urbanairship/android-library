@@ -29,8 +29,8 @@ import static junit.framework.Assert.assertTrue;
 public class BaseTagsActionTest extends BaseTestCase {
 
     private TestBaseTagsAction action;
-    private @Action.Situation int[] acceptedSituations;
-
+    private @Action.Situation
+    int[] acceptedSituations;
 
     @Before
     public void setup() {
@@ -167,6 +167,7 @@ public class BaseTagsActionTest extends BaseTestCase {
         void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
             applyNamedUserTags.putAll(tags);
         }
+
     }
 
 }

@@ -101,4 +101,5 @@ public class JsonMapTest extends BaseTestCase {
         assertEquals(1, jsonMap.get("list").getList().getList().get(3).getInt(2));
         assertEquals("c", jsonMap.get("list").getList().getList().get(4).getString());
     }
+
 }

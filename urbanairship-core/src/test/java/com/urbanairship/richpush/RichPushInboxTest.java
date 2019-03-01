@@ -5,13 +5,12 @@ package com.urbanairship.richpush;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.TestActivityMonitor;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
-import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 
 import junit.framework.Assert;
 
@@ -77,7 +76,7 @@ public class RichPushInboxTest extends BaseTestCase {
         }
 
         // Put some expired messages in there (these should not show up after refresh)
-        for (int i = 10; i< 15; i++) {
+        for (int i = 10; i < 15; i++) {
             RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id", null, true);
         }
 
@@ -204,7 +203,6 @@ public class RichPushInboxTest extends BaseTestCase {
         }));
     }
 
-
     /**
      * Test fetching messages skips triggering the rich push service if already
      * refreshing.
@@ -247,7 +245,6 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         }));
     }
-
 
     /**
      * Test fetch message request with a callback
@@ -354,10 +351,8 @@ public class RichPushInboxTest extends BaseTestCase {
         // Mark messages read
         inbox.markMessagesRead(messageIds);
 
-
         List<RichPushMessage> unreadMessages = inbox.getUnreadMessages();
         Assert.assertEquals(unreadMessages.size(), 6);
-
 
         List<RichPushMessage> filteredMessages = inbox.getUnreadMessages(testPredicate);
         Assert.assertEquals(filteredMessages.size(), 3);
@@ -365,7 +360,7 @@ public class RichPushInboxTest extends BaseTestCase {
         for (RichPushMessage message : filteredMessages) {
             String substring = message.getMessageId().replace("_message_id", "");
             int index = Integer.parseInt(substring);
-            Assert.assertEquals(index % 2,  0);
+            Assert.assertEquals(index % 2, 0);
         }
     }
 
@@ -384,7 +379,7 @@ public class RichPushInboxTest extends BaseTestCase {
         List<RichPushMessage> readMessages = inbox.getReadMessages();
         Assert.assertEquals(readMessages.size(), 4);
 
-        List<RichPushMessage> filteredMessages= inbox.getReadMessages(testPredicate);
+        List<RichPushMessage> filteredMessages = inbox.getReadMessages(testPredicate);
         Assert.assertEquals(filteredMessages.size(), 2);
 
         for (RichPushMessage message : filteredMessages) {
@@ -410,4 +405,5 @@ public class RichPushInboxTest extends BaseTestCase {
 
         return messageMap;
     }
+
 }

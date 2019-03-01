@@ -16,7 +16,6 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-
 public class OpenRichPushInboxActionTest extends BaseTestCase {
 
     private OpenRichPushInboxAction action;
@@ -68,7 +67,6 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         verify(mockInbox).startInboxActivity();
     }
-
 
     /**
      * Test action perform when the message is available it starts an activity to view the message.
@@ -128,4 +126,5 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         verify(mockInbox).startInboxActivity();
     }
+
 }

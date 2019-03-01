@@ -15,4 +15,5 @@ public class BannerAdapterFactory implements InAppMessageAdapter.Factory {
     public InAppMessageAdapter createAdapter(@NonNull InAppMessage message) {
         return BannerAdapter.newAdapter(message);
     }
+
 }

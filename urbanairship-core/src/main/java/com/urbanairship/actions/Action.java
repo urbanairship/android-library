@@ -139,7 +139,8 @@ public abstract class Action {
      *
      * @param arguments The action arguments.
      */
-    public void onStart(@NonNull ActionArguments arguments) {}
+    public void onStart(@NonNull ActionArguments arguments) {
+    }
 
     /**
      * Performs the action.
@@ -156,7 +157,8 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {}
+    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
+    }
 
     /**
      * Determines which thread runs the action.
@@ -167,4 +169,5 @@ public abstract class Action {
     public boolean shouldRunOnMainThread() {
         return false;
     }
+
 }

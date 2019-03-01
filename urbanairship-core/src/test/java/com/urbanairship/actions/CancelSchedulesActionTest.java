@@ -80,9 +80,9 @@ public class CancelSchedulesActionTest extends BaseTestCase {
     @Test
     public void testAcceptsMapArguments() {
         JsonMap argValue = JsonMap.newBuilder()
-                .put(CancelSchedulesAction.GROUPS, "group")
-                .put(CancelSchedulesAction.IDS, "id")
-                .build();
+                                  .put(CancelSchedulesAction.GROUPS, "group")
+                                  .put(CancelSchedulesAction.IDS, "id")
+                                  .build();
 
         for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, argValue);
@@ -96,7 +96,6 @@ public class CancelSchedulesActionTest extends BaseTestCase {
                     action.acceptsArguments(args));
         }
     }
-
 
     /**
      * Test perform with the cancel all argument.
@@ -183,4 +182,5 @@ public class CancelSchedulesActionTest extends BaseTestCase {
 
         verify(automation).cancel("id 1");
     }
+
 }

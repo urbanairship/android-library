@@ -950,6 +950,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         @RetryingExecutor.Result
         abstract int onPrepare();
+
     }
 
 }

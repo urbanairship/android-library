@@ -139,5 +139,7 @@ public class InAppMessagePayload implements JsonSerializable {
         public InAppMessagePayload build() {
             return new InAppMessagePayload(this);
         }
+
     }
+
 }

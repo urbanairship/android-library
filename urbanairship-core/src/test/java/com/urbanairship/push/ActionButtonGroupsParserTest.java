@@ -52,16 +52,17 @@ public class ActionButtonGroupsParserTest extends BaseTestCase {
         NotificationActionButtonGroup yesNoGroup = groups.get("ua_yes_no_foreground");
         assertEquals(2, yesNoGroup.getNotificationActionButtons().size());
 
-        NotificationActionButton yes  = yesNoGroup.getNotificationActionButtons().get(0);
+        NotificationActionButton yes = yesNoGroup.getNotificationActionButtons().get(0);
         assertEquals("yes", yes.getId());
         assertEquals("Yes", yes.getLabel(context));
         assertEquals(R.drawable.ua_ic_notification_button_accept, yes.getIcon());
         assertTrue(yes.isForegroundAction());
 
-        NotificationActionButton no  = yesNoGroup.getNotificationActionButtons().get(1);
+        NotificationActionButton no = yesNoGroup.getNotificationActionButtons().get(1);
         assertEquals("no", no.getId());
         assertEquals("No", no.getLabel(context));
         assertEquals(R.drawable.ua_ic_notification_button_decline, no.getIcon());
         assertFalse(no.isForegroundAction());
     }
+
 }

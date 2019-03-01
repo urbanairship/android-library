@@ -32,7 +32,6 @@ class ImageCache {
      */
     private static final int DISK_CACHE_SIZE = 1024 * 1024 * 50; // 50MB
 
-
     private final LruCache<String, CacheEntry> memoryCache;
 
     private Context context;
@@ -91,6 +90,7 @@ class ImageCache {
     }
 
     private static class CacheEntry {
+
         private long byteCount;
         private Drawable drawable;
 
@@ -98,6 +98,7 @@ class ImageCache {
             this.drawable = drawable;
             this.byteCount = byteCount;
         }
+
     }
 
 }

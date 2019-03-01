@@ -46,7 +46,6 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
             return CANCEL;
         }
 
-
         return OK;
     }
 
@@ -83,7 +82,6 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
         return assets;
     }
 
-
     /**
      * Checks if a URL is whitelisted.
      *
@@ -93,5 +91,6 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
     private static boolean isWhiteListed(String url) {
         return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_OPEN_URL);
     }
+
 }
 

@@ -93,4 +93,5 @@ public class NotificationFactoryTest extends BaseTestCase {
         assertEquals(NotificationFactory.TAG_NOTIFICATION_ID, factory.getNextId(pushMessage));
         assertEquals(NotificationFactory.TAG_NOTIFICATION_ID, factory.getNextId(pushMessage));
     }
+
 }

@@ -9,12 +9,12 @@
             <!-- The WebView will allow a secure origin to load content from any other origin, even
             if that origin is insecure. This is the least secure mode of operation for the WebView,
             and where possible apps should not set this mode. -->
-            <enum name="always_allow" value="0"/>
+            <enum name="always_allow" value="0" />
 
             <!-- The WebView will not allow a secure origin to load content from an insecure origin.
             This is the preferred and most secure mode of operation for the WebView and apps are
             strongly advised to use this mode. -->
-            <enum name="never_allow" value="1"/>
+            <enum name="never_allow" value="1" />
 
             <!-- The default UAWebView value. The WebView will attempt to be compatible with the
             approach of a modern web browser with regard to mixed content. Some insecure content may
@@ -23,53 +23,53 @@
             explicitly defined. This mode is intended to be used by apps that are not in control of
             the content that they render but desire to operate in a reasonably secure environment.
             For highest security, apps are recommended to use MIXED_CONTENT_NEVER_ALLOW. -->
-            <enum name="compatibility_mode" value="2"/>
+            <enum name="compatibility_mode" value="2" />
         </attr>
     </declare-styleable>
 
     <declare-styleable name="TextAppearance">
         <!-- Font path -->
-        <attr name="urbanAirshipFontPath" format="string"/>
+        <attr name="urbanAirshipFontPath" format="string" />
     </declare-styleable>
 
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for the Message Center -->
-        <attr name="messageCenterStyle" format="reference"/>
+        <attr name="messageCenterStyle" format="reference" />
     </declare-styleable>
 
     <!-- Style attributes for Message Center  -->
     <declare-styleable name="MessageCenter">
         <!-- Message item's background -->
-        <attr name="messageCenterItemBackground" format="reference"/>
+        <attr name="messageCenterItemBackground" format="reference" />
 
         <!-- Message title text appearance -->
-        <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
+        <attr name="messageCenterItemTitleTextAppearance" format="reference" />
 
         <!-- Message date text appearance -->
-        <attr name="messageCenterItemDateTextAppearance" format="reference"/>
+        <attr name="messageCenterItemDateTextAppearance" format="reference" />
 
         <!-- Text appearance for the message not selected message when displaying the Message Center
           in a split view -->
-        <attr name="messageNotSelectedTextAppearance" format="reference"/>
+        <attr name="messageNotSelectedTextAppearance" format="reference" />
 
         <!-- Text for the message not selected message when displaying the Message Center in a split view -->
-        <attr name="messageNotSelectedText" format="string"/>
+        <attr name="messageNotSelectedText" format="string" />
 
         <!-- Empty Message Center message text appearance -->
-        <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
+        <attr name="messageCenterEmptyMessageTextAppearance" format="reference" />
 
         <!-- Empty Message Center message text -->
-        <attr name="messageCenterEmptyMessageText" format="string"/>
+        <attr name="messageCenterEmptyMessageText" format="string" />
 
         <!-- Message Center list divider color -->
-        <attr name="messageCenterDividerColor" format="color"/>
+        <attr name="messageCenterDividerColor" format="color" />
 
         <!-- If the Message Center should display message icons or not -->
-        <attr name="messageCenterItemIconEnabled" format="boolean"/>
+        <attr name="messageCenterItemIconEnabled" format="boolean" />
 
         <!-- Icon placeholder -->
-        <attr name="messageCenterItemIconPlaceholder" format="reference"/>
+        <attr name="messageCenterItemIconPlaceholder" format="reference" />
 
     </declare-styleable>
 
@@ -77,11 +77,11 @@
     <!-- Style attributes for view states  -->
     <declare-styleable name="States">
         <!-- The list view item is highlighted when needing to differentiate from activation -->
-        <attr name="ua_state_highlighted" format="boolean"/>
+        <attr name="ua_state_highlighted" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="UrbanAirshipActionButton">
-        <attr name="android:icon"/>
+        <attr name="android:icon" />
         <attr name="android:label" />
     </declare-styleable>
 

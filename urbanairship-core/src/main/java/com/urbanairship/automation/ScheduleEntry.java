@@ -21,7 +21,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Schedule information stored in the schedules table.
  *
@@ -30,9 +29,8 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ScheduleEntry implements ScheduleInfo {
 
-
     @IntDef({ STATE_IDLE, STATE_WAITING_SCHEDULE_CONDITIONS, STATE_EXECUTING, STATE_PAUSED,
-              STATE_FINISHED, STATE_PREPARING_SCHEDULE, STATE_TIME_DELAYED })
+            STATE_FINISHED, STATE_PREPARING_SCHEDULE, STATE_TIME_DELAYED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface State {}
 
@@ -172,7 +170,7 @@ class ScheduleEntry implements ScheduleInfo {
     }
 
     private List<String> parseScreens(JsonValue json) {
-        List<String> screens  = new ArrayList<>();
+        List<String> screens = new ArrayList<>();
         if (json.isJsonList()) {
             for (JsonValue value : json.optList()) {
                 if (value.getString() != null) {
@@ -409,7 +407,6 @@ class ScheduleEntry implements ScheduleInfo {
             cursor.moveToNext();
         }
 
-
         return scheduleEntry;
     }
 
@@ -439,7 +436,9 @@ class ScheduleEntry implements ScheduleInfo {
     }
 
     @Override
-    public int getPriority() { return this.priority; }
+    public int getPriority() {
+        return this.priority;
+    }
 
     @Override
     public String getGroup() {
@@ -474,7 +473,6 @@ class ScheduleEntry implements ScheduleInfo {
                                                           .setScreens(screens)
                                                           .setSeconds(seconds);
 
-
         for (TriggerEntry triggerEntry : this.triggerEntries) {
             if (triggerEntry.isCancellation) {
                 delayBuilder.addCancellationTrigger(triggerEntry.toTrigger());
@@ -489,4 +487,5 @@ class ScheduleEntry implements ScheduleInfo {
     public String toString() {
         return scheduleId;
     }
+
 }

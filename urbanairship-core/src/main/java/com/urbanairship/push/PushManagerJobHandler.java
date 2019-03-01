@@ -87,7 +87,6 @@ class PushManagerJobHandler {
     private final PreferenceDataStore dataStore;
     private final TagGroupRegistrar tagGroupRegistrar;
 
-
     /**
      * Default constructor.
      *
@@ -157,7 +156,6 @@ class PushManagerJobHandler {
                 .build();
 
         pushRunnable.run();
-
 
         return JobInfo.JOB_FINISHED;
     }
@@ -390,7 +388,6 @@ class PushManagerJobHandler {
             return true;
         }
 
-
         long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
         if (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
             Logger.verbose("PushManagerJobHandler - Should update registration. Time since last registration time is greater than 24 hours.");
@@ -490,7 +487,6 @@ class PushManagerJobHandler {
         context.sendBroadcast(intent);
     }
 
-
     /**
      * Handles performing any tag group requests if any pending tag group changes are available.
      *
@@ -504,11 +500,11 @@ class PushManagerJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-
         if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, channelId)) {
             return JobInfo.JOB_FINISHED;
         }
 
         return JobInfo.JOB_RETRY;
     }
+
 }

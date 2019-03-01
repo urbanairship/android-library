@@ -18,7 +18,6 @@ import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
-import com.urbanairship.AirshipExecutors;
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -28,9 +27,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 
 /**
  * Notification factory that provides a pathway for customizing the display of push notifications
@@ -145,7 +141,9 @@ public class NotificationFactory {
          * @return The Notification.
          */
         @Nullable
-        public Notification getNotification() { return notification; }
+        public Notification getNotification() {
+            return notification;
+        }
 
         /**
          * Gets the status.
@@ -153,7 +151,10 @@ public class NotificationFactory {
          * @return The status.
          */
         public @Status
-        int getStatus() { return status; }
+        int getStatus() {
+            return status;
+        }
+
     }
 
     private final Context context;
@@ -385,7 +386,6 @@ public class NotificationFactory {
         return builder.build();
     }
 
-
     /**
      * Creates a <code>Notification</code> for an incoming push message.
      * <p>
@@ -436,7 +436,6 @@ public class NotificationFactory {
                 .setCategory(message.getCategory())
                 .setVisibility(message.getVisibility());
 
-
         if (Build.VERSION.SDK_INT < 26) {
             int defaults = getNotificationDefaultOptions();
 
@@ -454,7 +453,6 @@ public class NotificationFactory {
             builder.setDefaults(defaults);
         }
 
-
         if (getLargeIcon() != 0) {
             builder.setLargeIcon(BitmapFactory.decodeResource(getContext().getResources(), getLargeIcon()));
         }
@@ -468,7 +466,6 @@ public class NotificationFactory {
                 .setAccentColor(getColor())
                 .setLargeIcon(getLargeIcon())
                 .setSmallIcon(getSmallIconId()));
-
 
         // Wearable support
         builder.extend(new WearableNotificationExtender(getContext(), message, notificationId));
@@ -514,7 +511,6 @@ public class NotificationFactory {
         return NotificationIdGenerator.nextID();
     }
 
-
     /**
      * Gets the active notification channel for the push message. If neither {@link PushMessage#getNotificationChannel()} or {@link #getNotificationChannel()} result
      * in an active channel, {@link #DEFAULT_NOTIFICATION_CHANNEL} will be used.
@@ -544,7 +540,6 @@ public class NotificationFactory {
 
             Logger.error("Factory notification channel %s does not exist. Unable to apply channel on notification.", getNotificationChannel());
         }
-
 
         // Fallback to Default Channel
         NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL,

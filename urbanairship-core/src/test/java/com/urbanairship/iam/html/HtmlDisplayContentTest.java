@@ -32,10 +32,10 @@ public class HtmlDisplayContentTest extends BaseTestCase {
         assertEquals(content.hashCode(), fromJson.hashCode());
     }
 
-
     @Test(expected = IllegalArgumentException.class)
     public void testMissingUrl() {
         ModalDisplayContent.newBuilder()
                            .build();
     }
+
 }

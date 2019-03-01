@@ -96,4 +96,5 @@ public abstract class HtmlWebViewClient extends UAWebViewClient {
                 return super.interceptUrl(webView, url);
         }
     }
+
 }

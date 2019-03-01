@@ -54,6 +54,7 @@ public class ImageRequestOptions {
      * Image request option builder.
      */
     public static class Builder {
+
         private int placeHolder;
         private String url;
 
@@ -84,4 +85,5 @@ public class ImageRequestOptions {
         }
 
     }
+
 }

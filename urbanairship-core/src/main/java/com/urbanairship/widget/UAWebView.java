@@ -148,7 +148,8 @@ public class UAWebView extends WebView {
      * <p>
      * Called during create.
      */
-    protected void initializeView() {}
+    protected void initializeView() {
+    }
 
     /**
      * Populate any custom javascript interfaces by calling
@@ -157,7 +158,8 @@ public class UAWebView extends WebView {
      * <p>
      * Called after initializeView.
      */
-    protected void populateCustomJavascriptInterfaces() {}
+    protected void populateCustomJavascriptInterfaces() {
+    }
 
     @Override
     public void loadData(@NonNull String data, @Nullable String mimeType, @Nullable String encoding) {
@@ -335,4 +337,5 @@ public class UAWebView extends WebView {
         String credentials = userName + ":" + password;
         return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
     }
+
 }

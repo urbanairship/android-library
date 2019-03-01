@@ -17,6 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class ChannelCaptureActionTest extends BaseTestCase {
+
     private ChannelCaptureAction action;
     private ChannelCapture mockChannelCapture;
 
@@ -77,4 +78,5 @@ public class ChannelCaptureActionTest extends BaseTestCase {
         action.perform(args);
         verify(mockChannelCapture).disable();
     }
+
 }

@@ -12,6 +12,7 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Scheduler {
+
     /**
      * Schedules a runnable.
      *
@@ -30,4 +31,5 @@ public interface Scheduler {
      */
     @NonNull
     Subscription schedule(long delayTimeMs, @NonNull Runnable runnable);
+
 }

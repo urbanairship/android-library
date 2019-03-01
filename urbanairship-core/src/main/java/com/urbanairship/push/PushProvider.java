@@ -54,6 +54,7 @@ public interface PushProvider {
         public boolean isRecoverable() {
             return isRecoverable;
         }
+
     }
 
     /**
@@ -100,4 +101,5 @@ public interface PushProvider {
      * @return {@code true} to allow the UA SDK to process the message, or {@code false} to ignore it.
      */
     boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message);
+
 }

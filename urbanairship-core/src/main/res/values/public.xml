@@ -1,93 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Strings -->
-    <public name="ua_notification_button_yes" type="string"/>
-    <public name="ua_notification_button_no" type="string"/>
-    <public name="ua_notification_button_shop_now" type="string"/>
-    <public name="ua_notification_button_buy_now" type="string"/>
-    <public name="ua_notification_button_follow" type="string"/>
-    <public name="ua_notification_button_unfollow" type="string"/>
-    <public name="ua_notification_button_opt_in" type="string"/>
-    <public name="ua_notification_button_opt_out" type="string"/>
-    <public name="ua_notification_button_remind" type="string"/>
-    <public name="ua_notification_button_share" type="string"/>
-    <public name="ua_notification_button_accept" type="string"/>
-    <public name="ua_notification_button_decline" type="string"/>
-    <public name="ua_notification_button_download" type="string"/>
-    <public name="ua_notification_button_more_like" type="string"/>
-    <public name="ua_notification_button_less_like" type="string"/>
-    <public name="ua_notification_button_like" type="string"/>
-    <public name="ua_notification_button_dislike" type="string"/>
-    <public name="ua_notification_button_copy" type="string"/>
-    <public name="ua_notification_button_save" type="string"/>
-    <public name="ua_notification_button_add_to_calendar" type="string"/>
-    <public name="ua_notification_button_add" type="string"/>
-    <public name="ua_notification_button_tell_me_more" type="string"/>
-    <public name="ua_notification_button_send_info" type="string"/>
-    <public name="ua_notification_button_rate_now" type="string"/>
-    <public name="ua_notification_button_search" type="string"/>
-    <public name="ua_notification_button_book_now" type="string"/>
-    <public name="ua_share_dialog_title" type="string"/>
-    <public name="ua_message_center_title" type="string"/>
-    <public name="ua_empty_message_list" type="string"/>
-    <public name="ua_message_not_selected" type="string"/>
-    <public name="ua_mc_failed_to_load" type="string"/>
-    <public name="ua_retry_button" type="string"/>
-    <public name="ua_ok" type="string"/>
-    <public name="ua_delete" type="string"/>
-    <public name="ua_mark_read" type="string"/>
-    <public name="ua_select_all" type="string"/>
-    <public name="ua_selected_count" type="plurals"/>
+    <public name="ua_notification_button_yes" type="string" />
+    <public name="ua_notification_button_no" type="string" />
+    <public name="ua_notification_button_shop_now" type="string" />
+    <public name="ua_notification_button_buy_now" type="string" />
+    <public name="ua_notification_button_follow" type="string" />
+    <public name="ua_notification_button_unfollow" type="string" />
+    <public name="ua_notification_button_opt_in" type="string" />
+    <public name="ua_notification_button_opt_out" type="string" />
+    <public name="ua_notification_button_remind" type="string" />
+    <public name="ua_notification_button_share" type="string" />
+    <public name="ua_notification_button_accept" type="string" />
+    <public name="ua_notification_button_decline" type="string" />
+    <public name="ua_notification_button_download" type="string" />
+    <public name="ua_notification_button_more_like" type="string" />
+    <public name="ua_notification_button_less_like" type="string" />
+    <public name="ua_notification_button_like" type="string" />
+    <public name="ua_notification_button_dislike" type="string" />
+    <public name="ua_notification_button_copy" type="string" />
+    <public name="ua_notification_button_save" type="string" />
+    <public name="ua_notification_button_add_to_calendar" type="string" />
+    <public name="ua_notification_button_add" type="string" />
+    <public name="ua_notification_button_tell_me_more" type="string" />
+    <public name="ua_notification_button_send_info" type="string" />
+    <public name="ua_notification_button_rate_now" type="string" />
+    <public name="ua_notification_button_search" type="string" />
+    <public name="ua_notification_button_book_now" type="string" />
+    <public name="ua_share_dialog_title" type="string" />
+    <public name="ua_message_center_title" type="string" />
+    <public name="ua_empty_message_list" type="string" />
+    <public name="ua_message_not_selected" type="string" />
+    <public name="ua_mc_failed_to_load" type="string" />
+    <public name="ua_retry_button" type="string" />
+    <public name="ua_ok" type="string" />
+    <public name="ua_delete" type="string" />
+    <public name="ua_mark_read" type="string" />
+    <public name="ua_select_all" type="string" />
+    <public name="ua_selected_count" type="plurals" />
 
 
     <!-- Attributes -->
-    <public name="mixed_content_mode" type="attr"/>
-    <public name="urbanAirshipFontPath" type="attr"/>
-    <public name="inAppMessageBannerStyle" type="attr"/>
-    <public name="messageCenterStyle" type="attr"/>
-    <public name="optCardBackgroundColor" type="attr"/>
-    <public name="optCardCornerRadius" type="attr"/>
-    <public name="optCardElevation" type="attr"/>
-    <public name="bannerFontPath" type="attr"/>
-    <public name="bannerTextAppearance" type="attr"/>
-    <public name="bannerPrimaryColor" type="attr"/>
-    <public name="bannerSecondaryColor" type="attr"/>
-    <public name="bannerDismissButtonDrawable" type="attr"/>
-    <public name="bannerNoDismissButton" type="attr"/>
-    <public name="bannerActionButtonTextAppearance" type="attr"/>
-    <public name="messageCenterItemBackground" type="attr"/>
-    <public name="messageCenterItemTitleTextAppearance" type="attr"/>
-    <public name="messageCenterItemDateTextAppearance" type="attr"/>
-    <public name="messageNotSelectedTextAppearance" type="attr"/>
-    <public name="messageNotSelectedText" type="attr"/>
-    <public name="messageCenterEmptyMessageTextAppearance" type="attr"/>
-    <public name="messageCenterEmptyMessageText" type="attr"/>
-    <public name="messageCenterDividerColor" type="attr"/>
-    <public name="messageCenterItemIconEnabled" type="attr"/>
-    <public name="messageCenterItemIconPlaceholder" type="attr"/>
-    <public name="ua_state_highlighted" type="attr"/>
+    <public name="mixed_content_mode" type="attr" />
+    <public name="urbanAirshipFontPath" type="attr" />
+    <public name="inAppMessageBannerStyle" type="attr" />
+    <public name="messageCenterStyle" type="attr" />
+    <public name="optCardBackgroundColor" type="attr" />
+    <public name="optCardCornerRadius" type="attr" />
+    <public name="optCardElevation" type="attr" />
+    <public name="bannerFontPath" type="attr" />
+    <public name="bannerTextAppearance" type="attr" />
+    <public name="bannerPrimaryColor" type="attr" />
+    <public name="bannerSecondaryColor" type="attr" />
+    <public name="bannerDismissButtonDrawable" type="attr" />
+    <public name="bannerNoDismissButton" type="attr" />
+    <public name="bannerActionButtonTextAppearance" type="attr" />
+    <public name="messageCenterItemBackground" type="attr" />
+    <public name="messageCenterItemTitleTextAppearance" type="attr" />
+    <public name="messageCenterItemDateTextAppearance" type="attr" />
+    <public name="messageNotSelectedTextAppearance" type="attr" />
+    <public name="messageNotSelectedText" type="attr" />
+    <public name="messageCenterEmptyMessageTextAppearance" type="attr" />
+    <public name="messageCenterEmptyMessageText" type="attr" />
+    <public name="messageCenterDividerColor" type="attr" />
+    <public name="messageCenterItemIconEnabled" type="attr" />
+    <public name="messageCenterItemIconPlaceholder" type="attr" />
+    <public name="ua_state_highlighted" type="attr" />
 
     <!-- Styles -->
-    <public name="UrbanAirship.LandingPageActivity" type="style"/>
-    <public name="InAppMessage.Banner.TextAppearance" type="style"/>
-    <public name="InAppMessage.Banner" type="style"/>
+    <public name="UrbanAirship.LandingPageActivity" type="style" />
+    <public name="InAppMessage.Banner.TextAppearance" type="style" />
+    <public name="InAppMessage.Banner" type="style" />
     <public name="Widget.UrbanAirship.InAppMessage.Banner.Card" />
     <public name="Widget.UrbanAirship.InAppMessage.Banner.Text" />
     <public name="Widget.UrbanAirship.InAppMessage.Banner.Divider" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.DismissButton" type="style"/>
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButton" type="style"/>
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButtonContainer" type="style"/>
-    <public name="Widget.UrbanAirship.InAppMessage.Banner" type="style"/>
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Container" type="style"/>
-    <public name="Widget.UrbanAirship.MessageCenter.Item.CheckBox" type="style"/>
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Icon" type="style"/>
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Title" type="style"/>
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Date" type="style"/>
-    <public name="MessageCenter.Item.Title.TextAppearance" type="style"/>
-    <public name="MessageCenter.Item.Date.TextAppearance" type="style"/>
-    <public name="MessageCenter.EmptyMessage.TextAppearance" type="style"/>
-    <public name="MessageCenter.MessageNotSelected.TextAppearance" type="style"/>
-    <public name="MessageCenter" type="style"/>
+    <public name="Widget.UrbanAirship.InAppMessage.Banner.DismissButton" type="style" />
+    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButton" type="style" />
+    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButtonContainer" type="style" />
+    <public name="Widget.UrbanAirship.InAppMessage.Banner" type="style" />
+    <public name="Widget.UrbanAirship.MessageCenter.Item.Container" type="style" />
+    <public name="Widget.UrbanAirship.MessageCenter.Item.CheckBox" type="style" />
+    <public name="Widget.UrbanAirship.MessageCenter.Item.Icon" type="style" />
+    <public name="Widget.UrbanAirship.MessageCenter.Item.Title" type="style" />
+    <public name="Widget.UrbanAirship.MessageCenter.Item.Date" type="style" />
+    <public name="MessageCenter.Item.Title.TextAppearance" type="style" />
+    <public name="MessageCenter.Item.Date.TextAppearance" type="style" />
+    <public name="MessageCenter.EmptyMessage.TextAppearance" type="style" />
+    <public name="MessageCenter.MessageNotSelected.TextAppearance" type="style" />
+    <public name="MessageCenter" type="style" />
 
     <!-- Ids -->
     <public name="close_button" type="id" />

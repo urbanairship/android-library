@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.fullscreen;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -28,15 +27,14 @@ public class FullScreenAdapterTest extends BaseTestCase {
     private InAppMessage message;
     private DisplayHandler displayHandler;
 
-
     @Before
     public void setup() {
 
         FullScreenDisplayContent displayContent = FullScreenDisplayContent.newBuilder()
-                .setBody(TextInfo.newBuilder()
-                        .setText("oh hi")
-                        .build())
-                .build();
+                                                                          .setBody(TextInfo.newBuilder()
+                                                                                           .setText("oh hi")
+                                                                                           .build())
+                                                                          .build();
 
         message = InAppMessage.newBuilder()
                               .setDisplayContent(displayContent)
@@ -72,4 +70,5 @@ public class FullScreenAdapterTest extends BaseTestCase {
             }
         }));
     }
+
 }

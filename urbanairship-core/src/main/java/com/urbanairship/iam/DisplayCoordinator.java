@@ -20,10 +20,12 @@ public abstract class DisplayCoordinator {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     interface OnDisplayReadyCallback {
+
         /**
          * Called when {@link #notifyDisplayReady()} is called.
          */
         void onReady();
+
     }
 
     private OnDisplayReadyCallback displayReadyCallback;
@@ -68,7 +70,6 @@ public abstract class DisplayCoordinator {
     @MainThread
     public abstract void onDisplayStarted(@NonNull InAppMessage message);
 
-
     /**
      * Notifies the coordinator that message display has finished.
      *
@@ -76,4 +77,5 @@ public abstract class DisplayCoordinator {
      */
     @MainThread
     public abstract void onDisplayFinished(@NonNull InAppMessage message);
+
 }

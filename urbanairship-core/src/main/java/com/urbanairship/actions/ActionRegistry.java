@@ -42,6 +42,7 @@ public final class ActionRegistry {
      * ActionArgument predicate
      */
     public interface Predicate {
+
         /**
          * Applies the predicate to the action arguments.
          *
@@ -49,6 +50,7 @@ public final class ActionRegistry {
          * @return {@code true} to accept the arguments, otherwise {@code false}.
          */
         boolean apply(@NonNull ActionArguments arguments);
+
     }
 
     private final Map<String, Entry> actionMap = new HashMap<>();
@@ -232,11 +234,11 @@ public final class ActionRegistry {
         }
     }
 
-
     /**
      * An entry in the action registry.
      */
     public final static class Entry {
+
         private final List<String> names;
         private Action defaultAction;
         private Class defaultActionClass;
@@ -384,5 +386,7 @@ public final class ActionRegistry {
         public String toString() {
             return "Action Entry: " + names;
         }
+
     }
+
 }

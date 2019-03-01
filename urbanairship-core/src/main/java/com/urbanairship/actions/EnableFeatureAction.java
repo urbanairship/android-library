@@ -25,7 +25,6 @@ import com.urbanairship.util.PermissionsRequester;
 import java.util.Arrays;
 import java.util.List;
 
-
 /**
  * An action that enables features. Running the action with value {@link #FEATURE_LOCATION} or {@link #FEATURE_BACKGROUND_LOCATION}
  * will prompt the user for permissions before enabling.
@@ -216,4 +215,5 @@ public class EnableFeatureAction extends Action {
             Logger.error(e, "Unable to launch settings activity.");
         }
     }
+
 }

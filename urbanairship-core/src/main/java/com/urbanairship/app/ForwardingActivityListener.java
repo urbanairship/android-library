@@ -13,6 +13,7 @@ import java.util.List;
  * Activity listener that forwards activity events to a list of listeners.
  */
 public class ForwardingActivityListener implements ActivityListener {
+
     private final List<ActivityListener> listeners = new ArrayList<>();
 
     /**
@@ -85,4 +86,5 @@ public class ForwardingActivityListener implements ActivityListener {
             listener.onActivityDestroyed(activity);
         }
     }
+
 }

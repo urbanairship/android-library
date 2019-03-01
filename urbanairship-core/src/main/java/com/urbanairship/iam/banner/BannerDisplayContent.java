@@ -52,7 +52,6 @@ public class BannerDisplayContent implements DisplayContent {
     @NonNull
     public static final String PLACEMENT_BOTTOM = "bottom";
 
-
     @StringDef({ TEMPLATE_LEFT_MEDIA, TEMPLATE_RIGHT_MEDIA })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Template {}
@@ -83,7 +82,6 @@ public class BannerDisplayContent implements DisplayContent {
      * JSON key for actions. Not supported in the API but is needed for compatibility of v1 banners.
      */
     private static final String ACTIONS_KEY = "actions";
-
 
     private final TextInfo heading;
     private final TextInfo body;
@@ -214,7 +212,6 @@ public class BannerDisplayContent implements DisplayContent {
             builder.setDuration(duration, TimeUnit.SECONDS);
         }
 
-
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
@@ -278,7 +275,6 @@ public class BannerDisplayContent implements DisplayContent {
                       .build()
                       .toJsonValue();
     }
-
 
     /**
      * Returns the optional heading {@link TextInfo}.
@@ -514,7 +510,8 @@ public class BannerDisplayContent implements DisplayContent {
         private float borderRadius = 0;
         private final Map<String, JsonValue> actions = new HashMap<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull BannerDisplayContent displayContent) {
             this.heading = displayContent.heading;
@@ -726,5 +723,7 @@ public class BannerDisplayContent implements DisplayContent {
 
             return new BannerDisplayContent(this);
         }
+
     }
+
 }

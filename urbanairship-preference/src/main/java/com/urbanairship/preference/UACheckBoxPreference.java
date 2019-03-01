@@ -22,6 +22,7 @@ import com.urbanairship.app.SimpleActivityListener;
  * Urban Airship check box preference.
  */
 public abstract class UACheckBoxPreference extends CheckBoxPreference {
+
     protected boolean isChecked = false;
     private static final long PREFERENCE_DELAY_MS = 1000;
 

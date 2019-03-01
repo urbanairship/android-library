@@ -134,4 +134,5 @@ public class ExactValueMatcher extends ValueMatcher {
     public int hashCode() {
         return expected.hashCode();
     }
+
 }

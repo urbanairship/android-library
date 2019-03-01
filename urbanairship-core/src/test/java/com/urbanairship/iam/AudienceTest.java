@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam;
 
-
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -106,4 +105,5 @@ public class AudienceTest extends BaseTestCase {
         } catch (Exception e) {
         }
     }
+
 }

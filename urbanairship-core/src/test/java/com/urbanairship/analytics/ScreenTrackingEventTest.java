@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class ScreenTrackingEventTest extends BaseTestCase {
 
-
     /**
      * Test screen tracking event data formatting directly
      */
@@ -96,6 +95,7 @@ public class ScreenTrackingEventTest extends BaseTestCase {
 
         return builder.toString();
     }
+
 }
 
 

@@ -15,9 +15,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 
 /**
@@ -224,12 +224,12 @@ public class JobDispatcher {
         return jobId + jobIdStart;
     }
 
-
     /**
      * Scheduler factory.
      */
     @VisibleForTesting
     interface SchedulerFactory {
+
         /**
          * Creates a scheduler.
          *
@@ -247,6 +247,7 @@ public class JobDispatcher {
          */
         @NonNull
         Scheduler createFallbackScheduler(Context context);
+
     }
 
     /**
@@ -273,5 +274,7 @@ public class JobDispatcher {
 
             return new AlarmScheduler();
         }
+
     }
+
 }

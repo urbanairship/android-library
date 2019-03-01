@@ -93,7 +93,6 @@ public class AppForegroundEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, Event.PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName);
     }
 
-
     @Test
     public void testPushId() throws JSONException {
         when(analytics.getConversionSendId()).thenReturn("send id");
@@ -106,7 +105,6 @@ public class AppForegroundEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, Event.METADATA_KEY, "metadata");
     }
 
-
     /**
      * Tests that the last metadata is included in the app foreground event
      * data
@@ -116,4 +114,5 @@ public class AppForegroundEventTest extends BaseTestCase {
         when(mockPush.getLastReceivedMetadata()).thenReturn("last metadata");
         EventTestUtils.validateEventValue(event, Event.LAST_METADATA_KEY, "last metadata");
     }
+
 }

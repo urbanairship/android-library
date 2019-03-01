@@ -51,8 +51,8 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
          */
         @MainThread
         void onExecuteSchedule(@NonNull InAppMessageSchedule schedule);
-    }
 
+    }
 
     private Listener listener;
     private final Map<String, AutomationDriver.ExecutionCallback> executionCallbacks = new HashMap<>();
@@ -89,7 +89,6 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
         return listener.onCheckExecutionReadiness(schedule);
     }
 
-
     @Override
     @MainThread
     public void onExecuteTriggeredSchedule(@NonNull InAppMessageSchedule schedule, @NonNull ExecutionCallback callback) {
@@ -104,13 +103,13 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
     public InAppMessageSchedule createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) throws ParseScheduleException {
         try {
             InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
-                    .addTriggers(info.getTriggers())
-                    .setDelay(info.getDelay())
-                    .setEnd(info.getEnd())
-                    .setStart(info.getStart())
-                    .setLimit(info.getLimit())
-                    .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
-                    .build();
+                                                                            .addTriggers(info.getTriggers())
+                                                                            .setDelay(info.getDelay())
+                                                                            .setEnd(info.getEnd())
+                                                                            .setStart(info.getStart())
+                                                                            .setLimit(info.getLimit())
+                                                                            .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
+                                                                            .build();
 
             return new InAppMessageSchedule(scheduleId, metadata, scheduleInfo);
         } catch (Exception e) {

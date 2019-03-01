@@ -34,4 +34,5 @@ public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         AdvertisingIdTracker.shared().setEnabled(enabled);
     }
+
 }

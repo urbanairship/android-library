@@ -130,5 +130,7 @@ public class ActionsPayload implements JsonSerializable {
         public ActionsPayload build() {
             return new ActionsPayload(this);
         }
+
     }
+
 }

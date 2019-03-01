@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Kyllä</string>
@@ -57,20 +58,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valittu</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Päivitä</string>
     <string name="ua_open">Avaa</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Arvioi</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Ei kiitos</string>
     <string name="ua_rate_app_action_default_title">Pidätkö sovelluksesta <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Arvioi se App Storessa napauttamalla <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>.</string>
     <string name="ua_rate_app_action_generic_display_name">Tämä sovellus</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Ilmoitukset</string>
     <string name="ua_default_channel_description">Yleiset sovelluspäivitykset</string>
     <string name="ua_channel_id">Kanavatunnus</string>
-    
+
 </resources>

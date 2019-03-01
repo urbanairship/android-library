@@ -113,7 +113,6 @@ public class InAppMessageEventTest extends BaseTestCase {
         assertTrue(event.isValid());
     }
 
-
     /**
      * Test display event when the conversion send id is null.
      */
@@ -138,11 +137,12 @@ public class InAppMessageEventTest extends BaseTestCase {
             super(message);
         }
 
-
         @NonNull
         @Override
         public String getType() {
             return "test";
         }
+
     }
+
 }

@@ -29,8 +29,10 @@ public interface Schedule<T extends ScheduleInfo> {
 
     /**
      * Gets the schedule's metadata.
+     *
      * @return The schedule's metadata.
      */
     @NonNull
     JsonMap getMetadata();
+
 }

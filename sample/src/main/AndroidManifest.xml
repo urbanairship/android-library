@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="com.urbanairship.sample"
+<manifest package="com.urbanairship.sample"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Optional: Needed if using location in Urban Airship. -->
     <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name="com.urbanairship.sample.SampleApplication"
@@ -19,7 +18,7 @@
         <!-- Autopilot calls takeOff without the need to override the Application -->
         <meta-data
             android:name="com.urbanairship.autopilot"
-            android:value="com.urbanairship.sample.SampleAutopilot"/>
+            android:value="com.urbanairship.sample.SampleAutopilot" />
 
         <meta-data
             android:name="com.urbanairship.job.PREFER_ANDROID_JOB_SCHEDULER"
@@ -37,24 +36,23 @@
             android:theme="@style/AppTheme.NoActionBar">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
 
 
             <!-- The open inbox action will attempt to start an activity with
            "com.urbanairship.VIEW_RICH_PUSH_INBOX" filter when requesting to view the inbox.-->
             <intent-filter>
-                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <intent-filter>
-                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX"/>
-                <data android:scheme="message"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX" />
+                <data android:scheme="message" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
         </activity>
@@ -67,8 +65,8 @@
             <!-- Lollipop+ only - Allows the settings to be accessed quickly from long clicking a notification
            or through the application's notification settings. -->
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
             </intent-filter>
 
         </activity>
@@ -82,15 +80,15 @@
             android:name=".ParseDeepLinkActivity"
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
 
                 <!-- Handles any vnd.urbanairship.sample://deeplink URI's -->
                 <data
                     android:host="deeplink"
-                    android:scheme="vnd.urbanairship.sample"/>
+                    android:scheme="vnd.urbanairship.sample" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
         </activity>
 
@@ -101,12 +99,12 @@
             android:exported="false">
 
             <intent-filter>
-                <action android:name="com.urbanairship.push.CHANNEL_UPDATED"/>
-                <action android:name="com.urbanairship.push.OPENED"/>
-                <action android:name="com.urbanairship.push.DISMISSED"/>
-                <action android:name="com.urbanairship.push.RECEIVED"/>
+                <action android:name="com.urbanairship.push.CHANNEL_UPDATED" />
+                <action android:name="com.urbanairship.push.OPENED" />
+                <action android:name="com.urbanairship.push.DISMISSED" />
+                <action android:name="com.urbanairship.push.RECEIVED" />
 
-                <category android:name="${applicationId}"/>
+                <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
 

@@ -693,6 +693,10 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @return The built custom event.
          */
         @NonNull
-        public CustomEvent build() { return new CustomEvent(this); }
+        public CustomEvent build() {
+            return new CustomEvent(this);
+        }
+
     }
+
 }

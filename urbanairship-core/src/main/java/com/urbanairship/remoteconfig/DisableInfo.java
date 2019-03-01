@@ -103,7 +103,6 @@ class DisableInfo implements JsonSerializable {
                       .toJsonValue();
     }
 
-
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) {
@@ -140,9 +139,7 @@ class DisableInfo implements JsonSerializable {
     public static DisableInfo fromJson(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
-
         Builder builder = newBuilder();
-
 
         if (jsonMap.containsKey(MODULES_KEY)) {
             Collection<String> modules = new HashSet<>();
@@ -180,7 +177,6 @@ class DisableInfo implements JsonSerializable {
             long remoteDataInterval = TimeUnit.SECONDS.toMillis(jsonMap.opt(REMOTE_DATA_REFRESH_INTERVAL_KEY).getLong(0));
             builder.setRemoteDataInterval(remoteDataInterval);
         }
-
 
         if (jsonMap.containsKey(SDK_VERSIONS_KEY)) {
             Collection<String> sdkVersionConstraints = new HashSet<>();
@@ -266,7 +262,8 @@ class DisableInfo implements JsonSerializable {
         private Set<String> sdkVersionConstraints;
         private JsonPredicate appVersionPredicate;
 
-        private Builder() { }
+        private Builder() {
+        }
 
         /**
          * Collection of modules to be disabled.
@@ -331,5 +328,7 @@ class DisableInfo implements JsonSerializable {
         public DisableInfo build() {
             return new DisableInfo(this);
         }
+
     }
+
 }

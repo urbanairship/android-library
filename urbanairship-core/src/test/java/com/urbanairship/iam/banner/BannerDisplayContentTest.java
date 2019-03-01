@@ -20,22 +20,22 @@ public class BannerDisplayContentTest extends BaseTestCase {
     @Test
     public void testJson() throws JsonException {
         BannerDisplayContent content = BannerDisplayContent.newBuilder()
-                            .setBody(TextInfo.newBuilder()
-                                             .setText("oh hi")
-                                             .build())
-                            .addButton(ButtonInfo.newBuilder()
-                                                 .setLabel(TextInfo.newBuilder()
-                                                                   .setText("Oh hi")
-                                                                   .build())
-                                                 .setId("id")
-                                                 .build())
-                            .addButton(ButtonInfo.newBuilder()
-                                                 .setLabel(TextInfo.newBuilder()
-                                                                   .setText("Oh hi")
-                                                                   .build())
-                                                 .setId("id")
-                                                 .build())
-                            .build();
+                                                           .setBody(TextInfo.newBuilder()
+                                                                            .setText("oh hi")
+                                                                            .build())
+                                                           .addButton(ButtonInfo.newBuilder()
+                                                                                .setLabel(TextInfo.newBuilder()
+                                                                                                  .setText("Oh hi")
+                                                                                                  .build())
+                                                                                .setId("id")
+                                                                                .build())
+                                                           .addButton(ButtonInfo.newBuilder()
+                                                                                .setLabel(TextInfo.newBuilder()
+                                                                                                  .setText("Oh hi")
+                                                                                                  .build())
+                                                                                .setId("id")
+                                                                                .build())
+                                                           .build();
 
         BannerDisplayContent fromJson = BannerDisplayContent.fromJson(content.toJsonValue());
         assertEquals(content, fromJson);
@@ -86,7 +86,7 @@ public class BannerDisplayContentTest extends BaseTestCase {
                                                  .build())
                             .build();
     }
-    
+
     @Test
     public void testMedia() {
         BannerDisplayContent.newBuilder()
@@ -112,4 +112,5 @@ public class BannerDisplayContentTest extends BaseTestCase {
                                                  .build())
                             .build();
     }
+
 }

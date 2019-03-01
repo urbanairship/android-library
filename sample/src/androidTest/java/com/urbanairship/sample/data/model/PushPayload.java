@@ -7,7 +7,6 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-
 public class PushPayload {
 
     @SerializedName("audience")
@@ -81,4 +80,5 @@ public class PushPayload {
     public void setInApp(InAppMessagePayload inAppMessagePayload) {
         this.inApp = inAppMessagePayload;
     }
+
 }

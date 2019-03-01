@@ -125,7 +125,8 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
     }
 
     @Override
-    public void onDestroyActionMode(@NonNull ActionMode mode) { }
+    public void onDestroyActionMode(@NonNull ActionMode mode) {
+    }
 
     @NonNull
     private Set<String> getCheckedMessageIds() {
@@ -147,4 +148,5 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
         return messageIds;
     }
+
 }

@@ -22,4 +22,5 @@ public class ParseScheduleException extends Exception {
     public ParseScheduleException(@NonNull String message, @NonNull Throwable e) {
         super(message, e);
     }
+
 }

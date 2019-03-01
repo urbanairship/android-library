@@ -16,7 +16,7 @@ import org.robolectric.shadows.ShadowLooper;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -27,7 +27,6 @@ public class RetryingExecutorTest extends BaseTestCase {
 
     private RetryingExecutor executor;
     private ShadowLooper mainLooper;
-
 
     @Before
     public void setup() {
@@ -56,7 +55,6 @@ public class RetryingExecutorTest extends BaseTestCase {
         assertEquals(1, operation.runCount);
     }
 
-
     @Test
     public void testExecuteChainedOperations() {
         TestOperation fistOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
@@ -75,7 +73,6 @@ public class RetryingExecutorTest extends BaseTestCase {
         assertEquals(2, secondOperation.runCount);
         assertEquals(1, thirdOperation.runCount);
     }
-
 
     @Test
     public void testExecuteChainedOperationsCancel() {
@@ -161,5 +158,7 @@ public class RetryingExecutorTest extends BaseTestCase {
             runCount++;
             return result;
         }
+
     }
+
 }

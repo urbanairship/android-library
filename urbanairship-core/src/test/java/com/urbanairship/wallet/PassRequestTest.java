@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 public class PassRequestTest extends BaseTestCase {
 
     private class TestPassRequest extends TestRequest {
+
         private final String expectedJson;
 
         TestPassRequest(String expectedJson) {
@@ -45,6 +46,7 @@ public class PassRequestTest extends BaseTestCase {
             }
             return response;
         }
+
     }
 
     @Test
@@ -99,9 +101,9 @@ public class PassRequestTest extends BaseTestCase {
 
         final TestPassRequest testRequest = new TestPassRequest(requestJson);
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody(responseJson)
-                .build();
+                                       .setResponseMessage("OK")
+                                       .setResponseBody(responseJson)
+                                       .build();
 
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
         when(requestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
@@ -129,7 +131,6 @@ public class PassRequestTest extends BaseTestCase {
             }
         };
 
-
         final CountDownLatch latch = new CountDownLatch(1);
         Callback callback = new Callback() {
             @Override
@@ -154,7 +155,7 @@ public class PassRequestTest extends BaseTestCase {
     public void testExecuteFail() throws Exception {
         TestRequest testRequest = new TestRequest();
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_BAD_REQUEST)
-                .build();
+                                       .build();
 
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
         when(requestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
@@ -203,9 +204,9 @@ public class PassRequestTest extends BaseTestCase {
 
         final TestRequest testRequest = new TestRequest();
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody(responseJson)
-                .build();
+                                       .setResponseMessage("OK")
+                                       .setResponseBody(responseJson)
+                                       .build();
 
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
 
@@ -245,4 +246,5 @@ public class PassRequestTest extends BaseTestCase {
         when(requestFactory.createRequest(anyString(), any(URL.class))).thenAnswer(answer);
         passRequest.execute(callback, null);
     }
+
 }

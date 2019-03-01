@@ -1,6 +1,5 @@
 package com.urbanairship;
 
-
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
@@ -31,10 +30,10 @@ public class ChannelCaptureActivityTest extends BaseTestCase {
         intent.putExtra(ChannelCapture.URL, "https://go.urbanairship.com/lol");
 
         channelCaptureActivity = Robolectric.buildActivity(ChannelCaptureActivity.class, intent)
-                .create()
-                .start()
-                .visible()
-                .get();
+                                            .create()
+                                            .start()
+                                            .visible()
+                                            .get();
 
         shadowChannelCaptureActivity = shadowOf(channelCaptureActivity);
     }
@@ -73,4 +72,5 @@ public class ChannelCaptureActivityTest extends BaseTestCase {
         assertEquals(Intent.ACTION_VIEW, shadowIntent.getAction());
         assertEquals(uri, shadowIntent.getData());
     }
+
 }

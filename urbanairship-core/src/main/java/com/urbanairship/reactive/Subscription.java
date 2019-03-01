@@ -21,7 +21,8 @@ public class Subscription {
     /**
      * Default constructor.
      */
-    protected Subscription() {}
+    protected Subscription() {
+    }
 
     /**
      * Subscription constructor
@@ -71,4 +72,5 @@ public class Subscription {
     public synchronized boolean isCancelled() {
         return this.canceled;
     }
+
 }

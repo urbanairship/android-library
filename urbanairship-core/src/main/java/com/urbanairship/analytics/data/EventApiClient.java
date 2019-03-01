@@ -158,7 +158,6 @@ public class EventApiClient {
                                         .setHeader("X-UA-Bluetooth-Status", bluetoothEnabled)
                                         .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
 
-
         Locale locale = localeManager.getDefaultLocale();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             request.setHeader("X-UA-Locale-Language", locale.getLanguage());
@@ -185,9 +184,7 @@ public class EventApiClient {
 
         Response response = request.execute();
 
-
         Logger.debug("EventApiClient - Analytics event response: %s", response);
-
 
         return response == null ? null : new EventResponse(response);
     }
@@ -287,4 +284,5 @@ public class EventApiClient {
             return null;
         }
     }
+
 }

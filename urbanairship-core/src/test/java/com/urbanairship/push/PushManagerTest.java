@@ -61,10 +61,9 @@ public class PushManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         mockDispatcher = mock(JobDispatcher.class);
-        mockTagGroupRegistrar = mock (TagGroupRegistrar.class);
+        mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
-
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -87,7 +86,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testInit() {
-       pushManager.init();
+        pushManager.init();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -398,7 +397,6 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
 
-
     /**
      * Test getNextChannelRegistrationPayload returns a payload with android device and GCM ID
      */
@@ -414,7 +412,7 @@ public class PushManagerTest extends BaseTestCase {
         assertNotNull("The payload should not be null.", payload);
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "android");
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "GCM_TOKEN");
-        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(), Locale.getDefault().getLanguage());
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
     }
 
@@ -433,7 +431,7 @@ public class PushManagerTest extends BaseTestCase {
         assertNotNull("The payload should not be null.", payload);
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "amazon");
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "ADM_ID");
-        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(), Locale.getDefault().getLanguage());
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
     }
 
@@ -690,7 +688,6 @@ public class PushManagerTest extends BaseTestCase {
 
     }
 
-
     /**
      * Test edit tags with clear set, clears the tags first before
      * doing any adds.
@@ -713,7 +710,6 @@ public class PushManagerTest extends BaseTestCase {
         tags = pushManager.getTags();
         assertEquals(1, tags.size());
         assertTrue(tags.contains("hi"));
-
 
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -745,7 +741,6 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());
         assertEquals(Color.parseColor("#ff0000"), factory.getColor());
     }
-
 
     /**
      * Test migrating quiet time enabled setting.
@@ -845,4 +840,5 @@ public class PushManagerTest extends BaseTestCase {
             }
         }));
     }
+
 }

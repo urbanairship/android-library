@@ -185,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -193,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
         currentNavPosition = id;
         navigation.setCheckedItem(id);
 
-        Fragment fragment =  getSupportFragmentManager().findFragmentByTag("content_frag" + id);
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("content_frag" + id);
 
         if (fragment != null) {
             return fragment;
@@ -208,9 +207,8 @@ public class MainActivity extends AppCompatActivity {
                 setTitle(R.string.message_center_title);
                 fragment = new MessageCenterFragment();
 
-
                 // Dismiss this Message Center indicator if it's being displayed
-                if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()){
+                if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()) {
                     messageCenterSnackbar.dismiss();
                 }
 
@@ -295,4 +293,5 @@ public class MainActivity extends AppCompatActivity {
 
         messageCenterSnackbar.show();
     }
+
 }

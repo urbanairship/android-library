@@ -35,4 +35,5 @@ public class AppBackgroundEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, Event.PUSH_ID_KEY, "send id");
         EventTestUtils.validateEventValue(event, Event.METADATA_KEY, "send metadata");
     }
+
 }

@@ -11,7 +11,6 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.Logger;
 import com.urbanairship.util.DataManager;
 
-
 /**
  * Database storage for events.
  *
@@ -64,6 +63,7 @@ public class EventsStorage extends DataManager {
 
         @NonNull
         String COLUMN_NAME_EVENT_SIZE = "event_size";
+
     }
 
     public EventsStorage(@NonNull Context context, @NonNull String appKey) {
@@ -103,4 +103,5 @@ public class EventsStorage extends DataManager {
         db.execSQL("DROP TABLE IF EXISTS " + Events.TABLE_NAME);
         onCreate(db);
     }
+
 }

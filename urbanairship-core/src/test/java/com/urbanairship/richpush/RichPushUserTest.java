@@ -5,8 +5,8 @@ package com.urbanairship.richpush;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
-import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -95,7 +95,7 @@ public class RichPushUserTest extends BaseTestCase {
         assertNull(user.getPassword());
     }
 
-     /**
+    /**
      * Test setting and getting the user credentials.
      */
     @Test
@@ -131,7 +131,6 @@ public class RichPushUserTest extends BaseTestCase {
 
         assertNull(dataStore.getString("com.urbanairship.user.PASSWORD", null));
     }
-
 
     /**
      * Test update user.
@@ -209,12 +208,14 @@ public class RichPushUserTest extends BaseTestCase {
      * Listener that captures the last update user result
      */
     private class TestUserListener implements RichPushUser.Listener {
+
         Boolean lastUpdateUserResult = null;
 
         @Override
         public void onUserUpdated(boolean success) {
             lastUpdateUserResult = success;
         }
+
     }
 
 }

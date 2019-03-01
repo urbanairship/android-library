@@ -76,6 +76,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
          */
         @NonNull
         InAppMessage.Builder extend(@NonNull Context context, @NonNull InAppMessage.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
+
     }
 
     /**
@@ -93,8 +94,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
          */
         @NonNull
         InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
-    }
 
+    }
 
     /**
      * Default constructor.
@@ -260,7 +261,6 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                                                                                .addTrigger(trigger)
                                                                                .setEnd(legacyInAppMessage.getExpiry());
 
-
             ScheduleInfoBuilderExtender builderExtender = this.scheduleBuilderExtender;
             if (builderExtender != null) {
                 builderExtender.extend(context, builder, legacyInAppMessage);
@@ -350,4 +350,5 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                       .setId(legacyMessage.getId())
                       .build();
     }
+
 }

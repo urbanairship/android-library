@@ -162,7 +162,6 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         verify(analytics, never()).addEvent(any(ResolutionEvent.class));
     }
 
-
     @Test
     public void testMessageExtenderException() {
         legacyInAppMessageManager.setMessageBuilderExtender(new LegacyInAppMessageManager.MessageBuilderExtender() {
@@ -180,7 +179,6 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         verifyZeroInteractions(inAppMessageManager);
     }
 
-
     @Test
     public void testScheduleExtenderException() {
         legacyInAppMessageManager.setScheduleBuilderExtender(new LegacyInAppMessageManager.ScheduleInfoBuilderExtender() {
@@ -197,6 +195,5 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         // Verify we did not try to schedule an in-app message
         verifyZeroInteractions(inAppMessageManager);
     }
-
 
 }

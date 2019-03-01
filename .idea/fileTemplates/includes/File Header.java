@@ -1,0 +1,1 @@
+/* Copyright Urban Airship and Contributors */

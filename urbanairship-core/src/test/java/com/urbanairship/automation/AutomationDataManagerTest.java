@@ -325,11 +325,10 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
     }
 
-
     private List<ScheduleEntry> createSchedules(int amount) {
         List<ScheduleEntry> scheduleEntries = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
-            scheduleEntries.add(createEntry("schedule_id_" + i, "group " + i, System.currentTimeMillis(), System.currentTimeMillis() + 100000 ));
+            scheduleEntries.add(createEntry("schedule_id_" + i, "group " + i, System.currentTimeMillis(), System.currentTimeMillis() + 100000));
         }
 
         return scheduleEntries;
@@ -359,6 +358,5 @@ public class AutomationDataManagerTest extends BaseTestCase {
         return new ScheduleEntry(id, schedule, JsonMap.EMPTY_MAP);
 
     }
-
 
 }

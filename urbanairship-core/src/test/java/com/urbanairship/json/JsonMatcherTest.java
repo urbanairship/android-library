@@ -110,11 +110,11 @@ public class JsonMatcherTest extends BaseTestCase {
                                                  .toJsonValue();
 
         JsonMatcher ignoreCaseMatcher = JsonMatcher.newBuilder()
-                                                    .setKey("key")
-                                                    .setScope("properties")
-                                                    .setValueMatcher(valueMatcher)
-                                                    .setIgnoreCase(true)
-                                                    .build();
+                                                   .setKey("key")
+                                                   .setScope("properties")
+                                                   .setValueMatcher(valueMatcher)
+                                                   .setIgnoreCase(true)
+                                                   .build();
 
         assertEquals(ignoreCaseMatcher, JsonMatcher.parse(ignoreCaseMatcherJson));
     }
@@ -147,4 +147,5 @@ public class JsonMatcherTest extends BaseTestCase {
 
         JsonMatcher.parse(json);
     }
+
 }

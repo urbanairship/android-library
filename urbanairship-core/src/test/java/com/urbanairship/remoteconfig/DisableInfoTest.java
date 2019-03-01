@@ -23,6 +23,7 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class DisableInfoTest extends BaseTestCase {
+
     private ApplicationMetrics mockMetrics;
 
     @Before
@@ -47,7 +48,6 @@ public class DisableInfoTest extends BaseTestCase {
                                           .setAppVersionPredicate(VersionUtils.createVersionPredicate(ValueMatcher.newNumberRangeMatcher(1.0, 1.0)))
                                           .build();
 
-
         DisableInfo fromJson = DisableInfo.fromJson(original.toJsonValue());
 
         assertEquals(original.getDisabledModules(), modules);
@@ -57,7 +57,6 @@ public class DisableInfoTest extends BaseTestCase {
         // Parsing from json will result in conversion from seconds to milliseconds
         assertEquals(fromJson.getRemoteDataRefreshInterval(), 10000);
     }
-
 
     @Test
     public void testParseJsonAllModules() throws JsonException {
@@ -70,7 +69,6 @@ public class DisableInfoTest extends BaseTestCase {
         assertEquals(disableInfo.getDisabledModules(), new HashSet<>(Modules.ALL_MODULES));
         assertEquals(disableInfo.getRemoteDataRefreshInterval(), 0);
     }
-
 
     @Test
     public void testFilter() {
@@ -95,7 +93,6 @@ public class DisableInfoTest extends BaseTestCase {
                                             .setAppVersionPredicate(VersionUtils.createVersionPredicate(ValueMatcher.newNumberRangeMatcher(5.0, 6.0)))
                                             .build();
 
-
         // Should match push
         List<DisableInfo> result = DisableInfo.filter(Arrays.asList(pushModule, messageCenter, allModules, sdkVersion), "8.0.0", 1);
         assertTrue(result.contains(pushModule));
@@ -118,4 +115,5 @@ public class DisableInfoTest extends BaseTestCase {
         result = DisableInfo.filter(Arrays.asList(messageCenter, allModules, sdkVersion), "9.0.4", 5);
         assertTrue(result.contains(sdkVersion));
     }
+
 }

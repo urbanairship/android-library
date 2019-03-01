@@ -14,6 +14,7 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface Function<T, R> {
+
     /**
      * Applies the function.
      *
@@ -22,4 +23,5 @@ public interface Function<T, R> {
      */
     @NonNull
     R apply(@NonNull T v);
+
 }

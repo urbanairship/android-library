@@ -9,8 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
@@ -18,8 +16,8 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -29,13 +27,11 @@ import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.Checks;
 
 import java.util.ArrayList;
-import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -119,15 +115,19 @@ public class Analytics extends AirshipComponent {
 
     /**
      * Listener for all Urban Airship events.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface EventListener {
+
         void onEventAdded(@NonNull Event event, @NonNull String sessionId);
+
     }
 
     /**
      * Adds an event listener.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -139,6 +139,7 @@ public class Analytics extends AirshipComponent {
 
     /**
      * Removes an event listener.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -147,7 +148,6 @@ public class Analytics extends AirshipComponent {
             eventListeners.remove(eventListener);
         }
     }
-
 
     @Override
     protected void init() {
@@ -671,5 +671,7 @@ public class Analytics extends AirshipComponent {
             Checks.checkNotNull(configOptions, "Missing config options.");
             return new Analytics(this);
         }
+
     }
+
 }

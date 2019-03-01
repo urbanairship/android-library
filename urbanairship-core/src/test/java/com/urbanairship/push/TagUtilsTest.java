@@ -48,4 +48,5 @@ public class TagUtilsTest extends BaseTestCase {
         JsonValue jsonString = JsonValue.parseString("non-JsonMap");
         assertNull(TagUtils.convertToTagsMap(jsonString));
     }
+
 }

@@ -25,6 +25,7 @@ import java.util.List;
 
 /**
  * An abstract class to manage a SQLiteDatabase.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -85,7 +86,8 @@ public abstract class DataManager {
      *
      * @param db The database.
      */
-    protected void onOpen(@NonNull SQLiteDatabase db) {}
+    protected void onOpen(@NonNull SQLiteDatabase db) {
+    }
 
     /**
      * Called when the database connection is configured.
@@ -93,7 +95,8 @@ public abstract class DataManager {
      * @param db The database.
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected void onConfigure(@NonNull SQLiteDatabase db) {}
+    protected void onConfigure(@NonNull SQLiteDatabase db) {
+    }
 
     /**
      * Called when the database is created for the first time.
@@ -366,7 +369,6 @@ public abstract class DataManager {
         File target;
         File[] sources;
 
-
         if (Build.VERSION.SDK_INT >= 21) {
             File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
             if (!urbanAirshipNoBackupDirectory.exists()) {
@@ -416,4 +418,5 @@ public abstract class DataManager {
 
         return target.getAbsolutePath();
     }
+
 }

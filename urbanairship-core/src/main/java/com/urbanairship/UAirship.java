@@ -23,7 +23,6 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.data.EventApiClient;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
@@ -72,11 +71,9 @@ public class UAirship {
     @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
-
-    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
+    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Platform {
-    }
+    public @interface Platform {}
 
     /**
      * Amazon platform type. Only ADM transport will be allowed.
@@ -339,7 +336,6 @@ public class UAirship {
             Logger.error("takeOff() must be called on the main thread!");
         }
 
-
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
             for (StackTraceElement element : new Exception().getStackTrace()) {
@@ -371,7 +367,6 @@ public class UAirship {
             });
         }
     }
-
 
     /**
      * Actually performs takeOff. This is called from takeOff on a background thread.
@@ -652,7 +647,6 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
-
         PushProviders providers = PushProviders.load(application, airshipConfigOptions);
 
         this.platform = determinePlatform(providers);
@@ -668,21 +662,21 @@ public class UAirship {
 
         // Airship components
         this.analytics = Analytics.newBuilder(application)
-                .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                .setConfigOptions(airshipConfigOptions)
-                .setJobDispatcher(JobDispatcher.shared(application))
-                .setPlatform(getPlatformType())
-                .setPreferenceDataStore(preferenceDataStore)
-                .setEventManager(EventManager.newBuilder()
-                        .setEventResolver(new EventResolver(application))
-                        .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                        .setJobDispatcher(JobDispatcher.shared(application))
-                        .setPreferenceDataStore(preferenceDataStore)
-                        .setApiClient(new EventApiClient(application))
-                        .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
-                        .setJobAction(Analytics.ACTION_SEND)
-                        .build())
-                .build();
+                                  .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                                  .setConfigOptions(airshipConfigOptions)
+                                  .setJobDispatcher(JobDispatcher.shared(application))
+                                  .setPlatform(getPlatformType())
+                                  .setPreferenceDataStore(preferenceDataStore)
+                                  .setEventManager(EventManager.newBuilder()
+                                                               .setEventResolver(new EventResolver(application))
+                                                               .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                                                               .setJobDispatcher(JobDispatcher.shared(application))
+                                                               .setPreferenceDataStore(preferenceDataStore)
+                                                               .setApiClient(new EventApiClient(application))
+                                                               .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
+                                                               .setJobAction(Analytics.ACTION_SEND)
+                                                               .build())
+                                  .build();
         components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -693,7 +687,6 @@ public class UAirship {
 
         this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.locationManager);
-
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
         tagGroupRegistrar.migrateKeys();
@@ -843,7 +836,6 @@ public class UAirship {
         return remoteData;
     }
 
-
     /**
      * Returns the UAirship {@link com.urbanairship.analytics.Analytics} instance.
      *
@@ -938,6 +930,7 @@ public class UAirship {
 
     /**
      * Gets an AirshipComponent by class.
+     *
      * @param clazz The component class.
      * @return The component, or null if not found.
      * @hide
@@ -953,7 +946,6 @@ public class UAirship {
         return null;
     }
 
-
     /**
      * Callback interface used to notify app when UAirship is ready.
      */
@@ -965,8 +957,8 @@ public class UAirship {
          * @param airship The UAirship instance.
          */
         void onAirshipReady(@NonNull UAirship airship);
-    }
 
+    }
 
     /**
      * Determines which push provider to use for the given platform.
@@ -1031,7 +1023,6 @@ public class UAirship {
         preferenceDataStore.put(PLATFORM_KEY, platform);
         return PlatformUtils.parsePlatform(platform);
     }
-
 
     @Nullable
     private AirshipComponent createOptionalComponent(String className, Context context, PreferenceDataStore dataStore) {

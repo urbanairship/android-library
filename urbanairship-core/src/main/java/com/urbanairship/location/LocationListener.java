@@ -17,4 +17,5 @@ public interface LocationListener {
      * @param location The new location.
      */
     void onLocationChanged(@NonNull Location location);
+
 }

@@ -1,23 +1,21 @@
 package com.urbanairship.analytics.data;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.Checks;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * Handles event storage and uploading.
@@ -237,6 +235,7 @@ public class EventManager {
      * EventManager builder
      */
     public static class Builder {
+
         private PreferenceDataStore preferenceDataStore;
         private JobDispatcher jobDispatcher;
         private ActivityMonitor activityMonitor;
@@ -344,6 +343,7 @@ public class EventManager {
             Checks.checkArgument(backgroundReportingIntervalMS > 0, "Missing background reporting interval.");
             return new EventManager(this);
         }
+
     }
 
 }

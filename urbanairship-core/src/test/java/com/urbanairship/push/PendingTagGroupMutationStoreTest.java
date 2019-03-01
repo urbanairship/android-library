@@ -18,7 +18,6 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-
 public class PendingTagGroupMutationStoreTest extends BaseTestCase {
 
     PendingTagGroupMutationStore store;
@@ -61,7 +60,6 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
 
         store.add(mutations);
 
-
         assertEquals(mutations.get(0), store.peek());
         assertEquals(mutations.get(0), store.peek());
     }
@@ -94,4 +92,5 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
     private Set<String> createTagSet(String... tags) {
         return new HashSet<>(Arrays.asList(tags));
     }
+
 }

@@ -23,20 +23,20 @@ public class QuietTimeIntervalTest extends BaseTestCase {
         Integer startHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - 1;
         Integer endHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1;
         QuietTimeInterval interval = QuietTimeInterval.newBuilder()
-                .setStartHour(startHour)
-                .setStartMin(30)
-                .setEndHour(endHour)
-                .setEndMin(15)
-                .build();
+                                                      .setStartHour(startHour)
+                                                      .setStartMin(30)
+                                                      .setEndHour(endHour)
+                                                      .setEndMin(15)
+                                                      .build();
 
         JsonValue value = interval.toJsonValue();
         String json =
                 "{ " +
-                    "\"start_hour\": " + startHour + ", " +
-                    "\"start_min\": " + 30 + "," +
-                    "\"end_hour\": " + endHour + "," +
-                    "\"end_min\": " + 15 +
-                "}";
+                        "\"start_hour\": " + startHour + ", " +
+                        "\"start_min\": " + 30 + "," +
+                        "\"end_hour\": " + endHour + "," +
+                        "\"end_min\": " + 15 +
+                        "}";
 
         assertEquals(interval, QuietTimeInterval.fromJson(JsonValue.parseString(json)));
 
@@ -51,11 +51,11 @@ public class QuietTimeIntervalTest extends BaseTestCase {
     @Test
     public void testQuietTimeIntervalStartBeforeEnd() {
         QuietTimeInterval interval = QuietTimeInterval.newBuilder()
-                .setStartHour(3)
-                .setStartMin(30)
-                .setEndHour(4)
-                .setEndMin(15)
-                .build();
+                                                      .setStartHour(3)
+                                                      .setStartMin(30)
+                                                      .setEndHour(4)
+                                                      .setEndMin(15)
+                                                      .build();
 
         Calendar now = Calendar.getInstance();
 
@@ -83,11 +83,11 @@ public class QuietTimeIntervalTest extends BaseTestCase {
     @Test
     public void testQuietTimeIntervalStartAfterEnd() {
         QuietTimeInterval interval = QuietTimeInterval.newBuilder()
-                .setStartHour(3)
-                .setStartMin(30)
-                .setEndHour(3)
-                .setEndMin(15)
-                .build();
+                                                      .setStartHour(3)
+                                                      .setStartMin(30)
+                                                      .setEndHour(3)
+                                                      .setEndMin(15)
+                                                      .build();
 
         Calendar now = Calendar.getInstance();
 
@@ -116,11 +116,11 @@ public class QuietTimeIntervalTest extends BaseTestCase {
     public void testQuietTimeEqualStartEnd() {
         // Test that when start is equals to end, end is set to a day later.
         QuietTimeInterval interval = QuietTimeInterval.newBuilder()
-                .setStartHour(3)
-                .setStartMin(30)
-                .setEndHour(3)
-                .setEndMin(30)
-                .build();
+                                                      .setStartHour(3)
+                                                      .setStartMin(30)
+                                                      .setEndHour(3)
+                                                      .setEndMin(30)
+                                                      .build();
 
         Calendar now = Calendar.getInstance();
 
@@ -143,11 +143,11 @@ public class QuietTimeIntervalTest extends BaseTestCase {
     @Test
     public void testQuietTimeEdgeTimes() {
         QuietTimeInterval interval = QuietTimeInterval.newBuilder()
-                .setStartHour(0)
-                .setStartMin(0)
-                .setEndHour(23)
-                .setEndMin(59)
-                .build();
+                                                      .setStartHour(0)
+                                                      .setStartMin(0)
+                                                      .setEndHour(23)
+                                                      .setEndMin(59)
+                                                      .build();
 
         Calendar now = Calendar.getInstance();
 
@@ -167,11 +167,11 @@ public class QuietTimeIntervalTest extends BaseTestCase {
         assertTrue(interval.isInQuietTime(now));
 
         interval = QuietTimeInterval.newBuilder()
-                .setStartHour(23)
-                .setStartMin(59)
-                .setEndHour(0)
-                .setEndMin(0)
-                .build();
+                                    .setStartHour(23)
+                                    .setStartMin(59)
+                                    .setEndHour(0)
+                                    .setEndMin(0)
+                                    .build();
 
         // 23:59 is in quiet time
         now.set(Calendar.HOUR_OF_DAY, 23);
@@ -193,4 +193,5 @@ public class QuietTimeIntervalTest extends BaseTestCase {
         now.set(Calendar.MINUTE, 58);
         assertFalse(interval.isInQuietTime(now));
     }
+
 }

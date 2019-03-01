@@ -5,7 +5,6 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
@@ -14,8 +13,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.locale.LocaleChangedListener;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
@@ -30,7 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -60,7 +56,9 @@ class InAppRemoteDataObserver {
     private List<Listener> listeners = new ArrayList<>();
 
     interface Listener {
+
         void onSchedulesUpdated();
+
     }
 
     /**
@@ -313,7 +311,6 @@ class InAppRemoteDataObserver {
         return idMap;
     }
 
-
     /**
      * Sets the message ID to schedule ID map.
      *
@@ -351,4 +348,5 @@ class InAppRemoteDataObserver {
     public JsonMap getLastPayloadMetadata() {
         return preferenceDataStore.getJsonValue(LAST_PAYLOAD_METADATA).optMap();
     }
+
 }

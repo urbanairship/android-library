@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.InAppMessageSchedule;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.banner.BannerDisplayContent;
@@ -21,7 +20,6 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
 
 /**
  * Default {@link PrepareAssetsDelegate} for Urban Airship message types.

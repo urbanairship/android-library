@@ -73,7 +73,6 @@ public class ShareAction extends Action {
                 .setType("text/plain")
                 .putExtra(Intent.EXTRA_TEXT, arguments.getValue().getString());
 
-
         List<ResolveInfo> shareResolveInfos = new ArrayList<>();
 
         for (ResolveInfo resolveInfo : UAirship.getPackageManager().queryIntentActivities(sharingIntent, 0)) {
@@ -131,4 +130,5 @@ public class ShareAction extends Action {
     public boolean shouldRunOnMainThread() {
         return true;
     }
+
 }

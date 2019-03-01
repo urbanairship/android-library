@@ -45,7 +45,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-
 public class IncomingPushRunnableTest extends BaseTestCase {
 
     public static final int TEST_NOTIFICATION_ID = 123;
@@ -73,7 +72,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
         pushBundle.putString(PushMessage.EXTRA_NOTIFICATION_TAG, "testNotificationTag");
-
 
         pushManager = mock(PushManager.class);
         testPushProvider = new TestPushProvider();
@@ -107,7 +105,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 return notificationFactory;
             }
         });
-
 
         analytics = mock(Analytics.class);
         legacyInAppMessageManager = mock(LegacyInAppMessageManager.class);
@@ -525,7 +522,5 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
     }
-
-
 
 }

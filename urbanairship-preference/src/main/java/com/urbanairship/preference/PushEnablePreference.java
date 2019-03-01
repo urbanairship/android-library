@@ -11,7 +11,6 @@ import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 
-
 /**
  * CheckboxPreference to enable/disable push notifications.
  */
@@ -39,4 +38,5 @@ public class PushEnablePreference extends UACheckBoxPreference {
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getPushManager().setUserNotificationsEnabled(enabled);
     }
+
 }

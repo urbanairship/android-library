@@ -39,4 +39,5 @@ class InstallAttributionEvent extends Event {
                       .put(PLAY_STORE_REFERRER, referrer)
                       .build();
     }
+
 }

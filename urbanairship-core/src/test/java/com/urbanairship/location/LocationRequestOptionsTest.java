@@ -43,7 +43,6 @@ public class LocationRequestOptionsTest extends BaseTestCase {
         LocationRequestOptions.newBuilder().setMinDistance(-1);
     }
 
-
     /**
      * Test creating a new request options throws exceptions for invalid
      * priority.
@@ -63,10 +62,10 @@ public class LocationRequestOptionsTest extends BaseTestCase {
     @Test
     public void testToJsonValue() {
         LocationRequestOptions options = LocationRequestOptions.newBuilder()
-                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
-                .setMinDistance(44.4f)
-                .setMinTime(1111, TimeUnit.MILLISECONDS)
-                .build();
+                                                               .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                                                               .setMinDistance(44.4f)
+                                                               .setMinTime(1111, TimeUnit.MILLISECONDS)
+                                                               .build();
 
         JsonValue value = options.toJsonValue();
         assertEquals(44.4f, value.getMap().get(LocationRequestOptions.MIN_DISTANCE_KEY).getNumber().floatValue());
@@ -80,11 +79,11 @@ public class LocationRequestOptionsTest extends BaseTestCase {
     @Test
     public void testParseJson() throws JsonException {
         LocationRequestOptions original = LocationRequestOptions.newBuilder()
-                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
-                .setMinDistance(44.4f)
-                .setMinTime(1111, TimeUnit.MILLISECONDS)
-                .build();
-        
+                                                                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                                                                .setMinDistance(44.4f)
+                                                                .setMinTime(1111, TimeUnit.MILLISECONDS)
+                                                                .build();
+
         LocationRequestOptions fromJson = LocationRequestOptions.fromJson(original.toJsonValue());
         assertEquals(original, fromJson);
     }
@@ -95,10 +94,10 @@ public class LocationRequestOptionsTest extends BaseTestCase {
     @Test
     public void testParcelable() throws JsonException {
         LocationRequestOptions original = LocationRequestOptions.newBuilder()
-                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
-                .setMinDistance(44.4f)
-                .setMinTime(1111, TimeUnit.MILLISECONDS)
-                .build();
+                                                                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                                                                .setMinDistance(44.4f)
+                                                                .setMinTime(1111, TimeUnit.MILLISECONDS)
+                                                                .build();
 
         // Write the options to the parcel
         Parcel parcel = Parcel.obtain();
@@ -113,4 +112,5 @@ public class LocationRequestOptionsTest extends BaseTestCase {
         // Validate the data
         assertEquals(original, fromParcel);
     }
+
 }

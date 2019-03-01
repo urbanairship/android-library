@@ -115,7 +115,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     @Source
     private final String source;
 
-
     /**
      * Default constructor.
      *
@@ -262,18 +261,15 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).optString();
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
-
         String messageId = jsonValue.optMap().opt(MESSAGE_ID_KEY).getString();
         if (messageId == null || messageId.length() > MAX_ID_LENGTH) {
             throw new JsonException("Invalid message ID. Must be nonnull and less than or equal to " + MAX_ID_LENGTH + " characters.");
         }
 
-
         InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                    .setId(messageId)
                                                    .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                                                    .setDisplayContent(type, content);
-
 
         // Source
         @Source String source = jsonValue.optMap().opt(SOURCE_KEY).getString();
@@ -310,7 +306,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         }
     }
 
-
     /**
      * Parses a json value.
      *
@@ -322,7 +317,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     static InAppMessage fromJson(@NonNull JsonValue jsonValue) throws JsonException {
         return fromJson(jsonValue, null);
     }
-
 
     /**
      * Creates a new builder.
@@ -441,6 +435,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * In-app message builder.
      */
     public static class Builder {
+
         @DisplayType
         private String type;
         private JsonMap extras;
@@ -453,7 +448,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String source = SOURCE_APP_DEFINED;
         private JsonValue campaigns;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         public Builder(@NonNull InAppMessage message) {
             this.type = message.type;
@@ -674,5 +670,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             Checks.checkNotNull(content, "Missing content.");
             return new InAppMessage(this);
         }
+
     }
+
 }

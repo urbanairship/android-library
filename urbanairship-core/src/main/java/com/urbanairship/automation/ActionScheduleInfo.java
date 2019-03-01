@@ -218,7 +218,6 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         return interval;
     }
 
-
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
@@ -317,6 +316,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * Builder class.
      */
     public static class Builder {
+
         private final List<Trigger> triggers = new ArrayList<>();
         private final Map<String, JsonValue> actions = new HashMap<>();
         private String group;
@@ -502,5 +502,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
 
             return new ActionScheduleInfo(this);
         }
+
     }
+
 }

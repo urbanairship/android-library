@@ -47,8 +47,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 ActionRunRequest.createRequest(ShareAction.DEFAULT_REGISTRY_NAME)
-                        .setValue(UAirship.shared().getPushManager().getChannelId())
-                        .run();
+                                .setValue(UAirship.shared().getPushManager().getChannelId())
+                                .run();
             }
         });
 
@@ -118,4 +118,5 @@ public class HomeFragment extends Fragment {
             shareButton.setEnabled(true);
         }
     }
+
 }

@@ -23,7 +23,6 @@ import java.util.List;
  */
 public class RichPushUser {
 
-
     /**
      * A listener interface for receiving events for user updates.
      */
@@ -35,6 +34,7 @@ public class RichPushUser {
          * @param success {@code} if the request was successful, otherwise {@code false}.
          */
         void onUserUpdated(boolean success);
+
     }
 
     private static final String KEY_PREFIX = "com.urbanairship.user";
@@ -242,4 +242,5 @@ public class RichPushUser {
 
         return out;
     }
+
 }

@@ -107,7 +107,6 @@ public class AirshipConfigOptions {
     @NonNull
     public final String remoteDataURL;
 
-
     /**
      * The FCM sender ID for push registration. Used as a fallback
      * if the production or development FCM sender ID is not set.
@@ -154,7 +153,6 @@ public class AirshipConfigOptions {
      */
     @Nullable
     public final PushProvider customPushProvider;
-
 
     /**
      * List of URLs that are allowed to be used for various features, including:
@@ -371,7 +369,6 @@ public class AirshipConfigOptions {
             return fcmSenderId;
         }
 
-
         return null;
     }
 
@@ -399,6 +396,7 @@ public class AirshipConfigOptions {
      * Airship config builder.
      */
     public static final class Builder {
+
         /*
          * Common config fields
          */
@@ -517,7 +515,6 @@ public class AirshipConfigOptions {
 
             return this;
         }
-
 
         /**
          * Applies properties from a given Properties object.
@@ -960,7 +957,6 @@ public class AirshipConfigOptions {
             return this;
         }
 
-
         /**
          * Set the flag indicating whether the application will use analytics.
          *
@@ -1096,7 +1092,6 @@ public class AirshipConfigOptions {
             return this;
         }
 
-
         /**
          * Sets the app store URI for the rate-app action. If not set,
          * the action will generate it using the app's current package name.
@@ -1167,5 +1162,7 @@ public class AirshipConfigOptions {
 
             return new AirshipConfigOptions(this);
         }
+
     }
+
 }

@@ -90,7 +90,6 @@ public class RateAppActivity extends ThemedActivity {
             return;
         }
 
-
         AlertDialog.Builder builder;
         Context context = this;
         builder = new AlertDialog.Builder(context);
@@ -125,7 +124,6 @@ public class RateAppActivity extends ThemedActivity {
                         finish();
                     }
                 });
-
 
         builder.setNegativeButton(
                 context.getString(R.string.ua_rate_app_action_default_rate_negative_button),
@@ -184,4 +182,5 @@ public class RateAppActivity extends ThemedActivity {
             return "";
         }
     }
+
 }

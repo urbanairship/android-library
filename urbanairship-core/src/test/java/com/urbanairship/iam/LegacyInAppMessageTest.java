@@ -72,7 +72,6 @@ public class LegacyInAppMessageTest extends BaseTestCase {
         assertEquals(actionValueMap, message.getClickActionValues());
     }
 
-
     /**
      * Test parsing a in-app message from a JSON payload.
      */
@@ -152,7 +151,6 @@ public class LegacyInAppMessageTest extends BaseTestCase {
         LegacyInAppMessage.fromPush(pushMessage);
     }
 
-
     /**
      * Test parsing a in-app message from a JSON invalid JSON payload throws an exception.
      */
@@ -161,7 +159,6 @@ public class LegacyInAppMessageTest extends BaseTestCase {
         Bundle pushBundle = new Bundle();
         pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, JsonValue.wrap("wat").toString());
         PushMessage pushMessage = new PushMessage(pushBundle);
-
 
         LegacyInAppMessage.fromPush(pushMessage);
     }

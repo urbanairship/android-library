@@ -35,4 +35,5 @@ public class Checks {
             throw new IllegalArgumentException(message);
         }
     }
+
 }

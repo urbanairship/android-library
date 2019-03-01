@@ -30,4 +30,5 @@ public class TagsPreference extends Preference {
     protected boolean shouldPersist() {
         return false;
     }
+
 }

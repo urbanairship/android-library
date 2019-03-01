@@ -61,7 +61,6 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
 
-
     }
 
     @Test
@@ -175,7 +174,6 @@ public class ActionRegistryTest extends BaseTestCase {
                 entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
     }
 
-
     /**
      * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
      * if the app has never been opened.
@@ -227,7 +225,7 @@ public class ActionRegistryTest extends BaseTestCase {
     /**
      * Test registering a empty action name
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testRegisterEmptyActionNames() {
         registry.registerAction(new TestAction(), "");
     }
@@ -235,7 +233,7 @@ public class ActionRegistryTest extends BaseTestCase {
     /**
      * Test trying to register multiple names where one is empty.
      */
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testRegisterMultipleEmptyActionNames() {
         registry.registerAction(new TestAction(), "what", "");
     }
@@ -305,4 +303,5 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(entry, names);
         assertEquals("Default action is unexpected", entry.getDefaultAction(), action);
     }
+
 }

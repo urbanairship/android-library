@@ -218,6 +218,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         public JsonMatcher build() {
             return new JsonMatcher(this);
         }
+
     }
 
     @Override
@@ -252,6 +253,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         result = 31 * result + (ignoreCase != null ? ignoreCase.hashCode() : 0);
         return result;
     }
+
 }
 
 

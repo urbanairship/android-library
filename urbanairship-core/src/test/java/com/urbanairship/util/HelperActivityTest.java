@@ -103,4 +103,5 @@ public class HelperActivityTest extends BaseTestCase {
         thread.join(100);
         Assert.assertFalse("Thread is not finishing", thread.isAlive());
     }
+
 }

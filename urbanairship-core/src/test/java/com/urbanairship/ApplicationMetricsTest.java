@@ -42,4 +42,5 @@ public class ApplicationMetricsTest extends BaseTestCase {
         // Make sure the time is greater than 0
         assertEquals("Last open time should've updated", 1000, metrics.getLastOpenTimeMillis());
     }
+
 }

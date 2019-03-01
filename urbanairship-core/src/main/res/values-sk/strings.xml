@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Áno</string>
@@ -58,20 +59,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> Vybráno</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Obnoviť</string>
     <string name="ua_open">Otvoriť</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Ohodnotiť</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nie, ďakujem</string>
     <string name="ua_rate_app_action_default_title">Páči sa ti <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Kliknutím na <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ju ohodnotíš v App Store.</string>
     <string name="ua_rate_app_action_generic_display_name">Táto aplikácia</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Upozornenia</string>
     <string name="ua_default_channel_description">Všeobecné aktualizácie aplikácie</string>
     <string name="ua_channel_id">ID kanála</string>
-    
+
 </resources>

@@ -44,16 +44,16 @@ public class InAppMessageTest extends BaseTestCase {
                                                    .build();
 
         fullScreenDisplayContent = FullScreenDisplayContent.newBuilder()
-                                                   .setBody(TextInfo.newBuilder()
-                                                                    .setText("oh hi")
-                                                                    .build())
-                                                   .addButton(ButtonInfo.newBuilder()
-                                                                        .setLabel(TextInfo.newBuilder()
-                                                                                          .setText("Oh hi")
-                                                                                          .build())
-                                                                        .setId("id")
-                                                                        .build())
-                                                   .build();
+                                                           .setBody(TextInfo.newBuilder()
+                                                                            .setText("oh hi")
+                                                                            .build())
+                                                           .addButton(ButtonInfo.newBuilder()
+                                                                                .setLabel(TextInfo.newBuilder()
+                                                                                                  .setText("Oh hi")
+                                                                                                  .build())
+                                                                                .setId("id")
+                                                                                .build())
+                                                           .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -70,7 +70,6 @@ public class InAppMessageTest extends BaseTestCase {
                     .setDisplayContent(customDisplayContent)
                     .build();
     }
-
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingDisplayContent() {
@@ -171,4 +170,5 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage fromJson = InAppMessage.fromJson(jsonValue);
         assertEquals(message, fromJson);
     }
+
 }

@@ -75,9 +75,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
             BannerAdapter.this.onActivityPaused(activity);
         }
 
-
     }, activityPredicate);
-
 
     private WeakReference<Activity> lastActivity;
     private WeakReference<BannerView> currentView;

@@ -169,12 +169,14 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     /**
      * Called on the handlers callback when the operation is canceled.
      */
-    protected void onCancel() {}
+    protected void onCancel() {
+    }
 
     /**
      * Called on the handlers callback when the operation is running.
      */
-    protected void onRun() {}
+    protected void onRun() {
+    }
 
     /**
      * Gets the handler for the operation.
@@ -185,4 +187,5 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     public Handler getHandler() {
         return handler;
     }
+
 }

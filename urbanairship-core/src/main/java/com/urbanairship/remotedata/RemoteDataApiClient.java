@@ -35,7 +35,6 @@ public class RemoteDataApiClient {
     // ISO 3166-2 two digit language code
     private static final String LANGUAGE_QUERY_PARAM = "language";
 
-
     private static final String AMAZON = "amazon";
     private static final String ANDROID = "android";
 
@@ -66,7 +65,6 @@ public class RemoteDataApiClient {
         this.requestFactory = requestFactory;
     }
 
-
     /**
      * Executes a remote data request.
      *
@@ -83,7 +81,7 @@ public class RemoteDataApiClient {
         }
 
         Request request = requestFactory.createRequest("GET", url)
-                .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret());
+                                        .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret());
 
         if (lastModified != null) {
             request.setHeader("If-Modified-Since", lastModified);
@@ -108,11 +106,11 @@ public class RemoteDataApiClient {
 
         try {
             Uri.Builder builder = Uri.parse(configOptions.remoteDataURL)
-                    .buildUpon()
-                    .appendEncodedPath(REMOTE_DATA_PATH)
-                    .appendPath(configOptions.getAppKey())
-                    .appendPath(UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
-                    .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
+                                     .buildUpon()
+                                     .appendEncodedPath(REMOTE_DATA_PATH)
+                                     .appendPath(configOptions.getAppKey())
+                                     .appendPath(UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
+                                     .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
 
             if (!UAStringUtil.isEmpty(locale.getLanguage())) {
                 builder.appendQueryParameter(LANGUAGE_QUERY_PARAM, locale.getLanguage());
@@ -130,4 +128,5 @@ public class RemoteDataApiClient {
 
         return url;
     }
+
 }

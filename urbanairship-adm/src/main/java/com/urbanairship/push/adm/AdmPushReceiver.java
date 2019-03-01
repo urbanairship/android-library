@@ -25,7 +25,6 @@ public class AdmPushReceiver extends BroadcastReceiver {
      */
     private static final long BROADCAST_INTENT_TIME_MS = 10000;
 
-
     @Override
     public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
         Autopilot.automaticTakeOff(context);
@@ -59,4 +58,5 @@ public class AdmPushReceiver extends BroadcastReceiver {
                               }
                           });
     }
+
 }

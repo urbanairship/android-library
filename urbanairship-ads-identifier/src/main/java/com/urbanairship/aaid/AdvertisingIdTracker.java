@@ -19,7 +19,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AssociatedIdentifiers;
 import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.util.UAStringUtil;
 
@@ -175,11 +174,12 @@ public class AdvertisingIdTracker extends AirshipComponent {
         private final int platform;
 
         interface Callback {
+
             void onResult(@Nullable String advertisingId, boolean isLimitedTrackingEnabled);
 
             void onError(Exception e);
-        }
 
+        }
 
         private UpdateIdTask(@NonNull Context context, @UAirship.Platform int platform, @NonNull Callback callback) {
             this.context = context.getApplicationContext();
@@ -219,5 +219,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
             callback.onResult(advertisingId, limitedAdTrackingEnabled);
             return null;
         }
+
     }
+
 }

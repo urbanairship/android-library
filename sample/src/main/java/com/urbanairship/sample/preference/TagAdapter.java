@@ -36,6 +36,7 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
+
         private ItemTagBinding binding;
 
         ViewHolder(@NonNull ItemTagBinding binding) {
@@ -51,6 +52,7 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
         public String getTag() {
             return binding.getTag();
         }
+
     }
 
     public static class TagFilterDiff extends DiffUtil.ItemCallback<String> {
@@ -64,5 +66,7 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
         public boolean areContentsTheSame(@NonNull String s, @NonNull String t1) {
             return s.equals(t1);
         }
+
     }
+
 }

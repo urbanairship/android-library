@@ -22,6 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Helper class to send push notifications.
  */
 public class PushSender {
+
     private final String masterSecret;
     private final String appKey;
     private final String pushUrl;
@@ -48,10 +49,10 @@ public class PushSender {
         this.interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         this.client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         this.retrofit = new Retrofit.Builder()
-                                    .baseUrl(this.pushUrl)
-                                    .addConverterFactory(GsonConverterFactory.create())
-                                    .client(client)
-                                    .build();
+                .baseUrl(this.pushUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)
+                .build();
         this.service = retrofit.create(PushService.class);
     }
 
@@ -84,4 +85,5 @@ public class PushSender {
             e.printStackTrace();
         }
     }
+
 }

@@ -75,4 +75,5 @@ public class DefaultNotificationFactory extends NotificationFactory {
     public NotificationCompat.Builder extendBuilder(@NonNull NotificationCompat.Builder builder, @NonNull PushMessage message, int notificationId) {
         return builder;
     }
+
 }

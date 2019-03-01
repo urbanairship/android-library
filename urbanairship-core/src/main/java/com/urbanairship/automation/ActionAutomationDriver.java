@@ -16,7 +16,6 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
 
-
 /**
  * Action automation driver for {@link AutomationEngine}
  */
@@ -38,7 +37,6 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                             .run(Looper.getMainLooper(), actionCallback);
         }
     }
-
 
     @NonNull
     @Override
@@ -72,6 +70,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
      * Helper class that calls the callback after all actions have run.
      */
     private static class ActionCallback implements ActionCompletionCallback {
+
         private final ExecutionCallback callback;
         private int pendingActionCallbacks;
 
@@ -93,6 +92,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                 callback.onFinish();
             }
         }
+
     }
 
 }

@@ -67,7 +67,6 @@ public class TagGroupsEditorTest extends BaseTestCase {
         editor.setTags(tagGroup, null)
               .apply();
 
-
         assertEquals(1, editor.collapsedMutations.size());
 
         TagGroupsMutation expected = TagGroupsMutation.newSetTagsMutation(tagGroup, new HashSet<String>());
@@ -104,5 +103,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
         protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
             this.collapsedMutations = collapsedMutations;
         }
+
     }
+
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.actions;
 
-
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
@@ -155,4 +154,5 @@ public class ShareActionTest extends BaseTestCase {
         info.activityInfo.name = "packageName";
         return info;
     }
+
 }

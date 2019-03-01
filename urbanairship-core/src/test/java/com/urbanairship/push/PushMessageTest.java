@@ -385,7 +385,6 @@ public class PushMessageTest extends BaseTestCase {
         assertEquals("The category should match.", pushMessage.getCategory(), "promo");
     }
 
-
     /**
      * Test get public notification payload.
      */
@@ -604,10 +603,10 @@ public class PushMessageTest extends BaseTestCase {
         PushMessage message = new PushMessage(bundle);
         assertFalse(message.containsAirshipKeys());
 
-
         bundle.putString("com.urbanairship.whatever", "value");
         message = new PushMessage(bundle);
         assertTrue(message.containsAirshipKeys());
     }
+
 }
 

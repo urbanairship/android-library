@@ -7,13 +7,15 @@ import android.support.annotation.NonNull;
 import com.urbanairship.BaseTestCase;
 
 import junit.framework.Assert;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class SubjectTest extends BaseTestCase {
+
     private Map<String, Boolean> resultMap;
 
     @Before
@@ -27,7 +29,7 @@ public class SubjectTest extends BaseTestCase {
     @Test
     public void testSubject() throws Exception {
         Subject<Integer> subject = Subject.create();
-        subject.subscribe(new Subscriber<Integer>(){
+        subject.subscribe(new Subscriber<Integer>() {
             @Override
             public void onNext(@NonNull Integer value) {
                 Assert.assertEquals(value.intValue(), 3);
@@ -58,7 +60,7 @@ public class SubjectTest extends BaseTestCase {
         final Exception exception = new Exception("Oh no");
 
         Subject<Integer> subject = Subject.create();
-        subject.subscribe(new Subscriber<Integer>(){
+        subject.subscribe(new Subscriber<Integer>() {
             @Override
             public void onNext(@NonNull Integer value) {
                 resultMap.put("next", true);

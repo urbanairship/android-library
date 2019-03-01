@@ -178,7 +178,6 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             return false;
         }
 
-
         Bitmap bitmap = fetchBigImage(url);
 
         if (bitmap == null) {
@@ -193,7 +192,6 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
 
         // Set the image as the large icon to show the image when collapsed
         builder.setLargeIcon(bitmap);
-
 
         if (!UAStringUtil.isEmpty(title)) {
             style.setBigContentTitle(title);
@@ -278,6 +276,6 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
 
         return null;
 
-
     }
+
 }

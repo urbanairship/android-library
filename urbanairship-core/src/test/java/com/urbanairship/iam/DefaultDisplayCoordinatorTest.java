@@ -13,7 +13,8 @@ import org.junit.Test;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
@@ -30,14 +31,14 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
         mainLooper = Shadows.shadowOf(Looper.getMainLooper());
 
         messageOne = InAppMessage.newBuilder()
-                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                .setId("message id one")
-                .build();
+                                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                 .setId("message id one")
+                                 .build();
 
         messageTwo = InAppMessage.newBuilder()
-                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                .setId("message id two")
-                .build();
+                                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                 .setId("message id two")
+                                 .build();
     }
 
     @Test
@@ -80,4 +81,5 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
         // Display should be ready
         assertTrue(coordinator.isReady());
     }
+
 }

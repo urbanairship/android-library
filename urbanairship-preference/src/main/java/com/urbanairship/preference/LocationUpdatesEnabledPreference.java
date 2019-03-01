@@ -103,5 +103,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
                 preference.setChecked(result);
             }
         }
+
     }
+
 }

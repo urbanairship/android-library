@@ -148,4 +148,5 @@ class PropertiesConfigParser implements ConfigParser {
     public long getLong(int index) {
         return Long.parseLong(propertyValues.get(index));
     }
+
 }

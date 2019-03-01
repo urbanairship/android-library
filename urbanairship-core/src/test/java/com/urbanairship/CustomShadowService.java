@@ -11,7 +11,6 @@ import org.robolectric.shadows.ShadowService;
 @Implements(Service.class)
 public class CustomShadowService extends ShadowService {
 
-
     private int lastStopSelfId;
 
     @Implementation

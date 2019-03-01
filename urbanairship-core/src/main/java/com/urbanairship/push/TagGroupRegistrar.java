@@ -39,6 +39,7 @@ public class TagGroupRegistrar {
          * @param mutation The mutation.
          */
         void onMutationUploaded(@NonNull TagGroupsMutation mutation);
+
     }
 
     /**
@@ -219,4 +220,5 @@ public class TagGroupRegistrar {
         }
         throw new IllegalArgumentException("Invalid type");
     }
+
 }

@@ -63,7 +63,6 @@ public class MessageFragment extends Fragment {
     private Button retryButton;
     private TextView errorMessage;
 
-
     private Integer error = null;
     private Cancelable fetchMessageRequest;
 
@@ -81,7 +80,6 @@ public class MessageFragment extends Fragment {
         message.setArguments(arguments);
         return message;
     }
-
 
     /**
      * Subclasses can override to replace with their own layout.  If doing so, the
@@ -179,7 +177,6 @@ public class MessageFragment extends Fragment {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
-
 
         retryButton = view.findViewById(R.id.retry_button);
         if (retryButton != null) {
@@ -374,4 +371,5 @@ public class MessageFragment extends Fragment {
             webView.loadRichPushMessage(message);
         }
     }
+
 }

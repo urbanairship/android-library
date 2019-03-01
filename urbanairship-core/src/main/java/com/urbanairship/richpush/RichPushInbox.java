@@ -13,8 +13,6 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
@@ -23,8 +21,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.actions.OverlayRichPushMessageAction;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
@@ -42,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 
 /**
  * The RichPushInbox singleton provides access to the device's local inbox data.
@@ -68,6 +64,7 @@ public class RichPushInbox extends AirshipComponent {
          * Called when the inbox is updated.
          */
         void onInboxUpdated();
+
     }
 
     /**
@@ -81,6 +78,7 @@ public class RichPushInbox extends AirshipComponent {
          * @param success If the request was successful or not.
          */
         void onFinished(boolean success);
+
     }
 
     /**
@@ -95,6 +93,7 @@ public class RichPushInbox extends AirshipComponent {
          * @return {@code true} if the message matches the predicate, otherwise {@code false}.
          */
         boolean apply(@NonNull RichPushMessage message);
+
     }
 
     /**
@@ -137,7 +136,6 @@ public class RichPushInbox extends AirshipComponent {
 
     private boolean isFetchingMessages = false;
     private InboxJobHandler inboxJobHandler;
-
 
     private final List<PendingFetchMessagesCallback> pendingFetchCallbacks = new ArrayList<>();
 
@@ -292,7 +290,6 @@ public class RichPushInbox extends AirshipComponent {
 
         context.startActivity(intent);
     }
-
 
     /**
      * Subscribe a listener for inbox update event callbacks.
@@ -483,7 +480,6 @@ public class RichPushInbox extends AirshipComponent {
             return messages;
         }
     }
-
 
     /**
      * Gets a list of RichPushMessages. Sorted by descending sent-at date.
@@ -742,6 +738,7 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     static class SentAtRichPushMessageComparator implements Comparator<RichPushMessage> {
+
         @Override
         public int compare(@NonNull RichPushMessage lhs, @NonNull RichPushMessage rhs) {
             if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
@@ -750,8 +747,8 @@ public class RichPushInbox extends AirshipComponent {
                 return Long.valueOf(rhs.getSentDateMS()).compareTo(lhs.getSentDateMS());
             }
         }
-    }
 
+    }
 
     static class PendingFetchMessagesCallback extends CancelableOperation {
 
@@ -769,6 +766,7 @@ public class RichPushInbox extends AirshipComponent {
                 callback.onFinished(result);
             }
         }
+
     }
 
 }

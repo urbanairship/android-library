@@ -5,10 +5,8 @@ package com.urbanairship;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.app.SimpleApplicationListener;
 
 /**
@@ -94,4 +92,5 @@ public class ApplicationMetrics extends AirshipComponent {
             appVersionUpdated = true;
         }
     }
+
 }

@@ -53,7 +53,6 @@ public class MessageActivity extends ThemedActivity {
             messageId = savedInstanceState.getString("messageId");
         }
 
-
         if (messageId == null) {
             finish();
             return;
@@ -110,7 +109,6 @@ public class MessageActivity extends ThemedActivity {
         updateTitle(messageId);
     }
 
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -157,4 +155,5 @@ public class MessageActivity extends ThemedActivity {
         }
         return false;
     }
+
 }

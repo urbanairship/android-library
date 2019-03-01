@@ -43,7 +43,6 @@ public class MessageItemView extends FrameLayout {
     private Typeface titleTypeface;
     private Typeface titleReadTypeface;
 
-
     public MessageItemView(@NonNull Context context) {
         this(context, null, R.attr.messageCenterStyle);
     }
@@ -163,11 +162,10 @@ public class MessageItemView extends FrameLayout {
             checkBox.setChecked(isActivated());
         }
 
-
         if (iconView != null) {
             ImageRequestOptions options = ImageRequestOptions.newBuilder(message.getListIconUrl())
-                    .setPlaceHolder(placeholder)
-                    .build();
+                                                             .setPlaceHolder(placeholder)
+                                                             .build();
 
             UAirship.shared().getImageLoader().load(getContext(), iconView, options);
         }
@@ -213,6 +211,5 @@ public class MessageItemView extends FrameLayout {
             return super.onCreateDrawableState(extraSpace);
         }
     }
-
 
 }

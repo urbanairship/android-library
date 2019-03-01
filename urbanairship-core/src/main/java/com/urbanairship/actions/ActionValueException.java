@@ -1,6 +1,5 @@
 package com.urbanairship.actions;
 
-
 import android.support.annotation.Nullable;
 
 /**
@@ -17,4 +16,5 @@ public class ActionValueException extends Exception {
     public ActionValueException(@Nullable String message, @Nullable Exception exception) {
         super(message, exception);
     }
+
 }

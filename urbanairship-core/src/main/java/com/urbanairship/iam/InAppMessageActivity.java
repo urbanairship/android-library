@@ -52,7 +52,6 @@ public abstract class InAppMessageActivity extends ThemedActivity {
 
         super.onCreate(savedInstanceState);
 
-
         if (getIntent() == null || getIntent().getExtras() == null) {
             finish();
             return;
@@ -102,7 +101,6 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         outState.putLong(DISPLAY_TIME_KEY, displayTime);
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -115,7 +113,6 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         displayTime += System.currentTimeMillis() - resumeTime;
         resumeTime = 0;
     }
-
 
     @Override
     public void onBackPressed() {
@@ -168,4 +165,5 @@ public abstract class InAppMessageActivity extends ThemedActivity {
     protected Assets getMessageAssets() {
         return assets;
     }
+
 }

@@ -1,7 +1,6 @@
 package com.urbanairship.util;
 /* Copyright Urban Airship and Contributors */
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -16,6 +15,7 @@ import java.util.regex.Pattern;
 
 /**
  * Ivy version matcher.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -240,11 +240,11 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         return JsonValue.wrap(constraint);
     }
 
-
     /**
      * Helper class to compare version strings.
      */
     private static class Version implements Comparable<Version> {
+
         final int[] versionComponent = new int[] { 0, 0, 0 };
         final String version;
 
@@ -271,6 +271,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
             return 0;
         }
+
     }
 
     @Override
@@ -287,9 +288,9 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         return constraint != null ? constraint.equals(that.constraint) : that.constraint == null;
     }
 
-
     @Override
     public int hashCode() {
         return constraint != null ? constraint.hashCode() : 0;
     }
+
 }

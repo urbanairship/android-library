@@ -86,8 +86,8 @@ class XmlConfigParser implements ConfigParser {
     @NonNull
     @Override
     public String getString(int index, @NonNull String defaultValue) {
-       String value = getString(index);
-       return value == null ? defaultValue : value;
+        String value = getString(index);
+        return value == null ? defaultValue : value;
     }
 
     @Override
@@ -147,4 +147,5 @@ class XmlConfigParser implements ConfigParser {
         parser.close();
         attributeSet = null;
     }
+
 }

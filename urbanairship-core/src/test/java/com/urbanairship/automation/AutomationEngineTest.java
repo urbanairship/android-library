@@ -129,7 +129,6 @@ public class AutomationEngineTest extends BaseTestCase {
         });
     }
 
-
     @Test
     public void testCustomEventValue() throws Exception {
         Trigger trigger = Triggers.newCustomEventTriggerBuilder()
@@ -356,7 +355,7 @@ public class AutomationEngineTest extends BaseTestCase {
     public void testPriority() throws Exception {
         ArrayList<ActionSchedule> schedules = new ArrayList<>();
 
-        Integer[] addedPriorityLevels = new Integer[]{5, 2, 1, 0, 0, 4, 3, 3, 2};
+        Integer[] addedPriorityLevels = new Integer[] { 5, 2, 1, 0, 0, 4, 3, 3, 2 };
         ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
         Collections.sort(expectedExecutionOrder);
 
@@ -590,7 +589,6 @@ public class AutomationEngineTest extends BaseTestCase {
         // Verify its idle
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
 
-
         // Update the schedule
         final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
                                                              .setEnd(0)
@@ -599,7 +597,6 @@ public class AutomationEngineTest extends BaseTestCase {
         Future<ActionSchedule> future = automationEngine.editSchedule(schedule.getId(), edits);
         runLooperTasks();
         ActionSchedule updated = future.get();
-
 
         // Verify it's finished
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_FINISHED);
@@ -669,7 +666,6 @@ public class AutomationEngineTest extends BaseTestCase {
         automationEngine.checkPendingSchedules();
     }
 
-
     @Test
     public void testCancelPrepareResult() throws ExecutionException, InterruptedException {
         ActionSchedule schedule = schedule(scheduleInfo);
@@ -699,7 +695,6 @@ public class AutomationEngineTest extends BaseTestCase {
                    .track();
 
         runLooperTasks();
-
 
         // Finish preparing and executing the schedule
         driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
@@ -939,5 +934,7 @@ public class AutomationEngineTest extends BaseTestCase {
             priorityList.add(schedule.getInfo().getPriority());
             preparedSchedulesMap.put(schedule.getId(), schedule);
         }
+
     }
+
 }

@@ -35,4 +35,5 @@ public class TagsActivity extends AppCompatActivity {
         }
         return false;
     }
+
 }

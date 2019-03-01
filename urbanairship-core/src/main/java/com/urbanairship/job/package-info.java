@@ -5,5 +5,6 @@
  *
  * @hide
  */
+
 package com.urbanairship.job;
 

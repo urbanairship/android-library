@@ -1,5 +1,4 @@
-<manifest
-    package="com.urbanairship.push.fcm"
+<manifest package="com.urbanairship.push.fcm"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:versionCode="1"
@@ -12,7 +11,7 @@
             android:name="com.urbanairship.push.fcm.AirshipFirebaseMessagingService"
             tools:ignore="ExportedService">
             <intent-filter android:priority="-1">
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 

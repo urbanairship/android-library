@@ -57,7 +57,6 @@ public class UALocationProviderTest extends BaseTestCase {
         options = LocationRequestOptions.createDefaultOptions();
     }
 
-
     /**
      * Test canceling location updates tries to cancel updates
      * on all of the adapters.
@@ -103,12 +102,10 @@ public class UALocationProviderTest extends BaseTestCase {
     public void testSingleLocationRequest() {
         when(mockAdapterTwo.isAvailable(context)).thenReturn(true);
 
-
         provider.requestSingleLocation(options, locationCallback);
         verify(mockAdapterTwo).requestSingleLocation(eq(context), eq(options), eq(locationCallback));
         verify(mockAdapterOne, times(0)).requestSingleLocation(eq(context), eq(options), eq(locationCallback));
     }
-
 
     /**
      * Test single request does not exception out when the adapter throws security exceptions.

@@ -9,6 +9,7 @@ import com.urbanairship.location.RegionEvent;
  * by adding the listener using {@link com.urbanairship.analytics.Analytics#addAnalyticsListener(AnalyticsListener)}.
  */
 public interface AnalyticsListener {
+
     /**
      * Called when a new screen is tracked.
      *
@@ -29,4 +30,5 @@ public interface AnalyticsListener {
      * @param event The region event.
      */
     void onRegionEventAdded(@NonNull RegionEvent event);
+
 }

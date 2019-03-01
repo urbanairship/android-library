@@ -121,7 +121,6 @@ public class MediaEventTemplate {
     private boolean feature;
     private boolean featureSet;
 
-
     // SHARED_CONTENT_EVENT optional
     @Nullable
     private String source;
@@ -410,4 +409,5 @@ public class MediaEventTemplate {
 
         return builder.build();
     }
+
 }

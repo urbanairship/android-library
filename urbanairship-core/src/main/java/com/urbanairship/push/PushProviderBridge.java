@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,14 +17,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-
 /**
  * {@link PushProvider} callback methods.
  *
  * @hide
  */
 public abstract class PushProviderBridge {
-
 
     final static String EXTRA_PROVIDER_CLASS = "EXTRA_PROVIDER_CLASS";
     final static String EXTRA_PUSH = "EXTRA_PUSH";
@@ -47,7 +44,6 @@ public abstract class PushProviderBridge {
 
         JobDispatcher.shared(context).dispatch(jobInfo);
     }
-
 
     /**
      * Creates a new request to process an incoming push message.
@@ -150,6 +146,7 @@ public abstract class PushProviderBridge {
                 Thread.currentThread().interrupt();
             }
         }
+
     }
 
 }

@@ -15,9 +15,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-
 public class AssociateIdentifiersEventTest extends BaseTestCase {
-
 
     @Test
     public void testEventType() {
@@ -59,6 +57,7 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
 
     /**
      * Test event data when limited ad tracking enabled.
+     *
      * @throws JSONException
      */
     @Test
@@ -76,6 +75,7 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
 
     /**
      * Test event data when limited ad tracking disabled.
+     *
      * @throws JSONException
      */
     @Test
@@ -90,4 +90,5 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "phone", "867-5309");
         EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "false");
     }
+
 }

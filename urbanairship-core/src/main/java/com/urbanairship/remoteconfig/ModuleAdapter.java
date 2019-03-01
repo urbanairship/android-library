@@ -77,4 +77,5 @@ class ModuleAdapter {
         Logger.verbose("ModuleAdapter - Unknown module: %s", module);
         return Collections.emptyList();
     }
+
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.iam.modal;
 
-
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
@@ -54,7 +53,6 @@ public class ModalDisplayContent implements DisplayContent {
      */
     @NonNull
     public static final String TEMPLATE_HEADER_BODY_MEDIA = "header_body_media";
-
 
     private final TextInfo heading;
     private final TextInfo body;
@@ -171,7 +169,6 @@ public class ModalDisplayContent implements DisplayContent {
             }
         }
 
-
         // Background color
         if (content.containsKey(BACKGROUND_COLOR_KEY)) {
             try {
@@ -189,7 +186,6 @@ public class ModalDisplayContent implements DisplayContent {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
         }
-
 
         // Border radius
         if (content.containsKey(BORDER_RADIUS_KEY)) {
@@ -296,7 +292,6 @@ public class ModalDisplayContent implements DisplayContent {
         return buttonLayout;
     }
 
-
     /**
      * Returns the template.
      *
@@ -307,7 +302,6 @@ public class ModalDisplayContent implements DisplayContent {
     public String getTemplate() {
         return template;
     }
-
 
     /**
      * Returns the background color.
@@ -435,7 +429,6 @@ public class ModalDisplayContent implements DisplayContent {
         return new Builder(displayContent);
     }
 
-
     /**
      * Display Content Builder.
      */
@@ -457,7 +450,8 @@ public class ModalDisplayContent implements DisplayContent {
         private float borderRadius;
         private boolean isFullscreenDisplayAllowed;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull ModalDisplayContent displayContent) {
             this.heading = displayContent.heading;
@@ -549,7 +543,6 @@ public class ModalDisplayContent implements DisplayContent {
             return this;
         }
 
-
         /**
          * Sets the template. Defaults to {@link #TEMPLATE_HEADER_MEDIA_BODY}.
          *
@@ -638,6 +631,8 @@ public class ModalDisplayContent implements DisplayContent {
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             return new ModalDisplayContent(this);
         }
+
     }
+
 }
 

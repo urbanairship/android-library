@@ -17,4 +17,5 @@ public interface InAppMessageExtender {
      */
     @NonNull
     InAppMessage extend(@NonNull InAppMessage message);
+
 }

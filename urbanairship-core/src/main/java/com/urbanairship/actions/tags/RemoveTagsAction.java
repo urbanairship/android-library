@@ -98,4 +98,5 @@ public class RemoveTagsAction extends BaseTagsAction {
         }
 
     }
+
 }

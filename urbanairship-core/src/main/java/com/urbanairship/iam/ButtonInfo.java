@@ -72,7 +72,6 @@ public class ButtonInfo implements JsonSerializable {
     private final Integer borderColor;
     private final Map<String, JsonValue> actions;
 
-
     /**
      * Default constructor.
      *
@@ -267,7 +266,6 @@ public class ButtonInfo implements JsonSerializable {
         return borderRadius;
     }
 
-
     /**
      * Returns the action names and values to be run when the button is clicked.
      *
@@ -353,6 +351,7 @@ public class ButtonInfo implements JsonSerializable {
      * Button info builder class.
      */
     public static class Builder {
+
         private TextInfo label;
         private String id;
         @Behavior
@@ -362,7 +361,8 @@ public class ButtonInfo implements JsonSerializable {
         private Integer borderColor;
         private final Map<String, JsonValue> actions = new HashMap<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         private Builder(@NonNull ButtonInfo buttonInfo) {
             this.label = buttonInfo.label;
@@ -490,6 +490,7 @@ public class ButtonInfo implements JsonSerializable {
             Checks.checkArgument(label != null, "Missing label.");
             return new ButtonInfo(this);
         }
+
     }
 
 }

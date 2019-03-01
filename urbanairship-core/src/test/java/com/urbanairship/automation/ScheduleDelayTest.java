@@ -11,7 +11,6 @@ import java.util.Arrays;
 
 import static junit.framework.Assert.assertEquals;
 
-
 public class ScheduleDelayTest extends BaseTestCase {
 
     /**
@@ -41,7 +40,7 @@ public class ScheduleDelayTest extends BaseTestCase {
         for (ScheduleDelay delay : Arrays.asList(singleScreenDelay, multiScreenDelay)) {
             assertEquals(delay.getSeconds(), 1);
             assertEquals(delay.getAppState(), ScheduleDelay.APP_STATE_FOREGROUND);
-            assertEquals(delay.getRegionId(),  "some region");
+            assertEquals(delay.getRegionId(), "some region");
 
             Trigger trigger = delay.getCancellationTriggers().get(0);
             Trigger otherTrigger = Trigger.fromJson(triggerJson.toJsonValue());
@@ -74,4 +73,5 @@ public class ScheduleDelayTest extends BaseTestCase {
 
         assertEquals(delay.getAppState(), ScheduleDelay.APP_STATE_ANY);
     }
+
 }

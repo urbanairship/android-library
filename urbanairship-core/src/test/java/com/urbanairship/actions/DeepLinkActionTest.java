@@ -1,6 +1,5 @@
 package com.urbanairship.actions;/* Copyright Urban Airship and Contributors */
 
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.shadows.ShadowApplication;
 
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -22,10 +20,10 @@ public class DeepLinkActionTest extends BaseTestCase {
 
     private DeepLinkAction action;
 
-
     @Before
     public void setup() {
-        action = new DeepLinkAction();;
+        action = new DeepLinkAction();
+        ;
     }
 
     @Test
@@ -71,7 +69,6 @@ public class DeepLinkActionTest extends BaseTestCase {
         assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
         validateLastActivity("http://example.com", message);
     }
-
 
     private void validateLastActivity(@NonNull String expectedUri, @Nullable PushMessage message) {
         ShadowApplication application = ShadowApplication.getInstance();

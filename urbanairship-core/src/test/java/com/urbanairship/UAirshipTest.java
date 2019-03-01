@@ -99,6 +99,7 @@ public class UAirshipTest extends BaseTestCase {
 
         UAirship.takeOff(null);
     }
+
     /**
      * Test that we throw an illegal state exception when shared() is called before
      * takeOff
@@ -121,5 +122,7 @@ public class UAirshipTest extends BaseTestCase {
         public void onAirshipReady(@NonNull UAirship airship) {
             onReadyCalled = true;
         }
+
     }
+
 }

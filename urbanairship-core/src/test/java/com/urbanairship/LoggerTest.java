@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 public class LoggerTest extends BaseTestCase {
+
     /**
      * Test the logger listener.
      */
@@ -40,4 +41,5 @@ public class LoggerTest extends BaseTestCase {
 
         Logger.removeListener(myListener);
     }
+
 }

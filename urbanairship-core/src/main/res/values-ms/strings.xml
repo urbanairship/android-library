@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Ya</string>
@@ -56,20 +57,20 @@
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> dipilih</item>
     </plurals>
 
-    <!-- General -->    
+    <!-- General -->
     <string name="ua_refresh">Segarkan</string>
     <string name="ua_open">Buka</string>
-    
-    <!-- Rate App Action -->    
+
+    <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Nilaikan</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Tidak, Terima kasih</string>
     <string name="ua_rate_app_action_default_title">Menikmati <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Ketik <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> untuk menilaikannya di kedai aplikasi.</string>
     <string name="ua_rate_app_action_generic_display_name">Apl ini</string>
-    
-    <!-- Channels -->    
+
+    <!-- Channels -->
     <string name="ua_default_channel_name">Pemberitahuan</string>
     <string name="ua_default_channel_description">Kemas kini aplikasi umum</string>
     <string name="ua_channel_id">ID Saluran</string>
-    
+
 </resources>

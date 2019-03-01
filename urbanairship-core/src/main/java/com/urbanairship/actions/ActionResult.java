@@ -128,7 +128,9 @@ public final class ActionResult {
      * @return The result exception.
      */
     @Nullable
-    public Exception getException() { return exception; }
+    public Exception getException() {
+        return exception;
+    }
 
     /**
      * Retrieves the status of the action run.
@@ -139,4 +141,5 @@ public final class ActionResult {
     public int getStatus() {
         return status;
     }
+
 }

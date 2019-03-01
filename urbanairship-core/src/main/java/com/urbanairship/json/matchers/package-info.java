@@ -3,5 +3,6 @@
 /**
  * @hide
  */
+
 package com.urbanairship.json.matchers;
 

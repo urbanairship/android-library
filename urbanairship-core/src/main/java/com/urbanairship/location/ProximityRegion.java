@@ -14,6 +14,7 @@ import com.urbanairship.Logger;
  * and optional latitude, longitude and RSSI.
  */
 public class ProximityRegion {
+
     /**
      * The maximum proximity region major and minor value.
      */
@@ -184,7 +185,6 @@ public class ProximityRegion {
         return this.rssi;
     }
 
-
     /**
      * Validates the proximity region object.
      *
@@ -215,5 +215,6 @@ public class ProximityRegion {
 
         return true;
     }
+
 }
 

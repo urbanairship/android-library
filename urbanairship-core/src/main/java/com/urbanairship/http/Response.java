@@ -12,6 +12,7 @@ import java.util.Map;
 
 /**
  * Model object containing response information from a request.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -108,7 +109,6 @@ public class Response {
      * Builder factory method.
      *
      * @param status The status.
-     *
      * @return A new builder instance.
      */
     public static Builder newBuilder(int status) {
@@ -219,4 +219,5 @@ public class Response {
 
         return null;
     }
+
 }

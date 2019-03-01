@@ -1,7 +1,6 @@
 package com.urbanairship.iam.view;
 /* Copyright Urban Airship and Contributors */
 
-
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -19,7 +18,6 @@ import android.support.annotation.RestrictTo;
 import android.support.v4.graphics.ColorUtils;
 import android.util.StateSet;
 import android.util.TypedValue;
-
 
 /**
  * Generates a background with an optional pressed state.
@@ -161,4 +159,5 @@ public class BackgroundDrawableBuilder {
             return stateListDrawable;
         }
     }
+
 }

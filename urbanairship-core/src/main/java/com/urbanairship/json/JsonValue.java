@@ -408,7 +408,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
             return o.isNull();
         }
 
-
         if (isFloat() && o.isFloat()) {
             return Float.compare(getFloat(0), o.getFloat(0)) == 0;
         }
@@ -553,7 +552,6 @@ public class JsonValue implements Parcelable, JsonSerializable {
 
         return JsonValue.wrapOpt(value);
     }
-
 
     /**
      * Wraps a JsonSerializable object as a JsonValue.
@@ -805,6 +803,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
 
     /**
      * JsonValue parcel creator.
+     *
      * @hide
      */
     @NonNull
@@ -833,4 +832,5 @@ public class JsonValue implements Parcelable, JsonSerializable {
     public JsonValue toJsonValue() {
         return this;
     }
+
 }

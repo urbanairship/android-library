@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -27,7 +26,7 @@
                 android:id="@+id/modal_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inflatedId="@+id/ua_iam_modal_header_body_media"/>
+                android:inflatedId="@+id/ua_iam_modal_header_body_media" />
 
         </ScrollView>
 
@@ -36,7 +35,7 @@
             android:id="@+id/buttons"
             style="@style/UrbanAirship.InAppModal.ButtonLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
 
         <FrameLayout
@@ -51,7 +50,7 @@
                 android:id="@+id/footer"
                 style="@style/UrbanAirship.InAppModal.Footer"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
         </FrameLayout>
 
@@ -66,7 +65,7 @@
         android:layout_alignEnd="@+id/modal"
         android:layout_alignRight="@+id/modal"
         android:layout_alignTop="@+id/modal"
-        android:contentDescription="@string/ua_cancel"/>
+        android:contentDescription="@string/ua_cancel" />
 
 </RelativeLayout>
 

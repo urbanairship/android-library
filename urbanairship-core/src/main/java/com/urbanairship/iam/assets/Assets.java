@@ -117,7 +117,6 @@ public class Assets implements Parcelable {
         dest.writeString(rootDirectory.getAbsolutePath());
     }
 
-
     @Override
     public int describeContents() {
         return 0;
@@ -260,4 +259,5 @@ public class Assets implements Parcelable {
             Logger.error("Failed to create directory: %s", filesDirectory.getAbsoluteFile());
         }
     }
+
 }

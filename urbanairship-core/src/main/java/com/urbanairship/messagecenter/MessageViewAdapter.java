@@ -16,12 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
 /**
  * A generic base adapter that binds items to views using the ViewBinder interface.
  */
 public abstract class MessageViewAdapter extends BaseAdapter {
-
 
     private final List<RichPushMessage> items;
     private final Context context;
@@ -116,4 +114,5 @@ public abstract class MessageViewAdapter extends BaseAdapter {
     public boolean hasStableIds() {
         return true;
     }
+
 }

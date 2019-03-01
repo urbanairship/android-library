@@ -83,6 +83,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
          * @param operation The operation.
          */
         void schedule(@NonNull Context context, long delay, @NonNull CancelableOperation operation);
+
     }
 
     /**
@@ -144,6 +145,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
 
             operations.append(operationId, operation);
         }
+
     }
 
     /**
@@ -159,7 +161,6 @@ public class AlarmOperationScheduler implements OperationScheduler {
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, UAirship.getPackageName(), listener, operation.getHandler());
             operation.addOnCancel(listener);
         }
-
 
         static class AlarmListener extends CancelableOperation implements AlarmManager.OnAlarmListener {
 
@@ -185,6 +186,9 @@ public class AlarmOperationScheduler implements OperationScheduler {
             protected void onCancel() {
                 alarmManager.cancel(this);
             }
+
         }
+
     }
+
 }

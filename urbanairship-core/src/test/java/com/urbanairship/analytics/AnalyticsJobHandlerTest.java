@@ -60,7 +60,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(Analytics.ACTION_SEND)
                                  .build();
-        
+
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
         Mockito.verify(mockEventManager).uploadEvents(UAirship.shared());
     }
@@ -118,4 +118,5 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
 
         assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
     }
+
 }

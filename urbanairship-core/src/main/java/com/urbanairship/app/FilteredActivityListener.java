@@ -69,4 +69,5 @@ public class FilteredActivityListener implements ActivityListener {
             listener.onActivityDestroyed(activity);
         }
     }
+
 }

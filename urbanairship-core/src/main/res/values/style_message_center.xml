@@ -3,7 +3,8 @@
     <!--- MESSAGE CENTER -->
 
     <!-- Item Container -->
-    <style name="Widget.UrbanAirship.MessageCenter.Item.Container" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Container"/>
+    <style name="Widget.UrbanAirship.MessageCenter.Item.Container" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Container" />
+
     <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Container" parent="">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -17,7 +18,8 @@
     </style>
 
     <!-- Item CheckBox -->
-    <style name="Widget.UrbanAirship.MessageCenter.Item.CheckBox" parent="Base.Widget.UrbanAirship.MessageCenter.Item.CheckBox"/>
+    <style name="Widget.UrbanAirship.MessageCenter.Item.CheckBox" parent="Base.Widget.UrbanAirship.MessageCenter.Item.CheckBox" />
+
     <style name="Base.Widget.UrbanAirship.MessageCenter.Item.CheckBox" parent="">
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>
@@ -27,7 +29,8 @@
     </style>
 
     <!-- Item Icon -->
-    <style name="Widget.UrbanAirship.MessageCenter.Item.Icon" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Icon"/>
+    <style name="Widget.UrbanAirship.MessageCenter.Item.Icon" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Icon" />
+
     <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Icon" parent="">
         <item name="android:scaleType">centerCrop</item>
         <item name="android:layout_width">64dp</item>
@@ -41,7 +44,8 @@
     </style>
 
     <!-- Item Title -->
-    <style name="Widget.UrbanAirship.MessageCenter.Item.Title" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Title"/>
+    <style name="Widget.UrbanAirship.MessageCenter.Item.Title" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Title" />
+
     <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Title" parent="android:TextAppearance.Medium">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -52,7 +56,8 @@
     </style>
 
     <!-- Item Date -->
-    <style name="Widget.UrbanAirship.MessageCenter.Item.Date" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Date"/>
+    <style name="Widget.UrbanAirship.MessageCenter.Item.Date" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Date" />
+
     <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Date" parent="android:TextAppearance.Small">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -64,19 +69,30 @@
     </style>
 
     <!-- Message Center Style-->
-    <style name="MessageCenter.Item.Title.TextAppearance" parent="@android:style/TextAppearance.Medium"/>
-    <style name="MessageCenter.Item.Date.TextAppearance" parent="@android:style/TextAppearance.Small"/>
-    <style name="MessageCenter.EmptyMessage.TextAppearance" parent="@android:style/TextAppearance.Small"/>
-    <style name="MessageCenter.MessageNotSelected.TextAppearance" parent="@android:style/TextAppearance.Small"/>
+    <style name="MessageCenter.Item.Title.TextAppearance" parent="@android:style/TextAppearance.Medium" />
+
+    <style name="MessageCenter.Item.Date.TextAppearance" parent="@android:style/TextAppearance.Small" />
+
+    <style name="MessageCenter.EmptyMessage.TextAppearance" parent="@android:style/TextAppearance.Small" />
+
+    <style name="MessageCenter.MessageNotSelected.TextAppearance" parent="@android:style/TextAppearance.Small" />
 
 
     <style name="MessageCenter">
         <item name="messageNotSelectedText">@string/ua_message_not_selected</item>
-        <item name="messageNotSelectedTextAppearance">@style/MessageCenter.MessageNotSelected.TextAppearance</item>
+        <item name="messageNotSelectedTextAppearance">
+            @style/MessageCenter.MessageNotSelected.TextAppearance
+        </item>
 
-        <item name="messageCenterItemTitleTextAppearance">@style/MessageCenter.Item.Title.TextAppearance</item>
-        <item name="messageCenterItemDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
-        <item name="messageCenterEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
+        <item name="messageCenterItemTitleTextAppearance">
+            @style/MessageCenter.Item.Title.TextAppearance
+        </item>
+        <item name="messageCenterItemDateTextAppearance">
+            @style/MessageCenter.Item.Date.TextAppearance
+        </item>
+        <item name="messageCenterEmptyMessageTextAppearance">
+            @style/MessageCenter.EmptyMessage.TextAppearance
+        </item>
         <item name="messageCenterItemIconEnabled">false</item>
         <item name="messageCenterEmptyMessageText">@string/ua_empty_message_list</item>
         <item name="messageCenterItemBackground">@drawable/ua_item_mc_background</item>

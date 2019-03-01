@@ -12,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -80,4 +78,5 @@ public class InAppMessageDriverTest extends BaseTestCase {
         assertEquals("some id", fromDriver.getId());
         assertEquals(schedule.getInfo().getInAppMessage(), fromDriver.getInfo().getInAppMessage());
     }
+
 }

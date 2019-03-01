@@ -16,4 +16,5 @@ public interface JsonSerializable {
      */
     @NonNull
     JsonValue toJsonValue();
+
 }
