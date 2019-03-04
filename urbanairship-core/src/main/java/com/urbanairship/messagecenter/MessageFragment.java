@@ -143,7 +143,8 @@ public class MessageFragment extends Fragment {
                 super.onPageFinished(view, url);
 
                 if (error != null) {
-                    showErrorPage(ERROR_DISPLAYING_MESSAGE);
+                    // 410 Gone: message has been permanently deleted from the backend
+                    showErrorPage(error == 410 ? ERROR_MESSAGE_UNAVAILABLE : ERROR_DISPLAYING_MESSAGE);
                 } else if (message != null) {
                     message.markRead();
                     showMessage();
@@ -363,8 +364,8 @@ public class MessageFragment extends Fragment {
                 public void onFinished(boolean success) {
                     message = UAirship.shared().getInbox().getMessage(getMessageId());
 
-                    if (message == null) {
-                        showErrorPage(success ? ERROR_MESSAGE_UNAVAILABLE : ERROR_FETCHING_MESSAGES);
+                    if (message == null || message.isExpired()) {
+                        showErrorPage(success || message.isExpired() ? ERROR_MESSAGE_UNAVAILABLE : ERROR_FETCHING_MESSAGES);
                     } else {
                         Logger.info("Loading message: " + message.getMessageId());
                         webView.loadRichPushMessage(message);
@@ -372,6 +373,11 @@ public class MessageFragment extends Fragment {
                 }
             });
         } else {
+            if (message.isExpired()) {
+                showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
+                return;
+            }
+
             Logger.info("Loading message: " + message.getMessageId());
             webView.loadRichPushMessage(message);
         }
