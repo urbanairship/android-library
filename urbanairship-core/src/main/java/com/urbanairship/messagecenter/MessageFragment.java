@@ -143,8 +143,7 @@ public class MessageFragment extends Fragment {
                 super.onPageFinished(view, url);
 
                 if (error != null) {
-                    // 410 Gone: message has been permanently deleted from the backend
-                    showErrorPage(error == 410 ? ERROR_MESSAGE_UNAVAILABLE : ERROR_DISPLAYING_MESSAGE);
+                    showErrorPage(ERROR_DISPLAYING_MESSAGE);
                 } else if (message != null) {
                     message.markRead();
                     showMessage();
