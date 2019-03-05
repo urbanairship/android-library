@@ -363,12 +363,18 @@ public class MessageFragment extends Fragment {
                 public void onFinished(boolean success) {
                     message = UAirship.shared().getInbox().getMessage(getMessageId());
 
-                    if (message == null || message.isExpired()) {
-                        showErrorPage(success || message.isExpired() ? ERROR_MESSAGE_UNAVAILABLE : ERROR_FETCHING_MESSAGES);
+                    if (!success) {
+                        showErrorPage(ERROR_FETCHING_MESSAGES);
+                        return;
                     } else {
-                        Logger.info("Loading message: " + message.getMessageId());
-                        webView.loadRichPushMessage(message);
+                        if (message == null || message.isExpired()) {
+                            showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
+                            return;
+                        }
                     }
+
+                    Logger.info("Loading message: " + message.getMessageId());
+                    webView.loadRichPushMessage(message);
                 }
             });
         } else {
