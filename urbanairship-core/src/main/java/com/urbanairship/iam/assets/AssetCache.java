@@ -14,6 +14,8 @@ import com.urbanairship.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Asset cache.
@@ -23,6 +25,14 @@ class AssetCache {
     private static final String CACHE_DIRECTORY = "com.urbanairship.iam.assets";
     private final File storageDirectory;
     private final StorageManager storageManager;
+
+    /**
+     * A map of active schedule IDs to assets. Prevents needed to load the asset's metadata
+     * from a file each time its accessed.
+     */
+    @NonNull
+    private final Map<String, Assets> activeAssets = new HashMap<>();
+
 
     /**
      * Default constructor.
@@ -43,30 +53,32 @@ class AssetCache {
     @WorkerThread
     @NonNull
     Assets getAssets(@NonNull String scheduleId) {
-        if (!storageDirectory.exists()) {
-            if (!storageDirectory.mkdirs()) {
-                Logger.error("Failed to create asset storage directory.");
+        synchronized (activeAssets) {
+            Assets assets = activeAssets.get(scheduleId);
+            if (assets == null) {
+                assets = Assets.load(getAssetsDirectory(scheduleId));
+                activeAssets.put(scheduleId, assets);
             }
+            return assets;
         }
-
-        File assetDirectory = new File(storageDirectory, scheduleId);
-        if (!assetDirectory.exists()) {
-            if (!assetDirectory.mkdirs()) {
-                Logger.error("Failed to create assets directory.");
-            }
-        }
-
-        return Assets.load(getAssetsDirectory(scheduleId));
     }
 
     /**
-     * Clears any stored assets for the schedule ID.
+     * Release the assets from the cache. Use `wipeFromDisk` parameter
+     * to control if the assets should be deleted.
      *
      * @param scheduleId The schedule ID.
+     * @param wipeFromDisk If the assets should we wiped from disk.
      */
     @WorkerThread
-    void clearAssets(@NonNull String scheduleId) {
-        FileUtils.deleteRecursively(getAssetsDirectory(scheduleId));
+    void releaseAssets(@NonNull String scheduleId, boolean wipeFromDisk) {
+        synchronized (activeAssets) {
+            if (wipeFromDisk) {
+                FileUtils.deleteRecursively(getAssetsDirectory(scheduleId));
+            }
+
+            activeAssets.remove(scheduleId);
+        }
     }
 
     /**

@@ -17,8 +17,6 @@ import com.urbanairship.iam.InAppMessageSchedule;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -52,14 +50,8 @@ public class AssetManager {
     private CachePolicyDelegate cachePolicyDelegate;
 
     @NonNull
-    private final AssetCache assetStorage;
+    private final AssetCache assetCache;
 
-    /**
-     * A map of active schedule IDs to assets. Prevents needed to load the asset's metadata
-     * from a file each time its accessed.
-     */
-    @NonNull
-    private final Map<String, Assets> activeAssets = new HashMap<>();
 
     /**
      * Default constructor. Applications should not create their own, instead use the asset manager
@@ -69,13 +61,13 @@ public class AssetManager {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AssetManager(@NonNull Context context) {
-        this.assetStorage = new AssetCache(context);
+        this.assetCache = new AssetCache(context);
         this.assetsDelegate = new AirshipPrepareAssetsDelegate();
     }
 
     @VisibleForTesting
-    AssetManager(@NonNull AssetCache assetStorage) {
-        this.assetStorage = assetStorage;
+    AssetManager(@NonNull AssetCache assetCache) {
+        this.assetCache = assetCache;
     }
 
     /**
@@ -116,8 +108,9 @@ public class AssetManager {
                 PrepareAssetsDelegate assetsDelegate = this.assetsDelegate;
                 if (assetsDelegate != null) {
                     InAppMessage message = extendedMessageCallable.call();
-                    Assets assets = assetStorage.getAssets(schedule.getId());
+                    Assets assets = assetCache.getAssets(schedule.getId());
                     assetsDelegate.onSchedule(schedule, message, assets);
+                    assetCache.releaseAssets(schedule.getId(), false);
                 }
             } catch (Exception e) {
                 Logger.error(e, "Unable to prepare assets for schedule: %s message: %s", schedule.getId(), schedule.getInfo().getInAppMessage().getId());
@@ -135,11 +128,9 @@ public class AssetManager {
     @WorkerThread
     @PrepareResult
     public int onPrepare(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessage message) {
-        activeAssets.put(schedule.getId(), getAssets(schedule.getId()));
-
         PrepareAssetsDelegate assetsDelegate = this.assetsDelegate;
         if (assetsDelegate != null) {
-            Assets assets = assetStorage.getAssets(schedule.getId());
+            Assets assets = assetCache.getAssets(schedule.getId());
             return assetsDelegate.onPrepare(schedule, message, assets);
         }
 
@@ -156,11 +147,12 @@ public class AssetManager {
     @WorkerThread
     public void onDisplayFinished(@NonNull InAppMessageSchedule schedule) {
         CachePolicyDelegate cachePolicyDelegate = this.cachePolicyDelegate;
+        boolean delete = false;
         if (cachePolicyDelegate == null || !cachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)) {
-            assetStorage.clearAssets(schedule.getId());
+            delete = true;
         }
 
-        activeAssets.remove(schedule.getId());
+        assetCache.releaseAssets(schedule.getId(), delete);
     }
 
     /**
@@ -172,7 +164,7 @@ public class AssetManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @WorkerThread
     public void onScheduleFinished(@NonNull InAppMessageSchedule schedule) {
-        assetStorage.clearAssets(schedule.getId());
+        assetCache.releaseAssets(schedule.getId(), true);
     }
 
     /**
@@ -184,8 +176,7 @@ public class AssetManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public Assets getAssets(@NonNull String scheduleId) {
-        Assets assets = activeAssets.get(scheduleId);
-        return assets == null ? assetStorage.getAssets(scheduleId) : assets;
+        return assetCache.getAssets(scheduleId);
     }
 
 }

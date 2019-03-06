@@ -119,7 +119,7 @@ public class AssetManagerTest extends BaseTestCase {
     public void testClearAssetsDisplayFinished() {
         when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)).thenReturn(false);
         assetManager.onDisplayFinished(schedule);
-        verify(mockCache).clearAssets(schedule.getId());
+        verify(mockCache).releaseAssets(schedule.getId(), true);
     }
 
     /**
@@ -130,6 +130,7 @@ public class AssetManagerTest extends BaseTestCase {
         when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)).thenReturn(true);
         assetManager.onDisplayFinished(schedule);
         verifyZeroInteractions(mockAssetsDelegate);
+        verify(mockCache).releaseAssets(schedule.getId(), false);
     }
 
     /**
@@ -138,7 +139,7 @@ public class AssetManagerTest extends BaseTestCase {
     @Test
     public void testClearOnScheduleFinished() {
         assetManager.onScheduleFinished(schedule);
-        verify(mockCache).clearAssets(schedule.getId());
+        verify(mockCache).releaseAssets(schedule.getId(), true);
     }
 
 }
