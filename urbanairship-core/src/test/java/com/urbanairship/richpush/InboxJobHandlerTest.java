@@ -63,7 +63,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
         requests = new ArrayList<>();
-        responses = new HashMap();
+        responses = new HashMap<>();
 
         RequestFactory requestFactory = new RequestFactory() {
             @NonNull
@@ -122,7 +122,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Null response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", null);
@@ -140,10 +140,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         TestRequest testRequest = requests.get(0);
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
-        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals(300L, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -155,7 +155,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Return a 304 response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -174,10 +174,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         TestRequest testRequest = requests.get(0);
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
-        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals(300L, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -192,13 +192,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channelID");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
                 Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
-                        .setLastModified(600l)
+                        .setLastModified(600L)
                         .setResponseBody("{ \"messages\": []}")
                         .build());
 
@@ -215,11 +215,11 @@ public class InboxJobHandlerTest extends BaseTestCase {
         TestRequest testRequest = requests.get(0);
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
-        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals(300L, testRequest.getIfModifiedSince());
         assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
 
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
-        assertEquals(600l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(600L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
 
         // Verify we updated the inbox
         verify(inbox).refresh(true);
@@ -237,13 +237,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channelID");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
                 Response.newBuilder(HttpURLConnection.HTTP_OK)
                         .setResponseMessage("OK")
-                        .setLastModified(600l)
+                        .setLastModified(600L)
                         .setResponseBody("{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
                                 "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
                                 "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," +
@@ -266,11 +266,11 @@ public class InboxJobHandlerTest extends BaseTestCase {
         TestRequest testRequest = requests.get(0);
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
-        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals(300L, testRequest.getIfModifiedSince());
         assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
 
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
-        assertEquals(600l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(600L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
 
         // Verify we updated the inbox
         verify(inbox).refresh(true);
@@ -285,7 +285,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -306,10 +306,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
         TestRequest testRequest = requests.get(0);
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
-        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals(300L, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+
+        // Verify we updated the inbox
+        verify(inbox).refresh(true);
     }
 
     @Test
@@ -318,7 +321,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -349,7 +352,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test create user when PushManager has a amazon channel.
      */
     @Test
-    public void testCreateUserWithAmazonChannel() throws IOException {
+    public void testCreateUserWithAmazonChannel() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
@@ -382,7 +385,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test create user when PushManager has a android channel.
      */
     @Test
-    public void testCreateUserWithAndroidChannel() throws IOException {
+    public void testCreateUserWithAndroidChannel() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
@@ -415,7 +418,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test create user when PushManager when a channel has not been created.
      */
     @Test
-    public void testCreateUserNoChannel() throws IOException {
+    public void testCreateUserNoChannel() {
         when(mockPushManager.getChannelId()).thenReturn(null);
 
         responses.put("https://device-api.urbanairship.com/api/user/",
@@ -463,7 +466,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test user update on amazon.
      */
     @Test
-    public void testUpdateUserAmazon() throws IOException {
+    public void testUpdateUserAmazon() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
@@ -496,7 +499,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test user update on android.
      */
     @Test
-    public void testUpdateUserAndroid() throws IOException {
+    public void testUpdateUserAndroid() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
         when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
@@ -529,7 +532,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test user update without a channel should not update.
      */
     @Test
-    public void testUpdateUserNoChannel() throws IOException {
+    public void testUpdateUserNoChannel() {
         // Set a user
         user.setUser("someUserId", "someUserToken");
 
@@ -548,7 +551,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      * Test user update failed request.
      */
     @Test
-    public void testUpdateUserRequestFail() throws IOException, JSONException {
+    public void testUpdateUserRequestFail() {
         // Set a user
         user.setUser("someUserId", "someUserToken");
 
