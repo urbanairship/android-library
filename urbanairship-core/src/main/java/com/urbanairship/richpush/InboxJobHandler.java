@@ -132,6 +132,7 @@ class InboxJobHandler {
             airship.getInbox().onUpdateMessagesFinished(false);
         } else {
             boolean success = this.updateMessages();
+            airship.getInbox().refresh(true);
             airship.getInbox().onUpdateMessagesFinished(success);
             this.syncReadMessageState();
             this.syncDeletedMessageState();
@@ -268,9 +269,6 @@ class InboxJobHandler {
         Set<String> deletedMessageIds = resolver.getMessageIds();
         deletedMessageIds.removeAll(serverMessageIds);
         resolver.deleteMessages(deletedMessageIds);
-
-        // update the inbox cache
-        airship.getInbox().refresh(true);
     }
 
     /**
