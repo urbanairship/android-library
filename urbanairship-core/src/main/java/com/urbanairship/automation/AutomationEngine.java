@@ -159,6 +159,19 @@ public class AutomationEngine<T extends Schedule> {
 
     private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION, Trigger.VERSION);
 
+    /**
+     * Used to sort schedule priority.
+     */
+    private final Comparator<ScheduleEntry> SCHEDULE_PRIORITY_COMPARATOR =  new Comparator<ScheduleEntry>() {
+        @Override
+        public int compare(ScheduleEntry lh, ScheduleEntry rh) {
+            if (lh.getPriority() == rh.getPriority()) {
+                return 0;
+            }
+            return lh.getPriority() > rh.getPriority() ? 1 : -1;
+        }
+    };
+
     private final AutomationDataManager dataManager;
     private final ActivityMonitor activityMonitor;
     private final AutomationDriver<T> driver;
@@ -741,12 +754,7 @@ public class AutomationEngine<T extends Schedule> {
         // Collections.singletonList and Collections.emptyList will throw an UnsupportedOperationException
         // if you try to sort the entries. Make sure we have more than 1 element (ArrayList) before sorting.
         if (entries.size() > 1) {
-            Collections.sort(entries, new Comparator<ScheduleEntry>() {
-                @Override
-                public int compare(ScheduleEntry lh, ScheduleEntry rh) {
-                    return lh.getPriority() - rh.getPriority();
-                }
-            });
+            Collections.sort(entries, SCHEDULE_PRIORITY_COMPARATOR);
         }
     }
 
