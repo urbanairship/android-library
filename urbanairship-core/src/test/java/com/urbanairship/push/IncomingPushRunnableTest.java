@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
@@ -21,7 +23,8 @@ import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.NotificationArguments;
-import com.urbanairship.push.notifications.NotificationFactory;
+import com.urbanairship.push.notifications.NotificationChannelCompat;
+import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
 
@@ -40,7 +43,6 @@ import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -52,6 +54,7 @@ import static org.mockito.Mockito.when;
 public class IncomingPushRunnableTest extends BaseTestCase {
 
     public static final int TEST_NOTIFICATION_ID = 123;
+    public static final String TEST_NOTIFICATION_CHANNEL_ID = "Test notification channel";
 
     private Bundle pushBundle;
 
@@ -59,6 +62,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private NotificationManagerCompat notificationManager;
     private Analytics analytics;
     private LegacyInAppMessageManager legacyInAppMessageManager;
+    private NotificationChannelRegistry mockChannelRegistry;
 
     private TestNotificationProvider notificationProvider;
 
@@ -83,6 +87,14 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         notificationManager = mock(NotificationManagerCompat.class);
 
         when(pushManager.isPushAvailable()).thenReturn(true);
+
+        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
+        mockChannelRegistry = mock(NotificationChannelRegistry.class);
+        when(pushManager.getNotificationChannelRegistry()).thenReturn(mockChannelRegistry);
 
 
         notificationProvider = new TestNotificationProvider();
@@ -373,53 +385,35 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     }
 
     /**
-     * Test when sound is disabled the flag for DEFAULT_SOUND is removed and the notification sound
-     * is set to null.
+     * Test that when a push is delivered pre-Oreo the notification settings are drawn
+     * from our notification channel compat layer.
      */
     @Test
     @Config(sdk = 25)
-    public void testDeliverPushSoundDisabled() {
+    public void testDeliverPushPreOreo() {
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        // Disable sound
-        when(pushManager.isSoundEnabled()).thenReturn(false);
+        // Create a channel and set some non-default values
+        NotificationChannelCompat channelCompat = new NotificationChannelCompat(TEST_NOTIFICATION_CHANNEL_ID, "Test Notification Channel", NotificationManager.IMPORTANCE_HIGH);
+        channelCompat.setSound(Uri.parse("cool://sound"));
+        channelCompat.enableVibration(true);
+        channelCompat.enableLights(true);
+        channelCompat.setLightColor(123);
+
+        when(mockChannelRegistry.getNotificationChannelSync(TEST_NOTIFICATION_CHANNEL_ID)).thenReturn(channelCompat);
         notificationProvider.notification = createNotification();
-        notificationProvider.notification.sound = Uri.parse("some://sound");
-        notificationProvider.notification.defaults = NotificationCompat.DEFAULT_ALL;
 
         pushRunnable.run();
 
-        assertNull("The notification sound should be null.", notificationProvider.notification.sound);
-        assertEquals("The notification defaults should not include DEFAULT_SOUND.",
-                notificationProvider.notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
-    }
+        Notification notification = notificationProvider.notification;
 
-    /**
-     * Test when sound is disabled the flag for DEFAULT_VIBRATE is removed and the notification vibrate
-     * is set to null.
-     */
-    @Test
-    @Config(sdk = 25)
-    public void testDeliverPushVibrateDisabled() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
-
-        // Disable vibrate
-        when(pushManager.isVibrateEnabled()).thenReturn(false);
-        notificationProvider.notification = createNotification();
-        notificationProvider.notification.defaults = NotificationCompat.DEFAULT_ALL;
-        notificationProvider.notification.vibrate = new long[] { 0L, 1L, 200L };
-
-        pushRunnable.run();
-
-        assertNull("The notification sound should be null.", notificationProvider.notification.vibrate);
-        assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
-                notificationProvider.notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
+        assertEquals(notification.sound, channelCompat.getSound());
+        assertEquals(NotificationManager.IMPORTANCE_HIGH, channelCompat.getImportance());
+        assertEquals(notification.defaults & Notification.DEFAULT_VIBRATE, Notification.DEFAULT_VIBRATE);
+        assertEquals(notification.ledARGB, channelCompat.getLightColor());
     }
 
     /**
@@ -445,27 +439,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(legacyInAppMessageManager).onPushReceived(push);
     }
 
-    /**
-     * Test the notification defaults in quiet time.
-     */
-    @Test
-    public void testInQuietTime() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
-
-        when(pushManager.isVibrateEnabled()).thenReturn(true);
-        when(pushManager.isSoundEnabled()).thenReturn(true);
-        when(pushManager.isInQuietTime()).thenReturn(true);
-
-        notificationProvider.notification = createNotification();
-
-        pushRunnable.run();
-
-        assertNull("The notification sound should be null.", notificationProvider.notification.sound);
-        assertEquals("The notification defaults should not include vibrate or sound.", 0, notificationProvider.notification.defaults);
-    }
 
 
     private Notification createNotification() {
@@ -476,7 +449,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .build();
     }
 
-    public static class TestNotificationProvider implements NotificationProvider {
+    public static class TestNotificationProvider extends NotificationProvider {
 
         public Notification notification;
         public String tag;
@@ -485,6 +458,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         @Override
         public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
             return NotificationArguments.newBuilder(message)
+                                        .setNotificationChannelId(TEST_NOTIFICATION_CHANNEL_ID)
                                         .setNotificationId(tag, TEST_NOTIFICATION_ID)
                                         .build();
         }

@@ -94,7 +94,7 @@ public class AirshipNotificationProviderTest extends BaseTestCase {
         provider.setDefaultNotificationChannelId("does not exist");
         NotificationArguments arguments = provider.onCreateNotificationArguments(context, pushMessage);
 
-        assertEquals(NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL, arguments.getNotificationChannelId());
+        assertEquals(NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL, arguments.getNotificationChannelId());
     }
 
     /**

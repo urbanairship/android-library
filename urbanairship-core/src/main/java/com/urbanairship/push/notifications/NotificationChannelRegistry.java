@@ -95,12 +95,22 @@ public class NotificationChannelRegistry {
      */
     public PendingResult<NotificationChannelCompat> getNotificationChannel(@NonNull final String id) {
         final PendingResult<NotificationChannelCompat> pendingResult = new PendingResult<>();
-
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                NotificationChannelCompat channelCompat = getNotificationChannelSync(id);
-                pendingResult.setResult(channelCompat);
+                NotificationChannelCompat result = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    NotificationChannel channel = getNotificationManager().getNotificationChannel(id);
+
+                    if (channel != null) {
+                        result = new NotificationChannelCompat(channel);
+                    }
+
+                } else {
+                    result = dataManager.getChannel(id);
+                }
+
+                pendingResult.setResult(result);
             }
         });
 
@@ -113,17 +123,14 @@ public class NotificationChannelRegistry {
      * @return A NotificationChannelCompat, or null if one could not be found.
      */
     @Nullable
-    public NotificationChannelCompat getNotificationChannelSync(String id) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = getNotificationManager().getNotificationChannel(id);
-
-            if (channel != null) {
-                NotificationChannelCompat channelCompat = new NotificationChannelCompat(channel);
-                return channelCompat;
-            }
-
-        } else {
-            return dataManager.getChannel(id);
+    public NotificationChannelCompat getNotificationChannelSync(@NonNull String id) {
+        try {
+            return getNotificationChannel(id).get();
+        } catch (InterruptedException e) {
+            Logger.error(e, "Failed to get notification channel.");
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            Logger.error(e, "Failed to get notification channel.");
         }
 
         return null;

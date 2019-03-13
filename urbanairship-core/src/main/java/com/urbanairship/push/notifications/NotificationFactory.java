@@ -49,7 +49,7 @@ public class NotificationFactory {
      * Default notification channel ID.
      */
     @NonNull
-    public static final String DEFAULT_NOTIFICATION_CHANNEL = NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL;
+    public static final String DEFAULT_NOTIFICATION_CHANNEL = NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL;
 
     private int titleId;
     private int smallIconId;
