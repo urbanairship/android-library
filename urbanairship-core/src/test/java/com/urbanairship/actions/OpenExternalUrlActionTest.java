@@ -10,6 +10,7 @@ import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.MalformedURLException;
@@ -17,6 +18,7 @@ import java.net.MalformedURLException;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.robolectric.Shadows.shadowOf;
 
 public class OpenExternalUrlActionTest extends BaseTestCase {
 
@@ -82,7 +84,7 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      * the open url action
      */
     private void validateLastActivity(String expectedUri) {
-        ShadowApplication application = ShadowApplication.getInstance();
+        ShadowApplication application = shadowOf(RuntimeEnvironment.application);
         Intent intent = application.getNextStartedActivity();
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.getFlags());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());

@@ -11,7 +11,6 @@ import com.urbanairship.json.JsonValue;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowLooper;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -22,13 +21,13 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
     private DefaultDisplayCoordinator coordinator;
     private InAppMessage messageOne;
     private InAppMessage messageTwo;
-    private ShadowLooper mainLooper;
+    private Looper mainLooper;
 
     @Before
     public void setup() {
         activityMonitor = new TestActivityMonitor();
         coordinator = new DefaultDisplayCoordinator(activityMonitor);
-        mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        mainLooper = Looper.getMainLooper();
 
         messageOne = InAppMessage.newBuilder()
                                  .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
@@ -76,7 +75,7 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
         assertFalse(coordinator.isReady());
 
         // Advance the looper to free up the display lock
-        mainLooper.runToEndOfTasks();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
 
         // Display should be ready
         assertTrue(coordinator.isReady());

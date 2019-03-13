@@ -13,7 +13,6 @@ import com.urbanairship.BaseTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPackageManager;
 
 import static org.junit.Assert.assertEquals;
@@ -76,7 +75,7 @@ public class ShareActionTest extends BaseTestCase {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "Share text"));
 
         // Verify the chooser intent has the right flags and actions
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        Intent startedIntent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
         assertEquals(startedIntent.getAction(), Intent.ACTION_CHOOSER);
         assertEquals(startedIntent.getFlags(), Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -127,7 +126,7 @@ public class ShareActionTest extends BaseTestCase {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "Share text"));
 
         // Should still start the intent
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        Intent startedIntent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
         assertEquals(startedIntent.getAction(), Intent.ACTION_CHOOSER);
         assertEquals(startedIntent.getFlags(), Intent.FLAG_ACTIVITY_NEW_TASK);
 

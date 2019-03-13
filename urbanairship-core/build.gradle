@@ -11,24 +11,23 @@ android.testOptions.unitTests.includeAndroidResources = true
 
 dependencies {
     // Required
-    api "com.android.support:support-v4:${airshipProperties.supportLibVersion}"
-    api "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
+    api "com.android.support:support-v4:$rootProject.supportLibVersion"
+    api "com.android.support:support-annotations:$rootProject.supportLibVersion"
 
     // Optional
-    compileOnly "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
-    compileOnly "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
-    compileOnly "com.google.android.gms:play-services-base:${airshipProperties.playServicesBaseVersion}"
+    compileOnly "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
+    compileOnly "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+    compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 
     // Tests
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.7.22'
-    testImplementation 'org.robolectric:robolectric:3.8'
-    testImplementation 'org.robolectric:shadows-supportv4:3.8'
-    testImplementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
-    testImplementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
+    testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation "org.robolectric:shadows-supportv4:$rootProject.robolectricVersion"
+    testImplementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
 
     // Docs
-    doclava("com.google.doclava:doclava:1.0.6")
+    doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")
 }
 
 android.libraryVariants.all { variant ->

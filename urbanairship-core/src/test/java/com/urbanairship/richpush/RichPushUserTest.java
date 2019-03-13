@@ -2,6 +2,8 @@
 
 package com.urbanairship.richpush;
 
+import android.app.Application;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
@@ -15,7 +17,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -137,8 +138,8 @@ public class RichPushUserTest extends BaseTestCase {
      */
     @Test
     public void testUpdateUserFalse() throws InterruptedException {
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
+        Application application = RuntimeEnvironment.application;
+        Shadows.shadowOf(application).clearStartedServices();
 
         user.update(false);
 

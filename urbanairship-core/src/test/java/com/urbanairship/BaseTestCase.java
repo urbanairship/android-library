@@ -11,8 +11,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-// Current robolectric does not support API 28
-@Config(sdk = 27,
+@Config(sdk = 28,
         shadows = { ShadowNotificationManagerExtension.class },
         application = TestApplication.class
 )

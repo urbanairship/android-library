@@ -40,7 +40,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,7 +83,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private InAppMessageSchedule schedule;
 
     private InAppMessageAdapter mockAdapter;
-    private ShadowLooper mainLooper;
+    private Looper mainLooper;
     private ActionRunRequestFactory actionRunRequestFactory;
     private InAppMessageListener mockListener;
     private TagGroupManager mockTagManager;
@@ -101,7 +100,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
         mockListener = mock(InAppMessageListener.class);
-        mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        mainLooper = Looper.getMainLooper();
         actionRunRequestFactory = mock(ActionRunRequestFactory.class);
         mockTagManager = mock(TagGroupManager.class);
         mockCoordinator = mock(DisplayCoordinator.class);
@@ -174,7 +173,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         manager.addListener(mockListener);
 
         // Finish init on the main thread
-        mainLooper.runToEndOfTasks();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
     }
 
     @Test
@@ -347,8 +346,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAdapter, times(1)).onPrepare(any(Context.class), any(Assets.class));
 
         // Advance the looper
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        mainLooper.runToEndOfTasks();
+        Looper mainLooper = Looper.getMainLooper();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
 
         // Verify it was called again
         verify(mockAdapter, times(2)).onPrepare(any(Context.class), any(Assets.class));
@@ -365,8 +364,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAssetManager, times(1)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
 
         // Advance the looper
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        mainLooper.runToEndOfTasks();
+        Looper mainLooper = Looper.getMainLooper();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
 
         // Verify it was called again
         verify(mockAssetManager, times(2)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
@@ -388,8 +387,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
 
         // Advance the looper to make sure its not called again
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        mainLooper.runToEndOfTasks();
+        Looper mainLooper = Looper.getMainLooper();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
     }
 
     @Test
@@ -406,8 +405,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
 
         // Advance the looper to make sure its not called again
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        mainLooper.runToEndOfTasks();
+        Looper mainLooper = Looper.getMainLooper();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
     }
 
     @Test
@@ -701,14 +700,14 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Helper method to run all the looper tasks.
      */
     private void runLooperTasks() {
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        ShadowLooper backgroundLooper = Shadows.shadowOf(AirshipLoopers.getBackgroundLooper());
+        Looper mainLooper = Looper.getMainLooper();
+        Looper backgroundLooper = AirshipLoopers.getBackgroundLooper();
 
         do {
-            mainLooper.runToEndOfTasks();
-            backgroundLooper.runToEndOfTasks();
+            Shadows.shadowOf(mainLooper).runToEndOfTasks();
+            Shadows.shadowOf(backgroundLooper).runToEndOfTasks();
         }
-        while (mainLooper.getScheduler().areAnyRunnable() || backgroundLooper.getScheduler().areAnyRunnable());
+        while (Shadows.shadowOf(mainLooper).getScheduler().areAnyRunnable() || Shadows.shadowOf(backgroundLooper).getScheduler().areAnyRunnable());
     }
 
     public static class TestInAppRemoteDataObserver extends InAppRemoteDataObserver {

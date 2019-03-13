@@ -10,11 +10,13 @@ import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.robolectric.Shadows.shadowOf;
 
 public class DeepLinkActionTest extends BaseTestCase {
 
@@ -71,7 +73,7 @@ public class DeepLinkActionTest extends BaseTestCase {
     }
 
     private void validateLastActivity(@NonNull String expectedUri, @Nullable PushMessage message) {
-        ShadowApplication application = ShadowApplication.getInstance();
+        ShadowApplication application = shadowOf(RuntimeEnvironment.application);
         Intent intent = application.getNextStartedActivity();
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.getFlags());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());

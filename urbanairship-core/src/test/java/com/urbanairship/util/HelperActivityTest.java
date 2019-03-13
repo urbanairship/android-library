@@ -13,8 +13,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowActivity;
 import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertNotNull;
@@ -35,8 +35,7 @@ public class HelperActivityTest extends BaseTestCase {
                                              .create()
                                              .get();
 
-        ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-        assertEquals(shadowActivity.getNextStartedActivityForResult().intent, intent);
+        assertEquals(Shadows.shadowOf(activity).getNextStartedActivityForResult().intent, intent);
         assertFalse(activity.isFinishing());
     }
 
@@ -47,8 +46,7 @@ public class HelperActivityTest extends BaseTestCase {
     public void testHandleStartingActivityNoExtras() {
         HelperActivity activity = Robolectric.buildActivity(HelperActivity.class).create().get();
 
-        ShadowActivity shadowActivity = Shadows.shadowOf(activity);
-        assertNull(shadowActivity.getNextStartedActivityForResult());
+        assertNull(Shadows.shadowOf(activity).getNextStartedActivityForResult());
         assertTrue(activity.isFinishing());
     }
 
@@ -76,7 +74,7 @@ public class HelperActivityTest extends BaseTestCase {
         thread.start();
 
         // Wait til we have a started activity from the action thread
-        ShadowApplication application = ShadowApplication.getInstance();
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         for (int i = 0; i < 10; i++) {
             Intent intent = application.peekNextStartedActivity();
             if (intent != null && intent.getComponent().getClassName().equals(HelperActivity.class.getName())) {

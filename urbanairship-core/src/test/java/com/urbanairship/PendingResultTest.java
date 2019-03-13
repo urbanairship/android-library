@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowLooper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +23,11 @@ public class PendingResultTest extends BaseTestCase {
     private TestResultCallback<Boolean> resultCallback;
     private PendingResult<Boolean> pendingResult;
 
-    private ShadowLooper looper;
+    private Looper looper;
 
     @Before
     public void setup() {
-        looper = Shadows.shadowOf(Looper.myLooper());
+        looper = Looper.myLooper();
         resultCallback = new TestResultCallback<>();
         pendingResult = new PendingResult<>();
         pendingResult.addResultCallback(Looper.myLooper(), resultCallback);
@@ -44,7 +43,7 @@ public class PendingResultTest extends BaseTestCase {
         assertFalse(pendingResult.isCancelled());
 
         // Verify callback is still called
-        looper.runToEndOfTasks();
+        Shadows.shadowOf(looper).runToEndOfTasks();
         assertEquals(1, resultCallback.results.size());
         assertTrue(resultCallback.results.get(0));
 

@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$airshipProperties.kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
     }
 }
 
@@ -18,35 +18,34 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-
 android.dataBinding.enabled = true
 
 dependencies {
     api project(':urbanairship-core')
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$airshipProperties.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$airshipProperties.kotlinCoroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$airshipProperties.kotlinCoroutinesVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
 
     // Room screens
-    implementation "android.arch.persistence.room:runtime:$airshipProperties.roomVersion"
-    kapt "android.arch.persistence.room:compiler:$airshipProperties.roomVersion"
+    implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
+    kapt "android.arch.persistence.room:compiler:$rootProject.roomVersion"
 
     // Constraint layout
-    implementation "com.android.support.constraint:constraint-layout:$airshipProperties.constraintLayoutVersion"
+    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
 
     // Lifecycle screens
-    implementation "android.arch.lifecycle:extensions:$airshipProperties.lifeCycleVersion"
-    kapt "android.arch.lifecycle:compiler:$airshipProperties.lifeCycleVersion"
+    implementation "android.arch.lifecycle:extensions:$rootProject.lifeCycleVersion"
+    kapt "android.arch.lifecycle:compiler:$rootProject.lifeCycleVersion"
 
     // Paging
-    implementation "android.arch.paging:runtime:$airshipProperties.pagingVersion"
+    implementation "android.arch.paging:runtime:$rootProject.pagingVersion"
 
     // Support libraries
-    implementation "com.android.support:appcompat-v7:$airshipProperties.supportLibVersion"
-    implementation "com.android.support:design:$airshipProperties.supportLibVersion"
-    implementation "com.android.support:support-vector-drawable:$airshipProperties.supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+    implementation "com.android.support:design:$rootProject.supportLibVersion"
+    implementation "com.android.support:support-vector-drawable:$rootProject.supportLibVersion"
 
 }
 

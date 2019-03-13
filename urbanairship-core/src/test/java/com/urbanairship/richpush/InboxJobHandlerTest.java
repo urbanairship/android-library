@@ -15,12 +15,10 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.PushManager;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;

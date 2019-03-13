@@ -15,12 +15,13 @@ import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.RuntimeEnvironment;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.robolectric.Shadows.shadowOf;
 
 public class JobDispatcherTest extends BaseTestCase {
 
@@ -72,7 +73,7 @@ public class JobDispatcherTest extends BaseTestCase {
         activityMonitor.startActivity();
         dispatcher.dispatch(jobInfo);
 
-        Intent intent = ShadowApplication.getInstance().getNextStartedService();
+        Intent intent = shadowOf(RuntimeEnvironment.application).getNextStartedService();
 
         Intent expectedIntent = AirshipService.createIntent(context, jobInfo, null);
         assertEquals(expectedIntent.getAction(), intent.getAction());

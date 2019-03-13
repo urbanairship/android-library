@@ -12,9 +12,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowLooper;
 
 import java.util.List;
 
@@ -28,12 +27,12 @@ public class UAirshipTest extends BaseTestCase {
     public ExpectedException exception = ExpectedException.none();
 
     AirshipConfigOptions configOptions;
-    ShadowLooper looper;
+    Looper looper;
     Application application;
 
     @Before
     public void setup() {
-        looper = Shadows.shadowOf(Looper.myLooper());
+        looper = Looper.myLooper();
 
         configOptions = new AirshipConfigOptions.Builder()
                 .setProductionAppKey("appKey")
@@ -76,14 +75,14 @@ public class UAirshipTest extends BaseTestCase {
 
         // Block until its ready
         UAirship.shared();
-        looper.runToEndOfTasks();
+        Shadows.shadowOf(looper).runToEndOfTasks();
 
         assertTrue(testCallback.onReadyCalled);
         assertTrue(takeOffCallback.onReadyCalled);
         assertFalse(cancelCallback.onReadyCalled);
 
         // Verify the airship ready intent was fired
-        List<Intent> intents = ShadowApplication.getInstance().getBroadcastIntents();
+        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
         assertEquals(intents.size(), 1);
         assertEquals(intents.get(0).getAction(), UAirship.ACTION_AIRSHIP_READY);
     }

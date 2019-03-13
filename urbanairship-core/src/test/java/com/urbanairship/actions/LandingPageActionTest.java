@@ -10,6 +10,7 @@ import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.robolectric.Shadows.shadowOf;
 
 public class LandingPageActionTest extends BaseTestCase {
 
@@ -116,7 +118,7 @@ public class LandingPageActionTest extends BaseTestCase {
     }
 
     private void verifyPerform(Object value, String expectedIntentData) {
-        ShadowApplication application = ShadowApplication.getInstance();
+        ShadowApplication application = shadowOf(RuntimeEnvironment.application);
 
         @Action.Situation int[] situations = new int[] {
                 Action.SITUATION_PUSH_OPENED,

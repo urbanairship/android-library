@@ -8,7 +8,6 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.job.JobDispatcher;
 

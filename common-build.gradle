@@ -10,11 +10,11 @@ apply plugin: 'jacoco'
 
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion rootProject.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 28
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${getMavenVersion()}\""
         buildConfigField "String", "SDK_VERSION", "\"${getSdkVersionString()}\""
@@ -129,17 +129,17 @@ bintray {
 
 def getSdkVersionString() {
     def result = "!SDK-VERSION-STRING!:" + project.group + ":" + project.name + ":"
-    if (airshipProperties['versionQualifier']) {
-        result += airshipProperties.versionQualifier + ":"
+    if (rootProject.hasProperty('airshipVersionQualifier')) {
+        result += rootProject.airshipVersionQualifier + ":"
     }
-    result += airshipProperties.version
+    result += rootProject.airshipVersion
     return result
 }
 
 def getMavenVersion() {
-    def result = airshipProperties.version
-    if (airshipProperties['versionQualifier']) {
-        result += "-" + airshipProperties.versionQualifier
+    def result = rootProject.airshipVersion
+    if (project.hasProperty("airshipVersionQualifier")) {
+        result += "-" + airshipVersionQualifier
     }
     return result
 }

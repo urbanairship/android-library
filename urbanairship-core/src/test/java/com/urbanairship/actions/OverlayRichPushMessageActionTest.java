@@ -13,13 +13,14 @@ import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.RuntimeEnvironment;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
@@ -164,7 +165,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "the_message_id"));
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        Intent startedIntent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
         assertEquals("message:the_message_id", startedIntent.getDataString());
     }
@@ -185,7 +186,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        Intent startedIntent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
         assertEquals("message:the_message_id", startedIntent.getDataString());
     }
@@ -204,7 +205,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        Intent startedIntent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
         assertEquals("message:the_message_id", startedIntent.getDataString());
     }

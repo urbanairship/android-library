@@ -4,5 +4,5 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesAdsIdentifierVersion}"
+    implementation "com.google.android.gms:play-services-ads-identifier:$rootProject.playServicesAdsIdentifierVersion"
 }

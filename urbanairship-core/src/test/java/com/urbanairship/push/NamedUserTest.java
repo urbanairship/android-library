@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.RuntimeEnvironment;
 
 import java.net.URL;
 
@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 public class NamedUserTest extends BaseTestCase {
 
@@ -113,7 +114,7 @@ public class NamedUserTest extends BaseTestCase {
     @Test
     public void testInit() {
         namedUser.setId("test");
-        ShadowApplication.getInstance().clearStartedServices();
+        shadowOf(RuntimeEnvironment.application).clearStartedServices();
 
         namedUser.init();
 

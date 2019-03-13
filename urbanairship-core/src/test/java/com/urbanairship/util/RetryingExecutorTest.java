@@ -11,7 +11,6 @@ import com.urbanairship.BaseTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +25,7 @@ import static org.mockito.Mockito.verify;
 public class RetryingExecutorTest extends BaseTestCase {
 
     private RetryingExecutor executor;
-    private ShadowLooper mainLooper;
+    private Looper mainLooper;
 
     @Before
     public void setup() {
@@ -37,7 +36,7 @@ public class RetryingExecutorTest extends BaseTestCase {
             }
         });
 
-        mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        mainLooper = Looper.getMainLooper();
     }
 
     @Test
@@ -109,7 +108,7 @@ public class RetryingExecutorTest extends BaseTestCase {
         assertEquals(4, operation.runCount);
 
         // Run the looper to the end of tasks, make sure the run count is still 4
-        mainLooper.runToEndOfTasks();
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
         assertEquals(4, operation.runCount);
     }
 
@@ -141,7 +140,7 @@ public class RetryingExecutorTest extends BaseTestCase {
     }
 
     private void advanceLooper(long millis) {
-        mainLooper.getScheduler().advanceBy(millis, TimeUnit.MILLISECONDS);
+        Shadows.shadowOf(mainLooper).getScheduler().advanceBy(millis, TimeUnit.MILLISECONDS);
     }
 
     public static class TestOperation implements RetryingExecutor.Operation {

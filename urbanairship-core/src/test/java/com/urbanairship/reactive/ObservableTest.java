@@ -16,7 +16,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowLooper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,9 +59,9 @@ public class ObservableTest extends BaseTestCase {
             Assert.assertEquals(completes.intValue(), completeCount);
             Assert.assertEquals(errors.intValue(), errorCount);
         } else {
-            ShadowLooper shadowLooper = Shadows.shadowOf(looper);
-            while (shadowLooper.getScheduler().areAnyRunnable()) {
-                shadowLooper.runToEndOfTasks();
+
+            while (Shadows.shadowOf(looper).getScheduler().areAnyRunnable()) {
+                Shadows.shadowOf(looper).runToEndOfTasks();
             }
 
             Assert.assertEquals(values, expectedValues);

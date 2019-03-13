@@ -2,6 +2,7 @@
 
 package com.urbanairship.push;
 
+import android.app.Application;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -29,8 +30,6 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.List;
 
@@ -148,10 +147,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notification);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
 
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+        PendingIntent pendingIntent = notification.contentIntent;
+        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent).isBroadcastIntent());
 
-        Intent intent = shadowPendingIntent.getSavedIntent();
+        Intent intent = Shadows.shadowOf(pendingIntent).getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
         assertBundlesEquals("The push message bundles should match.", pushBundle, intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
@@ -191,8 +190,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
+        Application application = RuntimeEnvironment.application;
+        List<Intent> intents = Shadows.shadowOf(application).getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
         PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
@@ -213,8 +212,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
+        Application application = RuntimeEnvironment.application;
+        List<Intent> intents = Shadows.shadowOf(application).getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
 
         PushMessage push = PushMessage.fromIntent(i);
@@ -390,10 +389,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+        PendingIntent pendingIntent2 = notification.contentIntent;
+        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent2).isBroadcastIntent());
 
-        Intent intent = shadowPendingIntent.getSavedIntent();
+        Intent intent = Shadows.shadowOf(pendingIntent2).getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification content intent is not null.", pendingIntent);
@@ -420,10 +419,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+        PendingIntent pendingIntent2 = notification.deleteIntent;
+        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent2).isBroadcastIntent());
 
-        Intent intent = shadowPendingIntent.getSavedIntent();
+        Intent intent = Shadows.shadowOf(pendingIntent2).getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification delete intent is not null.", pendingIntent);
