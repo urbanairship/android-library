@@ -663,6 +663,21 @@ public class PushMessage implements Parcelable, JsonSerializable {
         return data.get(EXTRA_NOTIFICATION_CHANNEL);
     }
 
+    /**
+     * Returns the notification channel that should be used when posting the notification or the
+     * default channel if its not defined.
+     *
+     * @return Either the notification channel or the default channel if the channel is not defined.
+     */
+    @Nullable
+    public String getNotificationChannel(@Nullable String defaultChannel) {
+        String channel = data.get(EXTRA_NOTIFICATION_CHANNEL);
+        if (channel == null) {
+            return defaultChannel;
+        }
+        return channel;
+    }
+
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) {

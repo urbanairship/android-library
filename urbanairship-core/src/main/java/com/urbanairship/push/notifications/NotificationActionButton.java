@@ -15,7 +15,6 @@ import android.support.v4.app.NotificationCompat;
 import com.urbanairship.CoreActivity;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,12 +129,11 @@ public class NotificationActionButton {
      *
      * @param context The application context.
      * @param actionsPayload The actions payload for the interactive buttons.
-     * @param message The PushMessage.
-     * @param notificationId The notification ID.
+     * @param arguments The notification arguments.
      * @return The action as a NotificationCompat.Action
      */
     @NonNull
-    NotificationCompat.Action createAndroidNotificationAction(@NonNull Context context, @Nullable String actionsPayload, @NonNull PushMessage message, int notificationId) {
+    NotificationCompat.Action createAndroidNotificationAction(@NonNull Context context, @Nullable String actionsPayload, @NonNull NotificationArguments arguments) {
         String label = getLabel(context);
         if (label == null) {
             label = "";
@@ -147,8 +145,9 @@ public class NotificationActionButton {
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, arguments.getMessage().getPushBundle())
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId())
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, arguments.getNotificationTag())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, id)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD, actionsPayload)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, isForegroundAction)

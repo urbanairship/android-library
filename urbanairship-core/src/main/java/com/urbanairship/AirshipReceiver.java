@@ -106,7 +106,8 @@ public class AirshipReceiver extends BroadcastReceiver {
 
         if (notificationPosted) {
             int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
-            onNotificationPosted(context, new NotificationInfo(message, id));
+            String tag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
+            onNotificationPosted(context, new NotificationInfo(message, tag, id));
         }
     }
 
@@ -118,13 +119,15 @@ public class AirshipReceiver extends BroadcastReceiver {
      */
     private void handlePushOpened(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
+        String tag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
+
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
             return;
         }
 
-        NotificationInfo notificationInfo = new NotificationInfo(message, id);
+        NotificationInfo notificationInfo = new NotificationInfo(message, tag, id);
 
         boolean launchedActivity;
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID)) {
@@ -178,6 +181,7 @@ public class AirshipReceiver extends BroadcastReceiver {
      */
     private void handleDismissedIntent(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
+        String tag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
 
         if (!intent.hasExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE)) {
             Logger.error("AirshipReceiver - Intent is missing push message for: %s", intent.getAction());
@@ -190,7 +194,7 @@ public class AirshipReceiver extends BroadcastReceiver {
             return;
         }
 
-        onNotificationDismissed(context, new NotificationInfo(message, id));
+        onNotificationDismissed(context, new NotificationInfo(message, tag, id));
     }
 
     /**
@@ -285,9 +289,11 @@ public class AirshipReceiver extends BroadcastReceiver {
 
         private final PushMessage message;
         private final int notificationId;
+        private final String notificationTag;
 
-        private NotificationInfo(@NonNull PushMessage message, int notificationId) {
+        private NotificationInfo(@NonNull PushMessage message, @Nullable String notificationTag, int notificationId) {
             this.message = message;
+            this.notificationTag = notificationTag;
             this.notificationId = notificationId;
         }
 
@@ -317,7 +323,7 @@ public class AirshipReceiver extends BroadcastReceiver {
          */
         @Nullable
         public String getNotificationTag() {
-            return message.getNotificationTag();
+            return notificationTag;
         }
 
     }

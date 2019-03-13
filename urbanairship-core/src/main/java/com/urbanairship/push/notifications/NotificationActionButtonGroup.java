@@ -11,7 +11,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -42,14 +41,13 @@ public class NotificationActionButtonGroup {
      * Creates a list of Android notification actions.
      *
      * @param context The application context.
-     * @param message The incoming push message.
-     * @param notificationId The notification ID.
+     * @param arguments The notification arguments.
      * @param actionsPayload The actions payload that defines the Urban Airship actions for each
      * interactive notification action.
      * @return List of Android notification actions.
      */
     @NonNull
-    List<NotificationCompat.Action> createAndroidActions(@NonNull Context context, @NonNull PushMessage message, int notificationId, @Nullable String actionsPayload) {
+    List<NotificationCompat.Action> createAndroidActions(@NonNull Context context, @NonNull NotificationArguments arguments, @Nullable String actionsPayload) {
         final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
         JsonMap notificationActionMap = null;
@@ -64,7 +62,7 @@ public class NotificationActionButtonGroup {
 
         for (NotificationActionButton action : getNotificationActionButtons()) {
             String actions = notificationActionMap == null ? null : notificationActionMap.opt(action.getId()).toString();
-            NotificationCompat.Action androidAction = action.createAndroidNotificationAction(context, actions, message, notificationId);
+            NotificationCompat.Action androidAction = action.createAndroidNotificationAction(context, actions, arguments);
             androidActions.add(androidAction);
         }
 

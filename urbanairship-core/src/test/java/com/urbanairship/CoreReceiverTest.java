@@ -123,12 +123,13 @@ public class CoreReceiverTest extends BaseTestCase {
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
 
         receiver.onReceive(context, intent);
 
         // Verify the notification was dismissed
-        verify(notificationManager).cancel(null, 150);
+        verify(notificationManager).cancel("TAG", 150);
 
         // Verify the conversion send id was set
         verify(analytics).setConversionSendId("sendId");
@@ -165,6 +166,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);
 
         receiver.onReceive(context, intent);
@@ -190,6 +192,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, deleteIntent);
 
         receiver.onReceive(context, intent);

@@ -9,6 +9,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.XmlRes;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.urbanairship.push.PushProvider;
@@ -264,6 +265,12 @@ public class AirshipConfigOptions {
     public final int notificationIcon;
 
     /**
+     * Large notification icon.
+     */
+    @DrawableRes
+    public final int notificationLargeIcon;
+
+    /**
      * The Wallet URL. This will always be set to https://wallet-api.urbanairship.com
      */
     @NonNull
@@ -314,6 +321,7 @@ public class AirshipConfigOptions {
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled;
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
         this.notificationIcon = builder.notificationIcon;
+        this.notificationLargeIcon = builder.notificationLargeIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
         this.walletUrl = builder.walletUrl;
         this.notificationChannel = builder.notificationChannel;
@@ -422,6 +430,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_CHANNEL_CREATION_DELAY_ENABLED = "channelCreationDelayEnabled";
         private static final String FIELD_CHANNEL_CAPTURE_ENABLED = "channelCaptureEnabled";
         private static final String FIELD_NOTIFICATION_ICON = "notificationIcon";
+        private static final String FIELD_NOTIFICATION_LARGE_ICON = "notificationLargeIcon";
         private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
         private static final String FIELD_WALLET_URL = "walletUrl";
         private static final String FIELD_NOTIFICATION_CHANNEL = "notificationChannel";
@@ -455,7 +464,8 @@ public class AirshipConfigOptions {
         private boolean channelCreationDelayEnabled = false;
         private boolean channelCaptureEnabled = true;
         private int notificationIcon;
-        private int notificationAccentColor;
+        public int notificationLargeIcon;
+        private int notificationAccentColor = NotificationCompat.COLOR_DEFAULT;
         private String walletUrl = "https://wallet-api.urbanairship.com";
         private String notificationChannel;
         private boolean enableUrlWhitelisting;
@@ -669,6 +679,10 @@ public class AirshipConfigOptions {
                             this.setNotificationIcon(configParser.getDrawableResourceId(i));
                             break;
 
+                        case FIELD_NOTIFICATION_LARGE_ICON:
+                            this.setNotificationLargeIcon(configParser.getDrawableResourceId(i));
+                            break;
+
                         case FIELD_NOTIFICATION_ACCENT_COLOR:
                             this.setNotificationAccentColor(configParser.getColor(i));
                             break;
@@ -744,6 +758,20 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setNotificationIcon(@DrawableRes int notificationIcon) {
             this.notificationIcon = notificationIcon;
+            return this;
+        }
+
+        /**
+         * Sets the large notification Icon.
+         * <p>
+         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
+         *
+         * @param notificationLargeIcon The large notification icon.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setNotificationLargeIcon(@DrawableRes int notificationLargeIcon) {
+            this.notificationLargeIcon = notificationLargeIcon;
             return this;
         }
 

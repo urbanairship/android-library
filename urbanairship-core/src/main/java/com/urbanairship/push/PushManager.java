@@ -26,9 +26,11 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
-import com.urbanairship.push.notifications.DefaultNotificationFactory;
+import com.urbanairship.push.notifications.AirshipNotificationProvider;
+import com.urbanairship.push.notifications.LegacyNotificationFactoryProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
+import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -107,6 +109,15 @@ public class PushManager extends AirshipComponent {
      */
     @NonNull
     public static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.push.NOTIFICATION_ID";
+
+    /**
+     * The notification tag extra contains the tag of the notification placed in the
+     * <code>NotificationManager</code> by the library.
+     * <p>
+     * If a <code>Notification</code> was not created, the extra will not be included.
+     */
+    @NonNull
+    public static final String EXTRA_NOTIFICATION_TAG = "com.urbanairship.push.NOTIFICATION_TAG";
 
     /**
      * The push message extra bundle.
@@ -274,7 +285,7 @@ public class PushManager extends AirshipComponent {
 
     //singleton stuff
     private final Context context;
-    private NotificationFactory notificationFactory;
+    private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean channelTagRegistrationEnabled = true;
     private final PreferenceDataStore preferenceDataStore;
@@ -319,7 +330,7 @@ public class PushManager extends AirshipComponent {
         this.jobDispatcher = dispatcher;
         this.pushProvider = provider;
         this.tagGroupRegistrar = tagGroupRegistrar;
-        this.notificationFactory = DefaultNotificationFactory.newFactory(context, configOptions);
+        this.notificationProvider = new AirshipNotificationProvider(context, configOptions);
         this.configOptions = configOptions;
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
 
@@ -482,19 +493,39 @@ public class PushManager extends AirshipComponent {
      * @see com.urbanairship.push.notifications.NotificationFactory
      * @see com.urbanairship.push.notifications.DefaultNotificationFactory
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationFactory
+     * @deprecated Use {@link com.urbanairship.push.notifications.NotificationProvider} and {@link #setNotificationProvider(NotificationProvider)}
+     * instead. Marked to be removed in SDK 11.
      */
-    public void setNotificationFactory(@NonNull NotificationFactory factory) {
-        notificationFactory = factory;
+    public void setNotificationFactory(@Nullable NotificationFactory factory) {
+        if (factory == null) {
+            this.notificationProvider = null;
+        } else {
+            this.notificationProvider = new LegacyNotificationFactoryProvider(factory);
+        }
     }
 
     /**
-     * Returns the current notification factory.
+     * Sets the notification provider used to build notifications from a push message
      *
-     * @return The current notification factory.
+     * If <code>null</code>, notification will not be displayed.
+     *
+     * @param provider The notification provider
+     * @see com.urbanairship.push.notifications.NotificationProvider
+     * @see com.urbanairship.push.notifications.AirshipNotificationProvider
+     * @see com.urbanairship.push.notifications.CustomLayoutNotificationProvider
+     */
+    public void setNotificationProvider(@Nullable NotificationProvider provider) {
+        this.notificationProvider = provider;
+    }
+
+    /**
+     * Gets the notification provider.
+     *
+     * @return The notification provider.
      */
     @Nullable
-    public NotificationFactory getNotificationFactory() {
-        return notificationFactory;
+    public NotificationProvider getNotificationProvider() {
+        return notificationProvider;
     }
 
     /**

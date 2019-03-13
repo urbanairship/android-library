@@ -12,6 +12,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
@@ -717,29 +718,6 @@ public class PushManagerTest extends BaseTestCase {
                 return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
-    }
-
-    /**
-     * Test default notification icon and accent color.
-     */
-    @Test
-    public void testDefaultNotificationFactory() {
-        DefaultNotificationFactory factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
-        assertEquals(0, factory.getSmallIconId());
-        assertEquals(0, factory.getColor());
-
-        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setNotificationAccentColor(Color.parseColor("#ff0000"))
-                .setNotificationIcon(R.drawable.ua_ic_urbanairship_notification)
-                .build();
-
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options, null, mockTagGroupRegistrar);
-        factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
-
-        assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());
-        assertEquals(Color.parseColor("#ff0000"), factory.getColor());
     }
 
     /**

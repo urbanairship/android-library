@@ -2,9 +2,9 @@
 
 package com.urbanairship.push;
 
-import android.app.Application;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,7 +20,10 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationFactory;
+import com.urbanairship.push.notifications.NotificationProvider;
+import com.urbanairship.push.notifications.NotificationResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +33,8 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.List;
 
@@ -55,8 +60,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private Analytics analytics;
     private LegacyInAppMessageManager legacyInAppMessageManager;
 
-    private Notification notification;
-    private NotificationFactory notificationFactory;
+    private TestNotificationProvider notificationProvider;
 
     private IncomingPushRunnable pushRunnable;
     private IncomingPushRunnable displayRunnable;
@@ -80,28 +84,13 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         when(pushManager.isPushAvailable()).thenReturn(true);
 
-        notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .build();
 
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
-            @Override
-            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
-                return notification;
-            }
+        notificationProvider = new TestNotificationProvider();
 
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return TEST_NOTIFICATION_ID;
-            }
-        };
-
-        when(pushManager.getNotificationFactory()).thenAnswer(new Answer<Object>() {
+        when(pushManager.getNotificationProvider()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                return notificationFactory;
+                return notificationProvider;
             }
         });
 
@@ -142,15 +131,18 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
+        notificationProvider.notification = createNotification();
+        notificationProvider.tag = "testNotificationTag";
+
         pushRunnable.run();
 
-        verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notification);
+        verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
 
-        PendingIntent pendingIntent = notification.contentIntent;
-        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent).isBroadcastIntent());
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.contentIntent);
+        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
-        Intent intent = Shadows.shadowOf(pendingIntent).getSavedIntent();
+        Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
         assertBundlesEquals("The push message bundles should match.", pushBundle, intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
@@ -190,8 +182,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        Application application = RuntimeEnvironment.application;
-        List<Intent> intents = Shadows.shadowOf(application).getBroadcastIntents();
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
         PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
@@ -204,7 +196,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testBackgroundPush() {
-        notification = null;
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
@@ -212,8 +203,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        Application application = RuntimeEnvironment.application;
-        List<Intent> intents = Shadows.shadowOf(application).getBroadcastIntents();
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
 
         PushMessage push = PushMessage.fromIntent(i);
@@ -223,25 +214,21 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     }
 
     /**
-     * Test handling an exceptions from the notification factory.
+     * Test handling an exceptions from the notification provider.
      */
     @Test
-    public void testNotificationFactoryException() {
+    public void testNotificationProviderException() {
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         // Set a notification factory that throws an exception
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+        notificationProvider = new TestNotificationProvider() {
+            @NonNull
             @Override
-            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
+            public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
                 throw new RuntimeException("Unable to create and display notification.");
-            }
-
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return 0;
             }
         };
 
@@ -252,55 +239,38 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     }
 
     @Test
-    public void testNotificationFactorySuccess() {
-        final int notificationId = 0;
-        final Notification notification = notificationFactory.createNotification(new PushMessage(pushBundle), notificationId);
+    public void testNotificationProviderSuccess() {
+        notificationProvider.notification = createNotification();
 
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
-            @Override
-            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
-                return notification;
-            }
-
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return notificationId;
-            }
-        };
-
         pushRunnable.run();
 
-        verify(notificationManager).notify(Mockito.anyString(), Mockito.eq(notificationId), Mockito.eq(notification));
+        verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, notificationProvider.notification);
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
     }
 
     /**
-     * Test that when the factory returns a cancel status, no notification is posted and no jobs are scheduled
+     * Test that when the provider returns a cancel status, no notification is posted and no jobs are scheduled
      */
     @Test
-    public void testNotificationFactoryResultCancel() {
+    public void testNotificationProviderResultCancel() {
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+        notificationProvider = new TestNotificationProvider() {
             @NonNull
             @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
-                return NotificationFactory.Result.cancel();
-            }
-
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return 0;
+            public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
+                return NotificationResult.cancel();
             }
         };
+
 
         displayRunnable.run();
 
@@ -318,16 +288,11 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+        notificationProvider = new TestNotificationProvider() {
             @NonNull
             @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
-                return NotificationFactory.Result.retry();
-            }
-
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return 0;
+            public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
+                return NotificationResult.retry();
             }
         };
 
@@ -347,25 +312,11 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        final int notificationId = 0;
-        final Notification notification = notificationFactory.createNotification(new PushMessage(pushBundle), notificationId);
-
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
-            @NonNull
-            @Override
-            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId, boolean longRunning) {
-                return NotificationFactory.Result.notification(notification);
-            }
-
-            @Override
-            public int getNextId(@NonNull PushMessage pushMessage) {
-                return notificationId;
-            }
-        };
+        notificationProvider.notification = createNotification();
 
         displayRunnable.run();
 
-        verify(notificationManager).notify(Mockito.anyString(), Mockito.eq(notificationId), Mockito.eq(notification));
+        verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, notificationProvider.notification);
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
     }
 
@@ -380,19 +331,15 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
-        notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-                .build();
+        notificationProvider.notification = createNotification();
+        notificationProvider.notification.contentIntent = pendingIntent;
 
         pushRunnable.run();
 
-        PendingIntent pendingIntent2 = notification.contentIntent;
-        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent2).isBroadcastIntent());
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.contentIntent);
+        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
-        Intent intent = Shadows.shadowOf(pendingIntent2).getSavedIntent();
+        Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification content intent is not null.", pendingIntent);
@@ -410,19 +357,15 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
-        notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .setDeleteIntent(pendingIntent)
-                .build();
+        notificationProvider.notification = createNotification();
+        notificationProvider.notification.deleteIntent = pendingIntent;
 
         pushRunnable.run();
 
-        PendingIntent pendingIntent2 = notification.deleteIntent;
-        assertTrue("The pending intent is broadcast intent.", Shadows.shadowOf(pendingIntent2).isBroadcastIntent());
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.deleteIntent);
+        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
-        Intent intent = Shadows.shadowOf(pendingIntent2).getSavedIntent();
+        Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification delete intent is not null.", pendingIntent);
@@ -443,15 +386,15 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         // Disable sound
         when(pushManager.isSoundEnabled()).thenReturn(false);
-
-        notification.sound = Uri.parse("some://sound");
-        notification.defaults = NotificationCompat.DEFAULT_ALL;
+        notificationProvider.notification = createNotification();
+        notificationProvider.notification.sound = Uri.parse("some://sound");
+        notificationProvider.notification.defaults = NotificationCompat.DEFAULT_ALL;
 
         pushRunnable.run();
 
-        assertNull("The notification sound should be null.", notification.sound);
+        assertNull("The notification sound should be null.", notificationProvider.notification.sound);
         assertEquals("The notification defaults should not include DEFAULT_SOUND.",
-                notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
+                notificationProvider.notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
     }
 
     /**
@@ -468,15 +411,15 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         // Disable vibrate
         when(pushManager.isVibrateEnabled()).thenReturn(false);
-
-        notification.defaults = NotificationCompat.DEFAULT_ALL;
-        notification.vibrate = new long[] { 0L, 1L, 200L };
+        notificationProvider.notification = createNotification();
+        notificationProvider.notification.defaults = NotificationCompat.DEFAULT_ALL;
+        notificationProvider.notification.vibrate = new long[] { 0L, 1L, 200L };
 
         pushRunnable.run();
 
-        assertNull("The notification sound should be null.", notification.vibrate);
+        assertNull("The notification sound should be null.", notificationProvider.notification.vibrate);
         assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
-                notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
+                notificationProvider.notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
     }
 
     /**
@@ -516,10 +459,45 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isSoundEnabled()).thenReturn(true);
         when(pushManager.isInQuietTime()).thenReturn(true);
 
+        notificationProvider.notification = createNotification();
+
         pushRunnable.run();
 
-        assertNull("The notification sound should be null.", notification.sound);
-        assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
+        assertNull("The notification sound should be null.", notificationProvider.notification.sound);
+        assertEquals("The notification defaults should not include vibrate or sound.", 0, notificationProvider.notification.defaults);
+    }
+
+
+    private Notification createNotification() {
+        return new NotificationCompat.Builder(RuntimeEnvironment.application, "some-channel")
+                .setContentTitle("Test NotificationBuilder Title")
+                .setContentText("Test NotificationBuilder Text")
+                .setAutoCancel(true)
+                .build();
+    }
+
+    public static class TestNotificationProvider implements NotificationProvider {
+
+        public Notification notification;
+        public String tag;
+
+        @NonNull
+        @Override
+        public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
+            return NotificationArguments.newBuilder(message)
+                                        .setNotificationId(tag, TEST_NOTIFICATION_ID)
+                                        .build();
+        }
+
+        @NonNull
+        @Override
+        public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
+            if (notification != null) {
+                return NotificationResult.notification(notification);
+            } else {
+                return NotificationResult.cancel();
+            }
+        }
     }
 
 }

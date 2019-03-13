@@ -98,8 +98,9 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
+        String notificationTag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
 
-        Logger.info("Notification opened ID: %s", notificationId);
+        Logger.info("Notification opened ID: %s tag: %s", notificationId, notificationTag);
 
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
@@ -141,10 +142,11 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
+        String notificationTag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
         boolean isForegroundAction = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
         String description = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION);
 
-        Logger.info("Notification opened ID: %s action button Id: %s", notificationId, notificationActionId);
+        Logger.info("Notification opened ID: %s tag: %s action button Id: %s", notificationId, notificationTag, notificationActionId);
 
         // Set the conversion push id and metadata
         if (isForegroundAction) {
@@ -156,7 +158,7 @@ public class CoreReceiver extends BroadcastReceiver {
         UAirship.shared().getLegacyInAppMessageManager().onPushResponse(message);
 
         // Dismiss the notification
-        NotificationManagerCompat.from(context).cancel(notificationId);
+        NotificationManagerCompat.from(context).cancel(notificationTag, notificationId);
 
         // Add the interactive notification event
         InteractiveNotificationEvent event = new InteractiveNotificationEvent(message, notificationActionId, description, isForegroundAction, remoteInput);
@@ -192,8 +194,9 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
+        String notificationTag = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_TAG);
 
-        Logger.info("Notification dismissed ID: %s", notificationId);
+        Logger.info("Notification dismissed ID: %s tag: %s", notificationId, notificationTag);
 
         PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
         if (deleteIntent != null) {

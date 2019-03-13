@@ -15,9 +15,19 @@ import com.urbanairship.push.PushMessage;
  */
 public class ActionsNotificationExtender implements NotificationCompat.Extender {
 
-    private final PushMessage message;
     private final Context context;
-    private final int notificationId;
+    private final NotificationArguments arguments;
+
+    /**
+     * ActionsNotificationExtender default constructor.
+     *
+     * @param context The application context.
+     * @param arguments The notification arguments.
+     */
+    public ActionsNotificationExtender(@NonNull Context context, @NonNull NotificationArguments arguments) {
+        this.context = context.getApplicationContext();
+        this.arguments = arguments;
+    }
 
     /**
      * ActionsNotificationExtender default constructor.
@@ -25,22 +35,27 @@ public class ActionsNotificationExtender implements NotificationCompat.Extender 
      * @param context The application context.
      * @param message The push message.
      * @param notificationId The notification ID.
+     * @deprecated Use {{@link #ActionsNotificationExtender(Context, NotificationArguments)} instead. Marked to be removed
+     * in SDK 11.
      */
+    @Deprecated
     public ActionsNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
-        this.context = context.getApplicationContext();
-        this.message = message;
-        this.notificationId = notificationId;
+        this(context, NotificationArguments.newBuilder(message)
+                                           .setNotificationId(message.getNotificationTag(), notificationId)
+                                           .build());
     }
 
     @NonNull
     @Override
     public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
-        NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(message.getInteractiveNotificationType());
+        String group = arguments.getMessage().getInteractiveNotificationType();
+
+        NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(group);
         if (actionGroup == null) {
             return builder;
         }
 
-        for (NotificationCompat.Action action : actionGroup.createAndroidActions(context, message, notificationId, message.getInteractiveActionsPayload())) {
+        for (NotificationCompat.Action action : actionGroup.createAndroidActions(context, arguments, arguments.getMessage().getInteractiveActionsPayload())) {
             builder.addAction(action);
         }
 

@@ -123,7 +123,9 @@ public class AirshipReceiverTest extends BaseTestCase {
     public void testOnNotificationPosted() {
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushBundle)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG");
+
 
         receiver = new AirshipReceiver() {
 
@@ -142,6 +144,8 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(101, notificationInfo.getNotificationId());
+                assertEquals("TAG", notificationInfo.getNotificationTag());
+
             }
         };
 
@@ -209,7 +213,9 @@ public class AirshipReceiverTest extends BaseTestCase {
     public void testOnNotificationOpened() {
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushBundle)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100);
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG");
+
 
         receiver = new AirshipReceiver() {
             @Override
@@ -219,6 +225,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(100, notificationInfo.getNotificationId());
+                assertEquals("TAG", notificationInfo.getNotificationTag());
                 return true;
             }
         };
@@ -236,6 +243,7 @@ public class AirshipReceiverTest extends BaseTestCase {
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushBundle)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "button id")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true)
                 .putExtra(AirshipReceiver.EXTRA_REMOTE_INPUT, remoteInput);
@@ -248,6 +256,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(100, notificationInfo.getNotificationId());
+                assertEquals("TAG", notificationInfo.getNotificationTag());
                 assertEquals("button id", buttonInfo.getButtonId());
                 assertEquals(remoteInput, buttonInfo.getRemoteInput());
                 assertTrue(buttonInfo.isForeground());
@@ -291,7 +300,9 @@ public class AirshipReceiverTest extends BaseTestCase {
     public void testOnNotificationDismissed() {
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_DISMISSED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushBundle)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, "TAG");
+
 
         receiver = new AirshipReceiver() {
             @Override
@@ -301,6 +312,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(101, notificationInfo.getNotificationId());
+                assertEquals("TAG", notificationInfo.getNotificationTag());
             }
         };
 

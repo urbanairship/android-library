@@ -19,7 +19,10 @@ import com.urbanairship.util.UAStringUtil;
  * layout and defaults to the BigTextStyle.
  * <p>
  * To customize the factory, override {@link #extendBuilder(NotificationCompat.Builder, PushMessage, int)}.
+ *
+ * @deprecated Use {@link AirshipNotificationProvider} instead.
  */
+@Deprecated
 public class DefaultNotificationFactory extends NotificationFactory {
 
     /**
@@ -48,6 +51,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
 
         factory.setColor(options.notificationAccentColor);
         factory.setNotificationChannel(options.notificationChannel);
+        factory.setLargeIcon(options.notificationLargeIcon);
 
         return factory;
     }

@@ -34,7 +34,10 @@ import java.lang.annotation.RetentionPolicy;
  * <p>
  * {@link DefaultNotificationFactory} is used by default and applies the big text style. For custom
  * layouts, see {@link CustomLayoutNotificationFactory}.
+ *
+ * @deprecated Use {@link AirshipNotificationProvider} instead.
  */
+@Deprecated
 public class NotificationFactory {
 
     /**
@@ -46,7 +49,7 @@ public class NotificationFactory {
      * Default notification channel ID.
      */
     @NonNull
-    public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
+    public static final String DEFAULT_NOTIFICATION_CHANNEL = NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL;
 
     private int titleId;
     private int smallIconId;
@@ -425,7 +428,7 @@ public class NotificationFactory {
      */
     @NonNull
     protected NotificationCompat.Builder createNotificationBuilder(@NonNull PushMessage message, int notificationId, @Nullable NotificationCompat.Style defaultStyle) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext())
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext(), getActiveNotificationChannel(message))
                 .setContentTitle(getTitle(message))
                 .setContentText(message.getAlert())
                 .setAutoCancel(true)
@@ -477,11 +480,6 @@ public class NotificationFactory {
         builder.extend(new StyleNotificationExtender(getContext(), message)
                 .setDefaultStyle(defaultStyle));
 
-        // Channels for Android O
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setChannelId(getActiveNotificationChannel(message));
-        }
-
         return builder;
     }
 
@@ -518,39 +516,44 @@ public class NotificationFactory {
      * @param message The push message.
      * @return The active notification channel from the message, factory, or the default channel.
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @NonNull
     String getActiveNotificationChannel(@NonNull PushMessage message) {
-        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (message.getNotificationChannel() != null) {
-            String channel = message.getNotificationChannel();
-            if (notificationManager.getNotificationChannel(channel) != null) {
-                return channel;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return message.getNotificationChannel() == null ? DEFAULT_NOTIFICATION_CHANNEL : message.getNotificationChannel();
+        } else {
+
+            NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (message.getNotificationChannel() != null) {
+                String channel = message.getNotificationChannel();
+                if (notificationManager.getNotificationChannel(channel) != null) {
+                    return channel;
+                }
+
+                Logger.error("Message notification channel %s does not exist. Unable to apply channel on notification.", message.getNotificationChannel());
             }
 
-            Logger.error("Message notification channel %s does not exist. Unable to apply channel on notification.", message.getNotificationChannel());
-        }
+            if (getNotificationChannel() != null) {
+                String channel = getNotificationChannel();
+                if (notificationManager.getNotificationChannel(channel) != null) {
+                    return channel;
+                }
 
-        if (getNotificationChannel() != null) {
-            String channel = getNotificationChannel();
-            if (notificationManager.getNotificationChannel(channel) != null) {
-                return channel;
+                Logger.error("Factory notification channel %s does not exist. Unable to apply channel on notification.", getNotificationChannel());
             }
 
-            Logger.error("Factory notification channel %s does not exist. Unable to apply channel on notification.", getNotificationChannel());
+            // Fallback to Default Channel
+            NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL,
+                    context.getString(R.string.ua_default_channel_name),
+                    NotificationManager.IMPORTANCE_DEFAULT);
+
+            channel.setDescription(context.getString(R.string.ua_default_channel_description));
+
+            notificationManager.createNotificationChannel(channel);
+
+            return DEFAULT_NOTIFICATION_CHANNEL;
         }
-
-        // Fallback to Default Channel
-        NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL,
-                context.getString(R.string.ua_default_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT);
-
-        channel.setDescription(context.getString(R.string.ua_default_channel_description));
-
-        notificationManager.createNotificationChannel(channel);
-
-        return DEFAULT_NOTIFICATION_CHANNEL;
     }
 
     /**

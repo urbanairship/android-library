@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
+import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -26,7 +27,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
     static final String ALERT_KEY = "alert";
 
     private final Context context;
-    private final PushMessage message;
+    private final NotificationArguments arguments;
     private int accentColor;
     private int smallIconId;
     private int largeIconId;
@@ -35,12 +36,25 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * Default constructor.
      *
      * @param context The application context.
-     * @param message The push message.
+     * @param arguments The notification arguments.
      */
-    public PublicNotificationExtender(@NonNull Context context, @NonNull PushMessage message) {
+    public PublicNotificationExtender(@NonNull Context context, @NonNull NotificationArguments arguments) {
         this.context = context;
-        this.message = message;
+        this.arguments = arguments;
         this.smallIconId = context.getApplicationInfo().icon;
+    }
+
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param message The push message.
+     * @deprecated Use {{@link #PublicNotificationExtender(Context, NotificationArguments)} instead. Marked to be removed
+     * in SDK 11.
+     */
+    @Deprecated
+    public PublicNotificationExtender(@NonNull Context context, @NonNull PushMessage message) {
+        this(context, NotificationArguments.newBuilder(message).build());
     }
 
     /**
@@ -83,14 +97,14 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
     @Override
     public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
 
-        if (UAStringUtil.isEmpty(message.getPublicNotificationPayload())) {
+        if (UAStringUtil.isEmpty(arguments.getMessage().getPublicNotificationPayload())) {
             return builder;
         }
 
         try {
-            JsonMap jsonMap = JsonValue.parseString(message.getPublicNotificationPayload()).optMap();
+            JsonMap jsonMap = JsonValue.parseString(arguments.getMessage().getPublicNotificationPayload()).optMap();
 
-            NotificationCompat.Builder publicBuilder = new NotificationCompat.Builder(context)
+            NotificationCompat.Builder publicBuilder = new NotificationCompat.Builder(context, arguments.getNotificationChannelId())
                     .setContentTitle(jsonMap.opt(TITLE_KEY).optString())
                     .setContentText(jsonMap.opt(ALERT_KEY).optString())
                     .setColor(accentColor)

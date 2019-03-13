@@ -24,7 +24,10 @@ import com.urbanairship.util.UAStringUtil;
  * <p>
  * Custom binding can be applied by overriding {@link #onBindContentView(RemoteViews, PushMessage, int)}. To
  * customize the builder, override {@link #extendBuilder(NotificationCompat.Builder, PushMessage, int)}.
+ *
+ * @deprecated Use {@link CustomLayoutNotificationProvider} instead.
  */
+@Deprecated
 public class CustomLayoutNotificationFactory extends NotificationFactory {
 
     private final int layoutId;

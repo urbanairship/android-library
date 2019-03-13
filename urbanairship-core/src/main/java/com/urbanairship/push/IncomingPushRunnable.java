@@ -11,11 +11,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -25,7 +28,9 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.notifications.NotificationFactory;
+import com.urbanairship.push.notifications.NotificationArguments;
+import com.urbanairship.push.notifications.NotificationProvider;
+import com.urbanairship.push.notifications.NotificationResult;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -156,49 +161,56 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        final NotificationFactory factory = airship.getPushManager().getNotificationFactory();
+        final NotificationProvider provider = airship.getPushManager().getNotificationProvider();
 
-        if (factory == null) {
-            Logger.error("NotificationFactory is null. Unable to display notification for message: %s", message);
+        if (provider == null) {
+            Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
             sendPushResultBroadcast(null);
             return;
         }
 
-        if (!isLongRunning && factory.requiresLongRunningTask(message)) {
+        NotificationArguments arguments;
+        try {
+            arguments = provider.onCreateNotificationArguments(context, message);
+        } catch (Exception e) {
+            Logger.error(e, "Failed to generate notification arguments for message. Skipping.");
+            sendPushResultBroadcast(null);
+            return;
+        }
+
+        if (!isLongRunning && arguments.getRequiresLongRunningTask()) {
             Logger.debug("Push requires a long running task. Scheduled for a later time: %s", message);
             reschedulePush(message);
             return;
         }
 
-        NotificationFactory.Result result;
-        int notificationId = 0;
+        NotificationResult result;
 
         try {
-            notificationId = factory.getNextId(message);
-            result = factory.createNotificationResult(message, notificationId, isLongRunning);
+            result = provider.onCreateNotification(context, arguments);
         } catch (Exception e) {
             Logger.error(e, "Cancelling notification display to create and display notification.");
-            result = NotificationFactory.Result.cancel();
+            result = NotificationResult.cancel();
         }
 
         Logger.debug("IncomingPushRunnable - Received result status %s for push message: %s", result.getStatus(), message);
 
         switch (result.getStatus()) {
-            case NotificationFactory.Result.OK:
+            case NotificationResult.OK:
                 Notification notification = result.getNotification();
 
                 if (notification != null) {
-                    postNotification(airship, notification, notificationId);
+                    postNotification(airship, notification, arguments);
                 }
 
-                sendPushResultBroadcast(notificationId);
+                sendPushResultBroadcast(arguments);
 
                 final PushArrivedEvent pushArrivedEvent;
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || notification == null) {
                     pushArrivedEvent = new PushArrivedEvent(message);
                 } else {
-                    NotificationManager notificationManager = (NotificationManager) UAirship.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                     NotificationChannel channel = notificationManager.getNotificationChannel(notification.getChannelId());
                     pushArrivedEvent = new PushArrivedEvent(message, channel);
                 }
@@ -206,10 +218,11 @@ class IncomingPushRunnable implements Runnable {
                 airship.getAnalytics().addEvent(pushArrivedEvent);
 
                 break;
-            case NotificationFactory.Result.CANCEL:
+            case NotificationResult.CANCEL:
                 sendPushResultBroadcast(null);
                 break;
-            case NotificationFactory.Result.RETRY:
+
+            case NotificationResult.RETRY:
                 Logger.debug("Scheduling notification to be retried for a later time: %s", message);
                 reschedulePush(message);
                 break;
@@ -221,10 +234,18 @@ class IncomingPushRunnable implements Runnable {
      *
      * @param airship The airship instance.
      * @param notification The notification.
-     * @param notificationId The notification ID.
+     * @param notificationArguments The notification arguments.
      */
-    private void postNotification(@NonNull UAirship airship, @NonNull Notification notification, int notificationId) {
-        if (Build.VERSION.SDK_INT < 26) {
+    private void postNotification(@NonNull UAirship airship, @NonNull Notification notification, @NonNull NotificationArguments notificationArguments) {
+        String tag = notificationArguments.getNotificationTag();
+        int id = notificationArguments.getNotificationId();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = getNotificationChannelId(notification, notificationArguments);
+            if (NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL.equals(channelId)) {
+                createDefaultChannel(context);
+            }
+        } else {
             if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
                 // Remove both the vibrate and the DEFAULT_VIBRATE flag
                 notification.vibrate = null;
@@ -243,7 +264,7 @@ class IncomingPushRunnable implements Runnable {
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, id);
 
         // If the notification already has an intent, add it to the extras to be sent later
         if (notification.contentIntent != null) {
@@ -254,7 +275,7 @@ class IncomingPushRunnable implements Runnable {
                 .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, id);
 
         if (notification.deleteIntent != null) {
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
@@ -263,27 +284,50 @@ class IncomingPushRunnable implements Runnable {
         notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
-        Logger.info("Posting notification: %s id: %s tag: %s", notification, notificationId, message.getNotificationTag());
+        Logger.info("Posting notification: %s id: %s tag: %s", notification, id, tag);
         try {
-            notificationManager.notify(message.getNotificationTag(), notificationId, notification);
+            notificationManager.notify(tag, id, notification);
         } catch (Exception e) {
             Logger.error(e, "Failed to post notification.");
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createDefaultChannel(@NonNull Context context) {
+        // Fallback to Default Channel
+        NotificationChannel channel = new NotificationChannel(NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL,
+                context.getString(R.string.ua_default_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT);
+
+        channel.setDescription(context.getString(R.string.ua_default_channel_description));
+
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.createNotificationChannel(channel);
+    }
+
+    @Nullable
+    private String getNotificationChannelId(@NonNull Notification notification, @NonNull NotificationArguments arguments) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return NotificationCompat.getChannelId(notification);
+        } else {
+            return arguments.getNotificationChannelId();
         }
     }
 
     /**
      * Sends the push broadcast with the notification result.
      *
-     * @param notificationId The notification ID if a notification was posted.
+     * @param arguments The notification arguments if the notification was posted.
      */
-    private void sendPushResultBroadcast(@Nullable Integer notificationId) {
+    private void sendPushResultBroadcast(@Nullable NotificationArguments arguments) {
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .addCategory(UAirship.getPackageName())
                 .setPackage(UAirship.getPackageName());
 
-        if (notificationId != null) {
-            intent.putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId.intValue());
+        if (arguments != null) {
+            intent.putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId());
+            intent.putExtra(PushManager.EXTRA_NOTIFICATION_TAG, arguments.getNotificationTag());
         }
 
         context.sendBroadcast(intent);

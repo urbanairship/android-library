@@ -39,9 +39,19 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
     static final String BACKGROUND_IMAGE_KEY = "background_image";
     static final String EXTRA_PAGES_KEY = "extra_pages";
 
-    private final PushMessage message;
     private final Context context;
-    private final int notificationId;
+    private final NotificationArguments arguments;
+
+    /**
+     * WearableNotificationExtender default constructor.
+     *
+     * @param context The application context.
+     * @param arguments The notification arguments.
+     */
+    public WearableNotificationExtender(@NonNull Context context, @NonNull NotificationArguments arguments) {
+        this.context = context.getApplicationContext();
+        this.arguments = arguments;
+    }
 
     /**
      * Default constructor.
@@ -49,17 +59,20 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
      * @param context The application context.
      * @param message The push message.
      * @param notificationId The notification ID.
+     * @deprecated Use {{@link #WearableNotificationExtender(Context, NotificationArguments)} instead. Marked to be removed
+     * in SDK 11.
      */
+    @Deprecated
     public WearableNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
-        this.context = context;
-        this.message = message;
-        this.notificationId = notificationId;
+        this(context, NotificationArguments.newBuilder(message)
+                                           .setNotificationId(message.getNotificationTag(), notificationId)
+                                           .build());
     }
 
     @NonNull
     @Override
     public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {
-        String wearablePayload = message.getWearablePayload();
+        String wearablePayload = arguments.getMessage().getWearablePayload();
         if (wearablePayload == null) {
             return builder;
         }
@@ -77,14 +90,14 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         String actionGroupId = wearableJson.opt(INTERACTIVE_TYPE_KEY).getString();
         String actionsPayload = wearableJson.opt(INTERACTIVE_ACTIONS_KEY).toString();
         if (UAStringUtil.isEmpty(actionsPayload)) {
-            actionsPayload = message.getInteractiveActionsPayload();
+            actionsPayload = arguments.getMessage().getInteractiveActionsPayload();
         }
 
         if (!UAStringUtil.isEmpty(actionGroupId)) {
             NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(actionGroupId);
 
             if (actionGroup != null) {
-                List<NotificationCompat.Action> androidActions = actionGroup.createAndroidActions(context, message, notificationId, actionsPayload);
+                List<NotificationCompat.Action> androidActions = actionGroup.createAndroidActions(context, arguments, actionsPayload);
                 extender.addActions(androidActions);
             }
         }

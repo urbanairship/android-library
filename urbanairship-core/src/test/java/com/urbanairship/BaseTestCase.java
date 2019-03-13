@@ -18,6 +18,10 @@ import org.robolectric.annotation.Config;
 @RunWith(RobolectricTestRunner.class)
 public abstract class BaseTestCase {
 
+    public TestApplication getApplication() {
+        return TestApplication.getApplication();
+    }
+
     public static void assertBundlesEquals(Bundle expected, Bundle actual) {
         assertBundlesEquals(null, expected, actual);
     }
