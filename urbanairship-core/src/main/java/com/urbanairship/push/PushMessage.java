@@ -21,6 +21,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
@@ -141,7 +142,9 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * The extra key for the sound of the notification.
+     * @deprecated To be removed in SDK 11.0.
      */
+    @Deprecated
     @NonNull
     public static final String EXTRA_SOUND = "com.urbanairship.sound";
 
@@ -583,10 +586,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * Gets the sound of the notification.
+     * @deprecated To be removed in SDK 11.0. Instead, use {@link NotificationChannelRegistry}.
      *
      * @param context The application context.
      * @return The sound of the notification.
      */
+    @Deprecated
     @Nullable
     public Uri getSound(@NonNull Context context) {
         if (sound == null && data.get(EXTRA_SOUND) != null) {

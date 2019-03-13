@@ -68,17 +68,6 @@ public class AppForegroundEventTest extends BaseTestCase {
     }
 
     @Test
-    public void testNotificationTypes() throws JSONException {
-        JsonMap data = event.getEventData();
-        JsonList typesJSON = data.get(AppForegroundEvent.NOTIFICATION_TYPES_KEY).getList();
-        ArrayList<String> typesList = new ArrayList<>();
-        for (int i = 0; i < typesJSON.size(); i++) {
-            typesList.add(typesJSON.get(i).getString());
-        }
-        assertEquals(typesList, event.getNotificationTypes());
-    }
-
-    @Test
     public void testOsVersion() throws JSONException {
         EventTestUtils.validateEventValue(event, Event.OS_VERSION_KEY, Build.VERSION.RELEASE);
     }
