@@ -86,6 +86,13 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
     }
 
     @Test
+    public void testGetNotificationChannelCreatesRealChannel() {
+        when(dataManager.getChannel(channelCompat.getId())).thenReturn(channelCompat);
+        channelRegistry.getNotificationChannel(channelCompat.getId());
+        verify(notificationManager).createNotificationChannel(channelCompat.toNotificationChannel());
+    }
+
+    @Test
     @Config(sdk = 25)
     public void testDeleteNotificationChannelPreOreo() {
         channelRegistry.deleteNotificationChannel("test");
