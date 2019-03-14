@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
@@ -223,18 +224,23 @@ public abstract class Event {
      */
     @NonNull
     public String getConnectionSubType() {
-
-        //determine network connectivity state
-        //each of these may return null if there is no connectivity, and this may change at any moment
-        //keep a reference, then do a null check before accessing
-        ConnectivityManager cm = (ConnectivityManager) UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            NetworkInfo ni = cm.getActiveNetworkInfo();
-            if (ni != null && ni.getSubtypeName() != null) {
-                return ni.getSubtypeName();
+        try {
+            //determine network connectivity state
+            //each of these may return null if there is no connectivity, and this may change at any moment
+            //keep a reference, then do a null check before accessing
+            ConnectivityManager cm = (ConnectivityManager) UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                if (ni != null) {
+                    return ni.getSubtypeName();
+                }
             }
+            return "";
+        } catch (ClassCastException e) {
+            // https://github.com/urbanairship/android-library/issues/115
+            Logger.error("Connection subtype lookup failed", e);
+            return "";
         }
-        return "";
     }
 
     /**
