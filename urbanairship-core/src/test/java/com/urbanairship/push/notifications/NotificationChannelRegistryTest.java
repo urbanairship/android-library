@@ -3,6 +3,7 @@ package com.urbanairship.push.notifications;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -43,11 +44,11 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
             }
         });
 
-        channel = new NotificationChannel("test", "Test Channel", NotificationManager.IMPORTANCE_HIGH);
-        otherChannel = new NotificationChannel("test2", "Test Channel 2", NotificationManager.IMPORTANCE_LOW);
+        channel = new NotificationChannel("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH);
+        otherChannel = new NotificationChannel("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW);
 
-        channelCompat = new NotificationChannelCompat("test", "Test Channel", NotificationManager.IMPORTANCE_HIGH);
-        otherChannelCompat = new NotificationChannelCompat("test2", "Test Channel 2", NotificationManager.IMPORTANCE_LOW);
+        channelCompat = new NotificationChannelCompat("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH);
+        otherChannelCompat = new NotificationChannelCompat("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW);
     }
 
     @Test
