@@ -3,19 +3,16 @@ package com.urbanairship.push.notifications;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Looper;
 
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.AirshipLoopers;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowLooper;
+
+import java.util.concurrent.Executor;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -39,12 +36,12 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
         dataManager = mock(NotificationChannelRegistryDataManager.class);
         when(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(notificationManager);
 
-        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appkey")
-                .setDevelopmentAppSecret("appsecret")
-                .build();
-
-        channelRegistry = new NotificationChannelRegistry(context, dataManager);
+        channelRegistry = new NotificationChannelRegistry(context, dataManager, new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                command.run();
+            }
+        });
 
         channel = new NotificationChannel("test", "Test Channel", NotificationManager.IMPORTANCE_HIGH);
         otherChannel = new NotificationChannel("test2", "Test Channel 2", NotificationManager.IMPORTANCE_LOW);
@@ -59,8 +56,6 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
         when(dataManager.getChannel("test")).thenReturn(channelCompat);
         PendingResult<NotificationChannelCompat> result = channelRegistry.getNotificationChannel("test");
 
-        runLooperTasks();
-
         verify(dataManager).getChannel("test");
         Assert.assertEquals(channelCompat, result.getResult());
     }
@@ -70,8 +65,6 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
         when(notificationManager.getNotificationChannel("test")).thenReturn(channel);
         PendingResult<NotificationChannelCompat> result = channelRegistry.getNotificationChannel("test");
 
-        runLooperTasks();
-
         verify(notificationManager).getNotificationChannel("test");
         Assert.assertEquals(channelCompat, result.getResult());
     }
@@ -80,14 +73,12 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
     @Config(sdk = 25)
     public void testCreateNotificationChannelPreOreo() {
         channelRegistry.createNotificationChannel(channelCompat);
-        runLooperTasks();
         verify(dataManager).createChannel(channelCompat);
     }
 
     @Test
     public void testCreateNotificationChannel() {
         channelRegistry.createNotificationChannel(channelCompat);
-        runLooperTasks();
         verify(notificationManager).createNotificationChannel(channel);
     }
 
@@ -95,28 +86,13 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
     @Config(sdk = 25)
     public void testDeleteNotificationChannelPreOreo() {
         channelRegistry.deleteNotificationChannel("test");
-        runLooperTasks();
         verify(dataManager).deleteChannel("test");
     }
 
     @Test
     public void testDeleteNotificationChannel() {
         channelRegistry.deleteNotificationChannel("test");
-        runLooperTasks();
         verify(notificationManager).deleteNotificationChannel("test");
     }
 
-    /**
-     * Helper method to run all the looper tasks.
-     */
-    private void runLooperTasks() {
-        ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
-        ShadowLooper backgroundLooper = Shadows.shadowOf(AirshipLoopers.getBackgroundLooper());
-
-        do {
-            mainLooper.runToEndOfTasks();
-            backgroundLooper.runToEndOfTasks();
-        }
-        while (mainLooper.getScheduler().areAnyRunnable() || backgroundLooper.getScheduler().areAnyRunnable());
-    }
 }

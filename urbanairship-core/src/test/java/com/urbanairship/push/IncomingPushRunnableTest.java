@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
@@ -88,14 +87,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         when(pushManager.isPushAvailable()).thenReturn(true);
 
-        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .build();
-
         mockChannelRegistry = mock(NotificationChannelRegistry.class);
         when(pushManager.getNotificationChannelRegistry()).thenReturn(mockChannelRegistry);
-
 
         notificationProvider = new TestNotificationProvider();
 
@@ -283,7 +276,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
             }
         };
 
-
         displayRunnable.run();
 
         verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
@@ -439,8 +431,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(legacyInAppMessageManager).onPushReceived(push);
     }
 
-
-
     private Notification createNotification() {
         return new NotificationCompat.Builder(RuntimeEnvironment.application, "some-channel")
                 .setContentTitle("Test NotificationBuilder Title")
@@ -472,6 +462,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 return NotificationResult.cancel();
             }
         }
+
     }
 
 }
