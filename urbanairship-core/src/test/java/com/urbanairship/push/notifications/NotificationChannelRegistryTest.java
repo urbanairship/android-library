@@ -1,3 +1,5 @@
+/* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.push.notifications;
 
 import android.app.NotificationChannel;

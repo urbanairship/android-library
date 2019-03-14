@@ -1,9 +1,8 @@
+/* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.push.notifications;
 
 import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -15,6 +14,7 @@ import com.urbanairship.UAirship;
 
 /**
  * Notification channel utils.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -46,23 +46,12 @@ public class NotificationChannelUtils {
         return channelId;
     }
 
-    static int priorityForImportance(int importance) {
-        switch (importance) {
-            case NotificationManagerCompat.IMPORTANCE_DEFAULT:
-                return Notification.PRIORITY_DEFAULT;
-            case NotificationManagerCompat.IMPORTANCE_HIGH:
-                return Notification.PRIORITY_HIGH;
-            case NotificationManagerCompat.IMPORTANCE_LOW:
-                return Notification.PRIORITY_LOW;
-            case NotificationManagerCompat.IMPORTANCE_MAX:
-                return Notification.PRIORITY_MAX;
-            case NotificationManagerCompat.IMPORTANCE_MIN:
-                return Notification.PRIORITY_MIN;
-            default:
-                return Notification.PRIORITY_LOW;
-        }
-    }
-
+    /**
+     * Helper method to apply channel compat settings to a notification on Pre-O devices.
+     *
+     * @param notification The notification.
+     * @param channelCompat The notification channel compat.
+     */
     public static void applyLegacySettings(@NonNull Notification notification, @NonNull NotificationChannelCompat channelCompat) {
         notification.priority = priorityForImportance(channelCompat.getImportance());
 
@@ -87,6 +76,29 @@ public class NotificationChannelUtils {
         if (channelCompat.shouldVibrate()) {
             notification.vibrate = channelCompat.getVibrationPattern();
             notification.defaults |= Notification.DEFAULT_VIBRATE;
+        }
+    }
+
+    /**
+     * Converts importance to priority.
+     *
+     * @param importance The importance.
+     * @return The priority.
+     */
+    static int priorityForImportance(int importance) {
+        switch (importance) {
+            case NotificationManagerCompat.IMPORTANCE_DEFAULT:
+                return Notification.PRIORITY_DEFAULT;
+            case NotificationManagerCompat.IMPORTANCE_HIGH:
+                return Notification.PRIORITY_HIGH;
+            case NotificationManagerCompat.IMPORTANCE_LOW:
+                return Notification.PRIORITY_LOW;
+            case NotificationManagerCompat.IMPORTANCE_MAX:
+                return Notification.PRIORITY_MAX;
+            case NotificationManagerCompat.IMPORTANCE_MIN:
+                return Notification.PRIORITY_MIN;
+            default:
+                return Notification.PRIORITY_LOW;
         }
     }
 

@@ -1,3 +1,5 @@
+/* Copyright Urban Airship and Contributors */
+
 package com.urbanairship.push.notifications;
 
 import android.content.ContentValues;
@@ -16,7 +18,6 @@ import com.urbanairship.util.DataManager;
 
 import java.util.HashSet;
 import java.util.Set;
-
 
 /**
  * {@link DataManager} class for NotificationChannelRegistry.
