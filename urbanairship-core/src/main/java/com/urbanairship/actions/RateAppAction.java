@@ -71,9 +71,9 @@ public class RateAppAction extends Action {
     private static final String MARKET_PLAY_URL = "market://details?id=";
 
     /**
-     * HTTP URL to the Google Play store. Used instead of the market URl if the play store is not available.
+     * HTTPS URL to the Google Play store. Used instead of the market URl if the play store is not available.
      */
-    private static final String HTTP_PLAY_URL = "http://play.google.com/store/apps/details?id=";
+    private static final String HTTPS_PLAY_URL = "https://play.google.com/store/apps/details?id=";
 
     /**
      * URL to the Amazon store.
@@ -172,7 +172,7 @@ public class RateAppAction extends Action {
             if (PlayServicesUtils.isGooglePlayStoreAvailable(UAirship.getApplicationContext())) {
                 return Uri.parse(MARKET_PLAY_URL + packageName);
             } else {
-                return Uri.parse(HTTP_PLAY_URL + packageName);
+                return Uri.parse(HTTPS_PLAY_URL + packageName);
             }
         }
 

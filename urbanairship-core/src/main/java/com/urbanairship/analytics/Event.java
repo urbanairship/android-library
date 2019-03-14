@@ -9,6 +9,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
@@ -50,7 +51,7 @@ public abstract class Event {
     static final String PACKAGE_VERSION_KEY = "package_version";
     static final String LAST_METADATA_KEY = "last_metadata";
 
-    @IntDef({LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY})
+    @IntDef({ LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Priority {}
 
@@ -68,7 +69,6 @@ public abstract class Event {
      * High priority event.
      */
     public static final int HIGH_PRIORITY = 2;
-
 
     /**
      * Constructor for Event.
@@ -118,14 +118,14 @@ public abstract class Event {
 
         // Copy the event data and add the session id
         data = JsonMap.newBuilder()
-                .putAll(data)
-                .put(SESSION_ID_KEY, sessionId)
-                .build();
+                      .putAll(data)
+                      .put(SESSION_ID_KEY, sessionId)
+                      .build();
 
         object.put(TYPE_KEY, getType())
-                .put(EVENT_ID_KEY, eventId)
-                .put(TIME_KEY, time)
-                .put(DATA_KEY, data);
+              .put(EVENT_ID_KEY, eventId)
+              .put(TIME_KEY, time)
+              .put(DATA_KEY, data);
 
         return object.build().toString();
     }
@@ -214,18 +214,23 @@ public abstract class Event {
      * @return The connection subtype as a String.
      */
     public String getConnectionSubType() {
-
-        //determine network connectivity state
-        //each of these may return null if there is no connectivity, and this may change at any moment
-        //keep a reference, then do a null check before accessing
-        ConnectivityManager cm = (ConnectivityManager) UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            NetworkInfo ni = cm.getActiveNetworkInfo();
-            if (ni != null) {
-                return ni.getSubtypeName();
+        try {
+            //determine network connectivity state
+            //each of these may return null if there is no connectivity, and this may change at any moment
+            //keep a reference, then do a null check before accessing
+            ConnectivityManager cm = (ConnectivityManager) UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                if (ni != null) {
+                    return ni.getSubtypeName();
+                }
             }
+            return "";
+        } catch (ClassCastException e) {
+            // https://github.com/urbanairship/android-library/issues/115
+            Logger.error("Connection subtype lookup failed", e);
+            return "";
         }
-        return "";
     }
 
     /**
@@ -266,11 +271,10 @@ public abstract class Event {
         return true;
     }
 
-
     /**
      * Helper method to convert milliseconds to a seconds string containing a double.
-     * @param milliseconds Milliseconds to convert.
      *
+     * @param milliseconds Milliseconds to convert.
      * @return Seconds as a string containing a double.
      * @hide
      */
@@ -281,10 +285,12 @@ public abstract class Event {
 
     /**
      * The event's send priority.
+     *
      * @return The event's send priority.
      */
     @Priority
     public int getPriority() {
         return NORMAL_PRIORITY;
     }
+
 }

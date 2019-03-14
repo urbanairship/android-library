@@ -3,6 +3,13 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.7.1 - March 14, 2019
+==============================
+
+Fixed a security issue within Urban Airship SDK, that could allow trusted URL redirects in certain
+edge cases. All applications that are using Urban Airship SDK 9.0.0 - 9.7.0 should update as soon as
+possible. For more details, please email security@urbanairship.com.
+
 Version 9.7.0 - January 22, 2019
 ================================
 Minor release that allows listing for Urban Airship log messages.
