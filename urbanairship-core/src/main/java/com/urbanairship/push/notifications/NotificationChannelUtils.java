@@ -55,7 +55,7 @@ public class NotificationChannelUtils {
     public static void applyLegacySettings(@NonNull Notification notification, @NonNull NotificationChannelCompat channelCompat) {
         notification.priority = priorityForImportance(channelCompat.getImportance());
 
-        // If it's not higher than default importance the notification disable sound, light, and vibration
+        // If it's lower than default importance, disable sound, light, and vibration
         if (channelCompat.getImportance() < NotificationManagerCompat.IMPORTANCE_DEFAULT) {
             notification.vibrate = null;
             notification.sound = null;

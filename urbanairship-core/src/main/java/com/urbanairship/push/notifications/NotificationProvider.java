@@ -54,7 +54,7 @@ public abstract class NotificationProvider {
     /**
      * Called before posting the notification.
      *
-     * The notification will have had any {@link NotificationChannelCompat} applied on pre-O devices.
+     * The notification will have settings applied from an associated {@link NotificationChannelCompat} on pre-O devices
      *
      * Use this method to apply any global overrides to the notification.
      *
