@@ -82,6 +82,12 @@ public class NotificationChannelUtils {
     /**
      * Converts importance to priority.
      *
+     * @note importance and priority do no perfectly overlap. In particular there is no equivalent
+     * to IMPORTANCE_NONE, and IMPORTANCE_UNSPECIFIED is ignored because the public docs
+     * say "This value is for persisting preferences, and should never be associated with an actual
+     * notification". The latter case is unlikely to be encountered in practice, and the best option
+     * for the former is to map to PRIORITY_LOW, which is the default here.
+     *
      * @param importance The importance.
      * @return The priority.
      */
