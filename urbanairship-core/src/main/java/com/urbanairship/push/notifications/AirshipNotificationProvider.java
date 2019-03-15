@@ -16,7 +16,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.NotificationIdGenerator;
 
-public class AirshipNotificationProvider implements NotificationProvider {
+public class AirshipNotificationProvider extends NotificationProvider {
 
     /**
      * Default Notification ID when the {@link PushMessage} defines a notification tag.
@@ -144,7 +144,7 @@ public class AirshipNotificationProvider implements NotificationProvider {
         if (configOptions.notificationChannel != null) {
             this.defaultNotificationChannelId = configOptions.notificationChannel;
         } else {
-            this.defaultNotificationChannelId = NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL;
+            this.defaultNotificationChannelId = NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL;
         }
 
         if (this.smallIconId == 0) {
@@ -157,11 +157,11 @@ public class AirshipNotificationProvider implements NotificationProvider {
     @NonNull
     @Override
     public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
-        String channelId = message.getNotificationChannel(defaultNotificationChannelId);
-        channelId = NotificationChannelUtils.getActiveChannel(context, channelId, NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL);
+        String requestedChannelId = message.getNotificationChannel(defaultNotificationChannelId);
+        String activeChannelId = NotificationChannelUtils.getActiveChannel(requestedChannelId, DEFAULT_NOTIFICATION_CHANNEL);
 
         return NotificationArguments.newBuilder(message)
-                                    .setNotificationChannelId(channelId)
+                                    .setNotificationChannelId(activeChannelId)
                                     .setNotificationId(message.getNotificationTag(), getNextId(context, message))
                                     .build();
     }

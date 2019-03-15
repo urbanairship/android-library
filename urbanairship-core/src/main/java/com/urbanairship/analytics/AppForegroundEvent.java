@@ -40,7 +40,6 @@ class AppForegroundEvent extends Event {
                       .put(CARRIER_KEY, getCarrier())
                       .put(TIME_ZONE_KEY, getTimezone())
                       .put(DAYLIGHT_SAVINGS_KEY, isDaylightSavingsTime())
-                      .put(NOTIFICATION_TYPES_KEY, JsonValue.wrapOpt(getNotificationTypes()).getList())
                       .put(OS_VERSION_KEY, Build.VERSION.RELEASE)
                       .put(LIB_VERSION_KEY, UAirship.getVersion())
                       .putOpt(PACKAGE_VERSION_KEY, packageInfo != null ? packageInfo.versionName : null)

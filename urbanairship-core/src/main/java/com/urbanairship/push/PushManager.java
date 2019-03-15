@@ -2,6 +2,8 @@
 
 package com.urbanairship.push;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -29,6 +31,8 @@ import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.LegacyNotificationFactoryProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
+import com.urbanairship.push.notifications.NotificationChannelCompat;
+import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.util.UAStringUtil;
@@ -253,28 +257,12 @@ public class PushManager extends AirshipComponent {
 
     // As of version 5.0.0
     static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
-    static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
-    static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
     static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";
     static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
-    static final String ALIAS_KEY = KEY_PREFIX + ".ALIAS";
     static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
-    static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
 
-    static final String OLD_QUIET_TIME_ENABLED = KEY_PREFIX + ".QuietTime.Enabled";
 
-    static final class QuietTime {
-
-        public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
-        public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
-        public static final String END_HOUR_KEY = KEY_PREFIX + ".QuietTime.END_HOUR";
-        public static final String END_MIN_KEY = KEY_PREFIX + ".QuietTime.END_MINUTE";
-        public static final int NOT_SET_VAL = -1;
-
-    }
-
-    static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
     static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
     static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
     static final String APID_KEY = KEY_PREFIX + ".APID";
@@ -297,6 +285,7 @@ public class PushManager extends AirshipComponent {
     private final TagGroupRegistrar tagGroupRegistrar;
     private final PushProvider pushProvider;
     private PushManagerJobHandler jobHandler;
+    private NotificationChannelRegistry notificationChannelRegistry;
 
     private final Object tagLock = new Object();
 
@@ -333,6 +322,7 @@ public class PushManager extends AirshipComponent {
         this.notificationProvider = new AirshipNotificationProvider(context, configOptions);
         this.configOptions = configOptions;
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
+        this.notificationChannelRegistry = new NotificationChannelRegistry(context, configOptions);
 
         this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -348,7 +338,6 @@ public class PushManager extends AirshipComponent {
         }
 
         this.migratePushEnabledSettings();
-        this.migrateQuietTimeSettings();
         this.migrateRegistrationTokenSettings();
 
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
@@ -539,6 +528,16 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * Returns the shared notification channel registry.
+     *
+     * @return The NotificationChannelRegistry
+     */
+    @NonNull
+    public NotificationChannelRegistry getNotificationChannelRegistry() {
+        return notificationChannelRegistry;
+    }
+
+    /**
      * Determines whether the app is capable of receiving push,
      * meaning whether a GCM or ADM registration ID is present.
      *
@@ -724,82 +723,6 @@ public class PushManager extends AirshipComponent {
         updateRegistration();
     }
 
-    /**
-     * Determines whether sound is enabled.
-     *
-     * @return A boolean indicated whether sound is enabled.
-     */
-    public boolean isSoundEnabled() {
-        return preferenceDataStore.getBoolean(SOUND_ENABLED_KEY, true);
-    }
-
-    /**
-     * Enables or disables sound.
-     *
-     * @param enabled A boolean indicating whether sound is enabled.
-     */
-    public void setSoundEnabled(boolean enabled) {
-        preferenceDataStore.put(SOUND_ENABLED_KEY, enabled);
-    }
-
-    /**
-     * Determines whether vibration is enabled.
-     *
-     * @return A boolean indicating whether vibration is enabled.
-     */
-    public boolean isVibrateEnabled() {
-        return preferenceDataStore.getBoolean(VIBRATE_ENABLED_KEY, true);
-    }
-
-    /**
-     * Enables or disables vibration.
-     *
-     * @param enabled A boolean indicating whether vibration is enabled.
-     */
-    public void setVibrateEnabled(boolean enabled) {
-        preferenceDataStore.put(VIBRATE_ENABLED_KEY, enabled);
-    }
-
-    /**
-     * Determines whether "Quiet Time" is enabled.
-     *
-     * @return A boolean indicating whether Quiet Time is enabled.
-     */
-    public boolean isQuietTimeEnabled() {
-        return preferenceDataStore.getBoolean(QUIET_TIME_ENABLED, false);
-    }
-
-    /**
-     * Sets the quiet time enabled.
-     *
-     * @param enabled A boolean indicating whether quiet time is enabled.
-     */
-    public void setQuietTimeEnabled(boolean enabled) {
-        preferenceDataStore.put(QUIET_TIME_ENABLED, enabled);
-    }
-
-    /**
-     * Determines whether we are currently in the middle of "Quiet Time".  Returns false if Quiet Time is disabled,
-     * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
-     *
-     * @return A boolean indicating whether it is currently "Quiet Time".
-     */
-    public boolean isInQuietTime() {
-        if (!this.isQuietTimeEnabled()) {
-            return false;
-        }
-
-        QuietTimeInterval quietTimeInterval;
-
-        try {
-            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
-        } catch (JsonException e) {
-            Logger.error("Failed to parse quiet time interval");
-            return false;
-        }
-
-        return quietTimeInterval.isInQuietTime(Calendar.getInstance());
-    }
 
     /**
      * Determines whether channel creation is initially disabled, to be enabled later
@@ -809,25 +732,6 @@ public class PushManager extends AirshipComponent {
      */
     boolean isChannelCreationDelayEnabled() {
         return channelCreationDelayEnabled;
-    }
-
-    /**
-     * Returns the Quiet Time interval currently set by the user.
-     *
-     * @return An array of two Date instances, representing the start and end of Quiet Time.
-     */
-    @Nullable
-    public Date[] getQuietTimeInterval() {
-        QuietTimeInterval quietTimeInterval;
-
-        try {
-            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
-        } catch (JsonException e) {
-            Logger.error("Failed to parse quiet time interval");
-            return null;
-        }
-
-        return quietTimeInterval.getQuietTimeIntervalDateArray();
     }
 
     /**
@@ -847,19 +751,6 @@ public class PushManager extends AirshipComponent {
      */
     void setLastReceivedMetadata(String sendMetadata) {
         preferenceDataStore.put(LAST_RECEIVED_METADATA, sendMetadata);
-    }
-
-    /**
-     * Sets the Quiet Time interval.
-     *
-     * @param startTime A Date instance indicating when Quiet Time should start.
-     * @param endTime A Date instance indicating when Quiet Time should end.
-     */
-    public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
-        QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                                                               .setQuietTimeInterval(startTime, endTime)
-                                                               .build();
-        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
     /**
@@ -1094,47 +985,6 @@ public class PushManager extends AirshipComponent {
         // set push enabled to true
         preferenceDataStore.put(PUSH_ENABLED_KEY, true);
         preferenceDataStore.put(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
-    }
-
-    /**
-     * Migrates the quiet time settings.
-     */
-    void migrateQuietTimeSettings() {
-
-        /*
-         * We changed the quiet time enabled key without migrating it when we released 7.1.0. Migrate
-         * the old quiet time key to the new key only if the new key is not yet set.
-         */
-        if (preferenceDataStore.getString(QUIET_TIME_ENABLED, null) == null) {
-            preferenceDataStore.put(QUIET_TIME_ENABLED, preferenceDataStore.getBoolean(OLD_QUIET_TIME_ENABLED, false));
-            preferenceDataStore.remove(OLD_QUIET_TIME_ENABLED);
-        }
-
-        // Attempt to extract an old quiet time interval
-        int startHr = preferenceDataStore.getInt(QuietTime.START_HOUR_KEY, QuietTime.NOT_SET_VAL);
-        int startMin = preferenceDataStore.getInt(QuietTime.START_MIN_KEY, QuietTime.NOT_SET_VAL);
-        int endHr = preferenceDataStore.getInt(QuietTime.END_HOUR_KEY, QuietTime.NOT_SET_VAL);
-        int endMin = preferenceDataStore.getInt(QuietTime.END_MIN_KEY, QuietTime.NOT_SET_VAL);
-
-        if (startHr == QuietTime.NOT_SET_VAL || startMin == QuietTime.NOT_SET_VAL ||
-                endHr == QuietTime.NOT_SET_VAL || endMin == QuietTime.NOT_SET_VAL) {
-            return;
-        }
-
-        Logger.debug("Migrating quiet time interval");
-
-        QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                                                               .setStartHour(startHr)
-                                                               .setStartMin(startMin)
-                                                               .setEndHour(endHr)
-                                                               .setEndMin(endMin)
-                                                               .build();
-
-        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
-        preferenceDataStore.remove(QuietTime.START_HOUR_KEY);
-        preferenceDataStore.remove(QuietTime.START_MIN_KEY);
-        preferenceDataStore.remove(QuietTime.END_HOUR_KEY);
-        preferenceDataStore.remove(QuietTime.END_MIN_KEY);
     }
 
     /**

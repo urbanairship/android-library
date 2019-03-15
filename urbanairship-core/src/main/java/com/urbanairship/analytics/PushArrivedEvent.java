@@ -8,12 +8,14 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.util.UAStringUtil;
 
 /**
@@ -58,7 +60,7 @@ public class PushArrivedEvent extends Event {
     private static final String NOTIFICATION_CHANNEL_GROUP_BLOCKED = "blocked";
 
     private final PushMessage message;
-    private NotificationChannel notificationChannel;
+    private NotificationChannelCompat notificationChannel;
 
     /**
      * Constructor for PushArrivedEvent. You should not instantiate this class directly.
@@ -66,8 +68,7 @@ public class PushArrivedEvent extends Event {
      * @param message The associated PushMessage.
      */
     public PushArrivedEvent(@NonNull PushMessage message) {
-        super();
-        this.message = message;
+        this(message, null);
     }
 
     /**
@@ -76,13 +77,11 @@ public class PushArrivedEvent extends Event {
      * @param message The associated PushMessage.
      * @param notificationChannel The notification channel.
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public PushArrivedEvent(@NonNull PushMessage message, @NonNull NotificationChannel notificationChannel) {
-        this(message);
+    public PushArrivedEvent(@NonNull PushMessage message, @Nullable NotificationChannelCompat notificationChannel) {
+        this.message = message;
         this.notificationChannel = notificationChannel;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private String importanceString(int importance) {
         switch (importance) {
             case 0:
@@ -102,7 +101,6 @@ public class PushArrivedEvent extends Event {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void addNotificationChannelData(JsonMap.Builder builder) {
         String importance = importanceString(notificationChannel.getImportance());
         String groupId = notificationChannel.getGroup();
@@ -146,7 +144,7 @@ public class PushArrivedEvent extends Event {
                                          .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
                                          .put(CARRIER_KEY, getCarrier());
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationChannel != null) {
+        if (notificationChannel != null) {
             addNotificationChannelData(builder);
         }
 

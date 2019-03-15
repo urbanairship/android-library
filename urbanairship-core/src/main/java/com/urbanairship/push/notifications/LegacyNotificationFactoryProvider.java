@@ -2,13 +2,12 @@
 
 package com.urbanairship.push.notifications;
 
-import android.app.NotificationManager;
+import android.app.Notification;
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 /**
@@ -17,7 +16,7 @@ import com.urbanairship.push.PushMessage;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class LegacyNotificationFactoryProvider implements NotificationProvider {
+public class LegacyNotificationFactoryProvider extends NotificationProvider {
 
     private final NotificationFactory factory;
 
@@ -33,10 +32,11 @@ public class LegacyNotificationFactoryProvider implements NotificationProvider {
     @NonNull
     @Override
     public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
-        String channelId = message.getNotificationChannel(factory.getNotificationChannel());
-        channelId = NotificationChannelUtils.getActiveChannel(context, channelId, NotificationArguments.DEFAULT_NOTIFICATION_CHANNEL);
+        String requestedChannelId = message.getNotificationChannel(factory.getNotificationChannel());
+        String activeChannelId = NotificationChannelUtils.getActiveChannel(requestedChannelId, DEFAULT_NOTIFICATION_CHANNEL);
+
         return NotificationArguments.newBuilder(message)
-                                    .setNotificationChannelId(channelId)
+                                    .setNotificationChannelId(activeChannelId)
                                     .setNotificationId(message.getNotificationTag(), factory.getNextId(message))
                                     .setRequiresLongRunningTask(factory.requiresLongRunningTask(message))
                                     .build();

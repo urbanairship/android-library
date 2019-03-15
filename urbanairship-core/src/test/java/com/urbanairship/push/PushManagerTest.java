@@ -2,8 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.graphics.Color;
-
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
@@ -12,8 +10,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.push.notifications.AirshipNotificationProvider;
-import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
 import org.json.JSONException;
@@ -25,8 +21,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -115,60 +109,6 @@ public class PushManagerTest extends BaseTestCase {
     public void testPushDisabled() {
         pushManager.setPushEnabled(false);
         assertFalse(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, true));
-    }
-
-    /**
-     * Test enable QuietTime
-     */
-    @Test
-    public void testQuietTimeEnabled() {
-        pushManager.setQuietTimeEnabled(true);
-        assertTrue(preferenceDataStore.getBoolean(PushManager.QUIET_TIME_ENABLED, false));
-    }
-
-    /**
-     * Test disable QuietTime
-     */
-    @Test
-    public void testQuietTimeDisabled() {
-        pushManager.setQuietTimeEnabled(false);
-        assertFalse(preferenceDataStore.getBoolean(PushManager.QUIET_TIME_ENABLED, true));
-    }
-
-    /**
-     * Test enable sound
-     */
-    @Test
-    public void testSoundEnabled() {
-        pushManager.setSoundEnabled(true);
-        assertTrue(preferenceDataStore.getBoolean(PushManager.SOUND_ENABLED_KEY, false));
-    }
-
-    /**
-     * Test disable sound
-     */
-    @Test
-    public void testSoundDisabled() {
-        pushManager.setSoundEnabled(false);
-        assertFalse(preferenceDataStore.getBoolean(PushManager.SOUND_ENABLED_KEY, true));
-    }
-
-    /**
-     * Test enable vibrate
-     */
-    @Test
-    public void testVibrateEnabled() {
-        pushManager.setVibrateEnabled(true);
-        assertTrue(preferenceDataStore.getBoolean(PushManager.VIBRATE_ENABLED_KEY, false));
-    }
-
-    /**
-     * Test disable vibrate
-     */
-    @Test
-    public void testVibrateDisabled() {
-        pushManager.setVibrateEnabled(false);
-        assertFalse(preferenceDataStore.getBoolean(PushManager.VIBRATE_ENABLED_KEY, true));
     }
 
     /**
@@ -609,53 +549,6 @@ public class PushManagerTest extends BaseTestCase {
         assertFalse(pushManager.isPushAvailable());
     }
 
-    @Test
-    public void testQuietTimeIntervalMigration() {
-        pushManager.init();
-        assertTrue(pushManager.getQuietTimeInterval() == null);
-
-        preferenceDataStore.put(PushManager.QuietTime.START_HOUR_KEY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - 1);
-        preferenceDataStore.put(PushManager.QuietTime.START_MIN_KEY, 30);
-        preferenceDataStore.put(PushManager.QuietTime.END_HOUR_KEY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1);
-        preferenceDataStore.put(PushManager.QuietTime.END_MIN_KEY, 15);
-        pushManager.init();
-
-        int startHr = preferenceDataStore.getInt(PushManager.QuietTime.START_HOUR_KEY, PushManager.QuietTime.NOT_SET_VAL);
-        int startMin = preferenceDataStore.getInt(PushManager.QuietTime.START_MIN_KEY, PushManager.QuietTime.NOT_SET_VAL);
-        int endHr = preferenceDataStore.getInt(PushManager.QuietTime.END_HOUR_KEY, PushManager.QuietTime.NOT_SET_VAL);
-        int endMin = preferenceDataStore.getInt(PushManager.QuietTime.END_MIN_KEY, PushManager.QuietTime.NOT_SET_VAL);
-
-        assertTrue(startHr == -1);
-        assertTrue(startMin == -1);
-        assertTrue(endHr == -1);
-        assertTrue(endMin == -1);
-
-        Date[] interval = pushManager.getQuietTimeInterval();
-
-        Calendar start = Calendar.getInstance();
-        start.set(Calendar.HOUR_OF_DAY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - 1);
-        start.set(Calendar.MINUTE, 30);
-        start.set(Calendar.SECOND, 0);
-
-        // Prepare the end date.
-        Calendar end = Calendar.getInstance();
-        end.set(Calendar.HOUR_OF_DAY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1);
-        end.set(Calendar.MINUTE, 15);
-        end.set(Calendar.SECOND, 0);
-
-        assertTrue(interval != null);
-        assertTrue(interval.length == 2);
-
-        // I hate this, but there's otherwise an inequivalence by milliseconds.
-        assertEquals(start.getTime().toString(), interval[0].toString());
-        assertEquals(end.getTime().toString(), interval[1].toString());
-
-        pushManager.setQuietTimeEnabled(false);
-        assertFalse(pushManager.isInQuietTime());
-        pushManager.setQuietTimeEnabled(true);
-        assertTrue(pushManager.isInQuietTime());
-    }
-
     /**
      * Test edit tags.
      */
@@ -718,49 +611,6 @@ public class PushManagerTest extends BaseTestCase {
                 return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
-    }
-
-    /**
-     * Test migrating quiet time enabled setting.
-     */
-    @Test
-    public void testMigrateQuietTimeEnabled() {
-        // Make sure only the old enable setting is set to true
-        preferenceDataStore.remove(PushManager.QUIET_TIME_ENABLED);
-        preferenceDataStore.put(PushManager.OLD_QUIET_TIME_ENABLED, true);
-
-        // Verify quiet time is disabled
-        assertFalse(pushManager.isQuietTimeEnabled());
-
-        // Migrate the old setting
-        pushManager.migrateQuietTimeSettings();
-
-        // Verify quiet time is enabled
-        assertTrue(pushManager.isQuietTimeEnabled());
-
-        // Make sure changes to the setting are persisted
-        pushManager.setQuietTimeEnabled(false);
-        pushManager.migratePushEnabledSettings();
-        assertFalse(pushManager.isQuietTimeEnabled());
-    }
-
-    /**
-     * Test migrating quiet time enabled setting does not overwrite
-     * the new setting if its set.
-     */
-    @Test
-    public void testMigrateQuietTimeEnabledAlreadySet() {
-        preferenceDataStore.put(PushManager.QUIET_TIME_ENABLED, false);
-        preferenceDataStore.put(PushManager.OLD_QUIET_TIME_ENABLED, true);
-
-        // Verify quiet time is disabled
-        assertFalse(pushManager.isQuietTimeEnabled());
-
-        // Migrate the old setting
-        pushManager.migrateQuietTimeSettings();
-
-        // Verify quiet time is still disabled
-        assertFalse(pushManager.isQuietTimeEnabled());
     }
 
     /**

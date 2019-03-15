@@ -2,6 +2,7 @@
 
 package com.urbanairship.util;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
@@ -190,4 +191,13 @@ public abstract class UAStringUtil {
         return value;
     }
 
+    @NonNull
+    public static String namedStringResource(Context context, String name, String defaultValue) {
+        int resourceId = context.getResources().getIdentifier(name, "string", context.getApplicationInfo().packageName);
+        if (resourceId == 0) {
+            return defaultValue;
+        } else {
+            return context.getString(resourceId);
+        }
+    }
 }

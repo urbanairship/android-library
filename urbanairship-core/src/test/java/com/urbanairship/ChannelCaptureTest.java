@@ -184,7 +184,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         activityMonitor.foreground();
 
-        // Verify we did not post a notification TODO
+        // Verify we did not post a notification
         assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);
     }
 

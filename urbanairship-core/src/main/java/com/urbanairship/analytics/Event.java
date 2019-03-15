@@ -152,33 +152,6 @@ public abstract class Event {
     protected abstract JsonMap getEventData();
 
     /**
-     * Returns a list of currently enabled notification types.
-     *
-     * @return The list of notification types as an ArrayList of String.
-     */
-    @NonNull
-    public ArrayList<String> getNotificationTypes() {
-
-        ArrayList<String> notificationTypes = new ArrayList<>();
-        PushManager pushManager = UAirship.shared().getPushManager();
-
-        if (pushManager.isPushEnabled()) {
-            if (pushManager.isSoundEnabled()) {
-                notificationTypes.add("sound");
-            }
-            if (pushManager.isVibrateEnabled()) {
-                notificationTypes.add("vibrate");
-            }
-
-            //TODO: how to express no sound / no vibrate?
-            //No way to turn off alerts right now...
-            //Send notification builder class name?
-        }
-
-        return notificationTypes;
-    }
-
-    /**
      * Returns the connection type.
      *
      * @return The connection type as a String.

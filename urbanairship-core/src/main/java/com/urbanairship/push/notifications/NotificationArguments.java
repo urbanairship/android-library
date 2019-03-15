@@ -10,12 +10,6 @@ import com.urbanairship.push.PushMessage;
  */
 public class NotificationArguments {
 
-    /**
-     * Default notification channel ID.
-     */
-    @NonNull
-    public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
-
     private int notificationId;
     private boolean longRunningTask;
     private String notificationChannelId;
@@ -96,7 +90,7 @@ public class NotificationArguments {
 
         private int notificationId = -1;
         private boolean longRunningTask;
-        private String notificationChannelId = DEFAULT_NOTIFICATION_CHANNEL;
+        private String notificationChannelId = NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL;
         private String notificationTag;
         private PushMessage message;
 
