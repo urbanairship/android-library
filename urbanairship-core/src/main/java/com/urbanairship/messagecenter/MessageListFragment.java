@@ -258,6 +258,9 @@ public class MessageListFragment extends Fragment {
         // Set latest messages
         updateAdapterMessages();
 
+        // refresh the inbox
+        onRefreshMessages();
+
         if (getAbsListView() != null) {
             getAbsListView().invalidate();
         }
