@@ -6,8 +6,9 @@
     <application>
 
         <activity
-            android:name="com.urbanairship.debug.event.DebugActivity"
+            android:name="com.urbanairship.debug.DebugActivity"
             android:label="@string/debug_short_title"
+            android:theme="@style/AirshipDebug"
             android:taskAffinity="com.urbanairship.debug.${applicationId}">
 
             <intent-filter android:priority="-100">
@@ -16,16 +17,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.urbanairship.debug.event.EventActivity" />
-
-        <activity android:name="com.urbanairship.debug.event.EventDetailsActivity">
+        <receiver android:name="com.urbanairship.debug.push.PushReceiver"
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <data android:scheme="event" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="com.urbanairship.push.RECEIVED" />
+                <category android:name="${applicationId}" />
             </intent-filter>
-        </activity>
-
+        </receiver>
     </application>
 
 </manifest>

@@ -28,14 +28,19 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
 
-    // Room screens
+    // Room
     implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
     kapt "android.arch.persistence.room:compiler:$rootProject.roomVersion"
+
+    // Navigation
+    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
+    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
+    implementation "android.arch.navigation:navigation-ui-ktx:$rootProject.navigationVersion"
 
     // Constraint layout
     implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
 
-    // Lifecycle screens
+    // Lifecycle
     implementation "android.arch.lifecycle:extensions:$rootProject.lifeCycleVersion"
     kapt "android.arch.lifecycle:compiler:$rootProject.lifeCycleVersion"
 
@@ -46,6 +51,5 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
     implementation "com.android.support:design:$rootProject.supportLibVersion"
     implementation "com.android.support:support-vector-drawable:$rootProject.supportLibVersion"
-
 }
 

@@ -28,13 +28,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <include layout="@layout/ua_include_appbar" />
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/events"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:splitMotionEvents="false"
             app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_event" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/ua_item_event" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
@@ -43,6 +46,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="16dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
             android:layout_marginBottom="16dp"
             android:src="@drawable/ic_filter"
             app:fabSize="auto"
@@ -141,7 +145,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/guide_peek_height"
                 app:spanCount="2"
-                tools:listitem="@layout/item_event_filter" />
+                tools:listitem="@layout/ua_item_event_filter" />
 
         </android.support.constraint.ConstraintLayout>
 

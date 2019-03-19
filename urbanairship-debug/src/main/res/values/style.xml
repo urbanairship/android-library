@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AirshipDebug" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimaryDark">#004964</item>
+        <item name="colorPrimary">#00698f</item>
+        <item name="colorAccent">#eaaa00</item>
+    </style>
+
+    <style name="AirshipDebug.Toolbar">
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+    </style>
+
+</resources>

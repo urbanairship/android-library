@@ -23,7 +23,7 @@ interface EventDao {
     @Query("SELECT * FROM events ORDER BY id DESC")
     fun getEvents(): DataSource.Factory<Int, EventEntity>
 
-    @Query("SELECT * FROM events where type IN(:types) ORDER BY id DESC")
+    @Query("SELECT * FROM events WHERE type IN(:types) ORDER BY id DESC")
     fun getEvents(types: List<String>): DataSource.Factory<Int, EventEntity>
 
     @Query("select * from events where eventId = :eventId")

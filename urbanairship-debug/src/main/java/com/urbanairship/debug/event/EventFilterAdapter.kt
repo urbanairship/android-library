@@ -6,7 +6,7 @@ import android.support.v7.recyclerview.extensions.ListAdapter
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.urbanairship.debug.databinding.ItemEventFilterBinding
+import com.urbanairship.debug.databinding.UaItemEventFilterBinding
 import com.urbanairship.debug.utils.SimpleDiffItemCallback
 
 /**
@@ -14,7 +14,7 @@ import com.urbanairship.debug.utils.SimpleDiffItemCallback
  */
 internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.ViewHolder>(SimpleDiffItemCallback()) {
 
-    class ViewHolder(val binding: ItemEventFilterBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: UaItemEventFilterBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: EventFilterAdapter.ViewHolder, position: Int) {
         getItem(position)?.apply {
@@ -26,7 +26,7 @@ internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventFilterAdapter.ViewHolder {
-        var binding = ItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        var binding = UaItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 

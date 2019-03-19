@@ -2,7 +2,7 @@
 <DebugScreens>
     <entry
         description="@string/event_view_description"
-        activity="com.urbanairship.debug.event.EventActivity"
+        navigationId="@id/eventListFragment"
         title="@string/event_view_title" />
 
 </DebugScreens>

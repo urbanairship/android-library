@@ -10,13 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <include layout="@layout/ua_include_appbar" />
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/screens"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:splitMotionEvents="false"
             app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_debug_screen" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/ua_item_debug_screen" />
 
     </android.support.design.widget.CoordinatorLayout>
 

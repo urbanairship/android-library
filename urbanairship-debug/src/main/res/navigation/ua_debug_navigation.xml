@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ua_debug"
+    app:startDestination="@id/debugFragment">
+
+    <fragment
+        android:id="@+id/debugFragment"
+        android:name="com.urbanairship.debug.DebugFragment"
+        android:label="@string/debug_title">
+        <action
+            android:id="@+id/action_debugFragment_to_eventListFragment"
+            app:destination="@id/eventListFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/eventListFragment"
+        android:name="com.urbanairship.debug.event.EventListFragment"
+        android:label="@string/event_view_title">
+        <action
+            android:id="@+id/action_eventListFragment_to_eventDetailsFragment"
+            app:destination="@id/eventDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventDetailsFragment"
+        android:name="com.urbanairship.debug.event.EventDetailsFragment"
+        android:label="@string/event_details">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
+
+
+</navigation>

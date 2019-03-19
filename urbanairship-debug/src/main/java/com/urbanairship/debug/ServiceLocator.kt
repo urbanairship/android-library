@@ -1,8 +1,9 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.event
+package com.urbanairship.debug
 
 import android.content.Context
+import com.urbanairship.debug.event.EventRepository
 import com.urbanairship.debug.event.persistence.EventDao
 import com.urbanairship.debug.event.persistence.EventDatabase
 
@@ -46,4 +47,5 @@ internal class DefaultServiceLocator(val context: Context) : ServiceLocator {
     }
 
     override fun getEventDao(): EventDao = eventDatabase.eventDao()
+
 }

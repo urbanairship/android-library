@@ -1,25 +1,22 @@
 package com.urbanairship.debug
 
 import android.os.Bundle
-import com.urbanairship.messagecenter.ThemedActivity
+import android.support.v7.app.AppCompatActivity
+import androidx.navigation.Navigation
+import androidx.navigation.ui.NavigationUI
 
 /**
- * Debug activity. The main entry point for the debug library.
+ * Debug activity. The nav_home entry point for the debug library.
  */
-class DebugActivity : ThemedActivity() {
+class DebugActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setDisplayHomeAsUpEnabled(true)
-
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                    .replace(android.R.id.content, DebugFragment())
-                    .commit()
-        }
-
-        setTitle(R.string.debug_title)
+        setContentView(R.layout.ua_activity_debug)
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
 }

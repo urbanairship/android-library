@@ -22,7 +22,7 @@ abstract class EventDatabase : RoomDatabase() {
 
         fun create(context: Context) =
                 Room.databaseBuilder(context.applicationContext,
-                        EventDatabase::class.java, "event.db")
+                        EventDatabase::class.java, "com.urbanairship.debug.event.db")
                         .fallbackToDestructiveMigration()
                         .build()
     }

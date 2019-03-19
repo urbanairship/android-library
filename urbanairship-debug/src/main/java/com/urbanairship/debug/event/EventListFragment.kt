@@ -16,11 +16,16 @@ import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.Navigation
+import androidx.navigation.ui.NavigationUI
 import com.urbanairship.debug.R
-import com.urbanairship.debug.databinding.FragmentEventListBinding
+import com.urbanairship.debug.ServiceLocator
+import com.urbanairship.debug.databinding.UaFragmentEventListBinding
+import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
 /**
  * Event list fragment.
@@ -63,7 +68,7 @@ class EventListFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val dataBinding = DataBindingUtil.inflate<FragmentEventListBinding>(inflater, R.layout.fragment_event_list, container, false)
+        val dataBinding = DataBindingUtil.inflate<UaFragmentEventListBinding>(inflater, R.layout.ua_fragment_event_list, container, false)
         bottomSheetBehavior = BottomSheetBehavior.from(dataBinding.filterSheet)
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, slideOffset: Float) {
@@ -75,14 +80,15 @@ class EventListFragment : Fragment() {
             }
         })
 
+
         val filterAdapter = EventFilterAdapter()
         filterAdapter.submitList(viewModel.filters)
 
         val eventAdapter = EventAdapter {
             if (isResumed) {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("event:${it.eventId}"))
-                        .setPackage(context?.packageName)
-                context?.startActivity(intent)
+                val args = Bundle()
+                args.putString(EventDetailsFragment.ARGUMENT_EVENT_ID, it.eventId)
+                Navigation.findNavController(dataBinding.root).navigate(R.id.eventDetailsFragment, args)
             }
         }
 
@@ -92,7 +98,7 @@ class EventListFragment : Fragment() {
         })
 
         dataBinding.apply {
-            setLifecycleOwner(this@EventListFragment)
+            lifecycleOwner = this@EventListFragment
             viewModel = this@EventListFragment.viewModel
             collapseAlpha = this@EventListFragment.collapseAlpha
             expandAlpha = this@EventListFragment.expandAlpha
@@ -132,6 +138,11 @@ class EventListFragment : Fragment() {
         return dataBinding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupToolbarWithNavController(R.id.toolbar)
+    }
+
     private fun updateCollapseAlpha(slideOffset: Float) {
         collapseAlpha.set(offsetToAlpha(slideOffset, COLLAPSE_CHANGEOVER_THRESHOLD, COLLAPSE_MAX_THRESHOLD))
         expandAlpha.set(offsetToAlpha(slideOffset, COLLAPSE_CHANGEOVER_THRESHOLD, EXPAND_MAX_THRESHOLD))
@@ -142,7 +153,7 @@ class EventListFragment : Fragment() {
      * For example, `offsetToAlpha(0.5, 0.25, 1) = 0.33` because 0.5 is 1/3 of the way between 0.25
      * and 1. The result value is additionally clamped to the range `[0, 1]`.
      *
-     * Taken from https://github.com/google/iosched/master/mobile/src/main/java/com/google/samples/apps/iosched/ui/schedule/filters/ScheduleFilterFragment.kt
+     * Taken from https://github.com/google/iosched/master/mobile/src/nav_home/java/com/google/samples/apps/iosched/ui/schedule/filters/ScheduleFilterFragment.kt
      */
     private fun offsetToAlpha(value: Float, rangeMin: Float, rangeMax: Float): Float {
         return ((value - rangeMin) / (rangeMax - rangeMin)).coerceIn(0f, 1f)
