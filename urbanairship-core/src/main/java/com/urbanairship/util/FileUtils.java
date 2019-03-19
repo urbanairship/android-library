@@ -3,10 +3,12 @@
 package com.urbanairship.util;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -93,18 +95,16 @@ public abstract class FileUtils {
             conn = url.openConnection();
             conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
             conn.setUseCaches(true);
-            inputStream = conn.getInputStream();
-
             int statusCode = 0;
 
             if (conn instanceof HttpURLConnection) {
                 statusCode = ((HttpURLConnection) conn).getResponseCode();
-
-                if (!UAHttpStatusUtil.inSuccessRange(((HttpURLConnection) conn).getResponseCode())) {
+                if (!UAHttpStatusUtil.inSuccessRange(statusCode)) {
                     return new DownloadResult(false, statusCode);
                 }
             }
 
+            inputStream = conn.getInputStream();
             if (inputStream != null) {
                 outputStream = new FileOutputStream(file);
 
@@ -123,18 +123,46 @@ public abstract class FileUtils {
 
             return new DownloadResult(false, statusCode);
         } finally {
-            if (outputStream != null) {
-                outputStream.close();
+            endRequest(conn, inputStream, outputStream);
+        }
+    }
+
+    /**
+     * Helper method to end a connection request and any associated closeables.
+     *
+     * @param connection The connection.
+     * @param closeables Closeables.
+     */
+    private static void endRequest(@Nullable URLConnection connection, @NonNull Closeable... closeables) {
+        for (int i = 0; i < closeables.length; i++) {
+            Closeable closeable = closeables[i];
+            if (closeable == null) {
+                continue;
             }
 
-            if (inputStream != null) {
-                inputStream.close();
-            }
-
-            if (conn instanceof HttpURLConnection) {
-                ((HttpURLConnection) conn).disconnect();
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                Logger.error(e);
             }
         }
+
+        if (connection instanceof HttpURLConnection) {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
+
+            // Any error response will generate an error stream so we need to make sure it
+            // is closed or we will leak resources.
+            if (httpURLConnection.getErrorStream() != null) {
+                try {
+                    httpURLConnection.getErrorStream().close();
+                } catch (Exception e) {
+                    Logger.error(e);
+                }
+            }
+
+            httpURLConnection.disconnect();
+        }
+
     }
 
 }
