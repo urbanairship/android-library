@@ -146,7 +146,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
             style.bigText(alert);
         }
 
-        return new NotificationCompat.Builder(context)
+        return new NotificationCompat.Builder(context, arguments.getNotificationChannelId())
                 .setAutoCancel(true)
                 .setStyle(style)
                 .build();
