@@ -9,8 +9,8 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 
@@ -98,7 +98,7 @@ public class OverlayRichPushMessageAction extends Action {
         Intent intent = new Intent(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION)
                 .setPackage(UAirship.getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
+                .setData(Uri.fromParts(MessageCenter.MESSAGE_DATA_SCHEME, messageId, null));
 
         try {
             UAirship.getApplicationContext().startActivity(intent);

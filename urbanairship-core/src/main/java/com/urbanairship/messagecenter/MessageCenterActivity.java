@@ -34,7 +34,7 @@ public class MessageCenterActivity extends ThemedActivity {
         setDisplayHomeAsUpEnabled(true);
 
         if (savedInstanceState == null) {
-            messageCenterFragment = MessageCenterFragment.newInstance(getMessageId(getIntent()));
+            messageCenterFragment = MessageCenterFragment.newInstance(MessageCenter.parseMessageId(getIntent()));
             getSupportFragmentManager()
                     .beginTransaction()
                     .add(android.R.id.content, messageCenterFragment, "MESSAGE_CENTER_FRAGMENT")
@@ -47,31 +47,10 @@ public class MessageCenterActivity extends ThemedActivity {
         messageCenterFragment.setPredicate(UAirship.shared().getMessageCenter().getPredicate());
     }
 
-    /**
-     * Gets the message ID from an intent.
-     *
-     * @param intent The intent.
-     * @return The message ID if its available on the intent, otherwise {@code null}.
-     */
-    @Nullable
-    private String getMessageId(@Nullable Intent intent) {
-        if (intent == null || intent.getData() == null || intent.getAction() == null) {
-            return null;
-        }
-
-        switch (intent.getAction()) {
-            case RichPushInbox.VIEW_INBOX_INTENT_ACTION:
-            case RichPushInbox.VIEW_MESSAGE_INTENT_ACTION:
-                return intent.getData().getSchemeSpecificPart();
-
-            default:
-                return null;
-        }
-    }
 
     @Override
     protected void onNewIntent(@NonNull Intent intent) {
-        String messageId = getMessageId(intent);
+        String messageId = MessageCenter.parseMessageId(intent);
         if (messageId != null) {
             messageCenterFragment.setMessageID(messageId);
         }

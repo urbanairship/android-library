@@ -26,6 +26,7 @@ import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
 
@@ -98,22 +99,28 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Intent action to view the rich push inbox.
+     *
+     * @deprecated Use {@link MessageCenter#VIEW_MESSAGE_CENTER_INTENT_ACTION}.
      */
+    @Deprecated
     @NonNull
-    public static final String VIEW_INBOX_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_INBOX";
+    public static final String VIEW_INBOX_INTENT_ACTION = MessageCenter.VIEW_MESSAGE_CENTER_INTENT_ACTION;
 
     /**
      * Intent action to view a rich push message.
+     *
+     * @deprecated Use {@link MessageCenter#VIEW_MESSAGE_CENTER_INTENT_ACTION}.
      */
-    @NonNull
-    public static final String VIEW_MESSAGE_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_MESSAGE";
+    @Deprecated
+    public static final String VIEW_MESSAGE_INTENT_ACTION = MessageCenter.VIEW_MESSAGE_INTENT_ACTION;
 
     /**
      * Scheme used for @{code message:<MESSAGE_ID>} when requesting to view a message with
      * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE}.
+     * @deprecated Use {@link MessageCenter#MESSAGE_DATA_SCHEME}.
      */
-    @NonNull
-    public static final String MESSAGE_DATA_SCHEME = "message";
+    @Deprecated
+    public static final String MESSAGE_DATA_SCHEME = MessageCenter.MESSAGE_DATA_SCHEME;
 
     private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
 
@@ -244,51 +251,24 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Starts an activity that can display the Message Center. An implicit intent with the intent
-     * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} will be attempted first. If the intent
-     * fails to start an activity, the {@link MessageCenterActivity} will be started instead.
+     * Starts the message center activity. This method calls through to {@link MessageCenter#showMessageCenter()}.
+     * @deprecated Use {@link MessageCenter#showMessageCenter()} instead.
      */
+    @Deprecated
     public void startInboxActivity() {
-        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
-                .setPackage(context.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        if (intent.resolveActivity(context.getPackageManager()) == null) {
-            // Fallback to our MessageCenterActivity
-            intent.setClass(context, MessageCenterActivity.class);
-        }
-
-        context.startActivity(intent);
+        UAirship.shared().getMessageCenter().showMessageCenter();
     }
 
     /**
-     * Starts an activity that can display a {@link RichPushMessage}. An implicit intent with the intent
-     * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} with the message ID supplied as the data
-     * in the form of {@code message:<MESSAGE_ID>} will be attempted first. If the intent
-     * fails then the action {@code com.urbanairship.VIEW_MESSAGE_INTENT_ACTION} will be tried. Finally,
-     * it will fall back to the {@link MessageActivity} activity.
+     * Starts the message center activity to display a specific message Id. This method calls through to
+     * @link MessageCenter#showMessageCenter(String)}.
      *
      * @param messageId An ID of a {@link RichPushMessage} to display.
+     * @deprecated Use {@link MessageCenter#showMessageCenter(String)} instead.
      */
+    @Deprecated
     public void startMessageActivity(@NonNull String messageId) {
-        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
-                .setPackage(context.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
-
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
-            context.startActivity(intent);
-            return;
-        }
-
-        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
-
-        if (intent.resolveActivity(context.getPackageManager()) == null) {
-            // Fallback to our MessageCenterActivity
-            intent.setClass(context, MessageCenterActivity.class);
-        }
-
-        context.startActivity(intent);
+        UAirship.shared().getMessageCenter().showMessageCenter(messageId);
     }
 
     /**

@@ -8,7 +8,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
@@ -38,11 +37,11 @@ import java.util.List;
  */
 public class MessageCenterFragment extends Fragment {
 
-    private static final String START_MESSAGE_ID = "START_MESSAGE_ID";
-    private static final String STATE_CURRENT_MESSAGE_ID = "STATE_CURRENT_MESSAGE_ID";
-    private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
-    private static final String STATE_ABS_LIST_VIEW = "STATE_ABS_LIST_VIEW";
-    private static final String STATE_PENDING_MESSAGE_ID = "STATE_PENDING_MESSAGE_ID";
+    // State
+    private static final String STATE_CURRENT_MESSAGE_ID = "currentMessageId";
+    private static final String STATE_CURRENT_MESSAGE_POSITION = "currentMessagePosition";
+    private static final String STATE_ABS_LIST_VIEW = "listView";
+    private static final String STATE_PENDING_MESSAGE_ID = "pendingMessageId";
 
     private RichPushInbox.Predicate predicate;
 
@@ -71,7 +70,7 @@ public class MessageCenterFragment extends Fragment {
     public static MessageCenterFragment newInstance(@Nullable String messageId) {
         MessageCenterFragment message = new MessageCenterFragment();
         Bundle arguments = new Bundle();
-        arguments.putString(START_MESSAGE_ID, messageId);
+        arguments.putString(MessageFragment.MESSAGE_ID, messageId);
         message.setArguments(arguments);
         return message;
     }
@@ -84,6 +83,8 @@ public class MessageCenterFragment extends Fragment {
             currentMessagePosition = savedInstanceState.getInt(STATE_CURRENT_MESSAGE_POSITION, -1);
             currentMessageId = savedInstanceState.getString(STATE_CURRENT_MESSAGE_ID, null);
             pendingMessageId = savedInstanceState.getString(STATE_PENDING_MESSAGE_ID, null);
+        } else if (getArguments() != null) {
+            pendingMessageId = getArguments().getString(MessageFragment.MESSAGE_ID);
         }
     }
 
@@ -116,10 +117,6 @@ public class MessageCenterFragment extends Fragment {
         configureView(view);
 
         messageListFragment.setPredicate(predicate);
-
-        if (savedInstanceState == null && getArguments() != null && getArguments().containsKey(START_MESSAGE_ID)) {
-            pendingMessageId = getArguments().getString(START_MESSAGE_ID);
-        }
 
         // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
         if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW)) {
@@ -162,17 +159,15 @@ public class MessageCenterFragment extends Fragment {
             isTwoPane = true;
 
             // Color the linear layout divider if we are running on JELLY_BEAN or newer
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                LinearLayout layoutContainer = view.findViewById(R.id.container);
-                TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
-                if (attributes.hasValue(R.styleable.MessageCenter_messageCenterDividerColor)) {
-                    int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.BLACK);
-                    DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
-                    DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
-                }
-
-                attributes.recycle();
+            LinearLayout layoutContainer = view.findViewById(R.id.container);
+            TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
+            if (attributes.hasValue(R.styleable.MessageCenter_messageCenterDividerColor)) {
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.BLACK);
+                DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
+                DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
             }
+
+            attributes.recycle();
 
             if (messageListFragment != null && currentMessageId != null) {
                 messageListFragment.setCurrentMessage(currentMessageId);
@@ -210,7 +205,6 @@ public class MessageCenterFragment extends Fragment {
      * @param messageListFragment The message list fragment.
      */
     protected void configureMessageListFragment(@NonNull final MessageListFragment messageListFragment) {
-
         messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
             @Override
             public void onListViewReady(@NonNull AbsListView absListView) {
@@ -316,21 +310,32 @@ public class MessageCenterFragment extends Fragment {
             messageListFragment.setCurrentMessage(messageId);
 
         } else if (messageId != null) {
-            Intent intent = new Intent()
-                    .setPackage(getContext().getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
-
-            // Try VIEW_MESSAGE_INTENT_ACTION first
-            intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
-
-            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
-                // Fallback to our MessageActivity
-                intent.setClass(getContext(), MessageActivity.class);
-            }
-
-            getContext().startActivity(intent);
+            showMessageExternally(getContext(), messageId);
         }
+    }
+
+    /**
+     * Called to display a message in single pane mode.
+     *
+     * @param context The context.
+     * @param messageId The message Id.
+     */
+    protected void showMessageExternally(@NonNull Context context, @NonNull String messageId) {
+
+        Intent intent = new Intent()
+                .setPackage(context.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setData(Uri.fromParts(MessageCenter.MESSAGE_DATA_SCHEME, messageId, null));
+
+        // Try VIEW_MESSAGE_INTENT_ACTION first
+        intent.setAction(MessageCenter.VIEW_MESSAGE_INTENT_ACTION);
+
+        if (intent.resolveActivity(context.getPackageManager()) == null) {
+            // Fallback to our MessageActivity
+            intent.setClass(context, MessageActivity.class);
+        }
+
+        context.startActivity(intent);
     }
 
     private void updateCurrentMessage() {

@@ -48,7 +48,7 @@ public class MessageActivity extends ThemedActivity {
         setDisplayHomeAsUpEnabled(true);
 
         if (savedInstanceState == null) {
-            messageId = parseMessageId(getIntent());
+            messageId = MessageCenter.parseMessageId(getIntent());
         } else {
             messageId = savedInstanceState.getString("messageId");
         }
@@ -65,23 +65,6 @@ public class MessageActivity extends ThemedActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("messageId", messageId);
-    }
-
-    @Nullable
-    private String parseMessageId(@Nullable Intent intent) {
-        if (intent == null || intent.getData() == null || intent.getAction() == null) {
-            return null;
-        }
-
-        String messageId = null;
-
-        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
-        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
-        if (RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(intent.getAction())) {
-            messageId = intent.getData().getSchemeSpecificPart();
-        }
-
-        return messageId;
     }
 
     /**
@@ -138,7 +121,7 @@ public class MessageActivity extends ThemedActivity {
     @SuppressLint("UnknownNullness")
     @Override
     protected void onNewIntent(Intent intent) {
-        String newMessageId = parseMessageId(intent);
+        String newMessageId = MessageCenter.parseMessageId(intent);
         if (newMessageId != null) {
             messageId = newMessageId;
             loadMessage();

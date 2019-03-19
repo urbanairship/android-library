@@ -16,6 +16,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.js.Whitelist;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.Checks;
@@ -142,8 +143,7 @@ public class LandingPageAction extends Action {
                     @Override
                     public void run() {
                         UAWebView webView = new UAWebView(UAirship.getApplicationContext());
-
-                        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+                        if (MessageCenter.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
                             String messageId = uri.getSchemeSpecificPart();
                             RichPushMessage message = UAirship.shared()
                                                               .getInbox()

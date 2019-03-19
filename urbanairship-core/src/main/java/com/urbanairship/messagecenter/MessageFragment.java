@@ -35,6 +35,11 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class MessageFragment extends Fragment {
 
+    /**
+     * Argument key to specify the message Id
+     */
+    public static final String MESSAGE_ID = "messageId";
+
     @IntDef({ ERROR_DISPLAYING_MESSAGE, ERROR_FETCHING_MESSAGES, ERROR_MESSAGE_UNAVAILABLE })
     @Retention(RetentionPolicy.SOURCE)
     @interface Error {}
@@ -54,7 +59,6 @@ public class MessageFragment extends Fragment {
      */
     protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
 
-    private static final String MESSAGE_ID_KEY = "com.urbanairship.richpush.URL_KEY";
 
     private UAWebView webView;
     private View progressBar;
@@ -76,7 +80,7 @@ public class MessageFragment extends Fragment {
     public static MessageFragment newInstance(@Nullable String messageId) {
         MessageFragment message = new MessageFragment();
         Bundle arguments = new Bundle();
-        arguments.putString(MESSAGE_ID_KEY, messageId);
+        arguments.putString(MESSAGE_ID, messageId);
         message.setArguments(arguments);
         return message;
     }
@@ -342,7 +346,7 @@ public class MessageFragment extends Fragment {
         if (getArguments() == null) {
             return null;
         }
-        return getArguments().getString(MESSAGE_ID_KEY);
+        return getArguments().getString(MESSAGE_ID);
     }
 
     private void loadMessage() {

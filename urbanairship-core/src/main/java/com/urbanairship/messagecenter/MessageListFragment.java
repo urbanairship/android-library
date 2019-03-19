@@ -259,7 +259,7 @@ public class MessageListFragment extends Fragment {
         updateAdapterMessages();
 
         // refresh the inbox
-        onRefreshMessages();
+        richPushInbox.fetchMessages();
 
         if (getAbsListView() != null) {
             getAbsListView().invalidate();

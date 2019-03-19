@@ -33,6 +33,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.js.Whitelist;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
@@ -435,7 +436,7 @@ public class LandingPageActivity extends Activity {
 
         error = null;
 
-        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+        if (MessageCenter.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
             final String messageId = uri.getSchemeSpecificPart();
             RichPushMessage message = UAirship.shared()
                                               .getInbox()
