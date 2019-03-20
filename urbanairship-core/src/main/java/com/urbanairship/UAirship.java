@@ -62,7 +62,7 @@ public class UAirship {
 
     private static final String[] OPTIONAL_COMPONENTS = {
             "com.urbanairship.aaid.AdvertisingIdTracker",
-            "com.urbanairship.debug.ComponentManager"
+            "com.urbanairship.debug.DebugManager"
     };
 
     /**
