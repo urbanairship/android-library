@@ -2,58 +2,59 @@
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.v7.preference.PreferenceCategory android:title="@string/push_preference_category_title">
+    <android.support.v7.preference.PreferenceCategory app:title="@string/push_preference_category_title">
 
         <com.urbanairship.preference.PushEnablePreference
-            android:key="push_preference"
-            android:persistent="false"
-            android:title="@string/push_preference_title" />
+            app:key="push_preference"
+            app:persistent="false"
+            app:title="@string/push_preference_title" />
 
     </android.support.v7.preference.PreferenceCategory>
 
     <android.support.v7.preference.PreferenceCategory android:title="@string/analytics_preference_category_title">
 
         <com.urbanairship.preference.AnalyticsEnablePreference
-            android:key="analytics_preference"
-            android:persistent="false"
-            android:title="@string/analytics_preference_title" />
+            app:key="analytics_preference"
+            app:persistent="false"
+            app:title="@string/analytics_preference_title" />
 
         <com.urbanairship.sample.preference.EnableAdvertisingIdPreference
-            android:persistent="false"
-            android:title="@string/analytics_ad_id_preference_title" />
+            app:persistent="false"
+            app:title="@string/analytics_ad_id_preference_title" />
 
     </android.support.v7.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory android:title="@string/location_preference_category_title">
+    <android.support.v7.preference.PreferenceCategory app:title="@string/location_preference_category_title">
 
         <com.urbanairship.preference.LocationUpdatesEnabledPreference
-            android:key="location_preference"
-            android:persistent="false"
-            android:title="@string/location_preference_title" />
+            app:key="location_preference"
+            app:persistent="false"
+            app:title="@string/location_preference_title" />
 
         <com.urbanairship.preference.LocationBackgroundUpdatesAllowedPreference
-            android:dependency="location_preference"
-            android:key="background_location_preference"
-            android:persistent="false"
-            android:title="@string/background_location_preference_title" />
+            app:dependency="location_preference"
+            app:key="background_location_preference"
+            app:persistent="false"
+            app:title="@string/background_location_preference_title" />
 
 
     </android.support.v7.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory android:title="@string/advanced_preference_category_title">
+    <android.support.v7.preference.PreferenceCategory app:title="@string/advanced_preference_category_title">
 
         <com.urbanairship.preference.ChannelIdPreference
-            android:persistent="false"
-            android:title="@string/channel_id_preference_title" />
+            app:persistent="false"
+            app:title="@string/channel_id_preference_title" />
 
         <com.urbanairship.sample.preference.NamedUserPreference
-            android:persistent="false"
             app:key="named user"
-            android:title="@string/set_named_user_preference_title" />
+            app:persistent="false"
+            app:title="@string/set_named_user_preference_title" />
 
-        <com.urbanairship.sample.preference.TagsPreference
-            android:persistent="false"
-            android:title="@string/add_tags_preference_title" />
+        <android.support.v7.preference.Preference
+            app:key="tags"
+            app:persistent="false"
+            app:title="@string/add_tags_preference_title" />
 
     </android.support.v7.preference.PreferenceCategory>
 

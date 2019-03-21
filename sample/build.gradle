@@ -42,6 +42,8 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:$rootProject.lifeCycleVersion"
     implementation "android.arch.lifecycle:viewmodel:$rootProject.lifeCycleVersion"
     implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
+    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
+    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
 
     // Urban Airship ADM
     implementation project(':urbanairship-adm')

@@ -3,8 +3,6 @@ developmentAppSecret = Your Development App Secret
 productionAppKey = Your Production App Key
 productionAppSecret = Your Production Secret
 
-inProduction = false
-
 # LogLevel is "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR" or "ASSERT"
 developmentLogLevel = DEBUG
 productionLogLevel = ERROR

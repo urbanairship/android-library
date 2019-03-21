@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -19,8 +20,12 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.urbanairship.sample.R;
 import com.urbanairship.sample.databinding.FragmentTagsBinding;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 /**
  * Fragment that manages Urban Airship tags.
@@ -75,6 +80,13 @@ public class TagsFragment extends Fragment {
         });
 
         itemTouchHelper.attachToRecyclerView(recyclerView);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
     }
 
     private void initAddTag() {

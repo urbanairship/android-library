@@ -1,51 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_gravity="center"
-    android:paddingTop="32dp"
-    android:orientation="vertical"
-    android:layout_width="280dp"
-    android:layout_height="fill_parent">
 
-    <TextView
-        android:id="@+id/channel_title"
-        android:paddingBottom="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/channel_id"
-        android:textColor="@color/color_accent"
-        android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.urbanairship.sample.home.HomeViewModel" />
+
+    </data>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include layout="@layout/include_appbar" />
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/channel_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/channel_id"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                app:layout_constraintBottom_toTopOf="@+id/channelId"
+                app:layout_constraintStart_toStartOf="@+id/channelId" />
+
+            <Button
+                android:id="@+id/channelId"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="51dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:lines="1"
+                android:text="@{viewModel.channeId}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.495"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.302"
+                tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
 
 
-    <TextView
-        android:id="@+id/channel_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:lines="1"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
-        tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/share_button"
-            android:layout_weight=".5"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Share"
-            style="@style/Widget.AppCompat.Button.Borderless" />
-
-        <Button
-            android:id="@+id/copy_button"
-            android:layout_weight=".5"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Copy"
-            style="@style/Widget.AppCompat.Button.Borderless" />
-
-    </LinearLayout>
-
-</LinearLayout>
+        </android.support.constraint.ConstraintLayout>
+    </android.support.design.widget.CoordinatorLayout>
+</layout>

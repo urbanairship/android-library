@@ -2,11 +2,12 @@
 
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
+        <item name="messageCenterStyle">@style/AppTheme.MessageCenter</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -15,8 +16,21 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.Toolbar">
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+    </style>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppTheme.MessageCenter" parent="MessageCenter">
+        <item name="messageCenterItemTitleTextAppearance">@style/AppTheme.MessageCenter.TitleTextAppearance</item>
+        <item name="messageCenterItemDateTextAppearance">@style/AppTheme.MessageCenter.DateTextAppearance</item>
+    </style>
+
+    <!-- Custom message title text style -->
+    <style name="AppTheme.MessageCenter.TitleTextAppearance" parent="TextAppearance.MaterialComponents.Subtitle1" />
+
+    <!-- Custom message date text style -->
+    <style name="AppTheme.MessageCenter.DateTextAppearance" parent="TextAppearance.MaterialComponents.Body2" />
+
+
 
 </resources>

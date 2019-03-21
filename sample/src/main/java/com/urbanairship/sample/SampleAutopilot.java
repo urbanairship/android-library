@@ -3,13 +3,22 @@
 package com.urbanairship.sample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.DeepLinkAction;
+import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.util.UriUtils;
+
+import androidx.navigation.Navigation;
 
 /**
  * Autopilot that enables user notifications on first run.
@@ -31,6 +40,24 @@ public class SampleAutopilot extends Autopilot {
             // Enable user notifications on first run
             airship.getPushManager().setUserNotificationsEnabled(true);
         }
+
+        airship.getMessageCenter().setOnShowMessageCenterListener(messageId -> {
+            // Use an implicit navigation deep link for now as explicit deep links are broken
+            // with multi navigation host fragments
+            Uri uri;
+            if (messageId != null) {
+                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox/message/" + messageId);
+            } else {
+                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox");
+            }
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri)
+                    .setPackage(UAirship.getPackageName())
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            UAirship.getApplicationContext().startActivity(intent);
+        });
+
     }
 
     @Nullable
@@ -48,7 +75,7 @@ public class SampleAutopilot extends Autopilot {
                     .setProductionAppSecret("Your Production App Secret")
                     .setGcmSender("Your GCM/Firebase Sender ID")
                     .setNotificationAccentColor(ContextCompat.getColor(context, R.color.color_accent))
-                    .setNotificationIcon(R.drawable.ic_notification)
+                    .setNotificationIcon(R.drawable.ic_airship)
                     .build();
 
             return options;

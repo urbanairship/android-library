@@ -60,6 +60,7 @@
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textAppearance="@style/AirshipDebug.ItemTitle"
                 app:eventName="@{viewModel}"
                 tools:text="@tools:sample/lorem[3]" />
 
@@ -67,6 +68,7 @@
                 android:id="@+id/time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textAppearance="@style/AirshipDebug.ItemSubTitle"
                 app:formatTime="@{viewModel.time}"
                 tools:text="@tools:sample/lorem[4]" />
 
