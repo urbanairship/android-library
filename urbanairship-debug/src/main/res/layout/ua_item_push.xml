@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="push"
+            type="com.urbanairship.debug.push.PushItem" />
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/alert"
+            android:textAppearance="@style/AirshipDebug.ItemTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{push.alert ?? @string/push_empty_alert}"
+            tools:text="@tools:sample/lorem[3]" />
+
+        <TextView
+            android:id="@+id/pushId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{push.pushId}"
+            android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+            app:layout_constraintStart_toEndOf="@+id/time"
+            app:layout_constraintTop_toBottomOf="@+id/alert"
+            tools:text="@tools:sample/lorem[3]" />
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:formatTime="@{push.time}"
+            android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/alert"
+            tools:text="10:30" />
+
+    </LinearLayout>
+</layout>

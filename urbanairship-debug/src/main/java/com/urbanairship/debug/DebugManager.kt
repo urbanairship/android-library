@@ -21,6 +21,8 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
 
     companion object {
         const val TRIM_EVENTS_COUNT = 100000L
+        const val TRIM_PUSHES_COUNT = 50L
+
     }
 
     override fun onAirshipReady(airship: UAirship) {
@@ -30,6 +32,10 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
             ServiceLocator.shared(context)
                     .getEventDao()
                     .trimEvents(TRIM_EVENTS_COUNT)
+
+            ServiceLocator.shared(context)
+                    .getPushDao()
+                    .trimPushes(TRIM_PUSHES_COUNT)
         }
 
         airship.analytics.addEventListener { event, session ->

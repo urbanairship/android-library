@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationCompat;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.NotificationIdGenerator;
+import com.urbanairship.util.UAStringUtil;
 
 public class AirshipNotificationProvider extends NotificationProvider {
 
@@ -169,7 +170,7 @@ public class AirshipNotificationProvider extends NotificationProvider {
     @NonNull
     @Override
     public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
-        if (arguments.getMessage().getAlert() == null) {
+        if (UAStringUtil.isEmpty(arguments.getMessage().getAlert())) {
             return NotificationResult.cancel();
         }
 

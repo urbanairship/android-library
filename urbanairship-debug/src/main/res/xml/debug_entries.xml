@@ -5,4 +5,9 @@
         navigationId="@id/eventListFragment"
         title="@string/event_view_title" />
 
+    <entry
+        description="@string/push_view_description"
+        navigationId="@id/pushListFragment"
+        title="@string/push_view_title" />
+
 </DebugScreens>

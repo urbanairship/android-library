@@ -9,7 +9,7 @@
 
         <variable
             name="viewModel"
-            type="com.urbanairship.debug.event.EventDetailsViewModel" />
+            type="com.urbanairship.debug.push.PushDetailsViewModel" />
 
     </data>
 
@@ -21,8 +21,8 @@
 
         <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
@@ -35,7 +35,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="16dp"
-                    android:text="@{viewModel.eventData}"
+                    android:text="@{viewModel.pushData()}"
                     android:textIsSelectable="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -45,4 +45,6 @@
 
         </android.support.v4.widget.NestedScrollView>
     </android.support.design.widget.CoordinatorLayout>
+
+
 </layout>
