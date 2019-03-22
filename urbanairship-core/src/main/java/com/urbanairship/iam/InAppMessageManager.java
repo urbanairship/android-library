@@ -92,6 +92,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final List<InAppMessageListener> listeners = new ArrayList<>();
     private final TagGroupManager tagGroupManager;
     private final DefaultDisplayCoordinator defaultCoordinator;
+    private final ImmediateDisplayCoordinator immediateDisplayCoordinator;
     private final Handler backgroundHandler;
     private final AssetManager assetManager;
 
@@ -126,6 +127,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
+        this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
         this.pushManager = pushManager;
@@ -163,6 +165,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
+        this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;
         this.pushManager = pushManager;
@@ -189,7 +192,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener<InAppMessageSchedule>() {
             @Override
             public void onScheduleExpired(@NonNull final InAppMessageSchedule schedule) {
-                analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
+                if (schedule.getInfo().getInAppMessage().isReportingEnabled()) {
+                    analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
+                }
 
                 executor.execute(new Runnable() {
                     @Override
@@ -236,7 +241,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         });
 
         driver.setListener(new InAppMessageDriver.Listener() {
-
             @WorkerThread
             @Override
             public void onPrepareSchedule(final @NonNull InAppMessageSchedule schedule) {
@@ -735,7 +739,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return;
         }
 
-        analytics.addEvent(new DisplayEvent(adapterWrapper.message));
+        if (adapterWrapper.message.isReportingEnabled()) {
+            analytics.addEvent(new DisplayEvent(adapterWrapper.message));
+        }
         synchronized (listeners) {
             for (InAppMessageListener listener : new ArrayList<>(listeners)) {
                 listener.onMessageDisplayed(scheduleId, adapterWrapper.message);
@@ -780,7 +786,15 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
 
             if (coordinator == null) {
-                coordinator = this.defaultCoordinator;
+                switch (message.getDisplayBehavior()) {
+                    case InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE:
+                        coordinator = this.immediateDisplayCoordinator;
+                        break;
+                    case InAppMessage.DISPLAY_BEHAVIOR_DEFAULT:
+                    default:
+                        coordinator = this.defaultCoordinator;
+                        break;
+                }
             }
         } catch (Exception e) {
             Logger.error(e, "InAppMessageManager - Failed to create in-app message adapter.");
@@ -841,7 +855,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         // Add resolution event
-        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo, displayMilliseconds));
+        if (adapterWrapper.message.isReportingEnabled()) {
+            analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo, displayMilliseconds));
+        }
 
         // Run Actions
         InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);

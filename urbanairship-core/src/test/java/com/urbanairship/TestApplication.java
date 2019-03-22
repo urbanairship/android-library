@@ -127,6 +127,11 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().legacyInAppMessageManager = legacyInAppMessageManager;
     }
 
+    public void setInAppMessageManager(InAppMessageManager inAppMessageManager) {
+        UAirship.shared().inAppMessageManager = inAppMessageManager;
+    }
+
+
     public void setRemoteData(RemoteData remoteData) {
         UAirship.shared().remoteData = remoteData;
     }

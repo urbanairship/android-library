@@ -89,42 +89,6 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
-     * if the app has not been opened in the last week.
-     */
-    @Test
-    public void testLandingPageDefaultPredicateReject() {
-        registry.registerDefaultActions(TestApplication.getApplication());
-
-        ActionRegistry.Entry entry = registry.getEntry("^p");
-        assertNotNull("Landing Page should have a default predicate", entry.getPredicate());
-
-        // Set the last open to 8 days ago
-        when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 8 * 24 * 1000 * 3600);
-
-        assertFalse("Should reject PUSH_RECEIVED when the app has not been opened in the week.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
-    }
-
-    /**
-     * Test the landing page default predicate accepts Action.SITUATION_PUSH_RECEIVED
-     * if the app has been opened in the last week.
-     */
-    @Test
-    public void testLandingPageDefaultPredicateAccepts() {
-        registry.registerDefaultActions(TestApplication.getApplication());
-
-        ActionRegistry.Entry entry = registry.getEntry("^p");
-        assertNotNull("Landing Page should have a default predicate", entry.getPredicate());
-
-        // Set the last open to 6 days ago
-        when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 6 * 24 * 1000 * 3600);
-
-        assertTrue("Should accept PUSH_RECEIVED when the app has been opened in the last week.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
-    }
-
-    /**
      * Test the add custom event default predicate rejects Action.SITUATION_PUSH_RECEIVED.
      */
     @Test
@@ -172,24 +136,6 @@ public class ActionRegistryTest extends BaseTestCase {
 
         assertTrue("Fetch device info should accept WEB_VIEW_INVOCATION.",
                 entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
-    }
-
-    /**
-     * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
-     * if the app has never been opened.
-     */
-    @Test
-    public void testLandingPagePredicateAppNeverOpened() {
-        registry.registerDefaultActions(TestApplication.getApplication());
-
-        ActionRegistry.Entry entry = registry.getEntry("^p");
-        assertNotNull("Landing Page should have a default predicate", entry.getPredicate());
-
-        // Set to -1, the default.
-        when(metrics.getLastOpenTimeMillis()).thenReturn(-1L);
-
-        assertFalse("Should not accept PUSH_RECEIVED when the app has never been opened.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
     }
 
     /**

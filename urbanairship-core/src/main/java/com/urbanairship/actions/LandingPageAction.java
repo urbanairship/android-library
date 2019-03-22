@@ -2,61 +2,46 @@
 
 package com.urbanairship.actions;
 
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.TypedValue;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.Triggers;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.InAppMessageScheduleInfo;
+import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
-import com.urbanairship.widget.UAWebView;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.UUID;
 
 /**
- * Action for launching a Landing Page.
- * <p>
- * The landing page will not be launched in SITUATION_PUSH_RECEIVED, instead it will be cached
- * if the action is triggered with a payload that sets "cache_on_receive" to true.
- * <p>
- * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_PUSH_RECEIVED, SITUATION_WEB_VIEW_INVOCATION,
+ * Schedules a landing page to display ASAP.
+ *
+ * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
- * <p>
+ *
  * Accepted argument value types: URL defined as either a String or a Map containing the key
- * "url" that defines the URL, an optional width and height in points as an int or "fill" string,
- * an optional aspectLock option as a boolean.
- * The aspectLock option guarantees that if the message does not fit, it will be resized at the
- * same aspect ratio defined by the provided width and height parameters. The map argument value
- * can also define a "cache_on_receive" flag to enable or disable caching when a
- * SITUATION_PUSH_RECEIVED. Caching is disabled by default.
- * <p>
- * <pre>{@code Note: URLs in the format of "u:<content-id>" will be treated as a short url and
- * used to construct a separate url using the content id. }</pre>
- * <p>
- * Result value: <code>null</code>
- * <p>
+ * "url" that defines the URL, an optional "width", "height" in dps as an int or "fill" string,
+ * an optional "aspect_lock" option as a boolean.
+ *
+ * The aspect_lock option guarantees that if the message does not fit, it will be resized at the
+ * same aspect ratio defined by the provided width and height parameters.
+ *
+ *
  * Default Registration Names: ^p, landing_page_action
- * <p>
- * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED if the application
- * has not been opened in the last week.
  */
 public class LandingPageAction extends Action {
-
-    public final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
 
     /**
      * Default registry name
@@ -71,41 +56,23 @@ public class LandingPageAction extends Action {
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^p";
 
     /**
-     * Intent action for showing a URL in a {@link com.urbanairship.widget.UAWebView}
-     */
-    @NonNull
-    public static final String SHOW_LANDING_PAGE_INTENT_ACTION = "com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION";
-
-    /**
      * The content's url payload key
      */
     @NonNull
     public static final String URL_KEY = "url";
 
     /**
-     * The content's width payload key
+     * Legacy key for aspect lock.
      */
     @NonNull
-    public static final String WIDTH_KEY = "width";
+    private static final String LEGACY_ASPECT_LOCK_KEY = "aspectLock";
 
     /**
-     * The content's height payload key
+     * Default border radius.
      */
-    @NonNull
-    public static final String HEIGHT_KEY = "height";
+    public static float DEFAULT_BORDER_RADIUS = 2;
 
-    /**
-     * The content's aspectLock payload key
-     */
-    @NonNull
-    public static final String ASPECT_LOCK_KEY = "aspectLock";
-
-    /**
-     * The payload key for indicating if the landing page should be cached
-     * when triggered in Action.SITUATION_PUSH_RECEIVED
-     */
-    @NonNull
-    public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
+    private float borderRadius = DEFAULT_BORDER_RADIUS;
 
     @NonNull
     @Override
@@ -113,74 +80,104 @@ public class LandingPageAction extends Action {
         final Uri uri = parseUri(arguments);
         Checks.checkNotNull(uri, "URI should not be null");
 
-        int width = 0;
-        int height = 0;
-        boolean aspectLock = false;
-        Context context = UAirship.getApplicationContext();
-
-        // Parse width
-        if (arguments.getValue().getMap() != null) {
-            int widthPoints = arguments.getValue().getMap().opt(WIDTH_KEY).getInt(0);
-            width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());
-        }
-
-        // Parse height
-        if (arguments.getValue().getMap() != null) {
-            int heightPoints = arguments.getValue().getMap().opt(HEIGHT_KEY).getInt(0);
-            height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, heightPoints, context.getResources().getDisplayMetrics());
-        }
-
-        // Parse aspectLock
-        if (arguments.getValue().getMap() != null) {
-            aspectLock = arguments.getValue().getMap().opt(ASPECT_LOCK_KEY).getBoolean(false);
-        }
-
-        if (arguments.getSituation() == SITUATION_PUSH_RECEIVED) {
-            if (shouldCacheOnReceive(arguments)) {
-                // Cache the landing page by loading the url in a web view
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.postAtFrontOfQueue(new Runnable() {
-                    @Override
-                    public void run() {
-                        UAWebView webView = new UAWebView(UAirship.getApplicationContext());
-                        if (MessageCenter.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
-                            String messageId = uri.getSchemeSpecificPart();
-                            RichPushMessage message = UAirship.shared()
-                                                              .getInbox()
-                                                              .getMessage(messageId);
-                            if (message != null) {
-                                webView.loadRichPushMessage(message);
-                            } else {
-                                Logger.debug("LandingPageAction - Message %s not found.", messageId);
-                            }
-                        } else {
-                            webView.loadUrl(uri.toString());
-                        }
-                    }
-                });
-            }
-        } else {
-            final Intent actionIntent = new Intent(SHOW_LANDING_PAGE_INTENT_ACTION, uri)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    .putExtra(WIDTH_KEY, width)
-                    .putExtra(HEIGHT_KEY, height)
-                    .putExtra(ASPECT_LOCK_KEY, aspectLock)
-                    .setPackage(UAirship.getPackageName());
-
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        UAirship.getApplicationContext().startActivity(actionIntent);
-                    } catch (ActivityNotFoundException ex) {
-                        Logger.error("Unable to view a landing page for uri %s. The landing page's intent filter is missing the scheme: %s", uri, uri.getScheme());
-                    }
-                }
-            });
-        }
-
+        UAirship.shared()
+                .getInAppMessagingManager()
+                .scheduleMessage(createScheduleInfo(uri, arguments));
         return ActionResult.newEmptyResult();
+    }
+
+    /**
+     * Sets the border radius to apply to the {@link HtmlDisplayContent}.
+     *
+     * @param borderRadius The border radius.
+     */
+    public void setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+        this.borderRadius = borderRadius;
+    }
+
+    /**
+     * Gets the border radius.
+     *
+     * @return The border radius.
+     */
+    public float getBorderRadius() {
+        return borderRadius;
+    }
+
+    /**
+     * Called to create the schedule Info.
+     *
+     * @param uri The landing page Uri.
+     * @param arguments The arguments.
+     * @return The schedule info.
+     */
+    @NonNull
+    protected InAppMessageScheduleInfo createScheduleInfo(@NonNull Uri uri, @NonNull ActionArguments arguments) {
+        JsonMap options = arguments.getValue().toJsonValue().optMap();
+
+        int width = options.opt(HtmlDisplayContent.WIDTH_KEY).getInt(0);
+        int height = options.opt(HtmlDisplayContent.HEIGHT_KEY).getInt(0);
+        boolean aspectLock;
+
+        if (options.containsKey(HtmlDisplayContent.ASPECT_LOCK_KEY)) {
+            aspectLock = options.opt(HtmlDisplayContent.ASPECT_LOCK_KEY).getBoolean(false);
+        } else {
+            aspectLock = options.opt(LEGACY_ASPECT_LOCK_KEY).getBoolean(false);
+        }
+
+        String messageId;
+        boolean reportEvents = false;
+        PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
+        if (pushMessage != null && pushMessage.getSendId() != null) {
+            messageId = pushMessage.getSendId();
+            reportEvents = true;
+        } else {
+            messageId = UUID.randomUUID().toString();
+        }
+
+        InAppMessage.Builder messageBuilder = InAppMessage.newBuilder()
+                                                          .setDisplayContent(HtmlDisplayContent.newBuilder()
+                                                                                               .setUrl(uri.toString())
+                                                                                               .setAllowFullscreenDisplay(false)
+                                                                                               .setBorderRadius(borderRadius)
+                                                                                               .setSize(width, height, aspectLock)
+                                                                                               .setRequireConnectivity(false)
+                                                                                               .build())
+                                                          .setReportingEnabled(reportEvents)
+                                                          .setId(messageId)
+                                                          .setDisplayBehavior(InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE);
+
+        InAppMessage message = extendMessage(messageBuilder).build();
+
+        InAppMessageScheduleInfo.Builder scheduleInfoBuilder = InAppMessageScheduleInfo.newBuilder()
+                                                                                       .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                                                       .setLimit(1)
+                                                                                       .setPriority(Integer.MIN_VALUE)
+                                                                                       .setMessage(message);
+
+        return extendSchedule(scheduleInfoBuilder).build();
+    }
+
+    /**
+     * Can be used to customize the {@link InAppMessage}.
+     *
+     * @param builder The builder.
+     * @return The builder.
+     */
+    @NonNull
+    protected InAppMessage.Builder extendMessage(InAppMessage.Builder builder) {
+        return builder;
+    }
+
+    /**
+     * Can be used to customize the {@link InAppMessageScheduleInfo}.
+     *
+     * @param builder The builder.
+     * @return The builder.
+     */
+    @NonNull
+    protected InAppMessageScheduleInfo.Builder extendSchedule(InAppMessageScheduleInfo.Builder builder) {
+        return builder;
     }
 
     /**
@@ -195,18 +192,12 @@ public class LandingPageAction extends Action {
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case SITUATION_PUSH_OPENED:
-            case SITUATION_PUSH_RECEIVED:
             case SITUATION_WEB_VIEW_INVOCATION:
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_AUTOMATION:
                 Uri uri = parseUri(arguments);
                 if (uri == null) {
-                    return false;
-                }
-
-                if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
-                    Logger.error("Unable to show landing page, url is not whitelisted: %s", uri);
                     return false;
                 }
 
@@ -221,7 +212,7 @@ public class LandingPageAction extends Action {
      * Parses the ActionArguments for a landing page URI.
      *
      * @param arguments The action arguments.
-     * @return A landing page Uri, or null if the arguments could not be parsed.
+     * @return A landing page Uri, or null if the arguments could not be parsed or is not whitelisted.
      */
     @Nullable
     protected Uri parseUri(@NonNull ActionArguments arguments) {
@@ -261,44 +252,12 @@ public class LandingPageAction extends Action {
             uri = Uri.parse("https://" + uri);
         }
 
+        if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
+            Logger.error("Landing page URL is not whitelisted: %s", uri);
+            return null;
+        }
+
         return uri;
-    }
-
-    /**
-     * Checks if the landing page arguments define whether the landing page
-     * should cache on receive.
-     *
-     * @param arguments The action arguments.
-     * @return <code>true</code> if the argument's value contains a payload
-     * with CACHE_ON_RECEIVE_KEY set to true, otherwise <code>false</code>.
-     */
-    protected boolean shouldCacheOnReceive(@NonNull ActionArguments arguments) {
-        if (arguments.getValue().getMap() != null) {
-            return arguments.getValue().getMap().opt(CACHE_ON_RECEIVE_KEY).getBoolean(false);
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean shouldRunOnMainThread() {
-        return true;
-    }
-
-    /**
-     * Default {@link LandingPageAction} predicate.
-     */
-    public static class LandingPagePredicate implements ActionRegistry.Predicate {
-
-        @Override
-        public boolean apply(@NonNull ActionArguments arguments) {
-            if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
-                long lastOpenTime = UAirship.shared().getApplicationMetrics().getLastOpenTimeMillis();
-                return System.currentTimeMillis() - lastOpenTime <= LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS;
-            }
-            return true;
-        }
-
     }
 
 }

@@ -64,6 +64,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -269,6 +270,36 @@ public class InAppMessageManagerTest extends BaseTestCase {
     }
 
     @Test
+    public void testMessageFinishedReportingDisabled() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setReportingEnabled(false)
+                                                                                        .build())
+                                                                .build();
+        InAppMessageSchedule schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
+
+        // Prepare the schedule
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
+        driverListener.onPrepareSchedule(schedule);
+
+        // Make sure it's ready
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
+
+        // Display the schedule
+        driverListener.onExecuteSchedule(schedule);
+        verify(mockListener).onMessageDisplayed(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        // Finish displaying the in-app message
+        ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
+        manager.messageFinished(schedule.getId(), resolutionInfo, 100);
+        verifyZeroInteractions(mockAnalytics);
+    }
+
+    @Test
     public void testOnExecuteSchedule() {
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
@@ -283,6 +314,36 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Verify a display event was added
         verify(mockAnalytics).addEvent(any(DisplayEvent.class));
+
+        // Verify the adapter onDisplay was called
+        verify(mockAdapter).onDisplay(any(Context.class), any(DisplayHandler.class));
+    }
+
+    @Test
+    public void testOnExecuteScheduleReportingDisabled() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                .setMessage(InAppMessage.newBuilder()
+                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                        .setId("message id")
+                                                                                        .setReportingEnabled(false)
+                                                                                        .build())
+                                                                .build();
+        InAppMessageSchedule schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
+
+        // Prepare the schedule
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
+        driverListener.onPrepareSchedule(schedule);
+
+        // Make sure it's ready
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driverListener.onCheckExecutionReadiness(schedule));
+
+        // Execute the schedule
+        driverListener.onExecuteSchedule(schedule);
+
+        // Verify a display event not added
+        verifyZeroInteractions(mockAnalytics);
 
         // Verify the adapter onDisplay was called
         verify(mockAdapter).onDisplay(any(Context.class), any(DisplayHandler.class));

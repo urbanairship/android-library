@@ -48,6 +48,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String ACTIONS_KEY = "actions";
     private static final String SOURCE_KEY = "source";
     private static final String CAMPAIGNS_KEY = "campaigns";
+    private static final String DISPLAY_BEHAVIOR_KEY = "display_behavior";
+    private static final String REPORTING_ENABLED_KEY = "reporting_enabled";
 
     @StringDef({ SOURCE_LEGACY_PUSH, SOURCE_REMOTE_DATA, SOURCE_APP_DEFINED })
     @Retention(RetentionPolicy.SOURCE)
@@ -102,6 +104,23 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     @NonNull
     public static final String TYPE_HTML = "html";
 
+    @StringDef({ DISPLAY_BEHAVIOR_DEFAULT, DISPLAY_BEHAVIOR_IMMEDIATE })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DisplayBehavior {}
+
+    /**
+     * The in-app message default display behavior. Usually displayed using the default coordinator
+     * that allows defining display interval.
+     */
+    @NonNull
+    public static final String DISPLAY_BEHAVIOR_DEFAULT = "default";
+
+    /**
+     * The in-app message should be displayed ASAP.
+     */
+    @NonNull
+    public static final String DISPLAY_BEHAVIOR_IMMEDIATE = "immediate";
+
     @DisplayType
     private final String type;
     private final JsonMap extras;
@@ -110,6 +129,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final Audience audience;
     private final Map<String, JsonValue> actions;
     private final JsonValue campaigns;
+
+    @DisplayBehavior
+    private final String displayBehavior;
+    private final boolean isReportingEnabled;
 
     @Source
     private final String source;
@@ -128,6 +151,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.actions = builder.actions;
         this.source = builder.source;
         this.campaigns = builder.campaigns;
+        this.displayBehavior = builder.displayBehavior;
+        this.isReportingEnabled = builder.isReportingEnabled;
     }
 
     /**
@@ -230,6 +255,27 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return campaigns;
     }
 
+    /**
+     * Gets the display behavior.
+     *
+     * @return The in-app message display behavior.
+     */
+    @DisplayBehavior
+    @NonNull
+    public String getDisplayBehavior() {
+        return displayBehavior;
+    }
+
+    /**
+     * Checks if reporting is enabled for the in-app message.
+     *
+     * @return {@code true} if reporting is enabled, otherwise {@code false}.
+     */
+    @NonNull
+    public boolean isReportingEnabled() {
+        return isReportingEnabled;
+    }
+
     @NonNull
     @Override
     public JsonValue toJsonValue() {
@@ -242,6 +288,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(ACTIONS_KEY, actions)
                       .putOpt(SOURCE_KEY, source)
                       .putOpt(CAMPAIGNS_KEY, campaigns)
+                      .putOpt(DISPLAY_BEHAVIOR_KEY, displayBehavior)
+                      .putOpt(REPORTING_ENABLED_KEY, isReportingEnabled)
                       .build().toJsonValue();
     }
 
@@ -296,6 +344,25 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         // Campaigns
         if (jsonValue.optMap().containsKey(CAMPAIGNS_KEY)) {
             builder.setCampaigns(jsonValue.optMap().opt(CAMPAIGNS_KEY));
+        }
+
+        // Behavior
+        if (jsonValue.optMap().containsKey(DISPLAY_BEHAVIOR_KEY)) {
+            switch (jsonValue.optMap().opt(DISPLAY_BEHAVIOR_KEY).optString()) {
+                case DISPLAY_BEHAVIOR_DEFAULT:
+                    builder.setDisplayBehavior(DISPLAY_BEHAVIOR_DEFAULT);
+                    break;
+                case DISPLAY_BEHAVIOR_IMMEDIATE:
+                    builder.setDisplayBehavior(DISPLAY_BEHAVIOR_IMMEDIATE);
+                    break;
+                default:
+                    throw new JsonException("Unexpected display behavior: " + jsonValue.optMap().get(DISPLAY_BEHAVIOR_IMMEDIATE));
+            }
+        }
+
+        // Reporting
+        if (jsonValue.optMap().containsKey(REPORTING_ENABLED_KEY)) {
+            builder.setReportingEnabled(jsonValue.optMap().opt(REPORTING_ENABLED_KEY).getBoolean(true));
         }
 
         try {
@@ -383,50 +450,63 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         InAppMessage message = (InAppMessage) o;
 
-        if (type != null ? !type.equals(message.type) : message.type != null) {
+        if (!displayBehavior.equals(message.displayBehavior)) {
             return false;
         }
+
+        if (isReportingEnabled != message.isReportingEnabled) {
+            return false;
+        }
+
+        if (!type.equals(message.type)) {
+            return false;
+        }
+
         if (!extras.equals(message.extras)) {
             return false;
         }
-        if (id != null ? !id.equals(message.id) : message.id != null) {
+
+        if (!id.equals(message.id)) {
             return false;
         }
-        if (content != null ? !content.equals(message.content) : message.content != null) {
+
+        if (!content.equals(message.content)) {
             return false;
         }
+
         if (audience != null ? !audience.equals(message.audience) : message.audience != null) {
             return false;
         }
-        if (actions != null ? !actions.equals(message.actions) : message.actions != null) {
+
+        if (!actions.equals(message.actions)) {
             return false;
         }
+
         if (campaigns != null ? !campaigns.equals(message.campaigns) : message.campaigns != null) {
             return false;
         }
-        return source != null ? source.equals(message.source) : message.source == null;
+
+        return source.equals(message.source);
     }
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
+        int result = type.hashCode();
         result = 31 * result + extras.hashCode();
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + id.hashCode();
+        result = 31 * result + content.hashCode();
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
-        result = 31 * result + (actions != null ? actions.hashCode() : 0);
+        result = 31 * result + actions.hashCode();
         result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
-        result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + displayBehavior.hashCode();
+        result = 31 * result + (isReportingEnabled ? 1 : 0);
+        result = 31 * result + source.hashCode();
         return result;
     }
 
@@ -447,6 +527,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String source = SOURCE_APP_DEFINED;
         private JsonValue campaigns;
 
+        @DisplayBehavior
+        private String displayBehavior = DISPLAY_BEHAVIOR_DEFAULT;
+        private boolean isReportingEnabled = true;
+
         private Builder() {
         }
 
@@ -459,6 +543,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.actions = message.actions;
             this.source = message.source;
             this.campaigns = message.campaigns;
+            this.displayBehavior = message.displayBehavior;
+            this.isReportingEnabled = message.isReportingEnabled;
         }
 
         /**
@@ -544,6 +630,18 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         public Builder setDisplayContent(@NonNull HtmlDisplayContent displayContent) {
             this.type = TYPE_HTML;
             this.content = displayContent;
+            return this;
+        }
+
+        /**
+         * Sets the display behavior.
+         *
+         * @param displayBehavior The display behavior.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setDisplayBehavior(@NonNull @DisplayBehavior String displayBehavior) {
+            this.displayBehavior = displayBehavior;
             return this;
         }
 
@@ -651,6 +749,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         @NonNull
         public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
             this.actions.put(actionName, actionValue);
+            return this;
+        }
+
+        /**
+         * Enables/disables generating display and resolution events for the in-app message.
+         *
+         * @param isReportingEnabled {@code true} to generate reporting events, otherwise {@code false}.
+         * @return The builder.
+         */
+        public Builder setReportingEnabled(boolean isReportingEnabled) {
+            this.isReportingEnabled = isReportingEnabled;
             return this;
         }
 

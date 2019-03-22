@@ -25,6 +25,8 @@ public class HtmlDisplayContentTest extends BaseTestCase {
                                                        .setBackgroundColor(Color.RED)
                                                        .setBorderRadius(10)
                                                        .setAllowFullscreenDisplay(true)
+                                                       .setRequireConnectivity(false)
+                                                       .setSize(100, 200, false)
                                                        .build();
 
         HtmlDisplayContent fromJson = HtmlDisplayContent.fromJson(content.toJsonValue());

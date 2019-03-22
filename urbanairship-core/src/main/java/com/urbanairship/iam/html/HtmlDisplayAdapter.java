@@ -21,14 +21,16 @@ import com.urbanairship.util.Network;
 public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
     private final InAppMessage message;
+    private final HtmlDisplayContent displayContent;
 
     /**
      * Default constructor.
      *
      * @param message The HTML in-app message.
      */
-    protected HtmlDisplayAdapter(@NonNull InAppMessage message) {
+    protected HtmlDisplayAdapter(@NonNull InAppMessage message, @NonNull HtmlDisplayContent displayContent) {
         this.message = message;
+        this.displayContent = displayContent;
     }
 
     /**
@@ -44,14 +46,13 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
         }
 
-        return new HtmlDisplayAdapter(message);
+        return new HtmlDisplayAdapter(message, displayContent);
     }
 
     @PrepareResult
     @Override
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
-        HtmlDisplayContent displayContent = message.getDisplayContent();
-        if (displayContent == null || !UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
+        if (!UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
             Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
             return InAppMessageAdapter.CANCEL;
         }
@@ -61,7 +62,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     public boolean isReady(@NonNull Context context) {
-        return Network.isConnected();
+        return !displayContent.getRequireConnectivity() || Network.isConnected();
     }
 
     @Override
@@ -75,7 +76,6 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public void onFinish(@NonNull Context context) {
-    }
+    public void onFinish(@NonNull Context context) {}
 
 }

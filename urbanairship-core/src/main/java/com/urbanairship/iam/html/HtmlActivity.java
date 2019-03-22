@@ -6,6 +6,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,13 +14,17 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -29,7 +34,11 @@ import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebView;
+
+import java.lang.ref.WeakReference;
 
 /**
  * HTML in-app message activity.
@@ -48,6 +57,7 @@ public class HtmlActivity extends InAppMessageActivity {
             load();
         }
     };
+    private Cancelable fetchMessagesCallback;
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
@@ -64,7 +74,8 @@ public class HtmlActivity extends InAppMessageActivity {
         }
 
         float borderRadius = 0;
-        if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_html_allow_fullscreen_display)) {
+
+        if (isFullScreen(displayContent)) {
             setTheme(R.style.UrbanAirship_InAppHtml_Activity_Fullscreen);
             setContentView(R.layout.ua_iam_html_fullscreen);
         } else {
@@ -80,6 +91,8 @@ public class HtmlActivity extends InAppMessageActivity {
         final ProgressBar progressBar = findViewById(R.id.progress);
         final ImageButton dismiss = findViewById(R.id.dismiss);
         final BoundedFrameLayout content = findViewById(R.id.content_holder);
+
+        applySizeConstraints(displayContent);
 
         this.webView = findViewById(R.id.web_view);
         this.handler = new Handler(Looper.getMainLooper());
@@ -178,6 +191,14 @@ public class HtmlActivity extends InAppMessageActivity {
         }
     }
 
+    private boolean isFullScreen(HtmlDisplayContent displayContent) {
+        if (!displayContent.isFullscreenDisplayAllowed()) {
+            return false;
+        }
+
+        return getResources().getBoolean(R.bool.ua_iam_html_allow_fullscreen_display);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -196,6 +217,11 @@ public class HtmlActivity extends InAppMessageActivity {
 
         // Cancel any delayed loads
         handler.removeCallbacks(delayedLoadRunnable);
+
+        if (fetchMessagesCallback != null) {
+            fetchMessagesCallback.cancel();
+            fetchMessagesCallback = null;
+        }
     }
 
     /**
@@ -249,7 +275,96 @@ public class HtmlActivity extends InAppMessageActivity {
 
         Logger.info("Loading url: %s", url);
         error = null;
-        webView.loadUrl(url);
+
+
+        Uri uri = Uri.parse(url);
+
+        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            final String messageId = uri.getSchemeSpecificPart();
+            RichPushMessage message = UAirship.shared()
+                                              .getInbox()
+                                              .getMessage(messageId);
+            if (message != null) {
+                webView.loadRichPushMessage(message);
+                message.markRead();
+            } else {
+                fetchMessagesCallback = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+                    @Override
+                    public void onFinished(boolean success) {
+                        if (success && UAirship.shared().getInbox().getMessage(messageId) == null) {
+                            Logger.error("Message %s not found.", messageId);
+                            finish();
+                        }
+
+                        load();
+                    }
+                });
+
+            }
+        } else {
+            webView.loadUrl(uri.toString());
+        }
+    }
+
+
+
+    public void applySizeConstraints(HtmlDisplayContent displayContent) {
+        if (displayContent.getWidth() == 0 && displayContent.getHeight() == 0) {
+            return;
+        }
+
+        View view = findViewById(R.id.content_holder);
+        if (view == null) {
+            return;
+        }
+
+        final int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, displayContent.getWidth(), getResources().getDisplayMetrics());
+        final int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, displayContent.getHeight(), getResources().getDisplayMetrics());
+        final boolean aspectLock = displayContent.getAspectRatioLock();
+
+        final WeakReference<View> viewWeakReference = new WeakReference<>(view);
+        view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                View view = viewWeakReference.get();
+                if (view == null) {
+                    return true;
+                }
+
+                ViewGroup.LayoutParams params = view.getLayoutParams();
+
+                int parentWidth = view.getMeasuredWidth();
+                int parentHeight = view.getMeasuredHeight();
+
+                int normalizedWidth = Math.min(parentWidth, width);
+                int normalizedHeight = Math.min(parentHeight, height);
+
+                if (aspectLock && (normalizedWidth != width || normalizedHeight != height)) {
+                    float landingPageAspect = (float) width / height;
+                    float parentAspect = (float) parentWidth / parentHeight;
+
+                    if (parentAspect > landingPageAspect) {
+                        normalizedWidth = (int) ((float) width * parentHeight / height);
+                    } else {
+                        normalizedHeight = (int) ((float) height * parentWidth / width);
+                    }
+                }
+
+                if (normalizedHeight > 0) {
+                    params.height = normalizedHeight;
+                }
+
+                if (normalizedWidth > 0) {
+                    params.width = normalizedWidth;
+                }
+
+                view.setLayoutParams(params);
+
+                view.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                return true;
+            }
+        });
     }
 
 }

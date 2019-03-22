@@ -4,9 +4,9 @@ package com.urbanairship.iam.html;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.Dimension;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;
@@ -20,11 +20,39 @@ import com.urbanairship.util.ColorUtils;
  */
 public class HtmlDisplayContent implements DisplayContent {
 
+    /**
+     * The content's width payload key
+     */
+    @NonNull
+    public static final String WIDTH_KEY = "width";
+
+    /**
+     * The content's height payload key
+     */
+    @NonNull
+    public static final String HEIGHT_KEY = "height";
+
+    /**
+     * The content's aspect lock payload key
+     */
+    @NonNull
+    public static final String ASPECT_LOCK_KEY = "aspect_lock";
+
+    /**
+     * The content's require connectivity key
+     */
+    @NonNull
+    public static final String REQUIRE_CONNECTIVITY = "require_connectivity";
+
     private final String url;
     private final int dismissButtonColor;
     private final int backgroundColor;
     private final float borderRadius;
     private final boolean isFullscreenDisplayAllowed;
+    private final int width;
+    private final int height;
+    private final boolean keepAspectRatio;
+    private final boolean requireConnectivity;
 
     /**
      * Default factory method.
@@ -37,6 +65,10 @@ public class HtmlDisplayContent implements DisplayContent {
         this.backgroundColor = builder.backgroundColor;
         this.borderRadius = builder.borderRadius;
         this.isFullscreenDisplayAllowed = builder.isFullscreenDisplayAllowed;
+        this.width = builder.width;
+        this.height = builder.height;
+        this.keepAspectRatio = builder.keepAspectRatio;
+        this.requireConnectivity = builder.requireConnectivity;
     }
 
     /**
@@ -97,9 +129,39 @@ public class HtmlDisplayContent implements DisplayContent {
             builder.setAllowFullscreenDisplay(content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY).getBoolean(false));
         }
 
+        // Require connectivity
+        if (content.containsKey(REQUIRE_CONNECTIVITY)) {
+            if (!content.opt(REQUIRE_CONNECTIVITY).isBoolean()) {
+                throw new JsonException("Require connectivity must be a boolean " + content.opt(REQUIRE_CONNECTIVITY));
+            }
+
+            builder.setRequireConnectivity(content.opt(REQUIRE_CONNECTIVITY).getBoolean(true));
+        }
+
+        // Width
+        if (content.containsKey(WIDTH_KEY) && !content.opt(WIDTH_KEY).isNumber()) {
+            throw new JsonException("Width must be a number " + content.opt(WIDTH_KEY));
+        }
+
+        // Height
+        if (content.containsKey(HEIGHT_KEY) && !content.opt(HEIGHT_KEY).isNumber()) {
+            throw new JsonException("Height must be a number " + content.opt(HEIGHT_KEY));
+        }
+
+        // Aspect lock
+        if (content.containsKey(ASPECT_LOCK_KEY) && !content.opt(ASPECT_LOCK_KEY).isBoolean()) {
+            throw new JsonException("Aspect lock must be a boolean " + content.opt(ASPECT_LOCK_KEY));
+        }
+
+        int width = content.opt(WIDTH_KEY).getInt(0);
+        int height = content.opt(HEIGHT_KEY).getInt(0);
+        boolean aspectLock = content.opt(ASPECT_LOCK_KEY).getBoolean(false);
+        builder.setSize(width, height, aspectLock);
+
         try {
             return builder.build();
-        } catch (IllegalArgumentException e) {
+        } catch (
+                IllegalArgumentException e) {
             throw new JsonException("Invalid html message JSON: " + content, e);
         }
     }
@@ -113,6 +175,10 @@ public class HtmlDisplayContent implements DisplayContent {
                       .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
                       .put(BORDER_RADIUS_KEY, borderRadius)
                       .put(ALLOW_FULLSCREEN_DISPLAY_KEY, isFullscreenDisplayAllowed)
+                      .put(WIDTH_KEY, width)
+                      .put(HEIGHT_KEY, height)
+                      .put(ASPECT_LOCK_KEY, keepAspectRatio)
+                      .put(REQUIRE_CONNECTIVITY, requireConnectivity)
                       .build()
                       .toJsonValue();
     }
@@ -154,10 +220,11 @@ public class HtmlDisplayContent implements DisplayContent {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
+
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
@@ -167,15 +234,35 @@ public class HtmlDisplayContent implements DisplayContent {
         if (dismissButtonColor != that.dismissButtonColor) {
             return false;
         }
+
         if (backgroundColor != that.backgroundColor) {
             return false;
         }
+
         if (Float.compare(that.borderRadius, borderRadius) != 0) {
             return false;
         }
+
         if (isFullscreenDisplayAllowed != that.isFullscreenDisplayAllowed) {
             return false;
         }
+
+        if (width != that.width) {
+            return false;
+        }
+
+        if (height != that.height) {
+            return false;
+        }
+
+        if (keepAspectRatio != that.keepAspectRatio) {
+            return false;
+        }
+
+        if (requireConnectivity != that.requireConnectivity) {
+            return false;
+        }
+
         return url.equals(that.url);
     }
 
@@ -186,6 +273,10 @@ public class HtmlDisplayContent implements DisplayContent {
         result = 31 * result + backgroundColor;
         result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
         result = 31 * result + (isFullscreenDisplayAllowed ? 1 : 0);
+        result = 31 * result + width;
+        result = 31 * result + height;
+        result = 31 * result + (keepAspectRatio ? 1 : 0);
+        result = 31 * result + (requireConnectivity ? 1 : 0);
         return result;
     }
 
@@ -220,6 +311,44 @@ public class HtmlDisplayContent implements DisplayContent {
     }
 
     /**
+     * Gets the desired width when displaying the message as a dialog.
+     *
+     * @return The desired width.
+     */
+    @Dimension
+    public long getWidth() {
+        return width;
+    }
+
+    /**
+     * Gets the desired height when displaying the message as a dialog.
+     *
+     * @return The desired height.
+     */
+    @Dimension
+    public long getHeight() {
+        return height;
+    }
+
+    /**
+     * Gets the aspect lock when displaying the message as a dialog.
+     *
+     * @return The aspect lock.
+     */
+    public boolean getAspectRatioLock() {
+        return keepAspectRatio;
+    }
+
+    /**
+     * Checks if the message can be displayed or not if connectivity is unavailable.
+     *
+     * @return {@code true} if connectivity is required, otherwise {@code false}.
+     */
+    public boolean getRequireConnectivity() {
+        return requireConnectivity;
+    }
+
+    /**
      * Returns {@code true} if the html message is allowed to be displayed as fullscreen, otherwise
      * {@code false}. See {@link Builder#setAllowFullscreenDisplay(boolean)}} for more details.
      *
@@ -239,14 +368,20 @@ public class HtmlDisplayContent implements DisplayContent {
         private int backgroundColor = Color.WHITE;
         private float borderRadius;
         private boolean isFullscreenDisplayAllowed;
+        private int width;
+        private int height;
+        private boolean keepAspectRatio;
+        private boolean requireConnectivity = true;
 
-        private Builder() {
-        }
+        private Builder() {}
 
         private Builder(@NonNull HtmlDisplayContent displayContent) {
             this.url = displayContent.url;
             this.dismissButtonColor = displayContent.dismissButtonColor;
             this.backgroundColor = displayContent.backgroundColor;
+            this.width = displayContent.width;
+            this.height = displayContent.height;
+            this.keepAspectRatio = displayContent.keepAspectRatio;
         }
 
         /**
@@ -309,6 +444,35 @@ public class HtmlDisplayContent implements DisplayContent {
         @NonNull
         public Builder setAllowFullscreenDisplay(boolean isFullscreenDisplayAllowed) {
             this.isFullscreenDisplayAllowed = isFullscreenDisplayAllowed;
+            return this;
+        }
+
+        /**
+         * Sets the size constraint for the display content when displaying the HTML message as a dialog.
+         *
+         * @param width The width. Use 0 for fill.
+         * @param height The height. Use 0 for fill.
+         * @param keepAspectRatio If the aspect ratio should be kept if the width or height are larger
+         * than the screen.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setSize(@Dimension int width, @Dimension int height, boolean keepAspectRatio) {
+            this.width = width;
+            this.height = height;
+            this.keepAspectRatio = keepAspectRatio;
+            return this;
+        }
+
+        /**
+         * Sets whether the message should check connectivity before displaying.
+         *
+         * @param requireConnectivity {@code true} to require connectivity, otherwise {@code false}.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setRequireConnectivity(boolean requireConnectivity) {
+            this.requireConnectivity = requireConnectivity;
             return this;
         }
 

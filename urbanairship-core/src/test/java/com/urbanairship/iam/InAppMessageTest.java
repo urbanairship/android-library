@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 
 /**
  * {@link InAppMessage} tests.
@@ -129,6 +130,9 @@ public class InAppMessageTest extends BaseTestCase {
                                  .put("display", customDisplayContent.toJsonValue())
                                  .put("message_id", "messageId")
                                  .put("actions", actionsMap)
+                                 .put("reporting_enabled", false)
+                                 .put("display_behavior", "default")
+
                                  .build();
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.toJsonValue());
@@ -137,6 +141,8 @@ public class InAppMessageTest extends BaseTestCase {
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
         assertEquals(customDisplayContent, message.getDisplayContent());
         assertEquals(actionsMap.getMap(), message.getActions());
+        assertEquals(InAppMessage.DISPLAY_BEHAVIOR_DEFAULT, message.getDisplayBehavior());
+        assertFalse(message.isReportingEnabled());
     }
 
     @Test(expected = JsonException.class)

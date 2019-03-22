@@ -2,33 +2,40 @@
 
 package com.urbanairship.actions;
 
-import android.content.Intent;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.iam.InAppMessageScheduleInfo;
+import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.shadows.ShadowApplication;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.robolectric.Shadows.shadowOf;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class LandingPageActionTest extends BaseTestCase {
 
     private LandingPageAction action;
     private Whitelist whitelist;
+    private InAppMessageManager inAppMessageManager;
 
     @Before
     public void setup() {
         action = new LandingPageAction();
+        inAppMessageManager = mock(InAppMessageManager.class);
+        getApplication().setInAppMessageManager(inAppMessageManager);
+
         whitelist = UAirship.shared().getWhitelist();
         whitelist.setOpenUrlWhitelistingEnabled(true);
     }
@@ -93,6 +100,8 @@ public class LandingPageActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() {
+        whitelist.setOpenUrlWhitelistingEnabled(false);
+
         // Verify scheme less URIs turn into https
         verifyPerform("www.urbanairship.com", "https://www.urbanairship.com");
 
@@ -117,9 +126,7 @@ public class LandingPageActionTest extends BaseTestCase {
         verifyPerform(payload, "https://www.example.com");
     }
 
-    private void verifyPerform(Object value, String expectedIntentData) {
-        ShadowApplication application = shadowOf(RuntimeEnvironment.application);
-
+    private void verifyPerform(Object value, final String expectedUrl) {
         @Action.Situation int[] situations = new int[] {
                 Action.SITUATION_PUSH_OPENED,
                 Action.SITUATION_MANUAL_INVOCATION,
@@ -127,21 +134,44 @@ public class LandingPageActionTest extends BaseTestCase {
                 Action.SITUATION_AUTOMATION
         };
 
-        for (@Action.Situation int situation : situations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, value);
+        for (@Action.Situation final int situation : situations) {
+            final ActionArguments args = ActionTestUtils.createArgs(situation, value);
 
             ActionResult result = action.perform(args);
             assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
-            Intent intent = application.getNextStartedActivity();
-            assertEquals("Invalid intent action for situation " + situation,
-                    LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION, intent.getAction());
+            verify(inAppMessageManager).scheduleMessage(Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
+                @Override
+                public boolean matches(InAppMessageScheduleInfo argument) {
+                    InAppMessage message = argument.getInAppMessage();
+                    if (!message.getType().equals(InAppMessage.TYPE_HTML)) {
+                        return false;
+                    }
 
-            assertEquals("Invalid intent flags for situation " + situation,
-                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
+                    if (!message.getDisplayBehavior().equals(InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE)) {
+                        return false;
+                    }
 
-            assertEquals("Wrong intent data for situation " + situation,
-                    expectedIntentData, intent.getDataString());
+                    if (message.isReportingEnabled()) {
+                        return false;
+                    }
+
+                    HtmlDisplayContent displayContent = message.getDisplayContent();
+                    if (displayContent.getRequireConnectivity()) {
+                        return false;
+                    }
+
+                    if (!displayContent.getUrl().equals(expectedUrl)) {
+                        return false;
+                    }
+
+
+
+                    return true;
+                }
+            }));
+
+            clearInvocations(inAppMessageManager);
         }
 
     }
@@ -151,7 +181,6 @@ public class LandingPageActionTest extends BaseTestCase {
                 Action.SITUATION_PUSH_OPENED,
                 Action.SITUATION_MANUAL_INVOCATION,
                 Action.SITUATION_WEB_VIEW_INVOCATION,
-                Action.SITUATION_PUSH_RECEIVED,
                 Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
         };
 
