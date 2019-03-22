@@ -2,6 +2,7 @@ package com.urbanairship.automation;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -326,8 +327,13 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_SECONDS, seconds);
             contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
             contentValues.put(COLUMN_NAME_INTERVAL, interval);
-            id = database.insert(TABLE_NAME, null, contentValues);
-            if (id == -1) {
+            try {
+                id = database.insert(TABLE_NAME, null, contentValues);
+                if (id == -1) {
+                    return false;
+                }
+            } catch (SQLException e) {
+                Logger.error(e, "ScheduleEntry - Unable to save.");
                 return false;
             }
         } else if (isDirty) {
@@ -347,7 +353,12 @@ class ScheduleEntry implements ScheduleInfo {
                 contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
                 contentValues.put(COLUMN_NAME_INTERVAL, interval);
             }
-            if (database.updateWithOnConflict(TABLE_NAME, contentValues, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) == 0) {
+            try {
+                if (database.updateWithOnConflict(TABLE_NAME, contentValues, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) == 0) {
+                    return false;
+                }
+            } catch (SQLException e) {
+                Logger.error(e, "ScheduleEntry - Unable to save.");
                 return false;
             }
         }

@@ -2,6 +2,7 @@ package com.urbanairship.automation;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -68,19 +69,29 @@ class TriggerEntry {
             value.put(COLUMN_NAME_GOAL, goal);
             value.put(COLUMN_NAME_PROGRESS, progress);
             value.put(COLUMN_NAME_IS_CANCELLATION, isCancellation ? 1 : 0);
-            id = database.insert(TABLE_NAME, null, value);
-            if (id != -1) {
-                isDirty = false;
-                return true;
+            try {
+                id = database.insert(TABLE_NAME, null, value);
+                if (id != -1) {
+                    isDirty = false;
+                    return true;
+                }
+            } catch (SQLException e) {
+                Logger.error(e, "TriggerEntry - Unable to save.");
+                return false;
             }
         } else if (isDirty) {
             ContentValues value = new ContentValues();
             value.put(COLUMN_NAME_PROGRESS, progress);
 
-            if (database.updateWithOnConflict(TABLE_NAME, value, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) != 0) {
-                isDirty = false;
-                return true;
-            } else {
+            try {
+                if (database.updateWithOnConflict(TABLE_NAME, value, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) != 0) {
+                    isDirty = false;
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (SQLException e) {
+                Logger.error(e, "TriggerEntry - Unable to save.");
                 return false;
             }
         }

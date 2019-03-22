@@ -5,6 +5,7 @@ package com.urbanairship.remotedata;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -109,23 +110,32 @@ public class RemoteDataStore extends DataManager {
             return false;
         }
 
-        db.beginTransaction();
+        try {
+            db.beginTransaction();
 
-        for (RemoteDataPayload payload : payloads) {
-            ContentValues value = new ContentValues();
-            value.put(COLUMN_NAME_TYPE, payload.getType());
-            value.put(COLUMN_NAME_TIMESTAMP, payload.getTimestamp());
-            value.put(COLUMN_NAME_DATA, payload.getData().toString());
-            value.put(COLUMN_NAME_METADATA, payload.getMetadata().toString());
-            long id = db.insert(TABLE_NAME, null, value);
-            if (id == -1) {
-                db.endTransaction();
-                return false;
+            for (RemoteDataPayload payload : payloads) {
+                ContentValues value = new ContentValues();
+                value.put(COLUMN_NAME_TYPE, payload.getType());
+                value.put(COLUMN_NAME_TIMESTAMP, payload.getTimestamp());
+                value.put(COLUMN_NAME_DATA, payload.getData().toString());
+                value.put(COLUMN_NAME_METADATA, payload.getMetadata().toString());
+                try {
+                    long id = db.insert(TABLE_NAME, null, value);
+                    if (id == -1) {
+                        db.endTransaction();
+                        return false;
+                    }
+                } catch (SQLException e) {
+                    Logger.error(e, "RemoteDataStore - Unable to save remote data payload.");
+                }
             }
-        }
 
-        db.setTransactionSuccessful();
-        db.endTransaction();
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (SQLException e) {
+            Logger.error(e, "RemoteDataStore - Unable to save remote data payloads.");
+            return false;
+        }
 
         return true;
     }

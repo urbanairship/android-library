@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -413,17 +414,21 @@ public class AutomationDataManager extends DataManager {
             return;
         }
 
-        db.beginTransaction();
+        try {
+            db.beginTransaction();
 
-        for (ScheduleEntry scheduleEntry : scheduleEntries) {
-            if (!scheduleEntry.save(db)) {
-                db.endTransaction();
-                return;
+            for (ScheduleEntry scheduleEntry : scheduleEntries) {
+                if (!scheduleEntry.save(db)) {
+                    db.endTransaction();
+                    return;
+                }
             }
-        }
 
-        db.setTransactionSuccessful();
-        db.endTransaction();
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (SQLException e) {
+            Logger.error(e, "AutomationDataManager - Unable to save schedules.");
+        }
     }
 
     /**
@@ -438,11 +443,15 @@ public class AutomationDataManager extends DataManager {
             return;
         }
 
-        db.beginTransaction();
-        if (entry.save(db)) {
-            db.setTransactionSuccessful();
+        try {
+            db.beginTransaction();
+            if (entry.save(db)) {
+                db.setTransactionSuccessful();
+            }
+            db.endTransaction();
+        } catch (SQLException e) {
+            Logger.error(e, "AutomationDataManager - Unable to save schedule.");
         }
-        db.endTransaction();
     }
 
     /**
@@ -461,17 +470,21 @@ public class AutomationDataManager extends DataManager {
             return;
         }
 
-        db.beginTransactionNonExclusive();
+        try {
+            db.beginTransactionNonExclusive();
 
-        for (TriggerEntry triggerEntry : triggerEntries) {
-            if (!triggerEntry.save(db)) {
-                db.endTransaction();
-                return;
+            for (TriggerEntry triggerEntry : triggerEntries) {
+                if (!triggerEntry.save(db)) {
+                    db.endTransaction();
+                    return;
+                }
             }
-        }
 
-        db.setTransactionSuccessful();
-        db.endTransaction();
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (SQLException e) {
+            Logger.error(e, "AutomationDataManager - Unable to save triggers.");
+        }
     }
 
     /**

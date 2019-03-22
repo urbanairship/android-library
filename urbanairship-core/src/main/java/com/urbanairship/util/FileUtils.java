@@ -122,6 +122,10 @@ public abstract class FileUtils {
             }
 
             return new DownloadResult(false, statusCode);
+        } catch (IOException e) {
+            // the file may have been partially created - delete it
+            file.delete();
+            throw e;
         } finally {
             endRequest(conn, inputStream, outputStream);
         }
