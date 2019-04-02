@@ -3,6 +3,7 @@
 package com.urbanairship.sample;
 
 import android.app.Application;
+import android.os.Build;
 import android.os.StrictMode;
 
 public class SampleApplication extends Application {
@@ -18,9 +19,7 @@ public class SampleApplication extends Application {
                     .build());
 
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                    .detectLeakedSqlLiteObjects()
-                    .detectLeakedClosableObjects()
-                    .detectUntaggedSockets()
+                    .detectAll()
                     .penaltyLog()
                     .build());
         }
