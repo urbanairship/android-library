@@ -48,9 +48,6 @@ public class LandingPageActionTest extends BaseTestCase {
         // Basic URIs
         verifyAcceptsArgumentValue("https://www.urbanairship.com", true);
 
-        // Content URIs
-        verifyAcceptsArgumentValue("u:<~@rH7,ASuTABk.~>", true);
-
         // Payload
         Map<String, Object> payload = new HashMap<>();
         payload.put("url", "https://www.urbanairship.com");
@@ -67,8 +64,6 @@ public class LandingPageActionTest extends BaseTestCase {
         whitelist.addEntry("*");
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
-        verifyAcceptsArgumentValue("u:", true);
-
         // Empty payload
         Map<String, Object> payload = new HashMap<>();
         verifyAcceptsArgumentValue(payload, false);
@@ -112,9 +107,6 @@ public class LandingPageActionTest extends BaseTestCase {
 
         // Verify message URIs
         verifyPerform("message://message_id", "message://message_id");
-
-        // Verify content URIs
-        verifyPerform("u:<~@rH7,ASuTABk.~>", "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
 
         // Verify basic payload
         Map<String, Object> payload = new HashMap<>();

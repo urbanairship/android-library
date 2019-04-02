@@ -61,11 +61,6 @@ public class WhitelistTest extends BaseTestCase {
         assertTrue(whitelist.isWhitelisted("https://sbux-dl.urbanairship.com/binary/token/", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
         assertTrue(whitelist.isWhitelisted("https://sbux-dl.urbanairship.com/binary/token/", Whitelist.SCOPE_ALL));
 
-        // Landing Page
-        assertTrue(whitelist.isWhitelisted("https://dl.urbanairship.com/aaa/message_id", Whitelist.SCOPE_OPEN_URL));
-        assertTrue(whitelist.isWhitelisted("https://dl.urbanairship.com/aaa/message_id", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
-        assertTrue(whitelist.isWhitelisted("https://dl.urbanairship.com/aaa/message_id", Whitelist.SCOPE_ALL));
-
         // Youtube
         assertTrue(whitelist.isWhitelisted("https://www.youtube.com/embed/wJelEXaPhJ8", Whitelist.SCOPE_OPEN_URL));
         assertFalse(whitelist.isWhitelisted("https://www.youtube.com/embed/wJelEXaPhJ8", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));

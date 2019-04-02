@@ -234,19 +234,6 @@ public class LandingPageAction extends Action {
             return null;
         }
 
-        if ("u".equals(uri.getScheme())) {
-            String id;
-            try {
-                id = URLEncoder.encode(uri.getSchemeSpecificPart(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                Logger.error("LandingPageAction - Unable to decode %s", uri.getSchemeSpecificPart());
-                return null;
-            }
-
-            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-            uri = Uri.parse(options.landingPageContentURL + options.getAppKey() + "/" + id);
-        }
-
         // Add https scheme if not set
         if (UAStringUtil.isEmpty(uri.getScheme())) {
             uri = Uri.parse("https://" + uri);

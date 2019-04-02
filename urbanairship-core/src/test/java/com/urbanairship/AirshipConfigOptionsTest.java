@@ -49,7 +49,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("devAppSecret", aco.developmentAppSecret);
         assertEquals("https://test.host.url.com/", aco.hostURL);
         assertEquals("https://test.analytics.url.com/", aco.analyticsServer);
-        assertEquals("https://test.landingpage.url.com/", aco.landingPageContentURL);
         assertArrayEquals(new String[] { "GCM_TRANSPORT" }, aco.allowedTransports);
         assertEquals("https://first.whitelist.url.com/", aco.whitelist[0]);
         assertEquals("https://second.whitelist.url.com/", aco.whitelist[1]);

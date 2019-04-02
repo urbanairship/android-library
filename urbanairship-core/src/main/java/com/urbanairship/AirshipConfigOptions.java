@@ -98,12 +98,6 @@ public class AirshipConfigOptions {
     public final String analyticsServer;
 
     /**
-     * The landing page content URL. This will always be set to https://dl.urbanairship.com/aaa/
-     */
-    @NonNull
-    public final String landingPageContentURL;
-
-    /**
      * The remote data server URL.
      */
     @NonNull
@@ -304,7 +298,6 @@ public class AirshipConfigOptions {
         this.developmentAppSecret = builder.developmentAppSecret;
         this.hostURL = builder.hostURL;
         this.analyticsServer = builder.analyticsServer;
-        this.landingPageContentURL = builder.landingPageContentURL;
         this.remoteDataURL = builder.remoteDataURL;
         this.fcmSenderId = builder.fcmSenderId;
         this.developmentFcmSenderId = builder.developmentFcmSenderId;
@@ -447,7 +440,6 @@ public class AirshipConfigOptions {
         private String developmentAppSecret;
         private String hostURL = "https://device-api.urbanairship.com/";
         private String analyticsServer = "https://combine.urbanairship.com/";
-        private String landingPageContentURL = "https://dl.urbanairship.com/aaa/";
         private String remoteDataURL = "https://remote-data.urbanairship.com/";
         private String fcmSenderId;
         private String productionFcmSenderId;
@@ -617,10 +609,6 @@ public class AirshipConfigOptions {
 
                         case FIELD_ANALYTICS_SERVER:
                             this.setAnalyticsServer(configParser.getString(i, analyticsServer));
-                            break;
-
-                        case FIELD_LANDING_PAGE_CONTENT_URL:
-                            this.setLandingPageContentURL(configParser.getString(i, landingPageContentURL));
                             break;
 
                         case FIELD_REMOTE_DATA_URL:
@@ -858,18 +846,6 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setAnalyticsServer(@NonNull String analyticsServer) {
             this.analyticsServer = analyticsServer;
-            return this;
-        }
-
-        /**
-         * Set the landing page content URL.
-         *
-         * @param landingPageContentURL The landing page content URL.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setLandingPageContentURL(@NonNull String landingPageContentURL) {
-            this.landingPageContentURL = landingPageContentURL;
             return this;
         }
 

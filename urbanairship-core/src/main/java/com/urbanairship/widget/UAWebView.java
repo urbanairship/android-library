@@ -181,21 +181,7 @@ public class UAWebView extends WebView {
      */
     public void loadUrl(@NonNull String url) {
         onPreLoad();
-
-        // Add auth to landing page content URLs
-        if (url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
-            // Do pre auth if we can
-            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", createBasicAuth(options.getAppKey(), options.getAppSecret()));
-
-            super.loadUrl(url, headers);
-
-            // Set the client auth request
-            setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
-        } else {
-            super.loadUrl(url);
-        }
+        super.loadUrl(url);
     }
 
     /**
@@ -208,11 +194,6 @@ public class UAWebView extends WebView {
     public void loadUrl(@NonNull String url, @NonNull Map<String, String> additionalHttpHeaders) {
         onPreLoad();
         super.loadUrl(url, additionalHttpHeaders);
-
-        if (url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
-            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-            setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
-        }
     }
 
     /**
