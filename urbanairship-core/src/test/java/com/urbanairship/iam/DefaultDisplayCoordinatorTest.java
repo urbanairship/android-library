@@ -1,10 +1,8 @@
 package com.urbanairship.iam;
 
-import android.app.Activity;
 import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonValue;
 
@@ -17,7 +15,6 @@ import static org.junit.Assert.assertTrue;
 
 public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
-    private TestActivityMonitor activityMonitor;
     private DefaultDisplayCoordinator coordinator;
     private InAppMessage messageOne;
     private InAppMessage messageTwo;
@@ -25,8 +22,7 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        activityMonitor = new TestActivityMonitor();
-        coordinator = new DefaultDisplayCoordinator(activityMonitor);
+        coordinator = new DefaultDisplayCoordinator();
         mainLooper = Looper.getMainLooper();
 
         messageOne = InAppMessage.newBuilder()
@@ -42,29 +38,18 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
     @Test
     public void isReady() {
-        assertFalse(coordinator.isReady());
-
-        Activity activity = new Activity();
-        activityMonitor.resumeActivity(activity);
-
         assertTrue(coordinator.isReady());
     }
 
     @Test
     public void onDisplay() {
-        Activity activity = new Activity();
-        activityMonitor.resumeActivity(activity);
-
         assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageOne);
         assertFalse(coordinator.isReady());
     }
 
     @Test
-    public void onDisplayFinished() {
-        Activity activity = new Activity();
-        activityMonitor.resumeActivity(activity);
-
+        public void onDisplayFinished() { ;
         assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageTwo);
 

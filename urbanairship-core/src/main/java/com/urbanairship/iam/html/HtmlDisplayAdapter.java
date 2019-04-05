@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
+import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.assets.Assets;
@@ -18,7 +19,7 @@ import com.urbanairship.util.Network;
 /**
  * Html display adapter.
  */
-public class HtmlDisplayAdapter implements InAppMessageAdapter {
+public class HtmlDisplayAdapter extends ForegroundDisplayAdapter {
 
     private final InAppMessage message;
     private final HtmlDisplayContent displayContent;
@@ -62,6 +63,10 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     public boolean isReady(@NonNull Context context) {
+        if (!super.isReady(context)) {
+            return false;
+        }
+
         return !displayContent.getRequireConnectivity() || Network.isConnected();
     }
 

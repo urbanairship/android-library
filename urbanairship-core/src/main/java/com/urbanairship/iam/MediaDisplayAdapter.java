@@ -16,7 +16,7 @@ import com.urbanairship.util.Network;
 /**
  * Display adapter that handles caching an in-app message.
  */
-public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
+public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
 
     private final InAppMessage message;
     private final MediaInfo mediaInfo;
@@ -64,8 +64,13 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
         return message;
     }
 
+    @CallSuper
     @Override
     public boolean isReady(@NonNull Context context) {
+        if (!super.isReady(context)) {
+            return false;
+        }
+
         if (mediaInfo == null) {
             return true;
         }

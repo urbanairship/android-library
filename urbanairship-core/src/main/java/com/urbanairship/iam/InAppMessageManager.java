@@ -126,7 +126,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
+        this.defaultCoordinator = new DefaultDisplayCoordinator();
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
@@ -164,7 +164,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(activityMonitor);
+        this.defaultCoordinator = new DefaultDisplayCoordinator();
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;

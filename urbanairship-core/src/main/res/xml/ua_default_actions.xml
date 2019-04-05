@@ -45,7 +45,6 @@
 
     <ActionEntry
         class="com.urbanairship.actions.LandingPageAction"
-        predicate="com.urbanairship.actions.LandingPageAction$LandingPagePredicate"
         name="landing_page_action"
         altName="^p" />
 
