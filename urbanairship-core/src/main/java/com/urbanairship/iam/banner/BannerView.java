@@ -13,10 +13,12 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.AnimatorRes;
 import android.support.annotation.CallSuper;
+import android.support.annotation.Dimension;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
@@ -26,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -65,6 +68,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
 
     private boolean isDismissed = false;
     private boolean isResumed = false;
+    private boolean applyRootWindowInsets = false;
 
     @Nullable
     private View subView;
@@ -219,10 +223,29 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         DrawableCompat.setTint(drawable, displayContent.getDismissButtonColor());
         ViewCompat.setBackground(bannerPull, drawable);
 
-        // If the parent is `android.R.id.content` apply the window insets
-        if (getParent() != null && ((View) getParent()).getId() == android.R.id.content) {
-            applyWindowInsets(view);
-        }
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(@NonNull View view) {
+                if (applyRootWindowInsets) {
+                    applyRootWindowInsets(view);
+                }
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(@NonNull View view) {
+                view.removeOnAttachStateChangeListener(this);
+            }
+        });
+
+        ViewCompat.setOnApplyWindowInsetsListener(view, new android.support.v4.view.OnApplyWindowInsetsListener() {
+            @NonNull
+            @Override
+            public WindowInsetsCompat onApplyWindowInsets(@NonNull View view, @NonNull WindowInsetsCompat src) {
+                WindowInsetsCompat copy = new WindowInsetsCompat(src);
+                ViewCompat.onApplyWindowInsets(view, copy);
+                return src;
+            }
+        });
 
         return view;
     }
@@ -247,6 +270,18 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     protected void onPause() {
         isResumed = false;
         getTimer().stop();
+    }
+
+    /**
+     * Applies window insets from the root view.
+     */
+    void applyRootWindowInsets() {
+        if (!applyRootWindowInsets) {
+            this.applyRootWindowInsets = true;
+            if (subView != null && subView.isAttachedToWindow()) {
+                applyRootWindowInsets(subView);
+            }
+        }
     }
 
     /**
@@ -327,6 +362,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         if (listener != null) {
             listener.onButtonClicked(this, buttonInfo);
         }
+        dismiss(true);
     }
 
     @Override
@@ -383,84 +419,62 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     /**
      * Applies the window insets to the view.
      *
-     * @param view The fragment's view.
+     * @param view The view.
      */
-    private void applyWindowInsets(@NonNull View view) {
-        ViewCompat.setOnApplyWindowInsetsListener(view, new android.support.v4.view.OnApplyWindowInsetsListener() {
-            @NonNull
-            @Override
-            public WindowInsetsCompat onApplyWindowInsets(@NonNull View view, @NonNull WindowInsetsCompat src) {
-                WindowInsetsCompat copy = new WindowInsetsCompat(src);
+    private void applyRootWindowInsets(@NonNull View view) {
+        boolean isNavigationTranslucent, isStatusTranslucent;
+        TypedArray a = view.getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
+        isNavigationTranslucent = a.getBoolean(0, false);
+        isStatusTranslucent = a.getBoolean(1, false);
+        a.recycle();
 
-                int left, top, right, bottom;
-                left = right = Math.max(src.getSystemWindowInsetLeft(), src.getSystemWindowInsetRight());
-                top = src.getSystemWindowInsetTop();
-                bottom = src.getSystemWindowInsetBottom();
-
-                if (displayContent.getPlacement().equals(BannerDisplayContent.PLACEMENT_TOP)) {
-                    top = isActionBarEnabled() ? 0 : top;
-                } else {
-                    bottom = isNavigationTranslucent() ? bottom : 0;
-                }
-
-                copy = copy.replaceSystemWindowInsets(left, top, right, bottom);
-                ViewCompat.onApplyWindowInsets(view, copy);
-                return src;
+        if (BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement())) {
+            if (isStatusTranslucent) {
+                applyTopInsets(view);
             }
-        });
-
-        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(@NonNull View view) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    view.dispatchApplyWindowInsets(view.getRootWindowInsets());
-                    return;
-                }
-
-                if (displayContent.getPlacement().equals(BannerDisplayContent.PLACEMENT_TOP) && !isActionBarEnabled()) {
-                    int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-                    if (resourceId > 0) {
-                        int height = getResources().getDimensionPixelSize(resourceId);
-                        view.setPadding(0, height, 0, 0);
-                    }
-                }
+        } else {
+            if (isNavigationTranslucent) {
+                applyBottomInsets(view);
             }
-
-            @Override
-            public void onViewDetachedFromWindow(@NonNull View view) {
-                view.removeOnAttachStateChangeListener(this);
-            }
-        });
+        }
     }
 
-    /**
-     * Checks if the navigation bar is configured to be translucent on the current theme.
-     *
-     * @return {@code true} if the theme specifies a translucent navigation bar, otherwise {@code false}.
-     */
-    private boolean isNavigationTranslucent() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return false;
+    private void applyTopInsets(@NonNull View view) {
+        int top = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            WindowInsets insets = view.getRootWindowInsets();
+            if (insets != null) {
+                top = insets.getSystemWindowInsetTop();
+            }
+        } else {
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                top = getResources().getDimensionPixelSize(resourceId);
+            }
         }
 
-        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation });
-        boolean isEnabled = a.getBoolean(0, false);
-        a.recycle();
-        return isEnabled;
+        if (top > 0) {
+            ViewCompat.setPaddingRelative(view, 0, top, 0, 0);
+        }
     }
 
-    /**
-     * Checks if the standard or compat action bar is enabled for this activity.
-     *
-     * @return {@code true} if the action bar is enabled, otherwise {@code false}.
-     */
-    private boolean isActionBarEnabled() {
-        int compatWindowActionBarAttr = getContext().getResources().getIdentifier("windowActionBar", "attr", getContext().getPackageName());
-        TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowActionBar, compatWindowActionBarAttr });
-        boolean isEnabled = a.getBoolean(0, false) || a.getBoolean(1, false);
-        a.recycle();
+    private void applyBottomInsets(@NonNull View view) {
+        int bottom = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            WindowInsets insets = view.getRootWindowInsets();
+            if (insets != null) {
+                bottom = insets.getSystemWindowInsetBottom();
+            }
+        } else {
+            int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                bottom = getResources().getDimensionPixelSize(resourceId);
+            }
+        }
 
-        return isEnabled;
+        if (bottom > 0) {
+            ViewCompat.setPaddingRelative(view, 0, 0, 0, bottom);
+        }
     }
 
     /**

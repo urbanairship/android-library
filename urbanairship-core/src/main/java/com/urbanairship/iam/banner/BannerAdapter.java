@@ -9,6 +9,7 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.urbanairship.Logger;
@@ -43,15 +44,15 @@ public class BannerAdapter extends MediaDisplayAdapter {
     public final static String BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID";
 
     private final BannerDisplayContent displayContent;
-    private final Map<Class, Integer> cachedContainerIds = new HashMap<>();
+    private final static Map<Class, Integer> cachedContainerIds = new HashMap<>();
     private final Predicate<Activity> activityPredicate = new Predicate<Activity>() {
         @Override
         public boolean apply(Activity activity) {
-            int id = getContainerId(activity);
-            if (id == 0 || activity.findViewById(id) == null || !(activity.findViewById(id) instanceof ViewGroup)) {
-                Logger.error("BannerAdapter - Unable to display in-app message. Missing view with id: %s", id);
+            if (getContainerView(activity) == null) {
+                Logger.error("BannerAdapter - Unable to display in-app message. No view group found.");
                 return false;
             }
+
             return true;
         }
     };
@@ -132,20 +133,32 @@ public class BannerAdapter extends MediaDisplayAdapter {
         display(context);
     }
 
-    private void display(@NonNull Context context) {
-        List<Activity> activityList = InAppActivityMonitor.shared(context).getResumedActivities(activityPredicate);
-        if (activityList.isEmpty()) {
-            return;
+    @CallSuper
+    @MainThread
+    protected void onDisplayFinished(@NonNull Context context) {
+        InAppActivityMonitor.shared(context).removeActivityListener(listener);
+    }
+
+    /**
+     * Inflates the banner view.
+     *
+     * The view should be attached to the view group.
+     *
+     * @param activity The activity.
+     * @param viewGroup The container view.
+     * @return The banner view.
+     */
+    @NonNull
+    protected BannerView onCreateView(@NonNull Activity activity, ViewGroup viewGroup) {
+        BannerView view = new BannerView(activity, displayContent, getAssets());
+        if (getLastActivity() != activity) {
+            if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
+                view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);
+            } else {
+                view.setAnimations(R.animator.ua_iam_slide_in_top, R.animator.ua_iam_slide_out_top);
+            }
         }
 
-        Activity activity = activityList.get(0);
-
-        int id = getContainerId(activity);
-        BannerView view = createView(activity);
-        attachView(view, activity, id);
-
-        lastActivity = new WeakReference<>(activity);
-        currentView = new WeakReference<>(view);
         view.setListener(new BannerView.Listener() {
             @Override
             public void onButtonClicked(@NonNull BannerView view, @NonNull ButtonInfo buttonInfo) {
@@ -176,56 +189,89 @@ public class BannerAdapter extends MediaDisplayAdapter {
                 onDisplayFinished(view.getContext());
             }
         });
-    }
 
-    protected void attachView(@NonNull BannerView bannerView, @NonNull Activity activity, int containerId) {
-        ViewGroup viewGroup = activity.getWindow().getDecorView().findViewById(containerId);
-        viewGroup.addView(bannerView);
-    }
-
-    protected BannerView createView(@NonNull Activity activity) {
-        BannerView view = new BannerView(activity, displayContent, getAssets());
-        if (getLastActivity() != activity) {
-            if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
-                view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);
-            } else {
-                view.setAnimations(R.animator.ua_iam_slide_in_top, R.animator.ua_iam_slide_out_top);
-            }
+        if (viewGroup.getId() == android.R.id.content) {
+            view.applyRootWindowInsets();
         }
 
         return view;
     }
 
-    @CallSuper
-    @MainThread
-    protected void onDisplayFinished(@NonNull Context context) {
-        InAppActivityMonitor.shared(context).removeActivityListener(listener);
+    /**
+     * Gets the banner's container view.
+     *
+     * @param activity The activity.
+     * @return The banner's container view or null.
+     */
+    @Nullable
+    protected ViewGroup getContainerView(@NonNull Activity activity) {
+        int containerId = getContainerId(activity);
+        View view = null;
+        if (containerId != 0) {
+            view = activity.findViewById(containerId);
+        }
+
+        if (view == null) {
+            view = activity.findViewById(android.R.id.content);
+        }
+
+        if (view instanceof ViewGroup) {
+            return (ViewGroup) view;
+        }
+
+        return null;
+    }
+
+    /**
+     * Attempts to display the banner.
+     *
+     * @param context THe application context.
+     */
+    private void display(@NonNull Context context) {
+        List<Activity> activityList = InAppActivityMonitor.shared(context).getResumedActivities(activityPredicate);
+        if (activityList.isEmpty()) {
+            return;
+        }
+
+        Activity activity = activityList.get(0);
+
+        ViewGroup container = getContainerView(activity);
+        if (container == null) {
+            return;
+        }
+
+        BannerView view = onCreateView(activity, container);
+        container.addView(view);
+
+        lastActivity = new WeakReference<>(activity);
+        currentView = new WeakReference<>(view);
     }
 
     /**
      * Gets the Banner fragment's container ID.
      * <p>
-     * The default implementation checks the activities metadata for {@link #BANNER_CONTAINER_ID}
-     * and falls back to `android.R.id.content`.
+     * The default implementation checks the activities metadata for {@link #BANNER_CONTAINER_ID}.
      *
      * @param activity The activity.
-     * @return The container ID.
+     * @return The container ID or 0 if its not defined.
      */
-    protected int getContainerId(@NonNull Activity activity) {
-        Integer cachedId = cachedContainerIds.get(activity.getClass());
-        if (cachedId != null) {
-            return cachedId;
+    private int getContainerId(@NonNull Activity activity) {
+        synchronized (cachedContainerIds) {
+            Integer cachedId = cachedContainerIds.get(activity.getClass());
+            if (cachedId != null) {
+                return cachedId;
+            }
+
+            int containerId = 0;
+
+            ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
+            if (info != null && info.metaData != null) {
+                containerId = info.metaData.getInt(BANNER_CONTAINER_ID, containerId);
+            }
+
+            cachedContainerIds.put(activity.getClass(), containerId);
+            return containerId;
         }
-
-        int containerId = android.R.id.content;
-
-        ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
-        if (info != null && info.metaData != null) {
-            containerId = info.metaData.getInt(BANNER_CONTAINER_ID, containerId);
-        }
-
-        cachedContainerIds.put(activity.getClass(), containerId);
-        return containerId;
     }
 
     @MainThread
