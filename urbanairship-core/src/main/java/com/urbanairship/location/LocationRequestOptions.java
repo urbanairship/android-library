@@ -279,11 +279,25 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed LocationRequestOptions.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static LocationRequestOptions parseJson(@Nullable String json) throws JsonException {
+        return fromJson(JsonValue.parseString(json));
+    }
+
+    /**
      * Creates a LocationRequestOptions from a JSON string.
      *
-     * @param value The JSON string.
-     * @return A LocationRequestOptions, or null if the JSON is not a valid object.
-     * @throws JsonException If the string is unable to be parsed to a {@link JsonValue}.
+     * @param value The JSON value.
+     * @return The parsed LocationRequestOptions.
+     * @throws JsonException If the JSON is invalid.
      */
     @NonNull
     public static LocationRequestOptions fromJson(@NonNull JsonValue value) throws JsonException {
@@ -299,9 +313,13 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
         long minTime = jsonMap.opt(MIN_TIME_KEY).getLong(DEFAULT_UPDATE_INTERVAL_MILLISECONDS);
         int priority = jsonMap.opt(PRIORITY_KEY).getInt(DEFAULT_REQUEST_PRIORITY);
 
-        verifyPriority(priority);
-        verifyMinDistance(minDistance);
-        verifyMinTime(minTime);
+        try {
+            verifyPriority(priority);
+            verifyMinDistance(minDistance);
+            verifyMinTime(minTime);
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Invalid value.", e);
+        }
 
         return new LocationRequestOptions(priority, minTime, minDistance);
     }
@@ -389,6 +407,18 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
             verifyPriority(priority);
             this.priority = priority;
             return this;
+        }
+
+        /**
+         * Creates the location request.
+         *
+         * @return The new location request option.
+         * @deprecated To be removed in SDK 12. Use {@link #build()} instaed.
+         */
+        @NonNull
+        @Deprecated
+        public LocationRequestOptions create() {
+            return build();
         }
 
         /**

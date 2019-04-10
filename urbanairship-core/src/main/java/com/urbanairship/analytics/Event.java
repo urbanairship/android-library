@@ -14,11 +14,9 @@ import android.telephony.TelephonyManager;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.PushManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;

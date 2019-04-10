@@ -102,6 +102,20 @@ public class ButtonInfo implements JsonSerializable {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed ButtonInfo.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static ButtonInfo parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
+    /**
      * Parses an {@link ButtonInfo} from a {@link JsonValue}.
      *
      * @param value The json value.
@@ -179,6 +193,20 @@ public class ButtonInfo implements JsonSerializable {
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid button JSON: " + content, e);
         }
+    }
+
+    /**
+     * {@see #fromJson(JsonList)}
+     *
+     * @param jsonList The json list.
+     * @return The list of parsed button info.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonList)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static List<ButtonInfo> parseJson(@NonNull JsonList jsonList) throws JsonException {
+        return fromJson(jsonList);
     }
 
     /**

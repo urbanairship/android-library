@@ -59,23 +59,35 @@ public class NotificationChannelUtils {
         if (channelCompat.getImportance() < NotificationManagerCompat.IMPORTANCE_DEFAULT) {
             notification.vibrate = null;
             notification.sound = null;
+            notification.ledARGB = 0;
+            notification.flags &= ~Notification.FLAG_SHOW_LIGHTS;
             notification.defaults = 0;
             return;
         }
 
         if (channelCompat.getSound() != null) {
             notification.sound = channelCompat.getSound();
-            notification.defaults |= Notification.DEFAULT_SOUND;
+            notification.defaults &= ~Notification.DEFAULT_SOUND;
         }
 
         if (channelCompat.shouldShowLights()) {
-            notification.ledARGB = channelCompat.getLightColor();
-            notification.defaults |= Notification.DEFAULT_LIGHTS;
+            notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+            if (channelCompat.getLightColor() != 0) {
+                notification.ledARGB = channelCompat.getLightColor();
+                notification.defaults &= ~Notification.DEFAULT_LIGHTS;
+            } else {
+                notification.defaults |= Notification.DEFAULT_LIGHTS;
+            }
         }
 
         if (channelCompat.shouldVibrate()) {
-            notification.vibrate = channelCompat.getVibrationPattern();
-            notification.defaults |= Notification.DEFAULT_VIBRATE;
+            if (channelCompat.getVibrationPattern() != null) {
+                notification.vibrate = channelCompat.getVibrationPattern();
+                notification.defaults &= ~Notification.DEFAULT_VIBRATE;
+            } else {
+                notification.defaults |= Notification.DEFAULT_VIBRATE;
+            }
+
         }
     }
 

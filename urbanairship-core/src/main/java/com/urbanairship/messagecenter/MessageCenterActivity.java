@@ -11,7 +11,6 @@ import android.view.MenuItem;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.richpush.RichPushInbox;
 
 /**
  * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.

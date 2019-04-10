@@ -75,6 +75,20 @@ public class MediaInfo implements JsonSerializable {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed MediaInfo.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static MediaInfo parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
+    /**
      * Parses a {@link MediaInfo} from a {@link JsonValue}.
      *
      * @param value The json value.

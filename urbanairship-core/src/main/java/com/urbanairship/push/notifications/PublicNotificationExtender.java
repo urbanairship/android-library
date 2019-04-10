@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
-import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -49,7 +48,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      *
      * @param context The application context.
      * @param message The push message.
-     * @deprecated Use {{@link #PublicNotificationExtender(Context, NotificationArguments)} instead. Marked to be removed
+     * @deprecated Use {{@link #PublicNotificationExtender(Context, NotificationArguments)} instead. To be removed
      * in SDK 11.
      */
     @Deprecated

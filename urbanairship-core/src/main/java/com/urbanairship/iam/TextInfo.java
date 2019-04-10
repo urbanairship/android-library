@@ -126,6 +126,20 @@ public class TextInfo implements JsonSerializable {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed TextInfo.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static TextInfo parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
+    /**
      * Parses a {@link TextInfo} from a {@link JsonValue}.
      *
      * @param value The json value.

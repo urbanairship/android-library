@@ -119,6 +119,20 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed BannerDisplayContent.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static BannerDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
+    /**
      * Parses banner display JSON.
      *
      * @param value The json payload.

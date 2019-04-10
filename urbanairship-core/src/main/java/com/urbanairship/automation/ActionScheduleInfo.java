@@ -253,6 +253,20 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param value The json value.
+     * @return The parsed ActionScheduleInfo.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @Deprecated
+    @NonNull
+    public static ActionScheduleInfo parseJson(@NonNull JsonValue value) throws JsonException {
+        return fromJson(value);
+    }
+
+    /**
      * Parses an ActionScheduleInfo from a JsonValue.
      * <p>
      * The expected JsonValue is a map containing:

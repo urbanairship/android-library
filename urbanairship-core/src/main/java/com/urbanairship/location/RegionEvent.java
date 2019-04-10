@@ -117,6 +117,26 @@ public class RegionEvent extends Event implements JsonSerializable {
      */
     private ProximityRegion proximityRegion;
 
+
+    /**
+     * Constructor for creating a region event.
+     *
+     * @param regionId The ID of the region object.
+     * @param source The source of the region definition.
+     * @param boundaryEvent The type of boundary crossing event.
+     * @deprecated To be removed SDK 12. Use the region event builder instead.
+     */
+    @Deprecated
+    public RegionEvent(@NonNull @Size(max = MAX_CHARACTER_LENGTH) String regionId,
+                       @NonNull @Size(max = MAX_CHARACTER_LENGTH) String source,
+                       @Boundary int boundaryEvent) {
+
+        this.regionId = regionId;
+        this.source = source;
+        this.boundaryEvent = boundaryEvent;
+    }
+
+
     private RegionEvent(@NonNull RegionEvent.Builder builder) {
         this.regionId = builder.regionId;
         this.source = builder.source;

@@ -92,6 +92,20 @@ public class ModalDisplayContent implements DisplayContent {
     }
 
     /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed ModalDisplayContent.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static ModalDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
+    /**
      * Parses modal display JSON.
      *
      * @param value The json payload.

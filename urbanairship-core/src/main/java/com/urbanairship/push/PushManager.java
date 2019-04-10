@@ -2,8 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -31,7 +29,6 @@ import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.LegacyNotificationFactoryProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
-import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.push.notifications.NotificationProvider;
@@ -257,11 +254,25 @@ public class PushManager extends AirshipComponent {
 
     // As of version 5.0.0
     static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
+    static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
+    static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
     static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";
     static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
     static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
 
+    static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
+    static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
+
+    static final class QuietTime {
+
+        public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
+        public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
+        public static final String END_HOUR_KEY = KEY_PREFIX + ".QuietTime.END_HOUR";
+        public static final String END_MIN_KEY = KEY_PREFIX + ".QuietTime.END_MINUTE";
+        public static final int NOT_SET_VAL = -1;
+
+    }
 
     static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
     static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
@@ -483,7 +494,7 @@ public class PushManager extends AirshipComponent {
      * @see com.urbanairship.push.notifications.DefaultNotificationFactory
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationFactory
      * @deprecated Use {@link com.urbanairship.push.notifications.NotificationProvider} and {@link #setNotificationProvider(NotificationProvider)}
-     * instead. Marked to be removed in SDK 11.
+     * instead. To be removed in SDK 11.
      */
     public void setNotificationFactory(@Nullable NotificationFactory factory) {
         if (factory == null) {
@@ -535,6 +546,151 @@ public class PushManager extends AirshipComponent {
     @NonNull
     public NotificationChannelRegistry getNotificationChannelRegistry() {
         return notificationChannelRegistry;
+    }
+
+    /**
+     * Determines whether sound is enabled.
+     *
+     * @return A boolean indicated whether sound is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public boolean isSoundEnabled() {
+        return preferenceDataStore.getBoolean(SOUND_ENABLED_KEY, true);
+    }
+
+    /**
+     * Enables or disables sound.
+     *
+     * @param enabled A boolean indicating whether sound is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public void setSoundEnabled(boolean enabled) {
+        preferenceDataStore.put(SOUND_ENABLED_KEY, enabled);
+    }
+
+    /**
+     * Determines whether vibration is enabled.
+     *
+     * @return A boolean indicating whether vibration is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public boolean isVibrateEnabled() {
+        return preferenceDataStore.getBoolean(VIBRATE_ENABLED_KEY, true);
+    }
+
+    /**
+     * Enables or disables vibration.
+     *
+     * @param enabled A boolean indicating whether vibration is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public void setVibrateEnabled(boolean enabled) {
+        preferenceDataStore.put(VIBRATE_ENABLED_KEY, enabled);
+    }
+
+    /**
+     * Determines whether "Quiet Time" is enabled.
+     *
+     * @return A boolean indicating whether Quiet Time is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public boolean isQuietTimeEnabled() {
+        return preferenceDataStore.getBoolean(QUIET_TIME_ENABLED, false);
+    }
+
+    /**
+     * Enables or disables quiet time.
+     *
+     * @param enabled A boolean indicating whether quiet time is enabled.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public void setQuietTimeEnabled(boolean enabled) {
+        preferenceDataStore.put(QUIET_TIME_ENABLED, enabled);
+    }
+
+    /**
+     * Determines whether we are currently in the middle of "Quiet Time".  Returns false if Quiet Time is disabled,
+     * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
+     *
+     * @return A boolean indicating whether it is currently "Quiet Time".
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public boolean isInQuietTime() {
+        if (!this.isQuietTimeEnabled()) {
+            return false;
+        }
+
+        QuietTimeInterval quietTimeInterval;
+
+        try {
+            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
+        } catch (JsonException e) {
+            Logger.error("Failed to parse quiet time interval");
+            return false;
+        }
+
+        return quietTimeInterval.isInQuietTime(Calendar.getInstance());
+    }
+
+    /**
+     * Returns the Quiet Time interval currently set by the user.
+     *
+     * @return An array of two Date instances, representing the start and end of Quiet Time.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    @Nullable
+    public Date[] getQuietTimeInterval() {
+        QuietTimeInterval quietTimeInterval;
+
+        try {
+            quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
+        } catch (JsonException e) {
+            Logger.error("Failed to parse quiet time interval");
+            return null;
+        }
+
+        return quietTimeInterval.getQuietTimeIntervalDateArray();
+    }
+
+    /**
+     * Sets the Quiet Time interval.
+     *
+     * @param startTime A Date instance indicating when Quiet Time should start.
+     * @param endTime A Date instance indicating when Quiet Time should end.
+     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
+     * instead.
+     */
+    @Deprecated
+    public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
+        QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
+                                                               .setQuietTimeInterval(startTime, endTime)
+                                                               .build();
+        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
     /**
@@ -722,7 +878,6 @@ public class PushManager extends AirshipComponent {
         preferenceDataStore.put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
         updateRegistration();
     }
-
 
     /**
      * Determines whether channel creation is initially disabled, to be enabled later

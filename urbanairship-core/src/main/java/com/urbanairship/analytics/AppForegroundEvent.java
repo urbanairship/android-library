@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 
 class AppForegroundEvent extends Event {
 

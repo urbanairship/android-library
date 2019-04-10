@@ -5,6 +5,7 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -189,7 +190,8 @@ public class AirshipNotificationProvider implements NotificationProvider {
                 .setSmallIcon(this.smallIconId)
                 .setPriority(message.getPriority())
                 .setCategory(message.getCategory())
-                .setVisibility(message.getVisibility());
+                .setVisibility(message.getVisibility())
+                .setDefaults(NotificationCompat.DEFAULT_ALL);
 
         if (largeIcon != 0) {
             builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), largeIcon));
@@ -197,6 +199,17 @@ public class AirshipNotificationProvider implements NotificationProvider {
 
         if (message.getSummary() != null) {
             builder.setSubText(message.getSummary());
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            int defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE;
+            if (message.getSound(context) != null) {
+                builder.setSound(message.getSound(context));
+
+                // Remove the Notification.DEFAULT_SOUND flag
+                defaults &= ~Notification.DEFAULT_SOUND;
+            }
+            builder.setDefaults(defaults);
         }
 
         Notification notification = onExtendBuilder(context, builder, arguments).build();

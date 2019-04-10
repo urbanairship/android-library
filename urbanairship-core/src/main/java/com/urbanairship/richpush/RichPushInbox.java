@@ -3,8 +3,6 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -25,9 +23,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.messagecenter.MessageActivity;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;

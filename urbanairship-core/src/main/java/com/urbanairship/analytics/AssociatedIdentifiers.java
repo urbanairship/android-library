@@ -4,6 +4,7 @@ package com.urbanairship.analytics;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.Size;
 
 import com.urbanairship.json.JsonException;
@@ -86,10 +87,33 @@ public class AssociatedIdentifiers implements JsonSerializable {
 
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue toJsonValue() {
         return JsonValue.wrapOpt(ids);
     }
 
+    /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed ActionScheduleInfo.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static AssociatedIdentifiers fromJson(@Nullable String json) throws JsonException {
+        return fromJson(JsonValue.parseString(json));
+    }
+
+    /**
+     * Parses associated identifiers from JSON.
+     *
+     * @param value The value.
+     * @return The associated identifiers.
+     * @throws JsonException
+     * @hide
+     */
     @NonNull
     public static AssociatedIdentifiers fromJson(@NonNull JsonValue value) throws JsonException {
 

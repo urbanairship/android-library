@@ -37,6 +37,21 @@ public class CustomDisplayContent implements DisplayContent {
                       .toJsonValue();
     }
 
+
+    /**
+     * {@see #fromJson(JsonValue)}
+     *
+     * @param json The json value.
+     * @return The parsed CustomDisplayContent.
+     * @throws JsonException If the JSON is invalid.
+     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
+     */
+    @NonNull
+    @Deprecated
+    public static CustomDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
+        return fromJson(json);
+    }
+
     /**
      * Parses a json value.
      *

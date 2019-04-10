@@ -59,7 +59,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
      * @param context The application context.
      * @param message The push message.
      * @param notificationId The notification ID.
-     * @deprecated Use {{@link #WearableNotificationExtender(Context, NotificationArguments)} instead. Marked to be removed
+     * @deprecated Use {{@link #WearableNotificationExtender(Context, NotificationArguments)} instead. To be removed
      * in SDK 11.
      */
     @Deprecated

@@ -7,7 +7,6 @@ import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.Triggers;
@@ -21,8 +20,6 @@ import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.UUID;
 
 /**

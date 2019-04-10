@@ -203,8 +203,12 @@ class IncomingPushRunnable implements Runnable {
                 NotificationChannelCompat notificationChannel = getNotificationChannel(airship, notification, arguments);
 
                 // Apply legacy settings
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && notificationChannel != null) {
-                    NotificationChannelUtils.applyLegacySettings(notification, notificationChannel);
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    if (notificationChannel != null) {
+                        NotificationChannelUtils.applyLegacySettings(notification, notificationChannel);
+                    } else {
+                        applyDeprecatedSettings(airship, notification);
+                    }
                 }
 
                 // Notify the provider the notification was created
@@ -229,8 +233,29 @@ class IncomingPushRunnable implements Runnable {
         }
     }
 
+    /**
+     * Applies deprecated sound, vibration, and quiet time settings to the notification.
+     *
+     * @param airship The airship instance.
+     * @param notification The notification.
+     */
+    private void applyDeprecatedSettings(@NonNull UAirship airship, @NonNull Notification notification) {
+        if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
+            // Remove both the vibrate and the DEFAULT_VIBRATE flag
+            notification.vibrate = null;
+            notification.defaults &= ~Notification.DEFAULT_VIBRATE;
+        }
+
+        if (!airship.getPushManager().isSoundEnabled() || airship.getPushManager().isInQuietTime()) {
+            // Remove both the sound and the DEFAULT_SOUND flag
+            notification.sound = null;
+            notification.defaults &= ~Notification.DEFAULT_SOUND;
+        }
+
+    }
+
     @Nullable
-    private NotificationChannelCompat getNotificationChannel(UAirship airship, @NonNull Notification notification, @NonNull NotificationArguments arguments) {
+    private NotificationChannelCompat getNotificationChannel(@NonNull UAirship airship, @NonNull Notification notification, @NonNull NotificationArguments arguments) {
         String channelId;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             channelId = NotificationCompat.getChannelId(notification);

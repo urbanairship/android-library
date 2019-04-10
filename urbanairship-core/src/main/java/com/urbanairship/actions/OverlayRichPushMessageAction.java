@@ -6,13 +6,8 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.js.Whitelist;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 
 /**
