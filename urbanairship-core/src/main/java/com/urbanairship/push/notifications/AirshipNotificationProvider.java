@@ -17,7 +17,10 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.NotificationIdGenerator;
 import com.urbanairship.util.UAStringUtil;
 
-public class AirshipNotificationProvider extends NotificationProvider {
+/**
+ * Default notification provider.
+ */
+public class AirshipNotificationProvider implements NotificationProvider {
 
     /**
      * Default Notification ID when the {@link PushMessage} defines a notification tag.
@@ -199,6 +202,9 @@ public class AirshipNotificationProvider extends NotificationProvider {
         Notification notification = onExtendBuilder(context, builder, arguments).build();
         return NotificationResult.notification(notification);
     }
+
+    @Override
+    public void onNotificationCreated(@NonNull Context context, @NonNull Notification notification, @NonNull NotificationArguments arguments) { }
 
     /**
      * Override this method to extend the notification builder.

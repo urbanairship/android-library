@@ -7,7 +7,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 /**
@@ -16,7 +15,7 @@ import com.urbanairship.push.PushMessage;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class LegacyNotificationFactoryProvider extends NotificationProvider {
+public class LegacyNotificationFactoryProvider implements NotificationProvider {
 
     private final NotificationFactory factory;
 
@@ -63,4 +62,8 @@ public class LegacyNotificationFactoryProvider extends NotificationProvider {
                 return NotificationResult.cancel();
         }
     }
+
+    @Override
+    public void onNotificationCreated(@NonNull Context context, @NonNull Notification notification, @NonNull NotificationArguments arguments) {}
+
 }

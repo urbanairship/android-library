@@ -21,13 +21,13 @@ import com.urbanairship.push.PushMessage;
  * The notification provider should never post the notification to the notification manager. The Urban
  * Airship SDK will do that on behave of the application.
  */
-public abstract class NotificationProvider {
+public interface NotificationProvider {
 
     /**
      * Default notification channel ID.
      */
     @NonNull
-    public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
+    String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
 
     /**
      * Called to generate the {@link NotificationArguments} for a push message.
@@ -38,7 +38,7 @@ public abstract class NotificationProvider {
      */
     @WorkerThread
     @NonNull
-    public abstract NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message);
+    NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message);
 
     /**
      * Called to generate the {@link NotificationResult} for a push message.
@@ -49,7 +49,7 @@ public abstract class NotificationProvider {
      */
     @WorkerThread
     @NonNull
-    public abstract NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments);
+    NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments);
 
     /**
      * Called before posting the notification.
@@ -63,6 +63,6 @@ public abstract class NotificationProvider {
      * @param arguments The notification arguments.
      */
     @WorkerThread
-    public void onNotificationCreated(@NonNull Context context, @NonNull Notification notification, @NonNull NotificationArguments arguments) {}
+    void onNotificationCreated(@NonNull Context context, @NonNull Notification notification, @NonNull NotificationArguments arguments);
 
 }

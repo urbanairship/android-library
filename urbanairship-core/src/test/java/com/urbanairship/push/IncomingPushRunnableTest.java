@@ -439,7 +439,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .build();
     }
 
-    public static class TestNotificationProvider extends NotificationProvider {
+    public static class TestNotificationProvider implements NotificationProvider {
 
         public Notification notification;
         public String tag;
@@ -461,6 +461,11 @@ public class IncomingPushRunnableTest extends BaseTestCase {
             } else {
                 return NotificationResult.cancel();
             }
+        }
+
+        @Override
+        public void onNotificationCreated(@NonNull Context context, @NonNull Notification notification, @NonNull NotificationArguments arguments) {
+
         }
 
     }
