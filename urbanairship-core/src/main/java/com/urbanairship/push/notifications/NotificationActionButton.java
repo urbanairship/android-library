@@ -12,8 +12,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
-import com.urbanairship.CoreActivity;
-import com.urbanairship.CoreReceiver;
+import com.urbanairship.push.NotificationProxyActivity;
+import com.urbanairship.push.NotificationProxyReceiver;
 import com.urbanairship.push.PushManager;
 
 import java.util.ArrayList;
@@ -143,7 +143,7 @@ public class NotificationActionButton {
 
         PendingIntent actionPendingIntent;
 
-        Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY)
+        Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_RESPONSE)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, arguments.getMessage().getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId())
@@ -154,10 +154,10 @@ public class NotificationActionButton {
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION, actionDescription);
 
         if (isForegroundAction) {
-            intent.setClass(context, CoreActivity.class);
+            intent.setClass(context, NotificationProxyActivity.class);
             actionPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
         } else {
-            intent.setClass(context, CoreReceiver.class);
+            intent.setClass(context, NotificationProxyReceiver.class);
             actionPendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         }
 

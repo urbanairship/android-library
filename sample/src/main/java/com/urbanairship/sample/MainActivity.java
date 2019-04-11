@@ -13,13 +13,9 @@ import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.sample.inbox.InboxFragment;
-import com.urbanairship.sample.inbox.InboxMessageFragment;
 
 import java.util.List;
 
-import androidx.navigation.NavController;
-import androidx.navigation.NavDeepLinkBuilder;
 
 /**
  * Main application entry point.

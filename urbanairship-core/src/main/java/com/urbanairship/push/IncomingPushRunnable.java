@@ -13,7 +13,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -156,7 +155,7 @@ class IncomingPushRunnable implements Runnable {
     private void postProcessPush(final UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
             Logger.info("User notifications opted out. Unable to display notification for message: %s", message);
-            sendPushResultBroadcast(null);
+            notifyPushReceived(airship, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -164,7 +163,7 @@ class IncomingPushRunnable implements Runnable {
         final NotificationProvider provider = airship.getPushManager().getNotificationProvider();
         if (provider == null) {
             Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
-            sendPushResultBroadcast(null);
+            notifyPushReceived(airship, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -174,7 +173,7 @@ class IncomingPushRunnable implements Runnable {
             arguments = provider.onCreateNotificationArguments(context, message);
         } catch (Exception e) {
             Logger.error(e, "Failed to generate notification arguments for message. Skipping.");
-            sendPushResultBroadcast(null);
+            notifyPushReceived(airship, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -215,15 +214,22 @@ class IncomingPushRunnable implements Runnable {
                 provider.onNotificationCreated(context, notification, arguments);
 
                 // Post the notification
-                postNotification(notification, arguments);
+                boolean posted = postNotification(notification, arguments);
 
                 airship.getAnalytics().addEvent(new PushArrivedEvent(message, notificationChannel));
-                sendPushResultBroadcast(arguments);
+
+                if (posted) {
+                    notifyPushReceived(airship, true);
+                    notifyNotificationPosted(airship, arguments);
+                } else {
+                    notifyPushReceived(airship, false);
+                }
+
                 break;
 
             case NotificationResult.CANCEL:
                 airship.getAnalytics().addEvent(new PushArrivedEvent(message));
-                sendPushResultBroadcast(null);
+                notifyPushReceived(airship, false);
                 break;
 
             case NotificationResult.RETRY:
@@ -302,12 +308,12 @@ class IncomingPushRunnable implements Runnable {
      * @param notification The notification.
      * @param arguments The notification arguments.
      */
-    private void postNotification(@NonNull Notification notification, @NonNull NotificationArguments arguments) {
+    private boolean postNotification(@NonNull Notification notification, @NonNull NotificationArguments arguments) {
         String tag = arguments.getNotificationTag();
         int id = arguments.getNotificationId();
 
-        Intent contentIntent = new Intent(context, CoreReceiver.class)
-                .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
+        Intent contentIntent = new Intent(context, NotificationProxyActivity.class)
+                .setAction(PushManager.ACTION_NOTIFICATION_RESPONSE)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, arguments.getMessage().getPushBundle())
                 .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
@@ -319,8 +325,8 @@ class IncomingPushRunnable implements Runnable {
             contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, notification.contentIntent);
         }
 
-        Intent deleteIntent = new Intent(context, CoreReceiver.class)
-                .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
+        Intent deleteIntent = new Intent(context, NotificationProxyReceiver.class)
+                .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, arguments.getMessage().getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId())
@@ -330,34 +336,32 @@ class IncomingPushRunnable implements Runnable {
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
         }
 
-        notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
+        notification.contentIntent = PendingIntent.getActivity(context, 0, contentIntent, 0);
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
         Logger.info("Posting notification: %s id: %s tag: %s", notification, id, tag);
         try {
             notificationManager.notify(tag, id, notification);
+
+            return true;
         } catch (Exception e) {
             Logger.error(e, "Failed to post notification.");
+            return false;
         }
     }
 
-    /**
-     * Sends the push broadcast with the notification result.
-     *
-     * @param arguments The notification arguments if the notification was posted.
-     */
-    private void sendPushResultBroadcast(@Nullable NotificationArguments arguments) {
-        Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
-                .addCategory(UAirship.getPackageName())
-                .setPackage(UAirship.getPackageName());
-
-        if (arguments != null) {
-            intent.putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId());
-            intent.putExtra(PushManager.EXTRA_NOTIFICATION_TAG, arguments.getNotificationTag());
+    private void notifyPushReceived(UAirship airship, boolean notificationPosted) {
+        for (PushListener listener : airship.getPushManager().getPushListeners()) {
+            listener.onPushReceived(message, notificationPosted);
         }
+    }
 
-        context.sendBroadcast(intent);
+    private void notifyNotificationPosted(UAirship airship, NotificationArguments arguments) {
+        NotificationListener listener = airship.getPushManager().getNotificationListener();
+        if (listener != null) {
+            NotificationInfo info = new NotificationInfo(arguments.getMessage(), arguments.getNotificationId(), arguments.getNotificationTag());
+            listener.onNotificationPosted(info);
+        }
     }
 
     /**

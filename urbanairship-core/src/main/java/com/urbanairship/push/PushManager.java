@@ -44,6 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
@@ -52,18 +53,6 @@ import java.util.concurrent.ExecutorService;
  * of incoming push notifications.
  */
 public class PushManager extends AirshipComponent {
-
-    /**
-     * Action sent as a broadcast when a push message is received.
-     * <p>
-     * Extras:
-     * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_MESSAGE_BUNDLE}
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.RECEIVED";
 
     /**
      * Action sent as a broadcast when a notification is opened.
@@ -76,8 +65,9 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
-    public static final String ACTION_NOTIFICATION_OPENED = "com.urbanairship.push.OPENED";
+    public static final String ACTION_NOTIFICATION_RESPONSE = "com.urbanairship.push.ACTION_NOTIFICATION_RESPONSE";
 
     /**
      * Action sent as a broadcast when a notification is dismissed.
@@ -88,19 +78,9 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
-    public static final String ACTION_NOTIFICATION_DISMISSED = "com.urbanairship.push.DISMISSED";
-
-    /**
-     * Action sent as a broadcast when a channel registration succeeds.
-     * <p>
-     * Extras:
-     * {@link #EXTRA_CHANNEL_ID}
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String ACTION_CHANNEL_UPDATED = "com.urbanairship.push.CHANNEL_UPDATED";
+    public static final String ACTION_NOTIFICATION_DISMISSED = "com.urbanairship.push.ACTION_NOTIFICATION_DISMISSED";
 
     /**
      * The notification ID extra contains the ID of the notification placed in the
@@ -108,6 +88,7 @@ public class PushManager extends AirshipComponent {
      * <p>
      * If a <code>Notification</code> was not created, the extra will not be included.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.push.NOTIFICATION_ID";
 
@@ -117,6 +98,7 @@ public class PushManager extends AirshipComponent {
      * <p>
      * If a <code>Notification</code> was not created, the extra will not be included.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_TAG = "com.urbanairship.push.NOTIFICATION_TAG";
 
@@ -125,6 +107,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_PUSH_MESSAGE_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE_BUNDLE";
 
@@ -133,6 +116,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_ID = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ID";
 
@@ -141,56 +125,9 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_FOREGROUND = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_FOREGROUND";
-
-    /**
-     * Extra used to indicate an error in channel registration.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String EXTRA_ERROR = "com.urbanairship.push.EXTRA_ERROR";
-
-    /**
-     * The channel ID extra.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String EXTRA_CHANNEL_ID = "com.urbanairship.push.EXTRA_CHANNEL_ID";
-
-    /**
-     * Extra used to indicate whether a channel registration request type is create or update.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String EXTRA_CHANNEL_CREATE_REQUEST = "com.urbanairship.push.EXTRA_CHANNEL_CREATE_REQUEST";
-
-    /**
-     * This intent action indicates that a push notification has been opened.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String ACTION_NOTIFICATION_OPENED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_OPENED_PROXY";
-
-    /**
-     * This intent action indicates that a push notification button has been opened.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String ACTION_NOTIFICATION_BUTTON_OPENED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY";
-
-    /**
-     * This intent action indicates that a push notification button has been dismissed.
-     *
-     * @hide
-     */
-    @NonNull
-    public static final String ACTION_NOTIFICATION_DISMISSED_PROXY = "com.urbanairship.ACTION_NOTIFICATION_DISMISSED_PROXY";
 
     /**
      * The CONTENT_INTENT extra is an optional intent that the notification builder can
@@ -199,6 +136,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_CONTENT_INTENT = "com.urbanairship.push.EXTRA_NOTIFICATION_CONTENT_INTENT";
 
@@ -209,6 +147,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_DELETE_INTENT = "com.urbanairship.push.EXTRA_NOTIFICATION_DELETE_INTENT";
 
@@ -217,6 +156,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION = "com.urbanairship.push.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION";
 
@@ -225,6 +165,7 @@ public class PushManager extends AirshipComponent {
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
@@ -264,23 +205,10 @@ public class PushManager extends AirshipComponent {
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
 
-    static final class QuietTime {
-
-        public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
-        public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
-        public static final String END_HOUR_KEY = KEY_PREFIX + ".QuietTime.END_HOUR";
-        public static final String END_MIN_KEY = KEY_PREFIX + ".QuietTime.END_MINUTE";
-        public static final int NOT_SET_VAL = -1;
-
-    }
-
-    static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
-    static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
     static final String APID_KEY = KEY_PREFIX + ".APID";
 
     // As of version 8.0.0
-    static final String REGISTRATION_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
-    static final String REGISTRATION_TOKEN_MIGRATED_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_MIGRATED_KEY";
+    static final String PUSH_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
 
     //singleton stuff
     private final Context context;
@@ -297,6 +225,10 @@ public class PushManager extends AirshipComponent {
     private final PushProvider pushProvider;
     private PushManagerJobHandler jobHandler;
     private NotificationChannelRegistry notificationChannelRegistry;
+
+    private NotificationListener notificationListener;
+    private List<RegistrationListener> registrationListeners = new CopyOnWriteArrayList<>();
+    private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
 
     private final Object tagLock = new Object();
 
@@ -349,7 +281,6 @@ public class PushManager extends AirshipComponent {
         }
 
         this.migratePushEnabledSettings();
-        this.migrateRegistrationTokenSettings();
 
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
@@ -695,12 +626,12 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Determines whether the app is capable of receiving push,
-     * meaning whether a GCM or ADM registration ID is present.
+     * meaning whether a FCM or ADM push token is present.
      *
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        return getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getRegistrationToken());
+        return getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getPushToken());
     }
 
     /**
@@ -856,11 +787,11 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Determines whether the GCM token or ADM ID is sent during channel registration.
+     * Determines whether the push token is sent during channel registration.
      * If {@code false}, the app will not be able to receive push notifications.
      * The default value is {@code true}.
      *
-     * @return {@code true} if the GCM token or ADM ID is sent during channel registration,
+     * @return {@code true} if the push token is sent during channel registration,
      * {@code false} otherwise.
      */
     public boolean getPushTokenRegistrationEnabled() {
@@ -868,10 +799,10 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets whether the GCM token or ADM ID is sent during channel registration.
+     * Sets whether the push token is sent during channel registration.
      * If {@code false}, the app will not be able to receive push notifications.
      *
-     * @param enabled A boolean indicating whether the GCM token or ADM ID is sent during
+     * @param enabled A boolean indicating whether the push token is sent during
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
@@ -906,6 +837,75 @@ public class PushManager extends AirshipComponent {
      */
     void setLastReceivedMetadata(String sendMetadata) {
         preferenceDataStore.put(LAST_RECEIVED_METADATA, sendMetadata);
+    }
+
+    /**
+     * Sets the notification listener.
+     *
+     * @param listener The listener.
+     */
+    public void setNotificationListener(@Nullable NotificationListener listener) {
+        this.notificationListener = listener;
+    }
+
+    /**
+     * Adds a push listener.
+     *
+     * @param listener The push listener.
+     */
+    public void addPushListener(@NonNull PushListener listener) {
+        pushListeners.add(listener);
+    }
+
+    /**
+     * Removes a push listener.
+     *
+     * @param listener The listener.
+     */
+    public void removePushListener(@NonNull PushListener listener) {
+        pushListeners.remove(listener);
+    }
+
+    /**
+     * Adds a registration listener.
+     *
+     * @param listener The listener.
+     */
+    public void addRegistrationListener(@NonNull RegistrationListener listener) {
+        registrationListeners.add(listener);
+    }
+
+    /**
+     * Removes a registration listener.
+     *
+     * @param listener The listener.
+     */
+    public void removeRegistrationListener(@NonNull RegistrationListener listener) {
+        registrationListeners.remove(listener);
+    }
+
+    /**
+     * Gets the notification listener.
+     *
+     * @return The notification listener.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    NotificationListener getNotificationListener() {
+        return notificationListener;
+    }
+
+    /**
+     * Gets the push listeners.
+     *
+     * @return The push listeners.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    List<PushListener> getPushListeners() {
+        return pushListeners;
     }
 
     /**
@@ -1066,9 +1066,18 @@ public class PushManager extends AirshipComponent {
      * @param channelId The channel ID as a string.
      * @param channelLocation The channel location as a URL.
      */
-    void setChannel(String channelId, String channelLocation) {
+    void onChannelCreated(@NonNull String channelId, @NonNull String channelLocation) {
         preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
         preferenceDataStore.put(CHANNEL_LOCATION_KEY, channelLocation);
+
+        for (RegistrationListener listener : registrationListeners) {
+            listener.onChannelCreated(channelId);
+        }
+    }
+
+    void clearChannel() {
+        preferenceDataStore.remove(CHANNEL_ID_KEY);
+        preferenceDataStore.remove(CHANNEL_LOCATION_KEY);
     }
 
     /**
@@ -1086,22 +1095,38 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets the GCM Instance ID or ADM ID token.
+     * Sets the FCM Instance ID or ADM ID token.
      *
-     * @param token The GCM Instance ID or ADM ID token.
+     * @param token The FCM Instance ID or ADM ID token.
      */
-    void setRegistrationToken(String token) {
-        preferenceDataStore.put(REGISTRATION_TOKEN_KEY, token);
+    void onPushTokenUpdated(@NonNull String token) {
+        preferenceDataStore.put(PUSH_TOKEN_KEY, token);
+
+        for (RegistrationListener listener : registrationListeners) {
+            listener.onPushTokenUpdated(token);
+        }
     }
 
     /**
-     * Gets the GCM Instance ID or ADM ID token.
+     * Gets the push token.
      *
-     * @return The GCM or ADM token.
+     * @return The push token.
+     * @deprecated Use {@link #getPushToken()} instead.
      */
     @Nullable
+    @Deprecated
     public String getRegistrationToken() {
-        return preferenceDataStore.getString(REGISTRATION_TOKEN_KEY, null);
+        return getPushToken();
+    }
+
+    /**
+     * Gets the push token.
+     *
+     * @return The push token.
+     */
+    @Nullable
+    public String getPushToken() {
+        return preferenceDataStore.getString(PUSH_TOKEN_KEY, null);
     }
 
     /**
@@ -1140,33 +1165,6 @@ public class PushManager extends AirshipComponent {
         // set push enabled to true
         preferenceDataStore.put(PUSH_ENABLED_KEY, true);
         preferenceDataStore.put(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
-    }
-
-    /**
-     * Migrates the stored registration token.
-     */
-    void migrateRegistrationTokenSettings() {
-        if (preferenceDataStore.getBoolean(REGISTRATION_TOKEN_MIGRATED_KEY, false)) {
-            return;
-        }
-
-        Logger.debug("Migrating registration token preference");
-
-        String token = null;
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                token = preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
-                break;
-            case UAirship.AMAZON_PLATFORM:
-                token = preferenceDataStore.getString(ADM_REGISTRATION_ID_KEY, null);
-                break;
-        }
-
-        if (!UAStringUtil.isEmpty(token)) {
-            setRegistrationToken(token);
-        }
-
-        preferenceDataStore.put(REGISTRATION_TOKEN_MIGRATED_KEY, true);
     }
 
     /**

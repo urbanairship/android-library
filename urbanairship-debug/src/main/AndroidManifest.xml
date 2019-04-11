@@ -16,14 +16,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <receiver android:name="com.urbanairship.debug.push.PushReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.urbanairship.push.RECEIVED" />
-                <category android:name="${applicationId}" />
-            </intent-filter>
-        </receiver>
+        
     </application>
 
 </manifest>

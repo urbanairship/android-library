@@ -103,42 +103,6 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     }
 
     /**
-     * Test update registration with channel ID and null channel location will create a new channel
-     */
-    @Test
-    public void testUpdateRegistrationNullChannelLocation() {
-        // Verify channel doesn't exist in preferences
-        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
-        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
-
-        // Only set the channel ID
-        pushManager.setChannel(fakeChannelId, null);
-
-        assertEquals("Channel ID should be set in preferences", fakeChannelId, pushManager.getChannelId());
-        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
-
-        // Set up channel response
-        Response response = mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
-        when(response.getResponseBody()).thenReturn(fakeResponseBody);
-        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
-
-        // Ensure payload is different, so we don't get a null payload
-        pushManager.editTags().addTag("someTag").apply();
-        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
-
-        // Return the response
-        when(client.createChannelWithPayload(payload)).thenReturn(response);
-
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
-
-        assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
-        assertEquals("Channel location should match in preferences", fakeChannelLocation,
-                pushManager.getChannelLocation());
-    }
-
-    /**
      * Test creating channel accepts a 200
      */
     @Test
@@ -271,7 +235,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateChannelSucceed() throws MalformedURLException {
         // Set Channel ID and channel location
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
 
         assertEquals("Channel ID should exist in preferences", pushManager.getChannelId(), fakeChannelId);
         assertEquals("Channel location should exist in preferences", pushManager.getChannelLocation(), fakeChannelLocation);
@@ -303,7 +267,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     @Test
     public void testChannelConflict() throws MalformedURLException {
         // Set Channel ID and channel location
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
 
         // Set up a conflict response
         Response conflictResponse = mock(Response.class);
@@ -327,7 +291,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateNamedUserTagsSucceed() {
         // Set the channel
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
 
         when(tagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, fakeChannelId)).thenReturn(true);
 
@@ -342,7 +306,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateTagsNoChannel() {
         // Set the channel
-        pushManager.setChannel(null, null);
+        pushManager.clearChannel();
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
@@ -358,7 +322,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateTagsRetry() {
         // Set the channel
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
 
         when(tagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, fakeChannelId)).thenReturn(false);
 

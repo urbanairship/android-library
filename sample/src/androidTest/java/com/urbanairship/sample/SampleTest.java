@@ -20,7 +20,6 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.v4.app.NotificationManagerCompat;
 import android.view.Gravity;
 
-import com.urbanairship.AirshipReceiver;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.ButtonInfo;

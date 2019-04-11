@@ -40,22 +40,6 @@
             </intent-filter>
         </activity>
 
-
-        <!-- Optional: Receives push and registration events from the Urban Airship SDK. -->
-        <receiver
-            android:name=".SampleAirshipReceiver"
-            android:exported="false">
-
-            <intent-filter>
-                <action android:name="com.urbanairship.push.CHANNEL_UPDATED" />
-                <action android:name="com.urbanairship.push.OPENED" />
-                <action android:name="com.urbanairship.push.DISMISSED" />
-                <action android:name="com.urbanairship.push.RECEIVED" />
-
-                <category android:name="${applicationId}" />
-            </intent-filter>
-        </receiver>
-
     </application>
 
 </manifest>

@@ -6,14 +6,12 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.sample.SampleAirshipReceiver;
+import com.urbanairship.push.RegistrationListener;
 
 /**
  * View model for the HomeFragment.
@@ -22,24 +20,20 @@ public class HomeViewModel extends AndroidViewModel {
 
     private MutableLiveData<String> channelId = new MutableLiveData<>();
 
-    private final BroadcastReceiver channelIdUpdateReceiver = new BroadcastReceiver() {
+    private final RegistrationListener registrationListener = new RegistrationListener() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            refreshChannel();
+        public void onChannelCreated(@NonNull String channelId) {
+            new Handler(Looper.getMainLooper()).post(() -> refreshChannel());
         }
+
+        @Override
+        public void onPushTokenUpdated(@NonNull String token) {}
     };
 
     public HomeViewModel(Application application) {
         super(application);
 
-        // Register a local broadcast manager to listen for ACTION_UPDATE_CHANNEL
-        LocalBroadcastManager locationBroadcastManager = LocalBroadcastManager.getInstance(application);
-
-        // Use local broadcast manager to receive registration events to update the channel
-        IntentFilter channelIdUpdateFilter;
-        channelIdUpdateFilter = new IntentFilter();
-        channelIdUpdateFilter.addAction(SampleAirshipReceiver.ACTION_UPDATE_CHANNEL);
-        locationBroadcastManager.registerReceiver(channelIdUpdateReceiver, channelIdUpdateFilter);
+        UAirship.shared().getPushManager().addRegistrationListener(registrationListener);
         refreshChannel();
     }
 
@@ -50,8 +44,7 @@ public class HomeViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        LocalBroadcastManager locationBroadcastManager = LocalBroadcastManager.getInstance(getApplication());
-        locationBroadcastManager.unregisterReceiver(channelIdUpdateReceiver);
+        UAirship.shared().getPushManager().removeRegistrationListener(registrationListener);
     }
 
     /**
@@ -59,7 +52,7 @@ public class HomeViewModel extends AndroidViewModel {
      *
      * @return The channel Id live data.
      */
-    public LiveData<String> getChanneId() {
+    public LiveData<String> getChannelId() {
         return channelId;
     }
 

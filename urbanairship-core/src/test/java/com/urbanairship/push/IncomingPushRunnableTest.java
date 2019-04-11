@@ -38,6 +38,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPendingIntent;
 
+import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
@@ -56,6 +57,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     public static final String TEST_NOTIFICATION_CHANNEL_ID = "Test notification channel";
 
     private Bundle pushBundle;
+    private PushMessage message;
+
+    private PushListener pushListener;
+    private NotificationListener notificationListener;
 
     private PushManager pushManager;
     private NotificationManagerCompat notificationManager;
@@ -78,10 +83,16 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
         pushBundle.putString(PushMessage.EXTRA_NOTIFICATION_TAG, "testNotificationTag");
+        message = new PushMessage(pushBundle);
 
         pushManager = mock(PushManager.class);
+        pushListener = mock(PushListener.class);
+        notificationListener = mock(NotificationListener.class);
         testPushProvider = new TestPushProvider();
+
         when(pushManager.getPushProvider()).thenReturn(testPushProvider);
+        when(pushManager.getNotificationListener()).thenReturn(notificationListener);
+        when(pushManager.getPushListeners()).thenReturn(Collections.singletonList(pushListener));
 
         notificationManager = mock(NotificationManagerCompat.class);
 
@@ -145,12 +156,15 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(analytics).addEvent(any(PushArrivedEvent.class));
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+        assertTrue("The pending intent is an activity intent.", shadowPendingIntent.isActivityIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
+        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_RESPONSE);
         assertBundlesEquals("The push message bundles should match.", pushBundle, intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
+
+        verify(pushListener).onPushReceived(message, true);
+        verify(notificationListener).onNotificationPosted(any(NotificationInfo.class));
     }
 
     /**
@@ -187,13 +201,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size() - 1);
-        PushMessage push = PushMessage.fromIntent(i);
-        assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", "testPushID", push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
+        verify(pushListener).onPushReceived(message, false);
     }
 
     /**
@@ -208,14 +216,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size() - 1);
-
-        PushMessage push = PushMessage.fromIntent(i);
-        assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", "testPushID", push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", -1, i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1));
+        verify(pushListener).onPushReceived(message, false);
     }
 
     /**
@@ -341,10 +342,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushRunnable.run();
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+        assertTrue("The pending intent is an activity intent.", shadowPendingIntent.isActivityIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
+        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_RESPONSE);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification content intent is not null.", pendingIntent);
         assertSame("The notification content intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT));
@@ -370,7 +371,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY);
+        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_DISMISSED);
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification delete intent is not null.", pendingIntent);
         assertSame("The notification delete intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT));

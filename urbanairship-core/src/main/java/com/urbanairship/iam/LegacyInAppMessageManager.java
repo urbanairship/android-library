@@ -17,6 +17,7 @@ import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.push.NotificationProxyReceiver;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -213,7 +214,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     }
 
     /**
-     * Called when a push is interacted with in {@link com.urbanairship.CoreReceiver}.
+     * Called when a push is interacted with in {@link NotificationProxyReceiver}.
      *
      * @param push The push message.
      * @hide

@@ -4,16 +4,18 @@ package com.urbanairship.analytics;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.NotificationActionButtonInfo;
+import com.urbanairship.push.NotificationInfo;
 
 /**
  * An event that captures information regarding an interactive notification action open.
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class InteractiveNotificationEvent extends Event {
 
     private static final String SEND_ID_KEY = "send_id";
@@ -40,19 +42,16 @@ public class InteractiveNotificationEvent extends Event {
     /**
      * Creates an interactive notification event.
      *
-     * @param message The PushMessage that displayed the notification.
-     * @param buttonId The button ID.
-     * @param buttonDescription The button description.
-     * @param isForeground If the action is foreground or not.
-     * @param remoteInput The action button remote input.
+     * @param notificationInfo The notification info.
+     * @param buttonInfo The action button info.
      */
-    public InteractiveNotificationEvent(@NonNull PushMessage message, @NonNull String buttonId, @Nullable String buttonDescription, boolean isForeground, @Nullable Bundle remoteInput) {
-        this.sendId = message.getSendId();
-        this.buttonGroupId = message.getInteractiveNotificationType();
-        this.buttonId = buttonId;
-        this.buttonDescription = buttonDescription;
-        this.isForeground = isForeground;
-        this.remoteInput = remoteInput;
+    public InteractiveNotificationEvent(NotificationInfo notificationInfo, NotificationActionButtonInfo buttonInfo) {
+        this.sendId = notificationInfo.getMessage().getSendId();
+        this.buttonGroupId = notificationInfo.getMessage().getInteractiveNotificationType();
+        this.buttonId = buttonInfo.getButtonId();
+        this.buttonDescription = buttonInfo.getDescription();
+        this.isForeground = buttonInfo.isForeground();
+        this.remoteInput = buttonInfo.getRemoteInput();
     }
 
     @NonNull

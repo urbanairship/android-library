@@ -215,7 +215,7 @@ class PushManagerJobHandler {
 
         if (!UAStringUtil.equals(token, currentToken)) {
             Logger.info("PushManagerJobHandler - Push registration updated.");
-            pushManager.setRegistrationToken(token);
+            pushManager.onPushTokenUpdated(token);
         }
 
         pushManager.updateRegistration();
@@ -262,7 +262,6 @@ class PushManagerJobHandler {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
-            sendRegistrationFinishedBroadcast(false, false);
             return JobInfo.JOB_RETRY;
         }
 
@@ -272,7 +271,6 @@ class PushManagerJobHandler {
 
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
-            sendRegistrationFinishedBroadcast(true, false);
 
             if (shouldUpdateRegistration(payload)) {
                 pushManager.updateRegistration();
@@ -284,13 +282,12 @@ class PushManagerJobHandler {
         // 409
         if (response.getStatus() == HttpURLConnection.HTTP_CONFLICT) {
             // Delete channel and register again.
-            pushManager.setChannel(null, null);
+            pushManager.clearChannel();
             return createChannel(payload);
         }
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: %s", response.getStatus());
-        sendRegistrationFinishedBroadcast(false, false);
         return JobInfo.JOB_FINISHED;
     }
 
@@ -314,7 +311,6 @@ class PushManagerJobHandler {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
-            sendRegistrationFinishedBroadcast(false, true);
             return JobInfo.JOB_RETRY;
         }
 
@@ -333,9 +329,8 @@ class PushManagerJobHandler {
                 Logger.debug("Channel creation succeeded with status: %s channel ID: %s", response.getStatus(), channelId);
 
                 // Set the last registration payload and time then notify registration succeeded
-                pushManager.setChannel(channelId, channelLocation);
+                pushManager.onChannelCreated(channelId, channelLocation);
                 setLastRegistrationPayload(payload);
-                sendRegistrationFinishedBroadcast(true, true);
 
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                     // 200 means channel previously existed and a named user may be associated to it.
@@ -360,7 +355,6 @@ class PushManagerJobHandler {
 
             } else {
                 Logger.error("Failed to register with channel ID: %s channel location: %s", channelId, channelLocation);
-                sendRegistrationFinishedBroadcast(false, true);
                 return JobInfo.JOB_RETRY;
             }
 
@@ -369,7 +363,6 @@ class PushManagerJobHandler {
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: %s", response.getStatus());
-        sendRegistrationFinishedBroadcast(false, true);
 
         return JobInfo.JOB_FINISHED;
     }
@@ -463,28 +456,6 @@ class PushManagerJobHandler {
         }
 
         return lastRegistrationTime;
-    }
-
-    /**
-     * Broadcasts an intent to notify the host application of a registration finished, but
-     * only if a receiver is set to get the user-defined intent receiver.
-     *
-     * @param isSuccess A boolean indicating whether registration succeeded or not.
-     * @param isCreateRequest A boolean indicating the channel registration request type - true if
-     * the request is of the create type, false otherwise.
-     */
-    private void sendRegistrationFinishedBroadcast(boolean isSuccess, boolean isCreateRequest) {
-        Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED)
-                .putExtra(PushManager.EXTRA_CHANNEL_ID, pushManager.getChannelId())
-                .putExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, isCreateRequest)
-                .addCategory(UAirship.getPackageName())
-                .setPackage(UAirship.getPackageName());
-
-        if (!isSuccess) {
-            intent.putExtra(PushManager.EXTRA_ERROR, true);
-        }
-
-        context.sendBroadcast(intent);
     }
 
     /**

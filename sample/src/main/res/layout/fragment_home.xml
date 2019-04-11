@@ -45,7 +45,7 @@
                 android:ellipsize="end"
                 android:gravity="center"
                 android:lines="1"
-                android:text="@{viewModel.channeId}"
+                android:text="@{viewModel.channelId}"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

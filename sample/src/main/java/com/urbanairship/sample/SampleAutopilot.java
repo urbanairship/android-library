@@ -12,13 +12,6 @@ import android.support.annotation.Nullable;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionResult;
-import com.urbanairship.actions.DeepLinkAction;
-import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.util.UriUtils;
-
-import androidx.navigation.Navigation;
 
 /**
  * Autopilot that enables user notifications on first run.
@@ -58,6 +51,11 @@ public class SampleAutopilot extends Autopilot {
             UAirship.getApplicationContext().startActivity(intent);
         });
 
+
+        AirshipListener airshipListener = new AirshipListener();
+        airship.getPushManager().addPushListener(airshipListener);
+        airship.getPushManager().addRegistrationListener(airshipListener);
+        airship.getPushManager().setNotificationListener(airshipListener);
     }
 
     @Nullable

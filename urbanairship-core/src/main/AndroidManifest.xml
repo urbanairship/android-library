@@ -37,7 +37,7 @@
         </activity>
 
         <activity
-            android:name="com.urbanairship.CoreActivity"
+            android:name="com.urbanairship.push.NotificationProxyActivity"
             android:exported="false"
             android:theme="@android:style/Theme.NoDisplay" />
 
@@ -101,7 +101,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
-            android:name="com.urbanairship.CoreReceiver"
+            android:name="com.urbanairship.push.NotificationProxyReceiver"
             android:exported="false">
             <intent-filter android:priority="-999">
                 <action android:name="com.urbanairship.push.OPENED" />

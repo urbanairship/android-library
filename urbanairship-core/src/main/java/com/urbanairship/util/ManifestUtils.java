@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
@@ -94,52 +93,4 @@ public class ManifestUtils {
 
         return false;
     }
-
-    /**
-     * Determine whether the specified permission is known to the system
-     *
-     * @param permission the permission name to check (e.g. com.google.android.c2dm.permission.RECEIVE)
-     * @return <code>true</code>if known, <code>false</code> otherwise
-     */
-    public static boolean isPermissionKnown(@NonNull String permission) {
-        try {
-            UAirship.getPackageManager().getPermissionInfo(permission, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
-    /**
-     * Validates the manifest for Urban Airship components.
-     */
-    public static void validateManifest() {
-
-        // Validate any app push receivers
-        ActivityInfo[] receivers = null;
-
-        try {
-            receivers = UAirship.getPackageManager().getPackageInfo(UAirship.getPackageName(), PackageManager.GET_RECEIVERS).receivers;
-        } catch (Exception e) {
-            Logger.error(e, "Unable to query the application's receivers.");
-        }
-
-        if (receivers != null) {
-            for (ActivityInfo info : receivers) {
-                try {
-                    Class receiverClass = Class.forName(info.name);
-                    if (AirshipReceiver.class.isAssignableFrom(receiverClass)) {
-                        if (info.exported) {
-                            Logger.error("Receiver %s is exported. This might allow outside applications to message the receiver. Make sure the intent is protected by a permission or prevent the receiver from being exported.", info.name);
-                            throw new IllegalStateException("Receiver cannot be exported. Exporting the receiver allows other " +
-                                    "apps to send fake broadcasts to this app.");
-                        }
-                    }
-                } catch (ClassNotFoundException e) {
-                    Logger.debug(e, "ManifestUtils - Unable to find class: %s", info.name);
-                }
-            }
-        }
-    }
-
 }

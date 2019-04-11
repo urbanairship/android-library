@@ -403,11 +403,6 @@ public class UAirship {
             // Initialize the modules
             sharedAirship.init();
 
-            // if in development mode, check the manifest and log manifest issues
-            if (!options.inProduction) {
-                ManifestUtils.validateManifest();
-            }
-
             Logger.info("Airship ready!");
 
             // Ready callback for setup

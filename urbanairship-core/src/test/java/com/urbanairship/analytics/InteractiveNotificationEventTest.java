@@ -5,6 +5,8 @@ package com.urbanairship.analytics;
 import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.push.NotificationActionButtonInfo;
+import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.PushMessage;
 
 import org.json.JSONException;
@@ -32,7 +34,10 @@ public class InteractiveNotificationEventTest extends BaseTestCase {
      */
     @Test
     public void testData() throws JSONException {
-        InteractiveNotificationEvent event = new InteractiveNotificationEvent(mockPushMessage, "button id", "button description", false, null);
+        NotificationInfo notificationInfo = new NotificationInfo(mockPushMessage, 100, "tag");
+        NotificationActionButtonInfo actionButtonInfo = new NotificationActionButtonInfo("button id", false, null, "button description");
+
+        InteractiveNotificationEvent event = new InteractiveNotificationEvent(notificationInfo, actionButtonInfo);
 
         validateEventValue(event, "button_id", "button id");
         validateEventValue(event, "button_description", "button description");
@@ -50,7 +55,10 @@ public class InteractiveNotificationEventTest extends BaseTestCase {
         remoteInput.putCharSequence("input_one", "cool");
         remoteInput.putCharSequence("input_two", "story");
 
-        InteractiveNotificationEvent event = new InteractiveNotificationEvent(mockPushMessage, "button id", "button description", false, remoteInput);
+        NotificationInfo notificationInfo = new NotificationInfo(mockPushMessage, 100, "tag");
+        NotificationActionButtonInfo actionButtonInfo = new NotificationActionButtonInfo("button id", false, remoteInput, "button description");
+
+        InteractiveNotificationEvent event = new InteractiveNotificationEvent(notificationInfo, actionButtonInfo);
 
         validateEventValue(event, "button_id", "button id");
         validateEventValue(event, "button_description", "button description");

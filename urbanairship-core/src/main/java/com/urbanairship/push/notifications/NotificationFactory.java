@@ -17,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
-import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.push.PushMessage;
