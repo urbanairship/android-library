@@ -11,7 +11,9 @@ import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.SpannableString;
 import android.text.format.DateFormat;
+import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.CheckBox;
@@ -39,9 +41,6 @@ public class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
-
-    private Typeface titleTypeface;
-    private Typeface titleReadTypeface;
 
     public MessageItemView(@NonNull Context context) {
         this(context, null, R.attr.messageCenterStyle);
@@ -103,15 +102,6 @@ public class MessageItemView extends FrameLayout {
 
         titleView = contentView.findViewById(R.id.title);
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance);
-        if (titleView.getTypeface() != null) {
-            titleReadTypeface = titleView.getTypeface();
-            int style = titleView.getTypeface().getStyle();
-            style |= Typeface.BOLD;
-            titleTypeface = Typeface.create(titleView.getTypeface(), style);
-        } else {
-            titleReadTypeface = Typeface.DEFAULT;
-            titleTypeface = Typeface.DEFAULT_BOLD;
-        }
 
         dateView = contentView.findViewById(R.id.date);
         ViewUtils.applyTextStyle(context, dateView, dateTextAppearance);
@@ -149,13 +139,14 @@ public class MessageItemView extends FrameLayout {
      * @param placeholder Image place holder.
      */
     void updateMessage(@NonNull RichPushMessage message, @DrawableRes int placeholder) {
-        titleView.setText(message.getTitle());
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
         if (message.isRead()) {
-            titleView.setTypeface(titleReadTypeface);
+            titleView.setText(message.getTitle());
         } else {
-            titleView.setTypeface(titleTypeface);
+            SpannableString text = new SpannableString(message.getTitle());
+            text.setSpan(new StyleSpan(Typeface.BOLD), 0, text.length(), 0);
+            titleView.setText(text, TextView.BufferType.SPANNABLE);
         }
 
         if (checkBox != null) {
