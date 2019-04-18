@@ -44,14 +44,6 @@ public class InboxFragment extends MessageCenterFragment {
     }
 
     @Override
-    protected void configureMessageListFragment(@NonNull MessageListFragment messageListFragment) {
-        super.configureMessageListFragment(messageListFragment);
-        messageListFragment.getAbsListViewAsync(absListView -> {
-            ViewCompat.setNestedScrollingEnabled(absListView, true);
-        });
-    }
-
-    @Override
     protected void showMessageExternally(@NonNull Context context, @NonNull String messageId) {
         if (getView() != null) {
             Bundle arguments = new Bundle();
