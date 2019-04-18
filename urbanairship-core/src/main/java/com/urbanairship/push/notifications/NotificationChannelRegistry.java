@@ -8,14 +8,17 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
+import android.support.annotation.XmlRes;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -30,9 +33,10 @@ public class NotificationChannelRegistry {
     private static final String DATABASE_NAME = "ua_notification_channel_registry.db";
 
     @VisibleForTesting
-    final private NotificationChannelRegistryDataManager dataManager;
+    private final NotificationChannelRegistryDataManager dataManager;
     private final Executor executor;
-    private Context context;
+    private final Context context;
+    private NotificationManager notificationManager;
 
     /**
      * NotificationChannelRegistry constructor.
@@ -41,6 +45,7 @@ public class NotificationChannelRegistry {
      * @param configOptions The airship config options.
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public NotificationChannelRegistry(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         this(context,
                 new NotificationChannelRegistryDataManager(context, configOptions.getAppKey(), DATABASE_NAME),
@@ -59,10 +64,7 @@ public class NotificationChannelRegistry {
         this.context = context;
         this.dataManager = dataManager;
         this.executor = executor;
-    }
-
-    private NotificationManager getNotificationManager() {
-        return (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     /**
@@ -78,13 +80,13 @@ public class NotificationChannelRegistry {
             public void run() {
                 NotificationChannelCompat result;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    NotificationChannel channel = getNotificationManager().getNotificationChannel(id);
+                    NotificationChannel channel = notificationManager.getNotificationChannel(id);
                     if (channel != null) {
                         result = new NotificationChannelCompat(channel);
                     } else {
                         result = dataManager.getChannel(id);
                         if (result != null) {
-                            getNotificationManager().createNotificationChannel(result.toNotificationChannel());
+                            notificationManager.createNotificationChannel(result.toNotificationChannel());
                         }
                     }
                 } else {
@@ -120,25 +122,6 @@ public class NotificationChannelRegistry {
     }
 
     /**
-     * Creates a notification channel and saves it to disk. This method is a no-op if a channel
-     * is already created with the same identifier. On Android O and above, this method
-     * will also register an equivalent NotificationChannel with NotificationManager.
-     *
-     * @param channelCompat A NotificationChannelCompat.
-     */
-    public void createNotificationChannel(@NonNull final NotificationChannelCompat channelCompat) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    getNotificationManager().createNotificationChannel(channelCompat.toNotificationChannel());
-                }
-                dataManager.createChannel(channelCompat);
-            }
-        });
-    }
-
-    /**
      * Deletes a notification channel, by identifier. On Android O and above, this method
      * will also delete the equivalent NotificationChannel on NotificationManager.
      *
@@ -149,9 +132,110 @@ public class NotificationChannelRegistry {
             @Override
             public void run() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    getNotificationManager().deleteNotificationChannel(id);
+                    notificationManager.deleteNotificationChannel(id);
                 }
                 dataManager.deleteChannel(id);
+            }
+        });
+    }
+
+    /**
+     * Adds a notification channel and saves it to disk. This method is a no-op if a channel
+     * is already created with the same identifier. On Android O and above, this method
+     * will also create an equivalent NotificationChannel with NotificationManager.
+     *
+     * @param channelCompat A NotificationChannelCompat.
+     */
+    public void createNotificationChannel(@NonNull final NotificationChannelCompat channelCompat) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    notificationManager.createNotificationChannel(channelCompat.toNotificationChannel());
+                }
+                dataManager.createChannel(channelCompat);
+            }
+        });
+    }
+
+    /**
+     * Like {@link #createNotificationChannel(NotificationChannelCompat)}, but on Android O and above,
+     * the channel will not be created with the NotificationManager until it is accessed with
+     * {@link #getNotificationChannel(String)}.
+     *
+     * @param channelCompat A NotificationChannelCompat.
+     */
+    public void createDeferredNotificationChannel(@NonNull final NotificationChannelCompat channelCompat) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                dataManager.createChannel(channelCompat);
+            }
+        });
+    }
+
+
+    /**
+     * Creates notification channels from an XML file. Any channel that is already created
+     * will no-op. On Android O and above, each channel will also create an equivalent
+     * NotificationChannel with NotificationManager.
+     *
+     * The resource file can define all attributes on the channel:
+     * <pre>
+     * {@code
+     * <resources>
+     *     <NotificationChannel
+     *         id="breaking_news"
+     *         name="@string/breaking_news"
+     *         description="@string/breaking_news_description"
+     *         importance="3"
+     *         can_bypass_dnd="false"
+     *         can_show_badge="true"
+     *         group="News"
+     *         light_color="@color/blue"
+     *         should_show_lights="true"
+     *         should_vibrate="true"
+     *         vibration_pattern="100,150,100" />
+     * </resources>
+     * }
+     * </pre>
+     *
+     * @param resourceId The xml resource ID.
+     * @hide
+     */
+    public void createNotificationChannels(@XmlRes final int resourceId) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<NotificationChannelCompat> channelCompats = NotificationChannelCompat.fromXml(context, resourceId);
+                for (NotificationChannelCompat channelCompat : channelCompats) {
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        notificationManager.createNotificationChannel(channelCompat.toNotificationChannel());
+                    }
+
+                    dataManager.createChannel(channelCompat);
+                }
+            }
+        });
+    }
+
+    /**
+     * Like {@link #createNotificationChannels(int)}, but on Android O and above, the channels
+     * will not be created with the NotificationManager until they are accessed with
+     * {@link #getNotificationChannel(String)}.
+     *
+     * @param resourceId The xml resource ID.
+     * @hide
+     */
+    public void createDeferredNotificationChannels(@XmlRes final int resourceId) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<NotificationChannelCompat> channelCompats = NotificationChannelCompat.fromXml(context, resourceId);
+                for (NotificationChannelCompat channelCompat : channelCompats) {
+                    dataManager.createChannel(channelCompat);
+                }
             }
         });
     }

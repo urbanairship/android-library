@@ -4,25 +4,42 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.content.Context;
+import android.content.res.XmlResourceParser;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.annotation.RestrictTo;
+import android.support.annotation.XmlRes;
+import android.util.Xml;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.AttributeSetConfigParser;
+import com.urbanairship.util.UAStringUtil;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Compatibility class for supporting NotificationChannel functionality across Android OS versions.
  */
 public class NotificationChannelCompat implements JsonSerializable {
+
+    private static final int LOCKSCREEN_VISIBILITY_DEFAULT_VALUE = -1000;
+    private static final String NOTIFICATION_CHANNEL_TAG = "NotificationChannel";
 
     private static final String CAN_BYPASS_DND_KEY = "can_bypass_dnd";
     private static final String CAN_SHOW_BADGE_KEY = "can_show_badge";
@@ -52,7 +69,7 @@ public class NotificationChannelCompat implements JsonSerializable {
 
     private int importance;
     private int lightColor = 0;
-    private int lockscreenVisibility = -1000; // default NotificationChannel value
+    private int lockscreenVisibility = LOCKSCREEN_VISIBILITY_DEFAULT_VALUE;
     private long[] vibrationPattern = null;
 
     /**
@@ -444,10 +461,13 @@ public class NotificationChannelCompat implements JsonSerializable {
                 channelCompat.setDescription(map.opt(DESCRIPTION_KEY).getString());
                 channelCompat.setGroup(map.opt(GROUP_KEY).getString());
                 channelCompat.setLightColor(map.opt(LIGHT_COLOR_KEY).getInt(0));
-                channelCompat.setLockscreenVisibility(map.opt(LOCKSCREEN_VISIBILITY_KEY).getInt(-1000));
+                channelCompat.setLockscreenVisibility(map.opt(LOCKSCREEN_VISIBILITY_KEY).getInt(LOCKSCREEN_VISIBILITY_DEFAULT_VALUE));
                 channelCompat.setName(map.opt(NAME_KEY).getString());
 
-                channelCompat.setSound(Uri.parse(map.opt(SOUND_KEY).getString()));
+                String sound = map.opt(SOUND_KEY).getString();
+                if (!UAStringUtil.isEmpty(sound)) {
+                    channelCompat.setSound(Uri.parse(sound));
+                }
 
                 JsonList vibrationPatternList = map.opt(VIBRATION_PATTERN_KEY).getList();
 
@@ -468,6 +488,79 @@ public class NotificationChannelCompat implements JsonSerializable {
         Logger.error("Unable to deserialize notification channel: %s", jsonValue);
 
         return null;
+    }
+
+    /**
+     * Parses notification channels from an Xml file.
+     *
+     * @param context The context.
+     * @param resource The Xml resource Id.
+     * @return A list of notification channels.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static List<NotificationChannelCompat> fromXml(Context context, @XmlRes int resource) {
+        XmlResourceParser parser = context.getResources().getXml(resource);
+        try {
+            List<NotificationChannelCompat> channels = parseChannels(context, parser);
+            return channels;
+        } catch (Exception e) {
+            Logger.error(e, "Failed to parse channels");
+        } finally {
+            parser.close();
+        }
+
+        return Collections.emptyList();
+    }
+
+    private static List<NotificationChannelCompat> parseChannels(Context context, XmlResourceParser parser) throws IOException, XmlPullParserException {
+        List<NotificationChannelCompat> channels = new ArrayList<>();
+
+        while (XmlPullParser.END_DOCUMENT != parser.next()) {
+            // Start component
+            if (XmlPullParser.START_TAG == parser.getEventType() && NOTIFICATION_CHANNEL_TAG.equals(parser.getName())) {
+                AttributeSetConfigParser configParser = new AttributeSetConfigParser(context, Xml.asAttributeSet(parser));
+
+                String name = configParser.getString(NAME_KEY);
+                String id = configParser.getString(ID_KEY);
+                int importance = configParser.getInt(IMPORTANCE_KEY, -1);
+
+                if (UAStringUtil.isEmpty(name) || UAStringUtil.isEmpty(id) || importance == -1) {
+                    Logger.error("Invalid notification channel. Missing name (%s), id (%s), or importance (%s)", name, id, importance);
+                    continue;
+                }
+
+                NotificationChannelCompat channelCompat = new NotificationChannelCompat(id, name, importance);
+                channelCompat.setBypassDnd(configParser.getBoolean(CAN_BYPASS_DND_KEY, false));
+                channelCompat.setShowBadge(configParser.getBoolean(CAN_SHOW_BADGE_KEY, true));
+                channelCompat.enableLights(configParser.getBoolean(SHOULD_SHOW_LIGHTS_KEY, false));
+                channelCompat.enableVibration(configParser.getBoolean(SHOULD_VIBRATE_KEY, false));
+                channelCompat.setDescription(configParser.getString(DESCRIPTION_KEY));
+                channelCompat.setGroup(configParser.getString(GROUP_KEY));
+                channelCompat.setLightColor(configParser.getColor(LIGHT_COLOR_KEY, 0));
+                channelCompat.setLockscreenVisibility(configParser.getInt(LOCKSCREEN_VISIBILITY_KEY, LOCKSCREEN_VISIBILITY_DEFAULT_VALUE));
+
+                String sound = configParser.getString(SOUND_KEY);
+                if (!UAStringUtil.isEmpty(sound)) {
+                    channelCompat.setSound(Uri.parse(sound));
+                }
+
+                String vibrationPatternString = configParser.getString(VIBRATION_PATTERN_KEY);
+                if (!UAStringUtil.isEmpty(vibrationPatternString)) {
+                    String[] stringArray = vibrationPatternString.split(",");
+                    long[] vibration = new long[stringArray.length];
+                    for (int i = 0; i < stringArray.length; i++) {
+                        vibration[i] = Long.parseLong(stringArray[i]);
+                    }
+
+                    channelCompat.setVibrationPattern(vibration);
+                }
+
+                channels.add(channelCompat);
+            }
+        }
+
+        return channels;
     }
 
 }

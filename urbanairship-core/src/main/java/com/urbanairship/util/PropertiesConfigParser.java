@@ -1,34 +1,41 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
-import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
  * Properties file config parser.
+ * @hide
  */
-class PropertiesConfigParser implements ConfigParser {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class PropertiesConfigParser implements ConfigParser {
 
     private final List<String> propertyNames;
-    private final List<String> propertyValues;
+    private final Map<String, String> propertyValues;
+
     private final Context context;
 
-    private PropertiesConfigParser(@NonNull Context context, @NonNull List<String> propertyNames, @NonNull List<String> propertyValues) {
+    private PropertiesConfigParser(@NonNull Context context, @NonNull List<String> propertyNames, @NonNull Map<String, String> propertyValues) {
         this.context = context;
         this.propertyNames = propertyNames;
         this.propertyValues = propertyValues;
@@ -80,7 +87,7 @@ class PropertiesConfigParser implements ConfigParser {
     @NonNull
     public static PropertiesConfigParser fromProperties(@NonNull Context context, @NonNull Properties properties) {
         List<String> propertyNames = new ArrayList<>();
-        List<String> propertyValues = new ArrayList<>();
+        Map<String, String> propertyValues = new HashMap<>();
 
         for (String name : properties.stringPropertyNames()) {
             String value = properties.getProperty(name);
@@ -93,7 +100,7 @@ class PropertiesConfigParser implements ConfigParser {
             }
 
             propertyNames.add(name);
-            propertyValues.add(value);
+            propertyValues.put(name, value);
         }
 
         return new PropertiesConfigParser(context, propertyNames, propertyValues);
@@ -112,41 +119,68 @@ class PropertiesConfigParser implements ConfigParser {
 
     @Nullable
     @Override
-    public String getString(int index) {
-        return propertyValues.get(index);
+    public String getString(@NonNull String name) {
+        return propertyValues.get(name);
     }
 
     @NonNull
     @Override
-    public String getString(int index, @NonNull String defaultValue) {
-        String value = getString(index);
+    public String getString(@NonNull String name, @NonNull String defaultValue) {
+        String value = getString(name);
         return value == null ? defaultValue : value;
     }
 
     @Override
-    public boolean getBoolean(int index) {
-        return Boolean.parseBoolean(propertyValues.get(index));
+    public boolean getBoolean(@NonNull String name, boolean defaultValue) {
+        String value = getString(name);
+        if (UAStringUtil.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        return Boolean.parseBoolean(value);
     }
 
     @Nullable
     @Override
-    public String[] getStringArray(int index) {
-        return propertyValues.get(index).split("[, ]+");
+    public String[] getStringArray(@NonNull String name) {
+        return propertyValues.get(name).split("[, ]+");
     }
 
     @Override
-    public int getDrawableResourceId(int index) {
-        return context.getResources().getIdentifier(getString(index), "drawable", context.getPackageName());
+    public int getDrawableResourceId(@NonNull String name) {
+        return context.getResources().getIdentifier(getString(name), "drawable", context.getPackageName());
+    }
+
+
+    @Override
+    public long getLong(@NonNull String name, long defaultValue) {
+        String value = getString(name);
+        if (UAStringUtil.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        return Long.parseLong(value);
     }
 
     @Override
-    public int getColor(int index) {
-        return Color.parseColor(propertyValues.get(index));
+    public int getInt(@NonNull String name, int defaultValue) {
+        String value = getString(name);
+        if (UAStringUtil.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        return Integer.parseInt(value);
     }
 
     @Override
-    public long getLong(int index) {
-        return Long.parseLong(propertyValues.get(index));
+    @ColorInt
+    public int getColor(@NonNull String name, @ColorInt int defaultValue) {
+        String value = getString(name);
+        if (UAStringUtil.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        return Color.parseColor(value);
     }
 
 }

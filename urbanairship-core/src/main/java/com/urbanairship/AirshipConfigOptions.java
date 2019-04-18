@@ -14,7 +14,10 @@ import android.util.Log;
 
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
+import com.urbanairship.util.ConfigParser;
+import com.urbanairship.util.PropertiesConfigParser;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.XmlConfigParser;
 
 import java.lang.reflect.Field;
 import java.util.Properties;
@@ -48,6 +51,8 @@ public class AirshipConfigOptions {
 
     // Default airship config properties filename
     private final static String DEFAULT_PROPERTIES_FILENAME = "airshipconfig.properties";
+
+    private static final String CONFIG_ELEMENT = "AirshipConfigOptions";
 
     /**
      * The application's production app key.
@@ -563,12 +568,16 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
+            XmlConfigParser configParser = null;
             try {
-                XmlConfigParser configParser = new XmlConfigParser(context, xmlResourceId);
+                configParser = XmlConfigParser.parseElement(context, xmlResourceId, CONFIG_ELEMENT);
                 applyConfigParser(context, configParser);
-                configParser.close();
             } catch (Exception e) {
                 Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+            } finally {
+                if (configParser != null) {
+                    configParser.close();
+                }
             }
 
             return this;
@@ -588,31 +597,31 @@ public class AirshipConfigOptions {
                     }
                     switch (name) {
                         case FIELD_PRODUCTION_APP_KEY:
-                            this.setProductionAppKey(configParser.getString(i));
+                            this.setProductionAppKey(configParser.getString(name));
                             break;
 
                         case FIELD_PRODUCTION_APP_SECRET:
-                            this.setProductionAppSecret(configParser.getString(i));
+                            this.setProductionAppSecret(configParser.getString(name));
                             break;
 
                         case FIELD_DEVELOPMENT_APP_KEY:
-                            this.setDevelopmentAppKey(configParser.getString(i));
+                            this.setDevelopmentAppKey(configParser.getString(name));
                             break;
 
                         case FIELD_DEVELOPMENT_APP_SECRET:
-                            this.setDevelopmentAppSecret(configParser.getString(i));
+                            this.setDevelopmentAppSecret(configParser.getString(name));
                             break;
 
                         case FIELD_HOST_URL:
-                            this.setHostURL(configParser.getString(i, hostURL));
+                            this.setHostURL(configParser.getString(name, hostURL));
                             break;
 
                         case FIELD_ANALYTICS_SERVER:
-                            this.setAnalyticsServer(configParser.getString(i, analyticsServer));
+                            this.setAnalyticsServer(configParser.getString(name, analyticsServer));
                             break;
 
                         case FIELD_REMOTE_DATA_URL:
-                            this.setRemoteDataURL(configParser.getString(i));
+                            this.setRemoteDataURL(configParser.getString(name));
                             break;
 
                         case FIELD_GCM_SENDER:
@@ -620,94 +629,94 @@ public class AirshipConfigOptions {
                                     "fcmSender or remove it to allow the Urban Airship SDK to pull from the google-services.json.");
 
                         case FIELD_ALLOWED_TRANSPORTS:
-                            this.setAllowedTransports(configParser.getStringArray(i));
+                            this.setAllowedTransports(configParser.getStringArray(name));
                             break;
 
                         case FIELD_WHITELIST:
-                            this.setWhitelist(configParser.getStringArray(i));
+                            this.setWhitelist(configParser.getStringArray(name));
                             break;
 
                         case FIELD_IN_PRODUCTION:
-                            this.setInProduction(configParser.getBoolean(i));
+                            this.setInProduction(configParser.getBoolean(name, inProduction));
                             break;
 
                         case FIELD_ANALYTICS_ENABLED:
-                            this.setAnalyticsEnabled(configParser.getBoolean(i));
+                            this.setAnalyticsEnabled(configParser.getBoolean(name, analyticsEnabled));
                             break;
 
                         case FIELD_BACKGROUND_REPORTING_INTERVAL_MS:
-                            this.setBackgroundReportingIntervalMS(configParser.getLong(i));
+                            this.setBackgroundReportingIntervalMS(configParser.getLong(name, backgroundReportingIntervalMS));
                             break;
 
                         case FIELD_CLEAR_NAMED_USER:
-                            this.setClearNamedUser(configParser.getBoolean(i));
+                            this.setClearNamedUser(configParser.getBoolean(name, clearNamedUser));
                             break;
 
                         case FIELD_DEVELOPMENT_LOG_LEVEL:
-                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(i), AirshipConfigOptions.DEFAULT_DEVELOPMENT_LOG_LEVEL));
+                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(name), developmentLogLevel));
                             break;
 
                         case FIELD_PRODUCTION_LOG_LEVEL:
-                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(i), AirshipConfigOptions.DEFAULT_PRODUCTION_LOG_LEVEL));
+                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(name), productionLogLevel));
                             break;
 
                         case FIELD_AUTO_LAUNCH_APPLICATION:
-                            this.setAutoLaunchApplication(configParser.getBoolean(i));
+                            this.setAutoLaunchApplication(configParser.getBoolean(name, autoLaunchApplication));
                             break;
 
                         case FIELD_CHANNEL_CREATION_DELAY_ENABLED:
-                            this.setChannelCreationDelayEnabled(configParser.getBoolean(i));
+                            this.setChannelCreationDelayEnabled(configParser.getBoolean(name, channelCreationDelayEnabled));
                             break;
 
                         case FIELD_CHANNEL_CAPTURE_ENABLED:
-                            this.setChannelCaptureEnabled(configParser.getBoolean(i));
+                            this.setChannelCaptureEnabled(configParser.getBoolean(name, channelCaptureEnabled));
                             break;
 
                         case FIELD_NOTIFICATION_ICON:
-                            this.setNotificationIcon(configParser.getDrawableResourceId(i));
+                            this.setNotificationIcon(configParser.getDrawableResourceId(name));
                             break;
 
                         case FIELD_NOTIFICATION_LARGE_ICON:
-                            this.setNotificationLargeIcon(configParser.getDrawableResourceId(i));
+                            this.setNotificationLargeIcon(configParser.getDrawableResourceId(name));
                             break;
 
                         case FIELD_NOTIFICATION_ACCENT_COLOR:
-                            this.setNotificationAccentColor(configParser.getColor(i));
+                            this.setNotificationAccentColor(configParser.getColor(name, notificationAccentColor));
                             break;
 
                         case FIELD_WALLET_URL:
-                            this.setWalletUrl(configParser.getString(i, walletUrl));
+                            this.setWalletUrl(configParser.getString(name, walletUrl));
                             break;
 
                         case FIELD_NOTIFICATION_CHANNEL:
-                            this.setNotificationChannel(configParser.getString(i));
+                            this.setNotificationChannel(configParser.getString(name));
                             break;
 
                         case FIELD_FCM_SENDER_ID:
-                            this.setFcmSenderId(configParser.getString(i));
+                            this.setFcmSenderId(configParser.getString(name));
                             break;
 
                         case FIELD_DEVELOPMENT_FCM_SENDER_ID:
-                            this.setDevelopmentFcmSenderId(configParser.getString(i));
+                            this.setDevelopmentFcmSenderId(configParser.getString(name));
                             break;
 
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
-                            this.setProductionFcmSenderId(configParser.getString(i));
+                            this.setProductionFcmSenderId(configParser.getString(name));
                             break;
 
                         case FIELD_ENABLE_URL_WHITELISTING:
-                            this.setEnableUrlWhitelisting(configParser.getBoolean(i));
+                            this.setEnableUrlWhitelisting(configParser.getBoolean(name, enableUrlWhitelisting));
                             break;
 
                         case FIELD_CUSTOM_PUSH_PROVIDER:
-                            String className = configParser.getString(i);
+                            String className = configParser.getString(name);
                             Checks.checkNotNull(className, "Missing custom push provider class name");
                             Class<? extends PushProvider> providerClass = Class.forName(className).asSubclass(PushProvider.class);
                             this.setCustomPushProvider(providerClass.newInstance());
                             break;
 
                         case FIELD_APP_STORE_URI:
-                            this.setAppStoreUri(Uri.parse(configParser.getString(i)));
+                            this.setAppStoreUri(Uri.parse(configParser.getString(name)));
                             break;
                     }
                 } catch (Exception e) {

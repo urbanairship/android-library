@@ -8,9 +8,11 @@ import android.content.res.XmlResourceParser;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
+import android.util.Xml;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
+import com.urbanairship.util.AttributeSetConfigParser;
 import com.urbanairship.util.UAStringUtil;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -178,10 +180,11 @@ public final class ActionRegistry {
      * @param context The application context.
      */
     public void registerDefaultActions(@NonNull Context context) {
-        try {
-            XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
+        XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
 
+        try {
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
+
                 int tagType = parser.getEventType();
                 String tagName = parser.getName();
 
@@ -189,7 +192,9 @@ public final class ActionRegistry {
                     continue;
                 }
 
-                String className = parser.getAttributeValue(null, CLASS_ATTRIBUTE);
+                AttributeSetConfigParser configParser = new AttributeSetConfigParser(context, Xml.asAttributeSet(parser));
+
+                String className = configParser.getString(CLASS_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(className)) {
                     Logger.error("%s must specify class attribute.", ACTION_ENTRY_TAG);
                     continue;
@@ -204,17 +209,17 @@ public final class ActionRegistry {
                 }
 
                 // Handle primary and secondary names.
-                String actionName = parser.getAttributeValue(null, NAME_ATTRIBUTE);
+                String actionName = configParser.getString(NAME_ATTRIBUTE);
                 if (actionName == null) {
                     Logger.error("%s must specify name attribute.", ACTION_ENTRY_TAG);
                     continue;
                 }
-                String altActionName = parser.getAttributeValue(null, ALT_NAME_ATTRIBUTE);
+                String altActionName = configParser.getString(ALT_NAME_ATTRIBUTE);
                 String[] names = UAStringUtil.isEmpty(altActionName) ? new String[] { actionName } : new String[] { actionName, altActionName };
                 Entry entry = registerAction(c, names);
 
                 // Handle optional predicate class.
-                String predicateClassName = parser.getAttributeValue(null, PREDICATE_ATTRIBUTE);
+                String predicateClassName = configParser.getString(PREDICATE_ATTRIBUTE);
                 if (predicateClassName == null) {
                     continue;
                 }
@@ -230,6 +235,8 @@ public final class ActionRegistry {
         } catch (XmlPullParserException | IOException | Resources.NotFoundException | NullPointerException e) {
             // Note: NullPointerException can occur in rare circumstances further down the call stack
             Logger.error(e, "Failed to parse ActionEntry.");
+        } finally {
+            parser.close();
         }
     }
 

@@ -14,7 +14,6 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -269,37 +268,9 @@ class IncomingPushRunnable implements Runnable {
             channelId = arguments.getNotificationChannelId();
         }
 
-        lazyCreateDefaultChannels(airship, channelId);
         return airship.getPushManager()
                       .getNotificationChannelRegistry()
                       .getNotificationChannelSync(channelId);
-    }
-
-    /**
-     * Creates the default channel if its being requested and not already created.
-     *
-     * @param airship The airship instance.
-     * @param channelId The channel Id.
-     */
-    private void lazyCreateDefaultChannels(@NonNull UAirship airship, @Nullable String channelId) {
-        if (channelId == null) {
-            return;
-        }
-
-        if (!NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL.equals(channelId)) {
-            return;
-        }
-
-        if (airship.getPushManager().getNotificationChannelRegistry().getNotificationChannelSync(channelId) != null) {
-            return;
-        }
-
-        NotificationChannelCompat channelCompat = new NotificationChannelCompat(NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL,
-                context.getString(R.string.ua_default_channel_name),
-                NotificationManagerCompat.IMPORTANCE_DEFAULT);
-
-        channelCompat.setDescription(context.getString(R.string.ua_default_channel_description));
-        airship.getPushManager().getNotificationChannelRegistry().createNotificationChannel(channelCompat);
     }
 
     /**

@@ -19,6 +19,7 @@ import java.util.concurrent.Executor;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class NotificationChannelRegistryTest extends BaseTestCase {
@@ -83,6 +84,12 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
     public void testCreateNotificationChannel() {
         channelRegistry.createNotificationChannel(channelCompat);
         verify(notificationManager).createNotificationChannel(channel);
+    }
+
+    @Test
+    public void testCreateDeferredChannel() {
+        channelRegistry.createDeferredNotificationChannel(channelCompat);
+        verifyZeroInteractions(notificationManager);
     }
 
     @Test

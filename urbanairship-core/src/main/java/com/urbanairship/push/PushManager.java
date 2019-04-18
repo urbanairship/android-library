@@ -299,6 +299,8 @@ public class PushManager extends AirshipComponent {
                 dispatchUpdateTagGroupsJob();
             }
         }
+
+        notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
     }
 
     /**
