@@ -41,7 +41,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public class PushManagerTest extends BaseTestCase {
 
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
-    private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private Set<String> tagsToAdd = new HashSet<>();
     private Set<String> tagsToRemove = new HashSet<>();
 
@@ -344,7 +343,7 @@ public class PushManagerTest extends BaseTestCase {
     public void testGetNextChannelRegistrationPayloadAndroid() throws JSONException {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
         pushManager.onPushTokenUpdated("GCM_TOKEN");
         pushManager.setPushTokenRegistrationEnabled(true);
 
@@ -364,7 +363,7 @@ public class PushManagerTest extends BaseTestCase {
 
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
         pushManager.onPushTokenUpdated("GCM_TOKEN");
         pushManager.setPushTokenRegistrationEnabled(true);
 
@@ -384,7 +383,7 @@ public class PushManagerTest extends BaseTestCase {
     public void testGetNextChannelRegistrationPayloadAmazon() throws JSONException {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
         pushManager.onPushTokenUpdated("ADM_ID");
         pushManager.setPushTokenRegistrationEnabled(true);
 
@@ -436,7 +435,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testStartUpdateChannelTagService() {
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
 
         pushManager.editTagGroups()
                    .addTags("tagGroup", tagsToAdd)
@@ -466,7 +465,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testInitUpdateChannelTags() {
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
         preferenceDataStore.put(PushManager.PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
         pushManager.init();
 
@@ -501,7 +500,7 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
-        pushManager.onChannelCreated(fakeChannelId, fakeChannelLocation);
+        pushManager.onChannelCreated(fakeChannelId);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
     }

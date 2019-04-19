@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 public class ChannelApiClientTest extends BaseTestCase {
 
     private static final String CHANNEL_ID_KEY = "channel_id";
-    private static final String CHANNEL_LOCATION_KEY = "Location";
 
     // Empty payload
     private ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
@@ -60,10 +59,8 @@ public class ChannelApiClientTest extends BaseTestCase {
      */
     @Test
     public void testCreateChannelSucceedsRequest() throws Exception {
-        String channelLocation = "https://go.urbanairship.com/api/channels/someChannelId";
 
         Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Location", Arrays.asList(new String[] { channelLocation }));
 
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                                        .setResponseHeaders(headers)
@@ -79,8 +76,6 @@ public class ChannelApiClientTest extends BaseTestCase {
                 response.getStatus());
         assertEquals("Channel ID should match with response", "someChannelId",
                 JsonValue.parseString(response.getResponseBody()).optMap().opt(CHANNEL_ID_KEY).getString());
-        assertEquals("Channel location should match with response", channelLocation,
-                response.getResponseHeader(CHANNEL_LOCATION_KEY));
     }
 
     /**
@@ -115,8 +110,8 @@ public class ChannelApiClientTest extends BaseTestCase {
                                        .setResponseMessage("OK")
                                        .build();
 
-        URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
-        Response response = client.updateChannelWithPayload(channelLocation, payload);
+        String channelId = "someChannelId";
+        Response response = client.updateChannelWithPayload(channelId, payload);
 
         assertNotNull("Channel response should not be null", response);
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
@@ -136,8 +131,8 @@ public class ChannelApiClientTest extends BaseTestCase {
                                        .setResponseMessage("Not Implemented")
                                        .build();
 
-        URL channelLocation = new URL("https://go.urbanairship.com/api/channels/someChannelId");
-        Response response = client.updateChannelWithPayload(channelLocation, payload);
+        String channelId = "someChannelId";
+        Response response = client.updateChannelWithPayload(channelId, payload);
 
         assertNotNull("Channel response should not be null", response);
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());

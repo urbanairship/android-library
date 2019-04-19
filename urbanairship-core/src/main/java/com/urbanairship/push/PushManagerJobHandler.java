@@ -70,11 +70,6 @@ class PushManagerJobHandler {
     private static final String CHANNEL_ID_KEY = "channel_id";
 
     /**
-     * Response header key for the channel location.
-     */
-    private static final String CHANNEL_LOCATION_KEY = "Location";
-
-    /**
      * Max time between channel registration updates.
      */
     private static final long CHANNEL_REREGISTRATION_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
@@ -233,10 +228,9 @@ class PushManagerJobHandler {
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         String channelId = pushManager.getChannelId();
-        URL channelLocation = getChannelLocationUrl();
 
-        if (channelLocation != null && !UAStringUtil.isEmpty(channelId)) {
-            return updateChannel(channelLocation, payload);
+        if (!UAStringUtil.isEmpty(channelId)) {
+            return updateChannel(channelId, payload);
         } else {
             return createChannel(payload);
         }
@@ -245,18 +239,18 @@ class PushManagerJobHandler {
     /**
      * Updates a channel.
      *
-     * @param channelLocation Channel location.
+     * @param channelId The channel identifier
      * @param payload The ChannelRegistrationPayload payload.
      * @return The job result.
      */
     @JobInfo.JobResult
-    private int updateChannel(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
+    private int updateChannel(@NonNull String channelId, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("PushManagerJobHandler - Channel already up to date.");
             return JobInfo.JOB_FINISHED;
         }
 
-        Response response = channelClient.updateChannelWithPayload(channelLocation, payload);
+        Response response = channelClient.updateChannelWithPayload(channelId, payload);
 
         // No response, 5xx, or 429
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
@@ -323,13 +317,11 @@ class PushManagerJobHandler {
                 Logger.debug(e, "Unable to parse channel registration response body: %s", response.getResponseBody());
             }
 
-            String channelLocation = response.getResponseHeader(CHANNEL_LOCATION_KEY);
-
-            if (!UAStringUtil.isEmpty(channelLocation) && !UAStringUtil.isEmpty(channelId)) {
+            if (!UAStringUtil.isEmpty(channelId)) {
                 Logger.debug("Channel creation succeeded with status: %s channel ID: %s", response.getStatus(), channelId);
 
                 // Set the last registration payload and time then notify registration succeeded
-                pushManager.onChannelCreated(channelId, channelLocation);
+                pushManager.onChannelCreated(channelId);
                 setLastRegistrationPayload(payload);
 
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
@@ -354,7 +346,7 @@ class PushManagerJobHandler {
                 airship.getAnalytics().uploadEvents();
 
             } else {
-                Logger.error("Failed to register with channel ID: %s channel location: %s", channelId, channelLocation);
+                Logger.error("Failed to register with channel ID: %s", channelId);
                 return JobInfo.JOB_RETRY;
             }
 
@@ -393,25 +385,6 @@ class PushManagerJobHandler {
         }
 
         return false;
-    }
-
-    /**
-     * Get the channel location as a URL
-     *
-     * @return The channel location URL
-     */
-    @Nullable
-    private URL getChannelLocationUrl() {
-        String channelLocationString = pushManager.getChannelLocation();
-        if (!UAStringUtil.isEmpty(channelLocationString)) {
-            try {
-                return new URL(channelLocationString);
-            } catch (MalformedURLException e) {
-                Logger.error(e, "Channel location from preferences was invalid: %s", channelLocationString);
-            }
-        }
-
-        return null;
     }
 
     /**

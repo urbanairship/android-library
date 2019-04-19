@@ -19,7 +19,7 @@ import java.net.URL;
  */
 class ChannelApiClient extends BaseApiClient {
 
-    static final String CHANNEL_CREATION_PATH = "api/channels/";
+    static final String CHANNEL_API_PATH = "api/channels/";
 
     ChannelApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
@@ -40,18 +40,19 @@ class ChannelApiClient extends BaseApiClient {
     Response createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Creating channel with payload: %s", payload);
-        return performRequest(getDeviceUrl(CHANNEL_CREATION_PATH), "POST", payload);
+        return performRequest(getDeviceUrl(CHANNEL_API_PATH), "POST", payload);
     }
 
     /**
      * Update the Channel ID
      *
-     * @param channelLocation The location of the channel as a URL
+     * @param channelId The channel identifier
      * @param channelPayload An instance of ChannelRegistrationPayload
      * @return response or null if an error occurred
      */
     @Nullable
-    Response updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
+    Response updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) {
+        URL channelLocation = getDeviceUrl(CHANNEL_API_PATH + channelId);
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: %s", payload);
         return performRequest(channelLocation, "PUT", payload);

@@ -197,7 +197,6 @@ public class PushManager extends AirshipComponent {
     static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
     static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
     static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
-    static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";
     static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
     static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
@@ -1052,25 +1051,13 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Gets the channel location.
-     *
-     * @return The channel location.
-     */
-    @Nullable
-    String getChannelLocation() {
-        return preferenceDataStore.getString(CHANNEL_LOCATION_KEY, null);
-    }
-
-    /**
-     * Sets the Channel ID and channel location.
+     * Sets the channel identifier.
      * Also update the user.
      *
      * @param channelId The channel ID as a string.
-     * @param channelLocation The channel location as a URL.
      */
-    void onChannelCreated(@NonNull String channelId, @NonNull String channelLocation) {
+    void onChannelCreated(@NonNull String channelId) {
         preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
-        preferenceDataStore.put(CHANNEL_LOCATION_KEY, channelLocation);
 
         for (RegistrationListener listener : registrationListeners) {
             listener.onChannelCreated(channelId);
@@ -1079,7 +1066,6 @@ public class PushManager extends AirshipComponent {
 
     void clearChannel() {
         preferenceDataStore.remove(CHANNEL_ID_KEY);
-        preferenceDataStore.remove(CHANNEL_LOCATION_KEY);
     }
 
     /**
