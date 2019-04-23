@@ -27,11 +27,6 @@
         </attr>
     </declare-styleable>
 
-    <declare-styleable name="TextAppearance">
-        <!-- Font path -->
-        <attr name="urbanAirshipFontPath" format="string" />
-    </declare-styleable>
-
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for the Message Center -->
