@@ -42,7 +42,6 @@
 
     <!-- Attributes -->
     <public name="mixed_content_mode" type="attr" />
-    <public name="urbanAirshipFontPath" type="attr" />
     <public name="inAppMessageBannerStyle" type="attr" />
     <public name="messageCenterStyle" type="attr" />
     <public name="optCardBackgroundColor" type="attr" />
