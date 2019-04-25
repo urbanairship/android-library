@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.graphics.Color;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
@@ -21,11 +22,45 @@ public class TextInfoTest extends BaseTestCase {
         TextInfo original = TextInfo.newBuilder()
                                     .setAlignment(TextInfo.ALIGNMENT_CENTER)
                                     .setFontSize(3000)
-                                    .setDrawable(100)
+                                    .setDrawable(1)
                                     .addFontFamily("cool_font")
                                     .setColor(Color.RED)
                                     .setText("OH hi")
                                     .build();
+
+        TextInfo fromJson = TextInfo.fromJson(original.toJsonValue());
+
+        assertEquals(original, fromJson);
+        assertEquals(original.hashCode(), fromJson.hashCode());
+    }
+
+    @Test
+    public void testJsonWithContext() throws JsonException {
+        TextInfo original = TextInfo.newBuilder()
+                .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                .setFontSize(3000)
+                .setDrawable(UAirship.getApplicationContext(),100)
+                .addFontFamily("cool_font")
+                .setColor(Color.RED)
+                .setText("OH hi")
+                .build();
+
+        TextInfo fromJson = TextInfo.fromJson(original.toJsonValue());
+
+        assertEquals(original, fromJson);
+        assertEquals(original.hashCode(), fromJson.hashCode());
+    }
+
+    @Test
+    public void testJsonWithDrawableName() throws JsonException {
+        TextInfo original = TextInfo.newBuilder()
+                .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                .setFontSize(3000)
+                .setDrawableName("test_drawable")
+                .addFontFamily("cool_font")
+                .setColor(Color.RED)
+                .setText("OH hi")
+                .build();
 
         TextInfo fromJson = TextInfo.fromJson(original.toJsonValue());
 

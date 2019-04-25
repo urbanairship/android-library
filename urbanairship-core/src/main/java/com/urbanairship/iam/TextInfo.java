@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
@@ -10,6 +11,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -35,7 +38,7 @@ public class TextInfo implements JsonSerializable {
     private static final String ALIGNMENT_KEY = "alignment";
     private static final String STYLE_KEY = "style";
     private static final String FONT_FAMILY_KEY = "font_family";
-    private static final String ANDROID_DRAWABLE_RES_ID_KEY = "android_drawable_res_id";
+    private static final String ANDROID_DRAWABLE_RES_NAME_KEY = "android_drawable_res_name";
 
     @StringDef({ ALIGNMENT_RIGHT, ALIGNMENT_LEFT, ALIGNMENT_CENTER })
     @Retention(RetentionPolicy.SOURCE)
@@ -92,8 +95,7 @@ public class TextInfo implements JsonSerializable {
 
     private final List<String> fontFamilies;
 
-    @DrawableRes
-    private final int drawable;
+    private final String drawableName;
 
     /**
      * Default constructor.
@@ -106,7 +108,7 @@ public class TextInfo implements JsonSerializable {
         this.size = builder.size;
         this.alignment = builder.alignment;
         this.styles = new ArrayList<>(builder.styles);
-        this.drawable = builder.drawable;
+        this.drawableName = builder.drawableName;
         this.fontFamilies = new ArrayList<>(builder.fontFamilies);
     }
 
@@ -120,7 +122,7 @@ public class TextInfo implements JsonSerializable {
                       .put(ALIGNMENT_KEY, alignment)
                       .put(STYLE_KEY, JsonValue.wrapOpt(styles))
                       .put(FONT_FAMILY_KEY, JsonValue.wrapOpt(fontFamilies))
-                      .putOpt(ANDROID_DRAWABLE_RES_ID_KEY, drawable == 0 ? null : drawable)
+                      .putOpt(ANDROID_DRAWABLE_RES_NAME_KEY, drawableName)
                       .build()
                       .toJsonValue();
     }
@@ -230,7 +232,7 @@ public class TextInfo implements JsonSerializable {
         }
 
         // Android drawable
-        builder.setDrawable(content.opt(ANDROID_DRAWABLE_RES_ID_KEY).getInt(0));
+        builder.setDrawableName(content.opt(ANDROID_DRAWABLE_RES_NAME_KEY).getString());
 
         try {
             return builder.build();
@@ -306,10 +308,32 @@ public class TextInfo implements JsonSerializable {
      * Returns the button icon.
      *
      * @return The icon resource ID.
+     *
+     * @deprecated To be removed in SDK 12. Use {@link #getDrawable(Context)} instead.
      */
     @DrawableRes
     public int getDrawable() {
-        return drawable;
+        return getDrawable(UAirship.getApplicationContext());
+    }
+
+    /**
+     * Returns the button icon.
+     *
+     * @param context The application context
+     * @return The icon resource ID.
+     */
+    @DrawableRes
+    public int getDrawable(@NonNull Context context) {
+        if (drawableName != null) {
+            try {
+                return context.getResources().getIdentifier(drawableName,"drawable", context.getPackageName());
+            } catch (android.content.res.Resources.NotFoundException e) {
+                Logger.debug("Drawable " + drawableName + " no longer exists.");
+                return 0;
+            }
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -323,7 +347,7 @@ public class TextInfo implements JsonSerializable {
 
         TextInfo textInfo = (TextInfo) o;
 
-        if (drawable != textInfo.drawable) {
+        if (drawableName != null ? !drawableName.equals(textInfo.drawableName) : textInfo.drawableName != null) {
             return false;
         }
         if (text != null ? !text.equals(textInfo.text) : textInfo.text != null) {
@@ -352,7 +376,7 @@ public class TextInfo implements JsonSerializable {
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         result = 31 * result + styles.hashCode();
         result = 31 * result + fontFamilies.hashCode();
-        result = 31 * result + drawable;
+        result = 31 * result + (drawableName != null ? drawableName.hashCode() : 0);
         return result;
     }
 
@@ -392,8 +416,7 @@ public class TextInfo implements JsonSerializable {
         @ColorInt
         private Integer color;
         private Float size;
-        @DrawableRes
-        private int drawable;
+        private String drawableName;
 
         @Alignment
         private String alignment;
@@ -409,7 +432,7 @@ public class TextInfo implements JsonSerializable {
             this.size = textInfo.size;
             this.alignment = textInfo.alignment;
             this.styles = textInfo.styles;
-            this.drawable = textInfo.drawable;
+            this.drawableName = textInfo.drawableName;
             this.fontFamilies = textInfo.fontFamilies;
         }
 
@@ -430,10 +453,40 @@ public class TextInfo implements JsonSerializable {
          *
          * @param drawable The drawable resource ID.
          * @return The builder instance.
+         * 
+         * @deprecated To be removed in SDK 12. Use {@link #setDrawable(Context, drawable)} instead.
          */
         @NonNull
         public Builder setDrawable(@DrawableRes int drawable) {
-            this.drawable = drawable;
+            return setDrawable(UAirship.getApplicationContext(), drawable);
+        }
+
+        /**
+         * Sets the drawable to appear next to the text.
+         *
+         * @param drawable The drawable resource ID.
+         * @param context The application context
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setDrawable(@NonNull Context context, @DrawableRes int drawable) {
+            try {
+                this.drawableName = context.getResources().getResourceName(drawable);
+            } catch (android.content.res.Resources.NotFoundException e) {
+                Logger.debug("Drawable " + drawable + " no longer exists or has a new identifier.");
+            }
+            return this;
+        }
+
+        /**
+         * Sets the drawable to appear next to the text.
+         *
+         * @param drawableName The drawable resource name.
+         * @return The builder instance.
+         */
+        @NonNull
+        Builder setDrawableName(@Nullable String drawableName) {
+            this.drawableName = drawableName;
             return this;
         }
 
@@ -508,7 +561,7 @@ public class TextInfo implements JsonSerializable {
          */
         @NonNull
         public TextInfo build() {
-            Checks.checkArgument(drawable != 0 || text != null, "Missing text.");
+            Checks.checkArgument(drawableName != null || text != null, "Missing text.");
             return new TextInfo(this);
         }
 

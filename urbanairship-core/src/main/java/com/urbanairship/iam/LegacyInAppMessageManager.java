@@ -320,7 +320,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                     NotificationActionButton button = group.getNotificationActionButtons().get(i);
 
                     TextInfo.Builder labelBuilder = TextInfo.newBuilder()
-                                                            .setDrawable(button.getIcon())
+                                                            .setDrawable(context, button.getIcon())
                                                             .setColor(primaryColor)
                                                             .setAlignment(TextInfo.ALIGNMENT_CENTER)
                                                             .setText(button.getLabel(context));

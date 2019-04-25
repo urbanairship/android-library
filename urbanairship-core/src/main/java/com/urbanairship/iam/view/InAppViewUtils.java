@@ -12,6 +12,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -101,8 +102,13 @@ public class InAppViewUtils {
         }
 
         Drawable drawable = null;
-        if (textInfo.getDrawable() != 0) {
-            drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
+        @DrawableRes int drawableId = textInfo.getDrawable(textView.getContext());
+        if (drawableId != 0) {
+            try {
+                drawable = ContextCompat.getDrawable(textView.getContext(), drawableId);
+            } catch (android.content.res.Resources.NotFoundException e) {
+                Logger.debug("Drawable " + drawableId + " no longer exists.");
+            }
         }
 
         if (drawable != null) {
