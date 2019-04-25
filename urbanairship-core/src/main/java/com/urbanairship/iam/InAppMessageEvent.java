@@ -3,6 +3,7 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
@@ -30,16 +31,23 @@ abstract class InAppMessageEvent extends Event {
     private static final String SOURCE_URBAN_AIRSHIP = "urban-airship";
     private static final String SOURCE_APP_DEFINED = "app-defined";
 
+    private static final String LOCALE = "locale";
+
     private final JsonValue eventId;
     private final String source;
 
+    @Nullable private final InAppMessage message;
+
     InAppMessageEvent(@NonNull InAppMessage message) {
-        this(createEventId(message), message.getSource());
+        this.eventId = createEventId(message);
+        this.source = message.getSource();
+        this.message = message;
     }
 
     InAppMessageEvent(@NonNull JsonValue eventId, @NonNull @InAppMessage.Source String source) {
         this.eventId = eventId;
         this.source = source;
+        this.message = null;
     }
 
     @NonNull
@@ -52,6 +60,7 @@ abstract class InAppMessageEvent extends Event {
                       .put(SOURCE, isAppDefined ? SOURCE_APP_DEFINED : SOURCE_URBAN_AIRSHIP)
                       .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
                       .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
+                      .putOpt(LOCALE, message != null? message.getRenderedLocale() : null)
                       .build();
     }
 

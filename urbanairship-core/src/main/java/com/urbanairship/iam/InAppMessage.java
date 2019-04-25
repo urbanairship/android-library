@@ -50,6 +50,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String CAMPAIGNS_KEY = "campaigns";
     private static final String DISPLAY_BEHAVIOR_KEY = "display_behavior";
     private static final String REPORTING_ENABLED_KEY = "reporting_enabled";
+    private static final String RENDERED_LOCALE_KEY = "rendered_locale";
+    private static final String RENDERED_LOCALE_LANGUAGE_KEY = "language";
+    private static final String RENDERED_LOCALE_COUNTRY_KEY = "country";
+
 
     @StringDef({ SOURCE_LEGACY_PUSH, SOURCE_REMOTE_DATA, SOURCE_APP_DEFINED })
     @Retention(RetentionPolicy.SOURCE)
@@ -137,6 +141,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     @Source
     private final String source;
 
+    private final Map<String, JsonValue> renderedLocale;
+
     /**
      * Default constructor.
      *
@@ -153,6 +159,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.campaigns = builder.campaigns;
         this.displayBehavior = builder.displayBehavior;
         this.isReportingEnabled = builder.isReportingEnabled;
+        this.renderedLocale = builder.renderedLocale;
     }
 
     /**
@@ -255,6 +262,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return campaigns;
     }
 
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    Map<String, JsonValue> getRenderedLocale() {
+        return renderedLocale;
+    }
+
     /**
      * Gets the display behavior.
      *
@@ -276,6 +289,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return isReportingEnabled;
     }
 
+
     @NonNull
     @Override
     public JsonValue toJsonValue() {
@@ -290,6 +304,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(CAMPAIGNS_KEY, campaigns)
                       .putOpt(DISPLAY_BEHAVIOR_KEY, displayBehavior)
                       .putOpt(REPORTING_ENABLED_KEY, isReportingEnabled)
+                      .putOpt(RENDERED_LOCALE_KEY, renderedLocale)
                       .build().toJsonValue();
     }
 
@@ -363,6 +378,27 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         // Reporting
         if (jsonValue.optMap().containsKey(REPORTING_ENABLED_KEY)) {
             builder.setReportingEnabled(jsonValue.optMap().opt(REPORTING_ENABLED_KEY).getBoolean(true));
+        }
+
+        if (jsonValue.optMap().containsKey(RENDERED_LOCALE_KEY)) {
+            JsonMap jsonMap = jsonValue.optMap().opt(RENDERED_LOCALE_KEY).getMap();
+
+            if (jsonMap == null) {
+                throw new JsonException("Rendered locale must be a JSON object: " + jsonValue.optMap().opt(RENDERED_LOCALE_KEY));
+            }
+
+            if (!jsonMap.containsKey(RENDERED_LOCALE_LANGUAGE_KEY) && !jsonMap.containsKey(RENDERED_LOCALE_COUNTRY_KEY)) {
+                throw new JsonException("Rendered locale must contain one of \"language\" or \"country\" fields: " + jsonMap);
+            }
+
+            JsonValue languageValue = jsonMap.get(RENDERED_LOCALE_LANGUAGE_KEY);
+            JsonValue countryValue = jsonMap.get(RENDERED_LOCALE_COUNTRY_KEY);
+
+            if ((!languageValue.isNull() && !languageValue.isString()) || (!countryValue.isNull() && !countryValue.isString())) {
+                throw new JsonException("Language and country codes must be strings: " + jsonMap);
+            }
+
+            builder.setRenderedLocale(jsonMap.getMap());
         }
 
         try {
@@ -503,6 +539,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + content.hashCode();
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + actions.hashCode();
+        result = 31 * result + (renderedLocale != null? renderedLocale.hashCode() : 0);
         result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
         result = 31 * result + displayBehavior.hashCode();
         result = 31 * result + (isReportingEnabled ? 1 : 0);
@@ -531,6 +568,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String displayBehavior = DISPLAY_BEHAVIOR_DEFAULT;
         private boolean isReportingEnabled = true;
 
+        private Map<String, JsonValue> renderedLocale;
+
         private Builder() {
         }
 
@@ -545,6 +584,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.campaigns = message.campaigns;
             this.displayBehavior = message.displayBehavior;
             this.isReportingEnabled = message.isReportingEnabled;
+            this.renderedLocale = message.renderedLocale;
         }
 
         /**
@@ -760,6 +800,11 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          */
         public Builder setReportingEnabled(boolean isReportingEnabled) {
             this.isReportingEnabled = isReportingEnabled;
+            return this;
+        }
+
+        public Builder setRenderedLocale(Map<String, JsonValue> renderedLocale){
+            this.renderedLocale = renderedLocale;
             return this;
         }
 

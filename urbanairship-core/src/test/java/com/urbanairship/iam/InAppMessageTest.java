@@ -16,6 +16,9 @@ import com.urbanairship.util.UAStringUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 
@@ -27,6 +30,7 @@ public class InAppMessageTest extends BaseTestCase {
     private CustomDisplayContent customDisplayContent;
     private BannerDisplayContent bannerDisplayContent;
     private FullScreenDisplayContent fullScreenDisplayContent;
+    private Map<String, JsonValue> renderedLocale;
 
     @Before
     public void setup() {
@@ -55,6 +59,10 @@ public class InAppMessageTest extends BaseTestCase {
                                                                                 .setId("id")
                                                                                 .build())
                                                            .build();
+
+        renderedLocale = new HashMap<>();
+        renderedLocale.put("language", JsonValue.wrap("en"));
+        renderedLocale.put("country", JsonValue.wrap("US"));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -132,7 +140,7 @@ public class InAppMessageTest extends BaseTestCase {
                                  .put("actions", actionsMap)
                                  .put("reporting_enabled", false)
                                  .put("display_behavior", "default")
-
+                                 .put("rendered_locale", JsonValue.wrap(renderedLocale))
                                  .build();
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.toJsonValue());
@@ -143,6 +151,7 @@ public class InAppMessageTest extends BaseTestCase {
         assertEquals(actionsMap.getMap(), message.getActions());
         assertEquals(InAppMessage.DISPLAY_BEHAVIOR_DEFAULT, message.getDisplayBehavior());
         assertFalse(message.isReportingEnabled());
+        assertEquals(renderedLocale, message.getRenderedLocale());
     }
 
     @Test(expected = JsonException.class)
