@@ -289,7 +289,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return isReportingEnabled;
     }
 
-
     @NonNull
     @Override
     public JsonValue toJsonValue() {
@@ -388,7 +387,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             }
 
             if (!jsonMap.containsKey(RENDERED_LOCALE_LANGUAGE_KEY) && !jsonMap.containsKey(RENDERED_LOCALE_COUNTRY_KEY)) {
-                throw new JsonException("Rendered locale must contain one of \"language\" or \"country\" fields: " + jsonMap);
+                throw new JsonException("Rendered locale must contain one of " +
+                        "\"" + RENDERED_LOCALE_LANGUAGE_KEY + "\" " +
+                        "or \"" + RENDERED_LOCALE_COUNTRY_KEY + "\" fields :" + jsonMap);
             }
 
             JsonValue languageValue = jsonMap.get(RENDERED_LOCALE_LANGUAGE_KEY);
@@ -525,6 +526,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         }
 
         if (campaigns != null ? !campaigns.equals(message.campaigns) : message.campaigns != null) {
+            return false;
+        }
+
+        if (renderedLocale != null ? !renderedLocale.equals(message.renderedLocale) : message.renderedLocale != null) {
             return false;
         }
 
