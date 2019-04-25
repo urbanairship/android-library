@@ -8,12 +8,16 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -23,9 +27,15 @@ public class InAppMessageEventTest extends BaseTestCase {
     InAppMessage appDefinedInAppMessage;
     InAppMessage legacyInAppMessage;
     InAppMessage remoteDataInAppMessage;
+    Map<String, JsonValue> renderedLocale;
 
     @Before
     public void setup() {
+
+        renderedLocale = new HashMap<>();
+        renderedLocale.put("language", JsonValue.wrap("en"));
+        renderedLocale.put("country", JsonValue.wrap("US"));
+
         legacyInAppMessage = InAppMessage.newBuilder()
                                          .setId("message id")
                                          .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
@@ -38,6 +48,7 @@ public class InAppMessageEventTest extends BaseTestCase {
                                              .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
                                              .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                              .setCampaigns(JsonValue.wrap("campaigns info"))
+                                             .setRenderedLocale(renderedLocale)
                                              .build();
 
         appDefinedInAppMessage = InAppMessage.newBuilder()
@@ -52,7 +63,7 @@ public class InAppMessageEventTest extends BaseTestCase {
      * Test display event from a legacy in-app message.
      */
     @Test
-    public void testLegacyMessage() throws JSONException {
+    public void testLegacyMessage() throws JsonException {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -72,7 +83,7 @@ public class InAppMessageEventTest extends BaseTestCase {
      * Test display event from an app-defined in-app message.
      */
     @Test
-    public void testAppDefinedMessage() throws JSONException {
+    public void testAppDefinedMessage() throws JsonException {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -94,7 +105,7 @@ public class InAppMessageEventTest extends BaseTestCase {
      * Test display event from a remote-data in-app message.
      */
     @Test
-    public void testRemoteDataMessage() throws JSONException {
+    public void testRemoteDataMessage() throws JsonException {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -106,6 +117,7 @@ public class InAppMessageEventTest extends BaseTestCase {
                                            .put("source", "urban-airship")
                                            .put("conversion_send_id", "send id")
                                            .put("conversion_metadata", "metadata")
+                                           .put("locale", JsonValue.wrap(renderedLocale))
                                            .build();
 
         TestEvent event = new TestEvent(remoteDataInAppMessage);
@@ -117,7 +129,7 @@ public class InAppMessageEventTest extends BaseTestCase {
      * Test display event when the conversion send id is null.
      */
     @Test
-    public void testDisplayEventNoConversionSendId() throws JSONException {
+    public void testDisplayEventNoConversionSendId() throws JsonException {
         UAirship.shared().getAnalytics().setConversionSendId(null);
         UAirship.shared().getAnalytics().setConversionMetadata(null);
 
