@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push.fcm;
 
@@ -15,7 +15,7 @@ import com.urbanairship.push.PushProviderBridge;
 import java.util.concurrent.Future;
 
 /**
- * Urban Airship FirebaseMessagingService.
+ * Airship FirebaseMessagingService.
  */
 public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
 

@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes used to submit device location to Urban Airship for use with Segments.
+ * Contains classes used to submit device location to Airship for use with Segments.
  */
 
 package com.urbanairship.location;

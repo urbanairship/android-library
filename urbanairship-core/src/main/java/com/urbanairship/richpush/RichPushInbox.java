@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.richpush;
 
@@ -40,7 +40,7 @@ import java.util.concurrent.Executor;
 
 /**
  * The RichPushInbox singleton provides access to the device's local inbox data.
- * Modifications (e.g., deletions or mark read) will be sent to the Urban Airship
+ * Modifications (e.g., deletions or mark read) will be sent to the Airship
  * server the next time the inbox is synchronized.
  */
 public class RichPushInbox extends AirshipComponent {
@@ -290,7 +290,7 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Fetches the latest inbox changes from Urban Airship.
+     * Fetches the latest inbox changes from Airship.
      * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
@@ -303,7 +303,7 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Fetches the latest inbox changes from Urban Airship.
+     * Fetches the latest inbox changes from Airship.
      * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
@@ -320,7 +320,7 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Fetches the latest inbox changes from Urban Airship.
+     * Fetches the latest inbox changes from Airship.
      * <p>
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.

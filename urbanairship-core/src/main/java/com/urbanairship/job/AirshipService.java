@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.job;
 
@@ -19,7 +19,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.util.AirshipHandlerThread;
 
 /**
- * Urban Airship Service.
+ * Airship Service.
  *
  * @hide
  */

@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.iam.assets;
 
@@ -74,7 +74,7 @@ public class AssetManager {
      * Sets the prepare assets delegate. The delegate is used to populate an {@link Assets} instance
      * for a schedule.
      * <p>
-     * To preserve Urban Airship default behavior, extend {@link AirshipPrepareAssetsDelegate}
+     * To preserve Airship default behavior, extend {@link AirshipPrepareAssetsDelegate}
      * and call through to the super's method.
      *
      * @param assetsDelegate The asset delegate.

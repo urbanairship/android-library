@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -54,7 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UAirship manages the shared state for all Urban Airship
+ * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
  * the class on <code>Application.onCreate()</code>.
  */
@@ -624,13 +624,13 @@ public class UAirship {
     }
 
     /**
-     * Returns the current Urban Airship version.
+     * Returns the current Airship version.
      *
-     * @return The Urban Airship version number.
+     * @return The Airship version number.
      */
     @NonNull
     public static String getVersion() {
-        return BuildConfig.URBAN_AIRSHIP_VERSION;
+        return BuildConfig.AIRSHIP_VERSION;
     }
 
     /**
@@ -727,7 +727,7 @@ public class UAirship {
         String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
 
         if (previousVersion != null && !previousVersion.equals(currentVersion)) {
-            Logger.info("Urban Airship library changed from %s to %s.", previousVersion, currentVersion);
+            Logger.info("Airship library changed from %s to %s.", previousVersion, currentVersion);
         }
 
         // store current version as library version once check is performed
@@ -850,7 +850,7 @@ public class UAirship {
 
     /**
      * The URL whitelist is used to determine if a URL is allowed to be used for various features, including:
-     * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages, and landing pages.
+     * Airship JS interface, open external URL action, wallet action, HTML in-app messages, and landing pages.
      *
      * @return The url whitelist.
      */

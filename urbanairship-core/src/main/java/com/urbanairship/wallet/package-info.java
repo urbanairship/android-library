@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes for creating wallet passes with the Urban Airship API and deep linking them
+ * Contains classes for creating wallet passes with the Airship API and deep linking them
  * to Android Pay.
  */
 

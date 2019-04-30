@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -978,7 +978,7 @@ public class PushManager extends AirshipComponent {
      */
     public void addNotificationActionButtonGroup(@NonNull String id, @NonNull NotificationActionButtonGroup group) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to add any notification button groups that starts with the reserved Urban Airship prefix %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            Logger.error("Unable to add any notification button groups that starts with the reserved Airship prefix %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -1019,7 +1019,7 @@ public class PushManager extends AirshipComponent {
      */
     public void removeNotificationActionButtonGroup(@NonNull String id) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to remove any reserved Urban Airship actions groups that begin with %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            Logger.error("Unable to remove any reserved Airship actions groups that begin with %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 

@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.analytics;
 
@@ -14,7 +14,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
- * This class captures all the necessary information for Urban Airship
+ * This class captures all the necessary information for Airship
  * {@link com.urbanairship.analytics.Analytics}.
  */
 public class LocationEvent extends Event {

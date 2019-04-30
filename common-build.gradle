@@ -16,7 +16,7 @@ android {
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.targetSdkVersion
 
-        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${getMavenVersion()}\""
+        buildConfigField "String", "AIRSHIP_VERSION", "\"${getMavenVersion()}\""
         buildConfigField "String", "SDK_VERSION", "\"${getSdkVersionString()}\""
 
         consumerProguardFiles 'proguard-rules.pro'
@@ -44,7 +44,7 @@ def pomConfig = {
 
     developers {
         developer {
-            name 'Urban Airship'
+            name 'Airship'
         }
     }
 

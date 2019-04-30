@@ -1,4 +1,4 @@
-# Urban Airship Android SDK Migration Guide (Legacy)
+# Airship Android SDK Migration Guide (Legacy)
 
 # UrbanAirship Library 7.2.x to 8.0.0
 

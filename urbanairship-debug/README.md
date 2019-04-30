@@ -1,4 +1,4 @@
-# Urban Airship Debug Library
+# Airship Debug Library
 
 
 ## Setup
@@ -13,7 +13,7 @@ dependencies {
 ```
 
 The debug library will automatically add a new launcher icon for the application with the app's icon,
-but the label will be `Urban Airship Debug`. The new launcher will navigate directly to the DebugActivity.
+but the label will be `Airship Debug`. The new launcher will navigate directly to the DebugActivity.
 
 
 ## Adding Screens

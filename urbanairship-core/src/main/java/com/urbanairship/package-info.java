@@ -1,9 +1,9 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains high-level classes for interacting with the Urban Airship API.
+ * Contains high-level classes for interacting with the Airship API.
  *
- * This package provides a very high level interface to the Urban Airship API via
+ * This package provides a very high level interface to the Airship API via
  * <code>UAirship</code> and the <code>Options</code> classes.
  */
 

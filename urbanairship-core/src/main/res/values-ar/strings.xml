@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">مشاركة</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">قناة Urban Airship</string>
+    <string name="ua_channel_notification_ticker">قناة Airship</string>
     <string name="ua_channel_copy_toast">تم نسخ القناة إلى الحافظة!</string>
 
     <!-- Message Center -->

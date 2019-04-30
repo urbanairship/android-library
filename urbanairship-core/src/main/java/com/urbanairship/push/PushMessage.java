@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -48,23 +48,23 @@ public class PushMessage implements Parcelable, JsonSerializable {
     static final String EXTRA_PING = "com.urbanairship.push.PING";
 
     /**
-     * The alert extra holds the string sent in the "alert" field of an Urban Airship
+     * The alert extra holds the string sent in the "alert" field of an Airship
      * Push Notification.
      */
     @NonNull
     public static final String EXTRA_ALERT = "com.urbanairship.push.ALERT";
 
     /**
-     * The push ID extra holds the unique push ID sent in an Urban Airship
+     * The push ID extra holds the unique push ID sent in an Airship
      * Push Notification. This is most commonly referred to as the "Send ID"
-     * at Urban Airship.
+     * at Airship.
      */
     @NonNull
     public static final String EXTRA_SEND_ID = "com.urbanairship.push.PUSH_ID";
 
     /**
      * The push metadata extra holds the encrypted push identifiers sent in an
-     * Urban Airship Push Notification. Possible data includes send, push, and group IDs.
+     * Airship Push Notification. Possible data includes send, push, and group IDs.
      */
     @NonNull
     public static final String EXTRA_METADATA = "com.urbanairship.metadata";
@@ -77,7 +77,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String EXTRA_ACTIONS = "com.urbanairship.actions";
 
     /**
-     * The extra key for the payload of Urban Airship actions to be run when an
+     * The extra key for the payload of Airship actions to be run when an
      * interactive notification action button is opened.
      */
     @NonNull
@@ -341,9 +341,9 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Checks the message for Urban Airship keys.
+     * Checks the message for Airship keys.
      *
-     * @return <code>true</code> if the message contains any Urban Airship keys.
+     * @return <code>true</code> if the message contains any Airship keys.
      */
     public boolean containsAirshipKeys() {
         for (String key : data.keySet()) {

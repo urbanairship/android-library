@@ -1,5 +1,5 @@
 package com.urbanairship.iam.view;
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 import android.content.Context;
 import android.content.res.ColorStateList;

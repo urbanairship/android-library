@@ -1,6 +1,6 @@
-# Urban Airship Sample
+# Airship Sample
 
-Sample application for the Urban Airship SDK.
+Sample application for the Airship SDK.
 
 ## Setup
 
@@ -10,4 +10,4 @@ the assets directory.
 Setup:
 - Update `airshipconfig.properties` with your application's config.
 - [Add Firebase to your app](https://firebase.google.com/docs/android/setup#add_firebase_to_your_app).
-- Optionally, add ADM - [Amazon setup docs](https://docs.urbanairship.com/platform/push-providers/adm/)
+- Optionally, add ADM - [Amazon setup docs](https://docs.airship.com/platform/android/getting-started/#adm-setup)

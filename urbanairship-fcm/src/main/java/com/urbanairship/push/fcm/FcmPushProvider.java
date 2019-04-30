@@ -1,4 +1,4 @@
-/* Copyright 2017-18 Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push.fcm;
 
@@ -138,7 +138,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @NonNull
     @Override
     public String getAirshipVersion() {
-        return BuildConfig.URBAN_AIRSHIP_VERSION;
+        return BuildConfig.AIRSHIP_VERSION;
     }
 
     @NonNull

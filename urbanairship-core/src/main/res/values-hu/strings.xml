@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Oszd meg</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Urban Airship csatorna</string>
+    <string name="ua_channel_notification_ticker">Airship csatorna</string>
     <string name="ua_channel_copy_toast">A csatornát rámásoltam a vágólapra</string>
 
     <!-- Message Center -->

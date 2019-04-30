@@ -1,4 +1,4 @@
-package com.urbanairship.actions;/* Copyright Urban Airship and Contributors */
+package com.urbanairship.actions;/* Copyright Airship and Contributors */
 
 import android.content.Intent;
 import android.os.Bundle;

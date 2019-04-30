@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.automation;
 
@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
- * This class is the primary interface to the Urban Airship On Device Automation API. If accessed outside
+ * This class is the primary interface to the Airship On Device Automation API. If accessed outside
  * of the main process, the class methods will no-op.
  */
 public class Automation extends AirshipComponent {

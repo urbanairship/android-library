@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes for interacting with the Urban Airship Javascript Interface.
+ * Contains classes for interacting with the Airship Javascript Interface.
  */
 
 package com.urbanairship.js;

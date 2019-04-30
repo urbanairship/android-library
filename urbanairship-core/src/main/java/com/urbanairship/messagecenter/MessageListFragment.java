@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.messagecenter;
 
@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragment that displays the Urban Airship Message Center.
+ * Fragment that displays the Airship Message Center.
  */
 public class MessageListFragment extends Fragment {
 

@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains high-level classes for interacting with the Urban Airship Analytics API.
+ * Contains high-level classes for interacting with the Airship Analytics API.
  */
 
 package com.urbanairship.analytics;

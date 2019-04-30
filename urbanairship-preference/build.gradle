@@ -1,4 +1,4 @@
-description = "Urban Airship Android SDK preference extension."
+description = "Airship Android SDK preference extension."
 
 apply from: "../common-build.gradle"
 

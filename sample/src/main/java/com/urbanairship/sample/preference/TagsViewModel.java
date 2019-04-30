@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.sample.preference;
 
@@ -34,7 +34,7 @@ public class TagsViewModel extends ViewModel {
     }
 
     /**
-     * Adds a channel tag to Urban Airship.
+     * Adds a channel tag to Airship.
      *
      * @param tag The tag.
      */
@@ -45,7 +45,7 @@ public class TagsViewModel extends ViewModel {
     }
 
     /**
-     * Removes a channel tag from Urban Airship.
+     * Removes a channel tag from Airship.
      *
      * @param tag The tag.
      */

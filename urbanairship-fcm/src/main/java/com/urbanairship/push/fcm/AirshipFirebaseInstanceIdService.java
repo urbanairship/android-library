@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
 /**
- * Urban Airship FirebaseInstanceIdService.
+ * Airship FirebaseInstanceIdService.
  *
  * @deprecated To be removed in SDK 12. Use {@link AirshipFirebaseMessagingService} instead.
  */

@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes for interacting with the Urban Airship Message Center.
+ * Contains classes for interacting with the Airship Message Center.
  */
 
 package com.urbanairship.messagecenter;

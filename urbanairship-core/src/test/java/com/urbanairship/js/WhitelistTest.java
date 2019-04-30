@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.js;
 
@@ -39,7 +39,7 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test the default white list accepts Urban Airship URLs.
+     * Test the default white list accepts Airship URLs.
      */
     @Test
     public void testDefaultWhitelist() {

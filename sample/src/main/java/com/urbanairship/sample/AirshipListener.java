@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.sample;
 
@@ -28,7 +28,7 @@ public class AirshipListener implements PushListener, NotificationListener, Regi
     public boolean onNotificationOpened(@NonNull NotificationInfo notificationInfo) {
         Log.i(TAG, "Notification opened: " + notificationInfo);
 
-        // Return false here to allow Urban Airship to auto launch the launcher
+        // Return false here to allow Airship to auto launch the launcher
         // activity for foreground notification action buttons
         return false;
     }
@@ -37,7 +37,7 @@ public class AirshipListener implements PushListener, NotificationListener, Regi
     public boolean onNotificationForegroundAction(@NonNull NotificationInfo notificationInfo, @NonNull NotificationActionButtonInfo actionButtonInfo) {
         Log.i(TAG, "Notification action: " + notificationInfo + " " + actionButtonInfo);
 
-        // Return false here to allow Urban Airship to auto launch the launcher
+        // Return false here to allow Airship to auto launch the launcher
         // activity for foreground notification action buttons
         return false;
     }

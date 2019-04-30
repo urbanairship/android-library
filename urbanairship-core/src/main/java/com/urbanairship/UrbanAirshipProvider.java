@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -21,7 +21,7 @@ import com.urbanairship.util.DataManager;
 import java.util.List;
 
 /**
- * Manages access to Urban Airship Preferences and Rich Push Message data.
+ * Manages access to Airship Preferences and Rich Push Message data.
  *
  * @hide
  */

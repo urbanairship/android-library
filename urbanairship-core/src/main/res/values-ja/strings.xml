@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">共有しよう</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Urban Airship チャンネル</string>
+    <string name="ua_channel_notification_ticker">Airship チャンネル</string>
     <string name="ua_channel_copy_toast">チャンネルがクリップボードにコピーされました！</string>
 
     <!-- Message Center -->

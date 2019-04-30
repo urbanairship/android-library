@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * ThreadFactory that sets the Urban Airship thread stats tags on each thread.
+ * ThreadFactory that sets the Airship thread stats tags on each thread.
  *
  * @hide
  */
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AirshipThreadFactory implements ThreadFactory {
 
     /**
-     * The Urban Airship thread stats tag.
+     * The Airship thread stats tag.
      */
     public static final int THREAD_STATS_TAG = 11797; // ua
 

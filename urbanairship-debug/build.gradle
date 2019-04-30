@@ -1,4 +1,4 @@
-description = "Urban Airship Android Debug Library"
+description = "Airship Android Debug Library"
 
 buildscript {
 

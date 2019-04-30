@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Urban Airship Job Api.
+ * Airship Job Api.
  *
  * @hide
  */

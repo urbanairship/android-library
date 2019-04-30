@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Paylaş</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Urban Airship Kanalı</string>
+    <string name="ua_channel_notification_ticker">Airship Kanalı</string>
     <string name="ua_channel_copy_toast">Kanal panoya kopyalandı!</string>
 
     <!-- Message Center -->

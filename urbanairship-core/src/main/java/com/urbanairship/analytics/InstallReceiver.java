@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.analytics;
 
@@ -31,7 +31,7 @@ import com.urbanairship.util.UAStringUtil;
  * receiver that notifies multiple receivers:
  * <pre>
  * {@code
- * // Notify the Urban Airship InstallReceiver
+ * // Notify the Airship InstallReceiver
  * new InstallReceiver().onReceive(context, intent);
  *
  * // Notify other receivers

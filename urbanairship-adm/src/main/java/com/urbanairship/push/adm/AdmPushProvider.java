@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push.adm;
 
@@ -115,7 +115,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
     @NonNull
     @Override
     public String getAirshipVersion() {
-        return BuildConfig.URBAN_AIRSHIP_VERSION;
+        return BuildConfig.AIRSHIP_VERSION;
     }
 
     @NonNull

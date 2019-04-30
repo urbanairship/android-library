@@ -1,11 +1,11 @@
-# Android Urban Airship SDK
+# Android Airship SDK
 
-Urban Airship SDK for Android.
+Airship SDK for Android.
 
 ## Resources
 
-- [Getting started guide](http://docs.urbanairship.com/platform/android/)
-- [Javadocs](https://docs.urbanairship.com/reference/libraries/android/latest/reference/packages.html)
+- [Getting started guide](http://docs.airship.com/platform/android/)
+- [Javadocs](https://docs.airship.com/reference/libraries/android/latest/reference/packages.html)
 - [Migration Guides](documentation/migration)
 
 ## Contributing Code
@@ -21,13 +21,13 @@ One of our engineers will verify receipt of the agreement before approving your 
 
 ## Quickstart
 
-1) Include Urban Airship into the build.gradle file:
+1) Include Airship into the build.gradle file:
 
 ```
    dependencies {
      ...
 
-     // Urban Airship SDK - FCM
+     // Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.6.0'
    }
 ```
@@ -69,7 +69,7 @@ One of our engineers will verify receipt of the agreement before approving your 
 ## Sample Application
 
 A [sample](sample) application is available that showcases the majority of the features offered by
-the Urban Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
+the Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
 ## Sample Test

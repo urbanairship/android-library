@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Partager</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Canal Urban Airship</string>
+    <string name="ua_channel_notification_ticker">Canal Airship</string>
     <string name="ua_channel_copy_toast">Canal copié dans le presse-papiers !</string>
 
     <!-- Message Center -->

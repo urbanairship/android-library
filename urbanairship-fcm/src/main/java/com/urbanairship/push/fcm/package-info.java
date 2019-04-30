@@ -1,4 +1,4 @@
-/* Copyright 2017-18 Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
  * Contains the FCM push provider.

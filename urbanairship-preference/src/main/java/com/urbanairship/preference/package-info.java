@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes for interacting with the Urban Airship Preferences.
+ * Contains classes for interacting with the Airship Preferences.
  */
 
 package com.urbanairship.preference;

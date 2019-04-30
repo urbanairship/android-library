@@ -1,5 +1,5 @@
 package com.urbanairship.iam;
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

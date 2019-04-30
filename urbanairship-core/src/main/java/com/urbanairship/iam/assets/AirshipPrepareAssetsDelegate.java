@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.iam.assets;
 
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
- * Default {@link PrepareAssetsDelegate} for Urban Airship message types.
+ * Default {@link PrepareAssetsDelegate} for Airship message types.
  */
 public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
 

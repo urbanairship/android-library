@@ -17,7 +17,7 @@
     <string name="event_details">Event Details</string>
     <string name="clear">Clear</string>
 
-    <string name="debug_title">Urban Airship Debug</string>
+    <string name="debug_title">Airship Debug</string>
     <string name="debug_short_title">UA Debug</string>
 
     <string name="event_view_title">Events</string>

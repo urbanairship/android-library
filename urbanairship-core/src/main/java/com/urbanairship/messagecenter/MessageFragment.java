@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.messagecenter;
 
@@ -141,7 +141,7 @@ public class MessageFragment extends Fragment {
 
         // Set a custom RichPushWebViewClient view client to listen for the page finish
         // Note: UAWebViewClient is required to load the proper auth and to
-        // inject the Urban Airship Javascript interface.  When overriding any methods
+        // inject the Airship Javascript interface.  When overriding any methods
         // make sure to call through to the super's implementation.
         webView.setWebViewClient(new UAWebViewClient() {
             @Override

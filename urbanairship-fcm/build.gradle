@@ -1,4 +1,4 @@
-description = "Urban Airship Android SDK FCM plugin"
+description = "Airship Android SDK FCM plugin"
 
 apply from: "../common-build.gradle"
 

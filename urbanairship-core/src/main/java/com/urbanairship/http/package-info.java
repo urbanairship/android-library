@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Provides classes for Urban Airship HTTP components.
+ * Provides classes for Airship HTTP components.
  *
  * @hide
  */

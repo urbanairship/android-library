@@ -1,5 +1,5 @@
 package com.urbanairship;
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 import com.urbanairship.util.Clock;
 

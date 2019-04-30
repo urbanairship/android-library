@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Del</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Urban Airship-kanal</string>
+    <string name="ua_channel_notification_ticker">Airship-kanal</string>
     <string name="ua_channel_copy_toast">Kanal kopiert til utklippstavlen!</string>
 
     <!-- Message Center -->

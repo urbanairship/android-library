@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Contains classes for interacting with the Urban Airship Push API.
+ * Contains classes for interacting with the Airship Push API.
  *
  * This package provides an interface to all push notification-related
  * functionality. Push configuration, persistent settings and UI frameworks

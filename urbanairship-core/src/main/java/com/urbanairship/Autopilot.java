@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -13,7 +13,7 @@ import android.util.Log;
 
 /**
  * Autopilot allows UAirship.takeOff to be called without overriding the Application class. Typically,
- * UAirship.takeOff must be called in Application.onCreate() so that the Urban Airship library is ready to
+ * UAirship.takeOff must be called in Application.onCreate() so that the Airship library is ready to
  * handle incoming events before intents are delivered to any application components. Calling takeOff
  * directly is the simplest integration, however some application frameworks do not provide a way to
  * extend the Application class. Autopilot allows you to provide your bootstrapping code in a way
@@ -56,7 +56,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
     @NonNull
     public static final String AUTOPILOT_MANIFEST_KEY = "com.urbanairship.autopilot";
 
-    private static final String TAG = "Urban Airship Autopilot";
+    private static final String TAG = "Airship Autopilot";
 
     private static boolean instanceCreationAttempted;
 
@@ -185,7 +185,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
      * <p>
      * Early takeOff will only be called on the main process. Apps that use multiple processes need
      * to make sure {@link #automaticTakeOff(Context)} is called in any other processes that use
-     * Urban Airship. If early takeOff is disabled, {@link #automaticTakeOff(Context)} must be called
+     * Airship. If early takeOff is disabled, {@link #automaticTakeOff(Context)} must be called
      * at <em>all</em> application entry points (i.e., in the onCreate() method of all registered
      * Broadcast Receivers, Activities and Services).
      *

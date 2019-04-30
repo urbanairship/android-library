@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Common Executors for Urban Airship.
+ * Common Executors for Airship.
  *
  * @hide
  */

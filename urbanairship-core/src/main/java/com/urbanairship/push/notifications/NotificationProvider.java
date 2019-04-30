@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push.notifications;
 
@@ -10,7 +10,7 @@ import android.support.annotation.WorkerThread;
 import com.urbanairship.push.PushMessage;
 
 /**
- * Used to provide notifications for Urban Airship push messages.
+ * Used to provide notifications for Airship push messages.
  *
  * The notification provider should never post the notification to the notification manager. The Urban
  * Airship SDK will do that on behave of the application.

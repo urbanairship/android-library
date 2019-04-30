@@ -45,23 +45,23 @@ dependencies {
     implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
     implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
 
-    // Urban Airship ADM
+    // Airship ADM
     implementation project(':urbanairship-adm')
 
-    // Urban Airship FCM
+    // Airship FCM
     implementation project(':urbanairship-fcm')
 
-    // Urban Airship Debug: Normally this is a debug only dependency but we
+    // Airship Debug: Normally this is a debug only dependency but we
     // embed the view in sample app
     implementation project(':urbanairship-debug')
 
-    // Urban Airship Advertising ID tracking
+    // Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')
 
-    // Urban Airship Preferences
+    // Airship Preferences
     implementation project(':urbanairship-preference')
 
-    // Allows Urban Airship location services to use Fused Location
+    // Allows Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
 
     // Testing-only dependencies

@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
- * Urban Airship package info.
+ * Airship package info.
  *
  * @hide
  */
@@ -14,7 +14,7 @@ import android.support.annotation.RestrictTo;
 public interface AirshipVersionInfo {
 
     /**
-     * The Urban Airship semantic version.
+     * The Airship semantic version.
      *
      * @return The version string.
      */

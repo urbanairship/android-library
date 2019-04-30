@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.analytics;
 
@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class is the primary interface to the UrbanAirship Analytics API.
+ * This class is the primary interface to the Airship Analytics API.
  */
 public class Analytics extends AirshipComponent {
 
@@ -107,7 +107,7 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
-     * Listener for all Urban Airship events.
+     * Listener for all Airship events.
      *
      * @hide
      */

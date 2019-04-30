@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -99,7 +99,7 @@ class PushProviders {
                 Logger.verbose("Found provider: %s version: %s", pushProvider, versionInfo.getPackageVersion());
 
                 if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
-                    Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Urban Airship dependencies are the exact same version.", pushProvider, versionInfo.getAirshipVersion(), UAirship.getVersion());
+                    Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the exact same version.", pushProvider, versionInfo.getAirshipVersion(), UAirship.getVersion());
                     continue;
                 }
             }

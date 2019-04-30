@@ -1,11 +1,11 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
 import android.support.annotation.Nullable;
 
 /**
- * Listener interface for the Urban Airship logger.
+ * Listener interface for the Airship logger.
  */
 public interface LoggerListener {
 

@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Dela</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Urban Airship Channel</string>
+    <string name="ua_channel_notification_ticker">Airship Channel</string>
     <string name="ua_channel_copy_toast">Kanal kopierad till Urklipp!</string>
 
     <!-- Message Center -->

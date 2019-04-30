@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.messagecenter;
 
@@ -31,7 +31,7 @@ import com.urbanairship.util.ViewUtils;
 import java.util.List;
 
 /**
- * The Urban Airship Message Center. The message list will be displayed using the {@link MessageListFragment},
+ * The Airship Message Center. The message list will be displayed using the {@link MessageListFragment},
  * and messages will be displayed either in a split view using {@link MessageFragment} or by
  * triggering {@link RichPushInbox#startMessageActivity(String)}.
  */

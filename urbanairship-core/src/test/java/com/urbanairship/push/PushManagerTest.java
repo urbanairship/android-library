@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -396,7 +396,7 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test Urban Airship notification action button groups are available
+     * Test Airship notification action button groups are available
      */
     @Test
     public void testUrbanAirshipNotificationActionButtonGroups() {

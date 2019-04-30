@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.urbanairship.sample">
 
-    <!-- Optional: Needed if using location in Urban Airship. -->
+    <!-- Optional: Needed if using location in Airship. -->
     <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 

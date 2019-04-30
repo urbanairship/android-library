@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">แชร์</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">ช่อง Urban Airship</string>
+    <string name="ua_channel_notification_ticker">ช่อง Airship</string>
     <string name="ua_channel_copy_toast">คัดลอกช่องไปยังคลิปบอร์ดแล้ว!</string>
 
     <!-- Message Center -->

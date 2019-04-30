@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
- * PreferenceDataStore stores and retrieves all the Urban Airship preferences through the
+ * PreferenceDataStore stores and retrieves all the Airship preferences through the
  * {@link UrbanAirshipProvider}.
  *
  * @hide
@@ -412,7 +412,7 @@ public final class PreferenceDataStore {
         /**
          * Puts the preferences value.
          * <p>
-         * The preference will save its value with the UrbanAirship provider.
+         * The preference will save its value with the Airship provider.
          *
          * @param value Value of the preference.
          * @return <code>true</code> if the preference was successfully saved to

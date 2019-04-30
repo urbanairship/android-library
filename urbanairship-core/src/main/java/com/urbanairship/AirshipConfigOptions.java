@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -57,7 +57,7 @@ public class AirshipConfigOptions {
     /**
      * The application's production app key.
      * <p>
-     * This string is generated automatically when you create an app in the Urban Airship
+     * This string is generated automatically when you create an app in the Airship
      * dashboard, which you can manually copy into your app configuration.
      */
     @Nullable
@@ -66,7 +66,7 @@ public class AirshipConfigOptions {
     /**
      * The application's production app secret.
      * <p>
-     * This string is generated automatically when you create an app in the Urban Airship
+     * This string is generated automatically when you create an app in the Airship
      * dashboard, which you can manually copy into your app configuration.
      */
     @Nullable
@@ -75,7 +75,7 @@ public class AirshipConfigOptions {
     /**
      * The application's development app key.
      * <p>
-     * This string is generated automatically when you create an app in the Urban Airship
+     * This string is generated automatically when you create an app in the Airship
      * dashboard, which you can manually copy into your app configuration.
      */
     @Nullable
@@ -84,14 +84,14 @@ public class AirshipConfigOptions {
     /**
      * The application's development app secret.
      * <p>
-     * This string is generated automatically when you create an app in the Urban Airship
+     * This string is generated automatically when you create an app in the Airship
      * dashboard, which you can manually copy into your app configuration.
      */
     @Nullable
     public final String developmentAppSecret;
 
     /**
-     * The Urban Airship URL. This will always be set to http://device-api.urbanairship.com/
+     * The Airship URL. This will always be set to http://device-api.urbanairship.com/
      */
     @NonNull
     public final String hostURL;
@@ -113,7 +113,7 @@ public class AirshipConfigOptions {
      * if the production or development FCM sender ID is not set.
      * This is your Google API project number.
      * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
      * main Firebase application's sender ID.
      */
     @Nullable
@@ -123,7 +123,7 @@ public class AirshipConfigOptions {
      * The FCM sender ID used for push registration in development mode.
      * This is your Google API project number.
      * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
      * main Firebase application's sender ID.
      */
     @Nullable
@@ -133,7 +133,7 @@ public class AirshipConfigOptions {
      * The FCM sender ID used for push registration in production mode.
      * This is your Google API project number.
      * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
      * main Firebase application's sender ID.
      */
     @Nullable
@@ -157,8 +157,8 @@ public class AirshipConfigOptions {
 
     /**
      * List of URLs that are allowed to be used for various features, including:
-     * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-     * and landing pages. Urban Airship https URLs are included by default.
+     * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
+     * and landing pages. Airship https URLs are included by default.
      * <p>
      * See {@link com.urbanairship.js.Whitelist#addEntry(String)} for valid url patterns.
      * <p>
@@ -626,7 +626,7 @@ public class AirshipConfigOptions {
 
                         case FIELD_GCM_SENDER:
                             throw new IllegalArgumentException("gcmSender no longer supported. Please use " +
-                                    "fcmSender or remove it to allow the Urban Airship SDK to pull from the google-services.json.");
+                                    "fcmSender or remove it to allow the Airship SDK to pull from the google-services.json.");
 
                         case FIELD_ALLOWED_TRANSPORTS:
                             this.setAllowedTransports(configParser.getStringArray(name));
@@ -835,9 +835,9 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the Urban Airship URL.
+         * Set the Airship URL.
          *
-         * @param hostURL The Urban Airship URL.
+         * @param hostURL The Airship URL.
          * @return The config options builder.
          */
         @NonNull
@@ -873,7 +873,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the production FCM sender ID.
          * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
          * main Firebase application's sender ID.
          *
          * @param senderId The production FCM sender ID.
@@ -888,7 +888,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the development FCM sender ID.
          * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
          * main Firebase application's sender ID.
          *
          * @param senderId The development FCM sender ID.
@@ -903,7 +903,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the default FCM sender ID.
          * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
          * main Firebase application's sender ID.
          *
          * @param senderId The FCM sender ID.
@@ -929,8 +929,8 @@ public class AirshipConfigOptions {
 
         /**
          * Set the list of additional URLs that are allowed to be used for various features, including:
-         * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-         * and landing pages. Urban Airship https URLs are included by default.
+         * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
+         * and landing pages. Airship https URLs are included by default.
          *
          * @param whitelist The whitelist.
          * @return The config options builder.

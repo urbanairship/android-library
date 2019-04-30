@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.richpush;
 
@@ -127,7 +127,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     }
 
     /**
-     * Get the message's Urban Airship ID.
+     * Get the message's Airship ID.
      *
      * @return The message id.
      */

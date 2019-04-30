@@ -5,7 +5,7 @@ import android.os.HandlerThread;
 import android.support.annotation.RestrictTo;
 
 /**
- * HandlerThread that sets the Urban Airship thread stats tag.
+ * HandlerThread that sets the Airship thread stats tag.
  *
  * @hide
  */

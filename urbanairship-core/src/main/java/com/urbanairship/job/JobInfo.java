@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.job;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Urban Airship job for defining a unit of work to be performed in an {@link AirshipComponent}.
+ * Airship job for defining a unit of work to be performed in an {@link AirshipComponent}.
  *
  * @hide
  */

@@ -1,12 +1,12 @@
-# Urban Airship SDK for Android
+# Airship SDK for Android
 
-The Urban Airship SDK for Android provides a simple way to integrate Urban Airship
+The Airship SDK for Android provides a simple way to integrate Airship
 services into your Android applications.
 
 ## Resources
 
 * [Sample App](../sample)
-* [API Docs](https://docs.urbanairship.com/reference/libraries/android/latest/)
+* [API Docs](https://docs.airship.com/reference/libraries/android/latest/)
 * [Migration Guides](migration)
-* [Troubleshooting guide](https://docs.urbanairship.com/reference/troubleshooting/android)
+* [Troubleshooting guide](https://docs.airship.com/reference/troubleshooting/android)
 * [Github Repo (SDK & Sample App)](..)

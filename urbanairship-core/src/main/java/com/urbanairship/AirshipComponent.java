@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -14,7 +14,7 @@ import com.urbanairship.json.JsonList;
 import java.util.concurrent.Executor;
 
 /**
- * Base class for Urban Airship components.
+ * Base class for Airship components.
  */
 public abstract class AirshipComponent {
 

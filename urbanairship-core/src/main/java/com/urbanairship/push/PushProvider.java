@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -93,7 +93,7 @@ public interface PushProvider {
     boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions);
 
     /**
-     * Checks if the push message should be handled by the Urban Airship SDK.
+     * Checks if the push message should be handled by the Airship SDK.
      *
      * @param context The application context.
      * @param airship The airship instance.

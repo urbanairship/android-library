@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.widget;
 
@@ -52,7 +52,7 @@ import java.util.WeakHashMap;
 
 /**
  * <p>
- * A web view client that intercepts Urban Airship URLs and enables triggering
+ * A web view client that intercepts Airship URLs and enables triggering
  * actions from javascript.
  * <p>
  * <p>
@@ -94,7 +94,7 @@ import java.util.WeakHashMap;
 public class UAWebViewClient extends WebViewClient {
 
     /**
-     * Urban Airship's scheme. The web view client will override any
+     * Airship's scheme. The web view client will override any
      * URLs that have this scheme by default.
      */
     @NonNull
@@ -161,7 +161,7 @@ public class UAWebViewClient extends WebViewClient {
     }
 
     /**
-     * Called when UAirship.close() is triggered from the Urban Airship Javascript interface.
+     * Called when UAirship.close() is triggered from the Airship Javascript interface.
      * <p>
      * The default behavior simulates a back key press.
      *
@@ -474,11 +474,11 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         if (!isWhiteListed(url)) {
-            Logger.debug("UAWebViewClient - %s is not a white listed URL. Urban Airship Javascript interface will not be accessible.", url);
+            Logger.debug("UAWebViewClient - %s is not a white listed URL. Airship Javascript interface will not be accessible.", url);
             return;
         }
 
-        Logger.info("Loading UrbanAirship Javascript interface.");
+        Logger.info("Loading Airship Javascript interface.");
         InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view);
         injectJsBridgeTaskMap.put(view, task);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);

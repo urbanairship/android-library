@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">שתף</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">ערוץ Urban Airship</string>
+    <string name="ua_channel_notification_ticker">ערוץ Airship</string>
     <string name="ua_channel_copy_toast">הערוץ הועתק ללוח העריכה!</string>
 
     <!-- Message Center -->

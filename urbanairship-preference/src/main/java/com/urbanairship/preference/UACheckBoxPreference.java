@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.preference;
 
@@ -19,7 +19,7 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleActivityListener;
 
 /**
- * Urban Airship check box preference.
+ * Airship check box preference.
  */
 public abstract class UACheckBoxPreference extends CheckBoxPreference {
 
@@ -91,7 +91,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     }
 
     /**
-     * Gets the initial Urban Airship value for the preference.
+     * Gets the initial Airship value for the preference.
      *
      * @param airship The {@link UAirship} instance.
      * @return The initial value for the preference.
@@ -99,7 +99,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     protected abstract boolean getInitialAirshipValue(@NonNull UAirship airship);
 
     /**
-     * Called when the preference should be set on Urban Airship.
+     * Called when the preference should be set on Airship.
      *
      * @param airship The {@link UAirship} instance.
      * @param enabled The value of the preference.

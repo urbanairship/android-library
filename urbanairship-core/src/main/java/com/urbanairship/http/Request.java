@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.http;
 
@@ -228,9 +228,9 @@ public class Request {
     }
 
     /**
-     * Gets the Urban Airship User Agent used for any Urban Airship requests.
+     * Gets the Airship User Agent used for any Airship requests.
      *
-     * @return The Urban Airship User Agent.
+     * @return The Airship User Agent.
      */
     @NonNull
     public static String getUrbanAirshipUserAgent() {

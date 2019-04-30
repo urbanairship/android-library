@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.messagecenter;
 
@@ -13,7 +13,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 /**
- * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
+ * Displays the Airship Message Center using {@link MessageCenterFragment}.
  */
 public class MessageCenterActivity extends ThemedActivity {
 

@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship;
 
@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Shared logging wrapper for all Urban Airship log entries.
+ * Shared logging wrapper for all Airship log entries.
  * This class serves to consolidate the tag and log level in a
  * single location.
  */
@@ -121,7 +121,7 @@ public class Logger {
     }
 
     /**
-     * Disables Urban Airship from using the standard {@link Log} for logging.
+     * Disables Airship from using the standard {@link Log} for logging.
      */
     public static void disableDefaultLogger() {
         removeListener(defaultLogger);

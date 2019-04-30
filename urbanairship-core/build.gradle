@@ -1,4 +1,4 @@
-description = "Urban Airship Android Core SDK"
+description = "Airship Android Core SDK"
 
 apply from: "../common-build.gradle"
 
@@ -47,7 +47,7 @@ android.libraryVariants.all { variant ->
                 docletpath = configurations.doclava.files as List
                 doclet "com.google.doclava.Doclava"
                 bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
-                addStringOption "hdf project.name", "Urban Airship Android Library"
+                addStringOption "hdf project.name", "Airship Android Library"
                 addStringOption "hdf project.version", project.version
                 addStringOption "apiversion", "v2"
                 addStringOption "federate android", "http://developer.android.com/reference"

@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.widget;
 
@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A web view that sets settings appropriate for Urban Airship content.
+ * A web view that sets settings appropriate for Airship content.
  */
 public class UAWebView extends WebView {
 
@@ -93,7 +93,7 @@ public class UAWebView extends WebView {
     }
 
     /**
-     * Helper method that sets the default web view settings for urban airship
+     * Helper method that sets the default web view settings for Airship
      * and calls through to initializeView and populateCustomJavascriptInterfaces.
      *
      * @param context A Context object used to access application assets.
@@ -235,7 +235,7 @@ public class UAWebView extends WebView {
     @Override
     public void setWebViewClient(@Nullable WebViewClient webViewClient) {
         if (webViewClient != null && !(webViewClient instanceof UAWebViewClient)) {
-            Logger.warn("The web view client should extend UAWebViewClient to support urban airship url overrides and triggering actions from.");
+            Logger.warn("The web view client should extend UAWebViewClient to support Airship url overrides and triggering actions from.");
         }
 
         this.webViewClient = webViewClient;

@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * The Urban Airship Actions Framework.
+ * The Airship Actions Framework.
  */
 
 package com.urbanairship.actions;

@@ -33,7 +33,7 @@
     <string name="ua_share_dialog_title">Bagikan</string>
 
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Saluran Urban Airship</string>
+    <string name="ua_channel_notification_ticker">Saluran Airship</string>
     <string name="ua_channel_copy_toast">Saluran disalin ke papan klip!</string>
 
     <!-- Message Center -->

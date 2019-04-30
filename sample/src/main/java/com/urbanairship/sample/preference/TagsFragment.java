@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.sample.preference;
 
@@ -28,7 +28,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 /**
- * Fragment that manages Urban Airship tags.
+ * Fragment that manages Airship tags.
  */
 public class TagsFragment extends Fragment {
 

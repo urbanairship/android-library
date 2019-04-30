@@ -1,7 +1,7 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 /**
- * Urban Airship Utilities
+ * Airship Utilities
  *
  * @hide
  */

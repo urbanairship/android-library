@@ -1,4 +1,4 @@
-/* Copyright Urban Airship and Contributors */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.push.notifications;
 
@@ -42,7 +42,7 @@ public class NotificationActionButtonGroup {
      *
      * @param context The application context.
      * @param arguments The notification arguments.
-     * @param actionsPayload The actions payload that defines the Urban Airship actions for each
+     * @param actionsPayload The actions payload that defines the Airship actions for each
      * interactive notification action.
      * @return List of Android notification actions.
      */

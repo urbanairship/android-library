@@ -1,4 +1,4 @@
-description = "Urban Airship Android SDK Advertising ID plugin"
+description = "Airship Android SDK Advertising ID plugin"
 
 apply from: "../common-build.gradle"
 
