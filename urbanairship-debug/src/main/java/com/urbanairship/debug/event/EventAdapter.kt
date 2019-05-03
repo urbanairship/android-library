@@ -32,7 +32,7 @@ internal class EventAdapter(private val callback: ((event: EventEntity) -> Unit)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var binding = UaItemEventBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = UaItemEventBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 

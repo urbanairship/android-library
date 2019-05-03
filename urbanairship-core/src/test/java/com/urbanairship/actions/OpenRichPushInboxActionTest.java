@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 
@@ -19,15 +20,16 @@ import static org.mockito.Mockito.verify;
 public class OpenRichPushInboxActionTest extends BaseTestCase {
 
     private OpenRichPushInboxAction action;
-    private RichPushInbox mockInbox;
+    private MessageCenter mockMessageCenter;
+
 
     @Before
     public void setup() {
         action = new OpenRichPushInboxAction();
 
-        mockInbox = mock(RichPushInbox.class);
+        mockMessageCenter = mock(MessageCenter.class);
 
-        TestApplication.getApplication().setInbox(mockInbox);
+        TestApplication.getApplication().setMessageCenter(mockMessageCenter);
     }
 
     /**
@@ -65,7 +67,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerformNoMessageId() {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null));
 
-        verify(mockInbox).startInboxActivity();
+        verify(mockMessageCenter).showMessageCenter();
     }
 
     /**
@@ -75,7 +77,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerform() {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
 
-        verify(mockInbox).startMessageActivity("message_id");
+        verify(mockMessageCenter).showMessageCenter("message_id");
     }
 
     /**
@@ -90,7 +92,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
-        verify(mockInbox).startMessageActivity("the_message_id");
+        verify(mockMessageCenter).showMessageCenter("the_message_id");
     }
 
     /**
@@ -103,7 +105,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
-        verify(mockInbox).startMessageActivity("the_message_id");
+        verify(mockMessageCenter).showMessageCenter("the_message_id");
     }
 
     /**
@@ -114,7 +116,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerformMessageIdPlaceHolderNoMetadata() {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto"));
 
-        verify(mockInbox).startInboxActivity();
+        verify(mockMessageCenter).showMessageCenter();
     }
 
     /**
@@ -124,7 +126,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerformEmptyMessageId() {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ""));
 
-        verify(mockInbox).startInboxActivity();
+        verify(mockMessageCenter).showMessageCenter();
     }
 
 }

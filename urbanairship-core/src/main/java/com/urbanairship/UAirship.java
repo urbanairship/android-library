@@ -42,7 +42,6 @@ import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAStringUtil;
 

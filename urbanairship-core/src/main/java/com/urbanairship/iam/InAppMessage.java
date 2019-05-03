@@ -284,7 +284,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return {@code true} if reporting is enabled, otherwise {@code false}.
      */
-    @NonNull
     public boolean isReportingEnabled() {
         return isReportingEnabled;
     }

@@ -3,7 +3,6 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -19,8 +18,6 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import static com.urbanairship.UAirship.getApplicationContext;
 
@@ -184,7 +181,7 @@ class PushManagerJobHandler {
     @JobInfo.JobResult
     private int onUpdatePushRegistration() {
         PushProvider provider = pushManager.getPushProvider();
-        String currentToken = pushManager.getRegistrationToken();
+        String currentToken = pushManager.getPushToken();
 
         if (provider == null) {
             Logger.error("Registration failed. Missing push provider.");

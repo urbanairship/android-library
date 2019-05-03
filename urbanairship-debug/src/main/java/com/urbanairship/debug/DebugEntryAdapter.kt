@@ -30,7 +30,7 @@ internal class DebugEntryAdapter(private val callback: ((screen: DebugEntry) -> 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DebugEntryAdapter.ViewHolder {
-        var binding = UaItemDebugScreenBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = UaItemDebugScreenBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 }

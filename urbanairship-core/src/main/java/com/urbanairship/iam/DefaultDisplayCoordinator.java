@@ -9,8 +9,6 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.app.ActivityMonitor;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -66,11 +64,7 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         }
 
         // Display lock
-        if (isLocked) {
-            return false;
-        }
-
-        return true;
+        return !isLocked;
     }
 
     @MainThread

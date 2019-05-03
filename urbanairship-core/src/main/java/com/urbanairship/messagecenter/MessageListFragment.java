@@ -124,7 +124,7 @@ public class MessageListFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 RichPushMessage message = getMessage(position);
                 if (message != null) {
-                    UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
+                    UAirship.shared().getMessageCenter().showMessageCenter(message.getMessageId());
                 }
             }
         });

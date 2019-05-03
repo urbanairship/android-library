@@ -31,7 +31,7 @@ internal class PushAdapter(private val callback: ((push: PushEntity) -> Unit)) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var binding = UaItemPushBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = UaItemPushBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 }

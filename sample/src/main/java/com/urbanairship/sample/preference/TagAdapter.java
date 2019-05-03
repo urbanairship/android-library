@@ -59,7 +59,7 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
 
         @Override
         public boolean areItemsTheSame(@NonNull String s, @NonNull String t1) {
-            return s == t1;
+            return s.equals(t1);
         }
 
         @Override

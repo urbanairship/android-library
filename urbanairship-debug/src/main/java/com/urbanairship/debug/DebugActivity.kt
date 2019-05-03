@@ -3,7 +3,6 @@ package com.urbanairship.debug
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import androidx.navigation.Navigation
-import androidx.navigation.ui.NavigationUI
 
 /**
  * Debug activity. The nav_home entry point for the debug library.

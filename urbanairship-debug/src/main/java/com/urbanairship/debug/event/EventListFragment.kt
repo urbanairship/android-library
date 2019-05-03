@@ -7,21 +7,17 @@ import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
-import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableFloat
-import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.Navigation
-import androidx.navigation.ui.NavigationUI
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentEventListBinding
@@ -166,8 +162,8 @@ class EventListFragment : Fragment() {
     }
 
     fun updateFiltersLayout() {
-        var state = bottomSheetBehavior.state
-        var isHideable = !areFiltersActive
+        val state = bottomSheetBehavior.state
+        val isHideable = !areFiltersActive
 
         bottomSheetBehavior.isHideable = isHideable
         bottomSheetBehavior.skipCollapsed = isHideable
@@ -176,7 +172,7 @@ class EventListFragment : Fragment() {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
 
-        var isFilterSheetVisible = bottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN
+        val isFilterSheetVisible = bottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN
         if (isFilterSheetVisible != this.isFilterSheetVisible.get()) {
             this.isFilterSheetVisible.set(isFilterSheetVisible)
         }

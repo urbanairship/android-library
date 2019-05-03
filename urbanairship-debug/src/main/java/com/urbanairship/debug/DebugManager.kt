@@ -9,7 +9,6 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
 import com.urbanairship.debug.event.persistence.EventEntity
 import com.urbanairship.debug.push.persistence.PushEntity
-import com.urbanairship.push.PushListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

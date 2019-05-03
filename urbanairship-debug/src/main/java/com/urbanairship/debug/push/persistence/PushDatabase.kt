@@ -7,7 +7,6 @@ import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.content.Context
 import android.support.annotation.RestrictTo
-import com.urbanairship.debug.push.persistence.PushDao
 import com.urbanairship.debug.push.persistence.PushEntity
 
 /**

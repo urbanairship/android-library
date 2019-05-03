@@ -26,7 +26,7 @@ internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventFilterAdapter.ViewHolder {
-        var binding = UaItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = UaItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 

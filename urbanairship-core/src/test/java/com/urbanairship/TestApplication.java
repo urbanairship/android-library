@@ -173,6 +173,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().inbox = inbox;
     }
 
+    public void setMessageCenter(MessageCenter messageCenter) {
+        UAirship.sharedAirship.messageCenter = messageCenter;
+    }
+
     public void setAutomation(Automation automation) {
         UAirship.shared().automation = automation;
     }

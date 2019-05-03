@@ -917,11 +917,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return true;
         }
 
-        if (!remoteData.getLastMetadata().equals(schedule.getMetadata())) {
-            return true;
-        }
-
-        return false;
+        return !remoteData.getLastMetadata().equals(schedule.getMetadata());
     }
 
     /**

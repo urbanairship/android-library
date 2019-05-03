@@ -71,7 +71,7 @@ data class DebugEntry(val navigationId: Int,
                 }
             }
 
-            return screens;
+            return screens
         }
 
         private fun getString(context: Context, parser: XmlResourceParser, identifier: String): String? {

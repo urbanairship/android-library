@@ -79,9 +79,10 @@ public class OpenRichPushInboxAction extends Action {
         }
 
         if (UAStringUtil.isEmpty(messageId)) {
-            UAirship.shared().getInbox().startInboxActivity();
+            UAirship.shared().getMessageCenter().showMessageCenter();
+
         } else {
-            UAirship.shared().getInbox().startMessageActivity(messageId);
+            UAirship.shared().getMessageCenter().showMessageCenter(messageId);
         }
 
         return ActionResult.newEmptyResult();

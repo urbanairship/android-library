@@ -190,7 +190,6 @@ public class MultiNavigationHelper {
      *
      * @param graphId The navigation's graph Id.
      */
-    @Nullable
     public void navigate(@IdRes int graphId) {
         if (fragmentManager.isStateSaved()) {
             return;

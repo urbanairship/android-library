@@ -113,11 +113,7 @@ class InAppRemoteDataObserver {
                                                   return true;
                                               }
 
-                                              if (!payload.getMetadata().equals(getLastPayloadMetadata())) {
-                                                  return true;
-                                              }
-
-                                              return false;
+                                              return !payload.getMetadata().equals(getLastPayloadMetadata());
                                           }
                                       })
                                       .observeOn(Schedulers.looper(looper))

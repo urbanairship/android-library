@@ -8,12 +8,9 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.Navigation
-import androidx.navigation.ui.NavigationUI
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentEventDetailsBinding
@@ -46,7 +43,7 @@ class EventDetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupToolbarWithNavController(R.id.toolbar);
+        setupToolbarWithNavController(R.id.toolbar)
     }
 
     internal class ViewModelFactory(private val context: Context, private val eventId: String) : ViewModelProvider.Factory {

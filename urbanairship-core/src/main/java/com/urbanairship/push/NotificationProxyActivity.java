@@ -14,9 +14,6 @@ import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.NotificationIntentProcessor;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
 /**
  * An activity that handles notification intents.
  * @hide
