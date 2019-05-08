@@ -4,24 +4,23 @@ package com.urbanairship.push.fcm;
 
 import android.content.Context;
 
-import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.urbanairship.push.PushProviderBridge;
 
 /**
  * Urban Airship FirebaseInstanceIdService.
+ *
+ * @deprecated Use AirshipFirebaseMessagingService instead
  */
-public class AirshipFirebaseInstanceIdService extends FirebaseInstanceIdService {
-    @Override
-    public void onTokenRefresh() {
-        super.onTokenRefresh();
-        processTokenRefresh(getApplicationContext());
-    }
-
+@Deprecated
+public class AirshipFirebaseInstanceIdService {
     /**
      * Called to handle token refresh.
      *
+     * @deprecated Use AirshipFirebaseMessagingService.processTokenRefresh instead
+     *
      * @param context The application context.
      */
+    @Deprecated
     public static void processTokenRefresh(Context context) {
         PushProviderBridge.requestRegistrationUpdate(context);
     }

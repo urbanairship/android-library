@@ -25,6 +25,13 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
         processMessageSync(getApplicationContext(), message);
     }
 
+    @Override
+    public void onNewToken(String token) {
+        super.onNewToken(token);
+
+        processTokenRefresh(getApplicationContext());
+    }
+
     /**
      * Called to handle {@link #onMessageReceived(RemoteMessage)}. The task should be finished
      * before `onMessageReceived(RemoteMessage message)` is complete. Wait for the message to be complete
@@ -56,5 +63,14 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
     public static void processMessageSync(Context context, RemoteMessage message) {
         PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
                           .executeSync(context);
+    }
+
+    /**
+     * Called to handle token refresh.
+     *
+     * @param context The application context.
+     */
+    public static void processTokenRefresh(Context context) {
+        PushProviderBridge.requestRegistrationUpdate(context);
     }
 }

@@ -19,7 +19,7 @@ Migration Steps:
 
      // Urban Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
-     implementation 'com.google.firebase:firebase-messaging:15.0.0'
+     implementation 'com.google.firebase:firebase-messaging:17.1.0'
 
      // Urban Airship SDK - ADM (Optional - if you support ADM)
      implementation 'com.urbanairship.android:urbanairship-adm:9.1.0'
@@ -27,18 +27,9 @@ Migration Steps:
 ```
 
 
-- If your application uses its own `FirebaseMessagingService`, `FirebaseInstanceIDService`, or another
+- If your application uses its own `FirebaseMessagingService` or another
 provider that uses FCM, you will need to forward token refresh and message received calls to the
 Urban Airship SDK:
-
-```
-// FirebaseInstanceIdService:
-
-public void onTokenRefresh() {
-   // Notify Urban Airship that the token is refreshed.
-   AirshipFirebaseInstanceIdService.processTokenRefresh(getContext());
-}
-```
 
 ```
 // FirebaseMessagingService:
@@ -46,5 +37,11 @@ public void onTokenRefresh() {
 @Override
 public void onMessageReceived(RemoteMessage remoteMessage) {
    AirshipFirebaseMessagingService.processMessageSync(getContext(), remoteMessage);
+}
+
+@Override
+public void onNewToken(String token) {
+   // Notify Urban Airship that the token is refreshed.
+   AirshipFirebaseMessagingService.processTokenRefresh(getContext());
 }
 ```
