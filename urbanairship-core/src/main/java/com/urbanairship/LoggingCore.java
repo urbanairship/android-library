@@ -114,9 +114,9 @@ public class LoggingCore {
             // Log directly if we do not have a throwable
             if (throwable == null) {
                 if (priority == Log.ASSERT) {
-                    Log.wtf(logTag, message);
+                    Log.wtf(logTag, formattedMessage);
                 } else {
-                    Log.println(priority, logTag, message);
+                    Log.println(priority, logTag, formattedMessage);
                 }
                 return;
             }
@@ -124,22 +124,22 @@ public class LoggingCore {
             // Log using one of the provided log methods
             switch (priority) {
                 case Log.INFO:
-                    Log.i(logTag, message, throwable);
+                    Log.i(logTag, formattedMessage, throwable);
                     break;
                 case Log.DEBUG:
-                    Log.d(logTag, message, throwable);
+                    Log.d(logTag, formattedMessage, throwable);
                     break;
                 case Log.VERBOSE:
-                    Log.v(logTag, message, throwable);
+                    Log.v(logTag, formattedMessage, throwable);
                     break;
                 case Log.WARN:
-                    Log.w(logTag, message, throwable);
+                    Log.w(logTag, formattedMessage, throwable);
                     break;
                 case Log.ERROR:
-                    Log.e(logTag, message, throwable);
+                    Log.e(logTag, formattedMessage, throwable);
                     break;
                 case Log.ASSERT:
-                    Log.wtf(logTag, message, throwable);
+                    Log.wtf(logTag, formattedMessage, throwable);
                     break;
             }
         }
