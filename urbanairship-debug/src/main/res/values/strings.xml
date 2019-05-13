@@ -12,20 +12,20 @@
     <string name="ua_associate_identifiers_event_name">Associate Identifiers</string>
     <string name="ua_install_attribution_event_name">Install Attribution</string>
     <string name="ua_event_name">%s</string>
-    <string name="active_filters">%d Active Filters</string>
-    <string name="no_filters">Filters</string>
-    <string name="event_details">Event Details</string>
-    <string name="clear">Clear</string>
+    <string name="ua_active_filters">%d Active Filters</string>
+    <string name="ua_no_filters">Filters</string>
+    <string name="ua_event_details">Event Details</string>
+    <string name="ua_clear">Clear</string>
 
-    <string name="debug_title">Airship Debug</string>
-    <string name="debug_short_title">UA Debug</string>
+    <string name="ua_debug_title">Airship Debug</string>
+    <string name="ua_debug_short_title">UA Debug</string>
 
-    <string name="event_view_title">Events</string>
-    <string name="event_view_description">Search and filter a list of recent events</string>
+    <string name="ua_event_view_title">Events</string>
+    <string name="ua_event_view_description">Search and filter a list of recent events</string>
 
-    <string name="push_view_title">Received Pushes</string>
-    <string name="push_view_description">List of received push messages</string>
-    <string name="push_details">Push Details</string>
-    <string name="push_empty_alert">No Alert</string>
+    <string name="ua_push_view_title">Received Pushes</string>
+    <string name="ua_push_view_description">List of received push messages</string>
+    <string name="ua_push_details">Push Details</string>
+    <string name="ua_push_empty_alert">No Alert</string>
 
 </resources>

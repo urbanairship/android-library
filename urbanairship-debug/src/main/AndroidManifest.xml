@@ -7,7 +7,7 @@
 
         <activity
             android:name="com.urbanairship.debug.DebugActivity"
-            android:label="@string/debug_short_title"
+            android:label="@string/ua_debug_short_title"
             android:theme="@style/AirshipDebug"
             android:taskAffinity="com.urbanairship.debug.${applicationId}">
 

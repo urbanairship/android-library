@@ -48,7 +48,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="16dp"
-            android:src="@drawable/ic_filter"
+            android:src="@drawable/ua_ic_filter"
             app:fabSize="auto"
             app:fabVisibility="@{!isFilterSheetVisible}"
             app:hoveredFocusedTranslationZ="0dp"
@@ -58,7 +58,7 @@
             android:id="@+id/filter_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/filter_sheet_background"
+            android:background="@drawable/ua_filter_sheet_background"
             android:clickable="true"
             android:elevation="8dp"
             android:focusable="true"
@@ -80,7 +80,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="@{viewModel.activeFiltersLiveData.size > 0 ? @string/active_filters(viewModel.activeFiltersLiveData.size) : @string/no_filters}"
+                android:text="@{viewModel.activeFiltersLiveData.size > 0 ? @string/ua_active_filters(viewModel.activeFiltersLiveData.size) : @string/ua_no_filters}"
                 android:textAppearance="?android:textAppearanceMedium"
                 android:textColor="?android:textColorPrimary"
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
@@ -96,7 +96,7 @@
                 android:layout_gravity="center_vertical|start"
                 android:enabled="@{viewModel.activeFiltersLiveData.size > 0}"
                 android:onClick="@{() -> viewModel.clearFilters()}"
-                android:text="@string/clear"
+                android:text="@string/ua_clear"
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -115,7 +115,7 @@
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/ic_chevron_down" />
+                android:src="@drawable/ua_ic_chevron_down" />
 
             <ImageButton
                 android:id="@+id/expand"
@@ -130,7 +130,7 @@
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/ic_chevron_up" />
+                android:src="@drawable/ua_ic_chevron_up" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/event_filters"

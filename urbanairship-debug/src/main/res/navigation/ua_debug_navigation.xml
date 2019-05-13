@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/debugFragment"
         android:name="com.urbanairship.debug.DebugFragment"
-        android:label="@string/debug_title">
+        android:label="@string/ua_debug_title">
         <action
             android:id="@+id/action_debugFragment_to_eventListFragment"
             app:destination="@id/eventListFragment" />
@@ -18,7 +18,7 @@
     <fragment
         android:id="@+id/eventListFragment"
         android:name="com.urbanairship.debug.event.EventListFragment"
-        android:label="@string/event_view_title">
+        android:label="@string/ua_event_view_title">
         <action
             android:id="@+id/action_eventListFragment_to_eventDetailsFragment"
             app:destination="@id/eventDetailsFragment" />
@@ -26,7 +26,7 @@
     <fragment
         android:id="@+id/eventDetailsFragment"
         android:name="com.urbanairship.debug.event.EventDetailsFragment"
-        android:label="@string/event_details">
+        android:label="@string/ua_event_details">
         <argument
             android:name="eventId"
             app:argType="string" />
@@ -35,7 +35,7 @@
     <fragment
         android:id="@+id/pushListFragment"
         android:name="com.urbanairship.debug.push.PushListFragment"
-        android:label="@string/push_view_title">
+        android:label="@string/ua_push_view_title">
         <action
             android:id="@+id/action_pushListFragment_to_pushDetailsFragment"
             app:destination="@id/pushDetailsFragment" />
@@ -44,7 +44,7 @@
     <fragment
         android:id="@+id/pushDetailsFragment"
         android:name="com.urbanairship.debug.push.PushDetailsFragment"
-        android:label="@string/push_details">
+        android:label="@string/ua_push_details">
         <argument
             android:name="pushId"
             app:argType="string" />

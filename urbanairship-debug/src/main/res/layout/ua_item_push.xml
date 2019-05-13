@@ -28,7 +28,7 @@
             android:textAppearance="@style/AirshipDebug.ItemTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@{push.alert ?? @string/push_empty_alert}"
+            android:text="@{push.alert ?? @string/ua_push_empty_alert}"
             tools:text="@tools:sample/lorem[3]" />
 
         <TextView

@@ -31,7 +31,7 @@
             android:layout_height="48dp"
             android:layout_gravity="center_vertical"
             android:layout_margin="8dp"
-            android:background="@drawable/oval_background"
+            android:background="@drawable/ua_oval_background"
             app:backgroundTint="@{EventInfo.getColor(context, viewModel.type)}">
 
 

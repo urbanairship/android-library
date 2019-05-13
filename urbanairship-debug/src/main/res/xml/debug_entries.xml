@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <DebugScreens>
     <entry
-        description="@string/event_view_description"
+        description="@string/ua_event_view_description"
         navigationId="@id/eventListFragment"
-        title="@string/event_view_title" />
+        title="@string/ua_event_view_title" />
 
     <entry
-        description="@string/push_view_description"
+        description="@string/ua_push_view_description"
         navigationId="@id/pushListFragment"
-        title="@string/push_view_title" />
+        title="@string/ua_push_view_title" />
 
 </DebugScreens>
