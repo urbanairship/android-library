@@ -150,7 +150,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
      */
     @NonNull
     protected BannerView onCreateView(@NonNull Activity activity, ViewGroup viewGroup) {
-        BannerView view = new BannerView(activity, displayContent, getAssets());
+        BannerView view = new BannerView(activity.getApplicationContext(), displayContent, getAssets());
         if (getLastActivity() != activity) {
             if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
                 view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);

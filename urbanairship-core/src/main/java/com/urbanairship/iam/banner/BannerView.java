@@ -5,7 +5,6 @@ package com.urbanairship.iam.banner;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -248,6 +247,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         return view;
     }
 
+
     /**
      * Resumes the banner's timer.
      */
@@ -323,11 +323,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
-        final Activity activity = (Activity) getContext();
-        if (activity == null) {
-            return;
-        }
-
         if (visibility == VISIBLE && !isDismissed) {
             if (subView == null) {
                 subView = onCreateView(LayoutInflater.from(getContext()), this);

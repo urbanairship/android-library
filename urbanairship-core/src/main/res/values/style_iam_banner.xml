@@ -93,6 +93,7 @@
 
     <!-- Button -->
     <style name="UrbanAirship.InAppBanner.Button">
+        <item name="android:stateListAnimator" tools:targetApi="lollipop">@null</item>
         <item name="android:minHeight">48dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
