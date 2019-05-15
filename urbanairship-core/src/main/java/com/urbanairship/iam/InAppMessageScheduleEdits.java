@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.automation.ScheduleEdits;
 import com.urbanairship.json.JsonException;
@@ -129,12 +130,26 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
      */
     @NonNull
     public static InAppMessageScheduleEdits fromJson(@NonNull JsonValue value) throws JsonException {
+        return fromJson(value, null);
+    }
+
+    /**
+     * Parses a json value for in-app message edits.
+     *
+     * @param value The json value.
+     * @param defaultSource The default source if it's not set in the JSON.
+     * @return The edit info.
+     * @throws JsonException If the json is invalid.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static InAppMessageScheduleEdits fromJson(@NonNull JsonValue value, @Nullable @InAppMessage.Source String defaultSource) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         Builder builder = newBuilder();
 
         if (jsonMap.containsKey(InAppMessageScheduleInfo.MESSAGE_KEY)) {
-            builder.setMessage(InAppMessage.fromJson(jsonMap.opt(InAppMessageScheduleInfo.MESSAGE_KEY)));
+            builder.setMessage(InAppMessage.fromJson(jsonMap.opt(InAppMessageScheduleInfo.MESSAGE_KEY), defaultSource));
         }
 
         if (jsonMap.containsKey(InAppMessageScheduleInfo.LIMIT_KEY)) {

@@ -54,7 +54,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String RENDERED_LOCALE_LANGUAGE_KEY = "language";
     private static final String RENDERED_LOCALE_COUNTRY_KEY = "country";
 
-
     @StringDef({ SOURCE_LEGACY_PUSH, SOURCE_REMOTE_DATA, SOURCE_APP_DEFINED })
     @Retention(RetentionPolicy.SOURCE)
     @interface Source {}
@@ -391,11 +390,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                         "or \"" + RENDERED_LOCALE_COUNTRY_KEY + "\" fields :" + jsonMap);
             }
 
-            JsonValue languageValue = jsonMap.get(RENDERED_LOCALE_LANGUAGE_KEY);
-            JsonValue countryValue = jsonMap.get(RENDERED_LOCALE_COUNTRY_KEY);
+            JsonValue languageValue = jsonMap.opt(RENDERED_LOCALE_LANGUAGE_KEY);
+            if (!languageValue.isNull() && !languageValue.isString()) {
+                throw new JsonException("Language must be a string: " + languageValue);
+            }
 
-            if ((!languageValue.isNull() && !languageValue.isString()) || (!countryValue.isNull() && !countryValue.isString())) {
-                throw new JsonException("Language and country codes must be strings: " + jsonMap);
+            JsonValue countryValue = jsonMap.opt(RENDERED_LOCALE_COUNTRY_KEY);
+            if (!countryValue.isNull() && !countryValue.isString()) {
+                throw new JsonException("Country must be a string: " + countryValue);
             }
 
             builder.setRenderedLocale(jsonMap.getMap());
@@ -543,7 +545,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + content.hashCode();
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + actions.hashCode();
-        result = 31 * result + (renderedLocale != null? renderedLocale.hashCode() : 0);
+        result = 31 * result + (renderedLocale != null ? renderedLocale.hashCode() : 0);
         result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
         result = 31 * result + displayBehavior.hashCode();
         result = 31 * result + (isReportingEnabled ? 1 : 0);
@@ -807,7 +809,15 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return this;
         }
 
-        public Builder setRenderedLocale(Map<String, JsonValue> renderedLocale){
+        /**
+         * Sets the rendered locale info.
+         *
+         * @param renderedLocale The rendered locale dictionary
+         * @return The builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setRenderedLocale(@Nullable Map<String, JsonValue> renderedLocale) {
             this.renderedLocale = renderedLocale;
             return this;
         }

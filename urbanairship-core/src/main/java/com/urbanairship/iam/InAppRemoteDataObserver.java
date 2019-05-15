@@ -208,7 +208,7 @@ class InAppRemoteDataObserver {
                 }
             } else if (existingScheduleId != null) {
                 try {
-                    InAppMessageScheduleEdits originalEdits = InAppMessageScheduleEdits.fromJson(messageJson);
+                    InAppMessageScheduleEdits originalEdits = InAppMessageScheduleEdits.fromJson(messageJson, InAppMessage.SOURCE_REMOTE_DATA);
                     InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder(originalEdits)
                                                                                .setMetadata(payload.getMetadata())
                                                                                // Since we cancel a schedule by setting the end time to 0 (1970), we need to clear

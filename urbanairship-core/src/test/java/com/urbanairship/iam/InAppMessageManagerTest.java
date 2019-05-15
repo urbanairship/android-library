@@ -665,9 +665,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                   .putOpt("cool", "story")
                                   .build();
 
-        testObserver.setLastPayloadMetadata(metadata);
-        when(mockRemoteData.getLastMetadata()).thenReturn(JsonMap.EMPTY_MAP);
-        when(mockRemoteData.isLastMetadataCurrent()).thenReturn(true);
+        when(mockRemoteData.isMetadataCurrent(metadata)).thenReturn(true);
 
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -679,7 +677,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                         .build())
                                                                 .build();
 
-        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", JsonMap.EMPTY_MAP, info);
+        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", metadata, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);
@@ -688,7 +686,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Change the metadata
-        when(mockRemoteData.getLastMetadata()).thenReturn(metadata);
+        when(mockRemoteData.isMetadataCurrent(metadata)).thenReturn(false);
 
         // Verify it returns an invalidate result
         assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, driverListener.onCheckExecutionReadiness(schedule));
@@ -696,12 +694,18 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testInvalidScheduleOnPrepare() {
-        JsonMap metadata = JsonMap.newBuilder()
-                                  .putOpt("cool", "story")
+        JsonMap observerMetadata = JsonMap.newBuilder()
+                                  .putOpt("cool", "schedule")
                                   .build();
 
-        testObserver.setLastPayloadMetadata(metadata);
-        when(mockRemoteData.getLastMetadata()).thenReturn(metadata);
+        JsonMap scheduleMetadata = JsonMap.newBuilder()
+                                          .putOpt("cool", "message")
+                                          .build();
+
+        testObserver.setLastPayloadMetadata(observerMetadata);
+        when(mockRemoteData.isMetadataCurrent(observerMetadata)).thenReturn(true);
+
+        when(mockRemoteData.isMetadataCurrent(scheduleMetadata)).thenReturn(false);
 
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -713,7 +717,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                         .build())
                                                                 .build();
 
-        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", JsonMap.EMPTY_MAP, info);
+        InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", scheduleMetadata, info);
 
         // Prepare the schedule
         driverListener.onPrepareSchedule(schedule);

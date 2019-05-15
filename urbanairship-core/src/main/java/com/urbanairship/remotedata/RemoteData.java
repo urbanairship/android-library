@@ -340,10 +340,7 @@ public class RemoteData extends AirshipComponent {
      * Called when the job is finished refreshing the remote data.
      */
     @WorkerThread
-    void onNewData(@NonNull final Set<RemoteDataPayload> payloads, @Nullable String lastModified, @NonNull JsonMap metadata) {
-        preferenceDataStore.put(LAST_REFRESH_METADATA, metadata);
-        preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
-
+    void onNewData(@NonNull final Set<RemoteDataPayload> payloads, final @Nullable String lastModified, final @NonNull JsonMap metadata) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -356,6 +353,10 @@ public class RemoteData extends AirshipComponent {
                 if (!dataStore.savePayloads(payloads)) {
                     Logger.error("Unable to save remote data payloads");
                 }
+
+                preferenceDataStore.put(LAST_REFRESH_METADATA, metadata);
+                preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
+
                 payloadUpdates.onNext(payloads);
             }
         });
@@ -409,10 +410,17 @@ public class RemoteData extends AirshipComponent {
      *
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
+    public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
+        return jsonMap.equals(createMetadata(localeManager.getDefaultLocale()));
+    }
+
+    /**
+     * Checks if the last metadata is current.
+     *
+     * @return {@code true} if the metadata is current, otherwise {@code false}.
+     */
     public boolean isLastMetadataCurrent() {
-        JsonMap lastRefreshMetadata = getLastMetadata();
-        Locale locale = localeManager.getDefaultLocale();
-        return lastRefreshMetadata.equals(createMetadata(locale));
+        return isMetadataCurrent(getLastMetadata());
     }
 
     /**

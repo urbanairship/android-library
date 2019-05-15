@@ -637,7 +637,7 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_IN_PRODUCTION:
-                            this.setInProduction(configParser.getBoolean(name, inProduction));
+                            this.setInProduction(configParser.getBoolean(name, inProduction != null && inProduction));
                             break;
 
                         case FIELD_ANALYTICS_ENABLED:

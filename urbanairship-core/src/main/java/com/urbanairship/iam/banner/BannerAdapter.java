@@ -276,34 +276,42 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
     @MainThread
     private void onActivityResumed(@NonNull Activity activity) {
-        BannerView view = getCurrentView();
+        BannerView currentView = getCurrentView();
 
-        if (view == null) {
+        if (currentView == null || !currentView.isAttachedToWindow()) {
             display(activity);
             return;
         }
 
-        if (view.getContext() == activity) {
-            view.onResume();
+        if (activity == getLastActivity()) {
+            currentView.onResume();
         }
     }
 
     @MainThread
     private void onActivityStopped(@NonNull Activity activity) {
+        if (activity != getLastActivity()) {
+            return;
+        }
+
         BannerView view = getCurrentView();
-        if (view != null && view.getContext() == activity) {
+        if (view != null) {
+            this.currentView = null;
+            this.lastActivity = null;
             view.dismiss(false);
-            currentView = null;
-            display(activity);
+            display(activity.getApplicationContext());
         }
     }
 
     @MainThread
     private void onActivityPaused(@NonNull Activity activity) {
-        BannerView view = getCurrentView();
+        if (activity != getLastActivity()) {
+            return;
+        }
 
-        if (view != null && view.getContext() == activity) {
-            view.onPause();
+        BannerView currentView = getCurrentView();
+        if (currentView != null) {
+            currentView.onPause();
         }
     }
 

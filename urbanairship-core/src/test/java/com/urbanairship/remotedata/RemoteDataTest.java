@@ -406,6 +406,8 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testLastModified() {
         remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        runLooperTasks();
+
         Assert.assertEquals(remoteData.getLastModified(), "lastModified");
     }
 
@@ -415,6 +417,8 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testLastModifiedMetadataChanges() {
         remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        runLooperTasks();
+
         Assert.assertEquals("lastModified", remoteData.getLastModified());
 
         localeManager.setDefaultLocale(new Locale("de"));

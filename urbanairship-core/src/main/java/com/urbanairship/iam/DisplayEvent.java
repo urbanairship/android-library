@@ -21,7 +21,7 @@ class DisplayEvent extends InAppMessageEvent {
      * @param message The in-app message.
      */
     DisplayEvent(@NonNull InAppMessage message) {
-        super(createEventId(message), message.getSource());
+        super(message);
     }
 
     @NonNull

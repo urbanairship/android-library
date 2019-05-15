@@ -44,6 +44,7 @@ abstract class InAppMessageEvent extends Event {
         this.message = message;
     }
 
+    // Used for legacy in-app messages
     InAppMessageEvent(@NonNull JsonValue eventId, @NonNull @InAppMessage.Source String source) {
         this.eventId = eventId;
         this.source = source;
@@ -58,9 +59,9 @@ abstract class InAppMessageEvent extends Event {
         return JsonMap.newBuilder()
                       .put(ID, eventId)
                       .put(SOURCE, isAppDefined ? SOURCE_APP_DEFINED : SOURCE_URBAN_AIRSHIP)
-                      .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
-                      .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
-                      .putOpt(LOCALE, message != null? message.getRenderedLocale() : null)
+                      .putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
+                      .putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
+                      .putOpt(LOCALE, message != null ? message.getRenderedLocale() : null)
                       .build();
     }
 

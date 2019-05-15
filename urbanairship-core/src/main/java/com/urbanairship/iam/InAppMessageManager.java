@@ -913,11 +913,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return false;
         }
 
-        if (!remoteData.isLastMetadataCurrent()) {
-            return true;
-        }
-
-        return !remoteData.getLastMetadata().equals(schedule.getMetadata());
+        return !remoteData.isMetadataCurrent(schedule.getMetadata());
     }
 
     /**
@@ -940,7 +936,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     @Override
                     public void run() {
                         // If the subscriber is already up to date, invalidate immediately
-                        if (remoteData.getLastMetadata().equals(remoteDataSubscriber.getLastPayloadMetadata())) {
+                        if (remoteData.isMetadataCurrent(remoteDataSubscriber.getLastPayloadMetadata())) {
                             driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
                         } else {
                             // Otherwise wait to invalidate
