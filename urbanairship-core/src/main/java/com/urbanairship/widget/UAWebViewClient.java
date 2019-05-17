@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -37,6 +38,7 @@ import com.urbanairship.util.UriUtils;
 
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,6 +131,7 @@ public class UAWebViewClient extends WebViewClient {
 
     private static SimpleDateFormat dateFormatter;
     private static String nativeBridge;
+    private boolean faviconEnabled = false;
 
     private final Map<WebView, InjectJsBridgeTask> injectJsBridgeTaskMap = new WeakHashMap<>();
 
@@ -179,36 +182,57 @@ public class UAWebViewClient extends WebViewClient {
     }
 
     /**
-     * Intercepts the favicon request and returns a null favicon
+     * Sets favicon enabled flag.
+     *
+     * @hide
+     *
+     * @param enabled {@code true} to enable favicon, {@code false} to disable and intercept favicon request.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void setFaviconEnabled(boolean enabled) {
+        faviconEnabled = enabled;
+    }
+
+    /**
+     * Intercepts the favicon request and returns a blank favicon
      *
      * @param webView The web view.
      * @param url The url being loaded.
-     * @return The null favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
+     * @return The blank favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
      */
+    @CallSuper
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView webView, String url) {
+        if (faviconEnabled) {
+            return null;
+        }
+
         if (url.toLowerCase().endsWith("/favicon.ico")) {
-            return new WebResourceResponse("image/png", null, null);
+            return generateEmptyFaviconResponse(webView);
         }
 
         return null;
     }
 
     /**
-     * Intercepts the favicon request and returns null favicon
+     * Intercepts the favicon request and returns blank favicon
      *
      * @param webView The web view.
      * @param request The WebResourceRequest being loaded.
-     * @return The tiny favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
+     * @return The blank favicon image embedded in a WebResourceResponse or null if the url does not contain a favicon.
      */
+    @CallSuper
     @Override
     @SuppressLint("NewApi")
     public WebResourceResponse shouldInterceptRequest(WebView webView, WebResourceRequest request) {
+        if (faviconEnabled) {
+            return null;
+        }
 
         if (!request.isForMainFrame()) {
             String path = request.getUrl().getPath();
             if (path != null && path.endsWith("/favicon.ico")) {
-                return new WebResourceResponse("image/png", null, null);
+                return generateEmptyFaviconResponse(webView);
             }
         }
 
@@ -320,6 +344,16 @@ public class UAWebViewClient extends WebViewClient {
                                        });
             }
         }
+    }
+
+    private WebResourceResponse generateEmptyFaviconResponse(@NonNull WebView webView) {
+        try {
+            return new WebResourceResponse("image/png", null, new BufferedInputStream(webView.getContext().getAssets().open("empty_favicon.ico")));
+        } catch (IOException e) {
+            Logger.error(e, "Failed to read blank favicon with IOException.");
+        }
+
+        return null;
     }
 
     /**
