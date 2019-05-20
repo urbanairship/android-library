@@ -120,7 +120,7 @@ public class Logger {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void warn(@NonNull Throwable t) {
-        logger.log(Log.WARN, t, null, null);
+        logger.log(Log.WARN, t, null, (Object[]) null);
     }
 
     /**
@@ -205,7 +205,7 @@ public class Logger {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void error(@NonNull Throwable t) {
-        logger.log(Log.ERROR, t, null, null);
+        logger.log(Log.ERROR, t, null, (Object[]) null);
     }
 
     /**
