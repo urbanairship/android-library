@@ -47,6 +47,13 @@ public class DeepLinkAction extends Action {
 
         Logger.info("Deep linking: %s", uri);
 
+        DeepLinkListener listener = UAirship.shared().getDeepLinkListener();
+        if (listener != null && listener.onDeepLink(uri.toString())) {
+            Logger.info("Calling through to deep link listener with uri string: %s", uri.toString());
+
+            return ActionResult.newResult(arguments.getValue());
+        }
+
         Intent intent = new Intent(Intent.ACTION_VIEW, uri)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .setPackage(UAirship.getPackageName());

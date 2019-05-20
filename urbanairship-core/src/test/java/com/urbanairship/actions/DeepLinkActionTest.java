@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
@@ -25,7 +26,6 @@ public class DeepLinkActionTest extends BaseTestCase {
     @Before
     public void setup() {
         action = new DeepLinkAction();
-        ;
     }
 
     @Test
@@ -58,6 +58,25 @@ public class DeepLinkActionTest extends BaseTestCase {
     }
 
     @Test
+    public void testDeepLinkListener() {
+        final DeepLinkActionTest.TestDeepLinkListener listener = new DeepLinkActionTest.TestDeepLinkListener() {
+            @Override
+            public boolean onDeepLink(@NonNull String deepLink) {
+                assertEquals("Value should be the deep link uri as a string", "http://example.com", deepLink);
+                return super.onDeepLink(deepLink);
+            }
+        };
+
+        UAirship.shared().setDeepLinkListener(listener);
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "http://example.com");
+        ActionResult result = action.perform(args);
+
+        assertEquals(result.getStatus(), ActionResult.STATUS_COMPLETED);
+        assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
+    }
+
+    @Test
     public void testPerformPushMessage() {
         Bundle bundle = new Bundle();
         bundle.putString("oh", "hi");
@@ -84,4 +103,18 @@ public class DeepLinkActionTest extends BaseTestCase {
         }
     }
 
+    /**
+     * Helper callback for testing.
+     */
+    static class TestDeepLinkListener implements DeepLinkListener {
+        volatile boolean onDeepLinkCalled = false;
+
+        @Override
+        public boolean onDeepLink(@NonNull String deepLink) {
+            onDeepLinkCalled = true;
+            return onDeepLinkCalled;
+        }
+
+    }
 }
+

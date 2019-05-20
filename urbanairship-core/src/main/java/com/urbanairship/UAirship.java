@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.actions.ActionRegistry;
+import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.data.EventApiClient;
 import com.urbanairship.analytics.data.EventManager;
@@ -116,6 +117,8 @@ public class UAirship {
     private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
 
     private static boolean queuePendingAirshipRequests = true;
+
+    private DeepLinkListener deepLinkListener;
 
     final List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
@@ -461,6 +464,15 @@ public class UAirship {
     }
 
     /**
+     * Sets the deep link listener.
+     *
+     * @param listener the deep link listener.
+     */
+    public void setDeepLinkListener(@Nullable DeepLinkListener listener) {
+        deepLinkListener = listener;
+    }
+
+    /**
      * Returns the Application's package name.
      *
      * @return The package name.
@@ -481,6 +493,18 @@ public class UAirship {
     public static PackageManager getPackageManager() {
         return getApplicationContext().getPackageManager();
     }
+
+    /**
+     * Returns the deep link listener if one has been set, otherwise null.
+     *
+     * @return The deep link listener.
+     * @throws java.lang.IllegalStateException if takeOff has not been called.
+     */
+    @Nullable
+    public DeepLinkListener getDeepLinkListener() {
+        return deepLinkListener;
+    }
+
 
     /**
      * Returns the Application's <code>PackageInfo</code>
