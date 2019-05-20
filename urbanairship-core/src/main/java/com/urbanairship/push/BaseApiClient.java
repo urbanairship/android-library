@@ -45,7 +45,7 @@ abstract class BaseApiClient {
         }
 
         return requestFactory.createRequest(requestMethod, url)
-                             .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret())
+                             .setCredentials(configOptions.appKey, configOptions.appSecret)
                              .setRequestBody(jsonPayload, "application/json")
                              .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                              .execute();
@@ -60,7 +60,7 @@ abstract class BaseApiClient {
     @Nullable
     protected URL getDeviceUrl(@NonNull String path) {
         try {
-            return new URL(configOptions.hostURL + path);
+            return new URL(configOptions.deviceUrl + path);
         } catch (MalformedURLException e) {
             Logger.error(e, "Invalid URL: %s", path);
             return null;

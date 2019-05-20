@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.amazon.device.messaging.ADMConstants;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -79,11 +78,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
     }
 
     @Override
-    public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
-        if (!configOptions.isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-            return false;
-        }
-
+    public boolean isSupported(@NonNull Context context) {
         if (isAdmDependencyAvailable == null) {
             try {
                 Class.forName("com.amazon.device.messaging.ADM");

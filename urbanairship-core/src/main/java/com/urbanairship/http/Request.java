@@ -238,7 +238,7 @@ public class Request {
 
         return String.format(Locale.US, USER_AGENT_FORMAT, UAirship.getPackageName(),
                 Build.MODEL, Build.VERSION.RELEASE, platform, UAirship.getVersion(),
-                UAirship.shared().getAirshipConfigOptions().getAppKey(),
+                UAirship.shared().getAirshipConfigOptions().appKey,
                 LocaleManager.shared(UAirship.getApplicationContext()).getDefaultLocale());
     }
 

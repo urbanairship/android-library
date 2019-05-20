@@ -6,7 +6,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
 
 /**
@@ -87,10 +86,9 @@ public interface PushProvider {
      * If the underlying push provider is supported on the device.
      *
      * @param context The application context.
-     * @param configOptions The airship config options.
      * @return {@code true} if the push provider is supported on the device, otherwise {@code false}.
      */
-    boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions);
+    boolean isSupported(@NonNull Context context);
 
     /**
      * Checks if the push message should be handled by the Airship SDK.

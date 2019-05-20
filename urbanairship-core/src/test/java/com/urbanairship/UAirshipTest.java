@@ -35,8 +35,8 @@ public class UAirshipTest extends BaseTestCase {
         looper = Looper.myLooper();
 
         configOptions = new AirshipConfigOptions.Builder()
-                .setProductionAppKey("appKey")
-                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("0000000000000000000000")
+                .setProductionAppSecret("0000000000000000000000")
                 .setInProduction(true)
                 .build();
 

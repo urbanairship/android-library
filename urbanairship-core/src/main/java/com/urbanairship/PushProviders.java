@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import com.urbanairship.push.PushProvider;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,37 +16,38 @@ import java.util.List;
  */
 class PushProviders {
 
-    private static final String GCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.gcm.GcmPushProvider";
     private static final String FCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.fcm.FcmPushProvider";
     private static final String ADM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.adm.AdmPushProvider";
 
     private final List<PushProvider> supportedProviders = new ArrayList<>();
     private final List<PushProvider> availableProviders = new ArrayList<>();
+    private final AirshipConfigOptions airshipConfigOptions;
 
-    private PushProviders() {
+    private PushProviders(@NonNull AirshipConfigOptions config) {
+        this.airshipConfigOptions = config;
     }
 
     /**
      * Factory method to load push providers.
      *
      * @param context The application context.
-     * @param configOptions The airship config options.
+     * @param config The airship config.
      * @return A PushProviders class with the loaded providers.
      */
     @NonNull
-    static PushProviders load(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
-        PushProviders providers = new PushProviders();
-        providers.init(context, configOptions);
+    static PushProviders load(@NonNull Context context, @NonNull AirshipConfigOptions config) {
+        PushProviders providers = new PushProviders(config);
+        providers.init(context);
         return providers;
     }
 
     /**
      * Loads all the plugins that are currently supported by the device.
      */
-    private void init(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
+    private void init(@NonNull Context context) {
         List<PushProvider> providers = createProviders();
-        if (configOptions.customPushProvider != null) {
-            providers.add(0, configOptions.customPushProvider);
+        if (airshipConfigOptions.customPushProvider != null) {
+            providers.add(0, airshipConfigOptions.customPushProvider);
         }
 
         if (providers.isEmpty()) {
@@ -56,7 +56,7 @@ class PushProviders {
         }
 
         for (PushProvider provider : providers) {
-            if (!provider.isSupported(context, configOptions)) {
+            if (!provider.isSupported(context)) {
                 continue;
             }
 
@@ -77,7 +77,7 @@ class PushProviders {
         List<PushProvider> providers = new ArrayList<>();
         List<String> providerClasses = new ArrayList<>();
 
-        for (String className : Arrays.asList(FCM_PUSH_PROVIDER_CLASS, GCM_PUSH_PROVIDER_CLASS, ADM_PUSH_PROVIDER_CLASS)) {
+        for (String className : createAllowedProviderClassList()) {
             PushProvider pushProvider = null;
             try {
                 Class providerClass = Class.forName(className);
@@ -106,10 +106,6 @@ class PushProviders {
 
             providers.add(pushProvider);
             providerClasses.add(className);
-        }
-
-        if (providerClasses.contains(FCM_PUSH_PROVIDER_CLASS) && providerClasses.contains(GCM_PUSH_PROVIDER_CLASS)) {
-            Logger.error("Both urbanairship-gcm and urbanairship-fcm packages detected. Having both installed is not supported.");
         }
 
         return providers;
@@ -172,6 +168,19 @@ class PushProviders {
         }
 
         return null;
+    }
+
+    public List<String> createAllowedProviderClassList() {
+        List<String> providers = new ArrayList<>();
+        if (airshipConfigOptions.allowedTransports.contains(AirshipConfigOptions.FCM_TRANSPORT)) {
+            providers.add(FCM_PUSH_PROVIDER_CLASS);
+        }
+
+        if (airshipConfigOptions.allowedTransports.contains(AirshipConfigOptions.ADM_TRANSPORT)) {
+            providers.add(ADM_PUSH_PROVIDER_CLASS);
+        }
+
+        return providers;
     }
 
 }

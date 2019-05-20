@@ -51,7 +51,6 @@ public class SampleAutopilot extends Autopilot {
             UAirship.getApplicationContext().startActivity(intent);
         });
 
-
         AirshipListener airshipListener = new AirshipListener();
         airship.getPushManager().addPushListener(airshipListener);
         airship.getPushManager().addRegistrationListener(airshipListener);
@@ -61,8 +60,7 @@ public class SampleAutopilot extends Autopilot {
     @Nullable
     @Override
     public AirshipConfigOptions createAirshipConfigOptions(@NonNull Context context) {
-
-         /*
+        /*
           Optionally, customize your config at runtime:
 
              AirshipConfigOptions options = new AirshipConfigOptions.Builder()
@@ -71,7 +69,6 @@ public class SampleAutopilot extends Autopilot {
                     .setDevelopmentAppSecret("Your Development App Secret")
                     .setProductionAppKey("Your Production App Key")
                     .setProductionAppSecret("Your Production App Secret")
-                    .setGcmSender("Your GCM/Firebase Sender ID")
                     .setNotificationAccentColor(ContextCompat.getColor(context, R.color.color_accent))
                     .setNotificationIcon(R.drawable.ic_airship)
                     .build();

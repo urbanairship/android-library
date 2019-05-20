@@ -81,7 +81,7 @@ public class RemoteDataApiClient {
         }
 
         Request request = requestFactory.createRequest("GET", url)
-                                        .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret());
+                                        .setCredentials(configOptions.appKey, configOptions.appSecret);
 
         if (lastModified != null) {
             request.setHeader("If-Modified-Since", lastModified);
@@ -105,10 +105,10 @@ public class RemoteDataApiClient {
         // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}
 
         try {
-            Uri.Builder builder = Uri.parse(configOptions.remoteDataURL)
+            Uri.Builder builder = Uri.parse(configOptions.remoteDataUrl)
                                      .buildUpon()
                                      .appendEncodedPath(REMOTE_DATA_PATH)
-                                     .appendPath(configOptions.getAppKey())
+                                     .appendPath(configOptions.appKey)
                                      .appendPath(UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
                                      .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
 

@@ -42,7 +42,7 @@ public class NamedUserApiClientTest extends BaseTestCase {
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setInProduction(false)
-                .setHostURL("https://go-demo.urbanairship.com/")
+                .setDeviceUrl("https://go-demo.urbanairship.com/")
                 .build();
 
         client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
@@ -92,7 +92,7 @@ public class NamedUserApiClientTest extends BaseTestCase {
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setInProduction(false)
-                .setHostURL("files://thisIsMalformed")
+                .setDeviceUrl("files://thisIsMalformed")
                 .build();
 
         client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);

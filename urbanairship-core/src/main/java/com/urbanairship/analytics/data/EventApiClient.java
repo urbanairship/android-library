@@ -106,7 +106,7 @@ public class EventApiClient {
 
         String payload = new JsonList(eventJSON).toString();
 
-        String url = airship.getAirshipConfigOptions().analyticsServer + "warp9/";
+        String url = airship.getAirshipConfigOptions().analyticsUrl + "warp9/";
         URL analyticsServerUrl = null;
         try {
             analyticsServerUrl = new URL(url);
@@ -141,7 +141,7 @@ public class EventApiClient {
                                         .setHeader("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt))
                                         .setHeader("X-UA-Package-Name", getPackageName())
                                         .setHeader("X-UA-Package-Version", getPackageVersion())
-                                        .setHeader("X-UA-App-Key", airship.getAirshipConfigOptions().getAppKey())
+                                        .setHeader("X-UA-App-Key", airship.getAirshipConfigOptions().appKey)
                                         .setHeader("X-UA-In-Production", Boolean.toString(airship.getAirshipConfigOptions().inProduction))
                                         .setHeader("X-UA-Device-Model", Build.MODEL)
                                         .setHeader("X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT))

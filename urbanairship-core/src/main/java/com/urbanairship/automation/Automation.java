@@ -60,7 +60,7 @@ public class Automation extends AirshipComponent {
                 .setActivityMonitor(activityMonitor)
                 .setAnalytics(analytics)
                 .setDriver(new ActionAutomationDriver())
-                .setDataManager(new AutomationDataManager(context, configOptions.getAppKey(), DATABASE_NAME))
+                .setDataManager(new AutomationDataManager(context, configOptions.appKey, DATABASE_NAME))
                 .setOperationScheduler(AlarmOperationScheduler.shared(context))
                 .build();
     }

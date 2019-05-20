@@ -237,8 +237,8 @@ public class ChannelCapture extends AirshipComponent {
      */
     @NonNull
     private String generateToken() {
-        byte[] appKeyBytes = configOptions.getAppKey().getBytes();
-        byte[] appSecretBytes = configOptions.getAppSecret().getBytes();
+        byte[] appKeyBytes = configOptions.appKey.getBytes();
+        byte[] appSecretBytes = configOptions.appSecret.getBytes();
 
         StringBuilder code = new StringBuilder();
 

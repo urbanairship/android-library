@@ -11,7 +11,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -106,11 +105,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     }
 
     @Override
-    public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
-        if (!configOptions.isTransportAllowed(AirshipConfigOptions.FCM_TRANSPORT)) {
-            return false;
-        }
-
+    public boolean isSupported(@NonNull Context context) {
         return PlayServicesUtils.isGooglePlayStoreAvailable(context);
     }
 
@@ -121,7 +116,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Nullable
     private String getSenderId(@NonNull FirebaseApp app) {
-        String senderId = UAirship.shared().getAirshipConfigOptions().getFcmSenderId();
+        String senderId = UAirship.shared().getAirshipConfigOptions().fcmSenderId;
         if (senderId != null) {
             return senderId;
         }

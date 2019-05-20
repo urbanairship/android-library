@@ -106,7 +106,7 @@ public class EventApiClientTest extends BaseTestCase {
                 { "X-UA-Device-Family", "android" },
                 { "X-UA-Package-Name", UAirship.getPackageName() },
                 { "X-UA-Package-Version", UAirship.getPackageInfo().versionName },
-                { "X-UA-App-Key", airshipConfig.getAppKey() },
+                { "X-UA-App-Key", airshipConfig.appKey },
                 { "X-UA-In-Production", Boolean.toString(airshipConfig.inProduction) },
                 { "X-UA-Device-Model", Build.MODEL },
                 { "X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT) },

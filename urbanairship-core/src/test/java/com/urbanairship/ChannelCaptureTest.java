@@ -208,8 +208,8 @@ public class ChannelCaptureTest extends BaseTestCase {
      * @return The clipboard token.
      */
     private String generateToken(String urlPath) {
-        byte[] appKeyBytes = configOptions.getAppKey().getBytes();
-        byte[] appSecretBytes = configOptions.getAppSecret().getBytes();
+        byte[] appKeyBytes = configOptions.appKey.getBytes();
+        byte[] appSecretBytes = configOptions.appSecret.getBytes();
 
         StringBuilder token = new StringBuilder();
 

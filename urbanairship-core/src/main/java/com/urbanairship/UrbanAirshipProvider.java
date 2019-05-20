@@ -262,7 +262,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return null;
         }
 
-        String appKey = airship.getAirshipConfigOptions().getAppKey();
+        String appKey = airship.getAirshipConfigOptions().appKey;
 
         int type = matcher.match(uri);
         switch (type) {

@@ -140,7 +140,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
                 .setAnalytics(analytics)
                 .setActivityMonitor(activityMonitor)
-                .setDataManager(new AutomationDataManager(context, configOptions.getAppKey(), "in-app"))
+                .setDataManager(new AutomationDataManager(context, configOptions.appKey, "in-app"))
                 .setScheduleLimit(200)
                 .setDriver(driver)
                 .setOperationScheduler(AlarmOperationScheduler.shared(context))

@@ -48,7 +48,7 @@ public class NotificationChannelRegistry {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public NotificationChannelRegistry(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         this(context,
-                new NotificationChannelRegistryDataManager(context, configOptions.getAppKey(), DATABASE_NAME),
+                new NotificationChannelRegistryDataManager(context, configOptions.appKey, DATABASE_NAME),
                 AirshipExecutors.newSerialExecutor());
     }
 

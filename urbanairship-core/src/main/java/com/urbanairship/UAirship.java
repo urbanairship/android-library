@@ -381,17 +381,19 @@ public class UAirship {
      */
     private static void executeTakeOff(@NonNull Application application, @Nullable AirshipConfigOptions options, @Nullable OnReadyCallback readyCallback) {
         if (options == null) {
-            options = new AirshipConfigOptions.Builder().applyDefaultProperties(application.getApplicationContext()).build();
+            options = new AirshipConfigOptions.Builder()
+                    .applyDefaultProperties(application.getApplicationContext())
+                    .build();
         }
 
-        // set sane log level based on production flag
-        int logLevel = options.getLoggerLevel();
-        Logger.setLogLevel(logLevel);
+        options.validate();
+
+        Logger.setLogLevel(options.logLevel);
         Logger.setTag(UAirship.getAppName() + " - " + Logger.DEFAULT_TAG);
 
         Logger.info("Airship taking off!");
-        Logger.info("Airship log level: %s", logLevel);
-        Logger.info("UA Version: %s / App key = %s Production = %s", getVersion(), options.getAppKey(), options.inProduction);
+        Logger.info("Airship log level: %s", options.logLevel);
+        Logger.info("UA Version: %s / App key = %s Production = %s", getVersion(), options.appKey, options.inProduction);
         Logger.verbose(BuildConfig.SDK_VERSION);
 
         sharedAirship = new UAirship(options);

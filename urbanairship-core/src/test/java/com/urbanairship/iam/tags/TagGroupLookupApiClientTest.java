@@ -50,7 +50,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setInProduction(false)
-                .setHostURL("https://test.urbanairship.com/")
+                .setDeviceUrl("https://test.urbanairship.com/")
                 .build();
 
         testRequest = new TestRequest();

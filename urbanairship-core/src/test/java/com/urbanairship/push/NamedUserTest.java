@@ -34,7 +34,7 @@ public class NamedUserTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
 
-    private AirshipConfigOptions mockAirshipConfigOptions;
+    private AirshipConfigOptions airshipConfigOptions;
     private NamedUser namedUser;
     private TestRequest testRequest;
     private JobDispatcher mockDispatcher;
@@ -43,7 +43,9 @@ public class NamedUserTest extends BaseTestCase {
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
-        mockAirshipConfigOptions = mock(AirshipConfigOptions.class);
+
+        airshipConfigOptions = AirshipConfigOptions.newBuilder().build();
+        airshipConfigOptions = mock(AirshipConfigOptions.class);
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
 
         testRequest = new TestRequest();
@@ -51,10 +53,8 @@ public class NamedUserTest extends BaseTestCase {
         RequestFactory mockRequestFactory = mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        when(mockAirshipConfigOptions.getAppKey()).thenReturn("appKey");
-        when(mockAirshipConfigOptions.getAppSecret()).thenReturn("appSecret");
 
-        TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
+        TestApplication.getApplication().setOptions(airshipConfigOptions);
 
         namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockDispatcher);
     }

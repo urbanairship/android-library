@@ -65,7 +65,7 @@ class TagGroupLookupApiClient {
     }
 
     private URL getUrl(AirshipConfigOptions configOptions) {
-        Uri uri = Uri.withAppendedPath(Uri.parse(configOptions.hostURL), CHANNEL_TAG_LOOKUP_PATH);
+        Uri uri = Uri.withAppendedPath(Uri.parse(configOptions.deviceUrl), CHANNEL_TAG_LOOKUP_PATH);
         try {
             return new URL(uri.toString());
         } catch (MalformedURLException e) {
@@ -105,7 +105,7 @@ class TagGroupLookupApiClient {
         Logger.debug("Looking up tags with payload: %s", tagPayload);
 
         Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret())
+                                          .setCredentials(configOptions.appKey, configOptions.appSecret)
                                           .setRequestBody(tagPayload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();

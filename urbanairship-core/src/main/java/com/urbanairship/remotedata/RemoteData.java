@@ -135,7 +135,7 @@ public class RemoteData extends AirshipComponent {
                @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
-        this.dataStore = new RemoteDataStore(context, configOptions.getAppKey(), DATABASE_NAME);
+        this.dataStore = new RemoteDataStore(context, configOptions.appKey, DATABASE_NAME);
         this.preferenceDataStore = preferenceDataStore;
         this.backgroundThread = new AirshipHandlerThread("remote data store");
         this.payloadUpdates = Subject.create();

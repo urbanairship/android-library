@@ -48,7 +48,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setInProduction(false)
-                .setHostURL("https://go-demo.urbanairship.com/")
+                .setDeviceUrl("https://go-demo.urbanairship.com/")
                 .build();
 
         client = new ChannelApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);

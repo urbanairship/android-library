@@ -8,6 +8,8 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
+import android.support.annotation.StringDef;
 import android.support.annotation.XmlRes;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -19,8 +21,15 @@ import com.urbanairship.util.PropertiesConfigParser;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.XmlConfigParser;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * This class holds the set of options necessary to properly initialize
@@ -28,8 +37,44 @@ import java.util.Properties;
  */
 public class AirshipConfigOptions {
 
+    // EU cloud site
+    private static final String EU_DEVICE_URL = "https://device-api.asnapieu.com/";
+    private static final String EU_ANALYTICS_URL = "https://combine.asnapieu.com/";
+    private static final String EU_REMOTE_DATA_URL = "https://remote-data.asnapieu.com/";
+    private static final String EU_WALLET_URL = "https://wallet-api.asnapieu.com";
+
+    // US cloud site
+    private static final String US_DEVICE_URL = "https://device-api.urbanairship.com/";
+    private static final String US_ANALYTICS_URL = "https://combine.urbanairship.com/";
+    private static final String US_REMOTE_DATA_URL = "https://remote-data.urbanairship.com/";
+    private static final String US_WALLET_URL = "https://wallet-api.urbanairship.com";
+
+    private final static long MIN_BG_REPORTING_INTERVAL_MS = 60 * 1000; // 1 minute
+    private final static long MAX_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
     private static final int DEFAULT_PRODUCTION_LOG_LEVEL = Log.ERROR;
     private static final int DEFAULT_DEVELOPMENT_LOG_LEVEL = Log.DEBUG;
+    private static final long DEFAULT_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+    private static final Pattern APP_CREDENTIAL_PATTERN = Pattern.compile("^[a-zA-Z0-9\\-_]{22}$");
+
+    @StringDef({ SITE_US, SITE_EU })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Site {}
+
+    /**
+     * US data site. In order to use this site, your
+     * project must be created at go.airship.com
+     */
+    @NonNull
+    public static final String SITE_US = "US";
+
+    /**
+     * EU data site. In order to use this site, your
+     * project must be created at go.airship.eu
+     */
+    @NonNull
+    public static final String SITE_EU = "EU";
 
     /**
      * The ADM transport type for Push.
@@ -43,70 +88,68 @@ public class AirshipConfigOptions {
     @NonNull
     public static final String FCM_TRANSPORT = "FCM";
 
-    // Logs a warning message if the backgroundReportingIntervalSeconds is below this minimum value
-    private final static int MIN_BG_REPORTING_INTERVAL_MS = 60 * 1000; // 1 minute
-
-    // Logs a warning message if the backgroundReportingIntervalSeconds is above this maximum value
-    private final static int MAX_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-    // Default airship config properties filename
-    private final static String DEFAULT_PROPERTIES_FILENAME = "airshipconfig.properties";
-
-    private static final String CONFIG_ELEMENT = "AirshipConfigOptions";
-
     /**
-     * The application's production app key.
+     * Airship app key.
      * <p>
      * This string is generated automatically when you create an app in the Airship
      * dashboard, which you can manually copy into your app configuration.
-     */
-    @Nullable
-    public final String productionAppKey;
-
-    /**
-     * The application's production app secret.
-     * <p>
-     * This string is generated automatically when you create an app in the Airship
-     * dashboard, which you can manually copy into your app configuration.
-     */
-    @Nullable
-    public final String productionAppSecret;
-
-    /**
-     * The application's development app key.
-     * <p>
-     * This string is generated automatically when you create an app in the Airship
-     * dashboard, which you can manually copy into your app configuration.
-     */
-    @Nullable
-    public final String developmentAppKey;
-
-    /**
-     * The application's development app secret.
-     * <p>
-     * This string is generated automatically when you create an app in the Airship
-     * dashboard, which you can manually copy into your app configuration.
-     */
-    @Nullable
-    public final String developmentAppSecret;
-
-    /**
-     * The Airship URL. This will always be set to http://device-api.urbanairship.com/
      */
     @NonNull
-    public final String hostURL;
+    public final String appKey;
 
     /**
-     * The Analytics Server. This will always be set to https://combine.urbanairship.com/
+     * Airship app secret.
+     * <p>
+     * This string is generated automatically when you create an app in the Airship
+     * dashboard, which you can manually copy into your app configuration.
      */
     @NonNull
-    public final String analyticsServer;
+    public final String appSecret;
+
+    /**
+     * The device URL.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String deviceUrl;
+
+    /**
+     * The analytics Url.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String analyticsUrl;
 
     /**
      * The remote data server URL.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
-    public final String remoteDataURL;
+    public final String remoteDataUrl;
+
+    /**
+     * The wallet URL.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String walletUrl;
+
+    /**
+     * Optional app store link when using the rate app action. If not set,
+     * the action will generate it using hte app's current package name.
+     * <p>
+     * Example: "market://details?id=com.example.android"
+     */
+    @Nullable
+    public final Uri appStoreUri;
 
     /**
      * The FCM sender ID for push registration. Used as a fallback
@@ -120,32 +163,12 @@ public class AirshipConfigOptions {
     public final String fcmSenderId;
 
     /**
-     * The FCM sender ID used for push registration in development mode.
-     * This is your Google API project number.
-     * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
-     * main Firebase application's sender ID.
-     */
-    @Nullable
-    public final String developmentFcmSenderId;
-
-    /**
-     * The FCM sender ID used for push registration in production mode.
-     * This is your Google API project number.
-     * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
-     * main Firebase application's sender ID.
-     */
-    @Nullable
-    public final String productionFcmSenderId;
-
-    /**
      * The transport types allowed for Push.
      * <p>
      * Defaults to ADM, FCM.
      */
-    @Nullable
-    public final String[] allowedTransports;
+    @NonNull
+    public final List<String> allowedTransports;
 
     /**
      * Custom push provider.
@@ -164,8 +187,8 @@ public class AirshipConfigOptions {
      * <p>
      * Defaults null.
      */
-    @Nullable
-    public final String[] whitelist;
+    @NonNull
+    public final List<String> whitelist;
 
     /**
      * Enables/disables whitelist checks for {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL}.
@@ -175,13 +198,6 @@ public class AirshipConfigOptions {
      * Defaults to false.
      */
     public final boolean enableUrlWhitelisting;
-
-    /**
-     * Flag indicating whether the application is in production or development.
-     * <p>
-     * Defaults to <code>false</code>.
-     */
-    public final boolean inProduction;
 
     /**
      * Flag indicating whether the application will use analytics.
@@ -218,22 +234,7 @@ public class AirshipConfigOptions {
      * </ul><br>
      * Defaults to <code>DEBUG</code>
      */
-    public final int developmentLogLevel;
-
-    /**
-     * Logger level when the application is in production mode. Possible values are:
-     * <br><ul>
-     * <li>ASSERT
-     * <li>NONE
-     * <li>DEBUG
-     * <li>ERROR
-     * <li>INFO
-     * <li>VERBOSE
-     * <li>WARN
-     * </ul><br>
-     * Defaults to <code>ERROR</code>
-     */
-    public final int productionLogLevel;
+    public final int logLevel;
 
     /**
      * Flag indicating whether or not to launch the launcher activity when a push notification or push
@@ -270,12 +271,6 @@ public class AirshipConfigOptions {
     public final int notificationLargeIcon;
 
     /**
-     * The Wallet URL. This will always be set to https://wallet-api.urbanairship.com
-     */
-    @NonNull
-    public final String walletUrl;
-
-    /**
      * Notification accent color.
      */
     @ColorInt
@@ -288,40 +283,54 @@ public class AirshipConfigOptions {
     public final String notificationChannel;
 
     /**
-     * Optional app store link when using the rate app action. If not set,
-     * the action will generate it using hte app's current package name.
+     * Flag indicating whether the application is in production.
      * <p>
-     * Example: "market://details?id=com.example.android"
+     * Defaults to <code>false</code>.
      */
-    @Nullable
-    public final Uri appStoreUri;
+    public final boolean inProduction;
 
     private AirshipConfigOptions(@NonNull Builder builder) {
-        this.productionAppKey = builder.productionAppKey;
-        this.productionAppSecret = builder.productionAppSecret;
-        this.developmentAppKey = builder.developmentAppKey;
-        this.developmentAppSecret = builder.developmentAppSecret;
-        this.hostURL = builder.hostURL;
-        this.analyticsServer = builder.analyticsServer;
-        this.remoteDataURL = builder.remoteDataURL;
-        this.fcmSenderId = builder.fcmSenderId;
-        this.developmentFcmSenderId = builder.developmentFcmSenderId;
-        this.productionFcmSenderId = builder.productionFcmSenderId;
-        this.allowedTransports = builder.allowedTransports;
-        this.whitelist = builder.whitelist;
+        if (builder.inProduction) {
+            this.appKey = first(builder.productionAppKey, builder.appKey);
+            this.appSecret = first(builder.productionAppSecret, builder.appSecret);
+            this.fcmSenderId = first(builder.productionFcmSenderId, builder.fcmSenderId);
+            this.logLevel = first(builder.productionLogLevel, builder.logLevel, DEFAULT_PRODUCTION_LOG_LEVEL);
+        } else {
+            this.appKey = first(builder.developmentAppKey, builder.appKey);
+            this.appSecret = first(builder.developmentAppSecret, builder.appSecret);
+            this.fcmSenderId = first(builder.developmentFcmSenderId, builder.fcmSenderId);
+            this.logLevel = first(builder.developmentLogLevel, builder.logLevel, DEFAULT_DEVELOPMENT_LOG_LEVEL);
+        }
+
+        switch (builder.site) {
+            case SITE_EU:
+                this.deviceUrl = first(builder.deviceUrl, EU_DEVICE_URL);
+                this.analyticsUrl = first(builder.analyticsUrl, EU_ANALYTICS_URL);
+                this.remoteDataUrl = first(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
+                this.walletUrl = first(builder.walletUrl, EU_WALLET_URL);
+                break;
+
+            case SITE_US:
+            default:
+                this.deviceUrl = first(builder.deviceUrl, US_DEVICE_URL);
+                this.analyticsUrl = first(builder.analyticsUrl, US_ANALYTICS_URL);
+                this.remoteDataUrl = first(builder.remoteDataUrl, US_REMOTE_DATA_URL);
+                this.walletUrl = first(builder.walletUrl, US_WALLET_URL);
+                break;
+        }
+
+        this.allowedTransports = Collections.unmodifiableList(new ArrayList<>(builder.allowedTransports));
+        this.whitelist = Collections.unmodifiableList(new ArrayList<>(builder.whitelist));
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
         this.clearNamedUser = builder.clearNamedUser;
-        this.developmentLogLevel = builder.developmentLogLevel;
-        this.productionLogLevel = builder.productionLogLevel;
         this.autoLaunchApplication = builder.autoLaunchApplication;
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled;
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
         this.notificationIcon = builder.notificationIcon;
         this.notificationLargeIcon = builder.notificationLargeIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
-        this.walletUrl = builder.walletUrl;
         this.notificationChannel = builder.notificationChannel;
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
@@ -329,74 +338,87 @@ public class AirshipConfigOptions {
     }
 
     /**
-     * Returns the appropriate development or production app key
+     * Validates the config.
      *
-     * @return The application key
+     * @throws IllegalArgumentException if the app key or secret are invalid.
+     */
+    public void validate() {
+        String modeString = inProduction ? "production" : "development";
+
+        if (!APP_CREDENTIAL_PATTERN.matcher(appKey).matches()) {
+            throw new IllegalArgumentException("AirshipConfigOptions: " + appKey + " is not a valid " + modeString + " app key");
+        }
+
+        if (!APP_CREDENTIAL_PATTERN.matcher(appSecret).matches()) {
+            throw new IllegalArgumentException("AirshipConfigOptions: " + appSecret + " is not a valid " + modeString + " app secret");
+        }
+
+        if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
+            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
+        } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
+            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
+        }
+    }
+
+    /**
+     * Factory method to create an AirshipConfig builder.
+     *
+     * @return A new builder.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * Parses {@link Site} from a String.
+     *
+     * @param value The value to parse.
+     * @return The parsed site value.
+     * @throws IllegalArgumentException If the value is invalid.
      */
     @NonNull
-    public String getAppKey() {
-        //noinspection ConstantConditions
-        return inProduction ? productionAppKey : developmentAppKey;
+    @Site
+    private static String parseSite(String value) {
+        if (SITE_EU.equalsIgnoreCase(value)) {
+            return SITE_EU;
+        }
+
+        if (SITE_US.equalsIgnoreCase(value)) {
+            return SITE_US;
+        }
+
+        throw new IllegalArgumentException("Invalid site: " + value);
     }
 
     /**
-     * Returns the appropriate development or production app secret
+     * Returns the first nonnull String or ""
      *
-     * @return The application secret
+     * @param args The Strings.
+     * @return The first nonnull String or "".
      */
     @NonNull
-    public String getAppSecret() {
-        //noinspection ConstantConditions
-        return inProduction ? productionAppSecret : developmentAppSecret;
-    }
-
-    /**
-     * Returns the appropriate development or production log level.
-     *
-     * @return The log level
-     */
-    public int getLoggerLevel() {
-        return inProduction ? productionLogLevel : developmentLogLevel;
-    }
-
-    /**
-     * Returns the development or production FCM sender ID.
-     *
-     * @return The FCM sender ID.
-     */
-    @Nullable
-    public String getFcmSenderId() {
-        String senderId = inProduction ? productionFcmSenderId : developmentFcmSenderId;
-
-        if (senderId != null) {
-            return senderId;
-        }
-
-        if (fcmSenderId != null) {
-            return fcmSenderId;
-        }
-
-        return null;
-    }
-
-    /**
-     * Check to see if the specified transport type is allowed.
-     *
-     * @param transport The transport type.
-     * @return <code>true</code> if the transport type is allowed, otherwise <code>false</code>.
-     */
-    public boolean isTransportAllowed(@Nullable String transport) {
-        if (allowedTransports == null || transport == null) {
-            return false;
-        }
-
-        for (String allowedTransport : allowedTransports) {
-            if (transport.equalsIgnoreCase(allowedTransport)) {
-                return true;
+    private static String first(String... args) {
+        for (String arg : args) {
+            if (!UAStringUtil.isEmpty(arg)) {
+                return arg;
             }
         }
+        return "";
+    }
 
-        return false;
+    /**
+     * Returns the first nonnull Integer or 0.
+     *
+     * @param args The Integers.
+     * @return The first nonnull Integer or 0.
+     */
+    private static int first(Integer... args) {
+        for (Integer arg : args) {
+            if (arg != null) {
+                return arg;
+            }
+        }
+        return 0;
     }
 
     /**
@@ -404,17 +426,25 @@ public class AirshipConfigOptions {
      */
     public static final class Builder {
 
+        // Default airship config properties filename
+        private final static String DEFAULT_PROPERTIES_FILENAME = "airshipconfig.properties";
+        private static final String CONFIG_ELEMENT = "AirshipConfigOptions";
+
         /*
          * Common config fields
          */
+        private static final String FIELD_APP_KEY = "appKey";
+        private static final String FIELD_APP_SECRET = "appSecret";
         private static final String FIELD_PRODUCTION_APP_KEY = "productionAppKey";
         private static final String FIELD_PRODUCTION_APP_SECRET = "productionAppSecret";
         private static final String FIELD_DEVELOPMENT_APP_KEY = "developmentAppKey";
         private static final String FIELD_DEVELOPMENT_APP_SECRET = "developmentAppSecret";
-        private static final String FIELD_HOST_URL = "hostURL";
-        private static final String FIELD_ANALYTICS_SERVER = "analyticsServer";
-        private static final String FIELD_LANDING_PAGE_CONTENT_URL = "landingPageContentURL";
-        private static final String FIELD_REMOTE_DATA_URL = "remoteDataURL";
+        private static final String FIELD_LEGACY_DEVICE_URL = "hostURL";
+        private static final String FIELD_DEVICE_URL = "deviceUrl";
+        private static final String FIELD_LEGACY_ANALYTICS_SERVER = "analyticsServer";
+        private static final String FIELD_ANALYTICS_URL = "analyticsUrl";
+        private static final String FIELD_LEGACY_REMOTE_DATA_URL = "remoteDataURL";
+        private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_WHITELIST = "whitelist";
@@ -424,6 +454,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_CLEAR_NAMED_USER = "clearNamedUser";
         private static final String FIELD_DEVELOPMENT_LOG_LEVEL = "developmentLogLevel";
         private static final String FIELD_PRODUCTION_LOG_LEVEL = "productionLogLevel";
+        private static final String FIELD_LOG_LEVEL = "logLevel";
         private static final String FIELD_AUTO_LAUNCH_APPLICATION = "autoLaunchApplication";
         private static final String FIELD_CHANNEL_CREATION_DELAY_ENABLED = "channelCreationDelayEnabled";
         private static final String FIELD_CHANNEL_CAPTURE_ENABLED = "channelCaptureEnabled";
@@ -438,36 +469,42 @@ public class AirshipConfigOptions {
         private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
+        private static final String FIELD_SITE = "site";
 
+        private String appKey;
+        private String appSecret;
         private String productionAppKey;
         private String productionAppSecret;
         private String developmentAppKey;
         private String developmentAppSecret;
-        private String hostURL = "https://device-api.urbanairship.com/";
-        private String analyticsServer = "https://combine.urbanairship.com/";
-        private String remoteDataURL = "https://remote-data.urbanairship.com/";
+        private String deviceUrl;
+        private String analyticsUrl;
+        private String remoteDataUrl;
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
-        private String[] allowedTransports = new String[] { ADM_TRANSPORT, FCM_TRANSPORT };
-        private String[] whitelist = null;
+        private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT));
+        private List<String> whitelist = new ArrayList<>();
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
-        private long backgroundReportingIntervalMS = 15 * 60 * 1000;
+        private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
         private boolean clearNamedUser = false;
-        private int developmentLogLevel = DEFAULT_DEVELOPMENT_LOG_LEVEL;
-        private int productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
+        private Integer developmentLogLevel;
+        private Integer productionLogLevel;
+        private Integer logLevel;
         private boolean autoLaunchApplication = true;
         private boolean channelCreationDelayEnabled = false;
         private boolean channelCaptureEnabled = true;
         private int notificationIcon;
-        public int notificationLargeIcon;
+        private int notificationLargeIcon;
         private int notificationAccentColor = NotificationCompat.COLOR_DEFAULT;
-        private String walletUrl = "https://wallet-api.urbanairship.com";
+        private String walletUrl;
         private String notificationChannel;
         private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
         private Uri appStoreUri;
+        private @Site
+        String site = SITE_US;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -596,6 +633,14 @@ public class AirshipConfigOptions {
                         continue;
                     }
                     switch (name) {
+                        case FIELD_APP_KEY:
+                            this.setAppKey(configParser.getString(name));
+                            break;
+
+                        case FIELD_APP_SECRET:
+                            this.setAppSecret(configParser.getString(name));
+                            break;
+
                         case FIELD_PRODUCTION_APP_KEY:
                             this.setProductionAppKey(configParser.getString(name));
                             break;
@@ -612,16 +657,19 @@ public class AirshipConfigOptions {
                             this.setDevelopmentAppSecret(configParser.getString(name));
                             break;
 
-                        case FIELD_HOST_URL:
-                            this.setHostURL(configParser.getString(name, hostURL));
+                        case FIELD_LEGACY_DEVICE_URL:
+                        case FIELD_DEVICE_URL:
+                            this.setDeviceUrl(configParser.getString(name, deviceUrl));
                             break;
 
-                        case FIELD_ANALYTICS_SERVER:
-                            this.setAnalyticsServer(configParser.getString(name, analyticsServer));
+                        case FIELD_LEGACY_ANALYTICS_SERVER:
+                        case FIELD_ANALYTICS_URL:
+                            this.setAnalyticsUrl(configParser.getString(name, analyticsUrl));
                             break;
 
+                        case FIELD_LEGACY_REMOTE_DATA_URL:
                         case FIELD_REMOTE_DATA_URL:
-                            this.setRemoteDataURL(configParser.getString(name));
+                            this.setRemoteDataUrl(configParser.getString(name, remoteDataUrl));
                             break;
 
                         case FIELD_GCM_SENDER:
@@ -653,11 +701,15 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_DEVELOPMENT_LOG_LEVEL:
-                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(name), developmentLogLevel));
+                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_DEVELOPMENT_LOG_LEVEL));
                             break;
 
                         case FIELD_PRODUCTION_LOG_LEVEL:
-                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(name), productionLogLevel));
+                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            break;
+
+                        case FIELD_LOG_LEVEL:
+                            this.setLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
                             break;
 
                         case FIELD_AUTO_LAUNCH_APPLICATION:
@@ -718,6 +770,9 @@ public class AirshipConfigOptions {
                         case FIELD_APP_STORE_URI:
                             this.setAppStoreUri(Uri.parse(configParser.getString(name)));
                             break;
+
+                        case FIELD_SITE:
+                            this.setSite(parseSite(configParser.getString(name)));
                     }
                 } catch (Exception e) {
                     Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
@@ -747,7 +802,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the default notification Icon.
          * <p>
-         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
+         * See {@link com.urbanairship.push.notifications.AirshipNotificationProvider#setSmallIcon(int)}.
          *
          * @param notificationIcon The notification icon.
          * @return The config options builder.
@@ -761,7 +816,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the large notification Icon.
          * <p>
-         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
+         * See {@link com.urbanairship.push.notifications.AirshipNotificationProvider#setLargeIcon(int)}.
          *
          * @param notificationLargeIcon The large notification icon.
          * @return The config options builder.
@@ -775,7 +830,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the default notification accent color.
          * <p>
-         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setColor(int)}.
+         * See {@link com.urbanairship.push.notifications.AirshipNotificationProvider#setDefaultAccentColor(int)}.
          *
          * @param notificationAccentColor The notification accent color.
          * @return The config options builder.
@@ -783,6 +838,36 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setNotificationAccentColor(@ColorInt int notificationAccentColor) {
             this.notificationAccentColor = notificationAccentColor;
+            return this;
+        }
+
+        /**
+         * Set the default app key.
+         *
+         * The development and production app keys will take precedence if defined depending
+         * on how the inProduction flag is set.
+         *
+         * @param appKey The application's app key.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setAppKey(@Nullable String appKey) {
+            this.appKey = appKey;
+            return this;
+        }
+
+        /**
+         * Set the default app secret.
+         *
+         * The development and production app secret will take precedence if defined depending
+         * on how the inProduction flag is set.
+         *
+         * @param appSecret The application's production app secret.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setAppSecret(@Nullable String appSecret) {
+            this.appSecret = appSecret;
             return this;
         }
 
@@ -835,38 +920,41 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the Airship URL.
+         * Set the device URL.
          *
-         * @param hostURL The Airship URL.
+         * @param deviceUrl The device URL.
          * @return The config options builder.
+         * @hide
          */
-        @NonNull
-        public Builder setHostURL(@NonNull String hostURL) {
-            this.hostURL = hostURL;
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setDeviceUrl(@NonNull String deviceUrl) {
+            this.deviceUrl = deviceUrl;
             return this;
         }
 
         /**
          * Set the analytics server URL.
          *
-         * @param analyticsServer The analytics server URL.
+         * @param analyticsUrl The analytics server URL.
          * @return The config options builder.
+         * @hide
          */
-        @NonNull
-        public Builder setAnalyticsServer(@NonNull String analyticsServer) {
-            this.analyticsServer = analyticsServer;
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setAnalyticsUrl(@NonNull String analyticsUrl) {
+            this.analyticsUrl = analyticsUrl;
             return this;
         }
 
         /**
          * Set the remote data URL.
          *
-         * @param remoteDataURL The remote data URL.
+         * @param remoteDataUrl The remote data URL.
          * @return The config options builder.
+         * @hide
          */
-        @NonNull
-        public Builder setRemoteDataURL(@Nullable String remoteDataURL) {
-            this.remoteDataURL = remoteDataURL;
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setRemoteDataUrl(@Nullable String remoteDataUrl) {
+            this.remoteDataUrl = remoteDataUrl;
             return this;
         }
 
@@ -923,7 +1011,10 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public Builder setAllowedTransports(@Nullable String[] allowedTransports) {
-            this.allowedTransports = allowedTransports;
+            this.allowedTransports.clear();
+            if (allowedTransports != null) {
+                this.allowedTransports.addAll(Arrays.asList(allowedTransports));
+            }
             return this;
         }
 
@@ -937,7 +1028,10 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public Builder setWhitelist(@Nullable String[] whitelist) {
-            this.whitelist = whitelist;
+            this.whitelist.clear();
+            if (whitelist != null) {
+                this.whitelist.addAll(Arrays.asList(whitelist));
+            }
             return this;
         }
 
@@ -1033,6 +1127,21 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Set the default logger level.
+         *
+         * The development and production log level will take precedence if defined depending
+         * on how the inProduction flag is set.
+         *
+         * @param logLevel The logger level.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setLogLevel(int logLevel) {
+            this.logLevel = logLevel;
+            return this;
+        }
+
+        /**
          * Set the flag indicating whether or not to launch the launcher activity when a push notification or push
          * notification button is opened and the application intent receiver did not launch an activity.
          *
@@ -1074,7 +1183,9 @@ public class AirshipConfigOptions {
          *
          * @param walletUrl The Wallet URL.
          * @return The config options builder.
+         * @hide
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @NonNull
         public Builder setWalletUrl(@NonNull String walletUrl) {
             this.walletUrl = walletUrl;
@@ -1124,14 +1235,19 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Builds the config options. Will fail if any of the following preconditions are not met.
-         * <p>
-         * <pre>
-         * 1. If inProduction is <code>false</code>, development app key and secret must be set.
-         * 2. If inProduction is <code>true</code>, production app key and secret must be set.
-         * 3. The analytics URI must not be empty if analytics are enabled.
-         * 4. The host URL must not be empty.
-         * </pre>
+         * Sets the Airship cloud site for data locality.
+         *
+         * @param site The airship cloud site.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setSite(@NonNull @Site String site) {
+            this.site = site;
+            return this;
+        }
+
+        /**
+         * Builds the config options.
          *
          * @return The built config options.
          */
@@ -1139,32 +1255,6 @@ public class AirshipConfigOptions {
         public AirshipConfigOptions build() {
             if (inProduction == null) {
                 inProduction = false;
-            }
-
-            String modeString = inProduction ? "production" : "development";
-
-            String appKey = inProduction ? productionAppKey : developmentAppKey;
-            if (appKey == null || appKey.length() == 0 || appKey.indexOf(' ') > 0) {
-                throw new IllegalArgumentException("AirshipConfigOptions: " + appKey + " is not a valid " + modeString + " app key");
-            }
-
-            String appSecret = inProduction ? productionAppSecret : developmentAppSecret;
-            if (appSecret == null || appSecret.length() == 0 || appSecret.indexOf(' ') > 0) {
-                throw new IllegalArgumentException("AirshipConfigOptions: " + appSecret + " is not a valid " + modeString + " app secret");
-            }
-
-            if (analyticsEnabled && UAStringUtil.isEmpty(analyticsServer)) {
-                throw new IllegalArgumentException("Invalid config - analyticsServer is empty or null.");
-            }
-
-            if (UAStringUtil.isEmpty(hostURL)) {
-                throw new IllegalArgumentException("Invalid config - hostURL is empty or null.");
-            }
-
-            if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
-                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
-            } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
-                Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
             }
 
             if (productionAppKey != null && productionAppKey.equals(developmentAppKey)) {

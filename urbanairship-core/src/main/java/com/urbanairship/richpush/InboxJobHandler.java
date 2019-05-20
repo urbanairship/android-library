@@ -76,7 +76,7 @@ class InboxJobHandler {
     private static final String PAYLOAD_ADD_KEY = "add";
 
     private final RichPushResolver resolver;
-    private final String hostUrl;
+    private final String deviceUrl;
     private final RichPushUser user;
     private final RequestFactory requestFactory;
     private final PreferenceDataStore dataStore;
@@ -94,7 +94,7 @@ class InboxJobHandler {
         this.resolver = resolver;
         this.airship = airship;
         this.user = airship.getInbox().getUser();
-        this.hostUrl = airship.getAirshipConfigOptions().hostURL;
+        this.deviceUrl = airship.getAirshipConfigOptions().deviceUrl;
     }
 
     /**
@@ -358,7 +358,7 @@ class InboxJobHandler {
         List<String> urls = new ArrayList<>();
         String userId = this.user.getId();
         for (String id : ids) {
-            String url = hostUrl + String.format(MESSAGE_URL, userId, id);
+            String url = deviceUrl + String.format(MESSAGE_URL, userId, id);
             urls.add(url);
         }
 
@@ -390,7 +390,7 @@ class InboxJobHandler {
         String payload = createNewUserPayload(channelId);
         Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", userCreationURL)
-                                          .setCredentials(airship.getAirshipConfigOptions().getAppKey(), airship.getAirshipConfigOptions().getAppSecret())
+                                          .setCredentials(airship.getAirshipConfigOptions().appKey, airship.getAirshipConfigOptions().appSecret)
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
@@ -513,8 +513,7 @@ class InboxJobHandler {
      * @return The URL or null if an error occurred.
      */
     private URL getUserURL(String path, Object... args) {
-        String hostURL = airship.getAirshipConfigOptions().hostURL;
-        String urlString = String.format(hostURL + path, args);
+        String urlString = String.format(deviceUrl + path, args);
         try {
             return new URL(urlString);
         } catch (MalformedURLException e) {
