@@ -51,5 +51,12 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
     implementation "com.android.support:design:$rootProject.supportLibVersion"
     implementation "com.android.support:support-vector-drawable:$rootProject.supportLibVersion"
+    implementation 'com.android.support:preference-v7:28.0.0'
+
+    // Urban Airship Advertising ID tracking
+    implementation project(':urbanairship-ads-identifier')
+
+    // Urban Airship Preferences
+    implementation project(':urbanairship-preference')
 }
 

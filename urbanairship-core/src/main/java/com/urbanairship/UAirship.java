@@ -123,6 +123,7 @@ public class UAirship {
     Analytics analytics;
     ApplicationMetrics applicationMetrics;
     PreferenceDataStore preferenceDataStore;
+    PushProvider pushProvider;
     PushManager pushManager;
     RichPushInbox inbox;
     UALocationManager locationManager;
@@ -643,10 +644,10 @@ public class UAirship {
         PushProviders providers = PushProviders.load(application, airshipConfigOptions);
 
         this.platform = determinePlatform(providers);
-        PushProvider pushProvider = determinePushProvider(platform, providers);
+        this.pushProvider = determinePushProvider(platform, providers);
 
-        if (pushProvider != null) {
-            Logger.info("Using push provider: %s", pushProvider);
+        if (this.pushProvider != null) {
+            Logger.info("Using push provider: %s", this.pushProvider);
         }
 
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -682,7 +683,7 @@ public class UAirship {
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
         tagGroupRegistrar.migrateKeys();
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, tagGroupRegistrar);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, this.pushProvider, tagGroupRegistrar);
         components.add(this.pushManager);
 
         this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar);

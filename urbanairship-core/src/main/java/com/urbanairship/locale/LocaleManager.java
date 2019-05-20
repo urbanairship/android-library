@@ -16,6 +16,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Locale manager. Handles listening for locale changes.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LocaleManager {

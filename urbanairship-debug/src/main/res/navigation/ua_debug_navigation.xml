@@ -15,6 +15,21 @@
             android:id="@+id/action_debugFragment_to_pushListFragment"
             app:destination="@id/pushListFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/deviceInfoFragment"
+        android:name="com.urbanairship.debug.deviceinfo.DeviceInfoFragment"
+        android:label="@string/ua_device_info_title">
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_tagsFragment"
+            app:destination="@id/deviceInfoTagsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/deviceInfoTagsFragment"
+        android:name="com.urbanairship.debug.deviceinfo.DeviceInfoTagsFragment"
+        android:label="@string/ua_add_tags_info_title" />
+
     <fragment
         android:id="@+id/eventListFragment"
         android:name="com.urbanairship.debug.event.EventListFragment"

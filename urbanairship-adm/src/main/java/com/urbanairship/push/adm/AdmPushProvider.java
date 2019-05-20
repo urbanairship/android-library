@@ -109,7 +109,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
     @NonNull
     @Override
     public String toString() {
-        return "Adm Push Provider";
+        return "ADM Push Provider";
     }
 
     @NonNull

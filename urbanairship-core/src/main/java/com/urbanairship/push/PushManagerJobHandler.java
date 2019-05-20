@@ -260,6 +260,11 @@ class PushManagerJobHandler {
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             Logger.debug("Channel registration succeeded with status: %s", response.getStatus());
 
+            if (!UAStringUtil.isEmpty(channelId)) {
+                // Set the last registration payload and time then notify registration succeeded
+                pushManager.onChannelUpdated(channelId);
+            }
+
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
 

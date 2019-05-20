@@ -1051,8 +1051,22 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets the channel identifier.
-     * Also update the user.
+     * Sets the channel identifier on update.
+     * Also updates the user.
+     *
+     * @param channelId The channel ID as a string.
+     */
+    void onChannelUpdated(@NonNull String channelId) {
+        preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
+
+        for (RegistrationListener listener : registrationListeners) {
+            listener.onChannelUpdated(channelId);
+        }
+    }
+
+    /**
+     * Sets the channel identifier on create.
+     * Also updates the user.
      *
      * @param channelId The channel ID as a string.
      */
@@ -1158,10 +1172,13 @@ public class PushManager extends AirshipComponent {
     /**
      * Gets the push provider.
      *
+     * @hide
+     *
      * @return The available push provider.
      */
     @Nullable
-    PushProvider getPushProvider() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public PushProvider getPushProvider() {
         return pushProvider;
     }
 

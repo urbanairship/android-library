@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <android.support.v7.preference.PreferenceCategory app:title="@string/ua_push_info_category_title">
+
+        <com.urbanairship.preference.PushEnablePreference
+            app:key="push_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_info_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushOptInPreference
+            app:key="push_opt_in_status_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_opt_in_status" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.NotificationOptInPreference
+            app:key="notification_opt_in_preference"
+            app:persistent="false"
+            app:title="@string/ua_notification_opt_in_status" />
+
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushProviderPreference
+            app:key="push_provider_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_provider" />
+
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory android:title="@string/ua_identifiers_category_title">
+
+        <com.urbanairship.debug.deviceinfo.preferences.ChannelPreference
+            app:persistent="false"
+            app:title="@string/ua_channel_id_info_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushTokenPreference
+            app:key="push_token_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_token" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.UserPreference
+            app:key="user_id_preference"
+            app:persistent="false"
+            app:title="@string/ua_user_id" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.NamedUserPreference
+            app:key="named user"
+            app:persistent="false"
+            app:title="@string/ua_set_named_user_info_title" />
+
+        <android.support.v7.preference.Preference
+            app:key="tags"
+            app:persistent="false"
+            app:title="@string/ua_add_tags_info_title" />
+
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory android:title="@string/ua_analytics_info_category_title">
+
+        <com.urbanairship.preference.AnalyticsEnablePreference
+            app:key="analytics_preference"
+            app:persistent="false"
+            app:title="@string/ua_analytics_info_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableAdvertisingIdPreference
+            app:persistent="false"
+            app:title="@string/ua_analytics_ad_id_info_title" />
+
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory app:title="@string/ua_location_info_category_title">
+
+        <com.urbanairship.preference.LocationUpdatesEnabledPreference
+            app:key="location_preference"
+            app:persistent="false"
+            app:title="@string/ua_location_info_location_enabled" />
+
+        <com.urbanairship.preference.LocationBackgroundUpdatesAllowedPreference
+            app:dependency="location_preference"
+            app:key="background_location_preference"
+            app:persistent="false"
+            app:title="@string/ua_background_location_info_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.LocalePreference
+            app:key="locale_preference"
+            app:persistent="false"
+            app:title="@string/ua_location_info_locale" />
+
+    </android.support.v7.preference.PreferenceCategory>
+
+</android.support.v7.preference.PreferenceScreen>

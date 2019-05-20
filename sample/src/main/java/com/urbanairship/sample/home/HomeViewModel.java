@@ -27,6 +27,11 @@ public class HomeViewModel extends AndroidViewModel {
         }
 
         @Override
+        public void onChannelUpdated(@NonNull String channelId) {
+            new Handler(Looper.getMainLooper()).post(() -> refreshChannel());
+        }
+
+        @Override
         public void onPushTokenUpdated(@NonNull String token) {}
     };
 

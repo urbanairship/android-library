@@ -17,6 +17,14 @@ public interface RegistrationListener {
     void onChannelCreated(@NonNull String channelId);
 
     /**
+     * Called when a channel ID is updated.
+     *
+     * @param channelId The channel ID.
+     */
+    @WorkerThread
+    void onChannelUpdated(@NonNull String channelId);
+
+    /**
      * Called when a token is updated.
      *
      * @param token The push token.
