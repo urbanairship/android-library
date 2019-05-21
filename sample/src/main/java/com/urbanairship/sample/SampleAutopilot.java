@@ -49,6 +49,7 @@ public class SampleAutopilot extends Autopilot {
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             UAirship.getApplicationContext().startActivity(intent);
+            return true;
         });
 
         AirshipListener airshipListener = new AirshipListener();

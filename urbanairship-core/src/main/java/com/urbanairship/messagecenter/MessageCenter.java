@@ -49,8 +49,9 @@ public class MessageCenter extends AirshipComponent {
          * Called when the message center needs to be displayed.
          *
          * @param messageId The optional message Id.
+         * @return {@code true} if the inbox was shown, otherwise {@code false}.
          */
-        void onShowMessageCenter(@Nullable String messageId);
+        boolean onShowMessageCenter(@Nullable String messageId);
 
     }
 
@@ -98,61 +99,60 @@ public class MessageCenter extends AirshipComponent {
     }
 
     /**
-     * Called to show the message center. If the {@link OnShowMessageCenterListener} is set,
-     * the listener will be called to show the message center. Otherwise an implicit intent
-     * with the intent action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} will be attempted first.
-     * If the intent fails it will fall back to the {@link MessageCenterActivity}.
+     * Called to show the message center. See {@link #showMessageCenter(String)} for more details.
      */
     public void showMessageCenter() {
-        OnShowMessageCenterListener listener = this.onShowMessageCenterListener;
-        if (listener != null) {
-            listener.onShowMessageCenter(null);
-        } else {
-            Intent intent = new Intent(VIEW_MESSAGE_CENTER_INTENT_ACTION)
-                    .setPackage(getContext().getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
-                // Fallback to our MessageCenterActivity
-                intent.setClass(getContext(), MessageCenterActivity.class);
-            }
-
-            getContext().startActivity(intent);
-        }
+        showMessageCenter(null);
     }
 
     /**
-     * Called to show the message center for a specific message. If the {@link OnShowMessageCenterListener}
-     * is set, the listener will be called to show the message center. Otherwise an implicit intent
-     * with the intent action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} with the message Id
-     * supplied as the data in the form of {@code message:<MESSAGE_ID>} will be attempted first.
-     * If the intent fails, then the action {@code com.urbanairship.VIEW_MESSAGE_INTENT_ACTION} will
-     * be tried. Finally, it will fall back to the {@link MessageActivity}.
+     * Called to show the message center for a specific message.
+     *
+     * To show the message center, the SDK will try the following:
+     * <pre>
+     * - The optional {@link OnShowMessageCenterListener}.
+     * - An implicit intent with {@code com.urbanairship.VIEW_RICH_PUSH_INBOX}.
+     * - If the message ID is provided, an implicit intent with {@code com.urbanairship.VIEW_MESSAGE_INTENT_ACTION}.
+     * - Finally it will fallback to the provided {@link MessageCenterActivity}.
+     * </pre>
+     *
+     * Implicit intents will have the message ID encoded as the intent's data with the format @{code message:<MESSAGE_ID>}.
+     *
+     * @param messageId The message ID.
      */
-    public void showMessageCenter(@NonNull String messageId) {
+    public void showMessageCenter(@Nullable String messageId) {
+        // Try the listener
         OnShowMessageCenterListener listener = this.onShowMessageCenterListener;
-        if (listener != null) {
-            listener.onShowMessageCenter(messageId);
-        } else {
-            Intent intent = new Intent(VIEW_MESSAGE_INTENT_ACTION)
-                    .setPackage(getContext().getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    .setData(Uri.fromParts(MESSAGE_DATA_SCHEME, messageId, null));
+        if (listener != null && listener.onShowMessageCenter(messageId)) {
+            return;
+        }
 
-            if (intent.resolveActivity(getContext().getPackageManager()) != null) {
+        // Try the VIEW_MESSAGE_CENTER_INTENT_ACTION intent
+        Intent intent = new Intent(VIEW_MESSAGE_CENTER_INTENT_ACTION)
+                .setPackage(getContext().getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        if (messageId != null) {
+            intent.setData(Uri.fromParts(MESSAGE_DATA_SCHEME, messageId, null));
+        }
+
+        if (intent.resolveActivity(getContext().getPackageManager()) != null) {
+            getContext().startActivity(intent);
+            return;
+        }
+
+        // Try the VIEW_MESSAGE_INTENT_ACTION if the message ID is available
+        if (messageId != null) {
+            intent.setAction(VIEW_MESSAGE_INTENT_ACTION);
+            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
                 getContext().startActivity(intent);
                 return;
             }
-
-            intent.setAction(VIEW_MESSAGE_INTENT_ACTION);
-
-            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
-                // Fallback to our MessageCenterActivity
-                intent.setClass(getContext(), MessageCenterActivity.class);
-            }
-
-            getContext().startActivity(intent);
         }
+
+        // Fallback to the message center activity
+        intent.setClass(getContext(), MessageCenterActivity.class);
+        getContext().startActivity(intent);
     }
 
     /**

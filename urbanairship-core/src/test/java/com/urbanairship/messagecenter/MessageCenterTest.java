@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 /**
@@ -44,12 +45,27 @@ public class MessageCenterTest extends BaseTestCase {
     @Test
     public void testShowMessageCenterListener() {
         MessageCenter.OnShowMessageCenterListener listener = mock(MessageCenter.OnShowMessageCenterListener.class);
+        when(listener.onShowMessageCenter(null)).thenReturn(true);
         this.messageCenter.setOnShowMessageCenterListener(listener);
 
         this.messageCenter.showMessageCenter();
         verify(listener).onShowMessageCenter(null);
 
         assertNull(shadowApplication.getNextStartedActivity());
+    }
+
+    @Test
+    public void testShowMessageCenterListenerDefaultBehavior() {
+        MessageCenter.OnShowMessageCenterListener listener = mock(MessageCenter.OnShowMessageCenterListener.class);
+        when(listener.onShowMessageCenter(null)).thenReturn(false);
+        this.messageCenter.setOnShowMessageCenterListener(listener);
+
+        this.messageCenter.showMessageCenter();
+
+        Intent intent = shadowApplication.getNextStartedActivity();
+
+        assertEquals(MessageCenter.VIEW_MESSAGE_CENTER_INTENT_ACTION, intent.getAction());
+        assertEquals(getApplication().getPackageName(), intent.getPackage());
     }
 
     @Test
@@ -66,13 +82,31 @@ public class MessageCenterTest extends BaseTestCase {
     @Test
     public void testShowMessageListener() {
         MessageCenter.OnShowMessageCenterListener listener = mock(MessageCenter.OnShowMessageCenterListener.class);
+        when(listener.onShowMessageCenter("id")).thenReturn(true);
         this.messageCenter.setOnShowMessageCenterListener(listener);
+
 
         this.messageCenter.showMessageCenter("id");
         verify(listener).onShowMessageCenter("id");
 
         assertNull(shadowApplication.getNextStartedActivity());
     }
+
+    @Test
+    public void testShowMessageListenerDefaultBehavior() {
+        MessageCenter.OnShowMessageCenterListener listener = mock(MessageCenter.OnShowMessageCenterListener.class);
+        when(listener.onShowMessageCenter("id")).thenReturn(false);
+        this.messageCenter.setOnShowMessageCenterListener(listener);
+
+        this.messageCenter.showMessageCenter("id");
+
+        Intent intent = shadowApplication.getNextStartedActivity();
+
+        assertEquals(MessageCenter.VIEW_MESSAGE_INTENT_ACTION, intent.getAction());
+        assertEquals("message:id", intent.getData().toString());
+        assertEquals(getApplication().getPackageName(), intent.getPackage());
+    }
+
 
     @Test
     public void testParseMessageId() {
