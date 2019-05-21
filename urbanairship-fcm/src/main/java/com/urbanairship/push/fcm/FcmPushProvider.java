@@ -17,6 +17,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -117,7 +118,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @Nullable
     private String getSenderId(@NonNull FirebaseApp app) {
         String senderId = UAirship.shared().getAirshipConfigOptions().fcmSenderId;
-        if (senderId != null) {
+        if (!UAStringUtil.isEmpty(senderId)) {
             return senderId;
         }
 

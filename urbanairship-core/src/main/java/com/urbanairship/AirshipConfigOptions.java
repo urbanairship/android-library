@@ -291,31 +291,31 @@ public class AirshipConfigOptions {
 
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
-            this.appKey = first(builder.productionAppKey, builder.appKey);
-            this.appSecret = first(builder.productionAppSecret, builder.appSecret);
-            this.fcmSenderId = first(builder.productionFcmSenderId, builder.fcmSenderId);
+            this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
+            this.appSecret = firstOrEmpty(builder.productionAppSecret, builder.appSecret);
+            this.fcmSenderId = firstOrNull(builder.productionFcmSenderId, builder.fcmSenderId);
             this.logLevel = first(builder.productionLogLevel, builder.logLevel, DEFAULT_PRODUCTION_LOG_LEVEL);
         } else {
-            this.appKey = first(builder.developmentAppKey, builder.appKey);
-            this.appSecret = first(builder.developmentAppSecret, builder.appSecret);
-            this.fcmSenderId = first(builder.developmentFcmSenderId, builder.fcmSenderId);
+            this.appKey = firstOrEmpty(builder.developmentAppKey, builder.appKey);
+            this.appSecret = firstOrEmpty(builder.developmentAppSecret, builder.appSecret);
+            this.fcmSenderId = firstOrNull(builder.developmentFcmSenderId, builder.fcmSenderId);
             this.logLevel = first(builder.developmentLogLevel, builder.logLevel, DEFAULT_DEVELOPMENT_LOG_LEVEL);
         }
 
         switch (builder.site) {
             case SITE_EU:
-                this.deviceUrl = first(builder.deviceUrl, EU_DEVICE_URL);
-                this.analyticsUrl = first(builder.analyticsUrl, EU_ANALYTICS_URL);
-                this.remoteDataUrl = first(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
-                this.walletUrl = first(builder.walletUrl, EU_WALLET_URL);
+                this.deviceUrl = firstOrEmpty(builder.deviceUrl, EU_DEVICE_URL);
+                this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, EU_ANALYTICS_URL);
+                this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
+                this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
                 break;
 
             case SITE_US:
             default:
-                this.deviceUrl = first(builder.deviceUrl, US_DEVICE_URL);
-                this.analyticsUrl = first(builder.analyticsUrl, US_ANALYTICS_URL);
-                this.remoteDataUrl = first(builder.remoteDataUrl, US_REMOTE_DATA_URL);
-                this.walletUrl = first(builder.walletUrl, US_WALLET_URL);
+                this.deviceUrl = firstOrEmpty(builder.deviceUrl, US_DEVICE_URL);
+                this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
+                this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
+                this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
                 break;
         }
 
@@ -391,13 +391,29 @@ public class AirshipConfigOptions {
     }
 
     /**
-     * Returns the first nonnull String or ""
+     * Returns the first String that is not empty or null.
      *
      * @param args The Strings.
-     * @return The first nonnull String or "".
+     * @return The first String that is not empty or null.
+     */
+    @Nullable
+    private static String firstOrNull(@NonNull String... args) {
+        for (String arg : args) {
+            if (!UAStringUtil.isEmpty(arg)) {
+                return arg;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the first String that is not empty or an empty String.
+     *
+     * @param args The Strings.
+     * @return The first String that is not empty or an empty String.
      */
     @NonNull
-    private static String first(String... args) {
+    private static String firstOrEmpty(@NonNull String... args) {
         for (String arg : args) {
             if (!UAStringUtil.isEmpty(arg)) {
                 return arg;
@@ -405,6 +421,7 @@ public class AirshipConfigOptions {
         }
         return "";
     }
+
 
     /**
      * Returns the first nonnull Integer or 0.
