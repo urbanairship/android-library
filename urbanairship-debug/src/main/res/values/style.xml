@@ -2,9 +2,9 @@
 <resources>
 
     <style name="AirshipDebug" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimaryDark">#004964</item>
-        <item name="colorPrimary">#00698f</item>
-        <item name="colorAccent">#eaaa00</item>
+        <item name="colorPrimaryDark">#004bff</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorAccent">#ff0b48</item>
     </style>
 
     <style name="AirshipDebug.Toolbar">
