@@ -9,6 +9,7 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -278,7 +279,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
     private void onActivityResumed(@NonNull Activity activity) {
         BannerView currentView = getCurrentView();
 
-        if (currentView == null || !currentView.isAttachedToWindow()) {
+        if (currentView == null || ViewCompat.isAttachedToWindow(currentView)) {
             display(activity);
             return;
         }

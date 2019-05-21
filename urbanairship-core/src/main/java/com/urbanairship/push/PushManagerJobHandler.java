@@ -205,7 +205,8 @@ class PushManagerJobHandler {
             }
         }
 
-        if (!UAStringUtil.equals(token, currentToken)) {
+
+        if (token != null && !UAStringUtil.equals(token, currentToken)) {
             Logger.info("PushManagerJobHandler - Push registration updated.");
             pushManager.onPushTokenUpdated(token);
         }

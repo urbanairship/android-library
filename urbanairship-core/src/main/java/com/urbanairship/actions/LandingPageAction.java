@@ -196,6 +196,7 @@ public class LandingPageAction extends Action {
                 Uri uri = parseUri(arguments);
 
                 return uri != null;
+            case Action.SITUATION_PUSH_RECEIVED:
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             default:
                 return false;

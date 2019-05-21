@@ -53,11 +53,11 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @return the element at the specified location.
      * @throws IndexOutOfBoundsException if {@code location < 0 || location >= size()}
      */
-    @Nullable
+    @NonNull
     public JsonValue get(int location) {
         return list.get(location);
     }
-
+    
     /**
      * Searches this {@code List} for the specified object and returns the index of the
      * first occurrence.

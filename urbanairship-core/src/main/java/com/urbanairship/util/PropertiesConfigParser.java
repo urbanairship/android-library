@@ -143,7 +143,12 @@ public class PropertiesConfigParser implements ConfigParser {
     @Nullable
     @Override
     public String[] getStringArray(@NonNull String name) {
-        return propertyValues.get(name).split("[, ]+");
+        String value = propertyValues.get(name);
+        if (value == null) {
+            return new String[0];
+        }
+
+        return value.split("[, ]+");
     }
 
     @Override

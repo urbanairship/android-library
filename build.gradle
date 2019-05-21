@@ -10,10 +10,10 @@ buildscript {
         // Android SDK Versions
         compileSdkVersion = 28
         targetSdkVersion = 28
-        minSdkVersion = 19
+        minSdkVersion = 16
 
         // Gradle plugins
-        gradlePluginVersion = '3.3.2'
+        gradlePluginVersion = '3.4.0'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.2.0'
 
@@ -21,9 +21,9 @@ buildscript {
         supportLibVersion = '28.0.0'
         playServicesAdsIdentifierVersion = '16.0.0'
         playServicesLocationVersion = '16.0.0'
-        playServicesBaseVersion = '16.0.1'
-        firebaseFcmVersion = '17.3.4'
-        kotlinVersion = '1.3.20'
+        playServicesBaseVersion = '16.1.0'
+        firebaseFcmVersion = '18.0.0'
+        kotlinVersion = '1.3.30'
         kotlinCoroutinesVersion = '1.0.0'
         roomVersion = '1.1.1'
         constraintLayoutVersion = '1.1.3'
@@ -34,7 +34,7 @@ buildscript {
         // Test Dependencies
         junitVersion = '4.12'
         mockitoVersion = '2.25.0'
-        robolectricVersion = '4.2'
+        robolectricVersion = '4.2.1'
 
         // Doc Dependencies
         doclavaVersion = '1.0.6'

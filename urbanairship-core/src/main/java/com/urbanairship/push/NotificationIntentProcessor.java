@@ -152,12 +152,14 @@ class NotificationIntentProcessor {
     private void onNotificationDismissed() {
         Logger.info("Notification dismissed: %s", notificationInfo);
 
-        PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
-        if (deleteIntent != null) {
-            try {
-                deleteIntent.send();
-            } catch (PendingIntent.CanceledException e) {
-                Logger.debug("Failed to send notification's deleteIntent, already canceled.");
+        if (intent.getExtras() != null) {
+            PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
+            if (deleteIntent != null) {
+                try {
+                    deleteIntent.send();
+                } catch (PendingIntent.CanceledException e) {
+                    Logger.debug("Failed to send notification's deleteIntent, already canceled.");
+                }
             }
         }
 
@@ -171,14 +173,17 @@ class NotificationIntentProcessor {
      * Helper method that attempts to launch the application's launch intent.
      */
     private void launchApplication() {
-        PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
-        if (contentIntent != null) {
-            try {
-                contentIntent.send();
-            } catch (PendingIntent.CanceledException e) {
-                Logger.debug("Failed to send notification's contentIntent, already canceled.");
+
+        if (intent.getExtras() != null) {
+            PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
+            if (contentIntent != null) {
+                try {
+                    contentIntent.send();
+                } catch (PendingIntent.CanceledException e) {
+                    Logger.debug("Failed to send notification's contentIntent, already canceled.");
+                }
+                return;
             }
-            return;
         }
 
         AirshipConfigOptions options = airship.getAirshipConfigOptions();

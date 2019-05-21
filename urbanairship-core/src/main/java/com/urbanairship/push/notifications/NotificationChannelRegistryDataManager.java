@@ -93,9 +93,13 @@ public class NotificationChannelRegistryDataManager extends DataManager {
     public Set<NotificationChannelCompat> getChannels() {
         Cursor cursor = query(TABLE_NAME, null, null, null, null);
 
-        cursor.moveToFirst();
-
         Set<NotificationChannelCompat> channels = new HashSet<>();
+
+        if (cursor == null) {
+            return channels;
+        }
+
+        cursor.moveToFirst();
 
         while (!cursor.isAfterLast()) {
             NotificationChannelCompat channelCompat = getChannel(cursor);

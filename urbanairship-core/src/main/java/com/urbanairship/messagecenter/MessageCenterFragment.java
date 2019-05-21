@@ -169,7 +169,7 @@ public class MessageCenterFragment extends Fragment {
 
             attributes.recycle();
 
-            if (messageListFragment != null && currentMessageId != null) {
+            if (currentMessageId != null) {
                 messageListFragment.setCurrentMessage(currentMessageId);
             }
         } else {

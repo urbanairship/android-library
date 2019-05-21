@@ -8,9 +8,6 @@ import android.support.annotation.NonNull;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import com.urbanairship.PendingResult;
-import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.PushProviderBridge;
 
 import java.util.concurrent.Future;
 
@@ -22,13 +19,13 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     @SuppressLint("UnknownNullness")
     public void onMessageReceived(RemoteMessage message) {
-        processMessageSync(getApplicationContext(), message);
+        AirshipFirebaseIntegration.processMessageSync(getApplicationContext(), message);
     }
 
     @Override
     @SuppressLint("UnknownNullness")
     public void onNewToken(String token) {
-        processNewToken(getApplicationContext());
+        AirshipFirebaseIntegration.processNewToken(getApplicationContext());
     }
 
     /**
@@ -39,19 +36,12 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
      * @param context The application context.
      * @param message The message.
      * @return A future.
+     * @deprecated Use {@link AirshipFirebaseIntegration#processMessage(Context, RemoteMessage)} instead.
      */
+    @Deprecated
     @NonNull
     public static Future<Void> processMessage(@NonNull Context context, @NonNull RemoteMessage message) {
-        final PendingResult<Void> pendingResult = new PendingResult<>();
-        PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
-                          .execute(context, new Runnable() {
-                              @Override
-                              public void run() {
-                                  pendingResult.setResult(null);
-                              }
-                          });
-
-        return pendingResult;
+        return AirshipFirebaseIntegration.processMessage(context, message);
     }
 
     /**
@@ -59,19 +49,11 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
      *
      * @param context The application context.
      * @param message The message.
+     * @deprecated Use {@link AirshipFirebaseIntegration#processMessageSync(Context, RemoteMessage)} instead.
      */
+    @Deprecated
     public static void processMessageSync(@NonNull Context context, @NonNull RemoteMessage message) {
-        PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
-                          .executeSync(context);
-    }
-
-    /**
-     * Called to handle new tokens.
-     *
-     * @param context The application context.
-     */
-    public static void processNewToken(@NonNull Context context) {
-        PushProviderBridge.requestRegistrationUpdate(context);
+        AirshipFirebaseIntegration.processMessageSync(context, message);
     }
 
 }

@@ -16,6 +16,7 @@ import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.sample.R;
 
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
@@ -39,10 +40,14 @@ public class InboxMessageFragment extends MessageFragment {
         NavController navController =  Navigation.findNavController(view);
 
         RichPushMessage message = UAirship.shared().getInbox().getMessage(getMessageId());
-        if (message != null) {
-            navController.getCurrentDestination().setLabel(message.getTitle());
-        } else {
-            navController.getCurrentDestination().setLabel(view.getContext().getString(R.string.message));
+
+        NavDestination navDestination = navController.getCurrentDestination();
+        if (navDestination != null) {
+            if (message != null) {
+                navController.getCurrentDestination().setLabel(message.getTitle());
+            } else {
+                navController.getCurrentDestination().setLabel(view.getContext().getString(R.string.message));
+            }
         }
 
         NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));

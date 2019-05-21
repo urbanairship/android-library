@@ -288,9 +288,7 @@ public class Whitelist {
             String character = String.valueOf(c);
 
             if (!escapeWildCards && character.equals("*")) {
-                if (character.equals("*")) {
-                    escapedInput.append(".");
-                }
+                escapedInput.append(".");
             } else if (REGEX_SPECIAL_CHARACTERS.contains(character)) {
                 escapedInput.append("\\");
             }

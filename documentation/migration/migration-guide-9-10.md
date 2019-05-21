@@ -384,7 +384,7 @@ can be specified in the composer and API to control each notification behavior s
 
 #### FCM Provider Changes
 
-`AirshipFirebaseInstanceIdService` was deprecated due to `FirebaseInstanceIdService` being deprecated. Use `AirshipFirebaseMessagingService` or `AirshipFirebaseMessagingService.processNewToken(Context)` instead.
+`AirshipFirebaseInstanceIdService` was deprecated due to `FirebaseInstanceIdService` being deprecated and removed. Use `AirshipFirebaseMessagingService` or `AirshipFirebaseIntegration.processNewToken(Context)` instead.
 
 ### From JSON Method Normalization
 

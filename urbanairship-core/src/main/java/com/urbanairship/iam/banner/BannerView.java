@@ -276,7 +276,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     void applyRootWindowInsets() {
         if (!applyRootWindowInsets) {
             this.applyRootWindowInsets = true;
-            if (subView != null && subView.isAttachedToWindow()) {
+            if (subView != null && ViewCompat.isAttachedToWindow(subView)) {
                 applyRootWindowInsets(subView);
             }
         }
@@ -415,6 +415,10 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      * @param view The view.
      */
     private void applyRootWindowInsets(@NonNull View view) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return;
+        }
+
         boolean isNavigationTranslucent, isStatusTranslucent;
         TypedArray a = view.getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
         isNavigationTranslucent = a.getBoolean(0, false);

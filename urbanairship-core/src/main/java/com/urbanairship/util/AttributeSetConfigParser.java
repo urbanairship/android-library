@@ -94,7 +94,7 @@ public class AttributeSetConfigParser implements ConfigParser {
 
         String resourceName = attributeSet.getAttributeValue(null, name);
         if (resourceName != null) {
-            return context.getResources().getIdentifier(getString(null, name), "drawable", context.getPackageName());
+            return context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
         }
 
         return 0;

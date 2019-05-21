@@ -68,6 +68,10 @@ public class OverlayRichPushMessageAction extends LandingPageAction {
             }
         }
 
+        if (UAStringUtil.isEmpty(messageId)) {
+            return null;
+        }
+
         if (messageId.toLowerCase().startsWith(MessageCenter.MESSAGE_DATA_SCHEME)) {
             return Uri.parse(messageId);
         }
