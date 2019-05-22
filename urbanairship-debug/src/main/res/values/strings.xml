@@ -62,6 +62,7 @@
     <string name="ua_toast_clipboard">Copied to clipboard</string>
 
     <string name="ua_current_tags">Current Tags</string>
+    <string name="ua_new_tag_hint">New Tag</string>
 
     <string name="ua_device_info_title">Device Info</string>
     <string name="ua_device_info_view_description">View device info and settings</string>

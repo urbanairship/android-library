@@ -33,7 +33,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
-                android:hint="New Tag"
+                android:hint="@string/ua_new_tag_hint"
                 android:inputType="text"
                 android:maxLines="1"
                 app:layout_constraintEnd_toStartOf="@+id/add_tag_button"
@@ -54,7 +54,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/add_tag_text"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_add" />
+                app:srcCompat="@drawable/ua_ic_add" />
 
 
             <TextView
@@ -64,7 +64,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginLeft="16dp"
                 android:layout_marginTop="16dp"
-                android:text="@string/current_tags"
+                android:text="@string/ua_current_tags"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/add_tag_text" />
