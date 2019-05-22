@@ -16,7 +16,7 @@ We accept pull requests! If you would like to submit a pull request, please fill
 One of our engineers will verify receipt of the agreement before approving your pull request.
 
 ## Requirements
-- minSdkVersion 16+
+- minSdkVersion 16
 - compileSdkVersion 28
 
 ## Quickstart
@@ -28,7 +28,7 @@ One of our engineers will verify receipt of the agreement before approving your 
      ...
 
      // Airship SDK - FCM
-     implementation 'com.urbanairship.android:urbanairship-fcm:9.6.0'
+     implementation 'com.urbanairship.android:urbanairship-fcm:10.0.0'
    }
 ```
 
@@ -69,7 +69,7 @@ One of our engineers will verify receipt of the agreement before approving your 
 ## Sample Application
 
 A [sample](sample) application is available that showcases the majority of the features offered by
-the Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
+the Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properties.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
 ## Sample Test
