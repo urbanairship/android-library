@@ -3,6 +3,61 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.0.0 - May 22, 2019
+=============================
+Major release that addresses new background restrictions with Android Q,
+includes enhancements to In-App Automation, and adds notification channel
+compatibility to simplify notification channel settings across Android versions.
+
+[9.x to 10.x Migration Guide](https://github.com/urbanairship/android-library/tree/master/documentation/migration/migration-guide-9-10.md)
+
+Changes
+-------
+
+### Packages
+- Removed `urbanairship-sdk` and `urbanairship-gcm`. Apps should use `urbanairship-fcm`
+  and/or `urbanairship-adm` instead.
+- Preferences (com.urbanairhsip.preferences) have been moved into their own
+  module `urbanairship-preferences`. The new
+  preferences use the preference support library instead of the deprecated system preferences.
+- Advertising ID tracking has been moved into its own module `urbanairship-ads-identifier`.
+- Updated to Firebase Messaging 18.0.
+
+### Notifications
+- NotificationFactory has been deprecated and replaced with a more flexible
+  NotificationProvider interface.
+- AirshipReceiver has been removed and replaced with 3 new listeners on the PushManager
+  class: NotificationListener, PushListener, and RegistrationListener.
+- The notification's push message is now available in the launched activity intent.
+- Added notification channel compat that works on Android 16 (Jellybean) and newer devices.
+
+### In-App Automation
+- Added support for localized messages.
+- Button resolution events can be generated from HTML messages via the native bridge.
+- Display coordinator architecture for more flexible custom display management.
+- There is a new, app-extendable, mechanism for caching the message's assets.
+- Banner messages now use a view group rather than a fragment, as system fragments were
+  deprecated in Android P.
+- Landing Pages are now scheduled as an HTML IAA.
+
+### Other
+- Updated APIs for better kotlin interop support.
+- Apps can now provide their own image loader.
+- Added `DeepLinkListener` to make it easier to customize deep link handling.
+- Removed styleable attribute `urbanAirshipFontPath`. Applications should use the
+  Android xml font support instead.
+- Builder factory methods and from JSON methods have been normalized throughout the SDK.
+- Added `OnShowMessageCenterListener` that can be set on the Message Center to make it
+  easier to perform custom message center actions.
+
+### Bug fixes
+- Fixed incorrect font in Message Center Listing.
+- Fixed an error when loading the favicon in Message Center.
+- Fixed potential ANR if notifications actions take longer than 10 seconds to complete.
+- Fixed potential resource-not-found exception on app update for legacy in-app messages
+  when using messages with button drawables.
+
+
 Version 9.7.1 - March 14, 2019
 ==============================
 
