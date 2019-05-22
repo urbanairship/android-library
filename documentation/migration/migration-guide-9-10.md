@@ -120,21 +120,22 @@ void onAirshipReady(@NonNull UAirship airship) {
 *RegistrationListener*
 
 The registration listener contains only the useful methods from `AirshipReceiver`. The
-listener will only be called when a channel is created and the push token is updated. Apps
-no longer have the ability to get a call whenever the channel is updated or failed to update.
+listener will be called when a channel is created or updated, and when the push token is updated. Apps no longer have the ability to get a call when the channel failed to update.
 
 ```java
 // AirshipReceiver - 9.x
 @MainThread
-void onChannelUpdated(@NonNull Context context, @NonNull String channelId);
-@MainThread
 void onChannelCreated(@NonNull Context context, @NonNull String channelId);
+@MainThread
+void onChannelUpdated(@NonNull Context context, @NonNull String channelId);
 @MainThread
 void onChannelRegistrationFailed(@NonNull Context context);
 
 // PushListener - 10.x
- @WorkerThread
+@WorkerThread
 void onChannelCreated(@NonNull String channelId);
+@WorkerThread
+void onChannelUpdated(@NonNull String channelId);
 @WorkerThread
 void onPushTokenUpdated(@NonNull String token);
 ```

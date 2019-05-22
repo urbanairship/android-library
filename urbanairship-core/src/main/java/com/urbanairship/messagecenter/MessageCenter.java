@@ -49,7 +49,7 @@ public class MessageCenter extends AirshipComponent {
          * Called when the message center needs to be displayed.
          *
          * @param messageId The optional message Id.
-         * @return {@code true} if the inbox was shown, otherwise {@code false}.
+         * @return {@code true} if the inbox was shown, otherwise {@code false} to trigger the default behavior.
          */
         boolean onShowMessageCenter(@Nullable String messageId);
 
