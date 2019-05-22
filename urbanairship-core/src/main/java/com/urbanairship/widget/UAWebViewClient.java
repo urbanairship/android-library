@@ -348,8 +348,8 @@ public class UAWebViewClient extends WebViewClient {
 
     private WebResourceResponse generateEmptyFaviconResponse(@NonNull WebView webView) {
         try {
-            return new WebResourceResponse("image/png", null, new BufferedInputStream(webView.getContext().getAssets().open("empty_favicon.ico")));
-        } catch (IOException e) {
+            return new WebResourceResponse("image/png", null, new BufferedInputStream(webView.getContext().getResources().openRawResource(R.raw.ua_blank_favicon)));
+        } catch (Exception e) {
             Logger.error(e, "Failed to read blank favicon with IOException.");
         }
 
