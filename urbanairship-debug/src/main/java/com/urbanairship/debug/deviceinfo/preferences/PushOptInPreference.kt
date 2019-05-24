@@ -10,7 +10,8 @@ import com.urbanairship.UAirship
 import com.urbanairship.debug.R
 import com.urbanairship.push.RegistrationListener
 
-import java.lang.ref.WeakReference
+import android.os.Looper
+import android.os.Handler
 
 class PushOptInPreference : Preference {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -25,7 +26,7 @@ class PushOptInPreference : Preference {
 
         override fun onChannelUpdated(channelId: String) {}
 
-        override fun onPushTokenUpdated(token: String) { notifyChanged() }
+        override fun onPushTokenUpdated(token: String) { notifyChannelUpdate() }
     }
 
     override fun getSummary(): CharSequence {
@@ -40,5 +41,10 @@ class PushOptInPreference : Preference {
     override fun onDetached() {
         super.onDetached()
         UAirship.shared().pushManager.removeRegistrationListener(registrationListener)
+    }
+
+    private fun notifyChannelUpdate() {
+        val handler = Handler(Looper.getMainLooper())
+        handler.post(Runnable { notifyChanged() })
     }
 }

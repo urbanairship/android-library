@@ -3,6 +3,8 @@ package com.urbanairship.debug.deviceinfo.preferences
 import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.support.v7.preference.Preference
 import android.util.AttributeSet
 
@@ -17,7 +19,7 @@ class NotificationOptInPreference : Preference {
 
         override fun onChannelUpdated(channelId: String) {}
 
-        override fun onPushTokenUpdated(token: String) { notifyChanged() }
+        override fun onPushTokenUpdated(token: String) { notifyTokenUpdate() }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -39,5 +41,10 @@ class NotificationOptInPreference : Preference {
     override fun onDetached() {
         super.onDetached()
         UAirship.shared().pushManager.removeRegistrationListener(registrationListener)
+    }
+
+    private fun notifyTokenUpdate() {
+        val handler = Handler(Looper.getMainLooper())
+        handler.post(Runnable { notifyChanged() })
     }
 }

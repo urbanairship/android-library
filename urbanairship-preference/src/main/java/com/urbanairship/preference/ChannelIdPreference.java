@@ -5,6 +5,8 @@ package com.urbanairship.preference;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.Preference;
@@ -20,10 +22,10 @@ public class ChannelIdPreference extends Preference {
 
     private RegistrationListener registrationListener = new RegistrationListener() {
         @Override
-        public void onChannelCreated(@NonNull String channelId) { notifyChanged(); }
+        public void onChannelCreated(@NonNull String channelId) { notifyChangedMainThread(); }
 
         @Override
-        public void onChannelUpdated(@NonNull String channelId) { notifyChanged(); }
+        public void onChannelUpdated(@NonNull String channelId) { notifyChangedMainThread(); }
 
         @Override
         public void onPushTokenUpdated(@NonNull String token) {}
@@ -59,5 +61,14 @@ public class ChannelIdPreference extends Preference {
     public void onDetached() {
         super.onDetached();
         UAirship.shared().getPushManager().removeRegistrationListener(registrationListener);
+    }
+
+    private void notifyChangedMainThread() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            public void run() {
+                notifyChanged();
+            }
+        });
     }
 }
