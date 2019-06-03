@@ -162,7 +162,7 @@ public class AirshipNotificationProvider implements NotificationProvider {
     @NonNull
     @Override
     public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
-        String requestedChannelId = message.getNotificationChannel(defaultNotificationChannelId);
+        String requestedChannelId = message.getNotificationChannel(getDefaultNotificationChannelId());
         String activeChannelId = NotificationChannelUtils.getActiveChannel(requestedChannelId, DEFAULT_NOTIFICATION_CHANNEL);
 
         return NotificationArguments.newBuilder(message)
@@ -186,13 +186,14 @@ public class AirshipNotificationProvider implements NotificationProvider {
                 .setContentText(message.getAlert())
                 .setAutoCancel(true)
                 .setLocalOnly(message.isLocalOnly())
-                .setColor(message.getIconColor(accentColor))
-                .setSmallIcon(this.smallIconId)
+                .setColor(message.getIconColor(getDefaultAccentColor()))
+                .setSmallIcon(message.getIcon(context, getSmallIcon()))
                 .setPriority(message.getPriority())
                 .setCategory(message.getCategory())
                 .setVisibility(message.getVisibility())
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
 
+        int largeIcon = getLargeIcon();
         if (largeIcon != 0) {
             builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), largeIcon));
         }
@@ -240,9 +241,9 @@ public class AirshipNotificationProvider implements NotificationProvider {
 
         // Public notification
         builder.extend(new PublicNotificationExtender(context, arguments)
-                .setAccentColor(accentColor)
-                .setLargeIcon(largeIcon)
-                .setSmallIcon(smallIconId));
+                .setAccentColor(getDefaultAccentColor())
+                .setLargeIcon(getLargeIcon())
+                .setSmallIcon(message.getIcon(context, getSmallIcon())));
 
         // Wearable support
         builder.extend(new WearableNotificationExtender(context, arguments));
