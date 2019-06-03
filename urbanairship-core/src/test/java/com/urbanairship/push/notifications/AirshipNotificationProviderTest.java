@@ -19,6 +19,11 @@ import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class AirshipNotificationProviderTest extends BaseTestCase {
 
@@ -132,6 +137,22 @@ public class AirshipNotificationProviderTest extends BaseTestCase {
         assertEquals(AirshipNotificationProvider.TAG_NOTIFICATION_ID, arguments.getNotificationId());
         assertEquals("some-tag", arguments.getNotificationTag());
         assertFalse(arguments.getRequiresLongRunningTask());
+    }
+
+    /**
+     * Test overriding the small icon from a push.
+     */
+    @Test
+    public void testOverrideSmallIcon() {
+        PushMessage mockPush = mock(PushMessage.class);
+        when(mockPush.getAlert()).thenReturn("alert");
+        when(mockPush.getIcon(eq(context), anyInt())).thenReturn(100);
+
+        NotificationArguments arguments = provider.onCreateNotificationArguments(context, mockPush);
+        NotificationResult result = provider.onCreateNotification(context, arguments);
+
+        assertEquals(NotificationResult.OK, result.getStatus());
+        assertEquals(100, result.getNotification().getSmallIcon().getResId());
     }
 
     private void createChannel(@NonNull String channelId) {
