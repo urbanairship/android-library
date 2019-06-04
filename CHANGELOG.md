@@ -3,6 +3,19 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.0.1 - June 4, 2019
+=============================
+Patch release fixing a minor regression in AirshipNotifiationProvider
+when overriding small icon resources via the push API.
+
+Changes
+-------
+
+- AirshipNotificationProvider deafults to the small icon specified in
+  the PushMessage, if available.
+- AirshipNotificationProvider uses getters instead of instance variables
+  when building its default NotificationArguments. 
+
 Version 10.0.0 - May 22, 2019
 =============================
 Major release that addresses new background restrictions with Android Q,
