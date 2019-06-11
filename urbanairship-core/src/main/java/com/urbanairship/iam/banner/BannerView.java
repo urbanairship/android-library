@@ -387,6 +387,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         if (listener != null) {
             listener.onBannerClicked(this);
         }
+        dismiss(true);
     }
 
     /**
