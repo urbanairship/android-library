@@ -93,10 +93,10 @@ public class AssociatedIdentifiers implements JsonSerializable {
     }
 
     /**
-     * {@see #fromJson(JsonValue)}
+     * See {@link #fromJson(JsonValue)}
      *
      * @param json The json value.
-     * @return The parsed ActionScheduleInfo.
+     * @return The parsed AssociatedIdentifiers.
      * @throws JsonException If the JSON is invalid.
      * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
      */

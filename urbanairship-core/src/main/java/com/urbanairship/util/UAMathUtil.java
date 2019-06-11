@@ -2,9 +2,14 @@
 
 package com.urbanairship.util;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * A class containing basic math operations.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class UAMathUtil {
 
     /**

@@ -2,9 +2,6 @@
 
 /**
  * Airship Utilities
- *
- * @hide
  */
-
 package com.urbanairship.util;
 

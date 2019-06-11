@@ -2,9 +2,13 @@
 
 package com.urbanairship.util;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * Range-check utility class for Http status codes
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class UAHttpStatusUtil {
 
     /**

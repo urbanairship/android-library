@@ -60,7 +60,7 @@ public class Logger {
     }
 
     /**
-     * Disables Airship from using the standard {@link Log} for logging.
+     * Disables Airship from using the default logger.
      */
     public static void disableDefaultLogger() {
         logger.setDefaultLoggerEnabled(false);

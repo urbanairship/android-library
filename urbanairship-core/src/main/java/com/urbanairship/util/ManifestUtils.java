@@ -8,13 +8,16 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestUtils {
 
     /**

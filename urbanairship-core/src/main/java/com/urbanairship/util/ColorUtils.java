@@ -4,10 +4,13 @@ package com.urbanairship.util;
 
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 /**
  * Color utility methods.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ColorUtils {
 
     /**
