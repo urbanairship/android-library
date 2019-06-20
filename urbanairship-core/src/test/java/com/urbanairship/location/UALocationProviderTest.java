@@ -51,7 +51,7 @@ public class UALocationProviderTest extends BaseTestCase {
         mockAdapterOne = mock(LocationAdapter.class);
         mockAdapterTwo = mock(LocationAdapter.class);
 
-        Intent intent = new Intent(context, LocationService.class).setAction(LocationService.ACTION_LOCATION_UPDATE);
+        Intent intent = new Intent(context, LocationReceiver.class).setAction(LocationReceiver.ACTION_LOCATION_UPDATE);
         provider = new UALocationProvider(context, intent, mockAdapterOne, mockAdapterTwo);
 
         options = LocationRequestOptions.createDefaultOptions();

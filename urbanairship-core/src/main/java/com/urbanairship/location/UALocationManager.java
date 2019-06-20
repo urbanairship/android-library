@@ -32,8 +32,6 @@ import com.urbanairship.util.AirshipHandlerThread;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.urbanairship.location.LocationService.ACTION_LOCATION_UPDATE;
-
 /**
  * High level interface for interacting with location.
  */
@@ -100,7 +98,7 @@ public class UALocationManager extends AirshipComponent {
         };
         this.activityMonitor = activityMonitor;
 
-        Intent updateIntent = new Intent(context, LocationService.class).setAction(ACTION_LOCATION_UPDATE);
+        Intent updateIntent = new Intent(context, LocationReceiver.class).setAction(LocationReceiver.ACTION_LOCATION_UPDATE);
         this.locationProvider = new UALocationProvider(context, updateIntent);
         this.backgroundThread = new AirshipHandlerThread("location");
     }
@@ -373,7 +371,7 @@ public class UALocationManager extends AirshipComponent {
     }
 
     /**
-     * Called by {@link LocationService} when a new continuous location update is available.
+     * Called by {@link LocationReceiver} when a new continuous location update is available.
      *
      * @param location The location update.
      */
@@ -403,7 +401,7 @@ public class UALocationManager extends AirshipComponent {
     }
 
     /**
-     * Called by {@link LocationService} when a location provider changes.
+     * Called by {@link LocationReceiver} when a location provider changes.
      */
     void onSystemLocationProvidersChanged() {
         backgroundHandler.post(new Runnable() {

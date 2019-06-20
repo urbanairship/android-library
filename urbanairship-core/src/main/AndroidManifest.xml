@@ -92,9 +92,10 @@
 
 
         <service android:name="com.urbanairship.job.AirshipService" />
-        <service
-            android:name="com.urbanairship.location.LocationService"
-            android:label="Segments Service" />
+
+        <receiver
+            android:name="com.urbanairship.location.LocationReceiver"
+            android:exported="false" />
 
         <service
             android:name="com.urbanairship.job.AndroidJobService"

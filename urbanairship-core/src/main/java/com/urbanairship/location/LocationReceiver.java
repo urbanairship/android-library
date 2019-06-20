@@ -2,59 +2,83 @@
 
 package com.urbanairship.location;
 
-import android.app.IntentService;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.util.concurrent.Executor;
+
 /**
- * A service that handles requesting location from either the Fused Location
+ * A receiver that handles requesting location from either the Fused Location
  * Provider or standard Android location.
  */
-public class LocationService extends IntentService {
+public class LocationReceiver extends BroadcastReceiver {
 
     /**
      * Time to wait for UAirship when processing messages.
      */
-    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds
+    private static final long AIRSHIP_WAIT_TIME_MS = 9000; // 9 seconds
 
     /**
      * Action used for location updates.
      */
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
-    public LocationService() {
-        super("Location Service");
+    private final Executor executor;
+
+    @VisibleForTesting
+    LocationReceiver(Executor executor) {
+        this.executor = executor;
+    }
+
+    public LocationReceiver() {
+        this(AirshipExecutors.THREAD_POOL_EXECUTOR);
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Autopilot.automaticTakeOff(getApplicationContext());
-    }
-
-    public void onHandleIntent(@Nullable Intent intent) {
+    public void onReceive(@NonNull Context context, final Intent intent) {
         if (intent == null || intent.getAction() == null) {
             return;
         }
 
-        Logger.verbose("LocationService - Received intent with action: %s", intent.getAction());
 
-        final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
-        if (airship == null) {
-            Logger.error("LocationService - UAirship not ready. Dropping intent: %s", intent);
+        if (!ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
+            Logger.verbose("LocationReceiver - Received intent with invalid action: %s", intent.getAction());
             return;
         }
 
-        if (ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
-            onLocationUpdate(airship, intent);
-        }
+        Logger.verbose("LocationReceiver - Received location update");
+
+        Autopilot.automaticTakeOff(context);
+
+        final PendingResult result = goAsync();
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+
+                if (airship == null) {
+                    Logger.error("Airship took too long to takeOff. Dropping location update.");
+                    result.finish();
+                    return;
+                }
+
+                onLocationUpdate(airship, intent);
+
+                if (result != null) {
+                    result.finish();
+                }
+            }
+        });
     }
 
     /**
@@ -68,7 +92,7 @@ public class LocationService extends IntentService {
         try {
             // If a provider is enabled or disabled notify the adapters so they can update providers.
             if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
-                Logger.debug("LocationService - One of the location providers was enabled or disabled.");
+                Logger.debug("LocationReceiver - One of the location providers was enabled or disabled.");
                 airship.getLocationManager().onSystemLocationProvidersChanged();
                 return;
             }
@@ -77,7 +101,7 @@ public class LocationService extends IntentService {
                     intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
                     intent.getParcelableExtra("com.google.android.location.LOCATION"));
         } catch (Exception e) {
-            Logger.error(e, "Unable to extract location.");
+            Logger.error(e, "LocationReceiver - Unable to extract location.");
             return;
         }
 

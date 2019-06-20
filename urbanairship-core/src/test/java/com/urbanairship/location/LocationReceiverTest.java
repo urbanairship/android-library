@@ -6,12 +6,15 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.Executor;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -22,9 +25,9 @@ import static org.mockito.Mockito.verify;
 /**
  * Unit tests for the Location Service
  */
-public class LocationServiceTest extends BaseTestCase {
+public class LocationReceiverTest extends BaseTestCase {
 
-    private LocationService locationService;
+    private LocationReceiver locationReceiver;
     private UALocationManager locationManager;
 
     @Before
@@ -32,7 +35,12 @@ public class LocationServiceTest extends BaseTestCase {
         locationManager = mock(UALocationManager.class);
         TestApplication.getApplication().setLocationManager(locationManager);
 
-        locationService = new LocationService();
+        locationReceiver = new LocationReceiver(new Executor() {
+            @Override
+            public void execute(@NonNull Runnable runnable) {
+                runnable.run();
+            }
+        });
     }
 
     /**
@@ -44,7 +52,7 @@ public class LocationServiceTest extends BaseTestCase {
         Bundle bundle = new Bundle();
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(LocationReceiver.ACTION_LOCATION_UPDATE, bundle);
 
         verify(locationManager).onLocationUpdate(eq(location));
     }
@@ -54,7 +62,7 @@ public class LocationServiceTest extends BaseTestCase {
      */
     @Test
     public void testLocationUpdateNullLocation() {
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE);
+        sendIntent(LocationReceiver.ACTION_LOCATION_UPDATE);
 
         // Should not call record location
         verify(locationManager, times(0)).onLocationUpdate(any(Location.class));
@@ -68,7 +76,7 @@ public class LocationServiceTest extends BaseTestCase {
         Bundle bundle = new Bundle();
         bundle.putBoolean(LocationManager.KEY_PROVIDER_ENABLED, true);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(LocationReceiver.ACTION_LOCATION_UPDATE, bundle);
 
         verify(locationManager).onSystemLocationProvidersChanged();
     }
@@ -94,7 +102,7 @@ public class LocationServiceTest extends BaseTestCase {
         if (extras != null) {
             intent.putExtras(extras);
         }
-        locationService.onHandleIntent(intent);
+        locationReceiver.onReceive(getApplication(), intent);
     }
 
 }
