@@ -5,14 +5,13 @@ package com.urbanairship.push;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.NotificationIntentProcessor;
 
 /**
  * An activity that handles notification intents.

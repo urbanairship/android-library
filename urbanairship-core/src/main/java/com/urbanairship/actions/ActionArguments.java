@@ -3,8 +3,8 @@
 package com.urbanairship.actions;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Container for the argument data passed to an {@link com.urbanairship.actions.Action}.

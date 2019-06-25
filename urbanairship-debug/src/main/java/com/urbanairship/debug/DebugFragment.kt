@@ -2,12 +2,12 @@
 
 package com.urbanairship.debug
 
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Observer
-import android.databinding.DataBindingUtil
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.DividerItemDecoration
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DividerItemDecoration
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 /**
  * Fragment that lists all the debug entries. Entries are defined in `xml/debug_entries.xml`.
  */
-open class DebugFragment : Fragment() {
+open class DebugFragment : androidx.fragment.app.Fragment() {
 
     private val debugScreenEntryLiveData = MutableLiveData<List<DebugEntry>>()
 
@@ -48,7 +48,7 @@ open class DebugFragment : Fragment() {
             lifecycleOwner = this@DebugFragment
 
             screens.apply {
-                addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, androidx.recyclerview.widget.DividerItemDecoration.VERTICAL))
                 adapter = componentAdapter
             }
         }

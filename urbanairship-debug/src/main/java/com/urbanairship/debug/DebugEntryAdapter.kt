@@ -2,8 +2,8 @@
 
 package com.urbanairship.debug
 
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.urbanairship.debug.databinding.UaItemDebugScreenBinding
@@ -15,7 +15,7 @@ import com.urbanairship.debug.utils.SimpleDiffItemCallback
 internal class DebugEntryAdapter(private val callback: ((screen: DebugEntry) -> Unit))
     : ListAdapter<DebugEntry, DebugEntryAdapter.ViewHolder>(SimpleDiffItemCallback()) {
 
-    class ViewHolder(val binding: UaItemDebugScreenBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: UaItemDebugScreenBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: DebugEntryAdapter.ViewHolder, position: Int) {
         getItem(position)?.apply {

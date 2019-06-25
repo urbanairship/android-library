@@ -5,7 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.FusedLocationProviderClient;

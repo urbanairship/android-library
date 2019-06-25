@@ -14,7 +14,6 @@ android {
         targetSdkVersion rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -36,14 +35,17 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
-    implementation "com.android.support:design:$rootProject.supportLibVersion"
-    implementation "com.android.support:preference-v7:$rootProject.supportLibVersion"
-    implementation "android.arch.lifecycle:extensions:$rootProject.lifeCycleVersion"
-    implementation "android.arch.lifecycle:viewmodel:$rootProject.lifeCycleVersion"
-    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
-    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
-    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
+    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
+    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
+    implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
+
+    // Allows Airship location services to use Fused Location
+    implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
 
     // Airship ADM
     implementation project(':urbanairship-adm')
@@ -61,23 +63,24 @@ dependencies {
     // Airship Preferences
     implementation project(':urbanairship-preference')
 
-    // Allows Airship location services to use Fused Location
-    implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
 
     // Testing-only dependencies
-    androidTestImplementation "com.android.support:support-annotations:$rootProject.supportLibVersion"
-    androidTestImplementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
-    androidTestImplementation "com.android.support:design:$rootProject.supportLibVersion"
-    androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-web:3.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-intents:3.0.2'
-    androidTestImplementation 'com.android.support.test.espresso.idling:idling-concurrent:3.0.2'
-    androidTestImplementation "com.squareup.retrofit2:retrofit:2.3.0"
-    androidTestImplementation 'com.google.code.gson:gson:2.8.2'
-    androidTestImplementation 'com.squareup.retrofit2:converter-gson:2.1.0'
-    androidTestImplementation 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-web:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:$rootProject.androidxEspressoVersion"
+
+    // AndroidJUnitRunner and JUnit Rules
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+
+    // Assertions
+    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
+    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
 }
+
 
 apply plugin: 'com.google.gms.google-services'

@@ -3,9 +3,9 @@
 package com.urbanairship.remoteconfig;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;

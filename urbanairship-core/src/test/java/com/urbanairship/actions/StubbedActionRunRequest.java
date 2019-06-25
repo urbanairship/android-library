@@ -4,7 +4,7 @@ package com.urbanairship.actions;
 
 import android.os.Bundle;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Stubbed action run request for testing. All methods are overridden to no-op.

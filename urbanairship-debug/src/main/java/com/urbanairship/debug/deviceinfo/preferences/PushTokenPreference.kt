@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.support.v7.preference.Preference
+import androidx.preference.Preference
 import android.util.AttributeSet
 
 import com.urbanairship.UAirship

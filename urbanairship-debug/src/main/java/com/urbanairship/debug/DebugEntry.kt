@@ -2,8 +2,8 @@ package com.urbanairship.debug
 
 import android.content.Context
 import android.content.res.XmlResourceParser
-import android.support.annotation.RestrictTo
-import android.support.annotation.XmlRes
+import androidx.annotation.RestrictTo
+import androidx.annotation.XmlRes
 import com.urbanairship.Logger
 import com.urbanairship.util.UAStringUtil
 import org.xmlpull.v1.XmlPullParser

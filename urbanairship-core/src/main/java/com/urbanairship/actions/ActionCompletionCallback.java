@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * An interface for callbacks signaling the completion of an

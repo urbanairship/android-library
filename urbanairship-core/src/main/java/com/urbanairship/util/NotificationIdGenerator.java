@@ -4,7 +4,7 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.IntRange;
+import androidx.annotation.IntRange;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

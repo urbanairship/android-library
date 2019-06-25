@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions.tags;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;

@@ -4,8 +4,8 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.push.PushMessage;
 

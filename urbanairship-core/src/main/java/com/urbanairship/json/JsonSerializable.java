@@ -2,7 +2,7 @@
 
 package com.urbanairship.json;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Interface for classes whose instances can be written as a JsonValue.

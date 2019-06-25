@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Factory class for creating {@link com.urbanairship.actions.ActionRunRequest}.

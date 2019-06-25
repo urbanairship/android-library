@@ -3,7 +3,7 @@
 package com.urbanairship.sample.preference;
 
 import android.content.Context;
-import android.support.v7.preference.EditTextPreference;
+import androidx.preference.EditTextPreference;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;

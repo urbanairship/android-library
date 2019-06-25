@@ -3,8 +3,8 @@
 package com.urbanairship.analytics;
 
 import android.location.Location;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;

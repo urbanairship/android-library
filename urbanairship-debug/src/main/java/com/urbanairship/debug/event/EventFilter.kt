@@ -2,7 +2,7 @@
 
 package com.urbanairship.debug.event
 
-import android.databinding.ObservableBoolean
+import androidx.databinding.ObservableBoolean
 
 /**
  * An event filter.

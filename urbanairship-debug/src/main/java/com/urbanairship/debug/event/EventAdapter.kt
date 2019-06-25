@@ -2,9 +2,9 @@
 
 package com.urbanairship.debug.event
 
-import android.arch.paging.PagedListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.urbanairship.debug.BR
@@ -17,7 +17,7 @@ import com.urbanairship.debug.event.persistence.EventEntity
 internal class EventAdapter(private val callback: ((event: EventEntity) -> Unit)) : PagedListAdapter<EventEntity, EventAdapter.ViewHolder>(diffCallback) {
 
 
-    class ViewHolder(val binding: UaItemEventBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: UaItemEventBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.apply {

@@ -1,9 +1,9 @@
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import com.urbanairship.AirshipConfigOptions;

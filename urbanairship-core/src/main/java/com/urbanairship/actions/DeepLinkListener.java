@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Listener interface used to notify app when deep link is received.

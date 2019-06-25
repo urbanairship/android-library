@@ -2,13 +2,13 @@
 
 package com.urbanairship.debug.event
 
-import android.databinding.BindingAdapter
+import androidx.databinding.BindingAdapter
 import android.graphics.drawable.ColorDrawable
-import android.support.annotation.ColorInt
-import android.support.design.chip.Chip
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
+import androidx.annotation.ColorInt
+import com.google.android.material.chip.Chip
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import android.text.format.DateUtils
 import android.view.View
 import android.widget.TextView

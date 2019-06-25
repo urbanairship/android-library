@@ -3,7 +3,7 @@
 package com.urbanairship.iam;
 
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;

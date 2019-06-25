@@ -3,7 +3,7 @@
 package com.urbanairship;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;

@@ -5,7 +5,7 @@ package com.urbanairship.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

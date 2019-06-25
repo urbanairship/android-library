@@ -3,10 +3,10 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import android.support.annotation.IntDef;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.iam.assets.Assets;
 

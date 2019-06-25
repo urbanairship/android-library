@@ -2,7 +2,7 @@
 
 package com.urbanairship.wallet;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Callback when executing a {@link PassRequest}.

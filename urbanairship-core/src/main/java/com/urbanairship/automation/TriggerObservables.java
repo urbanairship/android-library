@@ -2,7 +2,7 @@
 
 package com.urbanairship.automation;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;

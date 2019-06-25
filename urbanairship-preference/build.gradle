@@ -4,5 +4,5 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
-    api "com.android.support:preference-v7:$rootProject.supportLibVersion"
+    api 'androidx.preference:preference:1.0.0'
 }

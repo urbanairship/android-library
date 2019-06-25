@@ -2,8 +2,8 @@
 
 package com.urbanairship.reactive;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Concrete convenience implementation of Observer.

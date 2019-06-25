@@ -8,9 +8,9 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.preference.CheckBoxPreference;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.preference.CheckBoxPreference;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;

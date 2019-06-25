@@ -15,8 +15,8 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
-import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
+import static androidx.core.content.PermissionChecker.PERMISSION_DENIED;
+import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;

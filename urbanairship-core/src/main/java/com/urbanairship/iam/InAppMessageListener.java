@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Listener for in-app message display events.

@@ -3,11 +3,11 @@
 package com.urbanairship.push.notifications;
 
 import android.app.Notification;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.WorkerThread;
-import android.support.v4.app.NotificationManagerCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

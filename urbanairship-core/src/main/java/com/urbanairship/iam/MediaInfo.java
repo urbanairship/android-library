@@ -2,9 +2,9 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;

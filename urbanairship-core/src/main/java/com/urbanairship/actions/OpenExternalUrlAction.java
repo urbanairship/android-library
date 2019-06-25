@@ -4,7 +4,7 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

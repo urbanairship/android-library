@@ -2,7 +2,7 @@
 
 package com.urbanairship.util;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 /**
  * Range-check utility class for Http status codes

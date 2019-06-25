@@ -2,9 +2,9 @@
 
 package com.urbanairship.debug.push.persistence
 
-import android.arch.persistence.room.Entity
-import android.arch.persistence.room.PrimaryKey
-import android.support.annotation.RestrictTo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.annotation.RestrictTo
 import com.urbanairship.push.PushMessage
 
 /**

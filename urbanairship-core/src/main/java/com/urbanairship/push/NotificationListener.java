@@ -1,9 +1,9 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 /**
  * Notification listener.

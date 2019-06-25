@@ -2,8 +2,8 @@
 
 package com.urbanairship.actions;
 
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 

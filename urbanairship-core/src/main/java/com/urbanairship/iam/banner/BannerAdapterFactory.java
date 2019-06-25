@@ -1,6 +1,6 @@
 package com.urbanairship.iam.banner;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;

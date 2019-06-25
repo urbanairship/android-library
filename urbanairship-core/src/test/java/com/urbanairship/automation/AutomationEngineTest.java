@@ -3,7 +3,7 @@
 package com.urbanairship.automation;
 
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;

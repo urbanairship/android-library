@@ -2,8 +2,8 @@
 
 package com.urbanairship.remoteconfig;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;

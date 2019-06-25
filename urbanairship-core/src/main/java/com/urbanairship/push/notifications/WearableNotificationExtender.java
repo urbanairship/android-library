@@ -5,8 +5,8 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

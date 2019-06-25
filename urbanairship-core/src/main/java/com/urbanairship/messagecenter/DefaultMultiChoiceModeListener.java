@@ -2,7 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;

@@ -1,6 +1,6 @@
 package com.urbanairship.actions;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Exceptions thrown when creating ActionValues from objects.

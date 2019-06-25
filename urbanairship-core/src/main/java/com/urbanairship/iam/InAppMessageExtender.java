@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Interface used to extend in-app messages.

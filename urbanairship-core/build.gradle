@@ -6,25 +6,26 @@ configurations {
     doclava
 }
 
-
 android.testOptions.unitTests.includeAndroidResources = true
 
 dependencies {
     // Required
-    api "com.android.support:support-v4:$rootProject.supportLibVersion"
-    api "com.android.support:support-annotations:$rootProject.supportLibVersion"
+    api "androidx.core:core:$rootProject.androidxCoreVersion"
+    api "androidx.fragment:fragment:$rootProject.androidxFragmentVersion"
+    api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
+    api "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
 
     // Optional
     compileOnly "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
-    compileOnly "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+    compileOnly "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 
     // Tests
     testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    testImplementation "org.robolectric:shadows-supportv4:$rootProject.robolectricVersion"
-    testImplementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
+    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
 
     // Docs
     doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")

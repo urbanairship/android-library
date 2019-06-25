@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 import android.util.Log;
 
 /**
@@ -61,6 +63,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
     private static boolean instanceCreationAttempted;
 
     private static Autopilot instance;
+
 
     /**
      * Starts the auto pilot takeOff process.

@@ -2,7 +2,7 @@
 
 package com.urbanairship.debug.event
 
-import android.support.annotation.RestrictTo
+import androidx.annotation.RestrictTo
 import com.urbanairship.debug.event.persistence.EventEntity
 import com.urbanairship.json.JsonValue
 

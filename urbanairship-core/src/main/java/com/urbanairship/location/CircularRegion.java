@@ -2,7 +2,7 @@
 
 package com.urbanairship.location;
 
-import android.support.annotation.FloatRange;
+import androidx.annotation.FloatRange;
 
 import com.urbanairship.Logger;
 

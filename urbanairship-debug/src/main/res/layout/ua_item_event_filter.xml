@@ -14,7 +14,7 @@
     </data>
 
 
-    <android.support.design.chip.Chip
+    <com.google.android.material.chip.Chip
         android:layout_margin="8dp"
         android:id="@+id/chip"
         style="@style/Widget.MaterialComponents.Chip.Filter"

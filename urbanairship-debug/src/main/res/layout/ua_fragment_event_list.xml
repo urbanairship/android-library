@@ -12,34 +12,34 @@
 
         <variable
             name="isFilterSheetVisible"
-            type="android.databinding.ObservableBoolean" />
+            type="androidx.databinding.ObservableBoolean" />
 
         <variable
             name="expandAlpha"
-            type="android.databinding.ObservableFloat" />
+            type="androidx.databinding.ObservableFloat" />
 
         <variable
             name="collapseAlpha"
-            type="android.databinding.ObservableFloat" />
+            type="androidx.databinding.ObservableFloat" />
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout2"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <include layout="@layout/ua_include_appbar" />
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/events"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:splitMotionEvents="false"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:listitem="@layout/ua_item_event" />
 
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
             app:hoveredFocusedTranslationZ="0dp"
             app:pressedTranslationZ="0dp" />
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/filter_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,10 +65,10 @@
             app:behavior_hideable="true"
             app:behavior_peekHeight="48dp"
             app:behavior_skipCollapsed="true"
-            app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
+            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
             tools:layout_behavior="">
 
-            <android.support.constraint.Guideline
+            <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guide_peek_height"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -132,14 +132,14 @@
                 app:layout_constraintTop_toTopOf="parent"
                 android:src="@drawable/ua_ic_chevron_up" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/event_filters"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
-                app:layoutManager="android.support.v7.widget.GridLayoutManager"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -147,8 +147,8 @@
                 app:spanCount="2"
                 tools:listitem="@layout/ua_item_event_filter" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </layout>

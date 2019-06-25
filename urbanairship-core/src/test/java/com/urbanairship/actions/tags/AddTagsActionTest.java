@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions.tags;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;

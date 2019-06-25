@@ -2,7 +2,7 @@
 
 package com.urbanairship;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Listener interface for the Airship logger.

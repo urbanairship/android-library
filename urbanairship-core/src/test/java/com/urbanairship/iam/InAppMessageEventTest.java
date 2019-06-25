@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
@@ -12,7 +12,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 

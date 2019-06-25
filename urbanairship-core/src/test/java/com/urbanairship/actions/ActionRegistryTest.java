@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;

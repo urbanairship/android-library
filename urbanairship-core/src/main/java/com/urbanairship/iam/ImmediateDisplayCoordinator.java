@@ -1,6 +1,6 @@
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Display coordinator that is always ready.

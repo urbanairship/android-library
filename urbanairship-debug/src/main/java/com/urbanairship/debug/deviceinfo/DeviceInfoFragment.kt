@@ -3,8 +3,8 @@
 package com.urbanairship.debug.deviceinfo
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceFragmentCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +17,7 @@ import com.urbanairship.debug.extensions.setupToolbarWithNavController
  *
  * Wraps the PreferenceFragment.
  */
-class DeviceInfoFragment : Fragment() {
+class DeviceInfoFragment : androidx.fragment.app.Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.ua_fragment_device_info, container, false)
@@ -43,7 +43,7 @@ class DeviceInfoFragment : Fragment() {
             addPreferencesFromResource(R.xml.ua_device_info)
         }
 
-        override fun onPreferenceTreeClick(preference: android.support.v7.preference.Preference): Boolean {
+        override fun onPreferenceTreeClick(preference: androidx.preference.Preference): Boolean {
             val view = view
             if (view != null && TAGS_KEY == preference.key) {
                 Navigation.findNavController(view).navigate(R.id.deviceInfoTagsFragment)

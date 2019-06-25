@@ -1,6 +1,6 @@
 package com.urbanairship.debug.push
 
-import android.support.annotation.RestrictTo
+import androidx.annotation.RestrictTo
 import com.urbanairship.debug.push.persistence.PushEntity
 import com.urbanairship.json.JsonValue
 import com.urbanairship.push.PushMessage

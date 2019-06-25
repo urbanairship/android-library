@@ -2,12 +2,12 @@
 
 package com.urbanairship.debug.push
 
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +19,7 @@ import com.urbanairship.debug.extensions.setupToolbarWithNavController
 /**
  * PushItem detail fragment.
  */
-class PushDetailsFragment : Fragment() {
+class PushDetailsFragment : androidx.fragment.app.Fragment() {
 
     companion object {
         const val ARGUMENT_PUSH_ID = "pushId"

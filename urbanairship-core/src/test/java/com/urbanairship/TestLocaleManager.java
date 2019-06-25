@@ -1,6 +1,6 @@
 package com.urbanairship;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;

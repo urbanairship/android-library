@@ -1,7 +1,7 @@
 package com.urbanairship.remoteconfig;
 /* Copyright Airship and Contributors */
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;

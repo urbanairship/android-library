@@ -5,8 +5,8 @@ package com.urbanairship.location;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.ResultCallback;

@@ -6,11 +6,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.annotation.WorkerThread;
-import android.widget.Adapter;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
@@ -20,8 +19,6 @@ import com.urbanairship.google.PlayServicesUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static android.app.PendingIntent.getService;
 
 /**
  * Location provider that automatically selects between the standard android location

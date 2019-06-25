@@ -3,8 +3,8 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;

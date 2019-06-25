@@ -3,7 +3,7 @@
 package com.urbanairship.debug
 
 import android.content.Context
-import android.support.annotation.RestrictTo
+import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship

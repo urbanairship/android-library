@@ -4,8 +4,8 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import android.util.AttributeSet;
 import android.util.Xml;
 

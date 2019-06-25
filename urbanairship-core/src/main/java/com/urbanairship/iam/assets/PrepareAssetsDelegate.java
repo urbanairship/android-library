@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam.assets;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageSchedule;

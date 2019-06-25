@@ -4,11 +4,11 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.ArrayRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.app.RemoteInput;
+import androidx.annotation.ArrayRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.app.RemoteInput;
 
 /**
  * Remote Input that stores the resource ID instead of a String.

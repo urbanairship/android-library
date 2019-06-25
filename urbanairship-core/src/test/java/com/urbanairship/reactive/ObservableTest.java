@@ -4,8 +4,8 @@ package com.urbanairship.reactive;
 
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
+import androidx.annotation.NonNull;
+import androidx.core.util.Pair;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Predicate;

@@ -3,7 +3,7 @@
 package com.urbanairship.location;
 
 import android.location.Location;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * A location change listener. Used to listen for location updates by adding

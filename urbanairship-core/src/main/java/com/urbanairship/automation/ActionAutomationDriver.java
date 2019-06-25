@@ -2,9 +2,9 @@ package com.urbanairship.automation;
 
 import android.os.Bundle;
 import android.os.Looper;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;

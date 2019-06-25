@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;

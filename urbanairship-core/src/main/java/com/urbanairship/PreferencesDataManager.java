@@ -2,7 +2,7 @@ package com.urbanairship;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
 

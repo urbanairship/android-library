@@ -4,7 +4,7 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;

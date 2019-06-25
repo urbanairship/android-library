@@ -6,12 +6,12 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.push.PushMessage;

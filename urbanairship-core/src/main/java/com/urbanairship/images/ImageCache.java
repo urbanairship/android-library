@@ -3,9 +3,9 @@ package com.urbanairship.images;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.net.http.HttpResponseCache;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import android.util.LruCache;
 
 import com.urbanairship.Logger;

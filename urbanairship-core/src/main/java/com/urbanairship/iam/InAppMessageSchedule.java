@@ -2,7 +2,7 @@
 
 package com.urbanairship.iam;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.json.JsonMap;

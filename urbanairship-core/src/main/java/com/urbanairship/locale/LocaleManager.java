@@ -2,10 +2,10 @@ package com.urbanairship.locale;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.ConfigurationCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.os.ConfigurationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;

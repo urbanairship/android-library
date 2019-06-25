@@ -2,7 +2,7 @@ package com.urbanairship.util;
 
 import android.net.TrafficStats;
 import android.os.HandlerThread;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 /**
  * HandlerThread that sets the Airship thread stats tag.

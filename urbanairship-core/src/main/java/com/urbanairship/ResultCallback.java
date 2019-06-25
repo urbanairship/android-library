@@ -1,6 +1,6 @@
 package com.urbanairship;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Result callback interface.

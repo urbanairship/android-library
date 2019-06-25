@@ -2,7 +2,7 @@
 
 package com.urbanairship;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.http.Request;
 import com.urbanairship.http.Response;

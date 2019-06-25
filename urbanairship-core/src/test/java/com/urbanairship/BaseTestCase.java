@@ -8,14 +8,15 @@ import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Assert;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 @Config(sdk = 28,
         shadows = { ShadowNotificationManagerExtension.class },
         application = TestApplication.class
 )
-@RunWith(RobolectricTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 public abstract class BaseTestCase {
 
     public TestApplication getApplication() {

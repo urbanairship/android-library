@@ -3,7 +3,7 @@
 package com.urbanairship;
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;

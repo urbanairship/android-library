@@ -2,7 +2,7 @@
 
 package com.urbanairship.push;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;

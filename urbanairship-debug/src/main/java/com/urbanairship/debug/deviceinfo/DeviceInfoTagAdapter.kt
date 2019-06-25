@@ -2,9 +2,9 @@
 
 package com.urbanairship.debug.deviceinfo
 
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.urbanairship.debug.databinding.UaItemTagBinding
@@ -23,7 +23,7 @@ class DeviceInfoTagAdapter : ListAdapter<String, DeviceInfoTagAdapter.ViewHolder
         viewHolder.bind(getItem(i))
     }
 
-    inner class ViewHolder internal constructor(private val binding: UaItemTagBinding) : RecyclerView.ViewHolder(binding.getRoot()) {
+    inner class ViewHolder internal constructor(private val binding: UaItemTagBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.getRoot()) {
 
         val tag: String
             get() = binding.toString()

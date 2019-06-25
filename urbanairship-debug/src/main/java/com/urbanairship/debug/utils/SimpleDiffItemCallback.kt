@@ -1,6 +1,6 @@
 package com.urbanairship.debug.utils
 
-import android.support.v7.util.DiffUtil
+import androidx.recyclerview.widget.DiffUtil
 
 /**
  * Item callback that checks the object equality.

@@ -5,7 +5,7 @@ package com.urbanairship;
 import android.app.Application;
 import android.content.Intent;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.junit.After;
 import org.junit.Before;

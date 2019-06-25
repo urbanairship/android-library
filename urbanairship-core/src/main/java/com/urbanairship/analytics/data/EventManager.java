@@ -1,8 +1,8 @@
 package com.urbanairship.analytics.data;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;

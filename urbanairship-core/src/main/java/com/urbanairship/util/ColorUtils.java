@@ -2,9 +2,9 @@
 
 package com.urbanairship.util;
 
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Color utility methods.

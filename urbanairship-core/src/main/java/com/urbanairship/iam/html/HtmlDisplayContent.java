@@ -3,10 +3,10 @@
 package com.urbanairship.iam.html;
 
 import android.graphics.Color;
-import android.support.annotation.ColorInt;
-import android.support.annotation.Dimension;
-import android.support.annotation.FloatRange;
-import android.support.annotation.NonNull;
+import androidx.annotation.ColorInt;
+import androidx.annotation.Dimension;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;

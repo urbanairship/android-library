@@ -2,7 +2,7 @@
 
 package com.urbanairship.util;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 /**
  * A class containing basic math operations.

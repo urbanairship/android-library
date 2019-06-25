@@ -29,29 +29,29 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
 
     // Room
-    implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
-    kapt "android.arch.persistence.room:compiler:$rootProject.roomVersion"
+    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
+    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
-    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
-    implementation "android.arch.navigation:navigation-ui-ktx:$rootProject.navigationVersion"
+    implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
+    implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
+    implementation "androidx.navigation:navigation-ui-ktx:$rootProject.androidxNavigationVersion"
 
     // Constraint layout
-    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
 
     // Lifecycle
-    implementation "android.arch.lifecycle:extensions:$rootProject.lifeCycleVersion"
-    kapt "android.arch.lifecycle:compiler:$rootProject.lifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.androidxLifeCycleVersion"
+    kapt "androidx.lifecycle:lifecycle-compiler:$rootProject.androidxLifeCycleVersion"
 
     // Paging
-    implementation "android.arch.paging:runtime:$rootProject.pagingVersion"
+    implementation "androidx.paging:paging-runtime:$rootProject.androidxPagingVersion"
 
     // Support libraries
-    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
-    implementation "com.android.support:design:$rootProject.supportLibVersion"
-    implementation "com.android.support:support-vector-drawable:$rootProject.supportLibVersion"
-    implementation 'com.android.support:preference-v7:28.0.0'
+    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
+    implementation "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
 
     // Urban Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')

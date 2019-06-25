@@ -3,7 +3,7 @@
 package com.urbanairship.actions;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 

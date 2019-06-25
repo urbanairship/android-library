@@ -2,9 +2,9 @@
 
 package com.urbanairship.debug.push
 
-import android.arch.lifecycle.LiveData
-import android.arch.paging.DataSource
-import android.support.annotation.RestrictTo
+import androidx.lifecycle.LiveData
+import androidx.paging.DataSource
+import androidx.annotation.RestrictTo
 import com.urbanairship.debug.push.persistence.PushDao
 import com.urbanairship.debug.push.persistence.PushEntity
 

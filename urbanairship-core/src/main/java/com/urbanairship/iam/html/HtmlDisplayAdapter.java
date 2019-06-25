@@ -4,7 +4,7 @@ package com.urbanairship.iam.html;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;

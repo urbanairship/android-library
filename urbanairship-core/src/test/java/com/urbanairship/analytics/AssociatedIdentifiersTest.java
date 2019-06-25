@@ -3,7 +3,7 @@
 
 package com.urbanairship.analytics;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 

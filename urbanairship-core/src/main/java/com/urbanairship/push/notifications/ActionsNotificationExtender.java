@@ -3,8 +3,8 @@
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;

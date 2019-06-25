@@ -7,10 +7,11 @@ import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.fragment.app.FragmentActivity;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -184,7 +185,7 @@ public abstract class ThemedActivity extends FragmentActivity {
         if (isAppCompatDependencyAvailable == null) {
             // Play Services
             try {
-                Class.forName("android.support.v7.app.AppCompatDelegate");
+                Class.forName("androidx.appcompat.app.AppCompatDelegate");
                 isAppCompatDependencyAvailable = true;
             } catch (ClassNotFoundException e) {
                 isAppCompatDependencyAvailable = false;

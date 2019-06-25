@@ -1,8 +1,8 @@
 package com.urbanairship.iam;
 
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;

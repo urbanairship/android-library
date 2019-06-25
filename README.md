@@ -65,11 +65,3 @@ A [sample](sample) application is available that showcases the majority of the f
 the Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properties.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
-## Sample Test
-An automated test is available to test basic pushes, message center and in-app messages with the Sample application.
-
-To run the test suite on an emulator or device with API 21+:
-
-```
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.appKey="APP_KEY" -Pandroid.testInstrumentationRunnerArguments.masterSecret="MASTER_SECRET"
-```

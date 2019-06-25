@@ -1,8 +1,8 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import android.support.annotation.CallSuper;
-import android.support.annotation.NonNull;
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
 
 /**
  * Display adapter that is only ready when the application has at least one resumed activity that

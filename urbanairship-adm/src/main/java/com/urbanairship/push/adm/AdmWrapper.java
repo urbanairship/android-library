@@ -3,8 +3,8 @@
 package com.urbanairship.push.adm;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amazon.device.messaging.ADM;
 import com.urbanairship.Logger;

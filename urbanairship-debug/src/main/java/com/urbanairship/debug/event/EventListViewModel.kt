@@ -2,13 +2,13 @@
 
 package com.urbanairship.debug.event
 
-import android.arch.lifecycle.MediatorLiveData
-import android.arch.lifecycle.Transformations
-import android.arch.lifecycle.ViewModel
-import android.arch.paging.LivePagedListBuilder
-import android.arch.paging.PagedList
-import android.databinding.Observable
-import android.support.annotation.RestrictTo
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.Transformations
+import androidx.lifecycle.ViewModel
+import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
+import androidx.databinding.Observable
+import androidx.annotation.RestrictTo
 import com.urbanairship.debug.event.persistence.EventEntity
 
 /**

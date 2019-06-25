@@ -4,7 +4,7 @@ package com.urbanairship.analytics;
 
 import android.content.pm.PackageInfo;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;

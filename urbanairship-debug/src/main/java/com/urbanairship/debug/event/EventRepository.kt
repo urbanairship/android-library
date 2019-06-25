@@ -2,8 +2,8 @@
 
 package com.urbanairship.debug.event
 
-import android.arch.paging.DataSource
-import android.support.annotation.RestrictTo
+import androidx.paging.DataSource
+import androidx.annotation.RestrictTo
 import com.urbanairship.debug.event.persistence.EventDao
 import com.urbanairship.debug.event.persistence.EventEntity
 

@@ -2,8 +2,8 @@
 
 package com.urbanairship.debug.push
 
-import android.arch.paging.PagedListAdapter
-import android.support.v7.widget.RecyclerView
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.urbanairship.debug.BR
@@ -16,7 +16,7 @@ import com.urbanairship.debug.utils.SimpleDiffItemCallback
  */
 internal class PushAdapter(private val callback: ((push: PushEntity) -> Unit)) : PagedListAdapter<PushEntity, PushAdapter.ViewHolder>(SimpleDiffItemCallback<PushEntity>()) {
 
-    class ViewHolder(val binding: UaItemPushBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: UaItemPushBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.apply {

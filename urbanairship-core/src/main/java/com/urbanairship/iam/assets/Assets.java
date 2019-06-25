@@ -7,9 +7,9 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.storage.StorageManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;

@@ -2,7 +2,7 @@
 
 package com.urbanairship.analytics.data;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAMathUtil;

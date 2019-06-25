@@ -5,7 +5,7 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;

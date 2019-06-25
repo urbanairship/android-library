@@ -3,11 +3,11 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-import android.support.v4.os.ConfigurationCompat;
-import android.support.v4.os.LocaleListCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.os.ConfigurationCompat;
+import androidx.core.os.LocaleListCompat;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.location.UALocationManager;
