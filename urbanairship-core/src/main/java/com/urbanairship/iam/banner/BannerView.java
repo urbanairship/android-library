@@ -255,7 +255,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     @CallSuper
     protected void onResume() {
         isResumed = true;
-        if (isDismissed) {
+        if (!isDismissed) {
             getTimer().start();
         }
     }
