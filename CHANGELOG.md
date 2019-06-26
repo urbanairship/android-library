@@ -3,6 +3,18 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.0.2 - June 26, 2019
+==============================
+Patch release to fix issues with the banner in-app message type and background location
+updates on Android O+.
+
+Changes
+-------
+
+- Fixed banner in-app messages not dismissing when clicking the banner body.
+- Fixed banner in-app messages not auto dismissing.
+- Fixed background location updates on Android O+.
+  
 Version 10.0.1 - June 4, 2019
 =============================
 Patch release fixing a minor regression in AirshipNotifiationProvider
@@ -11,7 +23,7 @@ when overriding small icon resources via the push API.
 Changes
 -------
 
-- AirshipNotificationProvider deafults to the small icon specified in
+- AirshipNotificationProvider defaults to the small icon specified in
   the PushMessage, if available.
 - AirshipNotificationProvider uses getters instead of instance variables
   when building its default NotificationArguments. 
