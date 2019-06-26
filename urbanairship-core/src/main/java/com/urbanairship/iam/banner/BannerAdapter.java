@@ -180,7 +180,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
             @Override
             public void onTimedOut(@NonNull BannerView view) {
-                displayHandler.finished(ResolutionInfo.messageClicked(), view.getTimer().getRunTime());
+                displayHandler.finished(ResolutionInfo.timedOut(), view.getTimer().getRunTime());
                 onDisplayFinished(view.getContext());
             }
 
