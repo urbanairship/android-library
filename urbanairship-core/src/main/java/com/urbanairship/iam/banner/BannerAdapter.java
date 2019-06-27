@@ -5,11 +5,13 @@ package com.urbanairship.iam.banner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+
 import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
+
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -32,6 +34,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * Banner display adapter.
@@ -134,6 +137,11 @@ public class BannerAdapter extends MediaDisplayAdapter {
         display(context);
     }
 
+    /**
+     * Called when the banner is finished displaying.
+     *
+     * @param context The context.
+     */
     @CallSuper
     @MainThread
     protected void onDisplayFinished(@NonNull Context context) {
@@ -143,15 +151,23 @@ public class BannerAdapter extends MediaDisplayAdapter {
     /**
      * Inflates the banner view.
      *
-     * The view should be attached to the view group.
-     *
      * @param activity The activity.
      * @param viewGroup The container view.
      * @return The banner view.
      */
     @NonNull
-    protected BannerView onCreateView(@NonNull Activity activity, ViewGroup viewGroup) {
-        BannerView view = new BannerView(activity.getApplicationContext(), displayContent, getAssets());
+    protected BannerView onCreateView(@NonNull Activity activity, @NonNull ViewGroup viewGroup) {
+        return new BannerView(activity.getApplicationContext(), displayContent, getAssets());
+    }
+
+    /**
+     * Called after the banner view is created.
+     *
+     * @param view The banner view.
+     * @param activity The activity.
+     * @param viewGroup The container view.
+     */
+    protected void onViewCreated(@NonNull BannerView view, @NonNull Activity activity, @NonNull ViewGroup viewGroup) {
         if (getLastActivity() != activity) {
             if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
                 view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);
@@ -195,7 +211,6 @@ public class BannerAdapter extends MediaDisplayAdapter {
             view.applyRootWindowInsets();
         }
 
-        return view;
     }
 
     /**
@@ -242,7 +257,11 @@ public class BannerAdapter extends MediaDisplayAdapter {
         }
 
         BannerView view = onCreateView(activity, container);
-        container.addView(view);
+        onViewCreated(view, activity, container);
+
+        if (view.getParent() == null) {
+            container.addView(view);
+        }
 
         lastActivity = new WeakReference<>(activity);
         currentView = new WeakReference<>(view);

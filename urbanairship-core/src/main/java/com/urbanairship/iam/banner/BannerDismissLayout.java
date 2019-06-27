@@ -290,6 +290,11 @@ public class BannerDismissLayout extends FrameLayout {
         return dragHelper.getCapturedView() != null;
     }
 
+    /**
+     * Sets the banner placement.
+     *
+     * @param placement The placement.
+     */
     public void setPlacement(@BannerDisplayContent.Placement @NonNull String placement) {
         this.placement = placement;
     }
