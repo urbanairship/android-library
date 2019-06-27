@@ -5,12 +5,6 @@ package com.urbanairship.iam.banner;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.Keep;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.view.ViewCompat;
-import androidx.customview.widget.ViewDragHelper;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -18,6 +12,13 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.view.ViewCompat;
+import androidx.customview.widget.ViewDragHelper;
 
 /**
  * The BannerDismissLayout allows dismissing a banner with a vertical swipe gesture.
@@ -290,6 +291,11 @@ public class BannerDismissLayout extends FrameLayout {
         return dragHelper.getCapturedView() != null;
     }
 
+    /**
+     * Sets the banner placement.
+     *
+     * @param placement The placement.
+     */
     public void setPlacement(@BannerDisplayContent.Placement @NonNull String placement) {
         this.placement = placement;
     }
