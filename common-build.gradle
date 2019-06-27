@@ -149,7 +149,7 @@ def getMavenVersion() {
         result += "-" + airshipVersionQualifier
     }
 
-    if (property('versionSuffix')) {
+    if (project.hasProperty('versionSuffix')) {
         result += "-" + property('versionSuffix')
     }
 
