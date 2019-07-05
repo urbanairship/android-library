@@ -1,0 +1,32 @@
+package com.urbanairship.sample;
+
+import android.content.Context;
+
+import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.UAirship;
+
+import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+public class TestAutopilot extends SampleAutopilot {
+
+    @Override
+    public void onAirshipReady(@NonNull UAirship airship) {
+        super.onAirshipReady(airship);
+
+        airship.getInAppMessagingManager().setDisplayInterval(0, TimeUnit.MILLISECONDS);
+        UAirship.shared().getInAppMessagingManager().cancelAll();
+    }
+
+    @Nullable
+    @Override
+    public AirshipConfigOptions createAirshipConfigOptions(@NonNull Context context) {
+        return AirshipConfigOptions.newBuilder()
+                                   .setAppKey("APPKEYAPPKEYAPPKEYAPPK")
+                                   .setAppSecret("APPSECRETAPPSECRETAPPS")
+                                   .build();
+    }
+
+}
