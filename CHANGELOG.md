@@ -3,6 +3,19 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 11.0.0 - July 11, 2019
+==============================
+Major release that migrates from the Android Support Libraries to the Jetpack (AndroidX) Libraries.
+Applications are required to migrate to Android X before using this version. For more info, see
+[Migrating to AndroidX](https://developer.android.com/jetpack/androidx/migrate)
+
+Changes
+-------
+- Migrated to AndroidX.
+- Updated banner in-app message adapter to make it easier to customize the banner view.
+- Allow defining notification channel `sound` with a raw resource ID through XML instead of a URL.
+
+
 Version 10.0.2 - June 26, 2019
 ==============================
 Patch release to fix issues with the banner in-app message type and background location
@@ -14,7 +27,7 @@ Changes
 - Fixed banner in-app messages not dismissing when clicking the banner body.
 - Fixed banner in-app messages not auto dismissing.
 - Fixed background location updates on Android O+.
-  
+
 Version 10.0.1 - June 4, 2019
 =============================
 Patch release fixing a minor regression in AirshipNotifiationProvider
@@ -26,7 +39,7 @@ Changes
 - AirshipNotificationProvider defaults to the small icon specified in
   the PushMessage, if available.
 - AirshipNotificationProvider uses getters instead of instance variables
-  when building its default NotificationArguments. 
+  when building its default NotificationArguments.
 
 Version 10.0.0 - May 22, 2019
 =============================
