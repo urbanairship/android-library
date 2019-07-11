@@ -106,4 +106,11 @@ public interface ConfigParser {
      */
     int getInt(@NonNull String name, int defaultValue);
 
+    /**
+     * Gets the raw resource ID of the config element.
+     *
+     * @param name The name of the config element.
+     * @return The resource ID value of the config element or 0 if the element does not exist.
+     */
+    int getRawResourceId(@NonNull String name);
 }

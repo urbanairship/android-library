@@ -4,6 +4,7 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
@@ -540,9 +541,16 @@ public class NotificationChannelCompat implements JsonSerializable {
                 channelCompat.setLightColor(configParser.getColor(LIGHT_COLOR_KEY, 0));
                 channelCompat.setLockscreenVisibility(configParser.getInt(LOCKSCREEN_VISIBILITY_KEY, LOCKSCREEN_VISIBILITY_DEFAULT_VALUE));
 
-                String sound = configParser.getString(SOUND_KEY);
-                if (!UAStringUtil.isEmpty(sound)) {
-                    channelCompat.setSound(Uri.parse(sound));
+                int soundResource = configParser.getRawResourceId(SOUND_KEY);
+                if (soundResource != 0) {
+                    Uri uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                            context.getPackageName() + "/raw/" + context.getResources().getResourceEntryName(soundResource));
+                    channelCompat.setSound(uri);
+                } else {
+                    String sound = configParser.getString(SOUND_KEY);
+                    if (!UAStringUtil.isEmpty(sound)) {
+                        channelCompat.setSound(Uri.parse(sound));
+                    }
                 }
 
                 String vibrationPatternString = configParser.getString(VIBRATION_PATTERN_KEY);

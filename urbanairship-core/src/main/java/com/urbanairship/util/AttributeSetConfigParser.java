@@ -126,6 +126,21 @@ public class AttributeSetConfigParser implements ConfigParser {
         return Integer.parseInt(value);
     }
 
+    @Override
+    public int getRawResourceId(@NonNull String name) {
+        int resourceValue = attributeSet.getAttributeResourceValue(null, name, 0);
+        if (resourceValue != 0) {
+            return resourceValue;
+        }
+
+        String resourceName = attributeSet.getAttributeValue(null, name);
+        if (resourceName != null) {
+            return context.getResources().getIdentifier(resourceName, "raw", context.getPackageName());
+        }
+
+        return 0;
+    }
+
 
     @Override
     public long getLong(@NonNull String name, long defaultValue) {

@@ -156,6 +156,10 @@ public class PropertiesConfigParser implements ConfigParser {
         return context.getResources().getIdentifier(getString(name), "drawable", context.getPackageName());
     }
 
+    @Override
+    public int getRawResourceId(@NonNull String name) {
+        return context.getResources().getIdentifier(getString(name), "raw", context.getPackageName());
+    }
 
     @Override
     public long getLong(@NonNull String name, long defaultValue) {
