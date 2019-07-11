@@ -670,7 +670,7 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 List<T> result = convertEntries(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
-                Logger.error("AutomationEngine - Updated schedule: %s", result);
+                Logger.verbose("AutomationEngine - Updated schedule: %s", result);
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
         });
