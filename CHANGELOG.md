@@ -3,6 +3,14 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 11.0.1 - July 17, 2019
+==============================
+Patch release to fix a rare crash caused by accessing a SimpleDateFormat across multiple threads.
+
+Changes
+-------
+- Synchronize use of SimpleDateFormat instance across threads.
+
 Version 11.0.0 - July 11, 2019
 ==============================
 Major release that migrates from the Android Support Libraries to the Jetpack (AndroidX) Libraries.
