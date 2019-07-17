@@ -2,14 +2,14 @@
 
 package com.urbanairship.util;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Date utilities.
@@ -18,14 +18,14 @@ public class DateUtils {
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
     private static final SimpleDateFormat ALT_ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+    private static final Object lock = new Object();
 
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         ALT_ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    private DateUtils() {
-    }
+    private DateUtils() { }
 
     /**
      * Parses an ISO 8601 timestamp.
@@ -42,9 +42,15 @@ public class DateUtils {
         }
 
         try {
-            return ISO_DATE_FORMAT.parse(timeStamp).getTime();
-        } catch (ParseException ignored) {
-            return ALT_ISO_DATE_FORMAT.parse(timeStamp).getTime();
+            synchronized (lock) {
+                try {
+                    return ISO_DATE_FORMAT.parse(timeStamp).getTime();
+                } catch (ParseException ignored) {
+                    return ALT_ISO_DATE_FORMAT.parse(timeStamp).getTime();
+                }
+            }
+        } catch (Exception e) {
+            throw new ParseException("Unexpected issue when attempting to parse " + timeStamp + " - " + e.getMessage(), -1);
         }
     }
 
@@ -72,7 +78,9 @@ public class DateUtils {
      */
     @NonNull
     public static String createIso8601TimeStamp(long milliseconds) {
-        return ISO_DATE_FORMAT.format(new Date(milliseconds));
+        synchronized (lock) {
+            return ISO_DATE_FORMAT.format(new Date(milliseconds));
+        }
     }
 
 }
