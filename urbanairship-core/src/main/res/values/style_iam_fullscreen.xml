@@ -23,7 +23,7 @@
     <!-- Main layout - contains the message content -->
     <style name="UrbanAirship.InAppFullscreen.Layout">
         <item name="android:fitsSystemWindows">true</item>
-        <item name="android:paddingTop">24dp</item>
+        <item name="android:layout_marginTop">24dp</item>
     </style>
 
     <!-- Layout overrides for HEADER_MEDIA_BODY templates -->
@@ -34,8 +34,8 @@
 
     <!-- Layout overrides for MEDIA_HEADER_BODY templates -->
     <style name="UrbanAirship.InAppFullscreen.Layout.MediaHeaderBody">
-        <!-- Remove the top padding -->
-        <item name="android:paddingTop">0dp</item>
+        <!-- Remove the top margin -->
+        <item name="android:layout_marginTop">0dp</item>
     </style>
 
     <!-- Wraps the dismiss button -->
