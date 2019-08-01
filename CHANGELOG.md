@@ -3,6 +3,18 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.1.0 - August 1, 2019
+===============================
+Minor release that backports changes and fixes from 11.0.2 release.
+
+Changes
+-------
+- Updated banner in-app message adapter to make it easier to customize the banner view.
+- Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
+- Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
+- Synchronize use of SimpleDateFormat instance across threads.
+
+
 Version 10.0.2 - June 26, 2019
 ==============================
 Patch release to fix issues with the banner in-app message type and background location
