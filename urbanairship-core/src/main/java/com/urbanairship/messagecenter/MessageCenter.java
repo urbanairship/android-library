@@ -144,7 +144,7 @@ public class MessageCenter extends AirshipComponent {
         // Try the VIEW_MESSAGE_INTENT_ACTION if the message ID is available
         if (messageId != null) {
             intent.setAction(VIEW_MESSAGE_INTENT_ACTION);
-            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+            if (intent.resolveActivity(getContext().getPackageManager()) != null) {
                 getContext().startActivity(intent);
                 return;
             }
