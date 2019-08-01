@@ -3,6 +3,29 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 11.0.2 - August 1, 2019
+===============================
+Patch release to fix an issue with not starting a custom activity with the intent filter action
+`com.urbanairship.VIEW_RICH_PUSH_MESSAGE` for custom MessageCenter implementations and a fix for
+a minor fullscreen In-App Automation style issue. Apps that have custom message center implementations
+should update.
+
+Changes
+-------
+- Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
+- Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
+
+Version 10.1.0 - August 1, 2019
+===============================
+Minor release that backports changes and fixes from 11.0.2 release.
+
+Changes
+-------
+- Updated banner in-app message adapter to make it easier to customize the banner view.
+- Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
+- Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
+- Synchronize use of SimpleDateFormat instance across threads.
+
 Version 11.0.1 - July 17, 2019
 ==============================
 Patch release to fix a rare crash caused by accessing a SimpleDateFormat across multiple threads.
