@@ -3,6 +3,27 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.1.1 - August 9, 2019
+===============================
+Patch release to fix direct open reporting for notifications when an activity is resumed from
+the background. Applications running 10.x should update.
+
+Changes
+-------
+- Fixed direct open attributions for push notifications.
+
+Version 11.0.2 - August 1, 2019
+===============================
+Patch release to fix an issue with not starting a custom activity with the intent filter action
+`com.urbanairship.VIEW_RICH_PUSH_MESSAGE` for custom MessageCenter implementations and a fix for
+a minor fullscreen In-App Automation style issue. Apps that have custom message center implementations
+should update.
+
+Changes
+-------
+- Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
+- Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
+
 Version 10.1.0 - August 1, 2019
 ===============================
 Minor release that backports changes and fixes from 11.0.2 release.
@@ -13,6 +34,26 @@ Changes
 - Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
 - Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
 - Synchronize use of SimpleDateFormat instance across threads.
+
+Version 11.0.1 - July 17, 2019
+==============================
+Patch release to fix a rare crash caused by accessing a SimpleDateFormat across multiple threads.
+
+Changes
+-------
+- Synchronize use of SimpleDateFormat instance across threads.
+
+Version 11.0.0 - July 11, 2019
+==============================
+Major release that migrates from the Android Support Libraries to the Jetpack (AndroidX) Libraries.
+Applications are required to migrate to Android X before using this version. For more info, see
+[Migrating to AndroidX](https://developer.android.com/jetpack/androidx/migrate)
+
+Changes
+-------
+- Migrated to AndroidX.
+- Updated banner in-app message adapter to make it easier to customize the banner view.
+- Allow defining notification channel `sound` with a raw resource ID through XML instead of a URL.
 
 
 Version 10.0.2 - June 26, 2019
@@ -26,7 +67,7 @@ Changes
 - Fixed banner in-app messages not dismissing when clicking the banner body.
 - Fixed banner in-app messages not auto dismissing.
 - Fixed background location updates on Android O+.
-  
+
 Version 10.0.1 - June 4, 2019
 =============================
 Patch release fixing a minor regression in AirshipNotifiationProvider
@@ -38,7 +79,7 @@ Changes
 - AirshipNotificationProvider defaults to the small icon specified in
   the PushMessage, if available.
 - AirshipNotificationProvider uses getters instead of instance variables
-  when building its default NotificationArguments. 
+  when building its default NotificationArguments.
 
 Version 10.0.0 - May 22, 2019
 =============================
