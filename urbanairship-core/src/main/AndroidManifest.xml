@@ -38,6 +38,7 @@
 
         <activity
             android:name="com.urbanairship.push.NotificationProxyActivity"
+            android:taskAffinity="com.urbanairship.push.NotificationProxyActivity"
             android:exported="false"
             android:theme="@android:style/Theme.NoDisplay" />
 
