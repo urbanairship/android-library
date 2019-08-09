@@ -3,6 +3,25 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+
+Version 11.0.3 - August 9, 2019
+===============================
+Patch release to fix direct open reporting for notifications when an activity is resumed from
+the background. Applications running 11.x should update.
+
+Changes
+-------
+- Fixed direct open attributions for push notifications.
+
+Version 10.1.1 - August 9, 2019
+===============================
+Patch release to fix direct open reporting for notifications when an activity is resumed from
+the background. Applications running 10.x should update.
+
+Changes
+-------
+- Fixed direct open attributions for push notifications.
+
 Version 11.0.2 - August 1, 2019
 ===============================
 Patch release to fix an issue with not starting a custom activity with the intent filter action
