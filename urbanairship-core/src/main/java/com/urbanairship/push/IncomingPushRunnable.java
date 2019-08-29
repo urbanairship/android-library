@@ -289,7 +289,7 @@ class IncomingPushRunnable implements Runnable {
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, arguments.getMessage().getPushBundle())
                 .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationId())
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, arguments.getNotificationTag());
+                .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, arguments.getNotificationTag());
 
         // If the notification already has an intent, add it to the extras to be sent later
         if (notification.contentIntent != null) {
