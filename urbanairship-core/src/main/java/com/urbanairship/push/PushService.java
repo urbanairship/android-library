@@ -59,9 +59,6 @@ public class PushService extends Service {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            // Process the push
-                            pushRunnable.run();
-
                             pushes--;
                             if (pushes <= 0) {
                                 stopSelf(lastStartId);

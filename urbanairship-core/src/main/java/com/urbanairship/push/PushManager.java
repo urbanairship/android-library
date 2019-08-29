@@ -272,6 +272,7 @@ public class PushManager extends AirshipComponent {
 
 
     private final Object tagLock = new Object();
+    private final Object uniqueIdLock = new Object();
 
 
     /**
@@ -1186,32 +1187,34 @@ public class PushManager extends AirshipComponent {
             return true;
         }
 
-        JsonList jsonList = null;
-        try {
-            jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
-        } catch (JsonException e) {
-            Logger.debug("PushJobHandler - Unable to parse canonical Ids.", e);
+        synchronized (uniqueIdLock) {
+            JsonList jsonList = null;
+            try {
+                jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
+            } catch (JsonException e) {
+                Logger.debug("PushJobHandler - Unable to parse canonical Ids.", e);
+            }
+
+            List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
+
+            // Wrap the canonicalId
+            JsonValue id = JsonValue.wrap(canonicalId);
+
+            // Check if the list contains the canonicalId
+            if (canonicalIds.contains(id)) {
+                return false;
+            }
+
+            // Add it
+            canonicalIds.add(id);
+            if (canonicalIds.size() > MAX_CANONICAL_IDS) {
+                canonicalIds = canonicalIds.subList(canonicalIds.size() - MAX_CANONICAL_IDS, canonicalIds.size());
+            }
+
+            // Store the new list
+            preferenceDataStore.put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
+
+            return true;
         }
-
-        List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
-
-        // Wrap the canonicalId
-        JsonValue id = JsonValue.wrap(canonicalId);
-
-        // Check if the list contains the canonicalId
-        if (canonicalIds.contains(id)) {
-            return false;
-        }
-
-        // Add it
-        canonicalIds.add(id);
-        if (canonicalIds.size() > MAX_CANONICAL_IDS) {
-            canonicalIds = canonicalIds.subList(canonicalIds.size() - MAX_CANONICAL_IDS, canonicalIds.size());
-        }
-
-        // Store the new list
-        preferenceDataStore.put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
-
-        return true;
     }
 }
