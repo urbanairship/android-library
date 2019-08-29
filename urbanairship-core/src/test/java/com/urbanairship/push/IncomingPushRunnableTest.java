@@ -335,6 +335,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notificationProvider.notification = createNotification();
+        notificationProvider.tag = "cool-tag";
         notificationProvider.notification.contentIntent = pendingIntent;
 
         pushRunnable.run();
@@ -347,6 +348,9 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertEquals("One category should exist.", 1, intent.getCategories().size());
         assertNotNull("The notification content intent is not null.", pendingIntent);
         assertSame("The notification content intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT));
+        assertSame( "cool-tag", intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_TAG));
+        assertSame( TEST_NOTIFICATION_ID, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_ID));
+
     }
 
     /**
