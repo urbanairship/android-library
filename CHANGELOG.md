@@ -4,6 +4,11 @@ Android ChangeLog
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
 
+Version 11.0.4 - August 30, 2019
+================================
+Patch release to fix an issue with reporting the wrong push ID in the NotificationListener. Applications
+that rely on the notification ID should update.
+
 Version 11.0.3 - August 9, 2019
 ===============================
 Patch release to fix direct open reporting for notifications when an activity is resumed from
