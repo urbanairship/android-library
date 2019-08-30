@@ -9,6 +9,20 @@ Version 11.0.4 - August 30, 2019
 Patch release to fix an issue with reporting the wrong push ID in the NotificationListener. Applications
 that rely on the notification ID should update.
 
+Version 10.1.2 - August 30, 2019
+================================
+Patch release to fix an issue with reporting the wrong push ID in the NotificationListener. Applications
+that rely on the notification ID should update.
+
+Version 9.7.2 - August 30, 2019
+===============================
+Fixes an issue where push message could result in duplicate push notifications. Applications that are
+running 9.4.0 - 9.7.1 should update.
+
+Changes
+-------
+- Fixes issue with double processing messages on older devices.
+
 Version 11.0.3 - August 9, 2019
 ===============================
 Patch release to fix direct open reporting for notifications when an activity is resumed from
