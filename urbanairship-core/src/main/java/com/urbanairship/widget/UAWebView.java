@@ -218,8 +218,10 @@ public class UAWebView extends WebView {
             headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
         }
 
-        currentMessage = message;
         loadUrl(message.getMessageBodyUrl(), headers);
+
+        // loadUrl clears currentMessage, so set it after load starts
+        currentMessage = message;
     }
 
     /**
