@@ -3,6 +3,13 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+
+Version 10.1.3 - September 16, 2019
+===================================
+Patch release to fix an issue with custom event attribution when adding a custom event through a Message
+Center message. Apps that add events in a Message Center message should update.
+
+
 Version 10.1.2 - August 30, 2019
 ================================
 Patch release to fix an issue with reporting the wrong push ID in the NotificationListener.
