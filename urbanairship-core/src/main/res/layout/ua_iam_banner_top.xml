@@ -12,11 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top|center_horizontal"
+        android:weightSum="100"
         android:orientation="vertical">
 
         <ViewStub
             android:id="@+id/banner_content"
             android:inflatedId="@+id/ua_iam_banner_content_left_image"
+            android:layout_weight="90"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
@@ -24,10 +26,12 @@
             android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="5"
             style="@style/UrbanAirship.InAppBanner.ButtonLayout" />
 
         <View
             android:id="@+id/banner_pull"
+            android:layout_weight="5"
             style="@style/UrbanAirship.InAppBanner.Pull.Top" />
 
     </com.urbanairship.iam.view.BoundedLinearLayout>
