@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static org.junit.Assert.assertEquals;
@@ -297,6 +299,21 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify no jobs were created for the event
         verifyZeroInteractions(mockJobDispatcher);
+    }
+
+    /**
+     * Test that SDK extensions are registered correctly
+     */
+    @Test
+    public void testSDKExtensions() {
+        analytics.registerSDKExtension("cordova", "1.2.3");
+        analytics.registerSDKExtension("unity", "5,.6,.7,,,");
+
+        Map<String, String> expectedExtensions = new HashMap<>();
+        expectedExtensions.put("cordova", "1.2.3");
+        expectedExtensions.put("unity", "5.6.7");
+
+        assertEquals(expectedExtensions, analytics.getExtensions());
     }
 
 }

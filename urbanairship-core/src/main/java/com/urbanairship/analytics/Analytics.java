@@ -8,6 +8,7 @@ import android.location.Location;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
@@ -25,7 +26,10 @@ import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.Checks;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +82,52 @@ public class Analytics extends AirshipComponent {
     private String currentScreen;
     private String previousScreen;
     private long screenStartTime;
+
+    /**
+     * SDK Extensions enum
+     * @hide
+     */
+    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ExtensionName {}
+
+    /**
+     * SDK Extension = Cordova
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_CORDOVA = "cordova";
+
+    /**
+     * SDK Extension = Flutter
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_FLUTTER = "flutter";
+
+    /**
+     * SDK Extension = React-Native
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_REACT_NATIVE = "react-native";
+
+    /**
+     * SDK Extension = Unity
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_UNITY = "unity";
+
+    /**
+     * SDK Extension = Xamarin
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_XAMARIN = "xamarin";
+
+    @NonNull
+    private final Map<String, String> sdkExtensions = new HashMap<>();
 
     /**
      * The Analytics constructor.
@@ -530,6 +580,35 @@ public class Analytics extends AirshipComponent {
                     break;
             }
         }
+    }
+
+    /**
+     * Registers an SDK extension with the analytics module.
+     *
+     * @param extension The name of the SDK extension. The compiler will warn if the name is invalid.
+     * @param version The version of the SDK extension. Commas will be removed from the string.
+     * @hide
+     */
+    public void registerSDKExtension(@ExtensionName @NonNull String extension, @NonNull String version) {
+        // normalize extension
+        extension = extension.toLowerCase();
+
+        // normalize version
+        version = version.replace(",","");
+
+        sdkExtensions.put(extension, version);
+    }
+
+    /**
+     * The registered SDK extensions.
+     *
+     * @return The SDK extensions as a map of extension name to extension version
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public Map<String, String> getExtensions() {
+        return sdkExtensions;
     }
 
     /**

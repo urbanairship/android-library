@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -134,6 +135,20 @@ public class EventApiClient {
             bluetoothEnabled = Boolean.toString(isBluetoothEnabled());
         }
 
+        // SDK Extensions
+        String extensionHeader = "";
+
+        Map<String, String> sdkExtensions = airship.getAnalytics().getExtensions();
+        Integer i = 0;
+        for (String name : sdkExtensions.keySet()) {
+            extensionHeader += String.format("%s:%s", name, sdkExtensions.get(name));
+
+            i++;
+            if (i < sdkExtensions.size()) {
+                extensionHeader += ",";
+            }
+        }
+
         Request request = requestFactory.createRequest("POST", analyticsServerUrl)
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
@@ -156,7 +171,8 @@ public class EventApiClient {
                                         .setHeader("X-UA-Location-Service-Enabled",
                                                 Boolean.toString(airship.getLocationManager().isLocationUpdatesEnabled()))
                                         .setHeader("X-UA-Bluetooth-Status", bluetoothEnabled)
-                                        .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
+                                        .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId())
+                                        .setHeader("X-UA-Frameworks", extensionHeader);
 
         Locale locale = localeManager.getDefaultLocale();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {

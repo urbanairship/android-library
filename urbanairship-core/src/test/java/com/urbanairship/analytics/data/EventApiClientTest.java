@@ -115,9 +115,12 @@ public class EventApiClientTest extends BaseTestCase {
                 { "X-UA-Locale-Language", "en" },
                 { "X-UA-Locale-Country", "US" },
                 { "X-UA-Locale-Variant", "POSIX" },
-                { "X-UA-User-ID", "userId" }
+                { "X-UA-User-ID", "userId" },
+                { "X-UA-Frameworks", "cordova:1.2.3" }
 
         };
+
+        UAirship.shared().getAnalytics().registerSDKExtension("cordova", "1.2.3");
 
         client.sendEvents(UAirship.shared(), events);
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
