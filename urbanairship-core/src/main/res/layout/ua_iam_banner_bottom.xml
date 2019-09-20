@@ -11,25 +11,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:weightSum="100"
         android:orientation="vertical">
 
         <View
             android:id="@+id/banner_pull"
-            android:layout_weight="5"
             style="@style/UrbanAirship.InAppBanner.Pull.Bottom" />
 
         <ViewStub
             android:id="@+id/banner_content"
             android:inflatedId="@+id/ua_iam_banner_content_left_image"
-            android:layout_weight="90"
+            android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <com.urbanairship.iam.view.InAppButtonLayout
             android:id="@+id/buttons"
             style="@style/UrbanAirship.InAppBanner.ButtonLayout"
-            android:layout_weight="5"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
