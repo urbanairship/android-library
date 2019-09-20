@@ -31,4 +31,7 @@ interface EventDao {
 
     @Query("DELETE FROM events where eventId NOT IN (SELECT eventId from events ORDER BY time LIMIT :count)")
     fun trimEvents(count: Long)
+
+    @Query("DELETE FROM events WHERE datetime( time / 1000 , 'unixepoch') < datetime('now', '-' || :days || ' day')")
+    fun trimOldEvents(days: Int)
 }

@@ -16,6 +16,11 @@
     <string name="ua_no_filters">Filters</string>
     <string name="ua_event_details">Event Details</string>
     <string name="ua_clear">Clear</string>
+    <string name="ua_event_storage_days_title">Days of Events to Store</string>
+    <string name="ua_event_storage_days_02">2 Days</string>
+    <string name="ua_event_storage_days_05">5 Days</string>
+    <string name="ua_event_storage_days_10">10 Days</string>
+    <string name="ua_event_storage_days_30">30 Days</string>
 
     <string name="ua_debug_title">Airship Debug</string>
     <string name="ua_debug_short_title">UA Debug</string>
