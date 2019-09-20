@@ -17,6 +17,7 @@
         <ViewStub
             android:id="@+id/banner_content"
             android:inflatedId="@+id/ua_iam_banner_content_left_image"
+            android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
