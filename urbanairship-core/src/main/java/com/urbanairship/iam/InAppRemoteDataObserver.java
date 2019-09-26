@@ -4,7 +4,6 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
@@ -31,6 +30,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.
  *
@@ -48,7 +50,7 @@ class InAppRemoteDataObserver {
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
     private static final String LAST_PAYLOAD_METADATA = "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA";
-    private static final String SCHEDULED_MESSAGES_KEY = "com.urbanairship.iam.data.SCHEDULED_MESSAGES";
+    private static final String LEGACY_SCHEDULED_MESSAGES_KEY = "com.urbanairship.iam.data.SCHEDULED_MESSAGES";
     private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
 
     private final PreferenceDataStore preferenceDataStore;
@@ -56,9 +58,7 @@ class InAppRemoteDataObserver {
     private final List<Listener> listeners = new ArrayList<>();
 
     interface Listener {
-
         void onSchedulesUpdated();
-
     }
 
     /**
@@ -121,6 +121,7 @@ class InAppRemoteDataObserver {
                                           @Override
                                           public void onNext(@NonNull RemoteDataPayload payload) {
                                               try {
+                                                  normalizeSource(scheduler);
                                                   processPayload(payload, scheduler);
                                                   Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
                                               } catch (Exception e) {
@@ -140,6 +141,42 @@ class InAppRemoteDataObserver {
     }
 
     /**
+     * Cleans up the source on schedules from mishandled edits in past SDKs.
+     *
+     * @param scheduler The scheduler.
+     */
+    private void normalizeSource(@NonNull InAppMessageScheduler scheduler) throws ExecutionException, InterruptedException {
+        JsonMap jsonMap = preferenceDataStore.getJsonValue(LEGACY_SCHEDULED_MESSAGES_KEY).getMap();
+
+        if (jsonMap == null) {
+            return;
+        }
+
+        for (Map.Entry<String, JsonValue> entry : jsonMap) {
+            if (!entry.getValue().isString()) {
+                continue;
+            }
+
+            InAppMessageSchedule schedule = scheduler.getSchedule(entry.getValue().optString()).get();
+            if (schedule == null) {
+                return;
+            }
+
+            InAppMessage message = schedule.getInfo().getInAppMessage();
+
+            if (!InAppMessage.SOURCE_REMOTE_DATA.equals(message.getSource())) {
+                InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder()
+                                                                           .setMessage(InAppMessage.newBuilder(message).setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                                                                                   .build())
+                                                                           .build();
+                scheduler.editSchedule(schedule.getId(), edits).get();
+            }
+        }
+
+        preferenceDataStore.remove(LEGACY_SCHEDULED_MESSAGES_KEY);
+    }
+
+    /**
      * Processes a payload.
      *
      * @param payload The remote data payload.
@@ -153,7 +190,8 @@ class InAppRemoteDataObserver {
 
         List<String> messageIds = new ArrayList<>();
         List<InAppMessageScheduleInfo> newSchedules = new ArrayList<>();
-        Map<String, String> scheduleIdMap = getScheduleIdMap();
+
+        Map<String, String> scheduleIdMap = createScheduleIdMap(scheduler.getSchedules().get());
 
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
             long createdTimeStamp, lastUpdatedTimeStamp;
@@ -177,21 +215,6 @@ class InAppRemoteDataObserver {
             // Ignore any messages that have not updated since the last payload
             if (isMetadataUpToDate && lastUpdatedTimeStamp <= lastUpdate) {
                 continue;
-            }
-
-            // If we do not have a schedule ID for the message ID, try to look it up first
-            if (!scheduleIdMap.containsKey(messageId)) {
-                Collection<InAppMessageSchedule> schedules = scheduler.getSchedules(messageId).get();
-
-                if (schedules != null && !schedules.isEmpty()) {
-                    // Make sure we only have a single schedule for the message ID
-                    if (schedules.size() > 1) {
-                        Logger.debug("InAppRemoteDataObserver - Duplicate schedules for in-app message: %s", messageId);
-                        continue;
-                    }
-
-                    scheduleIdMap.put(messageId, schedules.iterator().next().getId());
-                }
             }
 
             String existingScheduleId = scheduleIdMap.get(messageId);
@@ -253,7 +276,7 @@ class InAppRemoteDataObserver {
                                                                        .setEnd(0)
                                                                        .build();
             for (String messageId : removedMessageIds) {
-                String scheduleId = scheduleIdMap.remove(messageId);
+                String scheduleId = scheduleIdMap.get(messageId);
                 if (scheduleId != null) {
                     scheduler.editSchedule(scheduleId, edits).get();
                 }
@@ -261,7 +284,6 @@ class InAppRemoteDataObserver {
         }
 
         // Store data
-        setScheduleIdMap(scheduleIdMap);
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
         preferenceDataStore.put(LAST_PAYLOAD_METADATA, payload.getMetadata());
 
@@ -290,33 +312,28 @@ class InAppRemoteDataObserver {
     }
 
     /**
-     * Gets the message ID to schedule ID map.
+     * Creates a map of message Id to schedule Id from a list of schedules.
      *
-     * @return The ID map.
+     * @param schedules
+     * @return The Id map.
      */
     @NonNull
-    private Map<String, String> getScheduleIdMap() {
-        JsonMap jsonMap = preferenceDataStore.getJsonValue(SCHEDULED_MESSAGES_KEY).optMap();
+    private Map<String, String> createScheduleIdMap(@Nullable Collection<InAppMessageSchedule> schedules) {
 
-        Map<String, String> idMap = new HashMap<>();
-        for (Map.Entry<String, JsonValue> entry : jsonMap) {
-            if (!entry.getValue().isString()) {
-                continue;
-            }
+        Map<String, String> scheduleIdMap = new HashMap<>();
 
-            idMap.put(entry.getKey(), entry.getValue().optString());
+        if (schedules == null) {
+            return scheduleIdMap;
         }
 
-        return idMap;
-    }
+        for (InAppMessageSchedule schedule : schedules) {
+            InAppMessage message = schedule.getInfo().getInAppMessage();
+            if (InAppMessage.SOURCE_REMOTE_DATA.equals(message.getSource())) {
+                scheduleIdMap.put(message.getId(), schedule.getId());
+            }
+        }
 
-    /**
-     * Sets the message ID to schedule ID map.
-     *
-     * @param idMap The message ID to schedule ID map.
-     */
-    private void setScheduleIdMap(Map<String, String> idMap) {
-        preferenceDataStore.put(SCHEDULED_MESSAGES_KEY, JsonValue.wrapOpt(idMap));
+        return scheduleIdMap;
     }
 
     /**
