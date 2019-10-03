@@ -1,9 +1,10 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
@@ -15,7 +16,9 @@ import java.util.Set;
 
 /**
  * A class containing utility methods related to tags.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class TagUtils {
 
     private static final int MAX_TAG_LENGTH = 127;

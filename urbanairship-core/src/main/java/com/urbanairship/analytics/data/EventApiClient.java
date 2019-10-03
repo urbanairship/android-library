@@ -187,7 +187,7 @@ public class EventApiClient {
             }
         }
 
-        String channelID = airship.getPushManager().getChannelId();
+        String channelID = airship.getChannel().getId();
         if (!UAStringUtil.isEmpty(channelID)) {
             request.setHeader("X-UA-Channel-ID", channelID);
             // Send the Channel ID instead of the Registration ID as the Push Address for

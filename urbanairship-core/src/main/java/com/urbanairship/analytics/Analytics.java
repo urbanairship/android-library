@@ -19,6 +19,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -65,6 +67,7 @@ public class Analytics extends AirshipComponent {
     private final EventManager eventManager;
     private final ApplicationListener listener;
     private final AirshipConfigOptions configOptions;
+    private final AirshipChannel airshipChannel;
     private final Executor executor;
     private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
     private final List<EventListener> eventListeners = new ArrayList<>();
@@ -140,6 +143,7 @@ public class Analytics extends AirshipComponent {
         this.configOptions = builder.configOptions;
         this.activityMonitor = builder.activityMonitor;
         this.eventManager = builder.eventManager;
+        this.airshipChannel = builder.airshipChannel;
         this.executor = builder.executor == null ? AirshipExecutors.newSerialExecutor() : builder.executor;
         this.sessionId = UUID.randomUUID().toString();
 
@@ -201,6 +205,20 @@ public class Analytics extends AirshipComponent {
         if (activityMonitor.isAppForegrounded()) {
             onForeground(System.currentTimeMillis());
         }
+
+        airshipChannel.addChannelListener(new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                uploadEvents();
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+
+            }
+        });
+
+
     }
 
     @Override
@@ -634,6 +652,7 @@ public class Analytics extends AirshipComponent {
         private ActivityMonitor activityMonitor;
         private EventManager eventManager;
         private AirshipConfigOptions configOptions;
+        public AirshipChannel airshipChannel;
         private Executor executor;
 
         /**
@@ -706,6 +725,18 @@ public class Analytics extends AirshipComponent {
         }
 
         /**
+         * Sets the Airship channel.
+         *
+         * @param airshipChannel The Airship channel.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setAirshipChannel(@NonNull AirshipChannel airshipChannel) {
+            this.airshipChannel = airshipChannel;
+            return this;
+        }
+
+        /**
          * Builds the analytics instance.
          *
          * @return The analytics instance.
@@ -716,9 +747,8 @@ public class Analytics extends AirshipComponent {
             Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
             Checks.checkNotNull(eventManager, "Missing event manager.");
             Checks.checkNotNull(configOptions, "Missing config options.");
+            Checks.checkNotNull(airshipChannel, "Missing Airship channel.");
             return new Analytics(this);
         }
-
     }
-
 }

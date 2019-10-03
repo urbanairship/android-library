@@ -1,13 +1,8 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
@@ -19,6 +14,12 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * The named user is an alternate method of identifying the device. Once a named
@@ -47,31 +48,50 @@ public class NamedUser extends AirshipComponent {
     private final JobDispatcher jobDispatcher;
     private final TagGroupRegistrar tagGroupRegistrar;
     private NamedUserJobHandler namedUserJobHandler;
+    private AirshipChannel airshipChannel;
 
     /**
      * Creates a NamedUser.
      *
      * @param context The application context.
      * @param preferenceDataStore The preferences data store.
+     * @param tagGroupRegistrar The tag group registrar.
+     * @param airshipChannel The airship channel.
      */
-    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        this(context, preferenceDataStore, tagGroupRegistrar, JobDispatcher.shared(context));
+    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                     @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull AirshipChannel airshipChannel) {
+        this(context, preferenceDataStore, tagGroupRegistrar, airshipChannel, JobDispatcher.shared(context));
     }
 
     /**
      * @hide
      */
     @VisibleForTesting
-    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
+    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+              @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull AirshipChannel airshipChannel,
+              @NonNull JobDispatcher dispatcher) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
-        this.jobDispatcher = dispatcher;
         this.tagGroupRegistrar = tagGroupRegistrar;
+        this.airshipChannel = airshipChannel;
+        this.jobDispatcher = dispatcher;
     }
 
     @Override
     protected void init() {
         super.init();
+
+        airshipChannel.addChannelListener(new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                dispatchNamedUserUpdateJob();
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+
+            }
+        });
 
         // Start named user update
         dispatchNamedUserUpdateJob();
@@ -188,15 +208,6 @@ public class NamedUser extends AirshipComponent {
      */
     private void updateChangeToken() {
         preferenceDataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString());
-    }
-
-    /**
-     * Disassociate the named user only if the named user ID is really null.
-     */
-    synchronized void disassociateNamedUserIfNull() {
-        if (UAStringUtil.equals(getId(), null)) {
-            setId(null);
-        }
     }
 
     /**

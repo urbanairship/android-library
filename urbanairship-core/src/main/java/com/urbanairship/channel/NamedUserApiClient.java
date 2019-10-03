@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,13 +26,17 @@ class NamedUserApiClient extends BaseApiClient {
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String NAMED_USER_ID_KEY = "named_user_id";
 
+    @UAirship.Platform
+    private final int platform;
+
     NamedUserApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
     NamedUserApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(platform, configOptions, requestFactory);
+        super(configOptions, requestFactory);
+        this.platform = platform;
     }
 
     /**
@@ -78,7 +82,7 @@ class NamedUserApiClient extends BaseApiClient {
      */
     @NonNull
     String getDeviceType() {
-        switch (getPlatform()) {
+        switch (platform) {
             case UAirship.AMAZON_PLATFORM:
                 return "amazon";
 

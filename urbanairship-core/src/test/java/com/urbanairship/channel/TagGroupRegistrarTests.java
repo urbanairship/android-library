@@ -1,12 +1,15 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.channel.PendingTagGroupMutationStore;
+import com.urbanairship.channel.TagGroupApiClient;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;

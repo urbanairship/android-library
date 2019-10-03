@@ -1,9 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.urbanairship.channel;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -14,10 +11,17 @@ import com.urbanairship.util.UAStringUtil;
 import java.util.HashSet;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 /**
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
+ *
+ * @hide
  */
-class ChannelRegistrationPayload implements JsonSerializable {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ChannelRegistrationPayload implements JsonSerializable {
 
     static final String CHANNEL_KEY = "channel";
     static final String DEVICE_TYPE_KEY = "device_type";
@@ -48,7 +52,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
     /**
      * Builds the ChannelRegistrationPayload
      */
-    static class Builder {
+    public static class Builder {
 
         private boolean optIn;
         private boolean backgroundEnabled;
@@ -69,7 +73,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with optIn value set
          */
         @NonNull
-        Builder setOptIn(boolean optIn) {
+        public Builder setOptIn(boolean optIn) {
             this.optIn = optIn;
             return this;
         }
@@ -81,7 +85,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with the background push enabled value set.
          */
         @NonNull
-        Builder setBackgroundEnabled(boolean enabled) {
+        public Builder setBackgroundEnabled(boolean enabled) {
             this.backgroundEnabled = enabled;
             return this;
         }
@@ -93,7 +97,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with device type set
          */
         @NonNull
-        Builder setDeviceType(@Nullable String deviceType) {
+        public Builder setDeviceType(@Nullable String deviceType) {
             this.deviceType = deviceType;
             return this;
         }
@@ -105,7 +109,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with timezone ID set
          */
         @NonNull
-        Builder setTimezone(@Nullable String timezone) {
+        public Builder setTimezone(@Nullable String timezone) {
             this.timezone = timezone;
             return this;
         }
@@ -117,7 +121,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with language ID set
          */
         @NonNull
-        Builder setLanguage(@Nullable String language) {
+        public Builder setLanguage(@Nullable String language) {
             this.language = language;
             return this;
         }
@@ -129,7 +133,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with country ID set
          */
         @NonNull
-        Builder setCountry(@Nullable String country) {
+        public Builder setCountry(@Nullable String country) {
             this.country = country;
             return this;
         }
@@ -141,7 +145,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with push address set
          */
         @NonNull
-        Builder setPushAddress(@Nullable String registrationId) {
+        public Builder setPushAddress(@Nullable String registrationId) {
             this.pushAddress = registrationId;
             return this;
         }
@@ -154,7 +158,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with channelTagRegistrationEnabled and tags set
          */
         @NonNull
-        Builder setTags(boolean channelTagRegistrationEnabled, @Nullable Set<String> tags) {
+        public Builder setTags(boolean channelTagRegistrationEnabled, @Nullable Set<String> tags) {
             this.setTags = channelTagRegistrationEnabled;
             this.tags = tags;
             return this;
@@ -167,7 +171,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with userId value set
          */
         @NonNull
-        Builder setUserId(@Nullable String userId) {
+        public Builder setUserId(@Nullable String userId) {
             this.userId = UAStringUtil.isEmpty(userId) ? null : userId;
             return this;
         }
@@ -179,13 +183,13 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder with apid value set
          */
         @NonNull
-        Builder setApid(@Nullable String apid) {
+        public Builder setApid(@Nullable String apid) {
             this.apid = apid;
             return this;
         }
 
         @NonNull
-        ChannelRegistrationPayload build() {
+        public ChannelRegistrationPayload build() {
             return new ChannelRegistrationPayload(this);
         }
 

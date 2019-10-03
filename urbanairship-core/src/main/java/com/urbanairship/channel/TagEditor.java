@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
+
+import com.urbanairship.push.PushManager;
 
 import androidx.annotation.NonNull;
 

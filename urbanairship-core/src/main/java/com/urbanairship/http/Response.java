@@ -2,12 +2,14 @@
 
 package com.urbanairship.http;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Model object containing response information from a request.
@@ -22,48 +24,37 @@ public class Response {
      */
     public static final int HTTP_TOO_MANY_REQUESTS = 429;
 
-    private String responseBody;
-    private Map<String, List<String>> responseHeaders;
-    private int status;
-    private String responseMessage;
-    private long lastModified;
+    private final String responseBody;
+    private final Map<String, List<String>> responseHeaders;
+    private final int status;
+    private final String responseMessage;
+    private final long lastModified;
 
-    private Response() {
-
+    private Response(Builder builder) {
+        this.status = builder.status;
+        this.responseBody = builder.responseBody;
+        this.responseHeaders = builder.responseHeaders;
+        this.responseMessage = builder.responseMessage;
+        this.lastModified = builder.lastModified;
     }
 
-    /**
-     * The Response as a string.
-     *
-     * @return The response as a string.
-     */
-    @NonNull
+    protected Response(Response response) {
+        this.status = response.status;
+        this.responseBody = response.responseBody;
+        this.responseHeaders = response.responseHeaders;
+        this.responseMessage = response.responseMessage;
+        this.lastModified = response.lastModified;
+    }
+
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("Response: ");
-        builder.append("ResponseBody: ");
-
-        if (responseBody != null) {
-            builder.append(responseBody);
-        }
-
-        builder.append(" ResponseHeaders: ");
-
-        if (responseHeaders != null) {
-            builder.append(responseHeaders);
-        }
-
-        builder.append(" ResponseMessage: ");
-
-        if (responseMessage != null) {
-            builder.append(responseMessage);
-        }
-
-        builder.append(" Status: ").append(Integer.toString(status));
-
-        return builder.toString();
+        return "Response{" +
+                "responseBody='" + responseBody + '\'' +
+                ", responseHeaders=" + responseHeaders +
+                ", status=" + status +
+                ", responseMessage='" + responseMessage + '\'' +
+                ", lastModified=" + lastModified +
+                '}';
     }
 
     /**
@@ -92,6 +83,15 @@ public class Response {
      */
     public long getLastModifiedTime() {
         return lastModified;
+    }
+
+    /**
+     * True if the status is 200-299, otherwise false.
+     *
+     * @return {@code true} if the status is 200-299, otherwise {@code false}.
+     */
+    public boolean isSuccessful() {
+        return UAHttpStatusUtil.inSuccessRange(status);
     }
 
     /**
@@ -189,14 +189,7 @@ public class Response {
          */
         @NonNull
         public Response build() {
-            Response response = new Response();
-            response.status = status;
-            response.responseBody = responseBody;
-            response.responseHeaders = responseHeaders;
-            response.responseMessage = responseMessage;
-            response.lastModified = lastModified;
-
-            return response;
+            return new Response(this);
         }
 
     }

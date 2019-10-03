@@ -142,7 +142,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         });
 
         manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics, new TestActivityMonitor(),
-                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager, testObserver, mockAssetManager);
+                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getChannel(), actionRunRequestFactory, mockTagManager, testObserver, mockAssetManager);
 
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())

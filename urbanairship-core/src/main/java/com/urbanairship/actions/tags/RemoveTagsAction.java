@@ -9,7 +9,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRegistry;
-import com.urbanairship.push.TagGroupsEditor;
+import com.urbanairship.channel.TagGroupsEditor;
 
 import java.util.Map;
 import java.util.Set;

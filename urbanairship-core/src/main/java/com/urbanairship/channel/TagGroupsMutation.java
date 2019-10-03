@@ -1,10 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
+package com.urbanairship.channel;
 
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -18,6 +14,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Defines a tag group mutations.

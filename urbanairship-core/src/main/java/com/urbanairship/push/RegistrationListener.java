@@ -12,7 +12,10 @@ public interface RegistrationListener {
      * Called when a channel ID is created.
      *
      * @param channelId The channel ID.
+     * @deprecated Use {@link com.urbanairship.channel.AirshipChannelListener} instead. Will be removed
+     * in SDK 13.0.
      */
+    @Deprecated
     @WorkerThread
     void onChannelCreated(@NonNull String channelId);
 
@@ -20,6 +23,8 @@ public interface RegistrationListener {
      * Called when a channel ID is updated.
      *
      * @param channelId The channel ID.
+     * @deprecated Use {@link com.urbanairship.channel.AirshipChannelListener} instead. Will be removed
+     * in SDK 13.0.
      */
     @WorkerThread
     void onChannelUpdated(@NonNull String channelId);

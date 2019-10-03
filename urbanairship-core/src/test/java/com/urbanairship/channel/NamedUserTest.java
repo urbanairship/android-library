@@ -1,17 +1,21 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.NamedUserJobHandler;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
@@ -19,11 +23,13 @@ import org.robolectric.RuntimeEnvironment;
 import java.net.URL;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -39,6 +45,7 @@ public class NamedUserTest extends BaseTestCase {
     private TestRequest testRequest;
     private JobDispatcher mockDispatcher;
     private TagGroupRegistrar mockTagGroupRegistrar;
+    private AirshipChannel mockChannel;
 
     @Before
     public void setUp() {
@@ -47,6 +54,7 @@ public class NamedUserTest extends BaseTestCase {
         airshipConfigOptions = AirshipConfigOptions.newBuilder().build();
         airshipConfigOptions = mock(AirshipConfigOptions.class);
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
+        mockChannel = mock(AirshipChannel.class);
 
         testRequest = new TestRequest();
 
@@ -56,7 +64,29 @@ public class NamedUserTest extends BaseTestCase {
 
         TestApplication.getApplication().setOptions(airshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockDispatcher);
+        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockChannel, mockDispatcher);
+    }
+
+    /**
+     * Test channel create dispatches a job to update the named user.
+     */
+    @Test
+    public void testChannelCreateUpdatesNamedUser() {
+        ArgumentCaptor<AirshipChannelListener> argument = ArgumentCaptor.forClass(AirshipChannelListener.class);
+        namedUser.init();
+        verify(mockChannel).addChannelListener(argument.capture());
+        AirshipChannelListener listener = argument.getValue();
+        assertNotNull(listener);
+
+        clearInvocations(mockDispatcher);
+
+        listener.onChannelCreated("some-channel");
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
     }
 
     /**
@@ -163,26 +193,6 @@ public class NamedUserTest extends BaseTestCase {
         }));
 
         assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
-    }
-
-    /**
-     * Test disassociateNamedUserIfNull clears the named user ID when it is null.
-     */
-    @Test
-    public void testDisassociateNamedUserNullId() {
-        namedUser.setId(null);
-        namedUser.disassociateNamedUserIfNull();
-        assertNull("Named user ID should be null", namedUser.getId());
-    }
-
-    /**
-     * Test disassociateNamedUserIfNull does not clear named user ID, when it is not null.
-     */
-    @Test
-    public void testDisassociateNamedUserNonNullId() {
-        namedUser.setId(fakeNamedUserId);
-        namedUser.disassociateNamedUserIfNull();
-        assertEquals("Named user ID should remain the same", fakeNamedUserId, namedUser.getId());
     }
 
     /**

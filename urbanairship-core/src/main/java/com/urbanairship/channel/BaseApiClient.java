@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,10 +21,8 @@ abstract class BaseApiClient {
 
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;
-    private final int platform;
 
-    BaseApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        this.platform = platform;
+    BaseApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
         this.configOptions = configOptions;
     }
@@ -66,9 +64,4 @@ abstract class BaseApiClient {
             return null;
         }
     }
-
-    public int getPlatform() {
-        return platform;
-    }
-
 }

@@ -13,9 +13,10 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.TagGroupRegistrar;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.util.Clock;
 
 import java.util.HashMap;
@@ -80,7 +81,7 @@ public class TagGroupManager {
 
     private final PreferenceDataStore dataStore;
     private final TagGroupHistorian historian;
-    private final PushManager pushManager;
+    private final AirshipChannel airshipChannel;
     private final TagGroupLookupApiClient client;
     private final Clock clock;
 
@@ -90,23 +91,23 @@ public class TagGroupManager {
      * Default constructor.
      *
      * @param configOptions The airship config options.
-     * @param pushManager The push manager.
+     * @param airshipChannel The Airship channel.
      * @param tagGroupRegistrar The tag group registrar.
      * @param dataStore The preference data store.
      */
-    public TagGroupManager(@NonNull AirshipConfigOptions configOptions, @NonNull PushManager pushManager,
+    public TagGroupManager(@NonNull AirshipConfigOptions configOptions, @NonNull AirshipChannel airshipChannel,
                            @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupLookupApiClient(configOptions), pushManager,
+        this(new TagGroupLookupApiClient(configOptions), airshipChannel,
                 new TagGroupHistorian(tagGroupRegistrar, dataStore, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
     @VisibleForTesting
-    TagGroupManager(@NonNull TagGroupLookupApiClient client, @NonNull PushManager pushManager,
+    TagGroupManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
                     @NonNull TagGroupHistorian historian, @NonNull PreferenceDataStore dataStore,
                     @NonNull Clock clock) {
         this.client = client;
-        this.pushManager = pushManager;
+        this.airshipChannel = airshipChannel;
         this.historian = historian;
         this.dataStore = dataStore;
         this.clock = clock;
@@ -234,14 +235,14 @@ public class TagGroupManager {
         }
 
         // Requesting only `device` tag groups when channel tag registration is enabled
-        if (tags.size() == 1 && tags.containsKey(DEVICE_GROUP) && pushManager.getChannelTagRegistrationEnabled()) {
+        if (tags.size() == 1 && tags.containsKey(DEVICE_GROUP) && airshipChannel.getChannelTagRegistrationEnabled()) {
             Map<String, Set<String>> deviceTags = new HashMap<>();
-            deviceTags.put(DEVICE_GROUP, pushManager.getTags());
+            deviceTags.put(DEVICE_GROUP, airshipChannel.getTags());
             return new TagGroupResult(true, deviceTags);
         }
 
         // Requires a channel
-        if (pushManager.getChannelId() == null) {
+        if (airshipChannel.getId() == null) {
             return new TagGroupResult(false, null);
         }
 
@@ -343,8 +344,8 @@ public class TagGroupManager {
         this.historian.applyLocalData(currentTags, cacheTime - getPreferLocalTagDataTime());
 
         // Override the device tags if needed
-        if (requestedTags.containsKey("device") && pushManager.getChannelTagRegistrationEnabled()) {
-            currentTags.put("device", pushManager.getTags());
+        if (requestedTags.containsKey("device") && airshipChannel.getChannelTagRegistrationEnabled()) {
+            currentTags.put("device", airshipChannel.getTags());
         }
 
         // Only return the requested tags if available
@@ -370,7 +371,7 @@ public class TagGroupManager {
             cachedResponse = null;
         }
 
-        TagGroupResponse response = client.lookupTagGroups(pushManager.getChannelId(), UAirship.shared().getPlatformType(), requestTags, cachedResponse);
+        TagGroupResponse response = client.lookupTagGroups(airshipChannel.getId(), UAirship.shared().getPlatformType(), requestTags, cachedResponse);
 
         if (response == null) {
             Logger.error("Failed to refresh the cache.");

@@ -42,7 +42,7 @@ class AnalyticsJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        if (airship.getPushManager().getChannelId() == null) {
+        if (airship.getChannel().getId() == null) {
             Logger.debug("AnalyticsJobHandler - No channel ID, skipping analytics send.");
             return JobInfo.JOB_FINISHED;
         }

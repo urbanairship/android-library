@@ -1,13 +1,18 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.NamedUserApiClient;
+import com.urbanairship.channel.NamedUserJobHandler;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.push.PushManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +37,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
     private NamedUserApiClient namedUserClient;
     private NamedUser namedUser;
-    private PushManager pushManager;
+    private AirshipChannel airshipChannel;
     private PreferenceDataStore dataStore;
     private NamedUserJobHandler jobHandler;
     private TagGroupRegistrar tagGroupRegistrar;
@@ -43,10 +48,10 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
     public void setup() {
         namedUserClient = Mockito.mock(NamedUserApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
-        pushManager = Mockito.mock(PushManager.class);
+        airshipChannel = Mockito.mock(AirshipChannel.class);
 
         TestApplication.getApplication().setNamedUser(namedUser);
-        TestApplication.getApplication().setPushManager(pushManager);
+        TestApplication.getApplication().setChannel(airshipChannel);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
@@ -70,7 +75,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAssociateNamedUserSucceed() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn("namedUserID");
 
         for (int statusCode = 200; statusCode < 300; statusCode++) {
@@ -102,7 +107,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAssociateNamedUserFailed() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Set up a 403 response
@@ -126,7 +131,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAssociateNamedUserFailedRetry() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Set up a 500 response
@@ -150,7 +155,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAssociateNamedUserTooManyRequests() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Set up a 429 response
@@ -174,7 +179,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateNamedUserSucceed() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn(null);
 
         for (int statusCode = 200; statusCode < 300; statusCode++) {
@@ -206,7 +211,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateNamedUserFailed() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn(null);
 
         // Set up a 404 response
@@ -230,7 +235,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateNamedUserFailedRetry() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn(null);
 
         // Set up a 500 response
@@ -254,7 +259,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateNamedUserTooManyRequests() {
-        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(airshipChannel.getId()).thenReturn("channelID");
         when(namedUser.getId()).thenReturn(null);
 
         // Set up a 429 response
@@ -278,7 +283,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAssociateNamedUserFailedNoChannel() {
-        when(pushManager.getChannelId()).thenReturn(null);
+        when(airshipChannel.getId()).thenReturn(null);
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Perform the update
@@ -297,7 +302,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDisassociateNamedUserFailedNoChannel() {
-        when(pushManager.getChannelId()).thenReturn(null);
+        when(airshipChannel.getId()).thenReturn(null);
         when(namedUser.getId()).thenReturn(null);
 
         // Perform the update

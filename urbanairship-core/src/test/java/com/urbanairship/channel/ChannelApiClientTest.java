@@ -1,31 +1,28 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestRequest;
-import com.urbanairship.UAirship;
+import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 public class ChannelApiClientTest extends BaseTestCase {
 
@@ -37,11 +34,8 @@ public class ChannelApiClientTest extends BaseTestCase {
     private TestRequest testRequest;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testRequest = new TestRequest();
-
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
         // Set hostURL
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
@@ -51,7 +45,13 @@ public class ChannelApiClientTest extends BaseTestCase {
                 .setDeviceUrl("https://go-demo.urbanairship.com/")
                 .build();
 
-        client = new ChannelApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
+        client = new ChannelApiClient(airshipConfigOptions, new RequestFactory() {
+            @NonNull
+            @Override
+            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
+                return testRequest;
+            }
+        });
     }
 
     /**
@@ -68,7 +68,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                                        .setResponseBody("{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
                                        .build();
 
-        Response response = client.createChannelWithPayload(payload);
+        ChannelResponse<String> response = client.createChannelWithPayload(payload);
 
         assertNotNull("Channel response should not be null", response);
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
@@ -76,6 +76,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                 response.getStatus());
         assertEquals("Channel ID should match with response", "someChannelId",
                 JsonValue.parseString(response.getResponseBody()).optMap().opt(CHANNEL_ID_KEY).getString());
+        assertEquals("someChannelId", response.getResult());
     }
 
     /**
@@ -111,7 +112,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                                        .build();
 
         String channelId = "someChannelId";
-        Response response = client.updateChannelWithPayload(channelId, payload);
+        ChannelResponse<Void> response = client.updateChannelWithPayload(channelId, payload);
 
         assertNotNull("Channel response should not be null", response);
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
@@ -132,7 +133,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                                        .build();
 
         String channelId = "someChannelId";
-        Response response = client.updateChannelWithPayload(channelId, payload);
+        ChannelResponse<Void> response = client.updateChannelWithPayload(channelId, payload);
 
         assertNotNull("Channel response should not be null", response);
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());

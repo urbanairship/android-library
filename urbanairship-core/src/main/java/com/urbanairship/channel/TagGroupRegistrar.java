@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;

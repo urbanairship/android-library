@@ -1,11 +1,12 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.NamedUserApiClient;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 

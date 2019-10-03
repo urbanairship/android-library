@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -10,6 +10,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -38,7 +39,7 @@ class NamedUserJobHandler {
 
     private final NamedUserApiClient client;
     private final NamedUser namedUser;
-    private final PushManager pushManager;
+    private final AirshipChannel channel;
     private final PreferenceDataStore dataStore;
     private final TagGroupRegistrar tagGroupRegistrar;
 
@@ -57,7 +58,7 @@ class NamedUserJobHandler {
         this.dataStore = dataStore;
         this.client = client;
         this.namedUser = airship.getNamedUser();
-        this.pushManager = airship.getPushManager();
+        this.channel = airship.getChannel();
         this.tagGroupRegistrar = tagGroupRegistrar;
     }
 
@@ -90,7 +91,7 @@ class NamedUserJobHandler {
         String currentId = namedUser.getId();
         String changeToken = namedUser.getChangeToken();
         String lastUpdatedToken = dataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
-        String channelId = pushManager.getChannelId();
+        String channelId = channel.getId();
 
         if (changeToken == null && lastUpdatedToken == null) {
             // Skip since no one has set the named user ID. Usually from a new or re-install.

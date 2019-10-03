@@ -2,29 +2,19 @@
 
 package com.urbanairship.richpush;
 
-import android.app.Application;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class RichPushUserTest extends BaseTestCase {
 
@@ -33,15 +23,12 @@ public class RichPushUserTest extends BaseTestCase {
 
     RichPushUser user;
     PreferenceDataStore dataStore;
-    JobDispatcher mockDispatcher;
     TestUserListener listener;
 
     @Before
     public void setUp() {
-        mockDispatcher = mock(JobDispatcher.class);
-
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        user = new RichPushUser(dataStore, mockDispatcher);
+        user = new RichPushUser(dataStore);
         listener = new TestUserListener();
         user.addListener(listener);
     }
@@ -125,7 +112,7 @@ public class RichPushUserTest extends BaseTestCase {
         dataStore.put("com.urbanairship.user.PASSWORD", fakeToken);
         dataStore.put("com.urbanairship.user.ID", fakeUserId);
 
-        user = new RichPushUser(dataStore, mockDispatcher);
+        user = new RichPushUser(dataStore);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
         assertEquals("User password should match", fakeToken, user.getPassword());
@@ -133,24 +120,6 @@ public class RichPushUserTest extends BaseTestCase {
         assertNull(dataStore.getString("com.urbanairship.user.PASSWORD", null));
     }
 
-    /**
-     * Test update user.
-     */
-    @Test
-    public void testUpdateUserFalse() throws InterruptedException {
-        Application application = RuntimeEnvironment.application;
-        Shadows.shadowOf(application).clearStartedServices();
-
-        user.update(false);
-
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
-            }
-        }));
-
-    }
 
     /**
      * Tests update user starts the rich push service and notifies the listener
@@ -158,20 +127,6 @@ public class RichPushUserTest extends BaseTestCase {
      */
     @Test
     public void testRichPushUpdateSuccess() {
-        // Update the user
-        user.update(true);
-
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
-                    return false;
-                }
-
-                return true;
-            }
-        }));
-
         user.onUserUpdated(true);
 
         // Verify the listener received a success callback
@@ -184,20 +139,6 @@ public class RichPushUserTest extends BaseTestCase {
      */
     @Test
     public void testRichPushUpdateError() {
-        // Update the user
-        user.update(true);
-
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
-                    return false;
-                }
-
-                return true;
-            }
-        }));
-
         user.onUserUpdated(false);
 
         // Verify the listener received a success callback

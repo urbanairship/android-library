@@ -81,12 +81,12 @@ public class FetchDeviceInfoAction extends Action {
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         JsonMap.Builder properties = JsonMap.newBuilder()
-                                            .put(CHANNEL_ID_KEY, UAirship.shared().getPushManager().getChannelId())
+                                            .put(CHANNEL_ID_KEY, UAirship.shared().getChannel().getId())
                                             .put(PUSH_OPT_IN_KEY, UAirship.shared().getPushManager().isOptIn())
                                             .put(LOCATION_ENABLED_KEY, UAirship.shared().getLocationManager().isLocationUpdatesEnabled())
                                             .putOpt(NAMED_USER_ID_KEY, UAirship.shared().getNamedUser().getId());
 
-        Set<String> tags = UAirship.shared().getPushManager().getTags();
+        Set<String> tags = UAirship.shared().getChannel().getTags();
         if (!tags.isEmpty()) {
             properties.put(TAGS_KEY, JsonValue.wrapOpt(tags));
         }

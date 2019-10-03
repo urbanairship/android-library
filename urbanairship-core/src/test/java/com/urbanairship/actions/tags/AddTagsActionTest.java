@@ -12,9 +12,9 @@ import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.NamedUser;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.TagGroupsEditor;
+import com.urbanairship.channel.TagGroupsEditor;
 
 import org.junit.Before;
 import org.junit.Test;

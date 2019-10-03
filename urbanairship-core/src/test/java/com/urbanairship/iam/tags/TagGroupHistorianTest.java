@@ -6,10 +6,10 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
+import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.TagGroupRegistrar;
-import com.urbanairship.push.TagGroupsMutation;
+import com.urbanairship.channel.TagGroupRegistrar;
 
 import org.junit.Before;
 import org.junit.Test;

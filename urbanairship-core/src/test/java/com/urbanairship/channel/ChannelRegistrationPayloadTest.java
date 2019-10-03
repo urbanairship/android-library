@@ -1,8 +1,9 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;

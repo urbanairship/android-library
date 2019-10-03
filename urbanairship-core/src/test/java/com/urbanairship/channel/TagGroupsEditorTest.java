@@ -1,10 +1,11 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.channel.TagGroupsEditor;
 
 import org.junit.Before;
 import org.junit.Test;

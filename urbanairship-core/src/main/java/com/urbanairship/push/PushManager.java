@@ -4,14 +4,6 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationManagerCompat;
-import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
@@ -20,12 +12,16 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannelListener;
+import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.channel.TagEditor;
+import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.LegacyNotificationFactoryProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -38,15 +34,22 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationManagerCompat;
+
+import static com.urbanairship.UAirship.getApplicationContext;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -182,9 +185,14 @@ public class PushManager extends AirshipComponent {
     private static final int MAX_CANONICAL_IDS = 10;
 
     /**
-     * The default tag group.
+     * Action to display a notification.
      */
-    private final String DEFAULT_TAG_GROUP = "device";
+    static final String ACTION_DISPLAY_NOTIFICATION = "ACTION_DISPLAY_NOTIFICATION";
+
+    /**
+     * Action to update push registration.
+     */
+    static final String ACTION_UPDATE_PUSH_REGISTRATION = "ACTION_UPDATE_PUSH_REGISTRATION";
 
     static final ExecutorService PUSH_EXECUTOR = AirshipExecutors.THREAD_POOL_EXECUTOR;
 
@@ -197,14 +205,10 @@ public class PushManager extends AirshipComponent {
     static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
     static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
     static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
-    static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
-    static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
 
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
-
-    static final String APID_KEY = KEY_PREFIX + ".APID";
 
     // As of version 8.0.0
     static final String PUSH_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
@@ -213,24 +217,20 @@ public class PushManager extends AirshipComponent {
     private final Context context;
     private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
-    private boolean channelTagRegistrationEnabled = true;
     private final PreferenceDataStore preferenceDataStore;
-    private final AirshipConfigOptions configOptions;
-    private boolean channelCreationDelayEnabled;
     private final NotificationManagerCompat notificationManagerCompat;
 
     private final JobDispatcher jobDispatcher;
-    private final TagGroupRegistrar tagGroupRegistrar;
     private final PushProvider pushProvider;
-    private PushManagerJobHandler jobHandler;
     private NotificationChannelRegistry notificationChannelRegistry;
 
     private NotificationListener notificationListener;
     private List<RegistrationListener> registrationListeners = new CopyOnWriteArrayList<>();
     private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
 
-    private final Object tagLock = new Object();
     private final Object uniqueIdLock = new Object();
+
+    private final AirshipChannel airshipChannel;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -240,13 +240,15 @@ public class PushManager extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      * @param configOptions The airship config options.
      * @param pushProvider The push provider.
+     * @param airshipChannel The airship channel.
      * @hide
      */
     public PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                        @NonNull AirshipConfigOptions configOptions, @Nullable PushProvider pushProvider,
-                       @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                       @NonNull AirshipChannel airshipChannel) {
 
-        this(context, preferenceDataStore, configOptions, pushProvider, tagGroupRegistrar, JobDispatcher.shared(context));
+        this(context, preferenceDataStore, configOptions, pushProvider,
+                airshipChannel, JobDispatcher.shared(context));
     }
 
     /**
@@ -255,15 +257,14 @@ public class PushManager extends AirshipComponent {
     @VisibleForTesting
     PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                 @NonNull AirshipConfigOptions configOptions, PushProvider provider,
-                @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
+                @NonNull AirshipChannel airshipChannel, @NonNull JobDispatcher dispatcher) {
         super(context, preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
-        this.jobDispatcher = dispatcher;
         this.pushProvider = provider;
-        this.tagGroupRegistrar = tagGroupRegistrar;
+        this.airshipChannel = airshipChannel;
+        this.jobDispatcher = dispatcher;
         this.notificationProvider = new AirshipNotificationProvider(context, configOptions);
-        this.configOptions = configOptions;
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
         this.notificationChannelRegistry = new NotificationChannelRegistry(context, configOptions);
 
@@ -276,31 +277,43 @@ public class PushManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        if (Logger.getLogLevel() < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
-            Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
-        }
-
         this.migratePushEnabledSettings();
 
-        channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
-
-        // Start registration
-        if (UAirship.isMainProcess()) {
-            JobInfo jobInfo = JobInfo.newBuilder()
-                                     .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                     .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
-                                     .setAirshipComponent(PushManager.class)
-                                     .build();
-
-            jobDispatcher.dispatch(jobInfo);
-
-            // If we have a channel already check for pending tags
-            if (getChannelId() != null) {
-                dispatchUpdateTagGroupsJob();
+        airshipChannel.addChannelListener(new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                for (RegistrationListener listener : registrationListeners) {
+                    listener.onChannelCreated(channelId);
+                }
             }
-        }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+                for (RegistrationListener listener : registrationListeners) {
+                    listener.onChannelUpdated(channelId);
+                }
+            }
+        });
+
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                if (getPushTokenRegistrationEnabled()) {
+                    if (getPushToken() == null) {
+                        performPushRegistration(false);
+                    }
+                    builder.setPushAddress(getPushToken());
+                }
+
+                return builder.setOptIn(isOptIn())
+                              .setBackgroundEnabled(isPushEnabled() && isPushAvailable());
+            }
+        });
 
         notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
+
+        dispatchUpdatePushTokenJob();
     }
 
     /**
@@ -312,28 +325,8 @@ public class PushManager extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
         if (isEnabled) {
-            JobInfo jobInfo = JobInfo.newBuilder()
-                                     .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                     .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
-                                     .setAirshipComponent(PushManager.class)
-                                     .build();
-
-            jobDispatcher.dispatch(jobInfo);
+            dispatchUpdatePushTokenJob();
         }
-    }
-
-    /**
-     * @hide
-     */
-    @NonNull
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Executor getJobExecutor(@NonNull JobInfo jobInfo) {
-        if (jobInfo.getAction().equals(PushManagerJobHandler.ACTION_PROCESS_PUSH)) {
-            return PUSH_EXECUTOR;
-        }
-
-        return super.getJobExecutor(jobInfo);
     }
 
     /**
@@ -343,11 +336,32 @@ public class PushManager extends AirshipComponent {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (jobHandler == null) {
-            jobHandler = new PushManagerJobHandler(context, airship, preferenceDataStore, tagGroupRegistrar);
+        switch (jobInfo.getAction()) {
+
+            case ACTION_UPDATE_PUSH_REGISTRATION:
+                return performPushRegistration(true);
+
+            case ACTION_DISPLAY_NOTIFICATION:
+                PushMessage message = PushMessage.fromJsonValue(jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PUSH));
+                String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
+
+                if (providerClass == null) {
+                    return JobInfo.JOB_FINISHED;
+                }
+
+                IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getContext())
+                        .setLongRunning(true)
+                        .setProcessed(true)
+                        .setMessage(message)
+                        .setProviderClass(providerClass)
+                        .build();
+
+                pushRunnable.run();
+
+                return JobInfo.JOB_FINISHED;
         }
 
-        return jobHandler.performJob(jobInfo);
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -356,12 +370,12 @@ public class PushManager extends AirshipComponent {
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
      * set to <code>true</code> in the airship config.
+     *
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#enableChannelCreation()} instead.
      */
+    @Deprecated
     public void enableChannelCreation() {
-        if (isChannelCreationDelayEnabled()) {
-            channelCreationDelayEnabled = false;
-            updateRegistration();
-        }
+        airshipChannel.enableChannelCreation();
     }
 
     /**
@@ -374,7 +388,7 @@ public class PushManager extends AirshipComponent {
      */
     public void setPushEnabled(boolean enabled) {
         preferenceDataStore.put(PUSH_ENABLED_KEY, enabled);
-        updateRegistration();
+        airshipChannel.updateRegistration();
     }
 
     /**
@@ -385,6 +399,16 @@ public class PushManager extends AirshipComponent {
      */
     public boolean isPushEnabled() {
         return preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, true);
+    }
+
+    /**
+     * Update registration.
+     *
+     * @deprecated Will be removed in SDk 13. There is no reason to ever use this method. It now no-ops.
+     */
+    @Deprecated
+    public void updateRegistration() {
+        //no-op
     }
 
     /**
@@ -400,7 +424,7 @@ public class PushManager extends AirshipComponent {
      */
     public void setUserNotificationsEnabled(boolean enabled) {
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
-        updateRegistration();
+        airshipChannel.updateRegistration();
     }
 
     /**
@@ -462,16 +486,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Returns the <code>PreferenceDataStore</code> singleton for this application.
-     *
-     * @return The PreferenceDataStore
-     */
-    @NonNull
-    PreferenceDataStore getPreferenceDataStore() {
-        return preferenceDataStore;
-    }
-
-    /**
      * Returns the shared notification channel registry.
      *
      * @return The NotificationChannelRegistry
@@ -485,7 +499,7 @@ public class PushManager extends AirshipComponent {
      * Determines whether sound is enabled.
      *
      * @return A boolean indicated whether sound is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -498,7 +512,7 @@ public class PushManager extends AirshipComponent {
      * Enables or disables sound.
      *
      * @param enabled A boolean indicating whether sound is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -511,7 +525,7 @@ public class PushManager extends AirshipComponent {
      * Determines whether vibration is enabled.
      *
      * @return A boolean indicating whether vibration is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -524,7 +538,7 @@ public class PushManager extends AirshipComponent {
      * Enables or disables vibration.
      *
      * @param enabled A boolean indicating whether vibration is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -537,7 +551,7 @@ public class PushManager extends AirshipComponent {
      * Determines whether "Quiet Time" is enabled.
      *
      * @return A boolean indicating whether Quiet Time is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -550,7 +564,7 @@ public class PushManager extends AirshipComponent {
      * Enables or disables quiet time.
      *
      * @param enabled A boolean indicating whether quiet time is enabled.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -564,7 +578,7 @@ public class PushManager extends AirshipComponent {
      * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
      *
      * @return A boolean indicating whether it is currently "Quiet Time".
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -590,7 +604,7 @@ public class PushManager extends AirshipComponent {
      * Returns the Quiet Time interval currently set by the user.
      *
      * @return An array of two Date instances, representing the start and end of Quiet Time.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -614,7 +628,7 @@ public class PushManager extends AirshipComponent {
      *
      * @param startTime A Date instance indicating when Quiet Time should start.
      * @param endTime A Date instance indicating when Quiet Time should end.
-     * @deprecated Will be removed in SDK 12. This setting does not work on Android O+. Applications
+     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
      * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
      * instead.
      */
@@ -655,62 +669,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Returns the next channel registration payload
-     *
-     * @return The ChannelRegistrationPayload payload
-     */
-    @NonNull
-    ChannelRegistrationPayload getNextChannelRegistrationPayload() {
-        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setTags(getChannelTagRegistrationEnabled(), getTags())
-                .setOptIn(isOptIn())
-                .setBackgroundEnabled(isPushEnabled() && isPushAvailable())
-                .setUserId(UAirship.shared().getInbox().getUser().getId())
-                .setApid(getApid());
-
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                builder.setDeviceType("android");
-                break;
-            case UAirship.AMAZON_PLATFORM:
-                builder.setDeviceType("amazon");
-                break;
-        }
-
-        builder.setTimezone(TimeZone.getDefault().getID());
-
-        Locale locale = LocaleManager.shared(context).getDefaultLocale();
-
-        if (!UAStringUtil.isEmpty(locale.getCountry())) {
-            builder.setCountry(locale.getCountry());
-        }
-
-        if (!UAStringUtil.isEmpty(locale.getLanguage())) {
-            builder.setLanguage(locale.getLanguage());
-        }
-
-        if (getPushTokenRegistrationEnabled()) {
-            builder.setPushAddress(getRegistrationToken());
-        }
-
-        return builder.build();
-    }
-
-    /**
-     * Update registration.
-     */
-    public void updateRegistration() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                 .setId(JobInfo.CHANNEL_UPDATE_REGISTRATION)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(PushManager.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
      * Set tags for the channel and update the server.
      * <p>
      * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
@@ -719,19 +677,11 @@ public class PushManager extends AirshipComponent {
      * To clear the current set of tags, pass an empty set to this method.
      *
      * @param tags A set of tag strings.
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#setTags(Set)} instead.
      */
+    @Deprecated
     public void setTags(@NonNull Set<String> tags) {
-        //noinspection ConstantConditions
-        if (tags == null) {
-            throw new IllegalArgumentException("Tags must be non-null.");
-        }
-
-        synchronized (tagLock) {
-            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-            preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
-        }
-
-        updateRegistration();
+        airshipChannel.setTags(tags);
     }
 
     /**
@@ -740,31 +690,12 @@ public class PushManager extends AirshipComponent {
      * An empty set indicates that no tags are set on this channel.
      *
      * @return The current set of tags.
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getTags()} instead.
      */
+    @Deprecated
     @NonNull
     public Set<String> getTags() {
-        synchronized (tagLock) {
-            Set<String> tags = new HashSet<>();
-
-            JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
-
-            if (jsonValue.isJsonList()) {
-                for (JsonValue tag : jsonValue.optList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
-            }
-
-            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-
-            //to prevent the getTags call from constantly logging tag set failures, sync tags
-            if (tags.size() != normalizedTags.size()) {
-                this.setTags(normalizedTags);
-            }
-
-            return normalizedTags;
-        }
+        return airshipChannel.getTags();
     }
 
     /**
@@ -773,9 +704,11 @@ public class PushManager extends AirshipComponent {
      * The default value is <code>true</code>.
      *
      * @return <code>true</code> if tags are enabled on the device, <code>false</code> otherwise.
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getChannelTagRegistrationEnabled()} instead.
      */
+    @Deprecated
     public boolean getChannelTagRegistrationEnabled() {
-        return channelTagRegistrationEnabled;
+        return airshipChannel.getChannelTagRegistrationEnabled();
     }
 
     /**
@@ -783,9 +716,11 @@ public class PushManager extends AirshipComponent {
      * If <code>false</code>, no locally specified tags will be sent to the server during registration.
      *
      * @param enabled A boolean indicating whether tags are enabled on the device.
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#setChannelTagRegistrationEnabled(boolean)} instead.
      */
+    @Deprecated
     public void setChannelTagRegistrationEnabled(boolean enabled) {
-        channelTagRegistrationEnabled = enabled;
+        airshipChannel.setChannelTagRegistrationEnabled(enabled);
     }
 
     /**
@@ -797,7 +732,7 @@ public class PushManager extends AirshipComponent {
      * {@code false} otherwise.
      */
     public boolean getPushTokenRegistrationEnabled() {
-        return preferenceDataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
+        return getDataStore().getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
     }
 
     /**
@@ -808,18 +743,8 @@ public class PushManager extends AirshipComponent {
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
-        preferenceDataStore.put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
-        updateRegistration();
-    }
-
-    /**
-     * Determines whether channel creation is initially disabled, to be enabled later
-     * by enableChannelCreation.
-     *
-     * @return <code>true</code> if channel creation is initially disabled, <code>false</code> otherwise.
-     */
-    boolean isChannelCreationDelayEnabled() {
-        return channelCreationDelayEnabled;
+        getDataStore().put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
+        airshipChannel.updateRegistration();
     }
 
     /**
@@ -914,56 +839,24 @@ public class PushManager extends AirshipComponent {
      * Edit the channel tag groups.
      *
      * @return A {@link TagGroupsEditor}.
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#editTagGroups()} instead.
      */
+    @Deprecated
     @NonNull
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor() {
-            @Override
-            protected boolean allowTagGroupChange(@NonNull String tagGroup) {
-                if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
-                    Logger.error("Unable to add tags to `device` tag group when `channelTagRegistrationEnabled` is true.");
-                    return false;
-                }
-
-                return true;
-            }
-
-            @Override
-            protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-
-                if (collapsedMutations.isEmpty()) {
-                    return;
-                }
-
-                tagGroupRegistrar.addMutations(TagGroupRegistrar.CHANNEL, collapsedMutations);
-
-                if (getChannelId() != null) {
-                    dispatchUpdateTagGroupsJob();
-                }
-            }
-        };
+        return airshipChannel.editTagGroups();
     }
 
     /**
      * Edits channel Tags.
      *
      * @return A {@link TagEditor}
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#editTags()} instead.
      */
+    @Deprecated
     @NonNull
     public TagEditor editTags() {
-        return new TagEditor() {
-            @Override
-            void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
-                synchronized (tagLock) {
-                    Set<String> tags = clear ? new HashSet<String>() : getTags();
-
-                    tags.addAll(tagsToAdd);
-                    tags.removeAll(tagsToRemove);
-
-                    setTags(tags);
-                }
-            }
-        };
+        return airshipChannel.editTags();
     }
 
     /**
@@ -1045,69 +938,12 @@ public class PushManager extends AirshipComponent {
      * Get the Channel ID
      *
      * @return A Channel ID string
+     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getId()} instead.
      */
+    @Deprecated
     @Nullable
     public String getChannelId() {
-        return preferenceDataStore.getString(CHANNEL_ID_KEY, null);
-    }
-
-    /**
-     * Sets the channel identifier on update.
-     * Also updates the user.
-     *
-     * @param channelId The channel ID as a string.
-     */
-    void onChannelUpdated(@NonNull String channelId) {
-        preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
-
-        for (RegistrationListener listener : registrationListeners) {
-            listener.onChannelUpdated(channelId);
-        }
-    }
-
-    /**
-     * Sets the channel identifier on create.
-     * Also updates the user.
-     *
-     * @param channelId The channel ID as a string.
-     */
-    void onChannelCreated(@NonNull String channelId) {
-        preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
-
-        for (RegistrationListener listener : registrationListeners) {
-            listener.onChannelCreated(channelId);
-        }
-    }
-
-    void clearChannel() {
-        preferenceDataStore.remove(CHANNEL_ID_KEY);
-    }
-
-    /**
-     * Dispatches a job to update the tag groups.
-     */
-    void dispatchUpdateTagGroupsJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                 .setId(JobInfo.CHANNEL_UPDATE_TAG_GROUPS)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(PushManager.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
-     * Sets the FCM Instance ID or ADM ID token.
-     *
-     * @param token The FCM Instance ID or ADM ID token.
-     */
-    void onPushTokenUpdated(@NonNull String token) {
-        preferenceDataStore.put(PUSH_TOKEN_KEY, token);
-
-        for (RegistrationListener listener : registrationListeners) {
-            listener.onPushTokenUpdated(token);
-        }
+        return airshipChannel.getId();
     }
 
     /**
@@ -1133,21 +969,10 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Return the device's existing APID
-     *
-     * @return an APID string or null if it doesn't exist.
-     */
-    @Nullable
-    String getApid() {
-        return preferenceDataStore.getString(APID_KEY, null);
-    }
-
-    /**
      * Migrates the old push enabled setting to the new user notifications enabled
      * setting, and enables push by default. This was introduced in version 5.0.0.
      */
     void migratePushEnabledSettings() {
-
         if (preferenceDataStore.getBoolean(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, false)) {
             return;
         }
@@ -1173,9 +998,8 @@ public class PushManager extends AirshipComponent {
     /**
      * Gets the push provider.
      *
-     * @hide
-     *
      * @return The available push provider.
+     * @hide
      */
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -1226,4 +1050,64 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    private void dispatchUpdatePushTokenJob() {
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
+    }
+
+    /**
+     * Performs push registration.
+     *
+     * @return {@code true} if push registration either succeeded or is not possible on this device. {@code false} if
+     * registration failed and should be retried.
+     */
+    @JobInfo.JobResult
+    int performPushRegistration(boolean updateChannelOnChange) {
+        String currentToken = getPushToken();
+
+        if (pushProvider == null) {
+            Logger.error("Registration failed. Missing push provider.");
+            return JobInfo.JOB_FINISHED;
+        }
+
+        synchronized (pushProvider) {
+            if (!pushProvider.isAvailable(context)) {
+                Logger.error("Registration failed. Push provider unavailable: %s", pushProvider);
+                return JobInfo.JOB_RETRY;
+            }
+
+            String token;
+            try {
+                token = pushProvider.getRegistrationToken(context);
+            } catch (PushProvider.RegistrationException e) {
+                Logger.error(e, "Push registration failed.");
+                if (e.isRecoverable()) {
+                    return JobInfo.JOB_RETRY;
+                } else {
+                    return JobInfo.JOB_FINISHED;
+                }
+            }
+
+            if (token != null && !UAStringUtil.equals(token, currentToken)) {
+                Logger.info("PushManagerJobHandler - Push registration updated.");
+
+                preferenceDataStore.put(PUSH_TOKEN_KEY, token);
+
+                for (RegistrationListener listener : registrationListeners) {
+                    listener.onPushTokenUpdated(token);
+                }
+
+                if (updateChannelOnChange) {
+                    airshipChannel.updateRegistration();
+                }
+            }
+
+            return JobInfo.JOB_FINISHED;
+        }
+    }
 }

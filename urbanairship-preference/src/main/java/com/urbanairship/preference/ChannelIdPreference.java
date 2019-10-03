@@ -13,6 +13,7 @@ import androidx.preference.Preference;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.push.RegistrationListener;
 
 /**
@@ -20,15 +21,12 @@ import com.urbanairship.push.RegistrationListener;
  */
 public class ChannelIdPreference extends Preference {
 
-    private RegistrationListener registrationListener = new RegistrationListener() {
+    private AirshipChannelListener channelListener = new AirshipChannelListener() {
         @Override
         public void onChannelCreated(@NonNull String channelId) { notifyChangedMainThread(); }
 
         @Override
         public void onChannelUpdated(@NonNull String channelId) { notifyChangedMainThread(); }
-
-        @Override
-        public void onPushTokenUpdated(@NonNull String token) {}
     };
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -48,19 +46,19 @@ public class ChannelIdPreference extends Preference {
     @Override
     @Nullable
     public CharSequence getSummary() {
-        return UAirship.shared().getPushManager().getChannelId();
+        return UAirship.shared().getChannel().getId();
     }
 
     @Override
     public void onAttached() {
         super.onAttached();
-        UAirship.shared().getPushManager().addRegistrationListener(registrationListener);
+        UAirship.shared().getChannel().addChannelListener(channelListener);
     }
 
     @Override
     public void onDetached() {
         super.onDetached();
-        UAirship.shared().getPushManager().removeRegistrationListener(registrationListener);
+        UAirship.shared().getChannel().removeChannelListener(channelListener);
     }
 
     private void notifyChangedMainThread() {

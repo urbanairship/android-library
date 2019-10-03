@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.channel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,13 +31,17 @@ class TagGroupApiClient extends BaseApiClient {
 
     private static final String AUDIENCE_KEY = "audience";
 
+    @UAirship.Platform
+    private final int platform;
+
     TagGroupApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
         this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
     TagGroupApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(platform, configOptions, requestFactory);
+        super(configOptions, requestFactory);
+        this.platform = platform;
     }
 
     /**
@@ -110,7 +114,7 @@ class TagGroupApiClient extends BaseApiClient {
     private String getTagGroupAudienceSelector(@TagGroupRegistrar.TagGroupType int type) {
         switch (type) {
             case TagGroupRegistrar.CHANNEL:
-                switch (this.getPlatform()) {
+                switch (platform) {
                     case UAirship.AMAZON_PLATFORM:
                         return AMAZON_CHANNEL_KEY;
 

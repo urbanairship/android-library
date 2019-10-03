@@ -3,12 +3,14 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannelListener;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -17,6 +19,7 @@ import junit.framework.Assert;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
@@ -27,11 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
+
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -43,11 +49,13 @@ public class RichPushInboxTest extends BaseTestCase {
     private RichPushInbox.Predicate testPredicate;
     private RichPushUser mockUser;
     private JobDispatcher mockDispatcher;
+    private AirshipChannel mockChannel;
 
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
         mockUser = mock(RichPushUser.class);
+        mockChannel = mock(AirshipChannel.class);
 
         Context context = RuntimeEnvironment.application;
         RichPushResolver resolver = new RichPushResolver(context);
@@ -58,7 +66,7 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         };
 
-        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor, new TestActivityMonitor());
+        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor, new TestActivityMonitor(), mockChannel);
 
         // Only the "even" messages
         testPredicate = new RichPushInbox.Predicate() {
@@ -84,22 +92,73 @@ public class RichPushInboxTest extends BaseTestCase {
     }
 
     /**
-     * Test init only updates the mockUser if it already exists. Normally the mockUser updates
-     * after channel creation.
+     * Test init updates the user if it does not have an ID but we have a channel ID.
      */
     @Test
     public void testInitNoUser() {
         when(mockUser.getId()).thenReturn(null);
+        when(mockChannel.getId()).thenReturn("channel");
 
         inbox.init();
 
-        verify(mockUser, never()).update(false);
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
+            }
+        }));
+    }
+
+    /**
+     * Test channel registration extender adds the user id.
+     */
+    @Test
+    public void testChannelRegistrationDisabledTokenRegistration() {
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        inbox.init();
+        verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        when(mockUser.getId()).thenReturn("cool");
+
+        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
+        ChannelRegistrationPayload payload = extender.extend(builder).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
+                .setUserId("cool")
+                .build();
+
+        assertEquals(expected, payload);
+    }
+
+    /**
+     * Test channel creation updates the user.
+     */
+    @Test
+    public void testChannelCreateUpdatesUser() {
+        ArgumentCaptor<AirshipChannelListener> argument = ArgumentCaptor.forClass(AirshipChannelListener.class);
+        inbox.init();
+        verify(mockChannel).addChannelListener(argument.capture());
+        AirshipChannelListener listener = argument.getValue();
+        assertNotNull(listener);
+
+        clearInvocations(mockDispatcher);
+
+        listener.onChannelCreated("some-channel");
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
+            }
+        }));
     }
 
     /**
      * Tests the inbox reports the correct
-     * number of messages that it was set up
-     * with
+     * number of messages.
      */
     @Test
     public void testNewRichPushInbox() {
