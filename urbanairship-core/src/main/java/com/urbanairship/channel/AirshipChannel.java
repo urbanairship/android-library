@@ -655,14 +655,11 @@ public class AirshipChannel extends AirshipComponent {
     private int onUpdateChannel() {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         ChannelRegistrationPayload lastPayload = getLastRegistrationPayload();
-
-        if (lastPayload != null) {
-            payload = payload.minimizedPayload(lastPayload);
-        }
+        ChannelRegistrationPayload minimizedPayload = lastPayload != null ? payload.minimizedPayload(lastPayload) : payload;
 
         ChannelResponse<Void> response;
         try {
-            response = channelApiClient.updateChannelWithPayload(getId(), payload);
+            response = channelApiClient.updateChannelWithPayload(getId(), minimizedPayload);
         } catch (ChannelRequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
             return JobInfo.JOB_RETRY;
@@ -671,6 +668,7 @@ public class AirshipChannel extends AirshipComponent {
         // 2xx
         if (response.isSuccessful()) {
             Logger.info("Airship channel updated.");
+            // Set non-minimized payload as the last sent version, for future comparison
             setLastRegistrationPayload(payload);
             for (AirshipChannelListener listener : airshipChannelListeners) {
                 listener.onChannelUpdated(getId());
