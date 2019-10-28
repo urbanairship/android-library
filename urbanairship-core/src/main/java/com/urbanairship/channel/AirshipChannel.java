@@ -654,6 +654,12 @@ public class AirshipChannel extends AirshipComponent {
     @JobInfo.JobResult
     private int onUpdateChannel() {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
+        ChannelRegistrationPayload lastPayload = getLastRegistrationPayload();
+
+        if (lastPayload != null) {
+            payload = payload.minimizedPayload(lastPayload);
+        }
+
         ChannelResponse<Void> response;
         try {
             response = channelApiClient.updateChannelWithPayload(getId(), payload);
