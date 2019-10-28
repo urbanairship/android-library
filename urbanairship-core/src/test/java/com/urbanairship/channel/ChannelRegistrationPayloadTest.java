@@ -15,12 +15,14 @@ import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ChannelRegistrationPayloadTest extends BaseTestCase {
@@ -44,6 +46,101 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         testTags = new HashSet<>();
         testTags.add("tagOne");
         testTags.add("tagTwo");
+    }
+
+    /**
+     * Test that minimized payload doesn't include creation-specific data such as the APID and user id.
+     */
+    @Test
+    public void testMinimizedPayloadIgnoresCreationSpecificData() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setUserId(testUserId)
+                .setApid(testApid)
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload).build();
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        assertNull(minPayload.apid);
+        assertNull(minPayload.userId);
+    }
+
+    /**
+     * Test that the minimized payload includes optional fields if changed
+     */
+    @Test
+    public void testMinimizedPayloadIncludesOptionalFieldsIfChanged() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setTags(testSetTags, testTags)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .setLanguage("newLanguage")
+                .setTimezone("newTimezone")
+                .setCountry("newCountry")
+                .setTags(true, new HashSet<>(Arrays.asList("new", "tags")))
+                .build();
+
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        assertEquals(minPayload.language, "newLanguage");
+        assertEquals(minPayload.timezone, "newTimezone");
+        assertEquals(minPayload.country, "newCountry");
+
+        assertTrue(minPayload.setTags);
+        assertEquals(minPayload.tags, new HashSet<>(Arrays.asList("new", "tags")));
+    }
+
+    /**
+     * Test that the minimized payload ignores optional fields if unchanged
+     */
+    @Test
+    public void testMinimizedPayloadIgnoresOptionalFieldsIfUnchanged() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setTags(testSetTags, testTags)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .build();
+
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        assertNull(minPayload.language);
+        assertNull(minPayload.timezone);
+        assertNull(minPayload.country);
+
+        assertFalse(minPayload.setTags);
+        assertNull(minPayload.tags);
+    }
+
+    /**
+     * Test that the minimized payload contains all required fields
+     */
+    @Test
+    public void testMinimizedPayloadContainsRequiredFields() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setOptIn(testOptIn)
+                .setBackgroundEnabled(testBackgroundEnabled)
+                .setDeviceType(testDeviceType)
+                .setPushAddress(testPushAddress)
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .setOptIn(!payload.optIn)
+                .setBackgroundEnabled(!payload.backgroundEnabled)
+                .build();
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        assertEquals(minPayload.optIn, newPayload.optIn);
+        assertEquals(minPayload.backgroundEnabled, newPayload.backgroundEnabled);
+        assertEquals(minPayload.deviceType, newPayload.deviceType);
+        assertEquals(minPayload.pushAddress, newPayload.pushAddress);
     }
 
     /**
@@ -327,5 +424,4 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
-
 }

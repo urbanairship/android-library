@@ -37,17 +37,17 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String LANGUAGE_KEY = "locale_language";
     static final String COUNTRY_KEY = "locale_country";
 
-    private final boolean optIn;
-    private final boolean backgroundEnabled;
-    private final String deviceType;
-    private final String pushAddress;
-    private final boolean setTags;
-    private final Set<String> tags;
-    private final String userId;
-    private final String apid;
-    private final String timezone;
-    private final String language;
-    private final String country;
+    public final boolean optIn;
+    public final boolean backgroundEnabled;
+    public final String deviceType;
+    public final String pushAddress;
+    public final boolean setTags;
+    public final Set<String> tags;
+    public final String userId;
+    public final String apid;
+    public final String timezone;
+    public final String language;
+    public final String country;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -65,6 +65,30 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String timezone;
         private String language;
         private String country;
+
+        /**
+         * Default ChannelRegistrationPayload.Builder constructor
+         */
+        public Builder() {}
+
+        /**
+         * ChannelRegistrationPayload.Builder constructor that draws from an existing payload.
+         *
+         * @param payload The payload.
+         */
+        public Builder(ChannelRegistrationPayload payload) {
+            this.optIn = payload.optIn;
+            this.backgroundEnabled = payload.backgroundEnabled;
+            this.deviceType = payload.deviceType;
+            this.pushAddress = payload.pushAddress;
+            this.setTags = payload.setTags;
+            this.tags = payload.tags;
+            this.userId = payload.userId;
+            this.apid = payload.apid;
+            this.timezone = payload.timezone;
+            this.language = payload.language;
+            this.country = payload.country;
+        }
 
         /**
          * Set the optIn value
@@ -207,6 +231,33 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.timezone = builder.timezone;
         this.language = builder.language;
         this.country = builder.country;
+    }
+
+    public ChannelRegistrationPayload minimizedPayload(ChannelRegistrationPayload last) {
+        Builder builder = new Builder(this);
+
+        builder.setApid(null);
+        builder.setUserId(null);
+
+        if (UAStringUtil.equals(last.country, country)) {
+            builder.setCountry(null);
+        }
+
+        if (UAStringUtil.equals(last.language, language)) {
+            builder.setLanguage(null);
+        }
+
+        if (UAStringUtil.equals(last.timezone, timezone)) {
+            builder.setTimezone(null);
+        }
+
+        if (last.setTags && setTags) {
+            if (last.tags != null && last.tags.equals(tags)) {
+                builder.setTags(false, null);
+            }
+        }
+
+        return builder.build();
     }
 
     @NonNull
