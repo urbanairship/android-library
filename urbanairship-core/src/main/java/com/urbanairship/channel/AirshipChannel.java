@@ -45,6 +45,11 @@ public class AirshipChannel extends AirshipComponent {
     private static final String ACTION_UPDATE_TAG_GROUPS = "ACTION_UPDATE_TAG_GROUPS";
 
     /**
+     * Action to perform update request for pending attribute changes.
+     */
+    private static final String ACTION_UPDATE_ATTRIBUTES = "ACTION_UPDATE_ATTRIBUTES";
+
+    /**
      * Action to update channel registration.
      */
     private static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "ACTION_UPDATE_CHANNEL_REGISTRATION";
@@ -65,19 +70,23 @@ public class AirshipChannel extends AirshipComponent {
     private static final String TAGS_KEY = "com.urbanairship.push.TAGS";
     private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
     private static final String LAST_REGISTRATION_PAYLOAD_KEY = "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD";
+    private static final String ATTRIBUTE_DATASTORE_KEY = "com.urbanairship.push.ATTRIBUTE_DATA_STORE";
 
     private final AirshipConfigOptions configOptions;
     private final ChannelApiClient channelApiClient;
+    private final AttributeApiClient attributeApiClient;
     private final TagGroupRegistrar tagGroupRegistrar;
     private final JobDispatcher jobDispatcher;
     private final LocaleManager localeManager;
 
     @UAirship.Platform
     private final int platform;
-
     private final List<AirshipChannelListener> airshipChannelListeners = new CopyOnWriteArrayList<>();
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
     private final Object tagLock = new Object();
+    private final Object attributeLock = new Object();
+
+    private final PendingAttributeMutationStore attributeMutationStore;
 
     private boolean channelTagRegistrationEnabled = true;
     private boolean channelCreationDelayEnabled;
@@ -119,7 +128,8 @@ public class AirshipChannel extends AirshipComponent {
                           @UAirship.Platform int platform,
                           @NonNull TagGroupRegistrar tagGroupRegistrar) {
         this(context, dataStore, configOptions, new ChannelApiClient(configOptions),
-                tagGroupRegistrar, platform, LocaleManager.shared(context), JobDispatcher.shared(context));
+                tagGroupRegistrar, platform, LocaleManager.shared(context), JobDispatcher.shared(context),
+                new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY), new AttributeApiClient(platform, configOptions));
     }
 
     @VisibleForTesting
@@ -130,7 +140,9 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull TagGroupRegistrar tagGroupRegistrar,
                    @UAirship.Platform int platform,
                    @NonNull LocaleManager localeManager,
-                   @NonNull JobDispatcher jobDispatcher) {
+                   @NonNull JobDispatcher jobDispatcher,
+                   @NonNull PendingAttributeMutationStore attributeMutationStore,
+                   @NonNull AttributeApiClient attributeApiClient) {
         super(context, dataStore);
 
         this.configOptions = configOptions;
@@ -139,6 +151,8 @@ public class AirshipChannel extends AirshipComponent {
         this.platform = platform;
         this.localeManager = localeManager;
         this.jobDispatcher = jobDispatcher;
+        this.attributeMutationStore = attributeMutationStore;
+        this.attributeApiClient = attributeApiClient;
     }
 
     /**
@@ -177,6 +191,7 @@ public class AirshipChannel extends AirshipComponent {
         if (getId() != null) {
             dispatchUpdateRegistrationJob();
             dispatchUpdateTagGroupsJob();
+            dispatchUpdateAttributesJob();
         } else if (!channelCreationDelayEnabled) {
             dispatchUpdateRegistrationJob();
         }
@@ -224,6 +239,9 @@ public class AirshipChannel extends AirshipComponent {
 
             case ACTION_UPDATE_TAG_GROUPS:
                 return onUpdateTagGroup();
+
+            case ACTION_UPDATE_ATTRIBUTES:
+                return onUpdateAttributes();
         }
 
         return JobInfo.JOB_FINISHED;
@@ -240,6 +258,7 @@ public class AirshipChannel extends AirshipComponent {
         if (isEnabled) {
             dispatchUpdateRegistrationJob();
             dispatchUpdateTagGroupsJob();
+            dispatchUpdateAttributesJob();
         }
     }
 
@@ -318,6 +337,29 @@ public class AirshipChannel extends AirshipComponent {
 
                 tagGroupRegistrar.addMutations(TagGroupRegistrar.CHANNEL, collapsedMutations);
                 dispatchUpdateTagGroupsJob();
+            }
+        };
+    }
+
+
+
+    /**
+     * Edit the attributes associated with this channel.
+     *
+     * @return An {@link AttributeEditor}.
+     */
+    @NonNull
+    public AttributeEditor editAttributes() {
+        return new AttributeEditor() {
+            @Override
+            protected void onApply(@NonNull List<AttributeMutation> mutations) {
+                synchronized (attributeLock) {
+                    List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
+
+                    // Add mutations to store
+                    attributeMutationStore.add(pendingMutations);
+                    dispatchUpdateAttributesJob();
+                }
             }
         };
     }
@@ -588,6 +630,8 @@ public class AirshipChannel extends AirshipComponent {
                 listener.onChannelCreated(channelId);
             }
             dispatchUpdateTagGroupsJob();
+            dispatchUpdateAttributesJob();
+
             return JobInfo.JOB_FINISHED;
         }
 
@@ -647,6 +691,69 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Called to upload attribute mutations.
+     *
+     * @return The job result.
+     */
+    @WorkerThread
+    @JobInfo.JobResult
+    private int onUpdateAttributes() {
+        String channelId = getId();
+        if (channelId == null) {
+            Logger.verbose("Failed to update channel tags due to null channel ID.");
+            return JobInfo.JOB_FINISHED;
+        }
+
+        if (uploadAttributeMutations(channelId)) {
+            return JobInfo.JOB_FINISHED;
+        }
+
+        return JobInfo.JOB_RETRY;
+    }
+
+    /**
+     * Uploads attribute mutations.
+     *
+     * @param channelId The channel ID.
+     *
+     * @return {@code true} if uploads are completed, otherwise {@code false}.
+     */
+    private boolean uploadAttributeMutations(@NonNull String channelId) {
+        PendingAttributeMutationStore mutationStore = attributeMutationStore;
+
+        while (true) {
+            // Collapse mutations before we try to send any updates
+            mutationStore.collapseAndSaveMutations();
+
+            List<PendingAttributeMutation> mutations = mutationStore.peek();
+            if (mutations == null) {
+                break;
+            }
+
+            Response response = attributeApiClient.updateAttributes(channelId, mutations);
+
+            // No response, 5xx, or 429
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) ||
+                    response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
+                Logger.debug("Failed to update attributes, retrying.");
+                return false;
+            }
+
+            // Log 4XX responses (excluding 429)
+            if (UAHttpStatusUtil.inClientErrorRange(response.getStatus())) {
+                Logger.error("Failed to update attributes with unrecoverable status %s.", response.getStatus());
+            }
+
+            mutationStore.pop();
+
+            int status = response.getStatus();
+            Logger.debug("Update attributes finished with status: %s", status);
+        }
+
+        return true;
+    }
+
+    /**
      * Dispatches a job to update registration.
      */
     private void dispatchUpdateRegistrationJob() {
@@ -674,4 +781,17 @@ public class AirshipChannel extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
+    /**
+     * Dispatches a job to update the tag groups.
+     */
+    private void dispatchUpdateAttributesJob() {
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_UPDATE_ATTRIBUTES)
+                                 .setId(JobInfo.CHANNEL_UPDATE_ATTRIBUTES)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(AirshipChannel.class)
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
+    }
 }
