@@ -233,7 +233,11 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.country = builder.country;
     }
 
-    public ChannelRegistrationPayload minimizedPayload(ChannelRegistrationPayload last) {
+    public ChannelRegistrationPayload minimizedPayload(@Nullable ChannelRegistrationPayload last) {
+        if (last == null) {
+            return this;
+        }
+
         Builder builder = new Builder(this);
 
         builder.setApid(null);

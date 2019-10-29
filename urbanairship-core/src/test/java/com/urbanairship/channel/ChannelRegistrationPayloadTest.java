@@ -3,7 +3,6 @@
 package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -141,6 +140,29 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals(minPayload.backgroundEnabled, newPayload.backgroundEnabled);
         assertEquals(minPayload.deviceType, newPayload.deviceType);
         assertEquals(minPayload.pushAddress, newPayload.pushAddress);
+    }
+
+    /**
+     * Test that when the last payload is null, the minimized payload is unchanged
+     */
+    @Test
+    public void testMinimizedPayloadWhenLastIsNull() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setOptIn(testOptIn)
+                .setBackgroundEnabled(testBackgroundEnabled)
+                .setDeviceType(testDeviceType)
+                .setPushAddress(testPushAddress)
+                .setTags(testSetTags, testTags)
+                .setUserId(testUserId)
+                .setApid(testApid)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .build();
+
+        ChannelRegistrationPayload minPayload = payload.minimizedPayload(null);
+
+        assertEquals(payload, minPayload);
     }
 
     /**
