@@ -26,14 +26,14 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
         mainLooper = Looper.getMainLooper();
 
         messageOne = InAppMessage.newBuilder()
-                                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                 .setId("message id one")
-                                 .build();
+                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                .setId("message id one")
+                .build();
 
         messageTwo = InAppMessage.newBuilder()
-                                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                 .setId("message id two")
-                                 .build();
+                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                .setId("message id two")
+                .build();
     }
 
     @Test
@@ -49,7 +49,7 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
     }
 
     @Test
-        public void onDisplayFinished() { ;
+    public void onDisplayFinished() { ;
         assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageTwo);
 
