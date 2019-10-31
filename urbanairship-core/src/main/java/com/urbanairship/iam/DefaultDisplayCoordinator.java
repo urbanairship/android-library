@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 class DefaultDisplayCoordinator extends DisplayCoordinator {
 
     private InAppMessage currentMessage = null;
-    private boolean isLocked = false;
+    private boolean isLocked = true;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private long displayInterval;
     private PreferenceDataStore preferenceDataStore;
@@ -42,10 +42,12 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
     DefaultDisplayCoordinator(PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;
         this.displayInterval = this.preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
 
     DefaultDisplayCoordinator () {
         this.displayInterval = InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS;
+        mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
 
     /**
