@@ -3,6 +3,9 @@
 package com.urbanairship.channel;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.os.Build;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
@@ -472,6 +475,21 @@ public class AirshipChannel extends AirshipComponent {
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             builder.setLanguage(locale.getLanguage());
         }
+
+        builder.setLocationSettings(UAirship.shared().getLocationManager().isLocationUpdatesEnabled());
+
+        if (UAirship.getPackageInfo() != null) {
+            builder.setAppVersion(UAirship.getPackageInfo().versionName);
+        }
+
+        builder.setSdkVersion(UAirship.getVersion());
+
+        builder.setDeviceModel(Build.MODEL);
+        builder.setApiVersion(Build.VERSION.SDK_INT);
+
+        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        builder.setCarrier(tm.getNetworkOperatorName());
+
 
         for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
             builder = extender.extend(builder);
