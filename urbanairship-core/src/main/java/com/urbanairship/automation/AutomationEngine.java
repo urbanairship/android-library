@@ -916,9 +916,17 @@ public class AutomationEngine<T extends Schedule> {
         handleExpiredEntries(expired);
 
         Set<String> schedulesToDelete = new HashSet<>();
-
         for (ScheduleEntry entry : finished) {
-            if (System.currentTimeMillis() >= entry.getExecutionStateChangeDate() + entry.getEditGracePeriod()) {
+            long finishDate;
+
+            // If grace period is unset - use the executionStateChangeDate as finishDate to avoid unnecessarily keeping schedules around
+            if (entry.getEditGracePeriod() == 0) {
+                finishDate = entry.getEnd() + entry.getEditGracePeriod();
+            } else {
+                finishDate = entry.getExecutionStateChangeDate();
+            }
+
+            if (System.currentTimeMillis() >= finishDate) {
                 schedulesToDelete.add(entry.scheduleId);
             }
         }
