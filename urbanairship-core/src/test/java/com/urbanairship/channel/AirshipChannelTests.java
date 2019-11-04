@@ -2,6 +2,10 @@
 
 package com.urbanairship.channel;
 
+import android.content.Context;
+import android.os.Build;
+import android.telephony.TelephonyManager;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestLocaleManager;
@@ -386,6 +390,8 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel.editTags().addTag("cool_tag").apply();
 
+        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+
         ChannelRegistrationPayload expectedPayload = new ChannelRegistrationPayload.Builder()
                 .setLanguage("wookiee")
                 .setCountry("KASHYYYK")
@@ -394,6 +400,12 @@ public class AirshipChannelTests extends BaseTestCase {
                 .setTimezone(TimeZone.getDefault().getID())
                 .setUserId("cool")
                 .setPushAddress("story")
+                .setLocationSettings(UAirship.shared().getLocationManager().isLocationUpdatesEnabled())
+                .setAppVersion(UAirship.getPackageInfo().versionName)
+                .setDeviceModel(Build.MODEL)
+                .setApiVersion(Build.VERSION.SDK_INT)
+                .setCarrier(tm.getNetworkOperatorName())
+                .setSdkVersion(UAirship.getVersion())
                 .build();
 
         // Update registration
@@ -413,17 +425,27 @@ public class AirshipChannelTests extends BaseTestCase {
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
 
+        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+
         ChannelRegistrationPayload expectedPayload = new ChannelRegistrationPayload.Builder()
                 .setDeviceType("amazon")
                 .setTimezone(TimeZone.getDefault().getID())
                 .setTags(true, Collections.<String>emptySet())
                 .setCountry(testLocaleManager.getDefaultLocale().getCountry())
                 .setLanguage(testLocaleManager.getDefaultLocale().getLanguage())
+                .setLocationSettings(UAirship.shared().getLocationManager().isLocationUpdatesEnabled())
+                .setAppVersion(UAirship.getPackageInfo().versionName)
+                .setDeviceModel(Build.MODEL)
+                .setApiVersion(Build.VERSION.SDK_INT)
+                .setCarrier(tm.getNetworkOperatorName())
+                .setSdkVersion(UAirship.getVersion())
                 .build();
 
         // Update registration
         airshipChannel.onPerformJob(UAirship.shared(), UPDATE_REGISTRATION_JOB);
         verify(mockClient).createChannelWithPayload(expectedPayload);
+
+
     }
 
     /**

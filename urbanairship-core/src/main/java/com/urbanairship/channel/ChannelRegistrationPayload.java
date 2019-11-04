@@ -36,6 +36,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String TIMEZONE_KEY = "timezone";
     static final String LANGUAGE_KEY = "locale_language";
     static final String COUNTRY_KEY = "locale_country";
+    static final String LOCATION_SETTINGS_KEY = "location_settings";
+    static final String APP_VERSION_KEY = "app_version";
+    static final String SDK_VERSION_KEY = "sdk_version";
+    static final String DEVICE_MODEL_KEY = "device_model";
+    static final String API_VERSION_KEY = "android_api_version";
+    static final String CARRIER_KEY = "carrier";
 
     public final boolean optIn;
     public final boolean backgroundEnabled;
@@ -48,6 +54,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String timezone;
     public final String language;
     public final String country;
+    public final Boolean locationSettings;
+    public final String appVersion;
+    public final String sdkVersion;
+    public final String deviceModel;
+    public final Integer apiVersion;
+    public final String carrier;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -65,6 +77,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String timezone;
         private String language;
         private String country;
+        private Boolean locationSettings;
+        private String appVersion;
+        private String sdkVersion;
+        private String deviceModel;
+        private Integer apiVersion;
+        private String carrier;
 
         /**
          * Default ChannelRegistrationPayload.Builder constructor
@@ -88,6 +106,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.timezone = payload.timezone;
             this.language = payload.language;
             this.country = payload.country;
+            this.locationSettings = payload.locationSettings;
+            this.appVersion = payload.appVersion;
+            this.sdkVersion = payload.sdkVersion;
+            this.deviceModel = payload.deviceModel;
+            this.apiVersion = payload.apiVersion;
+            this.carrier = payload.carrier;
         }
 
         /**
@@ -212,11 +236,82 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             return this;
         }
 
+        /**
+         * Set the location settings
+         *
+         * @param locationSettings The location settings
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setLocationSettings(Boolean locationSettings) {
+            this.locationSettings = locationSettings;
+            return this;
+        }
+
+        /**
+         * Set the app version
+         *
+         * @param appVersion The app version
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setAppVersion(@Nullable String appVersion) {
+            this.appVersion = appVersion;
+            return this;
+        }
+
+        /**
+         * Set the SDK version
+         *
+         * @param sdkVersion The SDK version
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setSdkVersion(@Nullable String sdkVersion) {
+            this.sdkVersion = sdkVersion;
+            return this;
+        }
+
+        /**
+         * Set the device model
+         *
+         * @param deviceModel The device model
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setDeviceModel(@Nullable String deviceModel) {
+            this.deviceModel = deviceModel;
+            return this;
+        }
+
+        /**
+         * Set the API version
+         *
+         * @param apiVersion The API version.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setApiVersion(Integer apiVersion) {
+            this.apiVersion = apiVersion;
+            return this;
+        }
+
+        /**
+         * Set the carrier
+         *
+         * @param carrier The carrier
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setCarrier(@Nullable String carrier) {
+            this.carrier = carrier;
+            return this;
+        }
+
         @NonNull
         public ChannelRegistrationPayload build() {
             return new ChannelRegistrationPayload(this);
         }
-
     }
 
     private ChannelRegistrationPayload(Builder builder) {
@@ -231,6 +326,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.timezone = builder.timezone;
         this.language = builder.language;
         this.country = builder.country;
+        this.locationSettings = builder.locationSettings;
+        this.appVersion = builder.appVersion;
+        this.sdkVersion = builder.sdkVersion;
+        this.deviceModel = builder.deviceModel;
+        this.apiVersion = builder.apiVersion;
+        this.carrier = builder.carrier;
     }
 
     public ChannelRegistrationPayload minimizedPayload(@Nullable ChannelRegistrationPayload last) {
@@ -261,6 +362,30 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             }
         }
 
+        if (last.locationSettings != null && last.locationSettings.equals(locationSettings)) {
+            builder.setLocationSettings(null);
+        }
+
+        if (UAStringUtil.equals(last.appVersion, appVersion)) {
+            builder.setAppVersion(null);
+        }
+
+        if (UAStringUtil.equals(last.sdkVersion, sdkVersion)) {
+            builder.setSdkVersion(null);
+        }
+
+        if (UAStringUtil.equals(last.deviceModel, deviceModel)) {
+            builder.setDeviceModel(null);
+        }
+
+        if (UAStringUtil.equals(last.carrier, carrier)) {
+            builder.setCarrier(null);
+        }
+
+        if (last.apiVersion != null && last.apiVersion.equals(apiVersion)) {
+            builder.setApiVersion(null);
+        }
+
         return builder.build();
     }
 
@@ -276,7 +401,19 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                                          .put(BACKGROUND_ENABLED_KEY, backgroundEnabled)
                                          .put(TIMEZONE_KEY, timezone)
                                          .put(LANGUAGE_KEY, language)
-                                         .put(COUNTRY_KEY, country);
+                                         .put(COUNTRY_KEY, country)
+                                         .put(APP_VERSION_KEY, appVersion)
+                                         .put(SDK_VERSION_KEY, sdkVersion)
+                                         .put(DEVICE_MODEL_KEY, deviceModel)
+                                         .put(CARRIER_KEY, carrier);
+
+        if (locationSettings != null) {
+            channel.put(LOCATION_SETTINGS_KEY, locationSettings);
+        }
+
+        if (apiVersion != null) {
+            channel.put(API_VERSION_KEY, apiVersion);
+        }
 
         // If setTags is TRUE, then include the tags
         if (setTags && tags != null) {
@@ -312,48 +449,39 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        ChannelRegistrationPayload that = (ChannelRegistrationPayload) o;
+        ChannelRegistrationPayload payload = (ChannelRegistrationPayload) o;
 
-        if (optIn != that.optIn) {
+        if (optIn != payload.optIn) return false;
+        if (backgroundEnabled != payload.backgroundEnabled) return false;
+        if (setTags != payload.setTags) return false;
+        if (deviceType != null ? !deviceType.equals(payload.deviceType) : payload.deviceType != null)
             return false;
-        }
-        if (backgroundEnabled != that.backgroundEnabled) {
+        if (pushAddress != null ? !pushAddress.equals(payload.pushAddress) : payload.pushAddress != null)
             return false;
-        }
-        if (setTags != that.setTags) {
+        if (tags != null ? !tags.equals(payload.tags) : payload.tags != null) return false;
+        if (userId != null ? !userId.equals(payload.userId) : payload.userId != null) return false;
+        if (apid != null ? !apid.equals(payload.apid) : payload.apid != null) return false;
+        if (timezone != null ? !timezone.equals(payload.timezone) : payload.timezone != null)
             return false;
-        }
-        if (deviceType != null ? !deviceType.equals(that.deviceType) : that.deviceType != null) {
+        if (language != null ? !language.equals(payload.language) : payload.language != null)
             return false;
-        }
-        if (pushAddress != null ? !pushAddress.equals(that.pushAddress) : that.pushAddress != null) {
+        if (country != null ? !country.equals(payload.country) : payload.country != null)
             return false;
-        }
-        if (tags != null ? !tags.equals(that.tags) : that.tags != null) {
+        if (locationSettings != null ? !locationSettings.equals(payload.locationSettings) : payload.locationSettings != null)
             return false;
-        }
-        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
+        if (appVersion != null ? !appVersion.equals(payload.appVersion) : payload.appVersion != null)
             return false;
-        }
-        if (apid != null ? !apid.equals(that.apid) : that.apid != null) {
+        if (sdkVersion != null ? !sdkVersion.equals(payload.sdkVersion) : payload.sdkVersion != null)
             return false;
-        }
-        if (timezone != null ? !timezone.equals(that.timezone) : that.timezone != null) {
+        if (deviceModel != null ? !deviceModel.equals(payload.deviceModel) : payload.deviceModel != null)
             return false;
-        }
-        if (language != null ? !language.equals(that.language) : that.language != null) {
+        if (apiVersion != null ? !apiVersion.equals(payload.apiVersion) : payload.apiVersion != null)
             return false;
-        }
-        return country != null ? country.equals(that.country) : that.country == null;
-
+        return carrier != null ? carrier.equals(payload.carrier) : payload.carrier == null;
     }
 
     @Override
@@ -369,6 +497,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (country != null ? country.hashCode() : 0);
+        result = 31 * result + (locationSettings != null ? locationSettings.hashCode() : 0);
+        result = 31 * result + (appVersion != null ? appVersion.hashCode() : 0);
+        result = 31 * result + (sdkVersion != null ? sdkVersion.hashCode() : 0);
+        result = 31 * result + (deviceModel != null ? deviceModel.hashCode() : 0);
+        result = 31 * result + (apiVersion != null ? apiVersion.hashCode() : 0);
+        result = 31 * result + (carrier != null ? carrier.hashCode() : 0);
         return result;
     }
 
@@ -396,6 +530,17 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             }
         }
 
+        Boolean locationSettings = null;
+        Integer apiVersion = null;
+
+        if (channelJson.containsKey(LOCATION_SETTINGS_KEY)) {
+            locationSettings = channelJson.opt(LOCATION_SETTINGS_KEY).getBoolean(false);
+        }
+
+        if (channelJson.containsKey(API_VERSION_KEY)) {
+            apiVersion = channelJson.opt(API_VERSION_KEY).getInt(-1);
+        }
+
         return new Builder().setOptIn(channelJson.opt(OPT_IN_KEY).getBoolean(false))
                             .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
                             .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
@@ -406,7 +551,12 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
                             .setUserId(identityHints.opt(USER_ID_KEY).getString())
                             .setApid(identityHints.opt(APID_KEY).getString())
+                            .setLocationSettings(locationSettings)
+                            .setAppVersion(channelJson.opt(APP_VERSION_KEY).getString())
+                            .setSdkVersion(channelJson.opt(SDK_VERSION_KEY).getString())
+                            .setDeviceModel(channelJson.opt(DEVICE_MODEL_KEY).getString())
+                            .setApiVersion(apiVersion)
+                            .setCarrier(channelJson.opt(CARRIER_KEY).getString())
                             .build();
     }
-
 }

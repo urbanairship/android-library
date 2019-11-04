@@ -74,6 +74,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
@@ -81,6 +87,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTimezone("newTimezone")
                 .setCountry("newCountry")
                 .setTags(true, new HashSet<>(Arrays.asList("new", "tags")))
+                .setLocationSettings(false)
+                .setAppVersion("234")
+                .setApiVersion(234)
+                .setSdkVersion("2.3.4")
+                .setDeviceModel("Other device model")
+                .setCarrier("Other carrier")
                 .build();
 
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
@@ -88,9 +100,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals(minPayload.language, "newLanguage");
         assertEquals(minPayload.timezone, "newTimezone");
         assertEquals(minPayload.country, "newCountry");
-
         assertTrue(minPayload.setTags);
         assertEquals(minPayload.tags, new HashSet<>(Arrays.asList("new", "tags")));
+        assertEquals(minPayload.locationSettings, false);
+        assertEquals(minPayload.appVersion, "234");
+        assertEquals((Object)minPayload.apiVersion, 234);
+        assertEquals(minPayload.sdkVersion, "2.3.4");
+        assertEquals(minPayload.deviceModel, "Other device model");
+        assertEquals(minPayload.carrier, "Other carrier");
     }
 
     /**
@@ -103,6 +120,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
@@ -113,9 +136,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertNull(minPayload.language);
         assertNull(minPayload.timezone);
         assertNull(minPayload.country);
-
         assertFalse(minPayload.setTags);
         assertNull(minPayload.tags);
+        assertNull(minPayload.locationSettings);
+        assertNull(minPayload.appVersion);
+        assertNull(minPayload.sdkVersion);
+        assertNull(minPayload.apiVersion);
+        assertNull(minPayload.deviceModel);
+        assertNull(minPayload.carrier);
     }
 
     /**
@@ -158,6 +186,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
                 .build();
 
         ChannelRegistrationPayload minPayload = payload.minimizedPayload(null);
@@ -181,6 +215,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
                 .build();
 
         JsonMap body = payload.toJsonValue().getMap();
@@ -221,6 +261,24 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals("Tags size should be 2.", tags.size(), testTags.size());
         assertTrue("Tags should contain tagOne.", testTags.contains(tags.get(0).getString()));
         assertTrue("Tags should contain tagTwo.", testTags.contains(tags.get(1).getString()));
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.LOCATION_SETTINGS_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.LOCATION_SETTINGS_KEY).getBoolean(false), true);
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.APP_VERSION_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.APP_VERSION_KEY).getString(), "123");
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.API_VERSION_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.API_VERSION_KEY).getInt(234), 123);
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.SDK_VERSION_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.SDK_VERSION_KEY).getString(), "1.2.3");
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.DEVICE_MODEL_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.DEVICE_MODEL_KEY).getString(), "Device model");
+
+        assertTrue(channel.containsKey(ChannelRegistrationPayload.CARRIER_KEY));
+        assertEquals(channel.get(ChannelRegistrationPayload.CARRIER_KEY).getString(), "Carrier");
     }
 
     /**
@@ -322,7 +380,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid).build();
+                .setApid(testApid)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
 
         assertTrue("Payload should be equal to itself.", payload.equals(payload));
     }
@@ -339,7 +404,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
-                .setBackgroundEnabled(testBackgroundEnabled).build();
+                .setBackgroundEnabled(testBackgroundEnabled)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
 
         ChannelRegistrationPayload payload2 = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
@@ -348,7 +420,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
-                .setBackgroundEnabled(testBackgroundEnabled).build();
+                .setBackgroundEnabled(testBackgroundEnabled)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
 
         assertTrue("Payloads should match.", payload.equals(payload2));
         assertEquals("The hashCode for the payloads should match.", payload.hashCode(), payload2.hashCode());
@@ -366,7 +445,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
-                .setBackgroundEnabled(testBackgroundEnabled).build();
+                .setBackgroundEnabled(testBackgroundEnabled)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
 
         ChannelRegistrationPayload emptyPayload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(false)
@@ -375,7 +461,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(false, null)
                 .setUserId(null)
                 .setApid(null)
-                .setBackgroundEnabled(!testBackgroundEnabled).build();
+                .setLocationSettings(false)
+                .setAppVersion("234")
+                .setApiVersion(234)
+                .setSdkVersion("2.3.4")
+                .setDeviceModel("Other device model")
+                .setCarrier("Other carrier")
+                .setBackgroundEnabled(!testBackgroundEnabled)
+                .build();
 
         assertFalse("Payloads should not match.", payload.equals(emptyPayload));
         assertNotSame("The hashCode for the payloads should not match.", payload.hashCode(), emptyPayload.hashCode());
@@ -403,7 +496,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid).build();
+                .setApid(testApid)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
 
         ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
@@ -426,7 +526,8 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid).build();
+                .setApid(testApid)
+                .build();
 
         ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
