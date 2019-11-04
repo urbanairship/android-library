@@ -141,6 +141,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertNull(minPayload.locationSettings);
         assertNull(minPayload.appVersion);
         assertNull(minPayload.sdkVersion);
+        assertNull(minPayload.apiVersion);
         assertNull(minPayload.deviceModel);
         assertNull(minPayload.carrier);
     }

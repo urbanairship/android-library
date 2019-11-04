@@ -331,7 +331,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.sdkVersion = builder.sdkVersion;
         this.deviceModel = builder.deviceModel;
         this.apiVersion = builder.apiVersion;
-        this.carrier = builder.carrier;    }
+        this.carrier = builder.carrier;
+    }
 
     public ChannelRegistrationPayload minimizedPayload(@Nullable ChannelRegistrationPayload last) {
         if (last == null) {

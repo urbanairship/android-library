@@ -490,7 +490,6 @@ public class AirshipChannel extends AirshipComponent {
         TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         builder.setCarrier(tm.getNetworkOperatorName());
 
-
         for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
             builder = extender.extend(builder);
         }
