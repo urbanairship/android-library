@@ -79,7 +79,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * Preference key for display interval of in-app automation
      */
-    public static final String DISPLAY_INTERVAL_KEY = "com.urbanairship.iam.displayinterval";
+    private static final String DISPLAY_INTERVAL_KEY = "com.urbanairship.iam.displayinterval";
 
     // State
     private final Map<String, AdapterWrapper> adapterWrappers = new ConcurrentHashMap<>();
@@ -132,7 +132,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(preferenceDataStore);
+        long iAADisplayInterval = preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        this.defaultCoordinator = new DefaultDisplayCoordinator(iAADisplayInterval);
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
@@ -170,7 +171,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(preferenceDataStore);
+        long iAADisplayInterval = preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        this.defaultCoordinator = new DefaultDisplayCoordinator(iAADisplayInterval);
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;

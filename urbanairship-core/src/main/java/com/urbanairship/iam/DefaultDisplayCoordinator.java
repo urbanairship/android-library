@@ -10,8 +10,6 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
-import com.urbanairship.PreferenceDataStore;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,7 +25,6 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
     private boolean isLocked = true;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private long displayInterval;
-    private PreferenceDataStore preferenceDataStore;
 
     private final Runnable postDisplayRunnable = new Runnable() {
         @Override
@@ -39,9 +36,8 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         }
     };
 
-    DefaultDisplayCoordinator(PreferenceDataStore preferenceDataStore) {
-        this.preferenceDataStore = preferenceDataStore;
-        this.displayInterval = this.preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+    DefaultDisplayCoordinator(long displayInterval) {
+        this.displayInterval = displayInterval;
         mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
 
