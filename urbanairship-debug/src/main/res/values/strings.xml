@@ -33,6 +33,10 @@
     <string name="ua_opted_in">Opted-in</string>
     <string name="ua_opted_out">Opted-out</string>
 
+    <string name="ua_iaa_info_category_title">In-App Automation Info</string>
+    <string name="ua_iaa_enable_title">Enable In-App Automation</string>
+    <string name="ua_iaa_display_interval_title">IAA Display Interval</string>
+
     <string name="ua_identifiers_category_title">Identifiers</string>
 
     <string name="ua_push_token">Push Token</string>

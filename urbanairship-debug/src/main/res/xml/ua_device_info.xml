@@ -27,6 +27,20 @@
 
     </androidx.preference.PreferenceCategory>
 
+    <androidx.preference.PreferenceCategory app:title="@string/ua_iaa_info_category_title">
+
+        <com.urbanairship.preference.IAAEnablePreference
+            android:key="iaa_preference"
+            android:persistent="false"
+            android:title="@string/ua_iaa_enable_title" />
+
+        <com.urbanairship.preference.NumberPickerPreference
+            android:key="iaa_display_interval_preference"
+            android:persistent="false"
+            android:title="@string/ua_iaa_display_interval_title" />
+
+    </androidx.preference.PreferenceCategory>
+
     <androidx.preference.PreferenceCategory android:title="@string/ua_identifiers_category_title">
 
         <com.urbanairship.debug.deviceinfo.preferences.ChannelPreference

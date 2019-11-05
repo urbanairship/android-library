@@ -3,14 +3,16 @@
 package com.urbanairship.debug.deviceinfo
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceFragmentCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.Navigation
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
+import com.urbanairship.preference.NumberPickerPreference
+import com.urbanairship.preference.NumberPickerPreferenceDialogFragment
 
 /**
  * Settings fragment.
@@ -52,9 +54,24 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
             return super.onPreferenceTreeClick(preference)
         }
 
+        override fun onDisplayPreferenceDialog(preference: Preference?) {
+            if(preference is NumberPickerPreference) {
+                val dialogFragment = NumberPickerPreferenceDialogFragment.newInstance(preference.key)
+                if(dialogFragment != null) {
+                    dialogFragment.setTargetFragment(this, 0)
+                    fragmentManager?.let { dialogFragment.show(it, DISPLAY_INTERVAL_TAG) }
+                } else {
+                    super.onDisplayPreferenceDialog(preference)
+                }
+            } else {
+                super.onDisplayPreferenceDialog(preference)
+            }
+        }
+
         companion object {
 
             private val TAGS_KEY = "tags"
+            private val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
         }
 
     }
