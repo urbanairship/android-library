@@ -266,14 +266,13 @@ class InAppRemoteDataObserver {
 
         if (!removedMessageIds.isEmpty()) {
 
-            // To cancel, we need to set the end time to 0 (1970). To avoid validation error where
-            // start needs to be before end if they are both set, we also need to clear the start.
-            // If the schedule comes back, the edits will reapply the start time from the schedule
-            // if it is set.
+            // To cancel, we need to set the end time to the payload's last modified timestamp. To avoid
+            // validation errors, the start must to be equal to or before the end time. If the schedule
+            // comes back, the edits will reapply the start and end times from the schedule edits.
             InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder()
                                                                        .setMetadata(payload.getMetadata())
-                                                                       .setStart(-1)
-                                                                       .setEnd(0)
+                                                                       .setStart(payload.getTimestamp())
+                                                                       .setEnd(payload.getTimestamp())
                                                                        .build();
             for (String messageId : removedMessageIds) {
                 String scheduleId = scheduleIdMap.get(messageId);

@@ -148,6 +148,18 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
     }
 
     @Test
+    public void testEndEqualsStart() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(trigger)
+                                                                .setStart(1000)
+                                                                .setEnd(1000)
+                                                                .setMessage(message)
+                                                                .build();
+
+        assertNotNull(info);
+    }
+
+    @Test
     public void testStartNoEnd() {
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
                                                                 .addTrigger(trigger)

@@ -136,8 +136,8 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         // Verify "bar" was edited with updated end and start time
         InAppMessageScheduleEdits edits = scheduler.getMessageEdits("bar");
-        assertEquals(Long.valueOf(0),  edits.getEnd());
-        assertEquals(Long.valueOf(-1), edits.getStart());
+        assertEquals(Long.valueOf(payload.getTimestamp()), edits.getEnd());
+        assertEquals(Long.valueOf(payload.getTimestamp()), edits.getStart());
     }
 
     @Test
