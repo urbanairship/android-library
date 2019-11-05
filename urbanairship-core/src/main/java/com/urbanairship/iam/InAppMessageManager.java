@@ -132,7 +132,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
-        long iAADisplayInterval = preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        long iAADisplayInterval = getDisplayIntervalFromDataStore();
         this.defaultCoordinator = new DefaultDisplayCoordinator(iAADisplayInterval);
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
@@ -171,7 +171,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
-        long iAADisplayInterval = preferenceDataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        long iAADisplayInterval = getDisplayIntervalFromDataStore();
         this.defaultCoordinator = new DefaultDisplayCoordinator(iAADisplayInterval);
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
@@ -469,7 +469,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param timeUnit The time unit.
      */
     public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
-        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
+        setDisplayIntervalInDataStore(time, timeUnit);
         this.defaultCoordinator.setDisplayInterval(time, timeUnit);
     }
 
@@ -923,6 +923,23 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         return !remoteData.isMetadataCurrent(schedule.getMetadata());
+    }
+
+    /**
+     * Save the display interval value in the DataStore
+     * @param time the value for the display interval
+     * @param timeUnit the time unit of the display interval
+     */
+    private void setDisplayIntervalInDataStore(long time, TimeUnit timeUnit) {
+        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
+    }
+
+    /**
+     * Gets the value of the display interval from the DataStore
+     * @return the display interval stored in the DataStore
+     */
+    private long getDisplayIntervalFromDataStore() {
+        return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
     }
 
     /**
