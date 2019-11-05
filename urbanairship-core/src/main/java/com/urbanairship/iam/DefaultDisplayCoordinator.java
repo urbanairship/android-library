@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 class DefaultDisplayCoordinator extends DisplayCoordinator {
 
     private InAppMessage currentMessage = null;
-    private boolean isLocked = true;
+    private boolean isLocked = false;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private long displayInterval;
 
@@ -38,12 +38,10 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
 
     DefaultDisplayCoordinator(long displayInterval) {
         this.displayInterval = displayInterval;
-        mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
 
     DefaultDisplayCoordinator () {
         this.displayInterval = InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS;
-        mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
 
     /**

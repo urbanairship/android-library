@@ -37,28 +37,20 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
     }
 
     @Test
-    public void isNotReady() {
-        // Display should be locked until the display interval
-        assertFalse(coordinator.isReady());
-    }
-
-    @Test
     public void isReady() {
-        // Advance the looper to free up the display lock
-        Shadows.shadowOf(mainLooper).runToEndOfTasks();
         assertTrue(coordinator.isReady());
     }
 
     @Test
     public void onDisplay() {
-        isReady();
+        assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageOne);
         assertFalse(coordinator.isReady());
     }
 
     @Test
-    public void onDisplayFinished() {
-        isReady();
+    public void onDisplayFinished() { ;
+        assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageTwo);
 
         assertFalse(coordinator.isReady());
