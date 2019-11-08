@@ -15,9 +15,10 @@ import androidx.annotation.Size;
  * Interface used for modifying attributes.
  */
 abstract public class AttributeEditor {
-    private final List<AttributeMutation> mutations = new ArrayList<>();
 
     private static final long MAX_ATTRIBUTE_FIELD_LENGTH = 1024;
+
+    private final List<AttributeMutation> mutations = new ArrayList<>();
 
     /**
      * Sets a string attribute.
@@ -27,8 +28,8 @@ abstract public class AttributeEditor {
      * @return The AttributeEditor.
      */
     @NonNull
-    public AttributeEditor setStringAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key,
-                                              @Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String string) {
+    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key,
+                                        @Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String string) {
 
         if (isInvalidField(key) || isInvalidField(string)) {
             return this;
@@ -39,13 +40,13 @@ abstract public class AttributeEditor {
     }
 
     /**
-     * Removes a string attribute.
+     * Removes an attribute.
      *
      * @param key The attribute key greater than one character and less than 1024 characters in length.
      * @return The AttributeEditor.
      */
     @NonNull
-    public AttributeEditor removeStringAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key) {
+    public AttributeEditor removeAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key) {
         if (isInvalidField(key)) {
             return this;
         }

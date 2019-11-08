@@ -28,8 +28,8 @@ public class AttributeEditorTest extends BaseTestCase {
 
     @Test
     public void testSetAttributes() {
-        editor.setStringAttribute("expected_key", "expected_value")
-              .setStringAttribute("expected_key2", "expected_value2")
+        editor.setAttribute("expected_key", "expected_value")
+              .setAttribute("expected_key2", "expected_value2")
               .apply();
 
 
@@ -41,8 +41,8 @@ public class AttributeEditorTest extends BaseTestCase {
 
     @Test
     public void testRemoveAttributes() {
-        editor.removeStringAttribute("expected_key")
-              .removeStringAttribute("expected_key2")
+        editor.removeAttribute("expected_key")
+              .removeAttribute("expected_key2")
               .apply();
 
         String expected = "[{\"action\":\"remove\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
@@ -53,8 +53,8 @@ public class AttributeEditorTest extends BaseTestCase {
 
     @Test
     public void testAddAndRemoveAttributes() {
-        editor.setStringAttribute("expected_key", "expected_value")
-              .removeStringAttribute("expected_key")
+        editor.setAttribute("expected_key", "expected_value")
+              .removeAttribute("expected_key")
               .apply();
 
         String expected = "[{\"action\":\"set\",\"value\":\"expected_value\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
@@ -68,12 +68,12 @@ public class AttributeEditorTest extends BaseTestCase {
         String tooLong = String.format("%1$" + 1025 + "s", "").replace(' ', '0');
         assertEquals(tooLong.length(), 1025 );
 
-        editor.setStringAttribute(tooLong, "expected_value")
+        editor.setAttribute(tooLong, "expected_value")
               .apply();
 
         assertNull(editor.mutations);
 
-        editor.removeStringAttribute(tooLong)
+        editor.removeAttribute(tooLong)
               .apply();
 
         assertNull(editor.mutations);
@@ -84,7 +84,7 @@ public class AttributeEditorTest extends BaseTestCase {
         String tooLong = String.format("%1$" + 1025 + "s", "").replace(' ', '0');
         assertEquals(tooLong.length(), 1025 );
 
-        editor.setStringAttribute("expected_key", tooLong)
+        editor.setAttribute("expected_key", tooLong)
               .apply();
 
         assertNull(editor.mutations);

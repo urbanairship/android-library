@@ -472,7 +472,7 @@ public class AirshipChannelTests extends BaseTestCase {
     @Test
     public void testAttributesUpdates() {
         airshipChannel.editAttributes()
-                      .setStringAttribute("expected_key", "expected_value")
+                      .setAttribute("expected_key", "expected_value")
                       .apply();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
@@ -502,7 +502,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 .thenReturn(expectedMutations, null);
 
         airshipChannel.editAttributes()
-                      .setStringAttribute("expected_key", "expected_value")
+                      .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
@@ -535,7 +535,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 .thenReturn(expectedMutations);
 
         airshipChannel.editAttributes()
-                      .setStringAttribute("expected_key", "expected_value")
+                      .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
@@ -567,7 +567,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 .thenReturn(expectedMutations);
 
         airshipChannel.editAttributes()
-                      .setStringAttribute("expected_key", "expected_value")
+                      .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
