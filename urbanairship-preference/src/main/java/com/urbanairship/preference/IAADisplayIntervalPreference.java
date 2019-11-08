@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class IAADisplayIntervalPreference extends UANumberPickerPreference {
 
-    private static final int dialogLayoutResId = R.layout.fragment_display_interval;
+    private static final int DIALOG_LAYOUT_RES_ID = R.layout.fragment_display_interval;
 
     public IAADisplayIntervalPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -48,7 +48,7 @@ public class IAADisplayIntervalPreference extends UANumberPickerPreference {
 
     @Override
     public int getDialogLayoutResource() {
-        return dialogLayoutResId;
+        return DIALOG_LAYOUT_RES_ID;
     }
 
     @Override

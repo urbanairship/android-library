@@ -40,10 +40,6 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         this.displayInterval = displayInterval;
     }
 
-    DefaultDisplayCoordinator () {
-        this.displayInterval = InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS;
-    }
-
     /**
      * Sets the in-app message display interval. Defaults to {@link InAppMessageManager#DEFAULT_DISPLAY_INTERVAL_MS}.
      *

@@ -22,7 +22,7 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        coordinator = new DefaultDisplayCoordinator();
+        coordinator = new DefaultDisplayCoordinator(InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
         mainLooper = Looper.getMainLooper();
 
         messageOne = InAppMessage.newBuilder()
@@ -49,7 +49,7 @@ public class DefaultDisplayCoordinatorTest extends BaseTestCase {
     }
 
     @Test
-    public void onDisplayFinished() { ;
+    public void onDisplayFinished() {
         assertTrue(coordinator.isReady());
         coordinator.onDisplayStarted(messageTwo);
 
