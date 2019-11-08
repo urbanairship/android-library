@@ -12,7 +12,7 @@ import androidx.preference.PreferenceDialogFragmentCompat;
 /**
  * PreferenceDialogFragment to set the IAA (In-App Automation) Display Interval
  */
-public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragmentCompat {
+public class IAADisplayIntervalPreferenceDialogFragment extends PreferenceDialogFragmentCompat {
 
     private static final int DEFAULT_MAX_VALUE = 200;
     private static final int MAX_SECONDS_AND_DAYS_VALUE = 200;
@@ -50,7 +50,7 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
 
         DialogPreference preference = getPreference();
 
-        init(((NumberPickerPreference)preference).getValue());
+        init(((IAADisplayIntervalPreference)preference).getValue());
     }
 
     @Override
@@ -67,8 +67,8 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
      * @param key the preference key
      * @return a new Instance of NumberPickerPreferenceDialogFragment
      */
-    public static NumberPickerPreferenceDialogFragment newInstance(String key) {
-        final NumberPickerPreferenceDialogFragment dialogFragment =  new NumberPickerPreferenceDialogFragment();
+    public static IAADisplayIntervalPreferenceDialogFragment newInstance(String key) {
+        final IAADisplayIntervalPreferenceDialogFragment dialogFragment =  new IAADisplayIntervalPreferenceDialogFragment();
         Bundle b = new Bundle(1);
         b.putString(ARG_KEY, key);
         dialogFragment.setArguments(b);
@@ -104,7 +104,7 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
      * Save the display interval in milliseconds
      */
     private void saveDisplayInterval() {
-        NumberPickerPreference preference = (NumberPickerPreference)getPreference();
+        IAADisplayIntervalPreference preference = (IAADisplayIntervalPreference)getPreference();
 
         switch (timeUnitSpinner.getSelectedItemPosition()) {
             case 0:

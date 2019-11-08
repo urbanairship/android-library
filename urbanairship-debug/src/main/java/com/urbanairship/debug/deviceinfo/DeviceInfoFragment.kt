@@ -11,8 +11,8 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import com.urbanairship.preference.NumberPickerPreference
-import com.urbanairship.preference.NumberPickerPreferenceDialogFragment
+import com.urbanairship.preference.IAADisplayIntervalPreference
+import com.urbanairship.preference.IAADisplayIntervalPreferenceDialogFragment
 
 /**
  * Settings fragment.
@@ -55,8 +55,8 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
         }
 
         override fun onDisplayPreferenceDialog(preference: Preference?) {
-            if(preference is NumberPickerPreference) {
-                val dialogFragment = NumberPickerPreferenceDialogFragment.newInstance(preference.key)
+            if(preference is IAADisplayIntervalPreference) {
+                val dialogFragment = IAADisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
                 if(dialogFragment != null) {
                     dialogFragment.setTargetFragment(this, 0)
                     fragmentManager?.let { dialogFragment.show(it, DISPLAY_INTERVAL_TAG) }

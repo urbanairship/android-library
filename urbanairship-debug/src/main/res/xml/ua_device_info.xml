@@ -34,7 +34,7 @@
             android:persistent="false"
             android:title="@string/ua_iaa_enable_title" />
 
-        <com.urbanairship.preference.NumberPickerPreference
+        <com.urbanairship.preference.IAADisplayIntervalPreference
             android:key="iaa_display_interval_preference"
             android:persistent="false"
             android:title="@string/ua_iaa_display_interval_title" />

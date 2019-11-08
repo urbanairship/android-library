@@ -5,7 +5,6 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 
 import androidx.annotation.Nullable;
-import androidx.preference.DialogPreference;
 
 import com.urbanairship.UAirship;
 
@@ -14,44 +13,37 @@ import java.util.concurrent.TimeUnit;
 /**
  * Number Picker Preference to set IAA (In-App Automation) Display Interval
  */
-public class NumberPickerPreference extends DialogPreference {
+public class IAADisplayIntervalPreference extends UANumberPickerPreference {
 
     private static final int dialogLayoutResId = R.layout.fragment_display_interval;
-    private long value;
 
-    public NumberPickerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public IAADisplayIntervalPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init();
     }
 
-    public NumberPickerPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public IAADisplayIntervalPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
     }
 
-    public NumberPickerPreference(Context context, AttributeSet attrs) {
+    public IAADisplayIntervalPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
-    public NumberPickerPreference(Context context) {
+    public IAADisplayIntervalPreference(Context context) {
         super(context);
-        init();
     }
 
-    private void init() {
-        this.value = UAirship.shared().getInAppMessagingManager().getDisplayInterval();
-    }
-
-    public long getValue() {
-        return value;
-    }
-
+    @Override
     public void setValue(long v) {
         if(v != value) {
             value = v;
             UAirship.shared().getInAppMessagingManager().setDisplayInterval(v, TimeUnit.MILLISECONDS);
         }
+    }
+
+    @Override
+    protected long getInitialValue() {
+        return UAirship.shared().getInAppMessagingManager().getDisplayInterval();
     }
 
     @Override
