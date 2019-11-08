@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <NumberPicker
@@ -13,10 +11,9 @@
         android:layout_marginLeft="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        android:layout_weight="5" />
+        android:layout_weight="6" />
 
-    <androidx.appcompat.widget.AppCompatSpinner
-        android:id="@+id/time_unit"
+    <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -24,8 +21,8 @@
         android:layout_marginLeft="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        android:layout_weight="5"
-        android:entries="@array/ua_iaa_interval_time_unit" />
+        android:layout_weight="4"
+        android:text="@string/iaa_display_interval_unit_time" />
 
 </LinearLayout>
 

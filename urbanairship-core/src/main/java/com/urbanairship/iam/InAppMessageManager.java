@@ -467,7 +467,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param timeUnit The time unit.
      */
     public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
-        setDisplayIntervalInDataStore(time, timeUnit);
+        setDisplayIntervalInDataStore(timeUnit.toMillis(time));
         this.defaultCoordinator.setDisplayInterval(time, timeUnit);
     }
 
@@ -925,16 +925,15 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     /**
      * Save the display interval value in the DataStore
-     * @param time the value for the display interval
-     * @param timeUnit the time unit of the display interval
+     * @param time the value for the display interval in milliseconds
      */
-    private void setDisplayIntervalInDataStore(long time, TimeUnit timeUnit) {
-        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
+    private void setDisplayIntervalInDataStore(long time) {
+        getDataStore().put(DISPLAY_INTERVAL_KEY, time);
     }
 
     /**
      * Gets the value of the display interval from the DataStore
-     * @return the display interval stored in the DataStore
+     * @return the display interval in milliseconds
      */
     private long getDisplayIntervalFromDataStore() {
         return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);

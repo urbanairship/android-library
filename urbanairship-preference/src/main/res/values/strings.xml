@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string-array name="ua_iaa_interval_time_unit">
-        <item>Seconds</item>
-        <item>Minutes</item>
-        <item>Hours</item>
-        <item>Days</item>
-    </string-array>
+    <string name="iaa_display_interval_unit_time" translatable="false">Seconds</string>
 
 </resources>
