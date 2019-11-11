@@ -49,14 +49,17 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
                 Navigation.findNavController(view).navigate(R.id.deviceInfoTagsFragment)
             }
 
+            if (view != null && ATTRIBUTES_KEY == preference.key) {
+                Navigation.findNavController(view).navigate(R.id.deviceInfoAttributesFragment)
+            }
+
             return super.onPreferenceTreeClick(preference)
         }
 
         companion object {
-
             private val TAGS_KEY = "tags"
+            private val ATTRIBUTES_KEY = "attributes"
         }
 
     }
-
 }

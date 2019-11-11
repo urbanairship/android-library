@@ -25,6 +25,12 @@
     <string name="ua_debug_title">Airship Debug</string>
     <string name="ua_debug_short_title">UA Debug</string>
 
+    <string name="ua_attributes_set">Set</string>
+    <string name="ua_attributes_remove">Remove</string>
+    <string name="ua_attributes_key">Key</string>
+    <string name="ua_attributes_value">Value</string>
+    <string name="ua_attributes_apply">Apply</string>
+
     <string name="ua_event_view_title">Events</string>
     <string name="ua_event_view_description">Search and filter a list of recent events</string>
     
@@ -59,12 +65,17 @@
     <string name="ua_user_id_info_title">User ID</string>
     <string name="ua_set_named_user_info_title">Named User</string>
     <string name="ua_add_tags_info_title">Tags</string>
+    <string name="ua_add_attributes_info_title">Channel Attributes</string>
+
 
     <string name="ua_duplicate_tag_warning">Tag already exists</string>
     <string name="ua_channel_id">Channel</string>
     <string name="ua_button_preferences">Preferences</string>
 
     <string name="ua_toast_clipboard">Copied to clipboard</string>
+
+    <string name="ua_toast_attributes_success_message">Attribute applied</string>
+    <string name="ua_toast_attributes_invalid_message">Please add valid attribute fields for your selected action</string>
 
     <string name="ua_current_tags">Current Tags</string>
     <string name="ua_new_tag_hint">New Tag</string>
