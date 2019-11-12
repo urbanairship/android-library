@@ -132,7 +132,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayIntervalFromDataStore());
+        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
@@ -170,7 +170,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayIntervalFromDataStore());
+        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;
@@ -467,7 +467,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param timeUnit The time unit.
      */
     public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
-        setDisplayIntervalInDataStore(timeUnit.toMillis(time));
+        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
         this.defaultCoordinator.setDisplayInterval(time, timeUnit);
     }
 
@@ -477,7 +477,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @return The display interval in milliseconds.
      */
     public long getDisplayInterval() {
-        return this.defaultCoordinator.getDisplayInterval();
+        return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
     }
 
     /**
@@ -921,22 +921,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         return !remoteData.isMetadataCurrent(schedule.getMetadata());
-    }
-
-    /**
-     * Save the display interval value in the DataStore
-     * @param time the value for the display interval in milliseconds
-     */
-    private void setDisplayIntervalInDataStore(long time) {
-        getDataStore().put(DISPLAY_INTERVAL_KEY, time);
-    }
-
-    /**
-     * Gets the value of the display interval from the DataStore
-     * @return the display interval in milliseconds
-     */
-    private long getDisplayIntervalFromDataStore() {
-        return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
     }
 
     /**

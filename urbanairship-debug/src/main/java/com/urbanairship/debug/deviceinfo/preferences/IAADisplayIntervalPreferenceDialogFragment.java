@@ -1,4 +1,4 @@
-package com.urbanairship.preference;
+package com.urbanairship.debug.deviceinfo.preferences;
 
 import android.os.Bundle;
 import android.view.View;
@@ -21,7 +21,7 @@ public class IAADisplayIntervalPreferenceDialogFragment extends PreferenceDialog
     protected void onBindDialogView(View view) {
         super.onBindDialogView(view);
 
-        numberPicker = view.findViewById(R.id.display_interval);
+        numberPicker = view.findViewById(com.urbanairship.preference.R.id.display_interval);
 
         DialogPreference preference = getPreference();
         init(((IAADisplayIntervalPreference)preference).getValue());

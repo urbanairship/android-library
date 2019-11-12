@@ -10,9 +10,9 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.urbanairship.debug.R
+import com.urbanairship.debug.deviceinfo.preferences.IAADisplayIntervalPreference
+import com.urbanairship.debug.deviceinfo.preferences.IAADisplayIntervalPreferenceDialogFragment
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import com.urbanairship.preference.IAADisplayIntervalPreference
-import com.urbanairship.preference.IAADisplayIntervalPreferenceDialogFragment
 
 /**
  * Settings fragment.

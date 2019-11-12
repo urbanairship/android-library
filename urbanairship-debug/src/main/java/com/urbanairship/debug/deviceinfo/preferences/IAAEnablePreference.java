@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.preference;
+package com.urbanairship.debug.deviceinfo.preferences;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.preference.UACheckBoxPreference;
 
 /**
  * CheckboxPreference to enable/disable IAA (In-App Automation).

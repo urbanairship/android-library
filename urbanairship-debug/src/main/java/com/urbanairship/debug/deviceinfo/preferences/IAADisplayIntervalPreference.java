@@ -1,4 +1,4 @@
-package com.urbanairship.preference;
+package com.urbanairship.debug.deviceinfo.preferences;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -7,6 +7,8 @@ import android.util.AttributeSet;
 import androidx.annotation.Nullable;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.debug.R;
+import com.urbanairship.preference.UANumberPickerPreference;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class IAADisplayIntervalPreference extends UANumberPickerPreference {
 
-    private static final int DIALOG_LAYOUT_RES_ID = R.layout.fragment_display_interval;
+    private static final int DIALOG_LAYOUT_RES_ID = com.urbanairship.preference.R.layout.fragment_display_interval;
 
     public IAADisplayIntervalPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -33,11 +35,18 @@ public class IAADisplayIntervalPreference extends UANumberPickerPreference {
         super(context);
     }
 
+
+    @Override
+    public CharSequence getSummary() {
+        return value / 1000L + " " + getContext().getString(R.string.iaa_display_interval_unit_time);
+    }
+
     @Override
     public void setValue(long v) {
         if(v != value) {
             value = v;
             UAirship.shared().getInAppMessagingManager().setDisplayInterval(v, TimeUnit.MILLISECONDS);
+            notifyChanged();
         }
     }
 
