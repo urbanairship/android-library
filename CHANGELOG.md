@@ -3,6 +3,24 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 12.0.0 - November 15, 2019
+==================================
+Major release decoupling Airship channel registration from push functionality,
+and adding support for channel attributes, which allow key value pairs to be 
+associated with the application's Airship channel for segmentation purposes.
+
+Custom channel attributes are currently a beta feature. If you wish to
+participate in the beta program, please contact our Product team at
+product-managers@airship.com.
+
+Changes
+-------
+- Added a new `AirshipChannel` class
+- Channel related functionality in PushManager is now deprecated
+- Added a new `AirshipChannel.AttributeEditor` class
+- Added a new `editAttributes` method to `AirshipChannel`
+- Android compile and target SDK versions are now 29
+
 Version 11.0.5 - September 16, 2019
 ===================================
 Patch release to fix an issue with custom event attribution when adding a custom event through a Message

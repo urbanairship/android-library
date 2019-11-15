@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '11.0.5'
+        airshipVersion = '12.0.0'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = beta
