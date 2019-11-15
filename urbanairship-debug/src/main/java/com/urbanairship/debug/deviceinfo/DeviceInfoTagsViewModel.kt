@@ -19,7 +19,7 @@ class DeviceInfoTagsViewModel : ViewModel() {
      * Default constructor.
      */
     init {
-        this.tags = ArrayList(UAirship.shared().pushManager.tags)
+        this.tags = ArrayList(UAirship.shared().channel.tags)
         updateList()
     }
 
@@ -49,7 +49,7 @@ class DeviceInfoTagsViewModel : ViewModel() {
      * @param tag The tag.
      */
     fun removeTag(tag: String) {
-        UAirship.shared().pushManager.editTags().removeTag(tag).apply()
+        UAirship.shared().channel.editTags().removeTag(tag).apply()
         tags.remove(tag)
         updateList()
     }
