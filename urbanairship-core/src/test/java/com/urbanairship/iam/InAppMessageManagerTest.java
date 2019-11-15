@@ -25,7 +25,6 @@ import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
@@ -41,7 +40,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -633,30 +631,32 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testNewConfig() {
-        JsonList config = new JsonList(Arrays.asList(
-                JsonMap.newBuilder()
-                       .put("tag_groups", JsonMap.newBuilder()
-                                                 .put("enabled", true)
-                                                 .put("cache_max_age_seconds", 100)
-                                                 .put("cache_stale_read_age_seconds", 11)
-                                                 .put("cache_prefer_local_until_seconds", 1)
-                                                 .build())
-                       .build().toJsonValue(),
-                JsonMap.newBuilder()
-                       .put("tag_groups", JsonMap.newBuilder()
-                                                 .put("enabled", true)
-                                                 .put("cache_max_age_seconds", 1)
-                                                 .put("cache_stale_read_age_seconds", 11)
-                                                 .put("cache_prefer_local_until_seconds", 200)
-                                                 .build())
-                       .build().toJsonValue()));
+        JsonMap config = JsonMap.newBuilder()
+                                .put("tag_groups", JsonMap.newBuilder()
+                                                          .put("enabled", false)
+                                                          .put("cache_max_age_seconds", 1)
+                                                          .put("cache_stale_read_age_seconds", 11)
+                                                          .put("cache_prefer_local_until_seconds", 111)
+                                                          .build())
+                                .build();
 
         manager.onNewConfig(config);
 
-        verify(mockTagManager).setEnabled(true);
-        verify(mockTagManager).setCacheMaxAgeTime(100, TimeUnit.SECONDS);
+        verify(mockTagManager).setEnabled(false);
+        verify(mockTagManager).setCacheMaxAgeTime(1, TimeUnit.SECONDS);
         verify(mockTagManager).setCacheStaleReadTime(11, TimeUnit.SECONDS);
-        verify(mockTagManager).setPreferLocalTagDataTime(200, TimeUnit.SECONDS);
+        verify(mockTagManager).setPreferLocalTagDataTime(111, TimeUnit.SECONDS);
+
+        Mockito.reset(mockTagManager);
+
+        // verify null config resets to defaults
+
+        manager.onNewConfig(null);
+
+        verify(mockTagManager).setEnabled(true);
+        verify(mockTagManager).setCacheMaxAgeTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_MAX_AGE_TIME_MS), TimeUnit.SECONDS);
+        verify(mockTagManager).setCacheStaleReadTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_STALE_READ_TIME_MS), TimeUnit.SECONDS);
+        verify(mockTagManager).setPreferLocalTagDataTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS), TimeUnit.SECONDS);
     }
 
     @Test

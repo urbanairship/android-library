@@ -37,9 +37,7 @@ import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.iam.tags.TagGroupUtils;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.PushManager;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
@@ -320,18 +318,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     @Override
-    public void onNewConfig(@NonNull JsonList configList) {
-        InAppRemoteConfig config = InAppRemoteConfig.fromJsonList(configList);
-        if (config == null) {
-            return;
-        }
+    public void onNewConfig(@Nullable JsonMap configValue) {
+        InAppRemoteConfig config = InAppRemoteConfig.fromJsonMap(configValue);
 
-        if (config.tagGroupsConfig != null) {
-            tagGroupManager.setEnabled(config.tagGroupsConfig.isEnabled);
-            tagGroupManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
-            tagGroupManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
-            tagGroupManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
-        }
+        tagGroupManager.setEnabled(config.tagGroupsConfig.isEnabled);
+        tagGroupManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
+        tagGroupManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
+        tagGroupManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
     }
 
     /**

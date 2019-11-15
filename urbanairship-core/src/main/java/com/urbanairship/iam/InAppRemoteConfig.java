@@ -4,14 +4,13 @@ package com.urbanairship.iam;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.iam.tags.TagGroupManager;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Remote config data for {@link InAppMessageManager}.
@@ -20,10 +19,10 @@ class InAppRemoteConfig {
 
     private static final String TAG_GROUPS_CONFIG_KEY = "tag_groups";
 
-    @Nullable
+    @NonNull
     public final TagGroupsConfig tagGroupsConfig;
 
-    private InAppRemoteConfig(@Nullable TagGroupsConfig tagGroupsConfig) {
+    private InAppRemoteConfig(@NonNull TagGroupsConfig tagGroupsConfig) {
         this.tagGroupsConfig = tagGroupsConfig;
     }
 
@@ -42,43 +41,50 @@ class InAppRemoteConfig {
     }
 
     /**
-     * Parses and collapses config from list of in-app configs.
+     * Creates an instance with all values defaulted
      *
-     * @param jsonList The json list.
-     * @return A in-app remote config, or null if the JSON is empty.
+     * @return A default in-app remote config
      */
-    @Nullable
-    public static InAppRemoteConfig fromJsonList(@NonNull JsonList jsonList) {
-        List<InAppRemoteConfig> configList = new ArrayList<>();
-        for (JsonValue jsonValue : jsonList) {
-            configList.add(InAppRemoteConfig.fromJsonValue(jsonValue));
-        }
-
-        if (configList.size() == 0) {
-            return null;
-        }
-
-        if (configList.size() == 1) {
-            return configList.get(0);
-        }
-
-        InAppRemoteConfig config = configList.remove(0);
-
-        while (!configList.isEmpty()) {
-            InAppRemoteConfig next = configList.remove(0);
-            config = config.combine(next);
-        }
-
-        return config;
+    @VisibleForTesting
+    @NonNull
+    static InAppRemoteConfig defaultConfig() {
+        TagGroupsConfig config = TagGroupsConfig.defaultConfig();
+        return new InAppRemoteConfig(config);
     }
 
-    private static InAppRemoteConfig fromJsonValue(JsonValue jsonValue) {
-        TagGroupsConfig config = null;
-        if (jsonValue.optMap().containsKey(TAG_GROUPS_CONFIG_KEY)) {
-            config = TagGroupsConfig.fromJsonValue(jsonValue.optMap().opt(TAG_GROUPS_CONFIG_KEY));
+    /**
+     * Parses generic remote config into an in-app config.
+     *
+     * @param remoteConfig The generic remote config as a JsonMap.
+     * @return An in-app remote config, or the default in-app remote config if the JSON is empty or null.
+     */
+    @NonNull
+    public static InAppRemoteConfig fromJsonMap(@Nullable JsonMap remoteConfig) {
+        if (remoteConfig == null) {
+            return InAppRemoteConfig.defaultConfig();
         }
 
-        return new InAppRemoteConfig(config);
+        TagGroupsConfig config = null;
+        if (remoteConfig.containsKey(TAG_GROUPS_CONFIG_KEY)) {
+            config = TagGroupsConfig.fromJsonValue(remoteConfig.opt(TAG_GROUPS_CONFIG_KEY));
+        }
+
+        return (config != null) ? new InAppRemoteConfig(config) : InAppRemoteConfig.defaultConfig();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        InAppRemoteConfig that = (InAppRemoteConfig) o;
+
+        return tagGroupsConfig.equals(that.tagGroupsConfig);
+    }
+
+    @Override
+    public int hashCode() {
+        return tagGroupsConfig.hashCode();
     }
 
     /**
@@ -94,6 +100,11 @@ class InAppRemoteConfig {
         private static final String TAG_GROUP_CACHE_STALE_READ_TIME_SECONDS = "cache_stale_read_age_seconds";
         @NonNull
         private static final String TAG_GROUP_CACHE_PREFER_LOCAL_UNTIL_SECONDS = "cache_prefer_local_until_seconds";
+
+        private static final boolean DEFAULT_FETCH_ENABLED = true;
+        private static final long DEFAULT_CACHE_MAX_AGE_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_MAX_AGE_TIME_MS);
+        private static final long DEFAULT_CACHE_STALE_READ_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_STALE_READ_TIME_MS);
+        private static final long DEFAULT_PREFER_LOCAL_DATA_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS);
 
         /**
          * Enable/Disable tag group fetches.
@@ -135,16 +146,43 @@ class InAppRemoteConfig {
         }
 
         @NonNull
+        private static TagGroupsConfig defaultConfig() {
+            return new TagGroupsConfig(DEFAULT_FETCH_ENABLED,
+                    DEFAULT_CACHE_MAX_AGE_TIME_SEC,
+                    DEFAULT_CACHE_STALE_READ_TIME_SEC,
+                    DEFAULT_PREFER_LOCAL_DATA_TIME_SEC);
+        }
+
+        @NonNull
         private static TagGroupsConfig fromJsonValue(@NonNull JsonValue jsonValue) {
             JsonMap map = jsonValue.optMap();
 
-            boolean isTagGroupFetchEnabled = map.opt(TAG_GROUP_FETCH_ENABLED_KEY).getBoolean(true);
+            return new TagGroupsConfig(map.opt(TAG_GROUP_FETCH_ENABLED_KEY).getBoolean(DEFAULT_FETCH_ENABLED),
+                    map.opt(TAG_GROUP_CACHE_MAX_AGE_SECONDS).getLong(DEFAULT_CACHE_MAX_AGE_TIME_SEC),
+                    map.opt(TAG_GROUP_CACHE_STALE_READ_TIME_SECONDS).getLong(DEFAULT_CACHE_STALE_READ_TIME_SEC),
+                    map.opt(TAG_GROUP_CACHE_PREFER_LOCAL_UNTIL_SECONDS).getLong(DEFAULT_PREFER_LOCAL_DATA_TIME_SEC));
+        }
 
-            long tagGroupCacheMaxAgeInSeconds = map.opt(TAG_GROUP_CACHE_MAX_AGE_SECONDS).getLong(TagGroupManager.DEFAULT_CACHE_MAX_AGE_TIME_MS);
-            long tagGroupCacheStaleReadTimeSeconds = map.opt(TAG_GROUP_CACHE_STALE_READ_TIME_SECONDS).getLong(TagGroupManager.DEFAULT_CACHE_STALE_READ_TIME_MS);
-            long tagGroupCachePreferLocalTagDataTimeSeconds = map.opt(TAG_GROUP_CACHE_PREFER_LOCAL_UNTIL_SECONDS).getLong(TagGroupManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS);
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-            return new TagGroupsConfig(isTagGroupFetchEnabled, tagGroupCacheMaxAgeInSeconds, tagGroupCacheStaleReadTimeSeconds, tagGroupCachePreferLocalTagDataTimeSeconds);
+            TagGroupsConfig that = (TagGroupsConfig) o;
+
+            if (isEnabled != that.isEnabled) return false;
+            if (cacheMaxAgeInSeconds != that.cacheMaxAgeInSeconds) return false;
+            if (cacheStaleReadTimeSeconds != that.cacheStaleReadTimeSeconds) return false;
+            return cachePreferLocalTagDataTimeSeconds == that.cachePreferLocalTagDataTimeSeconds;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = (isEnabled ? 1 : 0);
+            result = 31 * result + (int) (cacheMaxAgeInSeconds ^ (cacheMaxAgeInSeconds >>> 32));
+            result = 31 * result + (int) (cacheStaleReadTimeSeconds ^ (cacheStaleReadTimeSeconds >>> 32));
+            result = 31 * result + (int) (cachePreferLocalTagDataTimeSeconds ^ (cachePreferLocalTagDataTimeSeconds >>> 32));
+            return result;
         }
 
     }

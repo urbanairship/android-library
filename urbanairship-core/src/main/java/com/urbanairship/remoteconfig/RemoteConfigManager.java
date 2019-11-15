@@ -12,8 +12,9 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
@@ -21,6 +22,8 @@ import com.urbanairship.remotedata.RemoteDataPayload;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +45,20 @@ public class RemoteConfigManager extends AirshipComponent {
 
     // Disable config key
     private static final String DISABLE_INFO_KEY = "disable_features";
+
+    // comparator for remote config payload sorting
+    private static Comparator<RemoteDataPayload> COMPARE_BY_PAYLOAD_TYPE = new Comparator<RemoteDataPayload>() {
+        @Override
+        public int compare(RemoteDataPayload o1, RemoteDataPayload o2) {
+            if (o1.getType().equals(o2.getType())) {
+                return 0;
+            }
+            if (o1.getType().equals(CONFIG_TYPE_COMMON)) {
+                return -1;
+            }
+            return 1;
+        }
+    };
 
     private final RemoteData remoteData;
     private final ModuleAdapter moduleAdapter;
@@ -70,61 +87,72 @@ public class RemoteConfigManager extends AirshipComponent {
 
         String platformConfig = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? CONFIG_TYPE_AMAZON : CONFIG_TYPE_ANDROID;
         subscription = remoteData.payloadsForTypes(CONFIG_TYPE_COMMON, platformConfig)
-                                 .subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
+                                 .map(new Function<Collection<RemoteDataPayload>, JsonMap>() {
+                                     @NonNull
                                      @Override
-                                     public void onNext(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
+                                     public JsonMap apply(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
+                                         // sort the payloads, common first followed by platform-specific
+                                         List<RemoteDataPayload> remoteDataPayloadList = new ArrayList<RemoteDataPayload>(remoteDataPayloads);
+                                         Collections.sort(remoteDataPayloadList, COMPARE_BY_PAYLOAD_TYPE);
+
+                                         // combine the payloads, overwriting common config with platform-specific config
+                                         JsonMap.Builder combinedPayloadDataBuilder = JsonMap.newBuilder();
+                                         for (RemoteDataPayload payload : remoteDataPayloadList) {
+                                             combinedPayloadDataBuilder.putAll(payload.getData());
+                                         }
+                                         return combinedPayloadDataBuilder.build();
+                                     }
+                                 })
+                                 .subscribe(new Subscriber<JsonMap>() {
+                                     @Override
+                                     public void onNext(@NonNull JsonMap config) {
                                          try {
-                                             processRemoteData(remoteDataPayloads);
+                                             processConfig(config);
                                          } catch (Exception e) {
-                                             Logger.error(e, "Failed process remote data");
+                                             Logger.error(e, "Failed to process remote data");
                                          }
                                      }
                                  });
     }
 
     /**
-     * Processes the remote data payloads.
+     * Processes the remote config.
      *
-     * @param remoteDataPayloads The remote data payloads.
+     * @param config The remote data config.
      */
-    private void processRemoteData(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
-
+    private void processConfig(@NonNull JsonMap config) {
         List<DisableInfo> disableInfos = new ArrayList<>();
+        Map<String, JsonValue> moduleConfigs = new HashMap<>();
 
-        Map<String, List<JsonValue>> config = new HashMap<>();
+        for (String key : config.keySet()) {
+            JsonValue value = config.opt(key);
 
-        for (RemoteDataPayload payload : remoteDataPayloads) {
-            for (String key : payload.getData().keySet()) {
-
-                JsonValue value = payload.getData().opt(key);
-
-                if (DISABLE_INFO_KEY.equals(key)) {
-                    for (JsonValue disableInfoJson : value.optList()) {
-                        try {
-                            disableInfos.add(DisableInfo.fromJson(disableInfoJson));
-                        } catch (JsonException e) {
-                            Logger.error(e, "Failed to parse remote config: %s", payload);
-                        }
+            if (DISABLE_INFO_KEY.equals(key)) {
+                for (JsonValue disableInfoJson : value.optList()) {
+                    try {
+                        disableInfos.add(DisableInfo.fromJson(disableInfoJson));
+                    } catch (JsonException e) {
+                        Logger.error(e, "Failed to parse remote config: %s", config);
                     }
-                    continue;
                 }
-
-                // Treat it like its config
-                List<JsonValue> moduleConfig = config.get(key);
-                if (moduleConfig == null) {
-                    moduleConfig = new ArrayList<>();
-                    config.put(key, moduleConfig);
-                }
-                moduleConfig.add(value);
+                continue;
             }
+
+            moduleConfigs.put(key, value);
         }
 
         apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()));
 
         // Notify new config
-        for (Map.Entry<String, List<JsonValue>> entry : config.entrySet()) {
-            String module = entry.getKey();
-            moduleAdapter.onNewConfig(module, new JsonList(entry.getValue()));
+        Set<String> modules = new HashSet<>(Modules.ALL_MODULES);
+        modules.addAll(moduleConfigs.keySet());
+        for (String module : modules) {
+            JsonValue moduleConfig = moduleConfigs.get(module);
+            if (moduleConfig == null) {
+                moduleAdapter.onNewConfig(module, null);
+            } else {
+                moduleAdapter.onNewConfig(module, moduleConfig.optMap());
+            }
         }
     }
 

@@ -2,11 +2,12 @@ package com.urbanairship.remoteconfig;
 /* Copyright Airship and Contributors */
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +36,7 @@ class ModuleAdapter {
      * @param module The module name.
      * @param config The config
      */
-    public void onNewConfig(@NonNull String module, @NonNull JsonList config) {
+    public void onNewConfig(@NonNull String module, @Nullable JsonMap config) {
         for (AirshipComponent component : findAirshipComponents(module)) {
             if (component.isComponentEnabled()) {
                 component.onNewConfig(config);

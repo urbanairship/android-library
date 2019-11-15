@@ -5,11 +5,12 @@ package com.urbanairship;
 import android.content.Context;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 
 import java.util.concurrent.Executor;
 
@@ -174,7 +175,7 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onNewConfig(@NonNull JsonList value) {
+    public void onNewConfig(@Nullable JsonMap value) {
 
     }
 

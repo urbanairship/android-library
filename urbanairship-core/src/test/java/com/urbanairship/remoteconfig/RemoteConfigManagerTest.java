@@ -3,10 +3,10 @@
 package com.urbanairship.remoteconfig;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
@@ -26,6 +26,7 @@ import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,17 +55,17 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
     @Test
     public void testDisableComponents() {
-        RemoteDataPayload common = createDisablePayload("app_config:common", 0, Modules.ALL_MODULES);
-        RemoteDataPayload platform = createDisablePayload("app_config:android", 0, Modules.PUSH_MODULE);
+        RemoteDataPayload common = createDisablePayload("app_config", 0, Modules.PUSH_MODULE);
+        RemoteDataPayload platform = createDisablePayload("app_config:android", 0, Modules.ALL_MODULES);
 
         // Notify the updates
-        updates.onNext(Arrays.asList(common, platform));
+        updates.onNext(Arrays.asList(platform, common));
 
         // Verify they are all disabled
         assertTrue(testModuleAdapter.disabledModules.containsAll(Modules.ALL_MODULES));
 
         // Clear common
-        common = createRemoteDataPayload("app_config:common", 0, JsonMap.EMPTY_MAP);
+        platform = createRemoteDataPayload("app_config:android", 0, JsonMap.EMPTY_MAP);
         testModuleAdapter.reset();
 
         // Notify the updates
@@ -76,13 +77,12 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
         assertTrue(testModuleAdapter.enabledModules.containsAll(modules));
         assertTrue(testModuleAdapter.disabledModules.contains(Modules.PUSH_MODULE));
-        assertTrue(testModuleAdapter.sentConfig.isEmpty());
-
+        assertTrue(testModuleAdapter.sentConfig.keySet().containsAll(Modules.ALL_MODULES));
     }
 
     @Test
     public void testRemoteDataForegroundRefreshInterval() {
-        RemoteDataPayload common = createDisablePayload("app_config:common", 9, Modules.ALL_MODULES);
+        RemoteDataPayload common = createDisablePayload("app_config", 9, Modules.ALL_MODULES);
         RemoteDataPayload platform = createDisablePayload("app_config:android", 10, Modules.PUSH_MODULE);
 
         // Notify the updates
@@ -94,30 +94,46 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
     @Test
     public void testRemoteConfig() {
+        JsonMap module_one_config_common = JsonMap.newBuilder()
+                                                  .put("some_config_name", "some_config_value")
+                                                  .build();
+
+        JsonMap module_two_config_common = JsonMap.newBuilder()
+                                                  .put("some_other_config_name", "some_other_config_value")
+                                                  .build();
+
         JsonMap commonData = JsonMap.newBuilder()
-                                    .put("module_one", "some_config")
-                                    .put("module_two", "some_other_config")
+                                    .put("module_one", module_one_config_common)
+                                    .put("module_two", module_two_config_common)
                                     .build();
 
+        JsonMap module_one_config_platform_specific = JsonMap.newBuilder()
+                                                             .put("some_other_config_name", "some_other_config_value")
+                                                             .build();
+
         JsonMap androidData = JsonMap.newBuilder()
-                                     .put("module_one", "android")
+                                     .put("module_one", module_one_config_platform_specific)
                                      .build();
 
-        RemoteDataPayload common = createRemoteDataPayload("app_config:common", System.currentTimeMillis(), commonData);
+        RemoteDataPayload common = createRemoteDataPayload("app_config", System.currentTimeMillis(), commonData);
         RemoteDataPayload android = createRemoteDataPayload("app_config:android", System.currentTimeMillis(), androidData);
 
         // Notify the updates
-        updates.onNext(Arrays.asList(common, android));
+        updates.onNext(Arrays.asList(android, common));
 
-        Map<String, JsonList> config = testModuleAdapter.sentConfig;
+        Map<String, JsonMap> config = testModuleAdapter.sentConfig;
 
-        assertEquals(2, config.size());
+        assertEquals((2 + Modules.ALL_MODULES.size()), config.size());
 
-        JsonList expectedModuleOneConfig = JsonValue.wrapOpt(Arrays.asList("some_config", "android")).optList();
-        assertEquals(expectedModuleOneConfig, config.get("module_one"));
+        assertEquals(module_one_config_platform_specific, config.get("module_one"));
 
-        JsonList expectedModuleTwoConfig = JsonValue.wrapOpt(Arrays.asList("some_other_config")).optList();
-        assertEquals(expectedModuleTwoConfig, config.get("module_two"));
+        assertEquals(module_two_config_common, config.get("module_two"));
+
+        // All modules without config payloads should be called with a null config
+        for (String module : Modules.ALL_MODULES) {
+            assertNull(config.get(module));
+            assertTrue(testModuleAdapter.sentConfig.keySet().contains(module));
+        }
     }
 
     static RemoteDataPayload createRemoteDataPayload(String type, long timeStamp, JsonMap data) {
@@ -152,7 +168,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
         List<String> enabledModules = new ArrayList<>();
         List<String> disabledModules = new ArrayList<>();
-        Map<String, JsonList> sentConfig = new HashMap<>();
+        Map<String, JsonMap> sentConfig = new HashMap<>();
 
         @Override
         public void setComponentEnabled(@NonNull String module, boolean enabled) {
@@ -170,7 +186,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         }
 
         @Override
-        public void onNewConfig(@NonNull String module, @NonNull JsonList config) {
+        public void onNewConfig(@NonNull String module, @Nullable JsonMap config) {
             if (sentConfig.get(module) != null) {
                 throw new IllegalStateException("Make sure to reset test sender between checks");
             }
