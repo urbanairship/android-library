@@ -2,10 +2,10 @@
 
 package com.urbanairship.debug.event
 
+import androidx.annotation.RestrictTo
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import androidx.annotation.RestrictTo
 import com.urbanairship.debug.event.persistence.EventEntity
 import org.json.JSONObject
 

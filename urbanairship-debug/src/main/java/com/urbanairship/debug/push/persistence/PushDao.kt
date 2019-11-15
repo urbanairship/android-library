@@ -2,12 +2,12 @@
 
 package com.urbanairship.debug.push.persistence
 
+import androidx.annotation.RestrictTo
 import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.annotation.RestrictTo
 
 /**
  * Data Access Object for the push table.

@@ -3,8 +3,8 @@
 package com.urbanairship.debug.deviceinfo
 
 import android.content.Context
-import androidx.preference.EditTextPreference
 import android.util.AttributeSet
+import androidx.preference.EditTextPreference
 import com.urbanairship.UAirship
 import com.urbanairship.util.UAStringUtil
 

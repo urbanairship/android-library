@@ -5,22 +5,17 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.preference.Preference
 import android.util.AttributeSet
-
+import androidx.preference.Preference
 import com.urbanairship.UAirship
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.copyToClipboard
-import com.urbanairship.push.RegistrationListener
+import com.urbanairship.push.PushTokenListener
 
 class PushTokenPreference : Preference {
 
-    private val registrationListener = object : RegistrationListener {
-        override fun onChannelCreated(channelId: String) {}
-
-        override fun onChannelUpdated(channelId: String) {}
-
-        override fun onPushTokenUpdated(token: String) { notifyChannelUpdate() }
+    private val pushTokenListener = object : PushTokenListener {
+        override fun onPushTokenUpdated(token: String) = postUpdate()
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -41,16 +36,16 @@ class PushTokenPreference : Preference {
 
     override fun onAttached() {
         super.onAttached()
-        UAirship.shared().pushManager.addRegistrationListener(registrationListener)
+        UAirship.shared().pushManager.addPushTokenListener(pushTokenListener)
     }
 
     override fun onDetached() {
         super.onDetached()
-        UAirship.shared().pushManager.removeRegistrationListener(registrationListener)
+        UAirship.shared().pushManager.removePushTokenListener(pushTokenListener)
     }
 
-    private fun notifyChannelUpdate() {
+    private fun postUpdate() {
         val handler = Handler(Looper.getMainLooper())
-        handler.post(Runnable { notifyChanged() })
+        handler.post { notifyChanged() }
     }
 }

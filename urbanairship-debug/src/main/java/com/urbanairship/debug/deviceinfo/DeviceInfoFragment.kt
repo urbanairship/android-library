@@ -3,12 +3,11 @@
 package com.urbanairship.debug.deviceinfo
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceFragmentCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.Navigation
+import androidx.preference.PreferenceFragmentCompat
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 

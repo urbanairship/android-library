@@ -3,11 +3,12 @@
 package com.urbanairship.debug.deviceinfo.preferences;
 
 import android.content.Context;
-import androidx.preference.EditTextPreference;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.preference.EditTextPreference;
 
 /**
  * DialogPreference to set the named user.

@@ -5,10 +5,8 @@ package com.urbanairship.debug.deviceinfo
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-
 import com.urbanairship.UAirship
-
-import java.util.ArrayList
+import java.util.*
 
 class DeviceInfoTagsViewModel : ViewModel() {
 
@@ -38,7 +36,7 @@ class DeviceInfoTagsViewModel : ViewModel() {
      * @param tag The tag.
      */
     fun addTag(tag: String) {
-        UAirship.shared().pushManager.editTags().addTag(tag).apply()
+        UAirship.shared().channel.editTags().addTag(tag).apply()
         tags.add(tag)
         updateList()
     }

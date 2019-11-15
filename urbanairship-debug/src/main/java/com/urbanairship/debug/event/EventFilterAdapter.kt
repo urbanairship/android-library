@@ -2,10 +2,9 @@
 
 package com.urbanairship.debug.event
 
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ListAdapter
 import com.urbanairship.debug.databinding.UaItemEventFilterBinding
 import com.urbanairship.debug.utils.SimpleDiffItemCallback
 
