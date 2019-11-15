@@ -80,12 +80,9 @@ class EventListFragment : Fragment() {
             }
         }
 
-    override fun onAttach(context: Context?) {
-        context?.apply {
-            theme.applyStyle(com.google.android.material.R.style.Theme_MaterialComponents, false)
-            sharedPreferences = ServiceLocator.shared(context).sharedPreferences
-        }
-
+    override fun onAttach(context: Context) {
+        context.theme.applyStyle(com.google.android.material.R.style.Theme_MaterialComponents, false)
+        sharedPreferences = ServiceLocator.shared(context).sharedPreferences
         super.onAttach(context)
     }
 

@@ -573,8 +573,13 @@ public class AirshipChannel extends AirshipComponent {
      */
     @Nullable
     private ChannelRegistrationPayload getLastRegistrationPayload() {
+        JsonValue jsonValue = getDataStore().getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY);
+        if (jsonValue.isNull()) {
+            return null;
+        }
+
         try {
-            return ChannelRegistrationPayload.fromJson(getDataStore().getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY));
+            return ChannelRegistrationPayload.fromJson(jsonValue);
         } catch (JsonException e) {
             Logger.error(e, "AirshipChannel - Failed to parse payload from JSON.");
             return null;
