@@ -2,16 +2,16 @@
 
 package com.urbanairship.debug.event
 
-import androidx.databinding.BindingAdapter
 import android.graphics.drawable.ColorDrawable
-import androidx.annotation.ColorInt
-import com.google.android.material.chip.Chip
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import android.text.format.DateUtils
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.databinding.BindingAdapter
+import com.google.android.material.chip.Chip
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 @BindingAdapter("fabVisibility")
 fun bindFabVisibility(fab: FloatingActionButton, visible: Boolean) {

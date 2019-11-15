@@ -2,13 +2,7 @@
 
 package com.urbanairship.debug.deviceinfo
 
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.ItemTouchHelper
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -17,12 +11,15 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
-
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.debug.R
-import com.urbanairship.util.UAStringUtil
-
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoTagsBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
+import com.urbanairship.util.UAStringUtil
 
 /**
  * Fragment that manages Urban Airship tags.

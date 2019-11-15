@@ -3,13 +3,9 @@ package com.urbanairship.debug.deviceinfo.preferences
 import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
-import androidx.preference.Preference
 import android.util.AttributeSet
-import android.widget.Toast
-
+import androidx.preference.Preference
 import com.urbanairship.UAirship
-import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ClipboardAction
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.copyToClipboard
 

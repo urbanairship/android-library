@@ -2,11 +2,10 @@
 
 package com.urbanairship.debug.deviceinfo
 
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.urbanairship.debug.databinding.UaItemTagBinding
 
 /**

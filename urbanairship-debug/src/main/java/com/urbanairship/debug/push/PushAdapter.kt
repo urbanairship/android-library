@@ -2,10 +2,9 @@
 
 package com.urbanairship.debug.push
 
-import androidx.paging.PagedListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.paging.PagedListAdapter
 import com.urbanairship.debug.BR
 import com.urbanairship.debug.databinding.UaItemPushBinding
 import com.urbanairship.debug.push.persistence.PushEntity

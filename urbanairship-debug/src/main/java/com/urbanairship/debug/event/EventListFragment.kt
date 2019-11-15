@@ -19,14 +19,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentEventListBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * Event list fragment.
@@ -239,6 +238,7 @@ class EventListFragment : Fragment() {
 
     internal class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
             return EventListViewModel(ServiceLocator.shared(context).getEventRepository()) as T
         }
     }

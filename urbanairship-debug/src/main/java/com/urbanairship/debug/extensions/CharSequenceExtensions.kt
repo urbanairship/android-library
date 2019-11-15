@@ -1,7 +1,5 @@
 package com.urbanairship.debug.extensions
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import com.urbanairship.actions.ActionRunRequest

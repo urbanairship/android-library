@@ -2,10 +2,10 @@
 
 package com.urbanairship.debug.push
 
+import androidx.annotation.RestrictTo
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import androidx.annotation.RestrictTo
 import com.urbanairship.debug.push.persistence.PushEntity
 import org.json.JSONObject
 

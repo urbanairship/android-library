@@ -2,11 +2,10 @@
 
 package com.urbanairship.debug.event
 
-import androidx.paging.PagedListAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.DiffUtil
 import com.urbanairship.debug.BR
 import com.urbanairship.debug.databinding.UaItemEventBinding
 import com.urbanairship.debug.event.persistence.EventEntity
