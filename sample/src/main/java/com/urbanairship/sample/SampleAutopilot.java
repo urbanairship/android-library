@@ -54,8 +54,9 @@ public class SampleAutopilot extends Autopilot {
 
         AirshipListener airshipListener = new AirshipListener();
         airship.getPushManager().addPushListener(airshipListener);
-        airship.getPushManager().addRegistrationListener(airshipListener);
+        airship.getPushManager().addPushTokenListener(airshipListener);
         airship.getPushManager().setNotificationListener(airshipListener);
+        airship.getChannel().addChannelListener(airshipListener);
     }
 
     @Nullable

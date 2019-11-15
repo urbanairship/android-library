@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import androidx.annotation.NonNull;
@@ -49,7 +48,6 @@ import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
 import androidx.core.app.NotificationManagerCompat;
 
-import static com.urbanairship.UAirship.getApplicationContext;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -226,6 +224,8 @@ public class PushManager extends AirshipComponent {
 
     private NotificationListener notificationListener;
     private List<RegistrationListener> registrationListeners = new CopyOnWriteArrayList<>();
+    private List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
+
     private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
 
     private final Object uniqueIdLock = new Object();
@@ -794,10 +794,31 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Adds a registration listener.
+     * Adds a push token listener.
      *
      * @param listener The listener.
      */
+    public void addPushTokenListener(@NonNull PushTokenListener listener) {
+        pushTokenListeners.add(listener);
+    }
+
+    /**
+     * Removes a push token listener.
+     *
+     * @param listener The listener.
+     */
+    public void removePushTokenListener(@NonNull PushTokenListener listener) {
+        pushTokenListeners.remove(listener);
+    }
+
+    /**
+     * Adds a registration listener.
+     *
+     * @param listener The listener.
+     * @deprecated Use {@link AirshipChannel#addChannelListener(AirshipChannelListener)} and/or
+     * {@link #addPushTokenListener(PushTokenListener)} instead. Will be removed in SDK 13.
+     */
+    @Deprecated
     public void addRegistrationListener(@NonNull RegistrationListener listener) {
         registrationListeners.add(listener);
     }
@@ -807,6 +828,7 @@ public class PushManager extends AirshipComponent {
      *
      * @param listener The listener.
      */
+    @Deprecated
     public void removeRegistrationListener(@NonNull RegistrationListener listener) {
         registrationListeners.remove(listener);
     }
@@ -1099,6 +1121,10 @@ public class PushManager extends AirshipComponent {
                 preferenceDataStore.put(PUSH_TOKEN_KEY, token);
 
                 for (RegistrationListener listener : registrationListeners) {
+                    listener.onPushTokenUpdated(token);
+                }
+
+                for (PushTokenListener listener : pushTokenListeners) {
                     listener.onPushTokenUpdated(token);
                 }
 

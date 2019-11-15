@@ -3,7 +3,6 @@
 package com.urbanairship.channel;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
