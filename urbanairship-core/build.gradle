@@ -14,6 +14,7 @@ dependencies {
     api "androidx.fragment:fragment:$rootProject.androidxFragmentVersion"
     api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
     api "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
+    api "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
 
     // Optional
     compileOnly "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"

@@ -913,9 +913,7 @@ public class AutomationEngine<T extends Schedule> {
         List<ScheduleEntry> expired = dataManager.getActiveExpiredScheduleEntries();
         List<ScheduleEntry> finished = dataManager.getScheduleEntries(ScheduleEntry.STATE_FINISHED);
 
-        if (expired.isEmpty()) {
-            handleExpiredEntries(expired);
-        }
+        handleExpiredEntries(expired);
 
         Set<String> schedulesToDelete = new HashSet<>();
         for (ScheduleEntry entry : finished) {
@@ -1662,6 +1660,9 @@ public class AutomationEngine<T extends Schedule> {
      * @param entries The expired schedule entries.
      */
     private void handleExpiredEntries(@NonNull Collection<ScheduleEntry> entries) {
+        if (entries.isEmpty()) {
+            return;
+        }
         List<String> schedulesToDelete = new ArrayList<>();
         List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
 

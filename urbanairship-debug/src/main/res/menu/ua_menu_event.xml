@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/ua_event_settings"
+        android:enabled="true"
+        android:icon="@drawable/ua_ic_settings"
+        app:iconTint="@android:color/darker_gray"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:title = "@string/ua_event_storage_days_title"
+                android:enabled="false"></item>
+            <group
+                android:id="@+id/ua_storage_days"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/ua_event_storage_days_02"
+                    android:title="@string/ua_event_storage_days_02" />
+                <item
+                    android:id="@+id/ua_event_storage_days_05"
+                    android:title="@string/ua_event_storage_days_05" />
+                <item
+                    android:id="@+id/ua_event_storage_days_10"
+                    android:title="@string/ua_event_storage_days_10" />
+                <item
+                    android:id="@+id/ua_event_storage_days_30"
+                    android:title="@string/ua_event_storage_days_30" />
+            </group>
+        </menu>
+    </item>
+</menu>

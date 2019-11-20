@@ -38,7 +38,7 @@ public class JobInfo {
     @IntDef({ ANALYTICS_EVENT_UPLOAD, ANALYTICS_UPDATE_ADVERTISING_ID, NAMED_USER_UPDATE_ID,
             NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE_REGISTRATION,
             CHANNEL_UPDATE_TAG_GROUPS, RICH_PUSH_UPDATE_USER, RICH_PUSH_UPDATE_MESSAGES,
-            RICH_PUSH_SYNC_MESSAGE_STATE, REMOTE_DATA_REFRESH })
+            RICH_PUSH_SYNC_MESSAGE_STATE, REMOTE_DATA_REFRESH, CHANNEL_UPDATE_ATTRIBUTES})
     @Retention(SOURCE)
     public @interface JobId {}
 
@@ -51,6 +51,7 @@ public class JobInfo {
     public static final int CHANNEL_UPDATE_PUSH_TOKEN = 4;
     public static final int CHANNEL_UPDATE_REGISTRATION = 5;
     public static final int CHANNEL_UPDATE_TAG_GROUPS = 6;
+    public static final int CHANNEL_UPDATE_ATTRIBUTES = 11;
 
     public static final int RICH_PUSH_UPDATE_USER = 7;
     public static final int RICH_PUSH_UPDATE_MESSAGES = 8;

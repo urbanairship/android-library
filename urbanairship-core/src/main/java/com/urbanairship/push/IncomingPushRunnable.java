@@ -396,7 +396,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
+                                 .setAction(PushManager.ACTION_DISPLAY_NOTIFICATION)
                                  .generateUniqueId(context)
                                  .setAirshipComponent(PushManager.class)
                                  .setPersistent(true)

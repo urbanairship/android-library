@@ -6,13 +6,13 @@ import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.TagGroupRegistrar;
-import com.urbanairship.push.TagGroupsMutation;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;

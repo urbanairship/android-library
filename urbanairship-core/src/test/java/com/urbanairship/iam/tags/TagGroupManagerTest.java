@@ -8,6 +8,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
@@ -44,7 +45,7 @@ public class TagGroupManagerTest extends BaseTestCase {
     private TagGroupManager manager;
 
     private TagGroupLookupApiClient mockClient;
-    private PushManager mockPushManager;
+    private AirshipChannel mockChannel;
     private TagGroupHistorian mockHistorian;
 
     private TestCallback callback;
@@ -73,10 +74,10 @@ public class TagGroupManagerTest extends BaseTestCase {
         clientResponseTags.put("some-other-group", tagSet("not cool"));
 
         mockClient = mock(TagGroupLookupApiClient.class);
-        mockPushManager = mock(PushManager.class);
+        mockChannel = mock(AirshipChannel.class);
 
         channelId = "some-channel-id";
-        when(mockPushManager.getChannelId()).thenAnswer(new Answer<String>() {
+        when(mockChannel.getId()).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 return channelId;
@@ -84,7 +85,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         });
 
         mockHistorian = mock(TagGroupHistorian.class);
-        manager = new TagGroupManager(mockClient, mockPushManager, mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
+        manager = new TagGroupManager(mockClient, mockChannel, mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
 
         callback = new TestCallback();
         manager.setRequestTagsCallback(callback);
@@ -176,8 +177,8 @@ public class TagGroupManagerTest extends BaseTestCase {
     public void getTagsDeviceGroup() {
         // Setup push to return device tags
         Set<String> deviceTags = tagSet("local tag");
-        when(mockPushManager.getTags()).thenReturn(deviceTags);
-        when(mockPushManager.getChannelTagRegistrationEnabled()).thenReturn(true);
+        when(mockChannel.getTags()).thenReturn(deviceTags);
+        when(mockChannel.getChannelTagRegistrationEnabled()).thenReturn(true);
 
         // Have the response return a server side device tag
         clientResponseTags.put("device", tagSet("server tag"));
@@ -204,7 +205,7 @@ public class TagGroupManagerTest extends BaseTestCase {
      */
     @Test
     public void getTagsDeviceGroupPushManagerTagsDisabled() {
-        when(mockPushManager.getChannelTagRegistrationEnabled()).thenReturn(false);
+        when(mockChannel.getChannelTagRegistrationEnabled()).thenReturn(false);
 
         // Have the response return a server side device tag
         clientResponseTags.put("device", tagSet("server tag"));
@@ -233,8 +234,8 @@ public class TagGroupManagerTest extends BaseTestCase {
     public void getTagsOnlyDeviceTags() {
         // Setup push to return device tags
         Set<String> deviceTags = tagSet("local tag");
-        when(mockPushManager.getTags()).thenReturn(deviceTags);
-        when(mockPushManager.getChannelTagRegistrationEnabled()).thenReturn(true);
+        when(mockChannel.getTags()).thenReturn(deviceTags);
+        when(mockChannel.getChannelTagRegistrationEnabled()).thenReturn(true);
 
         // Request only the local tag
         requestTags.clear();

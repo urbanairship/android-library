@@ -8,18 +8,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.SimpleApplicationListener;
-import com.urbanairship.push.PushManager;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * ChannelCapture checks the device clipboard for a String that is prefixed by
@@ -39,7 +40,7 @@ public class ChannelCapture extends AirshipComponent {
 
     private final Context context;
     private final AirshipConfigOptions configOptions;
-    private final PushManager pushManager;
+    private final AirshipChannel airshipChannel;
     private ClipboardManager clipboardManager;
     private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
@@ -52,16 +53,16 @@ public class ChannelCapture extends AirshipComponent {
      *
      * @param context The application context.
      * @param configOptions The airship config options.
-     * @param pushManager The push manager instance.
+     * @param airshipChannel The airship channel.
      * @param activityMonitor The activity monitor instance.
      */
     ChannelCapture(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
-                   @NonNull PushManager pushManager, @NonNull PreferenceDataStore preferenceDataStore,
+                   @NonNull AirshipChannel airshipChannel, @NonNull PreferenceDataStore preferenceDataStore,
                    @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
-        this.pushManager = pushManager;
+        this.airshipChannel = airshipChannel;
 
         this.listener = new SimpleApplicationListener() {
             @Override
@@ -144,7 +145,7 @@ public class ChannelCapture extends AirshipComponent {
      * available.
      */
     private void attemptChannelCapture() {
-        String channel = pushManager.getChannelId();
+        String channel = airshipChannel.getId();
 
         if (UAStringUtil.isEmpty(channel)) {
             return;
@@ -161,7 +162,6 @@ public class ChannelCapture extends AirshipComponent {
                 this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
                 return;
             }
-
 
             // Clipboard is null on a few VodaPhone devices
             if (clipboardManager == null) {

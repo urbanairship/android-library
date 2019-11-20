@@ -3,6 +3,8 @@
 package com.urbanairship.debug
 
 import android.content.Context
+import android.content.SharedPreferences
+
 import com.urbanairship.debug.event.EventRepository
 import com.urbanairship.debug.event.persistence.EventDao
 import com.urbanairship.debug.event.persistence.EventDatabase
@@ -32,6 +34,8 @@ internal interface ServiceLocator {
 
             return instance!!
         }
+
+        const val PREFERENCES_KEY = "com.urbanairship.debug"
     }
 
     fun getEventRepository(): EventRepository
@@ -41,6 +45,8 @@ internal interface ServiceLocator {
     fun getEventDao(): EventDao
 
     fun getPushDao(): PushDao
+
+    val sharedPreferences: SharedPreferences
 }
 
 internal class DefaultServiceLocator(val context: Context) : ServiceLocator {
@@ -65,4 +71,7 @@ internal class DefaultServiceLocator(val context: Context) : ServiceLocator {
 
     override fun getPushDao(): PushDao = pushDatabase.pushDao()
 
+    override val sharedPreferences: SharedPreferences by lazy {
+        context.getSharedPreferences(ServiceLocator.PREFERENCES_KEY, Context.MODE_PRIVATE)
+    }
 }

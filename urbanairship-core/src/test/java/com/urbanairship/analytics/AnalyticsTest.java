@@ -9,13 +9,17 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static org.junit.Assert.assertEquals;
@@ -23,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,11 +40,13 @@ public class AnalyticsTest extends BaseTestCase {
     private Analytics analytics;
     private JobDispatcher mockJobDispatcher;
     private EventManager mockEventManager;
+    private AirshipChannel mockChannel;
 
     @Before
     public void setup() {
         this.mockJobDispatcher = Mockito.mock(JobDispatcher.class);
         this.mockEventManager = Mockito.mock(EventManager.class);
+        this.mockChannel = Mockito.mock(AirshipChannel.class);
 
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -51,6 +58,7 @@ public class AnalyticsTest extends BaseTestCase {
                                   .setConfigOptions(airshipConfigOptions)
                                   .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
                                   .setEventManager(mockEventManager)
+                                  .setAirshipChannel(mockChannel)
                                   .setExecutor(new Executor() {
                                       @Override
                                       public void execute(@NonNull Runnable runnable) {
@@ -151,6 +159,7 @@ public class AnalyticsTest extends BaseTestCase {
                                   .setConfigOptions(options)
                                   .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
                                   .setEventManager(mockEventManager)
+                                  .setAirshipChannel(mockChannel)
                                   .build();
 
         analytics.addEvent(new AppForegroundEvent(100));
@@ -297,6 +306,21 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify no jobs were created for the event
         verifyZeroInteractions(mockJobDispatcher);
+    }
+
+    /**
+     * Test that SDK extensions are registered correctly
+     */
+    @Test
+    public void testSDKExtensions() {
+        analytics.registerSDKExtension("cordova", "1.2.3");
+        analytics.registerSDKExtension("unity", "5,.6,.7,,,");
+
+        Map<String, String> expectedExtensions = new HashMap<>();
+        expectedExtensions.put("cordova", "1.2.3");
+        expectedExtensions.put("unity", "5.6.7");
+
+        assertEquals(expectedExtensions, analytics.getExtensions());
     }
 
 }

@@ -188,7 +188,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("GET", getMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
                                           .setIfModifiedSince(dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0))
                                           .execute();
 
@@ -297,7 +297,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
@@ -335,7 +335,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
@@ -376,7 +376,7 @@ class InboxJobHandler {
      * @return <code>true</code> if user was created, otherwise <code>false</code>.
      */
     private boolean createUser() {
-        String channelId = airship.getPushManager().getChannelId();
+        String channelId = airship.getChannel().getId();
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.debug("InboxJobHandler - No Channel. User will be created after channel registrations finishes.");
             return false;
@@ -434,7 +434,7 @@ class InboxJobHandler {
      * @return <code>true</code> if user was updated, otherwise <code>false</code>.
      */
     private boolean updateUser() {
-        String channelId = airship.getPushManager().getChannelId();
+        String channelId = airship.getChannel().getId();
 
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.debug("InboxJobHandler - No Channel. Skipping Rich Push user update.");

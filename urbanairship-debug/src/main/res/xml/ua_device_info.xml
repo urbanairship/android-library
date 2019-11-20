@@ -63,6 +63,11 @@
             app:title="@string/ua_set_named_user_info_title" />
 
         <androidx.preference.Preference
+            app:key="attributes"
+            app:persistent="false"
+            app:title="@string/ua_add_attributes_info_title" />
+
+        <androidx.preference.Preference
             app:key="tags"
             app:persistent="false"
             app:title="@string/ua_add_tags_info_title" />

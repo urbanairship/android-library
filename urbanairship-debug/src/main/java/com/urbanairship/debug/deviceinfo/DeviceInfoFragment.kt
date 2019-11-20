@@ -51,6 +51,10 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
                 Navigation.findNavController(view).navigate(R.id.deviceInfoTagsFragment)
             }
 
+            if (view != null && ATTRIBUTES_KEY == preference.key) {
+                Navigation.findNavController(view).navigate(R.id.deviceInfoAttributesFragment)
+            }
+
             return super.onPreferenceTreeClick(preference)
         }
 
@@ -69,11 +73,10 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
         }
 
         companion object {
-
             private val TAGS_KEY = "tags"
             private val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
+            private val ATTRIBUTES_KEY = "attributes"
         }
 
     }
-
 }

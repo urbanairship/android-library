@@ -20,6 +20,21 @@ apply plugin: 'kotlin-kapt'
 
 android.dataBinding.enabled = true
 
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ "room.incremental":"true" ]
+            }
+        }
+    }
+}
+
 dependencies {
     api project(':urbanairship-core')
 
@@ -41,8 +56,8 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
 
     // Lifecycle
+    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
     implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.androidxLifeCycleVersion"
-    kapt "androidx.lifecycle:lifecycle-compiler:$rootProject.androidxLifeCycleVersion"
 
     // Paging
     implementation "androidx.paging:paging-runtime:$rootProject.androidxPagingVersion"

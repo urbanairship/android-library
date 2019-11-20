@@ -2,19 +2,18 @@
 
 package com.urbanairship.debug.push
 
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import android.content.Context
-import androidx.databinding.DataBindingUtil
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DividerItemDecoration
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.navigation.Navigation
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentPushListBinding
@@ -47,7 +46,7 @@ class PushListFragment : androidx.fragment.app.Fragment() {
             viewModel = this@PushListFragment.viewModel
 
             pushes.apply {
-                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, androidx.recyclerview.widget.DividerItemDecoration.VERTICAL))
+                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
                 adapter = pushAdapter
             }
         }
@@ -62,6 +61,7 @@ class PushListFragment : androidx.fragment.app.Fragment() {
 
     internal class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
             return PushListViewModel(ServiceLocator.shared(context).getPushRepository()) as T
         }
     }

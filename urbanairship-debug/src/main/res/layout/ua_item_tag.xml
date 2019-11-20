@@ -11,14 +11,14 @@
     </data>
 
     <TextView
-        android:focusable="false"
         android:id="@+id/tag_text"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:gravity="center_vertical"
         android:ellipsize="end"
+        android:focusable="false"
+        android:gravity="center_vertical"
         android:maxLines="1"
         android:text="@{tag}"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
 </layout>

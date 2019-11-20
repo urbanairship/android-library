@@ -44,12 +44,9 @@ public class RichPushUser {
     private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
-    private final JobDispatcher jobDispatcher;
 
-    RichPushUser(@NonNull PreferenceDataStore preferenceDataStore, @NonNull JobDispatcher jobDispatcher) {
+    RichPushUser(@NonNull PreferenceDataStore preferenceDataStore) {
         this.preferences = preferenceDataStore;
-        this.jobDispatcher = jobDispatcher;
-
         String password = preferences.getString(USER_PASSWORD_KEY, null);
 
         if (!UAStringUtil.isEmpty(password)) {
@@ -89,29 +86,6 @@ public class RichPushUser {
                 listener.onUserUpdated(success);
             }
         }
-    }
-
-    /**
-     * Updates the user on the device with what's on the server.
-     *
-     * @param forcefully A boolean indicating if the rich push user needs to be updated.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void update(boolean forcefully) {
-
-        Logger.debug("RichPushUser - Updating user.");
-
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                                 .setId(JobInfo.RICH_PUSH_UPDATE_USER)
-                                 .setAirshipComponent(RichPushInbox.class)
-                                 .setExtras(JsonMap.newBuilder()
-                                                   .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
-                                                   .build())
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
     }
 
     /**

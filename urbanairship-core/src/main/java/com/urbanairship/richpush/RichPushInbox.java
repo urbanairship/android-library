@@ -15,14 +15,20 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
+import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannelListener;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.UAStringUtil;
 
@@ -136,6 +142,7 @@ public class RichPushInbox extends AirshipComponent {
     private final JobDispatcher jobDispatcher;
     private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
+    private final AirshipChannel airshipChannel;
 
     private boolean isFetchingMessages = false;
     private InboxJobHandler inboxJobHandler;
@@ -149,9 +156,11 @@ public class RichPushInbox extends AirshipComponent {
      * @param dataStore The preference data store.
      * @hide
      */
-    public RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull ActivityMonitor activityMonitor) {
-        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)),
-                new RichPushResolver(context), AirshipExecutors.newSerialExecutor(), activityMonitor);
+    public RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+                         @NonNull AirshipChannel airshipChannel) {
+        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore),
+                new RichPushResolver(context), AirshipExecutors.newSerialExecutor(),
+                GlobalActivityMonitor.shared(context), airshipChannel);
     }
 
     /**
@@ -159,7 +168,8 @@ public class RichPushInbox extends AirshipComponent {
      */
     @VisibleForTesting
     RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
-                  @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor, @NonNull ActivityMonitor activityMonitor) {
+                  @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor,
+                  @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
         super(context, dataStore);
 
         this.context = context.getApplicationContext();
@@ -168,6 +178,7 @@ public class RichPushInbox extends AirshipComponent {
         this.richPushResolver = resolver;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
+        this.airshipChannel = airshipChannel;
         this.listener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
@@ -214,6 +225,30 @@ public class RichPushInbox extends AirshipComponent {
         refresh(false);
 
         activityMonitor.addApplicationListener(listener);
+
+        airshipChannel.addChannelListener(new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                dispatchUpdateUserJob(true);
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+
+            }
+        });
+
+        if (user.getId() == null && airshipChannel.getId() != null) {
+            dispatchUpdateUserJob(true);
+        }
+
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setUserId(getUser().getId());
+            }
+        });
     }
 
     /**
@@ -713,6 +748,21 @@ public class RichPushInbox extends AirshipComponent {
         });
     }
 
+    private void dispatchUpdateUserJob(boolean forcefully) {
+        Logger.debug("RichPushInbox - Updating user.");
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                                 .setId(JobInfo.RICH_PUSH_UPDATE_USER)
+                                 .setAirshipComponent(RichPushInbox.class)
+                                 .setExtras(JsonMap.newBuilder()
+                                                   .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
+                                                   .build())
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
+    }
+
     static class SentAtRichPushMessageComparator implements Comparator<RichPushMessage> {
 
         @Override
@@ -723,7 +773,6 @@ public class RichPushInbox extends AirshipComponent {
                 return Long.valueOf(rhs.getSentDateMS()).compareTo(lhs.getSentDateMS());
             }
         }
-
     }
 
     static class PendingFetchMessagesCallback extends CancelableOperation {
@@ -742,7 +791,5 @@ public class RichPushInbox extends AirshipComponent {
                 callback.onFinished(result);
             }
         }
-
     }
-
 }

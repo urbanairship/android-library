@@ -4,14 +4,6 @@ package com.urbanairship;
 
 import android.content.Context;
 import android.net.Uri;
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.StringDef;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import com.urbanairship.push.PushProvider;
@@ -30,6 +22,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationCompat;
 
 /**
  * This class holds the set of options necessary to properly initialize
@@ -218,7 +219,11 @@ public class AirshipConfigOptions {
      * Flag indicating whether to clear an existing named user during a re-install.
      * <p>
      * Defaults to <code>false</code>.
+     *
+     * @deprecated Will be removed in SDK 12.0. It's not possible to restore a channel/named user
+     * on Android so this option has no impact on the device.
      */
+    @Deprecated
     public final boolean clearNamedUser;
 
     /**
@@ -421,7 +426,6 @@ public class AirshipConfigOptions {
         }
         return "";
     }
-
 
     /**
      * Returns the first nonnull Integer or 0.
@@ -1112,7 +1116,10 @@ public class AirshipConfigOptions {
          *
          * @param clearNamedUser The flag whether to clear an existing named user during a re-install.
          * @return The config options builder.
+         * @deprecated Will be removed in SDK 12.0. It's not possible to restore a channel/named user
+         * on Android so this option has no impact on the device.
          */
+        @Deprecated
         @NonNull
         public Builder setClearNamedUser(boolean clearNamedUser) {
             this.clearNamedUser = clearNamedUser;

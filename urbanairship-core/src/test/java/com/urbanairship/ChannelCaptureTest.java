@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Base64;
 
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.push.PushManager;
 
 import org.junit.After;
@@ -30,7 +31,7 @@ import static org.robolectric.Shadows.shadowOf;
 public class ChannelCaptureTest extends BaseTestCase {
 
     private ChannelCapture capture;
-    private PushManager mockPushManager;
+    private AirshipChannel mockChannel;
     private AirshipConfigOptions configOptions;
     private ClipboardManager clipboardManager;
     private PreferenceDataStore dataStore;
@@ -45,11 +46,11 @@ public class ChannelCaptureTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        mockPushManager = mock(PushManager.class);
+        mockChannel = mock(AirshipChannel.class);
         activityMonitor = new TestActivityMonitor();
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, dataStore, activityMonitor);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockChannel, dataStore, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -73,7 +74,7 @@ public class ChannelCaptureTest extends BaseTestCase {
      */
     @Test
     public void testForegroundClipboardWithTokenNoChannel() {
-        when(mockPushManager.getChannelId()).thenReturn(null);
+        when(mockChannel.getId()).thenReturn(null);
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
         activityMonitor.startActivity();
@@ -86,7 +87,7 @@ public class ChannelCaptureTest extends BaseTestCase {
      */
     @Test
     public void testForegroundEmptyClipboard() {
-        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        when(mockChannel.getId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
 
         activityMonitor.startActivity();
@@ -101,7 +102,7 @@ public class ChannelCaptureTest extends BaseTestCase {
      */
     @Test
     public void testForegroundClipboardWithoutToken() {
-        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        when(mockChannel.getId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("WHAT!", "OK!"));
 
         activityMonitor.startActivity();
@@ -116,7 +117,7 @@ public class ChannelCaptureTest extends BaseTestCase {
      */
     @Test
     public void testForegroundClipboardWithToken() {
-        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        when(mockChannel.getId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken("/oh_hi")));
 
         activityMonitor.foreground();
@@ -136,7 +137,7 @@ public class ChannelCaptureTest extends BaseTestCase {
      */
     @Test
     public void testForegroundClipboardWithTokenNoUrl() {
-        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        when(mockChannel.getId()).thenReturn("channel ID");
 
         // Set the token without a Url
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
@@ -167,7 +168,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Reinitialize it
         capture.tearDown();
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, dataStore, activityMonitor);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockChannel, dataStore, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -179,7 +180,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         capture.init();
 
         // Set up a valid token
-        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        when(mockChannel.getId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
         activityMonitor.foreground();

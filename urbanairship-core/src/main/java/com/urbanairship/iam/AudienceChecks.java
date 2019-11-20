@@ -10,6 +10,7 @@ import androidx.core.os.ConfigurationCompat;
 import androidx.core.os.LocaleListCompat;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
@@ -47,7 +48,7 @@ public abstract class AudienceChecks {
 
         // Test devices
         if (!audience.getTestDevices().isEmpty()) {
-            byte[] digest = UAStringUtil.sha256Digest(UAirship.shared().getPushManager().getChannelId());
+            byte[] digest = UAStringUtil.sha256Digest(UAirship.shared().getChannel().getId());
             if (digest == null || digest.length < 16) {
                 return false;
             }
@@ -98,6 +99,7 @@ public abstract class AudienceChecks {
         UAirship airship = UAirship.shared();
         UALocationManager locationManager = airship.getLocationManager();
         PushManager pushManager = airship.getPushManager();
+        AirshipChannel channel = airship.getChannel();
 
         // Location opt-in
         if (audience.getLocationOptIn() != null && audience.getLocationOptIn() != locationManager.isOptIn()) {
@@ -116,7 +118,7 @@ public abstract class AudienceChecks {
         }
 
         // Tags
-        if (audience.getTagSelector() != null && !audience.getTagSelector().apply(airship.getPushManager().getTags(), tagGroups)) {
+        if (audience.getTagSelector() != null && !audience.getTagSelector().apply(channel.getTags(), tagGroups)) {
             return false;
         }
 

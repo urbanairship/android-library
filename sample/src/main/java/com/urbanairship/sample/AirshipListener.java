@@ -5,17 +5,19 @@ package com.urbanairship.sample;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.push.NotificationActionButtonInfo;
 import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.NotificationListener;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.PushTokenListener;
 import com.urbanairship.push.RegistrationListener;
 
 /**
  * Listener for push, notifications, and registrations events.
  */
-public class AirshipListener implements PushListener, NotificationListener, RegistrationListener {
+public class AirshipListener implements PushListener, NotificationListener, PushTokenListener, AirshipChannelListener {
 
     private static final String TAG = "AirshipListener";
 

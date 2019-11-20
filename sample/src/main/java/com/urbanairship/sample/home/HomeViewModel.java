@@ -11,6 +11,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.push.RegistrationListener;
 
 /**
@@ -20,7 +21,7 @@ public class HomeViewModel extends AndroidViewModel {
 
     private MutableLiveData<String> channelId = new MutableLiveData<>();
 
-    private final RegistrationListener registrationListener = new RegistrationListener() {
+    private final AirshipChannelListener channelListener = new AirshipChannelListener() {
         @Override
         public void onChannelCreated(@NonNull String channelId) {
             new Handler(Looper.getMainLooper()).post(() -> refreshChannel());
@@ -30,26 +31,23 @@ public class HomeViewModel extends AndroidViewModel {
         public void onChannelUpdated(@NonNull String channelId) {
             new Handler(Looper.getMainLooper()).post(() -> refreshChannel());
         }
-
-        @Override
-        public void onPushTokenUpdated(@NonNull String token) {}
     };
 
     public HomeViewModel(Application application) {
         super(application);
 
-        UAirship.shared().getPushManager().addRegistrationListener(registrationListener);
+        UAirship.shared().getChannel().addChannelListener(channelListener);
         refreshChannel();
     }
 
     private void refreshChannel() {
-        channelId.setValue(UAirship.shared().getPushManager().getChannelId());
+        channelId.setValue(UAirship.shared().getChannel().getId());
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
-        UAirship.shared().getPushManager().removeRegistrationListener(registrationListener);
+        UAirship.shared().getChannel().removeChannelListener(channelListener);
     }
 
     /**

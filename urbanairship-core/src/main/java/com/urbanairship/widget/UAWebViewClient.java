@@ -650,7 +650,7 @@ public class UAWebViewClient extends WebViewClient {
               .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
               .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
               .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
-              .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
+              .append(createGetter("getChannelId", UAirship.shared().getChannel().getId()))
               .append(createGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().appKey))
               .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
 

@@ -434,7 +434,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         @NonNull
         public InAppMessageScheduleInfo build() {
             Checks.checkNotNull(message, "Missing message.");
-            Checks.checkArgument(start < 0 || end < 0 || start < end, "End must be after start.");
+            Checks.checkArgument(start < 0 || end < 0 || start <= end, "End must be on or after start.");
             Checks.checkArgument(triggers.size() > 0, "Must contain at least 1 trigger.");
             Checks.checkArgument(triggers.size() <= TRIGGER_LIMIT, "No more than " + TRIGGER_LIMIT + " triggers allowed.");
             return new InAppMessageScheduleInfo(this);

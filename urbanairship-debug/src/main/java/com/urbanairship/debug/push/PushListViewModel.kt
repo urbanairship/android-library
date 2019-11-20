@@ -2,10 +2,10 @@
 
 package com.urbanairship.debug.push
 
+import androidx.annotation.RestrictTo
 import androidx.lifecycle.ViewModel
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
-import androidx.annotation.RestrictTo
 
 /**
  * PushItem list view model.

@@ -4,11 +4,12 @@ package com.urbanairship.actions;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.UALocationManager;
-import com.urbanairship.push.NamedUser;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 public class FetchDeviceInfoActionTest extends BaseTestCase {
 
+    private AirshipChannel airshipChannel;
     private PushManager pushManager;
     private NamedUser namedUser;
     private UALocationManager locationManager;
@@ -36,9 +38,11 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
 
     @Before
     public void setUp() {
+        airshipChannel = mock(AirshipChannel.class);
         pushManager = mock(PushManager.class);
         namedUser = mock(NamedUser.class);
         locationManager = mock(UALocationManager.class);
+        TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setNamedUser(namedUser);
         TestApplication.getApplication().setLocationManager(locationManager);
@@ -78,9 +82,9 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         String channelId = "channel_id";
         String namedUserId = "named_user";
 
-        when(pushManager.getChannelId()).thenReturn(channelId);
+        when(airshipChannel.getId()).thenReturn(channelId);
         when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.getTags()).thenReturn(new HashSet<>(tags));
+        when(airshipChannel.getTags()).thenReturn(new HashSet<>(tags));
         when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
         when(namedUser.getId()).thenReturn(namedUserId);
 
@@ -100,9 +104,9 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         String channelId = "channel_id";
         String namedUserId = "named_user";
 
-        when(pushManager.getChannelId()).thenReturn(channelId);
+        when(airshipChannel.getId()).thenReturn(channelId);
         when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.getTags()).thenReturn(new HashSet<String>());
+        when(airshipChannel.getTags()).thenReturn(new HashSet<String>());
         when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
         when(namedUser.getId()).thenReturn(namedUserId);
 

@@ -74,4 +74,24 @@
     <string name="ua_default_channel_description">General app updates</string>
     <string name="ua_channel_id">Channel ID</string>
 
+    <string name="ua_service_channel_name">Service Notifications</string>
+    <string name="ua_service_channel_description">Service Messages</string>
+    <string name="ua_service_channel_id">Service Channel ID</string>
+
+    <string name="ua_news_channel_name">News Notifications</string>
+    <string name="ua_news_channel_description">News Messages</string>
+    <string name="ua_news_channel_id">News Channel ID</string>
+
+    <string name="ua_urgent_channel_name">Urgent Notifications</string>
+    <string name="ua_urgent_channel_description">Urgent Messages</string>
+    <string name="ua_urgent_channel_id">Urgent Channel ID</string>
+
+    <string name="ua_low_priority_channel_name">Low priority Notifications</string>
+    <string name="ua_low_priority_channel_description">Low priority Messages</string>
+    <string name="ua_low_priority_channel_id">Low priority Channel ID</string>
+
+    <string name="ua_min_priority_channel_name">Minimum priority Notifications</string>
+    <string name="ua_min_priority_channel_description">Minimum priority Messages</string>
+    <string name="ua_min_priority_channel_id">Minimum Channel ID</string>
+
 </resources>

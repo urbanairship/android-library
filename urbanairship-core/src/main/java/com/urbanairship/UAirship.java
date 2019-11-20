@@ -26,6 +26,7 @@ import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.automation.Automation;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
@@ -36,10 +37,10 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.push.NamedUser;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
-import com.urbanairship.push.TagGroupRegistrar;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
@@ -129,6 +130,7 @@ public class UAirship {
     PushProvider pushProvider;
     PushManager pushManager;
     RichPushInbox inbox;
+    AirshipChannel channel;
     UALocationManager locationManager;
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
@@ -676,6 +678,12 @@ public class UAirship {
             Logger.info("Using push provider: %s", this.pushProvider);
         }
 
+        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
+        tagGroupRegistrar.migrateKeys();
+
+        this.channel = new AirshipChannel(application, preferenceDataStore, airshipConfigOptions, platform, tagGroupRegistrar);
+        components.add(channel);
+
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
@@ -685,6 +693,7 @@ public class UAirship {
                                   .setActivityMonitor(GlobalActivityMonitor.shared(application))
                                   .setConfigOptions(airshipConfigOptions)
                                   .setPreferenceDataStore(preferenceDataStore)
+                                  .setAirshipChannel(channel)
                                   .setEventManager(EventManager.newBuilder()
                                                                .setEventResolver(new EventResolver(application))
                                                                .setActivityMonitor(GlobalActivityMonitor.shared(application))
@@ -700,22 +709,19 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
-        this.inbox = new RichPushInbox(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
+        this.inbox = new RichPushInbox(application, preferenceDataStore, channel);
         components.add(this.inbox);
 
         this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.locationManager);
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
-        tagGroupRegistrar.migrateKeys();
-
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, this.pushProvider, tagGroupRegistrar);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, this.pushProvider, channel);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar);
+        this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar, channel);
         components.add(this.namedUser);
 
-        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, GlobalActivityMonitor.shared(application));
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
         this.messageCenter = new MessageCenter(application, preferenceDataStore);
@@ -731,7 +737,7 @@ public class UAirship {
         components.add(this.remoteConfigManager);
 
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions,
-                analytics, this.remoteData, InAppActivityMonitor.shared(application), this.pushManager, tagGroupRegistrar);
+                analytics, this.remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, this.inAppMessageManager, this.analytics);
@@ -783,9 +789,9 @@ public class UAirship {
     }
 
     /**
-     * Returns the {@link com.urbanairship.push.NamedUser} instance.
+     * Returns the {@link com.urbanairship.channel.NamedUser} instance.
      *
-     * @return The {@link com.urbanairship.push.NamedUser} instance.
+     * @return The {@link com.urbanairship.channel.NamedUser} instance.
      */
     @NonNull
     public NamedUser getNamedUser() {
@@ -800,6 +806,16 @@ public class UAirship {
     @NonNull
     public PushManager getPushManager() {
         return pushManager;
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.channel.AirshipChannel} instance.
+     *
+     * @return The {@link com.urbanairship.channel.AirshipChannel} instance.
+     */
+    @NonNull
+    public AirshipChannel getChannel() {
+        return channel;
     }
 
     /**

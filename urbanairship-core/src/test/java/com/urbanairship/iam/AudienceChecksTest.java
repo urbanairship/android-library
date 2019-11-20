@@ -8,6 +8,7 @@ import android.util.Base64;
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
  */
 public class AudienceChecksTest extends BaseTestCase {
 
+    private AirshipChannel airshipChannel;
     private PushManager pushManager;
     private UALocationManager locationManager;
     private Context context;
@@ -43,11 +45,13 @@ public class AudienceChecksTest extends BaseTestCase {
 
     @Before
     public void setup() {
+        airshipChannel = mock(AirshipChannel.class);
         pushManager = mock(PushManager.class);
         locationManager = mock(UALocationManager.class);
         applicationMetrics = mock(ApplicationMetrics.class);
         context = TestApplication.getApplication();
 
+        TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setLocationManager(locationManager);
         TestApplication.getApplication().setApplicationMetrics(applicationMetrics);
@@ -127,7 +131,7 @@ public class AudienceChecksTest extends BaseTestCase {
                                                        .addTestDevice(UAStringUtil.sha256("some other channel"))
                                                        .build();
 
-        when(pushManager.getChannelId()).thenReturn("test channel");
+        when(airshipChannel.getId()).thenReturn("test channel");
 
         assertTrue(AudienceChecks.checkAudienceForScheduling(context, testDeviceAudience, false));
         assertFalse(AudienceChecks.checkAudienceForScheduling(context, someOtherTestDeviceAudience, false));
@@ -136,7 +140,7 @@ public class AudienceChecksTest extends BaseTestCase {
     @Test
     public void testTagSelector() {
         final Set<String> tags = new HashSet<>();
-        when(pushManager.getTags()).then(new Answer<Set<String>>() {
+        when(airshipChannel.getTags()).then(new Answer<Set<String>>() {
             @Override
             public Set<String> answer(InvocationOnMock invocation) throws Throwable {
                 return tags;
@@ -156,7 +160,7 @@ public class AudienceChecksTest extends BaseTestCase {
     @Test
     public void testTagSelectorWithGroups() {
         final Set<String> tags = new HashSet<>();
-        when(pushManager.getTags()).then(new Answer<Set<String>>() {
+        when(airshipChannel.getTags()).then(new Answer<Set<String>>() {
             @Override
             public Set<String> answer(InvocationOnMock invocation) throws Throwable {
                 return tags;

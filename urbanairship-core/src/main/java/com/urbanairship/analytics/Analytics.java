@@ -8,6 +8,7 @@ import android.location.Location;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
@@ -18,6 +19,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -25,7 +28,10 @@ import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.Checks;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +67,7 @@ public class Analytics extends AirshipComponent {
     private final EventManager eventManager;
     private final ApplicationListener listener;
     private final AirshipConfigOptions configOptions;
+    private final AirshipChannel airshipChannel;
     private final Executor executor;
     private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
     private final List<EventListener> eventListeners = new ArrayList<>();
@@ -80,6 +87,52 @@ public class Analytics extends AirshipComponent {
     private long screenStartTime;
 
     /**
+     * SDK Extensions enum
+     * @hide
+     */
+    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ExtensionName {}
+
+    /**
+     * SDK Extension = Cordova
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_CORDOVA = "cordova";
+
+    /**
+     * SDK Extension = Flutter
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_FLUTTER = "flutter";
+
+    /**
+     * SDK Extension = React-Native
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_REACT_NATIVE = "react-native";
+
+    /**
+     * SDK Extension = Unity
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_UNITY = "unity";
+
+    /**
+     * SDK Extension = Xamarin
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_XAMARIN = "xamarin";
+
+    @NonNull
+    private final Map<String, String> sdkExtensions = new HashMap<>();
+
+    /**
      * The Analytics constructor.
      *
      * @param builder The builder instance.
@@ -90,6 +143,7 @@ public class Analytics extends AirshipComponent {
         this.configOptions = builder.configOptions;
         this.activityMonitor = builder.activityMonitor;
         this.eventManager = builder.eventManager;
+        this.airshipChannel = builder.airshipChannel;
         this.executor = builder.executor == null ? AirshipExecutors.newSerialExecutor() : builder.executor;
         this.sessionId = UUID.randomUUID().toString();
 
@@ -151,6 +205,20 @@ public class Analytics extends AirshipComponent {
         if (activityMonitor.isAppForegrounded()) {
             onForeground(System.currentTimeMillis());
         }
+
+        airshipChannel.addChannelListener(new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                uploadEvents();
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+
+            }
+        });
+
+
     }
 
     @Override
@@ -533,6 +601,35 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
+     * Registers an SDK extension with the analytics module.
+     *
+     * @param extension The name of the SDK extension. The compiler will warn if the name is invalid.
+     * @param version The version of the SDK extension. Commas will be removed from the string.
+     * @hide
+     */
+    public void registerSDKExtension(@ExtensionName @NonNull String extension, @NonNull String version) {
+        // normalize extension
+        extension = extension.toLowerCase();
+
+        // normalize version
+        version = version.replace(",","");
+
+        sdkExtensions.put(extension, version);
+    }
+
+    /**
+     * The registered SDK extensions.
+     *
+     * @return The SDK extensions as a map of extension name to extension version
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public Map<String, String> getExtensions() {
+        return sdkExtensions;
+    }
+
+    /**
      * Builder factory method.
      *
      * @param context The application context.
@@ -555,6 +652,7 @@ public class Analytics extends AirshipComponent {
         private ActivityMonitor activityMonitor;
         private EventManager eventManager;
         private AirshipConfigOptions configOptions;
+        public AirshipChannel airshipChannel;
         private Executor executor;
 
         /**
@@ -627,6 +725,18 @@ public class Analytics extends AirshipComponent {
         }
 
         /**
+         * Sets the Airship channel.
+         *
+         * @param airshipChannel The Airship channel.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setAirshipChannel(@NonNull AirshipChannel airshipChannel) {
+            this.airshipChannel = airshipChannel;
+            return this;
+        }
+
+        /**
          * Builds the analytics instance.
          *
          * @return The analytics instance.
@@ -637,9 +747,8 @@ public class Analytics extends AirshipComponent {
             Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
             Checks.checkNotNull(eventManager, "Missing event manager.");
             Checks.checkNotNull(configOptions, "Missing config options.");
+            Checks.checkNotNull(airshipChannel, "Missing Airship channel.");
             return new Analytics(this);
         }
-
     }
-
 }

@@ -9,6 +9,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -43,7 +44,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     private List<TestRequest> requests;
     private Map<String, Response> responses;
 
-    private PushManager mockPushManager;
+    private AirshipChannel mockChannel;
 
     private RichPushUser user;
     private PreferenceDataStore dataStore;
@@ -79,8 +80,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
             }
         };
 
-        mockPushManager = Mockito.mock(PushManager.class);
-        TestApplication.getApplication().setPushManager(mockPushManager);
+        mockChannel = Mockito.mock(AirshipChannel.class);
+        TestApplication.getApplication().setChannel(mockChannel);
 
         // Clear any user or password
         user.setUser(null, null);
@@ -187,7 +188,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set a channel ID
-        when(mockPushManager.getChannelId()).thenReturn("channelID");
+        when(mockChannel.getId()).thenReturn("channelID");
 
         // Set the last refresh time
         dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
@@ -232,7 +233,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set a channel ID
-        when(mockPushManager.getChannelId()).thenReturn("channelID");
+        when(mockChannel.getId()).thenReturn("channelID");
 
         // Set the last refresh time
         dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300L);
@@ -352,7 +353,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     @Test
     public void testCreateUserWithAmazonChannel() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+        when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
                 Response.newBuilder(HttpURLConnection.HTTP_CREATED)
@@ -385,7 +386,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     @Test
     public void testCreateUserWithAndroidChannel() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+        when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
                 Response.newBuilder(HttpURLConnection.HTTP_CREATED)
@@ -417,7 +418,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testCreateUserNoChannel() {
-        when(mockPushManager.getChannelId()).thenReturn(null);
+        when(mockChannel.getId()).thenReturn(null);
 
         responses.put("https://device-api.urbanairship.com/api/user/",
                 Response.newBuilder(HttpURLConnection.HTTP_CREATED)
@@ -442,7 +443,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testCreateUserFailed() {
-        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+        when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a error response
         responses.put("https://device-api.urbanairship.com/api/user/",
@@ -466,7 +467,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateUserAmazon() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+        when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a user
         user.setUser("someUserId", "someUserToken");
@@ -499,7 +500,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateUserAndroid() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+        when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a user
         user.setUser("someUserId", "someUserToken");
@@ -535,7 +536,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         user.setUser("someUserId", "someUserToken");
 
         // Return a null channel
-        when(mockPushManager.getChannelId()).thenReturn(null);
+        when(mockChannel.getId()).thenReturn(null);
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)

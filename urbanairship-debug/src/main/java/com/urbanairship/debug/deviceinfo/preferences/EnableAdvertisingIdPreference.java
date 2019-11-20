@@ -3,13 +3,14 @@
 package com.urbanairship.debug.deviceinfo.preferences;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.aaid.AdvertisingIdTracker;
 import com.urbanairship.preference.UACheckBoxPreference;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
 

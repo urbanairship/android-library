@@ -5,12 +5,8 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.preference.Preference
 import android.util.AttributeSet
-import android.widget.Toast
-import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ClipboardAction
-import com.urbanairship.debug.R
+import androidx.preference.Preference
 import com.urbanairship.debug.extensions.copyToClipboard
 import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager

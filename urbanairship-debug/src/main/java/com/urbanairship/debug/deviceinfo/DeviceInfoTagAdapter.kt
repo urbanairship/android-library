@@ -2,11 +2,10 @@
 
 package com.urbanairship.debug.deviceinfo
 
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.urbanairship.debug.databinding.UaItemTagBinding
 
 /**
@@ -25,11 +24,11 @@ class DeviceInfoTagAdapter : ListAdapter<String, DeviceInfoTagAdapter.ViewHolder
 
     inner class ViewHolder internal constructor(private val binding: UaItemTagBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.getRoot()) {
 
-        val tag: String
-            get() = binding.toString()
+        val tag: String?
+            get() = binding.tag
 
         fun bind(tag: String) {
-            binding.setTag(tag)
+            binding.tag = tag
             binding.executePendingBindings()
         }
 

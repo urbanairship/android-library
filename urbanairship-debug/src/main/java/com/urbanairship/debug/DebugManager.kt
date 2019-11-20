@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
+import com.urbanairship.debug.event.EventListFragment
 import com.urbanairship.debug.event.persistence.EventEntity
 import com.urbanairship.debug.push.persistence.PushEntity
 import kotlinx.coroutines.Dispatchers
@@ -21,9 +22,7 @@ import kotlinx.coroutines.launch
 class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) : AirshipComponent(context, preferenceDataStore) {
 
     companion object {
-        const val TRIM_EVENTS_COUNT = 100000L
         const val TRIM_PUSHES_COUNT = 50L
-
     }
 
     override fun onAirshipReady(airship: UAirship) {
@@ -36,9 +35,12 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
         }
 
         GlobalScope.launch(Dispatchers.IO) {
+            val storageDays = ServiceLocator.shared(context)
+                    .sharedPreferences.getInt(EventListFragment.STORAGE_DAYS_KEY, EventListFragment.DEFAULT_STORAGE_DAYS)
+
             ServiceLocator.shared(context)
-                    .getEventDao()
-                    .trimEvents(TRIM_EVENTS_COUNT)
+                    .getEventRepository()
+                    .trimOldEvents(storageDays)
 
             ServiceLocator.shared(context)
                     .getPushDao()
@@ -53,5 +55,4 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
             }
         }
     }
-
 }

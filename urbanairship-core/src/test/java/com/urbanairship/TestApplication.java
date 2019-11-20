@@ -12,15 +12,16 @@ import com.urbanairship.analytics.data.EventApiClient;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
@@ -64,10 +65,15 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.platform = UAirship.ANDROID_PLATFORM;
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
 
+        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.ANDROID_PLATFORM, airshipConfigOptions, preferenceDataStore);
+
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, tagGroupRegistrar);
+
         UAirship.sharedAirship.analytics = Analytics.newBuilder(this)
                                                     .setActivityMonitor(new TestActivityMonitor())
                                                     .setConfigOptions(airshipConfigOptions)
                                                     .setPreferenceDataStore(preferenceDataStore)
+                                                    .setAirshipChannel(UAirship.sharedAirship.channel)
                                                     .setEventManager(EventManager.newBuilder()
                                                                                  .setEventResolver(new EventResolver(this))
                                                                                  .setActivityMonitor(new TestActivityMonitor())
@@ -79,23 +85,21 @@ public class TestApplication extends Application implements TestLifecycleApplica
                                                                                  .build())
                                                     .build();
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.ANDROID_PLATFORM, airshipConfigOptions, preferenceDataStore);
-
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, new TestActivityMonitor());
+        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), tagGroupRegistrar);
-        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, new TestActivityMonitor());
+        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel);
+        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.messageCenter = new MessageCenter(this, preferenceDataStore);
-        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar);
+        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, new TestActivityMonitor());
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor());
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,
-                UAirship.sharedAirship.remoteData, new TestActivityMonitor(), UAirship.sharedAirship.pushManager, tagGroupRegistrar);
+                UAirship.sharedAirship.remoteData, new TestActivityMonitor(), UAirship.sharedAirship.channel, tagGroupRegistrar);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();
@@ -131,7 +135,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().inAppMessageManager = inAppMessageManager;
     }
 
-
     public void setRemoteData(RemoteData remoteData) {
         UAirship.shared().remoteData = remoteData;
     }
@@ -159,6 +162,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
             Application.ActivityLifecycleCallbacks callback) {
         super.registerActivityLifecycleCallbacks(callback);
         this.callback = callback;
+    }
+
+    public void setChannel(AirshipChannel channel) {
+        UAirship.shared().channel = channel;
     }
 
     public void setPushManager(PushManager pushManager) {

@@ -3,8 +3,10 @@
 package com.urbanairship.debug.event
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
@@ -21,6 +23,9 @@ import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentEventListBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * Event list fragment.
@@ -34,6 +39,10 @@ class EventListFragment : Fragment() {
         private const val COLLAPSE_MAX_THRESHOLD = 0.67f
         // Threshold for when we reach max alpha value for the expand view
         private const val EXPAND_MAX_THRESHOLD = 0f
+        // Preference data store key for the number of days of events to keep in the datastore
+        const val STORAGE_DAYS_KEY = "com.urbanairship.debug.event.STORAGE_DAYS"
+        // Default number of days of events to keep in the datastore
+        const val DEFAULT_STORAGE_DAYS = 30
     }
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
@@ -54,11 +63,25 @@ class EventListFragment : Fragment() {
             return false
         }
 
-    override fun onAttach(context: Context?) {
-        context?.apply {
-            theme.applyStyle(com.google.android.material.R.style.Theme_MaterialComponents, false)
+    private var sharedPreferences: SharedPreferences? = null
+
+    private var storageDays: Int
+        get() {
+            sharedPreferences?.let {
+                return it.getInt(STORAGE_DAYS_KEY, DEFAULT_STORAGE_DAYS)
+            }
+            return DEFAULT_STORAGE_DAYS
+        }
+        set(days) {
+            // save to shared preferences
+            sharedPreferences?.apply {
+                edit().putInt(EventListFragment.STORAGE_DAYS_KEY, days).apply()
+            }
         }
 
+    override fun onAttach(context: Context) {
+        context.theme.applyStyle(com.google.android.material.R.style.Theme_MaterialComponents, false)
+        sharedPreferences = ServiceLocator.shared(context).sharedPreferences
         super.onAttach(context)
     }
 
@@ -74,7 +97,6 @@ class EventListFragment : Fragment() {
                 updateFiltersLayout()
             }
         })
-
 
         val filterAdapter = EventFilterAdapter()
         filterAdapter.submitList(viewModel.filters)
@@ -135,7 +157,67 @@ class EventListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupToolbarWithNavController(R.id.toolbar)
+
+        setupToolbarWithNavController(R.id.toolbar)?.let {
+            // inflate the menu
+            it.inflateMenu(R.menu.ua_menu_event)
+
+            // initialize radio buttons
+            var radioBoxItem : MenuItem? = null
+            when (storageDays) {
+                2 -> {
+                    radioBoxItem = it.menu.findItem(R.id.ua_event_storage_days_02)
+                }
+                5 -> {
+                    radioBoxItem = it.menu.findItem(R.id.ua_event_storage_days_05)
+                }
+                10 -> {
+                    radioBoxItem = it.menu.findItem(R.id.ua_event_storage_days_10)
+                }
+                30 -> {
+                    radioBoxItem = it.menu.findItem(R.id.ua_event_storage_days_30)
+                }
+            }
+
+            radioBoxItem?.let {
+                it.isChecked = true
+            }
+
+            // set up click handlers
+            it.setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.ua_event_settings -> {
+                    }
+                    else -> {
+                        if (it.groupId == R.id.ua_storage_days) {
+                            when (it.itemId) {
+                                R.id.ua_event_storage_days_02 -> {
+                                    storageDays = 2;
+                                }
+                                R.id.ua_event_storage_days_05 -> {
+                                    storageDays = 5;
+                                }
+                                R.id.ua_event_storage_days_10 -> {
+                                    storageDays = 10;
+                                }
+                                R.id.ua_event_storage_days_30 -> {
+                                    storageDays = 30;
+                                }
+                             }
+                            GlobalScope.launch(Dispatchers.IO) {
+                                ServiceLocator.shared(context!!)
+                                        .getEventRepository()
+                                        .trimOldEvents(storageDays)
+                            }
+                            if (it.isCheckable) {
+                                it.isChecked = true
+                            }
+                        }
+                    }
+                }
+                false
+            }
+        }
     }
 
     private fun updateCollapseAlpha(slideOffset: Float) {
@@ -156,6 +238,7 @@ class EventListFragment : Fragment() {
 
     internal class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
             return EventListViewModel(ServiceLocator.shared(context).getEventRepository()) as T
         }
     }

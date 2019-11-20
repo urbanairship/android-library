@@ -23,12 +23,20 @@
         <action
             android:id="@+id/action_deviceInfoFragment_to_tagsFragment"
             app:destination="@id/deviceInfoTagsFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_deviceInfoAttributesFragment"
+            app:destination="@id/deviceInfoAttributesFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/deviceInfoTagsFragment"
         android:name="com.urbanairship.debug.deviceinfo.DeviceInfoTagsFragment"
         android:label="@string/ua_add_tags_info_title" />
+
+    <fragment
+        android:id="@+id/deviceInfoAttributesFragment"
+        android:name="com.urbanairship.debug.deviceinfo.DeviceInfoAttributesFragment"
+        android:label="@string/ua_add_attributes_info_title" />
 
     <fragment
         android:id="@+id/eventListFragment"

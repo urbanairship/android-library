@@ -5,4 +5,34 @@
         name="@string/ua_default_channel_name"
         description="@string/ua_default_channel_description"
         importance="3" />
+
+    <NotificationChannel
+        id="com.urbanairship.service"
+        name="@string/ua_service_channel_name"
+        description="@string/ua_service_channel_description"
+        importance="4" />
+
+    <NotificationChannel
+        id="com.urbanairship.news"
+        name="@string/ua_news_channel_name"
+        description="@string/ua_news_channel_description"
+        importance="3" />
+
+    <NotificationChannel
+        id="com.urbanairship.urgent"
+        name="@string/ua_urgent_channel_name"
+        description="@string/ua_urgent_channel_description"
+        importance="4" />
+
+    <NotificationChannel
+        id="com.urbanairship.low.priority"
+        name="@string/ua_low_priority_channel_name"
+        description="@string/ua_low_priority_channel_description"
+        importance="2" />
+
+    <NotificationChannel
+        id="com.urbanairship.min.priority"
+        name="@string/ua_min_priority_channel_name"
+        description="@string/ua_min_priority_channel_description"
+        importance="1" />
 </resources>

@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.PushManager;
 
@@ -23,18 +24,18 @@ import static org.mockito.Mockito.when;
 public class AnalyticsJobHandlerTest extends BaseTestCase {
 
     private AnalyticsJobHandler jobHandler;
-    private PushManager mockPushManager;
+    private AirshipChannel mockChannel;
     private Analytics mockAnalytics;
     private EventManager mockEventManager;
     private String channelId;
 
     @Before
     public void setUp() {
-        mockPushManager = mock(PushManager.class);
+        mockChannel = mock(AirshipChannel.class);
         mockEventManager = mock(EventManager.class);
         mockAnalytics = mock(Analytics.class);
 
-        Mockito.when(mockPushManager.getChannelId()).thenAnswer(new Answer<String>() {
+        Mockito.when(mockChannel.getId()).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 return channelId;
@@ -42,7 +43,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         });
 
         TestApplication.getApplication().setAnalytics(mockAnalytics);
-        TestApplication.getApplication().setPushManager(mockPushManager);
+        TestApplication.getApplication().setChannel(mockChannel);
 
         channelId = "some channel ID";
         jobHandler = new AnalyticsJobHandler(UAirship.shared(), mockEventManager);

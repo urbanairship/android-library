@@ -29,6 +29,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
@@ -40,7 +41,7 @@ import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.TagGroupRegistrar;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -89,7 +90,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final ActionRunRequestFactory actionRunRequestFactory;
     private final RemoteData remoteData;
     private final Analytics analytics;
-    private final PushManager pushManager;
+    private final AirshipChannel airshipChannel;
     private final Handler mainHandler;
     private final InAppMessageDriver driver;
 
@@ -123,20 +124,20 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param analytics Analytics instance.
      * @param activityMonitor The activity monitor.
      * @param remoteData Remote data.
-     * @param pushManager The push manager.
+     * @param airshipChannel The airship channel.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions configOptions,
                                @NonNull Analytics analytics, @NonNull RemoteData remoteData, ActivityMonitor activityMonitor,
-                               @NonNull PushManager pushManager, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                               @NonNull AirshipChannel airshipChannel, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
-        this.pushManager = pushManager;
+        this.airshipChannel = airshipChannel;
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
@@ -153,7 +154,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 .build();
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
-        this.tagGroupManager = new TagGroupManager(configOptions, pushManager, tagGroupRegistrar, preferenceDataStore);
+        this.tagGroupManager = new TagGroupManager(configOptions, airshipChannel, tagGroupRegistrar, preferenceDataStore);
         this.assetManager = new AssetManager(context);
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
@@ -166,7 +167,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @VisibleForTesting
     InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
-                        RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory,
+                        RemoteData remoteData, AirshipChannel airshipChannel, ActionRunRequestFactory actionRunRequestFactory,
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
@@ -174,7 +175,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;
-        this.pushManager = pushManager;
+        this.airshipChannel = airshipChannel;
         this.remoteDataSubscriber = observer;
         this.driver = driver;
         this.automationEngine = engine;
@@ -301,7 +302,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         // New user cut off time
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? System.currentTimeMillis() : 0);
+            remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
         }
     }
 
