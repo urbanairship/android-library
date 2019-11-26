@@ -38,6 +38,8 @@ import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.modules.AccengageModuleLoaderFactory;
+import com.urbanairship.modules.ModuleLoader;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.channel.TagGroupRegistrar;
@@ -65,6 +67,8 @@ public class UAirship {
             "com.urbanairship.aaid.AdvertisingIdTracker",
             "com.urbanairship.debug.DebugManager"
     };
+
+    private static final String ACCENGAGE_MODULE_LOADER_FACTORY = "com.urbanairship.accengage.AccengageModuleLoaderFactoryImpl";
 
     /**
      * Broadcast that is sent when UAirship is finished taking off.
@@ -750,6 +754,11 @@ public class UAirship {
             }
         }
 
+        ModuleLoader accengageModuleLoader = createAccengageModuleLoader(application, preferenceDataStore, channel, pushManager, analytics);
+        if (accengageModuleLoader != null) {
+            components.addAll(accengageModuleLoader.getComponents());
+        }
+
         for (AirshipComponent component : components) {
             component.init();
         }
@@ -765,6 +774,7 @@ public class UAirship {
         // store current version as library version once check is performed
         this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
     }
+
 
     /**
      * Tears down the UAirship instance.
@@ -1077,6 +1087,24 @@ public class UAirship {
             Logger.error(e, "Unable to create component %s", className);
         } catch (ClassNotFoundException e) {
             return null;
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private ModuleLoader createAccengageModuleLoader(Context context, PreferenceDataStore preferenceDataStore,
+                                                     AirshipChannel channel, PushManager pushManager, Analytics analytics) {
+        try {
+            Class clazz = Class.forName(ACCENGAGE_MODULE_LOADER_FACTORY);
+            Object object = clazz.newInstance();
+
+            if (object instanceof AccengageModuleLoaderFactory) {
+                AccengageModuleLoaderFactory factory = (AccengageModuleLoaderFactory)object;
+                return factory.build(context, preferenceDataStore, channel, pushManager, analytics);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Unable to create loader %s", ACCENGAGE_MODULE_LOADER_FACTORY);
         }
 
         return null;

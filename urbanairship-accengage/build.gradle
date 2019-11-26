@@ -1,0 +1,7 @@
+description = "Airship Android SDK Accengage plugin"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+}
