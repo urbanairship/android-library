@@ -1100,9 +1100,11 @@ public class UAirship {
             Object object = clazz.newInstance();
 
             if (object instanceof AccengageModuleLoaderFactory) {
-                AccengageModuleLoaderFactory factory = (AccengageModuleLoaderFactory)object;
+                AccengageModuleLoaderFactory factory = (AccengageModuleLoaderFactory) object;
                 return factory.build(context, preferenceDataStore, channel, pushManager, analytics);
             }
+        } catch (ClassNotFoundException e) {
+            return null;
         } catch (Exception e) {
             Logger.error(e, "Unable to create loader %s", ACCENGAGE_MODULE_LOADER_FACTORY);
         }
