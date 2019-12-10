@@ -38,11 +38,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     public static final int MAX_ID_LENGTH = 100;
 
+    /**
+     * Max message name length.
+     */
+    public static final int MAX_NAME_LENGTH = 1024;
+
     // JSON keys
     static final String MESSAGE_ID_KEY = "message_id";
 
     private static final String DISPLAY_TYPE_KEY = "display_type";
     private static final String DISPLAY_CONTENT_KEY = "display";
+    private static final String NAME_KEY = "name";
     private static final String EXTRA_KEY = "extra";
     private static final String AUDIENCE_KEY = "audience";
     private static final String ACTIONS_KEY = "actions";
@@ -128,6 +134,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final String type;
     private final JsonMap extras;
     private final String id;
+    private final String name;
     private final JsonSerializable content;
     private final Audience audience;
     private final Map<String, JsonValue> actions;
@@ -151,6 +158,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.type = builder.type;
         this.content = builder.content;
         this.id = builder.id;
+        this.name = builder.name;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.audience = builder.audience;
         this.actions = builder.actions;
@@ -195,6 +203,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return null;
         }
     }
+
+    /**
+     * Gets the message name.
+     *
+     * @return The message name.
+     */
+    @Nullable
+    public String getName() { return name; }
 
     /**
      * Gets the message ID.
@@ -292,6 +308,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
                       .put(MESSAGE_ID_KEY, id)
+                      .putOpt(NAME_KEY, name)
                       .putOpt(EXTRA_KEY, extras)
                       .putOpt(DISPLAY_CONTENT_KEY, content)
                       .putOpt(DISPLAY_TYPE_KEY, type)
@@ -325,8 +342,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             throw new JsonException("Invalid message ID. Must be nonnull and less than or equal to " + MAX_ID_LENGTH + " characters.");
         }
 
+        String name = jsonValue.optMap().opt(NAME_KEY).getString();
+        if (name != null && name.length() > MAX_NAME_LENGTH) {
+            throw new JsonException("Invalid message name. Must be less than or equal to " + MAX_NAME_LENGTH + " characters.");
+        }
+
         InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                    .setId(messageId)
+                                                   .setName(name)
                                                    .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                                                    .setDisplayContent(type, content);
 
@@ -514,6 +537,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return false;
         }
 
+        if (name != null ? !name.equals(message.name) : message.name != null) {
+            return false;
+        }
+
         if (!content.equals(message.content)) {
             return false;
         }
@@ -542,6 +569,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         int result = type.hashCode();
         result = 31 * result + extras.hashCode();
         result = 31 * result + id.hashCode();
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + content.hashCode();
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + actions.hashCode();
@@ -562,6 +590,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String type;
         private JsonMap extras;
         private String id;
+        private String name;
         private JsonSerializable content;
         private Audience audience;
         private Map<String, JsonValue> actions = new HashMap<>();
@@ -583,6 +612,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.type = message.type;
             this.content = message.content;
             this.id = message.id;
+            this.name = message.name;
             this.extras = message.extras;
             this.audience = message.audience;
             this.actions = message.actions;
@@ -757,6 +787,18 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         }
 
         /**
+         * Sets the in-app message name.
+         *
+         * @param name The message name.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setName(@Nullable @Size(min = 1, max = MAX_NAME_LENGTH) String name) {
+            this.name = name;
+            return this;
+        }
+
+        /**
          * Sets the audience.
          *
          * @param audience The audience.
@@ -832,6 +874,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         @NonNull
         public InAppMessage build() {
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
+            Checks.checkArgument(name != null && name.length() <= MAX_NAME_LENGTH, "Name exceeds max name length: " + MAX_NAME_LENGTH);
             Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkNotNull(type, "Missing type.");
             Checks.checkNotNull(content, "Missing content.");

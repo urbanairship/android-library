@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -74,6 +75,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
 
+    /**
+     * Preference key for display interval of in-app automation
+     */
+    private static final String DISPLAY_INTERVAL_KEY = "com.urbanairship.iam.displayinterval";
+
     // State
     private final Map<String, AdapterWrapper> adapterWrappers = new ConcurrentHashMap<>();
     private final InAppRemoteDataObserver remoteDataSubscriber;
@@ -125,7 +131,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull AirshipChannel airshipChannel, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator();
+        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.remoteData = remoteData;
         this.analytics = analytics;
@@ -163,7 +169,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                         TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
         super(context, preferenceDataStore);
 
-        this.defaultCoordinator = new DefaultDisplayCoordinator();
+        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
         this.analytics = analytics;
         this.remoteData = remoteData;
@@ -455,6 +461,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param timeUnit The time unit.
      */
     public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
+        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
         this.defaultCoordinator.setDisplayInterval(time, timeUnit);
     }
 
@@ -464,7 +471,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @return The display interval in milliseconds.
      */
     public long getDisplayInterval() {
-        return this.defaultCoordinator.getDisplayInterval();
+        return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
     }
 
     /**

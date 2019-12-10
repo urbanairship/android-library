@@ -192,6 +192,7 @@ class NotificationIntentProcessor {
             if (launchIntent != null) {
                 launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 launchIntent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, notificationInfo.getMessage().getPushBundle());
+                launchIntent.setPackage(null);
                 Logger.info("Starting application's launch intent.");
                 context.startActivity(launchIntent);
             } else {
