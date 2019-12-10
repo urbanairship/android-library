@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.os.Handler;
 import android.os.Looper;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -23,7 +24,7 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
     private InAppMessage currentMessage = null;
     private boolean isLocked = false;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private long displayInterval = InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS;
+    private long displayInterval;
 
     private final Runnable postDisplayRunnable = new Runnable() {
         @Override
@@ -35,6 +36,9 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         }
     };
 
+    DefaultDisplayCoordinator(long displayInterval) {
+        this.displayInterval = displayInterval;
+    }
 
     /**
      * Sets the in-app message display interval. Defaults to {@link InAppMessageManager#DEFAULT_DISPLAY_INTERVAL_MS}.

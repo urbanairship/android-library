@@ -81,6 +81,14 @@ public class InAppMessageTest extends BaseTestCase {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void testInvalidName() {
+        InAppMessage.newBuilder()
+                    .setName(UAStringUtil.repeat("a", 1025, ""))
+                    .setDisplayContent(customDisplayContent)
+                    .build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testMissingDisplayContent() {
         InAppMessage.newBuilder()
                     .setId("messageId")
@@ -92,11 +100,13 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(bannerDisplayContent)
                                            .setId("messageId")
+                                           .setName("banner message name")
                                            .addAction("action_name", JsonValue.wrap(100))
                                            .build();
 
         assertEquals(InAppMessage.TYPE_BANNER, message.getType());
         assertEquals(bannerDisplayContent, message.getDisplayContent());
+        assertEquals("banner message name", message.getName());
 
         verifyParcelable(message);
         verifyJsonSerialization(message);
@@ -121,10 +131,12 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(fullScreenDisplayContent)
                                            .setId("messageId")
+                                           .setName("full screen message name")
                                            .build();
 
         assertEquals(InAppMessage.TYPE_FULLSCREEN, message.getType());
         assertEquals(fullScreenDisplayContent, message.getDisplayContent());
+        assertEquals("full screen message name", message.getName());
 
         verifyParcelable(message);
         verifyJsonSerialization(message);
@@ -137,6 +149,7 @@ public class InAppMessageTest extends BaseTestCase {
                                  .put("display_type", "custom")
                                  .put("display", customDisplayContent.toJsonValue())
                                  .put("message_id", "messageId")
+                                 .put("name", "message name")
                                  .put("actions", actionsMap)
                                  .put("reporting_enabled", false)
                                  .put("display_behavior", "default")
@@ -146,6 +159,7 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage message = InAppMessage.fromJson(jsonMap.toJsonValue());
 
         assertEquals("messageId", message.getId());
+        assertEquals("message name", message.getName());
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
         assertEquals(customDisplayContent, message.getDisplayContent());
         assertEquals(actionsMap.getMap(), message.getActions());
@@ -185,5 +199,4 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage fromJson = InAppMessage.fromJson(jsonValue);
         assertEquals(message, fromJson);
     }
-
 }
