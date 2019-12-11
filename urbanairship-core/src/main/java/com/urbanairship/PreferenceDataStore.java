@@ -63,7 +63,8 @@ public final class PreferenceDataStore {
      *
      * @param context The application context.
      */
-    PreferenceDataStore(@NonNull Context context) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public PreferenceDataStore(@NonNull Context context) {
         this(context, new UrbanAirshipResolver(context));
     }
 

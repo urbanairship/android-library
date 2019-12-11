@@ -4,18 +4,25 @@ package com.urbanairship.accengage;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
-
-import androidx.annotation.NonNull;
 
 /**
  * Accengage module.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Accengage extends AirshipComponent {
 
     private static Accengage sharedInstance;
@@ -23,6 +30,25 @@ public class Accengage extends AirshipComponent {
     private final AirshipChannel airshipChannel;
     private final PushManager pushManager;
     private final Analytics analytics;
+    private final AccengageSettingsLoader settingsLoader;
+
+    /**
+     * Preference key for Accengage settings migration status
+     */
+    private static final String IS_ALREADY_MIGRATED_PREFERENCE_KEY = "com.urbanairship.accengage.migrated";
+
+    /**
+     * Accengage Push settings file
+     */
+    @VisibleForTesting
+    static final String PUSH_SETTINGS_FILE = "com.ad4screen.sdk.service.modules.push.PushNotification";
+
+    /**
+     * Accengage isEnabled setting key (Push Opt-in status)
+     */
+    @VisibleForTesting
+    static final String IS_ENABLED_SETTING_KEY = "isEnabled";
+
 
     /**
      * Default constructor.
@@ -36,16 +62,39 @@ public class Accengage extends AirshipComponent {
     Accengage(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
               @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
               @NonNull Analytics analytics) {
+        this(context, dataStore, airshipChannel, pushManager, analytics, new AccengageSettingsLoader());
+    }
+
+    /**
+     * Default constructor.
+     *
+     * @param context The context.
+     * @param dataStore The datastore.
+     * @param airshipChannel The airship channel.
+     * @param pushManager The push manager.
+     * @param analytics The analytics instance.
+     * @param settingsLoader The settings loader.
+     */
+    @VisibleForTesting
+    Accengage(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+              @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
+              @NonNull Analytics analytics, @NonNull AccengageSettingsLoader settingsLoader) {
         super(context, dataStore);
 
         this.airshipChannel = airshipChannel;
         this.pushManager = pushManager;
         this.analytics = analytics;
+        this.settingsLoader = settingsLoader;
     }
 
     @Override
     protected void init() {
         super.init();
+
+        if (!getDataStore().getBoolean(IS_ALREADY_MIGRATED_PREFERENCE_KEY, false)) {
+            migrateAccengageSettings();
+            getDataStore().put(IS_ALREADY_MIGRATED_PREFERENCE_KEY, true);
+        }
     }
 
     @Override
@@ -69,6 +118,18 @@ public class Accengage extends AirshipComponent {
         }
 
         return sharedInstance;
+    }
+
+    /**
+     * Migrate the Accengage settings to Airship
+     */
+    private void migrateAccengageSettings() {
+        JsonMap accengageSettings = this.settingsLoader.load(getContext(), PUSH_SETTINGS_FILE);
+
+        // Migrate Accengage Push Opt-in Setting
+        boolean accengagePushOptinStatus = accengageSettings.opt(IS_ENABLED_SETTING_KEY).getBoolean(true);
+        Logger.debug("Accengage - Migrating Accengage Push Opt-in status : " + accengagePushOptinStatus);
+        pushManager.setPushEnabled(accengagePushOptinStatus);
     }
 
 }
