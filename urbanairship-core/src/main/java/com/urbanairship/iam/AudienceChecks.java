@@ -9,6 +9,7 @@ import androidx.annotation.RestrictTo;
 import androidx.core.os.ConfigurationCompat;
 import androidx.core.os.LocaleListCompat;
 
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.location.UALocationManager;
@@ -16,7 +17,10 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -141,6 +145,30 @@ public abstract class AudienceChecks {
         return audience.getVersionPredicate().apply(VersionUtils.createVersionObject());
     }
 
+    private static List<String> sanitizeLanguageTags(List<String> languageTags) {
+        ArrayList<String> sanitizedLanguageTags = new ArrayList<>();
+
+        for (String languageTag : languageTags) {
+            // Remove trailing dashes and underscores
+            if (!UAStringUtil.isEmpty(languageTag)) {
+                char trailingChar = languageTag.charAt(languageTag.length() - 1);
+
+                if (trailingChar == '_' || trailingChar == '-') {
+                    Logger.debug("Sanitizing malformed language tag: " + languageTag);
+                    sanitizedLanguageTags.add(languageTag.substring(0, languageTag.length() - 1));
+                } else {
+                    sanitizedLanguageTags.add(languageTag);
+                }
+            } else {
+                sanitizedLanguageTags.add(languageTag);
+            }
+        }
+
+        // Remove duplicates
+        return new ArrayList<>(new HashSet<>(sanitizedLanguageTags));
+    }
+
+
     /**
      * Helper method to check the locales.
      *
@@ -164,20 +192,27 @@ public abstract class AudienceChecks {
         // getFirstMatch will return the default language if none of the specified locales are found,
         // so we still have to verify the locale exists in the audience conditions
 
-        String tags = UAStringUtil.join(audience.getLanguageTags(), ",");
-        LocaleListCompat audienceLocales = LocaleListCompat.forLanguageTags(tags);
-        for (int i = 0; i < audienceLocales.size(); i++) {
-            Locale audienceLocale = audienceLocales.get(i);
+        // Sanitize language tags in case any happen to be malformed
+        List<String> languageTags = sanitizeLanguageTags(audience.getLanguageTags());
 
-            if (!locale.getLanguage().equals(audienceLocale.getLanguage())) {
-                continue;
+        try {
+            String joinedTags = UAStringUtil.join(languageTags, ",");
+            LocaleListCompat audienceLocales = LocaleListCompat.forLanguageTags(joinedTags);
+            for (int i = 0; i < audienceLocales.size(); i++) {
+                Locale audienceLocale = audienceLocales.get(i);
+
+                if (!locale.getLanguage().equals(audienceLocale.getLanguage())) {
+                    continue;
+                }
+
+                if (!UAStringUtil.isEmpty(audienceLocale.getCountry()) && !audienceLocale.getCountry().equals(locale.getCountry())) {
+                    continue;
+                }
+
+                return true;
             }
-
-            if (!UAStringUtil.isEmpty(audienceLocale.getCountry()) && !audienceLocale.getCountry().equals(locale.getCountry())) {
-                continue;
-            }
-
-            return true;
+        } catch (Exception e) {
+            Logger.error("Unable to construct locale list: ", e);
         }
 
         return false;
