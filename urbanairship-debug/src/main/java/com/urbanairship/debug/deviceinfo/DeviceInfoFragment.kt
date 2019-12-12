@@ -10,8 +10,8 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.urbanairship.debug.R
-import com.urbanairship.debug.deviceinfo.preferences.IAADisplayIntervalPreference
-import com.urbanairship.debug.deviceinfo.preferences.IAADisplayIntervalPreferenceDialogFragment
+import com.urbanairship.debug.deviceinfo.preferences.InAppAutomationDisplayIntervalPreference
+import com.urbanairship.debug.deviceinfo.preferences.InAppAutomationDisplayIntervalPreferenceDialogFragment
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
 /**
@@ -59,8 +59,8 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
         }
 
         override fun onDisplayPreferenceDialog(preference: Preference?) {
-            if(preference is IAADisplayIntervalPreference) {
-                val dialogFragment = IAADisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
+            if(preference is InAppAutomationDisplayIntervalPreference) {
+                val dialogFragment = InAppAutomationDisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
                 if(dialogFragment != null) {
                     dialogFragment.setTargetFragment(this, 0)
                     fragmentManager?.let { dialogFragment.show(it, DISPLAY_INTERVAL_TAG) }
