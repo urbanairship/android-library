@@ -221,4 +221,17 @@ public class AudienceChecksTest extends BaseTestCase {
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
 
+    @Test
+    public void testSanitizeLocalesInChecks() {
+        Audience audience = Audience.newBuilder()
+                                    .addLanguageTag("en-")
+                                    .addLanguageTag("en_")
+                                    .addLanguageTag("en")
+                                    .addLanguageTag("-")
+                                    .addLanguageTag("_")
+                                    .addLanguageTag("")
+                                    .build();
+
+        assertTrue(AudienceChecks.checkAudience(context, audience));
+    }
 }
