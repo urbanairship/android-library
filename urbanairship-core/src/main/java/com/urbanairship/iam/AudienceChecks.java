@@ -145,27 +145,23 @@ public abstract class AudienceChecks {
         return audience.getVersionPredicate().apply(VersionUtils.createVersionObject());
     }
 
-    private static List<String> sanitizeLanguageTags(List<String> languageTags) {
+    private static Set<String> sanitizeLanguageTags(List<String> languageTags) {
         ArrayList<String> sanitizedLanguageTags = new ArrayList<>();
 
         for (String languageTag : languageTags) {
             // Remove trailing dashes and underscores
             if (!UAStringUtil.isEmpty(languageTag)) {
-                char trailingChar = languageTag.charAt(languageTag.length() - 1);
-
-                if (trailingChar == '_' || trailingChar == '-') {
+                if (languageTag.endsWith("_") || languageTag.endsWith("-")) {
                     Logger.debug("Sanitizing malformed language tag: " + languageTag);
                     sanitizedLanguageTags.add(languageTag.substring(0, languageTag.length() - 1));
                 } else {
                     sanitizedLanguageTags.add(languageTag);
                 }
-            } else {
-                sanitizedLanguageTags.add(languageTag);
             }
         }
 
         // Remove duplicates
-        return new ArrayList<>(new HashSet<>(sanitizedLanguageTags));
+        return new HashSet<>(sanitizedLanguageTags);
     }
 
 
@@ -193,7 +189,7 @@ public abstract class AudienceChecks {
         // so we still have to verify the locale exists in the audience conditions
 
         // Sanitize language tags in case any happen to be malformed
-        List<String> languageTags = sanitizeLanguageTags(audience.getLanguageTags());
+        Set<String> languageTags = sanitizeLanguageTags(audience.getLanguageTags());
 
         try {
             String joinedTags = UAStringUtil.join(languageTags, ",");
