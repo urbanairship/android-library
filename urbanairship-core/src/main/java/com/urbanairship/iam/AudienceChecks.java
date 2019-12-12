@@ -146,7 +146,7 @@ public abstract class AudienceChecks {
     }
 
     private static Set<String> sanitizeLanguageTags(List<String> languageTags) {
-        ArrayList<String> sanitizedLanguageTags = new ArrayList<>();
+        HashSet<String> sanitizedLanguageTags = new HashSet<>();
 
         for (String languageTag : languageTags) {
             // Remove trailing dashes and underscores
@@ -161,7 +161,7 @@ public abstract class AudienceChecks {
         }
 
         // Remove duplicates
-        return new HashSet<>(sanitizedLanguageTags);
+        return sanitizedLanguageTags;
     }
 
 
