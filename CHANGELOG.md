@@ -3,6 +3,15 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.7.3 - December 13, 2019
+=================================
+Fixes stability issues with in-app automation.
+
+Changes
+-------
+- Fixes crash if specifying duplicate locale audience conditions for an In-App Automation.
+
+
 Version 9.7.2 - August 30, 2019
 ===============================
 Fixes an issue where push message could result in duplicate push notifications. Applications that are
