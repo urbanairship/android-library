@@ -2,6 +2,7 @@ package com.urbanairship.accengage;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -97,4 +98,40 @@ public class AccengageTest {
         verify(mockPush, times(0)).setPushEnabled(true);
     }
 
+    /**
+     * Test Accengage tracking setting enabled migrates to Airship.
+     */
+    @Test
+    public void testMigrateTrackingEnabledSetting() {
+        // Setup
+        Context context = ApplicationProvider.getApplicationContext();
+        SharedPreferences prefs = context.getSharedPreferences(Accengage.ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(Accengage.DO_NOT_TRACK_SETTING_KEY, false);
+
+        // Test migrate
+        accengage.init();
+
+        // Verify the migration does not apply twice
+        verify(mockAnalytics, times(1)).setEnabled(true);
+        verify(mockAnalytics, times(0)).setEnabled(false);
+    }
+
+    /**
+     * Test Accengage tracking setting disabled migrates to Airship.
+     */
+    @Test
+    public void testMigrateTrackingDisabledSetting() {
+        // Setup
+        Context context = ApplicationProvider.getApplicationContext();
+        SharedPreferences prefs = context.getSharedPreferences(Accengage.ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(Accengage.DO_NOT_TRACK_SETTING_KEY, true).commit();
+
+        // Test migrate
+        accengage.init();
+
+        // Verify the migration does not apply twice
+        verify(mockAnalytics, times(1)).setEnabled(false);
+        verify(mockAnalytics, times(0)).setEnabled(true);
+    }
+  
 }

@@ -3,6 +3,7 @@
 package com.urbanairship.accengage;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -49,6 +50,17 @@ public class Accengage extends AirshipComponent {
     @VisibleForTesting
     static final String IS_ENABLED_SETTING_KEY = "isEnabled";
 
+    /**
+     * Accengage Preferences file
+     */
+    @VisibleForTesting
+    static final String ACCENGAGE_PREFERENCES_FILE = "com.ad4screen.sdk.A4S";
+
+    /**
+     * Accengage doNotTrack setting key (Tracking Disabled status)
+     */
+    @VisibleForTesting
+    static final String DO_NOT_TRACK_SETTING_KEY = "com.ad4screen.sdk.A4S.doNotTrack";
 
     /**
      * Default constructor.
@@ -124,12 +136,18 @@ public class Accengage extends AirshipComponent {
      * Migrate the Accengage settings to Airship
      */
     private void migrateAccengageSettings() {
-        JsonMap accengageSettings = this.settingsLoader.load(getContext(), PUSH_SETTINGS_FILE);
 
         // Migrate Accengage Push Opt-in Setting
+        JsonMap accengageSettings = this.settingsLoader.load(getContext(), PUSH_SETTINGS_FILE);
         boolean accengagePushOptinStatus = accengageSettings.opt(IS_ENABLED_SETTING_KEY).getBoolean(true);
         Logger.debug("Accengage - Migrating Accengage Push Opt-in status : " + accengagePushOptinStatus);
         pushManager.setPushEnabled(accengagePushOptinStatus);
+
+        // Migrate Accengage Disabled Tracking Setting
+        final SharedPreferences prefs = getContext().getSharedPreferences(ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
+        boolean accengageTrackingDisabledStatus = prefs.getBoolean(DO_NOT_TRACK_SETTING_KEY, false);
+        Logger.debug("Accengage - Migrating Accengage Tracking Disabled status : " + accengageTrackingDisabledStatus);
+        analytics.setEnabled(!accengageTrackingDisabledStatus);
     }
 
 }
