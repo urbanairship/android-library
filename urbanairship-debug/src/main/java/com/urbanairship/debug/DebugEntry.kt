@@ -38,7 +38,7 @@ data class DebugEntry(val navigationId: Int,
                 parser = context.resources.getXml(resource)
                 parse(context, parser)
             } catch (e: Exception) {
-                Logger.error(e, "Failed to parse debug_entries config.")
+                Logger.error(e, "Failed to parse ua_debug_entries config.")
                 emptyList()
             } finally {
                 parser?.close()

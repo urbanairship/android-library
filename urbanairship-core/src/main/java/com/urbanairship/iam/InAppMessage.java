@@ -874,7 +874,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         @NonNull
         public InAppMessage build() {
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
-            Checks.checkArgument(name != null && name.length() <= MAX_NAME_LENGTH, "Name exceeds max name length: " + MAX_NAME_LENGTH);
+            Checks.checkArgument(name == null || name.length() <= MAX_NAME_LENGTH, "Name exceeds max name length: " + MAX_NAME_LENGTH);
             Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkNotNull(type, "Missing type.");
             Checks.checkNotNull(content, "Missing content.");

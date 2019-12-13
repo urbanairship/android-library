@@ -46,7 +46,7 @@
 
     <string name="ua_iaa_info_category_title">In-App Automation Info</string>
     <string name="ua_iaa_enable_title">Enable In-App Automation</string>
-    <string name="ua_iaa_display_interval_title">IAA Display Interval</string>
+    <string name="ua_iaa_display_interval_title">In-App Automation Display Interval</string>
 
     <string name="ua_identifiers_category_title">Identifiers</string>
 
@@ -98,5 +98,7 @@
     <string name="ua_settings">Settings</string>
     <string name="ua_debug">Debug</string>
     <string name="ua_message">Message</string>
+
+    <string name="ua_iaa_display_interval_unit_time">Seconds</string>
 
 </resources>
