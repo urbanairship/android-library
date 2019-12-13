@@ -1,6 +1,7 @@
-/* Copyright Airship and Contributors */
+/* Copyright 2018 Urban Airship and Contributors */
 
 package com.urbanairship.iam;
+
 
 import android.content.Context;
 import android.util.Base64;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -120,18 +122,20 @@ public class AudienceChecksTest extends BaseTestCase {
         String testDevice = Base64.encodeToString(bytes, Base64.DEFAULT);
 
         Audience testDeviceAudience = Audience.newBuilder()
-                                              .addTestDevice(testDevice)
-                                              .build();
+                                           .addTestDevice(testDevice)
+                                           .build();
 
         Audience someOtherTestDeviceAudience = Audience.newBuilder()
-                                                       .addTestDevice(UAStringUtil.sha256("some other channel"))
-                                                       .build();
+                                              .addTestDevice(UAStringUtil.sha256("some other channel"))
+                                              .build();
 
         when(pushManager.getChannelId()).thenReturn("test channel");
+
 
         assertTrue(AudienceChecks.checkAudienceForScheduling(context, testDeviceAudience, false));
         assertFalse(AudienceChecks.checkAudienceForScheduling(context, someOtherTestDeviceAudience, false));
     }
+
 
     @Test
     public void testTagSelector() {
@@ -163,9 +167,11 @@ public class AudienceChecksTest extends BaseTestCase {
             }
         });
 
+
         Audience audience = Audience.newBuilder()
                                     .setTagSelector(TagSelector.tag("expected tag", "expected group"))
                                     .build();
+
 
         Map<String, Set<String>> tagGroups = new HashMap<>();
 
@@ -207,6 +213,7 @@ public class AudienceChecksTest extends BaseTestCase {
                                     .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
                                     .build();
 
+
         when(applicationMetrics.getCurrentAppVersion()).thenReturn(1);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
@@ -217,4 +224,17 @@ public class AudienceChecksTest extends BaseTestCase {
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
 
+    @Test
+    public void testSanitizeLocalesInChecks() {
+        Audience audience = Audience.newBuilder()
+                                    .addLanguageTag("en-")
+                                    .addLanguageTag("en_")
+                                    .addLanguageTag("en")
+                                    .addLanguageTag("-")
+                                    .addLanguageTag("_")
+                                    .addLanguageTag("")
+                                    .build();
+
+        assertTrue(AudienceChecks.checkAudience(context, audience));
+    }
 }
