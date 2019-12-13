@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -221,5 +222,19 @@ public class AudienceChecksTest extends BaseTestCase {
 
         when(applicationMetrics.getCurrentAppVersion()).thenReturn(3);
         assertFalse(AudienceChecks.checkAudience(context, audience));
+    }
+
+    @Test
+    public void testSanitizeLocalesInChecks() {
+        Audience audience = Audience.newBuilder()
+                                    .addLanguageTag("en-")
+                                    .addLanguageTag("en_")
+                                    .addLanguageTag("en")
+                                    .addLanguageTag("-")
+                                    .addLanguageTag("_")
+                                    .addLanguageTag("")
+                                    .build();
+
+        assertTrue(AudienceChecks.checkAudience(context, audience));
     }
 }
