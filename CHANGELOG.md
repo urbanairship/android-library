@@ -3,6 +3,13 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 10.1.4 - December 13, 2019
+==================================
+Fixes stability issues with in-app automation.
+
+Changes
+-------
+- Fixes crash if specifying duplicate locale audience conditions for an In-App Automation.
 
 Version 10.1.3 - September 16, 2019
 ===================================
