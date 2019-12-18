@@ -3,10 +3,36 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 12.1.0 - December 18, 2019
+==================================
+Minor release that adds an accessor the In-App Automation name.
+
+Changes
+-------
+- Added name accessor for In-App Automations.
+- Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
+- Fixed application starting a new activity instead of resuming the current activity when launching from a notification.
+
+Version 10.1.4 - December 13, 2019
+==================================
+Fixes stability issues with in-app automation.
+
+Changes
+-------
+- Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
+
+Version 9.7.3 - December 13, 2019
+==================================
+Fixes stability issues with in-app automation.
+
+Changes
+-------
+- Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
+
 Version 12.0.0 - November 15, 2019
 ==================================
 Major release decoupling Airship channel registration from push functionality,
-and adding support for channel attributes, which allow key value pairs to be 
+and adding support for channel attributes, which allow key value pairs to be
 associated with the application's Airship channel for segmentation purposes.
 
 Custom channel attributes are currently a beta feature. If you wish to

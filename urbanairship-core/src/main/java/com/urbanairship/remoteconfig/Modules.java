@@ -45,7 +45,12 @@ interface Modules {
      */
     String LOCATION_MODULE = "location";
 
-    List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE,
-            MESSAGE_CENTER, IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE);
+    /**
+     * Channel module
+     */
+    String CHANNEL_MODULE = "channel";
+
+    List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE, MESSAGE_CENTER,
+            IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE, CHANNEL_MODULE);
 
 }
