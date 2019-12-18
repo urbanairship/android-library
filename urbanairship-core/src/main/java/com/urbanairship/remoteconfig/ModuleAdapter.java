@@ -73,6 +73,9 @@ class ModuleAdapter {
 
             case Modules.NAMED_USER_MODULE:
                 return Collections.singletonList(UAirship.shared().getNamedUser());
+
+            case Modules.CHANNEL_MODULE:
+                return Collections.singletonList(UAirship.shared().getChannel());
         }
 
         Logger.verbose("ModuleAdapter - Unknown module: %s", module);

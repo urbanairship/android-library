@@ -94,25 +94,25 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
     @Test
     public void testRemoteConfig() {
-        JsonMap module_one_config_common = JsonMap.newBuilder()
+        JsonMap fooConfig = JsonMap.newBuilder()
                                                   .put("some_config_name", "some_config_value")
                                                   .build();
 
-        JsonMap module_two_config_common = JsonMap.newBuilder()
+        JsonMap barConfig = JsonMap.newBuilder()
                                                   .put("some_other_config_name", "some_other_config_value")
                                                   .build();
 
         JsonMap commonData = JsonMap.newBuilder()
-                                    .put("module_one", module_one_config_common)
-                                    .put("module_two", module_two_config_common)
+                                    .put("foo", fooConfig)
+                                    .put("bar", barConfig)
                                     .build();
 
-        JsonMap module_one_config_platform_specific = JsonMap.newBuilder()
+        JsonMap androidFooOverrideConfig = JsonMap.newBuilder()
                                                              .put("some_other_config_name", "some_other_config_value")
                                                              .build();
 
         JsonMap androidData = JsonMap.newBuilder()
-                                     .put("module_one", module_one_config_platform_specific)
+                                     .put("foo", androidFooOverrideConfig)
                                      .build();
 
         RemoteDataPayload common = createRemoteDataPayload("app_config", System.currentTimeMillis(), commonData);
@@ -125,9 +125,9 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
         assertEquals((2 + Modules.ALL_MODULES.size()), config.size());
 
-        assertEquals(module_one_config_platform_specific, config.get("module_one"));
+        assertEquals(androidFooOverrideConfig, config.get("foo"));
 
-        assertEquals(module_two_config_common, config.get("module_two"));
+        assertEquals(barConfig, config.get("bar"));
 
         // All modules without config payloads should be called with a null config
         for (String module : Modules.ALL_MODULES) {

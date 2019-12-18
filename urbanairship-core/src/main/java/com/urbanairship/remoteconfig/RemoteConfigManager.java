@@ -92,7 +92,7 @@ public class RemoteConfigManager extends AirshipComponent {
                                      @Override
                                      public JsonMap apply(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
                                          // sort the payloads, common first followed by platform-specific
-                                         List<RemoteDataPayload> remoteDataPayloadList = new ArrayList<RemoteDataPayload>(remoteDataPayloads);
+                                         List<RemoteDataPayload> remoteDataPayloadList = new ArrayList<>(remoteDataPayloads);
                                          Collections.sort(remoteDataPayloadList, COMPARE_BY_PAYLOAD_TYPE);
 
                                          // combine the payloads, overwriting common config with platform-specific config
