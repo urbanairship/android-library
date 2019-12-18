@@ -22,5 +22,4 @@ public interface ModuleLoader {
      * @return The modules's Airship components.
      */
     Set<? extends AirshipComponent> getComponents();
-
 }

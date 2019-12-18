@@ -608,5 +608,30 @@ public class PushMessageTest extends BaseTestCase {
         assertTrue(message.containsAirshipKeys());
     }
 
+    @Test
+    public void testIsAirshipPush() {
+        Bundle bundle = new Bundle();
+        bundle.putString("cool", "story");
+
+        PushMessage message = new PushMessage(bundle);
+        assertFalse(message.isAirshipPush());
+
+        bundle.putString(PushMessage.EXTRA_SEND_ID, "value");
+        message = new PushMessage(bundle);
+        assertTrue(message.isAirshipPush());
+    }
+
+    @Test
+    public void testIsAccengagePush() {
+        Bundle bundle = new Bundle();
+        bundle.putString("cool", "story");
+
+        PushMessage message = new PushMessage(bundle);
+        assertFalse(message.containsAirshipKeys());
+
+        bundle.putString("a4scontent", "value");
+        message = new PushMessage(bundle);
+        assertTrue(message.isAccengagePush());
+    }
 }
 

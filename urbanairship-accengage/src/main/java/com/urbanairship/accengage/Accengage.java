@@ -5,22 +5,25 @@ package com.urbanairship.accengage;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
+import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.push.notifications.NotificationProvider;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Accengage module.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -62,6 +65,8 @@ public class Accengage extends AirshipComponent {
     @VisibleForTesting
     static final String DO_NOT_TRACK_SETTING_KEY = "com.ad4screen.sdk.A4S.doNotTrack";
 
+    private NotificationProvider notificationProvider;
+
     /**
      * Default constructor.
      *
@@ -97,6 +102,7 @@ public class Accengage extends AirshipComponent {
         this.pushManager = pushManager;
         this.analytics = analytics;
         this.settingsLoader = settingsLoader;
+        this.notificationProvider = new AccengageNotificationProvider();
     }
 
     @Override
@@ -148,6 +154,25 @@ public class Accengage extends AirshipComponent {
         boolean accengageTrackingDisabledStatus = prefs.getBoolean(DO_NOT_TRACK_SETTING_KEY, false);
         Logger.debug("Accengage - Migrating Accengage Tracking Disabled status : " + accengageTrackingDisabledStatus);
         analytics.setEnabled(!accengageTrackingDisabledStatus);
+    }
+
+    /**
+     * Sets the notification provider used for Accengage messages.
+     *
+     * @param notificationProvider The notification provider.
+     */
+    public void setNotificationProvider(@NonNull NotificationProvider notificationProvider) {
+        this.notificationProvider = notificationProvider;
+    }
+
+    /**
+     * Gets the notification provider used for Accengage messages.
+     *
+     * @return The notification provider.
+     */
+    @NonNull
+    public NotificationProvider getNotificationProvider() {
+        return notificationProvider;
     }
 
 }

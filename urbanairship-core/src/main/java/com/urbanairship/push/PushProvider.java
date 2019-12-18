@@ -3,10 +3,11 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Defines a push provider.
@@ -89,15 +90,5 @@ public interface PushProvider {
      * @return {@code true} if the push provider is supported on the device, otherwise {@code false}.
      */
     boolean isSupported(@NonNull Context context);
-
-    /**
-     * Checks if the push message should be handled by the Airship SDK.
-     *
-     * @param context The application context.
-     * @param airship The airship instance.
-     * @param message The push message.
-     * @return {@code true} to allow the UA SDK to process the message, or {@code false} to ignore it.
-     */
-    boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message);
 
 }

@@ -21,6 +21,7 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
@@ -51,11 +52,12 @@ import static org.mockito.Mockito.when;
 
 public class IncomingPushRunnableTest extends BaseTestCase {
 
-    public static final int TEST_NOTIFICATION_ID = 123;
-    public static final String TEST_NOTIFICATION_CHANNEL_ID = "Test notification channel";
+    private static final int TEST_NOTIFICATION_ID = 123;
+    private static final String TEST_NOTIFICATION_CHANNEL_ID = "Test notification channel";
 
     private Bundle pushBundle;
     private PushMessage message;
+    private PushMessage accengageMessage;
 
     private PushListener pushListener;
     private NotificationListener notificationListener;
@@ -67,6 +69,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private NotificationChannelRegistry mockChannelRegistry;
 
     private TestNotificationProvider notificationProvider;
+    private TestNotificationProvider accengageNotificationProvider;
+
 
     private IncomingPushRunnable pushRunnable;
     private IncomingPushRunnable displayRunnable;
@@ -82,6 +86,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
         pushBundle.putString(PushMessage.EXTRA_NOTIFICATION_TAG, "testNotificationTag");
         message = new PushMessage(pushBundle);
+
+        Bundle bundle = new Bundle();
+        bundle.putString("a4scontent", "neat");
+        accengageMessage = new PushMessage(bundle);
 
         pushManager = mock(PushManager.class);
         pushListener = mock(PushListener.class);
@@ -100,6 +108,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.getNotificationChannelRegistry()).thenReturn(mockChannelRegistry);
 
         notificationProvider = new TestNotificationProvider();
+        accengageNotificationProvider = new TestNotificationProvider();
 
         when(pushManager.getNotificationProvider()).thenAnswer(new Answer<Object>() {
             @Override
@@ -133,6 +142,14 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .setJobDispatcher(jobDispatcher)
                 .setProcessed(true)
                 .build();
+
+        TestApplication.getApplication().setAccengageNotificationHandler(new AccengageNotificationHandler() {
+            @NonNull
+            @Override
+            public NotificationProvider getNotificationProvider() {
+                return accengageNotificationProvider;
+            }
+        });
     }
 
     /**
@@ -163,6 +180,28 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         verify(pushListener).onPushReceived(message, true);
         verify(notificationListener).onNotificationPosted(any(NotificationInfo.class));
+    }
+
+    /**
+     * Test ignoring push from other vendors.
+     */
+    @Test
+    public void test() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass("wrong  class")
+                .setMessage(new PushMessage(pushBundle))
+                .setLongRunning(true)
+                .setNotificationManager(notificationManager)
+                .build();
+
+        pushRunnable.run();
+
+        verifyZeroInteractions(notificationManager);
     }
 
     /**
@@ -254,6 +293,30 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushRunnable.run();
 
         verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, notificationProvider.notification);
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
+    }
+
+    @Test
+    public void testAccengageNotificationProvider() {
+        accengageNotificationProvider.notification = createNotification();
+
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId(null)).thenReturn(true);
+
+
+        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(accengageMessage)
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .build();
+
+        pushRunnable.run();
+
+        verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, accengageNotificationProvider.notification);
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
     }
 

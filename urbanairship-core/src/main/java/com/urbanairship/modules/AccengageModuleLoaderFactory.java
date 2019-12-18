@@ -20,10 +20,11 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AccengageModuleLoaderFactory {
 
-    ModuleLoader build(@NonNull Context context,
-                       @NonNull PreferenceDataStore dataStore,
-                       @NonNull AirshipChannel airshipChannel,
-                       @NonNull PushManager manager,
-                       @NonNull Analytics analytics);
+    AccengageModuleLoader build(@NonNull Context context,
+                                @NonNull PreferenceDataStore dataStore,
+                                @NonNull AirshipChannel airshipChannel,
+                                @NonNull PushManager manager,
+                                @NonNull Analytics analytics);
+
 
 }

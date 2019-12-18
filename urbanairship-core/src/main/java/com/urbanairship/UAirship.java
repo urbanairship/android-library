@@ -38,8 +38,9 @@ import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.modules.AccengageModuleLoader;
 import com.urbanairship.modules.AccengageModuleLoaderFactory;
-import com.urbanairship.modules.ModuleLoader;
+import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.channel.TagGroupRegistrar;
@@ -146,6 +147,7 @@ public class UAirship {
     NamedUser namedUser;
     Automation automation;
     ImageLoader imageLoader;
+    AccengageNotificationHandler accengageNotificationHandler;
 
     @Platform
     int platform;
@@ -754,9 +756,10 @@ public class UAirship {
             }
         }
 
-        ModuleLoader accengageModuleLoader = createAccengageModuleLoader(application, preferenceDataStore, channel, pushManager, analytics);
+        AccengageModuleLoader accengageModuleLoader = createAccengageModuleLoader(application, preferenceDataStore, channel, pushManager, analytics);
         if (accengageModuleLoader != null) {
             components.addAll(accengageModuleLoader.getComponents());
+            this.accengageNotificationHandler = accengageModuleLoader.getAccengageNotificationHandler();
         }
 
         for (AirshipComponent component : components) {
@@ -950,6 +953,17 @@ public class UAirship {
     }
 
     /**
+     * Returns the Accengage instance if available.
+     * @return The Accengage instance.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Nullable
+    public AccengageNotificationHandler getAccengageNotificationHandler() {
+        return accengageNotificationHandler;
+    }
+
+    /**
      * Returns the platform type.
      *
      * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
@@ -1093,8 +1107,8 @@ public class UAirship {
     }
 
     @Nullable
-    private ModuleLoader createAccengageModuleLoader(Context context, PreferenceDataStore preferenceDataStore,
-                                                     AirshipChannel channel, PushManager pushManager, Analytics analytics) {
+    private AccengageModuleLoader createAccengageModuleLoader(Context context, PreferenceDataStore preferenceDataStore,
+                                                              AirshipChannel channel, PushManager pushManager, Analytics analytics) {
         try {
             Class clazz = Class.forName(ACCENGAGE_MODULE_LOADER_FACTORY);
             Object object = clazz.newInstance();

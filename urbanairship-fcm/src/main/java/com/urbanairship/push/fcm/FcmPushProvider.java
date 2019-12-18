@@ -110,11 +110,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return PlayServicesUtils.isGooglePlayStoreAvailable(context);
     }
 
-    @Override
-    public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        return message.containsAirshipKeys();
-    }
-
     @Nullable
     private String getSenderId(@NonNull FirebaseApp app) {
         String senderId = UAirship.shared().getAirshipConfigOptions().fcmSenderId;
