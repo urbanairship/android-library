@@ -32,6 +32,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private final String testPushAddress = "gcmRegistrationId";
     private final String testUserId = "fakeUserId";
     private final String testApid = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+    private final String testAccengageDeviceId = "accengage-device-id";
     private final boolean testSetTags = true;
     private Set<String> testTags;
     private final String testLanguage = "test_language";
@@ -55,6 +56,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         payload = new ChannelRegistrationPayload.Builder()
                 .setUserId(testUserId)
                 .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload).build();
@@ -62,6 +64,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
         assertNull(minPayload.apid);
         assertNull(minPayload.userId);
+        assertNull(minPayload.accengageDeviceId);
     }
 
     /**
@@ -183,6 +186,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
@@ -212,6 +216,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
                 .setCountry(testCountry)
@@ -238,6 +243,9 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
         assertTrue("APID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.APID_KEY));
         assertEquals("APID should match.", identityHints.get(ChannelRegistrationPayload.APID_KEY).getString(), testApid);
+
+        assertTrue("Accengage Device ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID));
+        assertEquals("Accengage Device ID should match.", identityHints.get(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID).getString(), testAccengageDeviceId);
 
         // Channel specific items
         assertTrue("Device type should be present in payload.", channel.containsKey(ChannelRegistrationPayload.DEVICE_TYPE_KEY));
@@ -497,6 +505,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
                 .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
                 .setLocationSettings(true)
                 .setAppVersion("123")
                 .setApiVersion(123)
@@ -527,6 +536,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
                 .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
         ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
@@ -541,7 +551,9 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid).build();
+                .setApid(testApid)
+                .setAccengageDeviceId(testAccengageDeviceId)
+                .build();
 
         ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));

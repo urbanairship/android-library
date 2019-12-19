@@ -12,17 +12,22 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.annotation.Config;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
@@ -52,7 +57,8 @@ public class AccengageTest {
             @NonNull
             @Override
             public JsonMap load(@NonNull Context context, @NonNull String filename) {
-                if (Accengage.PUSH_SETTINGS_FILE.equals(filename)) {
+                if (Accengage.PUSH_SETTINGS_FILE.equals(filename)
+                        || Accengage.DEVICE_INFO_FILE.equals(filename)) {
                     return accengageSettings;
                 }
                 return JsonMap.EMPTY_MAP;
@@ -60,6 +66,49 @@ public class AccengageTest {
         };
 
         accengage = new Accengage(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
+    }
+
+    /**
+     * Test Accengage device ID adding to the Channel Registration Payload
+     */
+    @Test
+    public void testAddAccengageDeviceId() {
+        // Setup
+        this.accengageSettings = JsonMap.newBuilder()
+                .put(Accengage.DEVICE_ID_KEY, "accengage-device-id")
+                .build();
+
+        // Test migrate
+        accengage.init();
+
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        ChannelRegistrationPayload payload = extender.extend(new ChannelRegistrationPayload.Builder()).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
+                .setAccengageDeviceId("accengage-device-id")
+                .build();
+
+        assertEquals(expected, payload);
+    }
+
+    /**
+     * Test Empty Accengage device ID
+     */
+    @Test
+    public void testEmptyAccengageDeviceId() {
+        // Setup
+        this.accengageSettings = JsonMap.newBuilder()
+                .build();
+
+        // Test migrate
+        accengage.init();
+
+        verifyZeroInteractions(mockChannel);
     }
 
     /**

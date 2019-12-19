@@ -2,6 +2,10 @@
 
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -10,10 +14,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 /**
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
@@ -42,6 +42,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String DEVICE_MODEL_KEY = "device_model";
     static final String API_VERSION_KEY = "android_api_version";
     static final String CARRIER_KEY = "carrier";
+    static final String ACCENGAGE_DEVICE_ID = "accengage_device_id";
 
     public final boolean optIn;
     public final boolean backgroundEnabled;
@@ -60,6 +61,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String deviceModel;
     public final Integer apiVersion;
     public final String carrier;
+    public final String accengageDeviceId;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -83,6 +85,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String deviceModel;
         private Integer apiVersion;
         private String carrier;
+        private String accengageDeviceId;
 
         /**
          * Default ChannelRegistrationPayload.Builder constructor
@@ -112,6 +115,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.deviceModel = payload.deviceModel;
             this.apiVersion = payload.apiVersion;
             this.carrier = payload.carrier;
+            this.accengageDeviceId = payload.accengageDeviceId;
         }
 
         /**
@@ -202,7 +206,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
          * Set tags
          *
          * @param channelTagRegistrationEnabled A boolean value indicating whether tags are enabled on the device.
-         * @param tags A set of tags
+         * @param tags                          A set of tags
          * @return The builder with channelTagRegistrationEnabled and tags set
          */
         @NonNull
@@ -308,6 +312,18 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             return this;
         }
 
+        /**
+         * Set the Accengage Device ID
+         *
+         * @param accengageDeviceId The Accengage Device ID
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setAccengageDeviceId(@Nullable String accengageDeviceId) {
+            this.accengageDeviceId = accengageDeviceId;
+            return this;
+        }
+
         @NonNull
         public ChannelRegistrationPayload build() {
             return new ChannelRegistrationPayload(this);
@@ -332,6 +348,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.deviceModel = builder.deviceModel;
         this.apiVersion = builder.apiVersion;
         this.carrier = builder.carrier;
+        this.accengageDeviceId = builder.accengageDeviceId;
     }
 
     public ChannelRegistrationPayload minimizedPayload(@Nullable ChannelRegistrationPayload last) {
@@ -343,6 +360,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
 
         builder.setApid(null);
         builder.setUserId(null);
+        builder.setAccengageDeviceId(null);
 
         if (UAStringUtil.equals(last.country, country)) {
             builder.setCountry(null);
@@ -394,18 +412,18 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public JsonValue toJsonValue() {
         // Channel Payload
         JsonMap.Builder channel = JsonMap.newBuilder()
-                                         .put(DEVICE_TYPE_KEY, deviceType)
-                                         .put(SET_TAGS_KEY, setTags)
-                                         .put(OPT_IN_KEY, optIn)
-                                         .put(PUSH_ADDRESS_KEY, pushAddress)
-                                         .put(BACKGROUND_ENABLED_KEY, backgroundEnabled)
-                                         .put(TIMEZONE_KEY, timezone)
-                                         .put(LANGUAGE_KEY, language)
-                                         .put(COUNTRY_KEY, country)
-                                         .put(APP_VERSION_KEY, appVersion)
-                                         .put(SDK_VERSION_KEY, sdkVersion)
-                                         .put(DEVICE_MODEL_KEY, deviceModel)
-                                         .put(CARRIER_KEY, carrier);
+                .put(DEVICE_TYPE_KEY, deviceType)
+                .put(SET_TAGS_KEY, setTags)
+                .put(OPT_IN_KEY, optIn)
+                .put(PUSH_ADDRESS_KEY, pushAddress)
+                .put(BACKGROUND_ENABLED_KEY, backgroundEnabled)
+                .put(TIMEZONE_KEY, timezone)
+                .put(LANGUAGE_KEY, language)
+                .put(COUNTRY_KEY, country)
+                .put(APP_VERSION_KEY, appVersion)
+                .put(SDK_VERSION_KEY, sdkVersion)
+                .put(DEVICE_MODEL_KEY, deviceModel)
+                .put(CARRIER_KEY, carrier);
 
         if (locationSettings != null) {
             channel.put(LOCATION_SETTINGS_KEY, locationSettings);
@@ -422,12 +440,13 @@ public class ChannelRegistrationPayload implements JsonSerializable {
 
         // Identity hints
         JsonMap.Builder identityHints = JsonMap.newBuilder()
-                                               .put(USER_ID_KEY, userId)
-                                               .put(APID_KEY, apid);
+                .put(USER_ID_KEY, userId)
+                .put(APID_KEY, apid)
+                .put(ACCENGAGE_DEVICE_ID, accengageDeviceId);
 
         // Full payload
         JsonMap.Builder data = JsonMap.newBuilder()
-                                      .put(CHANNEL_KEY, channel.build());
+                .put(CHANNEL_KEY, channel.build());
 
         JsonMap identityHintsMap = identityHints.build();
         if (!identityHintsMap.isEmpty()) {
@@ -465,6 +484,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         if (tags != null ? !tags.equals(payload.tags) : payload.tags != null) return false;
         if (userId != null ? !userId.equals(payload.userId) : payload.userId != null) return false;
         if (apid != null ? !apid.equals(payload.apid) : payload.apid != null) return false;
+        if (accengageDeviceId != null ? !accengageDeviceId.equals(payload.accengageDeviceId) : payload.accengageDeviceId != null)
+            return false;
         if (timezone != null ? !timezone.equals(payload.timezone) : payload.timezone != null)
             return false;
         if (language != null ? !language.equals(payload.language) : payload.language != null)
@@ -494,6 +515,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (tags != null ? tags.hashCode() : 0);
         result = 31 * result + (userId != null ? userId.hashCode() : 0);
         result = 31 * result + (apid != null ? apid.hashCode() : 0);
+        result = 31 * result + (accengageDeviceId != null ? accengageDeviceId.hashCode() : 0);
         result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (country != null ? country.hashCode() : 0);
@@ -542,21 +564,22 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         return new Builder().setOptIn(channelJson.opt(OPT_IN_KEY).getBoolean(false))
-                            .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
-                            .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
-                            .setPushAddress(channelJson.opt(PUSH_ADDRESS_KEY).getString())
-                            .setLanguage(channelJson.opt(LANGUAGE_KEY).getString())
-                            .setCountry(channelJson.opt(COUNTRY_KEY).getString())
-                            .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())
-                            .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
-                            .setUserId(identityHints.opt(USER_ID_KEY).getString())
-                            .setApid(identityHints.opt(APID_KEY).getString())
-                            .setLocationSettings(locationSettings)
-                            .setAppVersion(channelJson.opt(APP_VERSION_KEY).getString())
-                            .setSdkVersion(channelJson.opt(SDK_VERSION_KEY).getString())
-                            .setDeviceModel(channelJson.opt(DEVICE_MODEL_KEY).getString())
-                            .setApiVersion(apiVersion)
-                            .setCarrier(channelJson.opt(CARRIER_KEY).getString())
-                            .build();
+                .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
+                .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
+                .setPushAddress(channelJson.opt(PUSH_ADDRESS_KEY).getString())
+                .setLanguage(channelJson.opt(LANGUAGE_KEY).getString())
+                .setCountry(channelJson.opt(COUNTRY_KEY).getString())
+                .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())
+                .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
+                .setUserId(identityHints.opt(USER_ID_KEY).getString())
+                .setApid(identityHints.opt(APID_KEY).getString())
+                .setAccengageDeviceId(identityHints.opt(ACCENGAGE_DEVICE_ID).getString())
+                .setLocationSettings(locationSettings)
+                .setAppVersion(channelJson.opt(APP_VERSION_KEY).getString())
+                .setSdkVersion(channelJson.opt(SDK_VERSION_KEY).getString())
+                .setDeviceModel(channelJson.opt(DEVICE_MODEL_KEY).getString())
+                .setApiVersion(apiVersion)
+                .setCarrier(channelJson.opt(CARRIER_KEY).getString())
+                .build();
     }
 }

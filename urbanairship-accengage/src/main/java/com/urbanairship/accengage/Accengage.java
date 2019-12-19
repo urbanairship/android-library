@@ -13,6 +13,7 @@ import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.notifications.NotificationProvider;
@@ -68,6 +69,18 @@ public class Accengage extends AirshipComponent {
     private NotificationProvider notificationProvider;
 
     /**
+     * Accengage Device Info settings file
+     */
+    @VisibleForTesting
+    static final String DEVICE_INFO_FILE = "com.ad4screen.sdk.common.DeviceInfo";
+
+    /**
+     * Accengage Device Id key
+     */
+    @VisibleForTesting
+    static final String DEVICE_ID_KEY = "idfv";
+
+    /**
      * Default constructor.
      *
      * @param context The context.
@@ -109,6 +122,23 @@ public class Accengage extends AirshipComponent {
     protected void init() {
         super.init();
 
+        // Retrieve Accengage Device ID
+        JsonMap accengageDeviceInfo = this.settingsLoader.load(getContext(), DEVICE_INFO_FILE);
+        final String deviceId = accengageDeviceInfo.opt(DEVICE_ID_KEY).getString();
+        if (deviceId != null) {
+            Logger.debug("Accengage - Accengage Device ID retrieved : " + deviceId);
+            // Add Accengage Device ID to Channel Registration Payload
+            airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+                @NonNull
+                @Override
+                public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                    builder.setAccengageDeviceId(deviceId);
+                    return builder;
+                }
+            });
+        }
+
+        // Migrate Accengage Settings
         if (!getDataStore().getBoolean(IS_ALREADY_MIGRATED_PREFERENCE_KEY, false)) {
             migrateAccengageSettings();
             getDataStore().put(IS_ALREADY_MIGRATED_PREFERENCE_KEY, true);
