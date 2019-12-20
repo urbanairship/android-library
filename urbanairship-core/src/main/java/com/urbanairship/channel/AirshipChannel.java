@@ -451,7 +451,6 @@ public class AirshipChannel extends AirshipComponent {
     private ChannelRegistrationPayload getNextChannelRegistrationPayload() {
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
                 .setTags(getChannelTagRegistrationEnabled(), getTags())
-                .setUserId(UAirship.shared().getInbox().getUser().getId())
                 .setApid(getDataStore().getString(APID_KEY, null));
 
         switch (platform) {
@@ -474,8 +473,6 @@ public class AirshipChannel extends AirshipComponent {
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             builder.setLanguage(locale.getLanguage());
         }
-
-        builder.setLocationSettings(UAirship.shared().getLocationManager().isLocationUpdatesEnabled());
 
         if (UAirship.getPackageInfo() != null) {
             builder.setAppVersion(UAirship.getPackageInfo().versionName);

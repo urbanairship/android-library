@@ -87,7 +87,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, new TestActivityMonitor());
+        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, new TestActivityMonitor(), UAirship.sharedAirship.channel);
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);

@@ -25,6 +25,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.AirshipHandlerThread;
@@ -48,6 +50,7 @@ public class UALocationManager extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final ActivityMonitor activityMonitor;
     private final List<LocationListener> locationListeners = new ArrayList<>();
+    private final AirshipChannel airshipChannel;
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -80,7 +83,8 @@ public class UALocationManager extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      * @hide
      */
-    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
+    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                             @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
         super(context, preferenceDataStore);
 
         this.context = context.getApplicationContext();
@@ -101,6 +105,8 @@ public class UALocationManager extends AirshipComponent {
         Intent updateIntent = new Intent(context, LocationReceiver.class).setAction(LocationReceiver.ACTION_LOCATION_UPDATE);
         this.locationProvider = new UALocationProvider(context, updateIntent);
         this.backgroundThread = new AirshipHandlerThread("location");
+
+        this.airshipChannel = airshipChannel;
     }
 
     @Override
@@ -112,6 +118,14 @@ public class UALocationManager extends AirshipComponent {
         preferenceDataStore.addListener(preferenceChangeListener);
         activityMonitor.addApplicationListener(listener);
         updateServiceConnection();
+
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setLocationSettings(isLocationUpdatesEnabled());
+            }
+        });
     }
 
     /**
