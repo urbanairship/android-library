@@ -718,7 +718,7 @@ public class UAirship {
         this.inbox = new RichPushInbox(application, preferenceDataStore, channel);
         components.add(this.inbox);
 
-        this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
+        this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application), channel);
         components.add(this.locationManager);
 
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, this.pushProvider, channel);

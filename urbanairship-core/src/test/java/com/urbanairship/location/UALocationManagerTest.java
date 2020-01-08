@@ -9,15 +9,20 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrationPayload;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ResourceType")
 public class UALocationManagerTest extends BaseTestCase {
@@ -25,11 +30,13 @@ public class UALocationManagerTest extends BaseTestCase {
     UALocationManager locationManager;
     LocationRequestOptions options;
     Analytics analytics;
+    AirshipChannel mockChannel;
 
     @Before
     public void setUp() {
         analytics = mock(Analytics.class);
-        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
+        mockChannel = mock(AirshipChannel.class);
+        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor(), mockChannel);
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
 
         TestApplication.getApplication().setAnalytics(analytics);
@@ -81,4 +88,27 @@ public class UALocationManagerTest extends BaseTestCase {
         verify(analytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
+    /**
+     * Test channel registration extender adds the location settings.
+     */
+    @Test
+    public void testChannelRegistrationDisabledTokenRegistration() {
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        locationManager.init();
+        verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        locationManager.setLocationUpdatesEnabled(true);
+
+        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
+        ChannelRegistrationPayload payload = extender.extend(builder).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
+                .setLocationSettings(true)
+                .build();
+
+        assertEquals(expected, payload);
+    }
 }
