@@ -3,19 +3,6 @@
 
     <style name="UrbanAirship" />
 
-    <!-- Style for Landing Page Action Activity -->
-    <style name="UrbanAirship.LandingPageActivity">
-        <item name="android:windowBackground">@android:drawable/screen_background_dark_transparent
-        </item>
-        <item name="android:colorBackgroundCacheHint">@null</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent
-        </item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
-    </style>
-
     <!-- Style for Rate App Action Activity -->
     <style name="UrbanAirship.RateAppActivity">
         <item name="android:windowNoTitle">true</item>
