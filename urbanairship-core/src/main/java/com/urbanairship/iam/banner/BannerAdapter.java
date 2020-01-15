@@ -296,12 +296,9 @@ public class BannerAdapter extends MediaDisplayAdapter {
     private void onActivityResumed(@NonNull Activity activity) {
         BannerView currentView = getCurrentView();
 
-        if (currentView == null || ViewCompat.isAttachedToWindow(currentView)) {
+        if (currentView == null || !ViewCompat.isAttachedToWindow(currentView)) {
             display(activity);
-            return;
-        }
-
-        if (activity == getLastActivity()) {
+        } else if (activity == getLastActivity()) {
             currentView.onResume();
         }
     }
