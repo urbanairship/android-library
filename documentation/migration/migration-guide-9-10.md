@@ -303,6 +303,10 @@ assets.setMetadata("some-key", JsonValue.wrap("some value"));
 Due to the system `Fragment` being deprecated, the Banner messages now use a BannerView
 and are attached directly to the activity.
 
+#### Display of Landing Pages is now handled by In-App Automation Manager
+
+Landing pages are now displayed as In-App Automation HTML messages, so they can no longer be customized using the previously documented methods. Please see [In-App Automation](https://docs.airship.com/platform/android/in-app-automation#customizing-landing-pages) for the new documentation.
+
 ### Deprecations
 
 #### NotificationFactory
