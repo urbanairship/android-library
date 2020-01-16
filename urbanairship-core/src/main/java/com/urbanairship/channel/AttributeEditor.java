@@ -40,6 +40,80 @@ abstract public class AttributeEditor {
     }
 
     /**
+     * Sets an integer number attribute.
+     *
+     * @param key The attribute key greater than one character and less than 1024 characters in length.
+     * @param number The number attribute.
+     * @return The AttributeEditor.
+     */
+    @NonNull
+    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key, int number) {
+
+        if (isInvalidField(key)) {
+            return this;
+        }
+
+        mutations.add(AttributeMutation.newSetAttributeMutation(key, number));
+        return this;
+    }
+
+    /**
+     * Sets a long number attribute.
+     *
+     * @param key The attribute key greater than one character and less than 1024 characters in length.
+     * @param number The number attribute.
+     * @return The AttributeEditor.
+     */
+    @NonNull
+    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key, long number) {
+
+        if (isInvalidField(key)) {
+            return this;
+        }
+
+        mutations.add(AttributeMutation.newSetAttributeMutation(key, number));
+        return this;
+    }
+
+    /**
+     * Sets a float number attribute.
+     *
+     * @param key The attribute key greater than one character and less than 1024 characters in length.
+     * @param number The number attribute.
+     * @throws NumberFormatException if the number is NaN or infinite.
+     * @return The AttributeEditor.
+     */
+    @NonNull
+
+    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key, float number) throws NumberFormatException {
+        if (isInvalidField(key)) {
+            return this;
+        }
+
+        mutations.add(AttributeMutation.newSetAttributeMutation(key, number));
+        return this;
+    }
+
+    /**
+     * Sets a double number attribute.
+     *
+     * @param key The attribute key greater than one character and less than 1024 characters in length.
+     * @param number The number attribute.
+     * @throws NumberFormatException if the number is NaN or infinite.
+     * @return The AttributeEditor.
+     */
+    @NonNull
+    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key, double number) throws NumberFormatException {
+        if (isInvalidField(key)) {
+            return this;
+        }
+
+        mutations.add(AttributeMutation.newSetAttributeMutation(key, number));
+        return this;
+    }
+
+
+    /**
      * Removes an attribute.
      *
      * @param key The attribute key greater than one character and less than 1024 characters in length.

@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '12.1.0'
+        airshipVersion = '12.1.1'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = beta
@@ -13,7 +13,7 @@ buildscript {
         minSdkVersion = 16
 
         // Gradle plugins
-        gradlePluginVersion = '3.5.2'
+        gradlePluginVersion = '3.5.3'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
 
@@ -82,5 +82,25 @@ allprojects {
     repositories {
         google()
         jcenter()
+    }
+}
+
+
+task packageDocs(type: Tar, dependsOn: 'urbanairship-core:javadocRelease') {
+    into ('./') {
+        from 'urbanairship-core/build/docs/javadoc'
+    }
+
+    archiveName = "${rootProject.airshipVersion}.tar.gz"
+    compression = Compression.GZIP
+
+    destinationDir file('build/docs')
+    extension 'tar.gz'
+    compression = Compression.GZIP
+}
+
+task getVersion() {
+    doLast {
+        println rootProject.airshipVersion
     }
 }

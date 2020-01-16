@@ -3,6 +3,17 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 12.1.1 - January 16, 2020
+=================================
+Patch release to fix an issue with the same In-App Automation banner displaying multiple times on an activity
+if the activity goes through a resume/pause/resume lifecycle state without a stop. This could occur
+when starting an activity with NEW_TASK and CLEAR_TOP flags if the banner is already displaying. Apps
+that are experiencing this issue with In-App Automation should update.
+
+Changes
+-------
+- Fixed In-App Automation banner from displaying multiple times on a single activity in certain situations.
+
 Version 12.1.0 - December 18, 2019
 ==================================
 Minor release that adds an accessor the In-App Automation name.

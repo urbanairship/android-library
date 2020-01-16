@@ -20,7 +20,7 @@ import static junit.framework.Assert.assertEquals;
  */
 public class AttributeMutationTest extends BaseTestCase {
     @Test
-    public void testSetAttribute() {
+    public void testSetStringAttribute() {
         List<AttributeMutation> mutations = new ArrayList<>();
 
         mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", "expected_value"));
@@ -31,7 +31,7 @@ public class AttributeMutationTest extends BaseTestCase {
     }
 
     @Test
-    public void testRemoveAttribute() {
+    public void testRemoveStringAttribute() {
         List<AttributeMutation> mutations = new ArrayList<>();
 
         mutations.add(AttributeMutation.newRemoveAttributeMutation("expected_key"));
@@ -42,7 +42,7 @@ public class AttributeMutationTest extends BaseTestCase {
     }
 
     @Test
-    public void testSetAndRemove() {
+    public void testSetAndRemoveString() {
         List<AttributeMutation> mutations = new ArrayList<>();
 
         mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", "expected_value"));
@@ -51,6 +51,60 @@ public class AttributeMutationTest extends BaseTestCase {
         String expected = "[{\"action\":\"set\",\"value\":\"expected_value\",\"key\":\"expected_key\"},{\"action\":\"remove\",\"key\":\"expected_key\"}]";
 
         assertEquals(expected, toString(mutations));
+    }
+
+    @Test
+    public void testSetNumberAttributes() {
+        List<AttributeMutation> mutations = new ArrayList<>();
+
+        int expectedInt = 11;
+        long expectedLong = 11;
+        float expectedFloat = 11.11f;
+        double expectedDouble = 11.11;
+
+        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", expectedInt));
+        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", expectedLong));
+
+        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", expectedFloat));
+        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", expectedDouble));
+
+        String expected = "[{\"action\":\"set\",\"value\":" + expectedInt + ",\"key\":\"expected_key\"}," +
+                "{\"action\":\"set\",\"value\":" + expectedLong + ",\"key\":\"expected_key\"}," +
+                "{\"action\":\"set\",\"value\":" + JsonValue.wrap(expectedFloat) + ",\"key\":\"expected_key\"}," +
+                "{\"action\":\"set\",\"value\":" + expectedDouble + ",\"key\":\"expected_key\"}]";
+
+
+        assertEquals(expected, toString(mutations));
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testNaNFloatAttributes() throws NumberFormatException {
+        AttributeMutation.newSetAttributeMutation("expected_key", Float.NaN);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testNaNDoubleAttributes() throws NumberFormatException {
+       AttributeMutation.newSetAttributeMutation("expected_key", Double.NaN);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testInfiniteFloatAttributes() throws NumberFormatException {
+        AttributeMutation.newSetAttributeMutation("expected_key", Float.POSITIVE_INFINITY);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testNegativeInfiniteFloatAttributes() throws NumberFormatException {
+        AttributeMutation.newSetAttributeMutation("expected_key", Float.NEGATIVE_INFINITY);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testInfiniteDoubleAttributes() throws NumberFormatException {
+        AttributeMutation.newSetAttributeMutation("expected_key", Double.POSITIVE_INFINITY);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testNegativeInfiniteDoubleAttributes() throws NumberFormatException {
+        AttributeMutation.newSetAttributeMutation("expected_key", Double.NEGATIVE_INFINITY);
     }
 
     @NonNull

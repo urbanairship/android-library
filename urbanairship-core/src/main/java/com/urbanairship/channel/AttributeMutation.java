@@ -48,6 +48,64 @@ class AttributeMutation {
     }
 
     /**
+     * Creates a mutation to set a int number attribute.
+     *
+     * @param key The string attribute key.
+     * @param number The number attribute value.
+     * @return The attribute mutation.
+     */
+    @NonNull
+    static AttributeMutation newSetAttributeMutation(@NonNull String key, int number) {
+        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
+    }
+
+    /**
+     * Creates a mutation to set a long number attribute.
+     *
+     * @param key The number attribute key.
+     * @param number The number attribute value.
+     * @return The attribute mutation.
+     */
+    @NonNull
+    static AttributeMutation newSetAttributeMutation(@NonNull String key, long number) {
+        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
+    }
+
+    /**
+     * Creates a mutation to set a float number attribute.
+     *
+     * @param key The number attribute key.
+     * @param number The number attribute value.
+     * @throws NumberFormatException if the number is NaN or infinite.
+     * @return The attribute mutation.
+     */
+    @NonNull
+    static AttributeMutation newSetAttributeMutation(@NonNull String key, float number) throws NumberFormatException {
+        if (Float.isNaN(number) || Float.isInfinite(number)) {
+            throw new NumberFormatException("Infinity or NaN: " + number);
+        }
+
+        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
+    }
+
+    /**
+     * Creates a mutation to set a double number attribute.
+     *
+     * @param key The number attribute key.
+     * @param number The number attribute value.
+     * @throws NumberFormatException if the number is NaN or infinite.
+     * @return The attribute mutation.
+     */
+    @NonNull
+    static AttributeMutation newSetAttributeMutation(@NonNull String key, double number) throws NumberFormatException {
+        if (Double.isNaN(number) || Double.isInfinite(number)) {
+            throw new NumberFormatException("Infinity or NaN: " + number);
+        }
+
+        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
+    }
+
+    /**
      * Creates a mutation to remove a string attribute.
      *
      * @param key The string attribute key.
