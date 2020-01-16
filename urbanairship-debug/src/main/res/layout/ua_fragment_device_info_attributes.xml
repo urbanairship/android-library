@@ -9,19 +9,24 @@
             name="viewModel"
             type="com.urbanairship.debug.deviceinfo.DeviceInfoAttributesViewModel" />
 
+        <import type="android.text.InputType" />
+
+        <import type="com.urbanairship.debug.deviceinfo.AttributeType" />
+
     </data>
+
+
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <include layout="@layout/ua_include_appbar" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <include
-                layout="@layout/ua_include_appbar"
-                app:layout_constraintBottom_toTopOf="@+id/keyEditText" />
 
             <EditText
                 android:id="@+id/keyEditText"
@@ -29,16 +34,19 @@
                 android:layout_height="62dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginLeft="8dp"
-                android:layout_marginTop="78dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
+                android:maxLength="1024"
                 android:ems="10"
+                android:maxLines="1"
+                android:singleLine="true"
                 android:hint="@string/ua_attributes_key"
-                android:inputType="textPersonName"
+                android:text="@={viewModel.key}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/radioGroupAttributeType" />
 
             <EditText
                 android:id="@+id/valueEditText"
@@ -50,52 +58,94 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:ems="10"
-                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:singleLine="true"
                 android:hint="@string/ua_attributes_value"
+                android:inputType="@{viewModel.attributeType == AttributeType.NUMBER ? InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED : InputType.TYPE_CLASS_TEXT}"
+                android:text="@={viewModel.value}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/keyEditText" />
 
-
-            <RadioGroup
-                android:id="@+id/radioGroup"
+            <TextView
+                android:id="@+id/attributeTypeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginLeft="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/ua_attributes_attribute_type"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/valueEditText">
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <RadioGroup
+                android:id="@+id/radioGroupAttributeType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="@+id/attributeTypeLabel"
+                app:layout_constraintStart_toEndOf="@+id/attributeTypeLabel"
+                app:layout_constraintTop_toTopOf="@+id/attributeTypeLabel">
 
                 <RadioButton
-                    android:id="@+id/setButton"
+                    android:id="@+id/stringButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/ua_attributes_set" />
+                    android:paddingRight="8dp"
+                    android:text="@string/ua_attributes_string" />
 
                 <RadioButton
-                    android:id="@+id/removeButton"
+                    android:id="@+id/numberButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/ua_attributes_remove" />
+                    android:text="@string/ua_attributes_number" />
             </RadioGroup>
 
+
             <Button
-                android:id="@+id/applyButton"
-                android:layout_width="200dp"
+                android:id="@+id/setAttributeButton"
+                android:layout_width="0dp"
                 android:layout_height="64dp"
-                android:layout_marginStart="80dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:text="@string/ua_attributes_apply"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/radioGroup"
+                android:layout_marginStart="24dp"
+                android:layout_marginLeft="24dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginRight="24dp"
+                android:enabled="@{viewModel.keyValidator &amp;&amp; viewModel.valueValidator}"
+                android:onClick="@{() -> viewModel.setAttribute() }"
+                android:text="@string/ua_attributes_set"
+                app:layout_constraintEnd_toStartOf="@+id/guideline"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/valueEditText" />
+
+            <Button
+                android:id="@+id/removeAttributeButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginLeft="24dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginRight="24dp"
+                android:enabled="@{viewModel.keyValidator}"
+                android:onClick="@{() -> viewModel.removeAttribute() }"
+                android:text="@string/ua_attributes_remove"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/guideline"
+                app:layout_constraintTop_toBottomOf="@+id/valueEditText" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

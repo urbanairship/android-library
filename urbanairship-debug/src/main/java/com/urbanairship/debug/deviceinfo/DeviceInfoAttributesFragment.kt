@@ -11,115 +11,40 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoAttributesBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
+import kotlinx.android.synthetic.main.ua_fragment_device_info_attributes.*
+import kotlinx.android.synthetic.main.ua_fragment_event_list.view.*
 
 class DeviceInfoAttributesFragment  : androidx.fragment.app.Fragment() {
     private lateinit var viewModel: DeviceInfoAttributesViewModel
-
-    private lateinit var  keyEditText: EditText
-    private lateinit var valueEditText: EditText
-    private lateinit var setButton: RadioButton
-    private lateinit var removeButton: RadioButton
-    private lateinit var applyButton: Button
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel = ViewModelProviders.of(this).get(DeviceInfoAttributesViewModel::class.java)
         val binding = UaFragmentDeviceInfoAttributesBinding.inflate(inflater, container, false)
 
         binding.lifecycleOwner = this
+        binding.viewModel = viewModel
 
-        this.keyEditText = binding.keyEditText
-        this.valueEditText = binding.valueEditText
-        this.setButton = binding.setButton
-        this.removeButton = binding.removeButton
-        this.applyButton = binding.applyButton
-
-        initEditTexts()
-        initButtons()
-
-        return binding.getRoot()
-    }
-
-    private fun clearFields() {
-        keyEditText.text.clear()
-        valueEditText.text.clear()
-    }
-
-    private fun initButtons() {
-        // Set operation will appear as the default
-        setButton.isChecked = true
-
-        applyButton.setOnClickListener {
-            applyAttributesAndUpdateView()
-        }
-    }
-
-    private fun toastApplyStatus(success:Boolean) {
-        if (view == null) return
-
-        if (!success) {
-            Toast.makeText(view!!.context, view!!.context.getString(R.string.ua_toast_attributes_invalid_message), Toast.LENGTH_SHORT)
-                    .show()
-            return
-        }
-
-        var message = view!!.context.getString(R.string.ua_toast_attributes_success_message) +
-                "\n" + view!!.context.getString(R.string.ua_attributes_key) + ": " + keyEditText.text.toString()
-
-        if (!removeButton.isChecked) {
-            message += "\n" + view!!.context.getString(R.string.ua_attributes_value) + ": " + valueEditText.text.toString()
-        }
-
-        Toast.makeText(view!!.context, message, Toast.LENGTH_SHORT)
-                .show()
-    }
-
-    private fun applyAttributesAndUpdateView() {
-        val success = viewModel.updateAttributes(removeButton.isChecked, keyEditText.text.toString(), valueEditText.text?.toString())
-
-        toastApplyStatus(success)
-
-        if (success) {
-            clearFields()
-        }
-    }
-
-    private fun initEditTexts() {
-        keyEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                applyAttributesAndUpdateView()
+        binding.radioGroupAttributeType.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId == R.id.numberButton) {
+                viewModel.attributeType.set(AttributeType.NUMBER)
+            } else {
+                viewModel.attributeType.set(AttributeType.STRING)
             }
-            false
         }
 
-        keyEditText.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                if (event.action == KeyEvent.ACTION_DOWN) {
-                    applyAttributesAndUpdateView()
-                }
-            }
-            false
+        when(viewModel.attributeType.get()) {
+            AttributeType.STRING -> binding.radioGroupAttributeType.check(R.id.stringButton)
+            AttributeType.NUMBER -> binding.radioGroupAttributeType.check(R.id.numberButton)
+            else -> binding.radioGroupAttributeType.check(R.id.stringButton)
         }
 
-        valueEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                applyAttributesAndUpdateView()
-            }
-            false
-        }
-
-        valueEditText.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                if (event.action == KeyEvent.ACTION_DOWN) {
-                    applyAttributesAndUpdateView()
-                }
-            }
-            false
-        }
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

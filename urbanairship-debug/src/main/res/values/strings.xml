@@ -27,9 +27,12 @@
 
     <string name="ua_attributes_set">Set</string>
     <string name="ua_attributes_remove">Remove</string>
+    <string name="ua_attributes_attribute_action">Attribute Action</string>
+    <string name="ua_attributes_attribute_type">Attribute Type</string>
+    <string name="ua_attributes_string">String</string>
+    <string name="ua_attributes_number">Number</string>
     <string name="ua_attributes_key">Key</string>
     <string name="ua_attributes_value">Value</string>
-    <string name="ua_attributes_apply">Apply</string>
 
     <string name="ua_event_view_title">Events</string>
     <string name="ua_event_view_description">Search and filter a list of recent events</string>

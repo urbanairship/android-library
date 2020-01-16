@@ -2,49 +2,80 @@
 
 package com.urbanairship.debug.deviceinfo
 
+import androidx.databinding.Observable
+import androidx.databinding.ObservableField
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 import com.urbanairship.UAirship
-import com.urbanairship.channel.AttributeEditor
 
+class DeviceInfoAttributesViewModel : ViewModel()  {
 
-class DeviceInfoAttributesViewModel : ViewModel() {
+    val key = MutableLiveData<String>()
+    val value = MutableLiveData<String>()
+    val attributeType = ObservableField<AttributeType>(AttributeType.STRING)
+    val keyValidator = MediatorLiveData<Boolean>()
+    val valueValidator = MediatorLiveData<Boolean>()
 
-    /**
-     * Updates the attributes.
-     */
-    fun updateAttributes(isRemove:Boolean, key:String, value:String?) : Boolean {
-        if (!validateInput(isRemove, key, value)) {
-            return false
+    private val attributeChangeListener = object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            value.value = null
         }
-
-        val attributeEditor:AttributeEditor = UAirship.shared().channel.editAttributes()
-
-        if (isRemove) {
-            attributeEditor.removeAttribute(key)
-        } else {
-            attributeEditor.setAttribute(key, value!!)
-        }
-
-        attributeEditor.apply()
-
-        return true
     }
 
-    private fun validateInput(isRemove:Boolean, key:String, value:String?) : Boolean {
-        if (key.isEmpty() || key.count() > 1024) {
-            return false
+    init {
+        keyValidator.value = false
+        keyValidator.addSource(key) {
+            keyValidator.value = !key.value.isNullOrEmpty()
         }
 
-        // Only pay attention to the key if action is set to remove
-        if (isRemove) {
-            return true
+        valueValidator.value = false
+        valueValidator.addSource(value) {
+            valueValidator.value = when(attributeType.get()) {
+                AttributeType.STRING -> !value.value.isNullOrEmpty()
+                AttributeType.NUMBER -> value.value?.toDoubleOrNull() != null
+                else -> false
+            }
         }
 
-        if (value == null || value.isEmpty() || value.count() > 1024) {
-            return false
-        }
+        attributeType.addOnPropertyChangedCallback(attributeChangeListener)
+    }
 
-        return true
+    override fun onCleared() {
+        super.onCleared()
+        valueValidator.removeSource(value)
+        keyValidator.removeSource(key)
+        attributeType.removeOnPropertyChangedCallback(attributeChangeListener)
+    }
+
+    fun setAttribute() {
+        assert(keyValidator.value!!)
+        assert(valueValidator.value!!)
+
+        when(attributeType.get()) {
+            AttributeType.STRING -> {
+                UAirship.shared().channel.editAttributes()
+                        .setAttribute(key.value!!, value.value!!)
+                        .apply()
+            }
+            AttributeType.NUMBER -> {
+                UAirship.shared().channel.editAttributes()
+                        .setAttribute(key.value!!, value.value!!.toDouble())
+                        .apply()
+            }
+        }
+        clearForm()
+    }
+
+    fun removeAttribute() {
+        assert(keyValidator.value!!)
+        UAirship.shared().channel.editAttributes().removeAttribute(key.value!!).apply()
+        clearForm()
+    }
+
+    fun clearForm() {
+        key.value = null
+        value.value = null
     }
 }
