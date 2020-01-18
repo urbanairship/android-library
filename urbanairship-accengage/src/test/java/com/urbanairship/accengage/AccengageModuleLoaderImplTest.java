@@ -2,6 +2,9 @@ package com.urbanairship.accengage;
 
 import android.app.Application;
 
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
@@ -14,9 +17,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

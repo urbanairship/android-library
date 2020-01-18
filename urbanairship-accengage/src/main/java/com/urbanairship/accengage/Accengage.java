@@ -4,6 +4,11 @@ package com.urbanairship.accengage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
@@ -11,23 +16,23 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.actions.LandingPageAction;
+import com.urbanairship.actions.OpenExternalUrlAction;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.InternalNotificationListener;
+import com.urbanairship.push.NotificationActionButtonInfo;
+import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.notifications.NotificationProvider;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 /**
  * Accengage module.
- *
- * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Accengage extends AirshipComponent {
 
     private static Accengage sharedInstance;
@@ -122,6 +127,8 @@ public class Accengage extends AirshipComponent {
     protected void init() {
         super.init();
 
+        Logger.debug("Accengage - Accengage Init");
+
         // Retrieve Accengage Device ID
         JsonMap accengageDeviceInfo = this.settingsLoader.load(getContext(), DEVICE_INFO_FILE);
         final String deviceId = accengageDeviceInfo.opt(DEVICE_ID_KEY).getString();
@@ -143,11 +150,13 @@ public class Accengage extends AirshipComponent {
             migrateAccengageSettings();
             getDataStore().put(IS_ALREADY_MIGRATED_PREFERENCE_KEY, true);
         }
-    }
 
-    @Override
-    protected void onAirshipReady(@NonNull UAirship airship) {
-        super.onAirshipReady(airship);
+        pushManager.addInternalNotificationListener(new InternalNotificationListener() {
+            @Override
+            public void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
+                Accengage.this.onNotificationResponse(notificationInfo, actionButtonInfo);
+            }
+        });
     }
 
     /**
@@ -205,4 +214,76 @@ public class Accengage extends AirshipComponent {
         return notificationProvider;
     }
 
+    private void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
+        if (!notificationInfo.getMessage().isAccengagePush()) {
+            return;
+        }
+
+        AccengageMessage message = AccengageMessage.fromAirshipPushMessage(notificationInfo.getMessage());
+
+        AccengagePushButton button = null;
+        if (actionButtonInfo != null) {
+            button = getActionButton(message, actionButtonInfo);
+        }
+
+        String accengageAction;
+        String accengageUrl;
+        if (button != null) {
+            accengageAction = button.getAccengageAction();
+            accengageUrl = button.getAccengageUrl();
+        } else {
+            accengageAction = message.getAccengageAction();
+            accengageUrl = message.getAccengageUrl();
+        }
+
+        if (TextUtils.isEmpty(accengageUrl)) {
+            Logger.debug("Accengage - Notification URL is empty.");
+            return;
+        }
+
+        if (accengageAction != null) {
+            switch (accengageAction) {
+                case AccengageMessage.ACTION_OPEN_URL:
+                    ActionRunRequest.createRequest(OpenExternalUrlAction.DEFAULT_REGISTRY_NAME)
+                                    .setValue(accengageUrl)
+                                    .setSituation(Action.SITUATION_PUSH_OPENED)
+                                    .run();
+                    break;
+                case AccengageMessage.ACTION_TRACK_URL:
+                    Logger.info("Accengage - URL tracking not supported %s", accengageUrl);
+                    break;
+                case AccengageMessage.ACTION_SHOW_WEBVIEW:
+                default:
+                    ActionRunRequest.createRequest(LandingPageAction.DEFAULT_REGISTRY_NAME)
+                                    .setValue(accengageUrl)
+                                    .setSituation(Action.SITUATION_PUSH_OPENED)
+                                    .run();
+                    break;
+            }
+        } else {
+            if (message.getAccengageOpenWithBrowser()) {
+                ActionRunRequest.createRequest(OpenExternalUrlAction.DEFAULT_REGISTRY_NAME)
+                                .setValue(accengageUrl)
+                                .setSituation(Action.SITUATION_PUSH_OPENED)
+                                .run();
+            } else {
+                ActionRunRequest.createRequest(LandingPageAction.DEFAULT_REGISTRY_NAME)
+                                .setValue(accengageUrl)
+                                .setSituation(Action.SITUATION_PUSH_OPENED)
+                                .run();
+            }
+        }
+    }
+
+    @Nullable
+    private AccengagePushButton getActionButton(@NonNull AccengageMessage message, @NonNull NotificationActionButtonInfo actionButtonInfo) {
+        for (AccengagePushButton button : message.getButtons()) {
+            if (actionButtonInfo.getButtonId().equals(button.getId())) {
+                return button;
+            }
+        }
+
+        Logger.error("Unable to lookup Accengage button with ID: %s", actionButtonInfo.getButtonId());
+        return null;
+    }
 }

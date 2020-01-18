@@ -227,6 +227,7 @@ public class PushManager extends AirshipComponent {
     private List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
 
     private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
+    private List<InternalNotificationListener> internalNotificationListeners = new CopyOnWriteArrayList<>();
 
     private final Object uniqueIdLock = new Object();
 
@@ -812,6 +813,18 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * Adds an internal notification listener.
+     *
+     * @param listener The notification listener.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addInternalNotificationListener(@NonNull InternalNotificationListener listener) {
+        internalNotificationListeners.add(listener);
+    }
+
+    /**
      * Adds a registration listener.
      *
      * @param listener The listener.
@@ -1136,4 +1149,10 @@ public class PushManager extends AirshipComponent {
             return JobInfo.JOB_FINISHED;
         }
     }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    List<InternalNotificationListener> getInternalNotificationListeners() {
+        return internalNotificationListeners;
+    }
+
 }

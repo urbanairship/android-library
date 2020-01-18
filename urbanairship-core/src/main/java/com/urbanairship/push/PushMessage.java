@@ -10,6 +10,12 @@ import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
@@ -23,13 +29,12 @@ import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * A push message, usually created from handling a message intent from either GCM,

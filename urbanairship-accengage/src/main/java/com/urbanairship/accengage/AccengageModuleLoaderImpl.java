@@ -55,5 +55,4 @@ class AccengageModuleLoaderImpl implements AccengageModuleLoader {
             }
         };
     }
-
 }

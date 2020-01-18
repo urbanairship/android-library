@@ -256,7 +256,6 @@ class IncomingPushRunnable implements Runnable {
         } else {
             return airship.getPushManager().getNotificationProvider();
         }
-
         return null;
     }
 

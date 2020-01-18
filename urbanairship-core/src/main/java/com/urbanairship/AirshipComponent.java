@@ -11,6 +11,8 @@ import androidx.annotation.WorkerThread;
 
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.NotificationActionButtonInfo;
+import com.urbanairship.push.NotificationInfo;
 
 import java.util.concurrent.Executor;
 
@@ -178,5 +180,4 @@ public abstract class AirshipComponent {
     public void onNewConfig(@Nullable JsonMap value) {
 
     }
-
 }

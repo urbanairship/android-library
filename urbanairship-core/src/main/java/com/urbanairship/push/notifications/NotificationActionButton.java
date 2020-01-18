@@ -6,9 +6,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
+
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
 
@@ -131,9 +134,11 @@ public class NotificationActionButton {
      * @param actionsPayload The actions payload for the interactive buttons.
      * @param arguments The notification arguments.
      * @return The action as a NotificationCompat.Action
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
-    NotificationCompat.Action createAndroidNotificationAction(@NonNull Context context, @Nullable String actionsPayload, @NonNull NotificationArguments arguments) {
+    public NotificationCompat.Action createAndroidNotificationAction(@NonNull Context context, @Nullable String actionsPayload, @NonNull NotificationArguments arguments) {
         String label = getLabel(context);
         if (label == null) {
             label = "";
@@ -161,7 +166,7 @@ public class NotificationActionButton {
             actionPendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         }
 
-        NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(iconId, label, actionPendingIntent)
+        NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(iconId, Html.fromHtml(label), actionPendingIntent)
                 .addExtras(extras);
 
         if (remoteInputs != null) {

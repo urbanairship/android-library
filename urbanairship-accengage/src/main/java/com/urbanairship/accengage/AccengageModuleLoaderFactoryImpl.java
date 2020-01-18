@@ -4,16 +4,15 @@ package com.urbanairship.accengage;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.AccengageModuleLoader;
 import com.urbanairship.modules.AccengageModuleLoaderFactory;
-import com.urbanairship.modules.ModuleLoader;
 import com.urbanairship.push.PushManager;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 /**
  * Accengage module loader factory.
@@ -29,5 +28,4 @@ public class AccengageModuleLoaderFactoryImpl implements AccengageModuleLoaderFa
                                        @NonNull Analytics analytics) {
         return new AccengageModuleLoaderImpl(context, dataStore, airshipChannel, manager, analytics);
     }
-
 }
