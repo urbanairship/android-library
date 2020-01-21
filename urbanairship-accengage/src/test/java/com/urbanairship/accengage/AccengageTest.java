@@ -125,8 +125,8 @@ public class AccengageTest {
         accengage.init();
 
         // Verify the migration does not apply twice
-        verify(mockPush, times(1)).setPushEnabled(true);
-        verify(mockPush, times(0)).setPushEnabled(false);
+        verify(mockPush, times(1)).setUserNotificationsEnabled(true);
+        verify(mockPush, times(0)).setUserNotificationsEnabled(false);
     }
 
     /**
@@ -143,8 +143,8 @@ public class AccengageTest {
         accengage.init();
 
         // Verify the migration does not apply twice
-        verify(mockPush, times(1)).setPushEnabled(false);
-        verify(mockPush, times(0)).setPushEnabled(true);
+        verify(mockPush, times(1)).setUserNotificationsEnabled(false);
+        verify(mockPush, times(0)).setUserNotificationsEnabled(true);
     }
 
     /**

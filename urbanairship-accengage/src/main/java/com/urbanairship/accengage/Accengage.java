@@ -186,7 +186,7 @@ public class Accengage extends AirshipComponent {
         JsonMap accengageSettings = this.settingsLoader.load(getContext(), PUSH_SETTINGS_FILE);
         boolean accengagePushOptinStatus = accengageSettings.opt(IS_ENABLED_SETTING_KEY).getBoolean(true);
         Logger.debug("Accengage - Migrating Accengage Push Opt-in status : " + accengagePushOptinStatus);
-        pushManager.setPushEnabled(accengagePushOptinStatus);
+        pushManager.setUserNotificationsEnabled(accengagePushOptinStatus);
 
         // Migrate Accengage Disabled Tracking Setting
         final SharedPreferences prefs = getContext().getSharedPreferences(ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
