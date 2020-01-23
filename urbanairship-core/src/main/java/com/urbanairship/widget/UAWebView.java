@@ -128,6 +128,7 @@ public class UAWebView extends WebView {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         if (ManifestUtils.shouldEnableLocalStorage()) {
+            Logger.verbose("UAWebView - Application contains metadata to enable local storage");
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
 

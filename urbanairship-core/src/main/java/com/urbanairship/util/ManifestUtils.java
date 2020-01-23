@@ -3,6 +3,7 @@
 package com.urbanairship.util;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -19,6 +20,12 @@ import com.urbanairship.UAirship;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestUtils {
+
+    /**
+     * Metadata an app can use to disable installing network security provider.
+     */
+    @NonNull
+    private final static String INSTALL_NETWORK_SECURITY_PROVIDER = "com.urbanairship.INSTALL_NETWORK_SECURITY_PROVIDER";
 
     /**
      * Metadata an app can use to enable local storage.
@@ -90,7 +97,20 @@ public class ManifestUtils {
     public static boolean shouldEnableLocalStorage() {
         ApplicationInfo info = ManifestUtils.getApplicationInfo();
         if (info != null && info.metaData != null && info.metaData.getBoolean(ENABLE_LOCAL_STORAGE, false)) {
-            Logger.verbose("UAWebView - Application contains metadata to enable local storage");
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Helper method to check if the network security provider should be installed.
+     *
+     * @return {@code true} if the provider should be installed, otherwise {@code false}.
+     */
+    public static boolean shouldInstallNetworkSecurityProvider() {
+        ApplicationInfo info = ManifestUtils.getApplicationInfo();
+        if (info != null && info.metaData != null && info.metaData.getBoolean(INSTALL_NETWORK_SECURITY_PROVIDER, false)) {
             return true;
         }
 

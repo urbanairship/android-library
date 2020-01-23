@@ -11,6 +11,7 @@ import android.util.Base64;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.util.ConnectionUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.BufferedReader;
@@ -158,7 +159,7 @@ public class Request {
         HttpURLConnection conn = null;
 
         try {
-            conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) ConnectionUtils.openSecureConnection(UAirship.getApplicationContext(), url);
             conn.setRequestMethod(requestMethod);
 
             if (body != null) {

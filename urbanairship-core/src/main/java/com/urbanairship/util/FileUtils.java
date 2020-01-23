@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 
 import java.io.Closeable;
 import java.io.File;
@@ -92,9 +93,12 @@ public abstract class FileUtils {
         URLConnection conn = null;
 
         try {
-            conn = url.openConnection();
+
+            conn = ConnectionUtils.openSecureConnection(UAirship.getApplicationContext(), url);
             conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
             conn.setUseCaches(true);
+
+
             int statusCode = 0;
 
             if (conn instanceof HttpURLConnection) {

@@ -30,7 +30,6 @@ public class PlayServicesUtils {
     public static final int MISSING_PLAY_SERVICE_DEPENDENCY = -1;
 
     private static Boolean isGooglePlayServicesDependencyAvailable;
-    private static Boolean isGoogleCloudMessagingDependencyAvailable;
     private static Boolean isFusedLocationDependencyAvailable;
     private static Boolean isGooglePlayStoreAvailable;
     private static Boolean isGoogleAdsDependencyAvailable;
