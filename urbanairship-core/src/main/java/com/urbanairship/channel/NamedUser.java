@@ -192,7 +192,7 @@ public class NamedUser extends AirshipComponent {
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
                 if (!isDataOptIn()) {
-                    Logger.error("NamedUser - Unable to apply tag group edits when opted out of data collection.");
+                    Logger.warn("NamedUser - Unable to apply tag group edits when opted out of data collection.");
                     return;
                 }
 
