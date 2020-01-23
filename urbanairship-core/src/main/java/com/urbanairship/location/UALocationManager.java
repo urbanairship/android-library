@@ -123,7 +123,11 @@ public class UALocationManager extends AirshipComponent {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                return builder.setLocationSettings(isLocationUpdatesEnabled());
+                if (isDataOptIn()) {
+                    return builder.setLocationSettings(isLocationUpdatesEnabled());
+                }
+
+                return builder;
             }
         });
     }

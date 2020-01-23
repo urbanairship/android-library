@@ -4,8 +4,10 @@ package com.urbanairship.channel;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
+import com.urbanairship.UAirship;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.NamedUserJobHandler;
 import com.urbanairship.channel.TagGroupRegistrar;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -46,6 +49,7 @@ public class NamedUserTest extends BaseTestCase {
     private JobDispatcher mockDispatcher;
     private TagGroupRegistrar mockTagGroupRegistrar;
     private AirshipChannel mockChannel;
+    private PreferenceDataStore dataStore;
 
     @Before
     public void setUp() {
@@ -58,13 +62,15 @@ public class NamedUserTest extends BaseTestCase {
 
         testRequest = new TestRequest();
 
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+
         RequestFactory mockRequestFactory = mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-
         TestApplication.getApplication().setOptions(airshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockChannel, mockDispatcher);
+        namedUser = new NamedUser(TestApplication.getApplication(), dataStore, mockTagGroupRegistrar, mockChannel, mockDispatcher);
     }
 
     /**
@@ -206,6 +212,26 @@ public class NamedUserTest extends BaseTestCase {
                  .apply();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+            }
+        }));
+    }
+
+    /**
+     * Test editTagGroups apply does not dispatch a job to update the tag groups when data opt-in is disabled.
+     */
+    @Test
+    public void testStartUpdateNamedUserTagsServiceDataOptInDisabled() {
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+
+        namedUser.editTagGroups()
+                 .addTag("tagGroup", "tag1")
+                 .removeTag("tagGroup", "tag5")
+                 .apply();
+
+        verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
