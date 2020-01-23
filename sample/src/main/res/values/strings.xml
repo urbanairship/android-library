@@ -31,6 +31,8 @@
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>
+    <string name="optin_category_title">Opt-In Settings</string>
+    <string name="opt_in_enabled_settings">Data Opt-In Enabled (GDPR)</string>
     <plurals name="mc_indicator_text">
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>

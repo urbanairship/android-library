@@ -8,9 +8,6 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -22,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * PreferenceDataStore stores and retrieves all the Airship preferences through the
@@ -126,6 +127,16 @@ public final class PreferenceDataStore {
         for (Preference preference : preferences.values()) {
             preference.unregisterObserver();
         }
+    }
+
+    /**
+     * Checks if the value is set.
+     *
+     * @param key The key.
+     * @return {@code true} if the value is set, otherwise {@code false}.
+     */
+    public boolean isSet(String key) {
+        return getPreference(key).get() != null;
     }
 
     /**

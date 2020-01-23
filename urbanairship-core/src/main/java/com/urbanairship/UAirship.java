@@ -13,12 +13,6 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -57,6 +51,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -124,6 +124,8 @@ public class UAirship {
     private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
 
     private static boolean queuePendingAirshipRequests = true;
+
+    public static final String DATA_OPTIN_KEY = "com.urbanairship.application.device.DATA_OPTIN";
 
     private DeepLinkListener deepLinkListener;
 
@@ -516,7 +518,6 @@ public class UAirship {
         return deepLinkListener;
     }
 
-
     /**
      * Returns the Application's <code>PackageInfo</code>
      *
@@ -777,8 +778,14 @@ public class UAirship {
 
         // store current version as library version once check is performed
         this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
-    }
 
+        // Check if DataOptInEnabled has never been loaded
+        if (!this.preferenceDataStore.isSet(DATA_OPTIN_KEY)) {
+            boolean configDataOptInEnabledValue = airshipConfigOptions.dataOptInEnabled;
+            Logger.debug("Config - DataOptInEnabled key loaded : " + configDataOptInEnabledValue);
+            setDataOptIn(!configDataOptInEnabledValue);
+        }
+    }
 
     /**
      * Tears down the UAirship instance.
@@ -955,6 +962,7 @@ public class UAirship {
 
     /**
      * Returns the Accengage instance if available.
+     *
      * @return The Accengage instance.
      * @hide
      */
@@ -1003,6 +1011,32 @@ public class UAirship {
             }
         }
         return null;
+    }
+
+    /**
+     * Sets the data opt-in flag. Enabled by default. Setting this flag to {@code false} will opt
+     * the device out of analytics, device token registration, named user association, and any pending
+     * events or attributes will be cleared.
+     *
+     * @param enabled {@code true} to opt-in, {@code false} to opt-out.
+     */
+    public void setDataOptIn(boolean enabled) {
+        if (isDataOptIn() == enabled) {
+            Logger.verbose("OptIn state is the same. Nothing happened.");
+        } else {
+            Logger.debug("Setting OptInData to : " + enabled);
+            this.preferenceDataStore.put(DATA_OPTIN_KEY, enabled);
+        }
+    }
+
+    /**
+     * Checks if data is opted-in or out.
+     *
+     * @return {@code true} if data is opted-in, otherwise {@code false}.
+     */
+    public boolean isDataOptIn() {
+        Logger.debug("OptInData is actually in state : " + this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true));
+        return this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true);
     }
 
     /**

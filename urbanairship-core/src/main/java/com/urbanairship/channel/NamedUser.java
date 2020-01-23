@@ -145,6 +145,11 @@ public class NamedUser extends AirshipComponent {
      * @param namedUserId The named user ID string.
      */
     public void setId(@Nullable String namedUserId) {
+        if (!isDataOptIn()) {
+            Logger.debug("NamedUser - DataOptIn is disabled, ignoring named user association.");
+            return;
+        }
+
         String id = null;
         if (namedUserId != null) {
             id = namedUserId.trim();
@@ -173,6 +178,7 @@ public class NamedUser extends AirshipComponent {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }
         }
+
     }
 
     /**
@@ -185,6 +191,11 @@ public class NamedUser extends AirshipComponent {
         return new TagGroupsEditor() {
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
+                if (!isDataOptIn()) {
+                    Logger.debug("NamedUser - DataOptIn is disabled, ignoring tag group updates.");
+                    return;
+                }
+
                 if (!collapsedMutations.isEmpty()) {
                     tagGroupRegistrar.addMutations(TagGroupRegistrar.NAMED_USER, collapsedMutations);
                     dispatchUpdateTagGroupsJob();
@@ -238,4 +249,16 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
+    private void clearPendingNamedUserUpdates() {
+        tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
+        Logger.debug("Pending Named Users updates are now cleared.");
+    }
+
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        if (!isOptedIn) {
+            clearPendingNamedUserUpdates();
+            setId(null);
+        }
+    }
 }

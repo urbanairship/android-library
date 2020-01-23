@@ -343,8 +343,6 @@ public class AirshipChannel extends AirshipComponent {
         };
     }
 
-
-
     /**
      * Edit the attributes associated with this channel.
      *
@@ -355,6 +353,11 @@ public class AirshipChannel extends AirshipComponent {
         return new AttributeEditor() {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
+                if (!isDataOptIn()) {
+                    Logger.info("Ignore attributes, data opted out.");
+                    return;
+                }
+
                 synchronized (attributeLock) {
                     List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
 
@@ -736,7 +739,6 @@ public class AirshipChannel extends AirshipComponent {
      * Uploads attribute mutations.
      *
      * @param channelId The channel ID.
-     *
      * @return {@code true} if uploads are completed, otherwise {@code false}.
      */
     private boolean uploadAttributeMutations(@NonNull String channelId) {
@@ -772,6 +774,13 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         return true;
+    }
+
+    private void clearPendingAttributes() {
+        synchronized (attributeLock) {
+            Logger.debug("Deleting pending attributes.");
+            attributeMutationStore.clear();
+        }
     }
 
     /**
@@ -815,4 +824,12 @@ public class AirshipChannel extends AirshipComponent {
 
         jobDispatcher.dispatch(jobInfo);
     }
+
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        if (!isOptedIn) {
+            clearPendingAttributes();
+        }
+    }
+
 }

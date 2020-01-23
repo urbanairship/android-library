@@ -3,18 +3,17 @@
 package com.urbanairship;
 
 import android.content.Context;
+
+import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonMap;
+
+import java.util.concurrent.Executor;
+
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
-
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.NotificationActionButtonInfo;
-import com.urbanairship.push.NotificationInfo;
-
-import java.util.concurrent.Executor;
 
 /**
  * Base class for Airship components.
@@ -59,6 +58,8 @@ public abstract class AirshipComponent {
             public void onPreferenceChange(@NonNull String key) {
                 if (key.equals(enableKey)) {
                     onComponentEnableChange(isComponentEnabled());
+                } else if (key.equals(UAirship.DATA_OPTIN_KEY)) {
+                    onDataOptInChange(isDataOptIn());
                 }
             }
         });
@@ -180,4 +181,25 @@ public abstract class AirshipComponent {
     public void onNewConfig(@Nullable JsonMap value) {
 
     }
+
+    /**
+     * Check if the user is opted-in to data.
+     *
+     * @return The opt-in value.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected boolean isDataOptIn() {
+        return dataStore.getBoolean(UAirship.DATA_OPTIN_KEY, true);
+    }
+
+    /**
+     * Called when the data opt-in changes.
+     *
+     * @param isOptedIn The opt-in value.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected void onDataOptInChange(boolean isOptedIn) {}
+
 }

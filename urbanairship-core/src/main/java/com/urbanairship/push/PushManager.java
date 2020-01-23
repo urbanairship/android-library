@@ -48,7 +48,6 @@ import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
 import androidx.core.app.NotificationManagerCompat;
 
-
 /**
  * This class is the primary interface for customizing the display and behavior
  * of incoming push notifications.
@@ -300,7 +299,7 @@ public class PushManager extends AirshipComponent {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (getPushTokenRegistrationEnabled()) {
+                if (isDataOptIn() && getPushTokenRegistrationEnabled()) {
                     if (getPushToken() == null) {
                         performPushRegistration(false);
                     }
@@ -648,7 +647,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        return getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getPushToken());
+        return isDataOptIn() && getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getPushToken());
     }
 
     /**
@@ -744,6 +743,10 @@ public class PushManager extends AirshipComponent {
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
+        if (!isDataOptIn() && enabled) {
+            Logger.debug("PUsh token registration is enabled, but data is opted out. Token will not registered.");
+        }
+
         getDataStore().put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
         airshipChannel.updateRegistration();
     }
@@ -1150,9 +1153,13 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        airshipChannel.updateRegistration();
+    }
+
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     List<InternalNotificationListener> getInternalNotificationListeners() {
         return internalNotificationListeners;
     }
-
 }

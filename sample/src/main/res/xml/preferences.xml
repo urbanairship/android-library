@@ -40,6 +40,14 @@
 
     </androidx.preference.PreferenceCategory>
 
+    <androidx.preference.PreferenceCategory app:title="@string/optin_category_title">
+        <com.urbanairship.preference.OptInPreference
+            app:key="optin_settings"
+            app:persistent="true"
+            app:title="@string/opt_in_enabled_settings" />
+
+    </androidx.preference.PreferenceCategory>
+
     <androidx.preference.PreferenceCategory app:title="@string/advanced_preference_category_title">
 
         <com.urbanairship.preference.ChannelIdPreference
