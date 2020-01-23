@@ -21,6 +21,7 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
@@ -141,6 +142,11 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setOptions(AirshipConfigOptions options) {
         UAirship.shared().airshipConfigOptions = options;
+    }
+
+
+    public void setAccengageNotificationHandler(AccengageNotificationHandler notificationHandler) {
+        UAirship.shared().accengageNotificationHandler = notificationHandler;
     }
 
     @Override

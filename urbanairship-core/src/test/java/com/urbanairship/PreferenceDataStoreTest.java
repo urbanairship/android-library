@@ -32,6 +32,16 @@ public class PreferenceDataStoreTest extends BaseTestCase {
         testPrefs = new PreferenceDataStore(context);
     }
 
+    @Test
+    public void testIsSet() {
+        assertFalse(testPrefs.isSet("neat"));
+        testPrefs.put("neat", "oh hi");
+        assertTrue(testPrefs.isSet("neat"));
+
+        testPrefs.remove("neat");
+        assertFalse(testPrefs.isSet("neat"));
+    }
+
     /**
      * Test saving string values.
      */

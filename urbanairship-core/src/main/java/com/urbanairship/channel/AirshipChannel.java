@@ -333,6 +333,11 @@ public class AirshipChannel extends AirshipComponent {
 
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
+                if (!isDataOptIn()) {
+                    Logger.warn("AirshipChannel - Unable to apply tag group edits when opted out of data collection.");
+                    return;
+                }
+
                 if (collapsedMutations.isEmpty()) {
                     return;
                 }
@@ -342,8 +347,6 @@ public class AirshipChannel extends AirshipComponent {
             }
         };
     }
-
-
 
     /**
      * Edit the attributes associated with this channel.
@@ -355,6 +358,11 @@ public class AirshipChannel extends AirshipComponent {
         return new AttributeEditor() {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
+                if (!isDataOptIn()) {
+                    Logger.info("Ignore attributes, data opted out.");
+                    return;
+                }
+
                 synchronized (attributeLock) {
                     List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
 
@@ -449,8 +457,10 @@ public class AirshipChannel extends AirshipComponent {
     @WorkerThread
     @NonNull
     private ChannelRegistrationPayload getNextChannelRegistrationPayload() {
+        boolean shouldSetTags = getChannelTagRegistrationEnabled() && isDataOptIn();
+
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setTags(getChannelTagRegistrationEnabled(), getTags())
+                .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
                 .setApid(getDataStore().getString(APID_KEY, null));
 
         switch (platform) {
@@ -480,11 +490,14 @@ public class AirshipChannel extends AirshipComponent {
 
         builder.setSdkVersion(UAirship.getVersion());
 
-        builder.setDeviceModel(Build.MODEL);
-        builder.setApiVersion(Build.VERSION.SDK_INT);
+        if (isDataOptIn()) {
+            TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            builder.setCarrier(tm.getNetworkOperatorName());
 
-        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        builder.setCarrier(tm.getNetworkOperatorName());
+            builder.setDeviceModel(Build.MODEL);
+
+            builder.setApiVersion(Build.VERSION.SDK_INT);
+        }
 
         for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
             builder = extender.extend(builder);
@@ -736,7 +749,6 @@ public class AirshipChannel extends AirshipComponent {
      * Uploads attribute mutations.
      *
      * @param channelId The channel ID.
-     *
      * @return {@code true} if uploads are completed, otherwise {@code false}.
      */
     private boolean uploadAttributeMutations(@NonNull String channelId) {
@@ -772,6 +784,13 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         return true;
+    }
+
+    private void clearPendingAttributes() {
+        synchronized (attributeLock) {
+            Logger.debug("Deleting pending attributes.");
+            attributeMutationStore.clear();
+        }
     }
 
     /**
@@ -815,4 +834,12 @@ public class AirshipChannel extends AirshipComponent {
 
         jobDispatcher.dispatch(jobInfo);
     }
+
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        if (!isOptedIn) {
+            clearPendingAttributes();
+        }
+    }
+
 }

@@ -29,7 +29,7 @@ public class NotificationChannelUtils {
      */
     @NonNull
     @WorkerThread
-    static String getActiveChannel(@Nullable String channelId, @NonNull String defaultChannel) {
+    public static String getActiveChannel(@Nullable String channelId, @NonNull String defaultChannel) {
         if (channelId == null) {
             return defaultChannel;
         }

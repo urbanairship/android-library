@@ -262,7 +262,7 @@ public class Analytics extends AirshipComponent {
             return;
         }
 
-        if (!isEnabled()) {
+        if (!isEnabled() || !isDataOptIn()) {
             Logger.debug("Analytics disabled - ignoring event: %s", event.getType());
             return;
         }
@@ -417,18 +417,27 @@ public class Analytics extends AirshipComponent {
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
-
-            Logger.info("Deleting all analytic events.");
-
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    eventManager.deleteEvents();
-                }
-            });
+            clearPendingEvents();
         }
 
         preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
+    }
+
+    private void clearPendingEvents() {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Logger.info("Deleting all analytic events.");
+                eventManager.deleteEvents();
+            }
+        });
+    }
+
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        if (!isOptedIn) {
+            clearPendingEvents();
+        }
     }
 
     /**

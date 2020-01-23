@@ -12,11 +12,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
@@ -27,6 +22,8 @@ import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
@@ -37,10 +34,11 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.channel.NamedUser;
+import com.urbanairship.modules.AccengageModuleLoader;
+import com.urbanairship.modules.AccengageModuleLoaderFactory;
+import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
@@ -54,6 +52,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 /**
  * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
@@ -65,6 +69,8 @@ public class UAirship {
             "com.urbanairship.aaid.AdvertisingIdTracker",
             "com.urbanairship.debug.DebugManager"
     };
+
+    private static final String ACCENGAGE_MODULE_LOADER_FACTORY = "com.urbanairship.accengage.AccengageModuleLoaderFactoryImpl";
 
     /**
      * Broadcast that is sent when UAirship is finished taking off.
@@ -119,6 +125,8 @@ public class UAirship {
 
     private static boolean queuePendingAirshipRequests = true;
 
+    public static final String DATA_OPTIN_KEY = "com.urbanairship.application.device.DATA_OPTIN";
+
     private DeepLinkListener deepLinkListener;
 
     final List<AirshipComponent> components = new ArrayList<>();
@@ -142,6 +150,7 @@ public class UAirship {
     NamedUser namedUser;
     Automation automation;
     ImageLoader imageLoader;
+    AccengageNotificationHandler accengageNotificationHandler;
 
     @Platform
     int platform;
@@ -509,7 +518,6 @@ public class UAirship {
         return deepLinkListener;
     }
 
-
     /**
      * Returns the Application's <code>PackageInfo</code>
      *
@@ -750,6 +758,12 @@ public class UAirship {
             }
         }
 
+        AccengageModuleLoader accengageModuleLoader = createAccengageModuleLoader(application, preferenceDataStore, channel, pushManager, analytics);
+        if (accengageModuleLoader != null) {
+            components.addAll(accengageModuleLoader.getComponents());
+            this.accengageNotificationHandler = accengageModuleLoader.getAccengageNotificationHandler();
+        }
+
         for (AirshipComponent component : components) {
             component.init();
         }
@@ -764,6 +778,13 @@ public class UAirship {
 
         // store current version as library version once check is performed
         this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
+
+        // Check if DataOptInEnabled has never been loaded
+        if (!this.preferenceDataStore.isSet(DATA_OPTIN_KEY)) {
+            boolean configDataOptInEnabledValue = airshipConfigOptions.dataOptInEnabled;
+            Logger.debug("Config - DataOptInEnabled key loaded : " + configDataOptInEnabledValue);
+            setDataOptIn(!configDataOptInEnabledValue);
+        }
     }
 
     /**
@@ -940,6 +961,18 @@ public class UAirship {
     }
 
     /**
+     * Returns the Accengage instance if available.
+     *
+     * @return The Accengage instance.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Nullable
+    public AccengageNotificationHandler getAccengageNotificationHandler() {
+        return accengageNotificationHandler;
+    }
+
+    /**
      * Returns the platform type.
      *
      * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
@@ -978,6 +1011,32 @@ public class UAirship {
             }
         }
         return null;
+    }
+
+    /**
+     * Sets the data opt-in flag. Enabled by default. Setting this flag to {@code false} will opt
+     * the device out of analytics, device token registration, named user association, and any pending
+     * events or attributes will be cleared.
+     *
+     * @param enabled {@code true} to opt-in, {@code false} to opt-out.
+     */
+    public void setDataOptIn(boolean enabled) {
+        if (isDataOptIn() == enabled) {
+            Logger.verbose("OptIn state is the same. Nothing happened.");
+        } else {
+            Logger.debug("Setting OptInData to : " + enabled);
+            this.preferenceDataStore.put(DATA_OPTIN_KEY, enabled);
+        }
+    }
+
+    /**
+     * Checks if data is opted-in or out.
+     *
+     * @return {@code true} if data is opted-in, otherwise {@code false}.
+     */
+    public boolean isDataOptIn() {
+        Logger.debug("OptInData is actually in state : " + this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true));
+        return this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true);
     }
 
     /**
@@ -1082,4 +1141,23 @@ public class UAirship {
         return null;
     }
 
+    @Nullable
+    private AccengageModuleLoader createAccengageModuleLoader(Context context, PreferenceDataStore preferenceDataStore,
+                                                              AirshipChannel channel, PushManager pushManager, Analytics analytics) {
+        try {
+            Class clazz = Class.forName(ACCENGAGE_MODULE_LOADER_FACTORY);
+            Object object = clazz.newInstance();
+
+            if (object instanceof AccengageModuleLoaderFactory) {
+                AccengageModuleLoaderFactory factory = (AccengageModuleLoaderFactory) object;
+                return factory.build(context, preferenceDataStore, channel, pushManager, analytics);
+            }
+        } catch (ClassNotFoundException e) {
+            return null;
+        } catch (Exception e) {
+            Logger.error(e, "Unable to create loader %s", ACCENGAGE_MODULE_LOADER_FACTORY);
+        }
+
+        return null;
+    }
 }

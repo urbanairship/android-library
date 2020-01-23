@@ -10,9 +10,12 @@ import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
@@ -25,6 +28,9 @@ import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -142,6 +148,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * The extra key for the sound of the notification.
+     *
      * @deprecated To be removed in SDK 11.0.
      */
     @Deprecated
@@ -237,6 +244,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     @NonNull
     public static final String PRIORITY_HIGH = "high";
+
+    /**
+     * Accengage constant used to determine if the push is Accengage or not.
+     */
+    @NonNull
+    private static final String ACCENGAGE_CONTENT_KEY = "a4scontent";
 
     /**
      * Default sound name.
@@ -423,6 +436,24 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Checks if the push is from Accengage or not.
+     *
+     * @return {@code true} if its from Accengage, otherwise {@code false}.
+     */
+    public boolean isAccengagePush() {
+        return data.containsKey(ACCENGAGE_CONTENT_KEY);
+    }
+
+    /**
+     * Checks if the push is from Airship or not.
+     *
+     * @return {@code true} if its from Airship, otherwise {@code false}.
+     */
+    public boolean isAirshipPush() {
+        return data.containsKey(EXTRA_SEND_ID) || data.containsKey(EXTRA_PUSH_ID) || data.containsKey(EXTRA_METADATA);
+    }
+
+    /**
      * Gets the push message's actions.
      *
      * @return A map of action name to action value.
@@ -586,10 +617,10 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * Gets the sound of the notification.
-     * @deprecated To be removed in SDK 11.0. Instead, use {@link NotificationChannelRegistry}.
      *
      * @param context The application context.
      * @return The sound of the notification.
+     * @deprecated To be removed in SDK 11.0. Instead, use {@link NotificationChannelRegistry}.
      */
     @Deprecated
     @Nullable

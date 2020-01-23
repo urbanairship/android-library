@@ -264,6 +264,13 @@ public class AirshipConfigOptions {
     public final boolean channelCaptureEnabled;
 
     /**
+     * Flag indicating if the dataOptIn management is enabled or not
+     * <p>
+     * The flag defaults to false
+     */
+    public final boolean dataOptInEnabled;
+
+    /**
      * Notification icon.
      */
     @DrawableRes
@@ -340,6 +347,7 @@ public class AirshipConfigOptions {
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
+        this.dataOptInEnabled = builder.dataOptInEnabled;
     }
 
     /**
@@ -491,6 +499,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
         private static final String FIELD_SITE = "site";
+        private static final String FIELD_IS_DATA_OPTIN_ENABLED = "dataOptInEnabled";
 
         private String appKey;
         private String appSecret;
@@ -524,6 +533,7 @@ public class AirshipConfigOptions {
         private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
         private Uri appStoreUri;
+        private boolean dataOptInEnabled;
         private @Site
         String site = SITE_US;
 
@@ -794,6 +804,12 @@ public class AirshipConfigOptions {
 
                         case FIELD_SITE:
                             this.setSite(parseSite(configParser.getString(name)));
+                            break;
+
+                        case FIELD_IS_DATA_OPTIN_ENABLED:
+                            Logger.debug("Loaded isDataOptInEnabled to " + configParser.getBoolean(name, true) + " !");
+                            this.setDataOptInEnabled(configParser.getBoolean(name, false));
+                            break;
                     }
                 } catch (Exception e) {
                     Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
@@ -1267,6 +1283,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setSite(@NonNull @Site String site) {
             this.site = site;
+            return this;
+        }
+
+        /**
+         * Set the flag indicating whether the Optin Data will be managed or not.
+         *
+         * @param dataOptInEnabled The flag indicating whether the application will manage Data OptIn.
+         * @return The config options builder.
+         */
+        public Builder setDataOptInEnabled(boolean dataOptInEnabled) {
+            Logger.debug("Setting dataOptInEnabled with config to :" + dataOptInEnabled);
+            this.dataOptInEnabled = dataOptInEnabled;
             return this;
         }
 

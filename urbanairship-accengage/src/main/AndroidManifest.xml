@@ -1,0 +1,15 @@
+<manifest package="com.urbanairship.accengage"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application>
+
+        <receiver android:name=".PackageUpdatedReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+</manifest>

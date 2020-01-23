@@ -20,6 +20,22 @@
   public <fields>;
 }
 
+## Module Loaders
+-keep public class com.urbanairship.modules.ModuleLoader
+-keep public class * implements com.urbanairship.modules.ModuleLoader
+-keepclassmembernames class * implements com.urbanairship.modules.ModuleLoader {
+  public <methods>;
+  public <fields>;
+}
+
+## Accengage Module Loader Factory
+-keep public class com.urbanairship.modules.AccengageModuleLoaderFactory
+-keep public class * implements com.urbanairship.modules.AccengageModuleLoaderFactory
+-keepclassmembernames class * implements com.urbanairship.modules.AccengageModuleLoaderFactory {
+  public <methods>;
+  public <fields>;
+}
+
 ## Airship Version Info
 -keep public class com.urbanairship.AirshipVersionInfo
 -keepclassmembers class com.urbanairship.AirshipVersionInfo {

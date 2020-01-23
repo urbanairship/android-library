@@ -120,6 +120,7 @@ class NotificationIntentProcessor {
         // Notify the legacy in-app message manager about the push
         airship.getLegacyInAppMessageManager().onPushResponse(notificationInfo.getMessage());
 
+
         NotificationListener listener = airship.getPushManager().getNotificationListener();
 
         if (actionButtonInfo != null) {
@@ -144,6 +145,10 @@ class NotificationIntentProcessor {
         }
 
         runNotificationResponseActions(completionHandler);
+
+        for (InternalNotificationListener internalNotificationListener : airship.getPushManager().getInternalNotificationListeners()) {
+            internalNotificationListener.onNotificationResponse(notificationInfo, actionButtonInfo);
+        }
     }
 
     /**

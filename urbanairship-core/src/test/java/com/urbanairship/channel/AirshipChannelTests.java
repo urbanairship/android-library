@@ -8,6 +8,7 @@ import android.telephony.TelephonyManager;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
@@ -64,6 +65,8 @@ public class AirshipChannelTests extends BaseTestCase {
     private TestLocaleManager testLocaleManager;
     private String timestamp = "expected_timestamp";
 
+    private PreferenceDataStore dataStore;
+
 
     private static final JobInfo UPDATE_REGISTRATION_JOB = JobInfo.newBuilder()
                                                                   .setAction("ACTION_UPDATE_CHANNEL_REGISTRATION")
@@ -84,6 +87,9 @@ public class AirshipChannelTests extends BaseTestCase {
         mockClient = mock(ChannelApiClient.class);
         mockAttributeClient = mock(AttributeApiClient.class);
         mockPendingAttributeStore = mock(PendingAttributeMutationStore.class);
+        dataStore = getApplication().preferenceDataStore;
+
+        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -92,7 +98,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
         testLocaleManager = new TestLocaleManager();
 
-        airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
+        airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 options, mockClient, mockTagGroupRegistrar, UAirship.ANDROID_PLATFORM, testLocaleManager,
                 mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
     }
@@ -413,6 +419,49 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
+     * Test channel registration payload when isDataOptIn is disabled
+     */
+    @Test
+    public void testChannelRegistrationPayloadDataOptInDisabled() throws ChannelRequestException {
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+
+        when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
+                .thenReturn(createResponse("channel", 200));
+
+        testLocaleManager.setDefaultLocale(new Locale("wookiee", "KASHYYYK"));
+
+        // Add an extender
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setUserId("cool")
+                              .setPushAddress("story");
+            }
+        });
+
+        airshipChannel.editTags().addTag("cool_tag").apply();
+
+        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        ChannelRegistrationPayload expectedPayload = new ChannelRegistrationPayload.Builder()
+                .setLanguage("wookiee")
+                .setCountry("KASHYYYK")
+                .setDeviceType("android")
+                .setTags(false, null)
+                .setTimezone(TimeZone.getDefault().getID())
+                .setUserId("cool")
+                .setPushAddress("story")
+                .setAppVersion(UAirship.getPackageInfo().versionName)
+                .setSdkVersion(UAirship.getVersion())
+                .build();
+
+        // Update registration
+        airshipChannel.onPerformJob(UAirship.shared(), UPDATE_REGISTRATION_JOB);
+        verify(mockClient).createChannelWithPayload(expectedPayload);
+    }
+
+    /**
      * Test channel registration payload for amazon devices
      */
     @Test
@@ -442,8 +491,26 @@ public class AirshipChannelTests extends BaseTestCase {
         // Update registration
         airshipChannel.onPerformJob(UAirship.shared(), UPDATE_REGISTRATION_JOB);
         verify(mockClient).createChannelWithPayload(expectedPayload);
+    }
 
+    /**
+     * Test editTagGroups apply does not dispatch a job to update the tag groups when data opt-in is disabled.
+     */
+    @Test
+    public void testTagGroupUpdatesDataOptInDisabled() {
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
 
+        airshipChannel.editTagGroups()
+                      .addTag("tagGroup", "add")
+                      .removeTag("tagGroup", "remove")
+                      .apply();
+
+        verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals("ACTION_UPDATE_TAG_GROUPS");
+            }
+        }));
     }
 
     /**

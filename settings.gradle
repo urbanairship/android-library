@@ -4,4 +4,5 @@ include ':urbanairship-core',
         ':urbanairship-ads-identifier',
         ':urbanairship-preference',
         ':urbanairship-debug',
+        ':urbanairship-accengage',
         ":sample"

@@ -81,6 +81,11 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
+        if (!message.isAccengagePush() && !message.isAirshipPush()) {
+            Logger.debug("Ignoring push: %s", message);
+            return;
+        }
+
         if (checkProvider(airship, providerClass)) {
             // If we've already processed the push, proceed to notification display
             if (isProcessed) {
@@ -113,6 +118,7 @@ class IncomingPushRunnable implements Runnable {
             Logger.debug("Received a duplicate push with canonical ID: %s", message.getCanonicalPushId());
             return;
         }
+
         if (message.isExpired()) {
             Logger.debug("Received expired push message, ignoring.");
             return;
@@ -159,7 +165,10 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        final NotificationProvider provider = airship.getPushManager().getNotificationProvider();
+
+
+        final NotificationProvider provider = getNotificationProvider(airship);
+
         if (provider == null) {
             Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
             notifyPushReceived(airship, false);
@@ -236,6 +245,18 @@ class IncomingPushRunnable implements Runnable {
                 reschedulePush(message);
                 break;
         }
+    }
+
+    @Nullable
+    private NotificationProvider getNotificationProvider(UAirship airship) {
+        if (message.isAccengagePush()) {
+            if (airship.getAccengageNotificationHandler() != null) {
+                return airship.getAccengageNotificationHandler().getNotificationProvider();
+            }
+        } else {
+            return airship.getPushManager().getNotificationProvider();
+        }
+        return null;
     }
 
     /**
@@ -374,11 +395,6 @@ class IncomingPushRunnable implements Runnable {
 
         if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
             Logger.error("Received message when push is disabled. Ignoring.");
-            return false;
-        }
-
-        if (!airship.getPushManager().getPushProvider().isUrbanAirshipMessage(context, airship, message)) {
-            Logger.debug("Ignoring push: %s", message);
             return false;
         }
 

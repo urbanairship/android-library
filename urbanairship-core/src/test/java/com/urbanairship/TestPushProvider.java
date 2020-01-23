@@ -32,9 +32,4 @@ public class TestPushProvider implements PushProvider {
         return true;
     }
 
-    @Override
-    public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        return true;
-    }
-
 }

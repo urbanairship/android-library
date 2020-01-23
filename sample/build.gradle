@@ -63,6 +63,8 @@ dependencies {
     // Airship Preferences
     implementation project(':urbanairship-preference')
 
+    implementation project(':urbanairship-accengage')
+
 
     // Testing-only dependencies
     androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
