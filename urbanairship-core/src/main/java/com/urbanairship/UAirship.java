@@ -1160,5 +1160,4 @@ public class UAirship {
 
         return null;
     }
-
 }

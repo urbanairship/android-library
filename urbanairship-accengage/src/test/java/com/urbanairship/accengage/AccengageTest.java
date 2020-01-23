@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -36,12 +37,12 @@ public class AccengageTest {
     private AirshipChannel mockChannel;
     private PushManager mockPush;
     private Analytics mockAnalytics;
+    private UAirship mockAirship;
 
     private Accengage accengage;
 
-    @NonNull
+     @NonNull
     private JsonMap accengageSettings;
-
     @Before
     public void setup() {
         Application application = ApplicationProvider.getApplicationContext();
@@ -50,6 +51,7 @@ public class AccengageTest {
         mockChannel = mock(AirshipChannel.class);
         mockAnalytics = mock(Analytics.class);
         mockPush = mock(PushManager.class);
+        mockAirship = mock(UAirship.class);
 
         accengageSettings = JsonMap.EMPTY_MAP;
 
@@ -57,11 +59,7 @@ public class AccengageTest {
             @NonNull
             @Override
             public JsonMap load(@NonNull Context context, @NonNull String filename) {
-                if (Accengage.PUSH_SETTINGS_FILE.equals(filename)
-                        || Accengage.DEVICE_INFO_FILE.equals(filename)) {
-                    return accengageSettings;
-                }
-                return JsonMap.EMPTY_MAP;
+                return accengageSettings;
             }
         };
 
@@ -80,6 +78,7 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
         verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
@@ -107,6 +106,7 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         verifyZeroInteractions(mockChannel);
     }
@@ -123,6 +123,7 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockPush, times(1)).setUserNotificationsEnabled(true);
@@ -141,6 +142,7 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockPush, times(1)).setUserNotificationsEnabled(false);
@@ -159,6 +161,7 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockAnalytics, times(1)).setEnabled(true);
@@ -177,10 +180,48 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
+        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockAnalytics, times(1)).setEnabled(false);
         verify(mockAnalytics, times(0)).setEnabled(true);
     }
-  
+
+    /**
+     * Test Accengage data opt-in migrates to Airship.
+     */
+    @Test
+    public void testMigrateDataOptInSetting() {
+        // Setup
+        this.accengageSettings = JsonMap.newBuilder()
+                                        .put(Accengage.OPTIN_DATA_KEY, Accengage.DATA_OPT_IN)
+                                        .build();
+
+        // Test migrate
+        accengage.init();
+        accengage.onAirshipReady(mockAirship);
+
+        // Verify the migration does not apply twice
+        verify(mockAirship, times(1)).setDataOptIn(true);
+    }
+
+    /**
+     * Test Accengage data opt-out migrates to Airship.
+     */
+    @Test
+    public void testMigrateDataOptOutSetting() {
+        // Setup
+        this.accengageSettings = JsonMap.newBuilder()
+                                        .put(Accengage.OPTIN_DATA_KEY, Accengage.DATA_OPT_OUT)
+                                        .build();
+
+        // Test migrate
+        accengage.init();
+        accengage.onAirshipReady(mockAirship);
+
+        // Verify the migration does not apply twice
+        verify(mockAirship, times(1)).setDataOptIn(false);
+    }
+
+
 }
