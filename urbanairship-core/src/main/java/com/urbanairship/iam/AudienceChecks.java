@@ -111,7 +111,7 @@ public abstract class AudienceChecks {
         }
 
         // Notification opt-in
-        boolean notificationsOptIn = pushManager.areNotificationsOptedIn();
+        boolean notificationsOptIn = pushManager.isOptIn();
         if (audience.getNotificationsOptIn() != null && audience.getNotificationsOptIn() != notificationsOptIn) {
             return false;
         }

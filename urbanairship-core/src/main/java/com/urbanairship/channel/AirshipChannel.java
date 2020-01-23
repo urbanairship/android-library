@@ -793,6 +793,10 @@ public class AirshipChannel extends AirshipComponent {
         }
     }
 
+    private void clearTags() {
+        editTags().clear().apply();
+    }
+
     /**
      * Dispatches a job to update registration.
      */
@@ -839,6 +843,7 @@ public class AirshipChannel extends AirshipComponent {
     protected void onDataOptInChange(boolean isOptedIn) {
         if (!isOptedIn) {
             clearPendingAttributes();
+            clearTags();
         }
     }
 

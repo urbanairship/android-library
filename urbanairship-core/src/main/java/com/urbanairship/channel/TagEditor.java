@@ -106,5 +106,4 @@ public abstract class TagEditor {
      * @param tagsToRemove Tags to remove.
      */
     abstract void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove);
-
 }
