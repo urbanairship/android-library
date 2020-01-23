@@ -132,6 +132,7 @@ public class RichPushInbox extends AirshipComponent {
     private final Set<String> deletedMessageIds = new HashSet<>();
     private final Map<String, RichPushMessage> unreadMessages = new HashMap<>();
     private final Map<String, RichPushMessage> readMessages = new HashMap<>();
+    private final Map<String, RichPushMessage> messageUrlMap = new HashMap<>();
 
     private final RichPushResolver richPushResolver;
     private final RichPushUser user;
@@ -574,6 +575,23 @@ public class RichPushInbox extends AirshipComponent {
         }
     }
 
+    /**
+     * Get the {@link RichPushMessage} with the corresponding message body URL.
+     *
+     * @param messageUrl The message body URL of the desired {@link RichPushMessage}.
+     * @return A {@link RichPushMessage} or <code>null</code> if one does not exist.
+     */
+    @Nullable
+    public RichPushMessage getMessageByUrl(@Nullable String messageUrl) {
+        if (messageUrl == null) {
+            return null;
+        }
+
+        synchronized (inboxLock) {
+            return messageUrlMap.get(messageUrl);
+        }
+    }
+
     // actions
 
     /**
@@ -687,6 +705,7 @@ public class RichPushInbox extends AirshipComponent {
             // Clear the current messages
             unreadMessages.clear();
             readMessages.clear();
+            messageUrlMap.clear();
 
             // Process the new messages
             for (RichPushMessage message : messageList) {
@@ -702,6 +721,9 @@ public class RichPushInbox extends AirshipComponent {
                     deletedMessageIds.add(message.getMessageId());
                     continue;
                 }
+
+                // Populate message url map
+                messageUrlMap.put(message.getMessageBodyUrl(), message);
 
                 // Unread - check the previousUnreadMessageIds if any mark reads are still in process
                 if (previousUnreadMessageIds.contains(message.getMessageId())) {

@@ -9,10 +9,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.CallSuper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -51,6 +47,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.WeakHashMap;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * <p>
@@ -513,7 +514,9 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         Logger.info("Loading Airship Javascript interface.");
-        InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view);
+
+        RichPushMessage message = getMessage(view);
+        InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view, message);
         injectJsBridgeTaskMap.put(view, task);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -579,16 +582,13 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Helper method to get the RichPushMessage from the web view.
      *
+     * @note This method should only be called from the main thread.
      * @param webView The web view.
-     * @return The rich push message or null if the web view is not an instance of UAWebView
-     * or does not have an associated message.
+     * @return The rich push message, or null if the web view does not have an associated message.
      */
     @Nullable
-    private RichPushMessage getMessage(@Nullable WebView webView) {
-        if (webView instanceof UAWebView) {
-            return ((UAWebView) webView).getCurrentMessage();
-        }
-        return null;
+    private RichPushMessage getMessage(@Nullable final WebView webView) {
+        return UAirship.shared().getInbox().getMessageByUrl(webView.getUrl());
     }
 
     /**
@@ -616,20 +616,22 @@ public class UAWebViewClient extends WebViewClient {
         private final WeakReference<WebView> webViewWeakReference;
         private final Context context;
 
-        private InjectJsBridgeTask(Context context, WebView webView) {
+        @Nullable
+        private final RichPushMessage message;
+
+        private InjectJsBridgeTask(Context context, WebView webView, @Nullable RichPushMessage message) {
             this.context = context.getApplicationContext();
             this.webViewWeakReference = new WeakReference<>(webView);
+            this.message = message;
         }
 
         @Nullable
         @Override
         protected String doInBackground(Void... params) {
-            WebView webView = webViewWeakReference.get();
+            final WebView webView = webViewWeakReference.get();
             if (webView == null) {
                 return null;
             }
-
-            RichPushMessage message = getMessage(webView);
 
             if (dateFormatter == null) {
                 dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
