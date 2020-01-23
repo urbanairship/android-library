@@ -333,6 +333,11 @@ public class AirshipChannel extends AirshipComponent {
 
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
+                if (!isDataOptIn()) {
+                    Logger.warn("AirshipChannel - Unable to apply tag group edits when opted out of data collection.");
+                    return;
+                }
+
                 if (collapsedMutations.isEmpty()) {
                     return;
                 }
@@ -452,8 +457,10 @@ public class AirshipChannel extends AirshipComponent {
     @WorkerThread
     @NonNull
     private ChannelRegistrationPayload getNextChannelRegistrationPayload() {
+        boolean shouldSetTags = getChannelTagRegistrationEnabled() && isDataOptIn();
+
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setTags(getChannelTagRegistrationEnabled(), getTags())
+                .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
                 .setApid(getDataStore().getString(APID_KEY, null));
 
         switch (platform) {
@@ -483,11 +490,14 @@ public class AirshipChannel extends AirshipComponent {
 
         builder.setSdkVersion(UAirship.getVersion());
 
-        builder.setDeviceModel(Build.MODEL);
-        builder.setApiVersion(Build.VERSION.SDK_INT);
+        if (isDataOptIn()) {
+            TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            builder.setCarrier(tm.getNetworkOperatorName());
 
-        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        builder.setCarrier(tm.getNetworkOperatorName());
+            builder.setDeviceModel(Build.MODEL);
+
+            builder.setApiVersion(Build.VERSION.SDK_INT);
+        }
 
         for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
             builder = extender.extend(builder);

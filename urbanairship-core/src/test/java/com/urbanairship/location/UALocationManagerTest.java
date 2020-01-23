@@ -5,8 +5,10 @@ package com.urbanairship.location;
 import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.channel.AirshipChannel;
@@ -31,12 +33,17 @@ public class UALocationManagerTest extends BaseTestCase {
     LocationRequestOptions options;
     Analytics analytics;
     AirshipChannel mockChannel;
+    PreferenceDataStore dataStore;
 
     @Before
     public void setUp() {
         analytics = mock(Analytics.class);
         mockChannel = mock(AirshipChannel.class);
-        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor(), mockChannel);
+
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+
+        locationManager = new UALocationManager(TestApplication.getApplication(), dataStore, new TestActivityMonitor(), mockChannel);
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
 
         TestApplication.getApplication().setAnalytics(analytics);
@@ -92,7 +99,7 @@ public class UALocationManagerTest extends BaseTestCase {
      * Test channel registration extender adds the location settings.
      */
     @Test
-    public void testChannelRegistrationDisabledTokenRegistration() {
+    public void testChannelRegistrationPayloadExtender() {
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
         locationManager.init();
         verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
@@ -108,6 +115,30 @@ public class UALocationManagerTest extends BaseTestCase {
         ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
                 .setLocationSettings(true)
                 .build();
+
+        assertEquals(expected, payload);
+    }
+
+    /**
+     * Test channel registration extender does not add the location settings when data opt-in is disabled.
+     */
+    @Test
+    public void testChannelRegistrationPayloadExtenderDataOptInDisabled() {
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        locationManager.init();
+        verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        locationManager.setLocationUpdatesEnabled(true);
+
+        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
+        ChannelRegistrationPayload payload = extender.extend(builder).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder().build();
 
         assertEquals(expected, payload);
     }
