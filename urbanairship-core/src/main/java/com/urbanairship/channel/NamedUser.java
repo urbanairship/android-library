@@ -145,7 +145,7 @@ public class NamedUser extends AirshipComponent {
      * @param namedUserId The named user ID string.
      */
     public void setId(@Nullable String namedUserId) {
-        if (!isDataOptIn()) {
+        if (namedUserId != null && !isDataOptIn()) {
             Logger.debug("NamedUser - DataOptIn is disabled, ignoring named user association.");
             return;
         }

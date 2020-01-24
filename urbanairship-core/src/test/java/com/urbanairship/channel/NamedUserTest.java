@@ -278,4 +278,31 @@ public class NamedUserTest extends BaseTestCase {
         }));
     }
 
+    @Test
+    public void testNamedUserDataOptedOut() {
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+        namedUser.setId("some-user");
+        assertNull(namedUser.getId());
+    }
+
+    @Test
+    public void testNamedUserClearOnDataOptedOut() {
+        namedUser.setId("cool");
+        assertEquals("cool", namedUser.getId());
+
+        clearInvocations(mockDispatcher);
+
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+        namedUser.onDataOptInChange(false);
+
+        assertNull(namedUser.getId());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+
+    }
+
 }
