@@ -2,109 +2,131 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.preference.PreferenceCategory app:title="@string/ua_push_info_category_title">
+    <androidx.preference.PreferenceCategory app:title="@string/ua_user_settings_category">
 
-        <com.urbanairship.preference.PushEnablePreference
-            app:key="push_preference"
-            app:persistent="false"
-            app:title="@string/ua_push_info_title" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.PushOptInPreference
-            app:key="push_opt_in_status_preference"
-            app:persistent="false"
-            app:title="@string/ua_push_opt_in_status" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.NotificationOptInPreference
-            app:key="notification_opt_in_preference"
-            app:persistent="false"
-            app:title="@string/ua_notification_opt_in_status" />
-
-
-        <com.urbanairship.debug.deviceinfo.preferences.PushProviderPreference
-            app:key="push_provider_preference"
-            app:persistent="false"
-            app:title="@string/ua_push_provider" />
-
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory app:title="@string/ua_iaa_info_category_title">
-
-        <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationEnablePreference
-            android:key="iaa_preference"
-            android:persistent="false"
-            android:title="@string/ua_iaa_enable_title" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationDisplayIntervalPreference
-            android:key="iaa_display_interval_preference"
-            android:persistent="false"
-            android:title="@string/ua_iaa_display_interval_title" />
-
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory android:title="@string/ua_identifiers_category_title">
-
-        <com.urbanairship.debug.deviceinfo.preferences.ChannelPreference
-            app:persistent="false"
-            app:title="@string/ua_channel_id_info_title" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.PushTokenPreference
-            app:key="push_token_preference"
-            app:persistent="false"
-            app:title="@string/ua_push_token" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.UserPreference
-            app:key="user_id_preference"
-            app:persistent="false"
-            app:title="@string/ua_user_id" />
+        <com.urbanairship.preference.OptInPreference
+            app:key="data_opt_in"
+            app:persistent="true"
+            app:summary="@string/ua_data_opt_preference_settings_summary"
+            app:title="@string/ua_data_optin_enabled_settings_title" />
 
         <com.urbanairship.debug.deviceinfo.preferences.NamedUserPreference
-            app:key="named user"
+            app:dependency="data_opt_in"
+            app:key="named_user"
             app:persistent="false"
-            app:title="@string/ua_set_named_user_info_title" />
+            app:title="@string/ua_named_user_settings_title" />
 
         <androidx.preference.Preference
+            app:dependency="data_opt_in"
             app:key="attributes"
             app:persistent="false"
-            app:title="@string/ua_add_attributes_info_title" />
+            app:title="@string/ua_channel_attributes_settings_title" />
 
         <androidx.preference.Preference
+            app:dependency="data_opt_in"
             app:key="tags"
             app:persistent="false"
-            app:title="@string/ua_add_tags_info_title" />
+            app:title="@string/ua_tags_settings_title" />
 
     </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/ua_analytics_info_category_title">
+    <androidx.preference.PreferenceCategory
+        app:dependency="data_opt_in"
+        app:title="@string/ua_push_settings_category">
+
+        <com.urbanairship.preference.PushEnablePreference
+            app:key="notification_preference"
+            app:persistent="false"
+            app:title="@string/ua_notifications_enabled_settings_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:title="@string/ua_analytics_settings_category"
+        app:dependency="data_opt_in">
 
         <com.urbanairship.preference.AnalyticsEnablePreference
             app:key="analytics_preference"
             app:persistent="false"
-            app:title="@string/ua_analytics_info_title" />
+            app:title="@string/ua_analytics_enabled_settings_title" />
 
         <com.urbanairship.debug.deviceinfo.preferences.EnableAdvertisingIdPreference
             app:persistent="false"
-            app:title="@string/ua_analytics_ad_id_info_title" />
+            app:title="@string/ua_track_advertising_id_settings_title" />
 
     </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory app:title="@string/ua_location_info_category_title">
+    <androidx.preference.PreferenceCategory
+        app:dependency="data_opt_in"
+        app:title="@string/ua_location_settings_category">
 
         <com.urbanairship.preference.LocationUpdatesEnabledPreference
             app:key="location_preference"
             app:persistent="false"
-            app:title="@string/ua_location_info_location_enabled" />
+            app:title="@string/ua_location_enabled_settings_title" />
 
         <com.urbanairship.preference.LocationBackgroundUpdatesAllowedPreference
             app:dependency="location_preference"
             app:key="background_location_preference"
             app:persistent="false"
-            app:title="@string/ua_background_location_info_title" />
+            app:title="@string/ua_background_location_enabled_settings_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory app:title="@string/ua_iaa_setting_category">
+
+        <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationEnablePreference
+            android:key="iaa_preference"
+            android:persistent="false"
+            android:title="@string/ua_iaa_enabled_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationDisplayIntervalPreference
+            android:key="iaa_display_interval_preference"
+            android:persistent="false"
+            android:title="@string/ua_iaa_display_interval_settings_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory android:title="@string/ua_device_info_category">
+
+        <com.urbanairship.debug.deviceinfo.preferences.ChannelPreference
+            app:persistent="false"
+            app:title="@string/ua_channel_id_settings_title" />
+
+
+        <com.urbanairship.debug.deviceinfo.preferences.UserPreference
+            app:key="user_id_preference"
+            app:persistent="false"
+            app:title="@string/ua_user_id_settings_title" />
 
         <com.urbanairship.debug.deviceinfo.preferences.LocalePreference
             app:key="locale_preference"
             app:persistent="false"
-            app:title="@string/ua_location_info_locale" />
+            app:title="@string/ua_current_locale_settings_title" />
+
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushOptInPreference
+            app:key="push_opt_in_status_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_optin_status_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.NotificationOptInPreference
+            app:key="notification_opt_in_preference"
+            app:persistent="false"
+            app:title="@string/ua_notificaiton_optin_status_settings_title" />
+
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushProviderPreference
+            app:key="push_provider_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_provider_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.PushTokenPreference
+            app:key="push_token_preference"
+            app:persistent="false"
+            app:title="@string/ua_push_token_settings_title" />
 
     </androidx.preference.PreferenceCategory>
+
 
 </androidx.preference.PreferenceScreen>

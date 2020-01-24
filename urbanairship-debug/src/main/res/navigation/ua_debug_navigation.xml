@@ -31,12 +31,12 @@
     <fragment
         android:id="@+id/deviceInfoTagsFragment"
         android:name="com.urbanairship.debug.deviceinfo.DeviceInfoTagsFragment"
-        android:label="@string/ua_add_tags_info_title" />
+        android:label="@string/ua_tags_settings_title" />
 
     <fragment
         android:id="@+id/deviceInfoAttributesFragment"
         android:name="com.urbanairship.debug.deviceinfo.DeviceInfoAttributesFragment"
-        android:label="@string/ua_add_attributes_info_title" />
+        android:label="@string/ua_channel_attributes_settings_title" />
 
     <fragment
         android:id="@+id/eventListFragment"

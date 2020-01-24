@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.preference.PreferenceCategory app:title="@string/push_preference_category_title">
+    <androidx.preference.PreferenceCategory app:title="@string/airship_preference_category_title">
+
+        <com.urbanairship.preference.ChannelIdPreference
+            app:persistent="false"
+            app:title="@string/channel_id_preference_title" />
+
+        <com.urbanairship.preference.OptInPreference
+            app:key="optin_settings"
+            app:persistent="true"
+            app:title="@string/data_opt_in_enabled_settings" />
+
 
         <com.urbanairship.preference.PushEnablePreference
+            app:dependency="optin_settings"
             app:key="push_preference"
             app:persistent="false"
             app:title="@string/push_preference_title" />
 
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory android:title="@string/analytics_preference_category_title">
-
         <com.urbanairship.preference.AnalyticsEnablePreference
+            app:dependency="optin_settings"
             app:key="analytics_preference"
             app:persistent="false"
             app:title="@string/analytics_preference_title" />
 
         <com.urbanairship.sample.preference.EnableAdvertisingIdPreference
+            app:dependency="optin_settings"
             app:persistent="false"
             app:title="@string/analytics_ad_id_preference_title" />
 
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory app:title="@string/location_preference_category_title">
-
         <com.urbanairship.preference.LocationUpdatesEnabledPreference
+            app:dependency="optin_settings"
             app:key="location_preference"
             app:persistent="false"
             app:title="@string/location_preference_title" />
@@ -37,22 +42,11 @@
             app:persistent="false"
             app:title="@string/background_location_preference_title" />
 
-
     </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory app:title="@string/optin_category_title">
-        <com.urbanairship.preference.OptInPreference
-            app:key="optin_settings"
-            app:persistent="true"
-            app:title="@string/opt_in_enabled_settings" />
-
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory app:title="@string/advanced_preference_category_title">
-
-        <com.urbanairship.preference.ChannelIdPreference
-            app:persistent="false"
-            app:title="@string/channel_id_preference_title" />
+    <androidx.preference.PreferenceCategory
+        app:dependency="optin_settings"
+        app:title="@string/user_preference_category_title">
 
         <com.urbanairship.sample.preference.NamedUserPreference
             app:key="named user"
@@ -65,5 +59,6 @@
             app:title="@string/add_tags_preference_title" />
 
     </androidx.preference.PreferenceCategory>
+
 
 </androidx.preference.PreferenceScreen>

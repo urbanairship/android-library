@@ -9,20 +9,19 @@
 
     <string name="delete">Delete</string>
     <string name="ok">OK</string>
-    <string name="push_preference_category_title">Push Preferences</string>
-    <string name="location_preference_category_title">Location Preferences</string>
-    <string name="analytics_preference_category_title">Analytics Preferences</string>
+
+    <string name="user_preference_category_title">User Settings</string>
+
+    <string name="airship_preference_category_title">Airship Settings</string>
+    <string name="data_opt_in_enabled_settings">Data Opt-In Enabled</string>
     <string name="push_preference_title">Enable Push</string>
     <string name="location_preference_title">Enable Location Updates</string>
     <string name="background_location_preference_title">Allow Background Location</string>
     <string name="analytics_preference_title">Send usage data</string>
     <string name="analytics_ad_id_preference_title">Track advertising ID</string>
-
-    <string name="advanced_preference_category_title">Advanced</string>
-    <string name="channel_id_preference_title">Channel ID</string>
-    <string name="user_id_preference_title">User ID</string>
     <string name="set_named_user_preference_title">Named User</string>
     <string name="add_tags_preference_title">Tags</string>
+    <string name="channel_id_preference_title">Channel ID</string>
     <string name="duplicate_tag_warning">Tag already exists</string>
     <string name="channel_id">Channel</string>
     <string name="button_preferences">Preferences</string>
@@ -31,8 +30,7 @@
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>
-    <string name="optin_category_title">Opt-In Settings</string>
-    <string name="opt_in_enabled_settings">Data Opt-In Enabled (GDPR)</string>
+
     <plurals name="mc_indicator_text">
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>
