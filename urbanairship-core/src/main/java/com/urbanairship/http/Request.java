@@ -36,6 +36,8 @@ import java.util.zip.GZIPOutputStream;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Request {
 
+    private static final int NETWORK_TIMEOUT_MS = 60000;
+
     @NonNull
     protected URL url;
 
@@ -161,6 +163,7 @@ public class Request {
         try {
             conn = (HttpURLConnection) ConnectionUtils.openSecureConnection(UAirship.getApplicationContext(), url);
             conn.setRequestMethod(requestMethod);
+            conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
 
             if (body != null) {
                 conn.setDoOutput(true);
