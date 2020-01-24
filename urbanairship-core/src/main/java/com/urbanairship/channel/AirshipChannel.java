@@ -303,11 +303,15 @@ public class AirshipChannel extends AirshipComponent {
         return new TagEditor() {
             @Override
             void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
-                synchronized (tagLock) {
-                    Set<String> tags = clear ? new HashSet<String>() : getTags();
-                    tags.addAll(tagsToAdd);
-                    tags.removeAll(tagsToRemove);
-                    setTags(tags);
+                if (isDataOptIn()) {
+                    synchronized (tagLock) {
+                        Set<String> tags = clear ? new HashSet<String>() : getTags();
+                        tags.addAll(tagsToAdd);
+                        tags.removeAll(tagsToRemove);
+                        setTags(tags);
+                    }
+                } else {
+                    Logger.warn("AirshipChannel - Unable to apply tag edits when opted out of data collection.");
                 }
             }
         };
@@ -385,12 +389,16 @@ public class AirshipChannel extends AirshipComponent {
      * @param tags A set of tag strings.
      */
     public void setTags(@NonNull Set<String> tags) {
-        synchronized (tagLock) {
-            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-            getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
-        }
+        if (isDataOptIn()) {
+            synchronized (tagLock) {
+                Set<String> normalizedTags = TagUtils.normalizeTags(tags);
+                getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
+            }
 
-        dispatchUpdateRegistrationJob();
+            dispatchUpdateRegistrationJob();
+        } else {
+            Logger.warn("AirshipChannel - Unable to set tags when opted out of data collection.");
+        }
     }
 
     /**
@@ -793,6 +801,12 @@ public class AirshipChannel extends AirshipComponent {
         }
     }
 
+    private void clearTags() {
+        synchronized (tagLock) {
+            getDataStore().remove(TAGS_KEY);
+        }
+    }
+
     /**
      * Dispatches a job to update registration.
      */
@@ -839,6 +853,7 @@ public class AirshipChannel extends AirshipComponent {
     protected void onDataOptInChange(boolean isOptedIn) {
         if (!isOptedIn) {
             clearPendingAttributes();
+            clearTags();
         }
     }
 

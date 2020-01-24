@@ -105,15 +105,31 @@ public abstract class AudienceChecks {
         PushManager pushManager = airship.getPushManager();
         AirshipChannel channel = airship.getChannel();
 
+        // Data opt-in
+        boolean isDataOptIn = airship.isDataOptIn();
+
         // Location opt-in
-        if (audience.getLocationOptIn() != null && audience.getLocationOptIn() != locationManager.isOptIn()) {
-            return false;
+        if (audience.getLocationOptIn() != null) {
+            if (!isDataOptIn) {
+                return false;
+            }
+
+            if (audience.getLocationOptIn() != locationManager.isOptIn()) {
+                return false;
+            }
         }
 
         // Notification opt-in
         boolean notificationsOptIn = pushManager.areNotificationsOptedIn();
-        if (audience.getNotificationsOptIn() != null && audience.getNotificationsOptIn() != notificationsOptIn) {
-            return false;
+
+        if (audience.getNotificationsOptIn() != null) {
+            if (!isDataOptIn) {
+                return false;
+            }
+
+            if (audience.getNotificationsOptIn() != notificationsOptIn) {
+                return false;
+            }
         }
 
         // Locale
@@ -122,8 +138,13 @@ public abstract class AudienceChecks {
         }
 
         // Tags
-        if (audience.getTagSelector() != null && !audience.getTagSelector().apply(channel.getTags(), tagGroups)) {
-            return false;
+        if (audience.getTagSelector() != null) {
+            if (!isDataOptIn) {
+                return false;
+            }
+            if (!audience.getTagSelector().apply(channel.getTags(), tagGroups)) {
+                return false;
+            }
         }
 
         // Version
