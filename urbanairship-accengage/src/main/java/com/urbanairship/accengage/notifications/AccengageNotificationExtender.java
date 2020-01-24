@@ -56,7 +56,7 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         setCommonFields(builder);
 
         boolean isCollapsedFieldsSet = false;
-        if (message.getAccengageBigTemplateId(context) != 0) {
+        if (message.getAccengageTemplateId(context) != 0) {
             setCustomCollapsedFields(builder);
         } else {
             setCollapsedFields(builder);
