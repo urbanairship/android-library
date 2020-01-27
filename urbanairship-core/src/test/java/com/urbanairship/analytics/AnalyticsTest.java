@@ -6,8 +6,10 @@ import androidx.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobDispatcher;
@@ -27,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -41,6 +44,7 @@ public class AnalyticsTest extends BaseTestCase {
     private JobDispatcher mockJobDispatcher;
     private EventManager mockEventManager;
     private AirshipChannel mockChannel;
+    private PreferenceDataStore dataStore;
 
     @Before
     public void setup() {
@@ -53,10 +57,13 @@ public class AnalyticsTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                                   .setActivityMonitor(new TestActivityMonitor())
                                   .setConfigOptions(airshipConfigOptions)
-                                  .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
+                                  .setPreferenceDataStore(dataStore)
                                   .setEventManager(mockEventManager)
                                   .setAirshipChannel(mockChannel)
                                   .setExecutor(new Executor() {
@@ -323,4 +330,38 @@ public class AnalyticsTest extends BaseTestCase {
         assertEquals(expectedExtensions, analytics.getExtensions());
     }
 
+    @Test
+    public void testEditAssociatedIdentifiersDataOptedOut() {
+        analytics.editAssociatedIdentifiers()
+                .addIdentifier("customKey", "customValue")
+                .apply();
+
+        // Verify identifiers are stored
+        AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
+        assertEquals(storedIds.getIds().get("customKey"), "customValue");
+
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+        analytics.onDataOptInChange(false);
+
+        assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
+
+        analytics.editAssociatedIdentifiers()
+                .addIdentifier("customKey", "customValue")
+                .apply();
+
+        assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
+    }
+
+    @Test
+    public void testIsEnabledDataOptedOut() {
+        assertTrue(analytics.isEnabled());
+
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+        analytics.onDataOptInChange(false);
+
+        assertFalse(analytics.isEnabled());
+
+        analytics.setEnabled(true);
+        assertFalse(analytics.isEnabled());
+    }
 }

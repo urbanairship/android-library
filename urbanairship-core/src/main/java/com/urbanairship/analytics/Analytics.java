@@ -263,7 +263,7 @@ public class Analytics extends AirshipComponent {
         }
 
         if (!isEnabled() || !isDataOptIn()) {
-            Logger.debug("Analytics disabled - ignoring event: %s", event.getType());
+            Logger.debug("Analytics - Disabled ignoring event: %s", event.getType());
             return;
         }
 
@@ -420,6 +420,10 @@ public class Analytics extends AirshipComponent {
             clearPendingEvents();
         }
 
+        if (enabled && !isDataOptIn()) {
+            Logger.warn("Analytics - Analytics is disabled until data collection is opted in.");
+        }
+
         preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
     }
 
@@ -437,12 +441,15 @@ public class Analytics extends AirshipComponent {
     protected void onDataOptInChange(boolean isOptedIn) {
         if (!isOptedIn) {
             clearPendingEvents();
+            synchronized (associatedIdentifiersLock) {
+                preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+            }
         }
     }
 
     /**
-     * Returns {@code true} if analytics is enabled and {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
-     * is set to {@code true}, otherwise {@code false}.
+     * Returns {@code true} if analytics is enabled, {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
+     * is set to {@code true}, and data collection is opted in, otherwise {@code false}.
      * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
@@ -450,7 +457,7 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
     public boolean isEnabled() {
-        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
+        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataOptIn();
     }
 
     /**
@@ -467,6 +474,11 @@ public class Analytics extends AirshipComponent {
             @Override
             void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
+                    if (!isDataOptIn()) {
+                        Logger.warn("Analytics - Unable to track associated identifiers when opted out of data collection.");
+                        return;
+                    }
+
                     Map<String, String> ids = new HashMap<>();
                     AssociatedIdentifiers associatedIdentifiers = getAssociatedIdentifiers();
 
