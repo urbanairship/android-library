@@ -272,7 +272,7 @@ public class UALocationManager extends AirshipComponent {
 
         final PendingResult<Location> pendingResult = new PendingResult<>();
 
-        if (!isLocationPermitted()) {
+        if (!isLocationPermitted() || !isDataOptIn()) {
             pendingResult.cancel();
             return pendingResult;
         }
@@ -322,7 +322,7 @@ public class UALocationManager extends AirshipComponent {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
+                if (isDataOptIn() && isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
                     LocationRequestOptions options = getLocationRequestOptions();
                     LocationRequestOptions lastLocationOptions = getLastUpdateOptions();
 
@@ -368,7 +368,7 @@ public class UALocationManager extends AirshipComponent {
      * otherwise <code>false</code>.
      */
     boolean isContinuousLocationUpdatesAllowed() {
-        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
+        return isDataOptIn() && isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
     }
 
     /**
@@ -437,6 +437,11 @@ public class UALocationManager extends AirshipComponent {
      */
     public boolean isOptIn() {
         return isLocationPermitted() && isLocationUpdatesEnabled() && isDataOptIn();
+    }
+
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        updateServiceConnection();
     }
 
     /**

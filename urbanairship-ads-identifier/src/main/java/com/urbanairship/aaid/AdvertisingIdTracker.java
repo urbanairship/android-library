@@ -107,6 +107,12 @@ public class AdvertisingIdTracker extends AirshipComponent {
     public void setEnabled(boolean isEnabled) {
         synchronized (this) {
             getDataStore().put(ENABLED_KEY, isEnabled);
+
+            if (!isDataOptIn()) {
+                Logger.warn("AdvertisingIdTracker - Unable to track advertising ID when opted out of data collection.");
+                return;
+            }
+
             if (isEnabled) {
                 update();
             }
@@ -126,16 +132,27 @@ public class AdvertisingIdTracker extends AirshipComponent {
         }
     }
 
+    @Override
+    protected void onDataOptInChange(boolean isOptedIn) {
+        if (isEnabled() && isOptedIn) {
+            update();
+        }
+    }
+
     private void update() {
         final UAirship airship = this.airship;
         if (airship == null) {
             return;
         }
 
+        if (!isEnabled() || !isDataOptIn()) {
+            return;
+        }
+
         UpdateIdTask task = new UpdateIdTask(getContext(), airship.getPlatformType(), new UpdateIdTask.Callback() {
             @Override
             public void onResult(String advertisingId, boolean isLimitedTrackingEnabled) {
-                if (!isEnabled()) {
+                if (!isEnabled() || !isDataOptIn()) {
                     return;
                 }
 

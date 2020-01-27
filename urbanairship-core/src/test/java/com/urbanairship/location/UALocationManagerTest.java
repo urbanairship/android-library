@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -93,6 +94,20 @@ public class UALocationManagerTest extends BaseTestCase {
         locationManager.onLocationUpdate(location);
 
         verify(analytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
+    }
+
+    @Test
+    public void testLocationUpdatesDataOptedOut() {
+        locationManager.setLocationRequestOptions(options);
+        locationManager.setLocationUpdatesEnabled(true);
+        locationManager.setBackgroundLocationAllowed(true);
+
+        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+
+        Location location = new Location("provider");
+        locationManager.onLocationUpdate(location);
+
+        verify(analytics, never()).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     /**
