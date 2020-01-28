@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import com.urbanairship.UAirship;
 
 /**
- * Preference that can be used to embed data collection preference in a settings screen.
+ * Preference that can be used to embed a data collection preference in a settings screen.
  */
 public class DataCollectionEnabledPreference extends UACheckBoxPreference {
 

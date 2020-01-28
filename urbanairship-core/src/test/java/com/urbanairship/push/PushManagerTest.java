@@ -303,6 +303,6 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(pushManager.isPushTokenRegistrationEnabled());
 
         preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        pushManager.setPushTokenRegistrationEnabled(true);
+        assertTrue(pushManager.isPushTokenRegistrationEnabled());
     }
 }
