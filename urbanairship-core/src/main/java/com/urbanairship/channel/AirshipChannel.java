@@ -303,7 +303,7 @@ public class AirshipChannel extends AirshipComponent {
         return new TagEditor() {
             @Override
             void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
-                if (isDataOptIn()) {
+                if (isDataCollectionEnabled()) {
                     synchronized (tagLock) {
                         Set<String> tags = clear ? new HashSet<String>() : getTags();
                         tags.addAll(tagsToAdd);
@@ -337,7 +337,7 @@ public class AirshipChannel extends AirshipComponent {
 
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-                if (!isDataOptIn()) {
+                if (!isDataCollectionEnabled()) {
                     Logger.warn("AirshipChannel - Unable to apply tag group edits when opted out of data collection.");
                     return;
                 }
@@ -362,7 +362,7 @@ public class AirshipChannel extends AirshipComponent {
         return new AttributeEditor() {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
-                if (!isDataOptIn()) {
+                if (!isDataCollectionEnabled()) {
                     Logger.info("Ignore attributes, data opted out.");
                     return;
                 }
@@ -389,7 +389,7 @@ public class AirshipChannel extends AirshipComponent {
      * @param tags A set of tag strings.
      */
     public void setTags(@NonNull Set<String> tags) {
-        if (isDataOptIn()) {
+        if (isDataCollectionEnabled()) {
             synchronized (tagLock) {
                 Set<String> normalizedTags = TagUtils.normalizeTags(tags);
                 getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
@@ -465,7 +465,7 @@ public class AirshipChannel extends AirshipComponent {
     @WorkerThread
     @NonNull
     private ChannelRegistrationPayload getNextChannelRegistrationPayload() {
-        boolean shouldSetTags = getChannelTagRegistrationEnabled() && isDataOptIn();
+        boolean shouldSetTags = getChannelTagRegistrationEnabled() && isDataCollectionEnabled();
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
                 .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
@@ -498,7 +498,7 @@ public class AirshipChannel extends AirshipComponent {
 
         builder.setSdkVersion(UAirship.getVersion());
 
-        if (isDataOptIn()) {
+        if (isDataCollectionEnabled()) {
             TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             builder.setCarrier(tm.getNetworkOperatorName());
 
@@ -850,8 +850,8 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     @Override
-    protected void onDataOptInChange(boolean isOptedIn) {
-        if (!isOptedIn) {
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
+        if (!isDataCollectionEnabled) {
             clearPendingAttributes();
             clearTags();
         }

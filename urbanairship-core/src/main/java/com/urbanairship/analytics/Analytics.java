@@ -31,7 +31,6 @@ import com.urbanairship.util.Checks;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,7 +261,7 @@ public class Analytics extends AirshipComponent {
             return;
         }
 
-        if (!isEnabled() || !isDataOptIn()) {
+        if (!isEnabled() || !isDataCollectionEnabled()) {
             Logger.debug("Analytics - Disabled ignoring event: %s", event.getType());
             return;
         }
@@ -420,7 +419,7 @@ public class Analytics extends AirshipComponent {
             clearPendingEvents();
         }
 
-        if (enabled && !isDataOptIn()) {
+        if (enabled && !isDataCollectionEnabled()) {
             Logger.warn("Analytics - Analytics is disabled until data collection is opted in.");
         }
 
@@ -438,8 +437,8 @@ public class Analytics extends AirshipComponent {
     }
 
     @Override
-    protected void onDataOptInChange(boolean isOptedIn) {
-        if (!isOptedIn) {
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
+        if (!isDataCollectionEnabled) {
             clearPendingEvents();
             synchronized (associatedIdentifiersLock) {
                 preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
@@ -457,7 +456,7 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
     public boolean isEnabled() {
-        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataOptIn();
+        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataCollectionEnabled();
     }
 
     /**
@@ -474,8 +473,8 @@ public class Analytics extends AirshipComponent {
             @Override
             void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
-                    if (!isDataOptIn()) {
-                        Logger.warn("Analytics - Unable to track associated identifiers when opted out of data collection.");
+                    if (!isDataCollectionEnabled()) {
+                        Logger.warn("Analytics - Unable to track associated identifiers when data collection is disabled.");
                         return;
                     }
 

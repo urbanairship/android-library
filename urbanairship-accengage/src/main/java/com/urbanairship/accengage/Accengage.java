@@ -235,7 +235,7 @@ public class Accengage extends AirshipComponent {
                 optinEnabled = false;
             }
 
-            airship.setDataOptIn(optinEnabled);
+            airship.setDataCollectionEnabled(optinEnabled);
         }
 
         // Migrate Accengage Disabled Tracking Setting

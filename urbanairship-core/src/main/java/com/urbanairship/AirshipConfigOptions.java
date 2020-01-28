@@ -264,11 +264,11 @@ public class AirshipConfigOptions {
     public final boolean channelCaptureEnabled;
 
     /**
-     * Flag indicating if the dataOptIn management is enabled or not
+     * Flag indicating if the data collection opt-in is enabled.
      * <p>
      * The flag defaults to false
      */
-    public final boolean dataOptInEnabled;
+    public final boolean dataCollectionOptInEnabled;
 
     /**
      * Notification icon.
@@ -347,7 +347,7 @@ public class AirshipConfigOptions {
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
-        this.dataOptInEnabled = builder.dataOptInEnabled;
+        this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
     }
 
     /**
@@ -499,7 +499,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
         private static final String FIELD_SITE = "site";
-        private static final String FIELD_IS_DATA_OPTIN_ENABLED = "dataOptInEnabled";
+        private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
 
         private String appKey;
         private String appSecret;
@@ -533,7 +533,7 @@ public class AirshipConfigOptions {
         private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
         private Uri appStoreUri;
-        private boolean dataOptInEnabled;
+        private boolean dataCollectionOptInEnabled;
         private @Site
         String site = SITE_US;
 
@@ -806,9 +806,8 @@ public class AirshipConfigOptions {
                             this.setSite(parseSite(configParser.getString(name)));
                             break;
 
-                        case FIELD_IS_DATA_OPTIN_ENABLED:
-                            Logger.debug("Loaded isDataOptInEnabled to " + configParser.getBoolean(name, true) + " !");
-                            this.setDataOptInEnabled(configParser.getBoolean(name, false));
+                        case FIELD_DATA_COLLECTION_OPT_IN_ENABLED:
+                            this.setDataCollectionOptInEnabled(configParser.getBoolean(name, false));
                             break;
                     }
                 } catch (Exception e) {
@@ -1287,14 +1286,18 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the flag indicating whether the Optin Data will be managed or not.
+         * Set the flag indicating whether data collection needs to be opted in with
+         * {@link UAirship#setDataCollectionEnabled(boolean)}.
          *
-         * @param dataOptInEnabled The flag indicating whether the application will manage Data OptIn.
+         * @note This flag will only take affect on first run. If previously not enabled, the device
+         * will still have data collection enabled until disabled with {@link UAirship#setDataCollectionEnabled(boolean)}.
+         *
+         * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
          * @return The config options builder.
          */
-        public Builder setDataOptInEnabled(boolean dataOptInEnabled) {
-            Logger.debug("Setting dataOptInEnabled with config to :" + dataOptInEnabled);
-            this.dataOptInEnabled = dataOptInEnabled;
+        @NonNull
+        public Builder setDataCollectionOptInEnabled(boolean dataCollectionOptInEnabled) {
+            this.dataCollectionOptInEnabled = dataCollectionOptInEnabled;
             return this;
         }
 

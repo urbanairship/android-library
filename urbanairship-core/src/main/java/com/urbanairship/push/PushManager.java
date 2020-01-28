@@ -5,6 +5,14 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
@@ -39,14 +47,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationManagerCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -299,7 +299,7 @@ public class PushManager extends AirshipComponent {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (isDataOptIn() && getPushTokenRegistrationEnabled()) {
+                if (isPushTokenRegistrationEnabled()) {
                     if (getPushToken() == null) {
                         performPushRegistration(false);
                     }
@@ -307,7 +307,7 @@ public class PushManager extends AirshipComponent {
                 }
 
                 return builder.setOptIn(isOptIn())
-                              .setBackgroundEnabled(isPushEnabled() && isPushAvailable());
+                        .setBackgroundEnabled(isPushEnabled() && isPushAvailable());
             }
         });
 
@@ -463,7 +463,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Sets the notification provider used to build notifications from a push message
-     *
+     * <p>
      * If <code>null</code>, notification will not be displayed.
      *
      * @param provider The notification provider
@@ -635,8 +635,8 @@ public class PushManager extends AirshipComponent {
     @Deprecated
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                                                               .setQuietTimeInterval(startTime, endTime)
-                                                               .build();
+                .setQuietTimeInterval(startTime, endTime)
+                .build();
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
@@ -647,7 +647,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        return isDataOptIn() && getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getPushToken());
+        return isPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getPushToken());
     }
 
     /**
@@ -724,15 +724,25 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * {@see #isPushTokenRegistrationEnabled()}
+     *
+     * @deprecated Use {@link #isPushTokenRegistrationEnabled()} instead.
+     */
+    @Deprecated
+    public boolean getPushTokenRegistrationEnabled() {
+        return isPushTokenRegistrationEnabled();
+    }
+
+    /**
      * Determines whether the push token is sent during channel registration.
      * If {@code false}, the app will not be able to receive push notifications.
-     * The default value is {@code true}.
+     * Defaults to {@link UAirship#isDataCollectionEnabled()}.
      *
      * @return {@code true} if the push token is sent during channel registration,
      * {@code false} otherwise.
      */
-    public boolean getPushTokenRegistrationEnabled() {
-        return getDataStore().getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
+    public boolean isPushTokenRegistrationEnabled() {
+        return getDataStore().getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, isDataCollectionEnabled());
     }
 
     /**
@@ -743,10 +753,6 @@ public class PushManager extends AirshipComponent {
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
-        if (!isDataOptIn() && enabled) {
-            Logger.debug("PUsh token registration is enabled, but data is opted out. Token will not registered.");
-        }
-
         getDataStore().put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
         airshipChannel.updateRegistration();
     }
@@ -819,7 +825,6 @@ public class PushManager extends AirshipComponent {
      * Adds an internal notification listener.
      *
      * @param listener The notification listener.
-     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -1090,10 +1095,10 @@ public class PushManager extends AirshipComponent {
 
     private void dispatchUpdatePushTokenJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
-                                 .setAirshipComponent(PushManager.class)
-                                 .build();
+                .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+                .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
+                .setAirshipComponent(PushManager.class)
+                .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
@@ -1154,7 +1159,7 @@ public class PushManager extends AirshipComponent {
     }
 
     @Override
-    protected void onDataOptInChange(boolean isOptedIn) {
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
         airshipChannel.updateRegistration();
     }
 

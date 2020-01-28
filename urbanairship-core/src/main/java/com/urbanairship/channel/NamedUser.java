@@ -145,8 +145,8 @@ public class NamedUser extends AirshipComponent {
      * @param namedUserId The named user ID string.
      */
     public void setId(@Nullable String namedUserId) {
-        if (namedUserId != null && !isDataOptIn()) {
-            Logger.debug("NamedUser - DataOptIn is disabled, ignoring named user association.");
+        if (namedUserId != null && !isDataCollectionEnabled()) {
+            Logger.debug("NamedUser - Data collection is disabled, ignoring named user association.");
             return;
         }
 
@@ -191,8 +191,8 @@ public class NamedUser extends AirshipComponent {
         return new TagGroupsEditor() {
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-                if (!isDataOptIn()) {
-                    Logger.warn("NamedUser - Unable to apply tag group edits when opted out of data collection.");
+                if (!isDataCollectionEnabled()) {
+                    Logger.warn("NamedUser - Unable to apply tag group edits when data collection is disabled.");
                     return;
                 }
 
@@ -255,8 +255,8 @@ public class NamedUser extends AirshipComponent {
     }
 
     @Override
-    protected void onDataOptInChange(boolean isOptedIn) {
-        if (!isOptedIn) {
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
+        if (!isDataCollectionEnabled) {
             clearPendingNamedUserUpdates();
             setId(null);
         }

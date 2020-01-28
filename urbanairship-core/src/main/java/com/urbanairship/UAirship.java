@@ -13,6 +13,12 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -52,12 +58,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 /**
  * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
@@ -78,9 +78,10 @@ public class UAirship {
     @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
-    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
+    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Platform {}
+    public @interface Platform {
+    }
 
     /**
      * Amazon platform type. Only ADM transport will be allowed.
@@ -125,7 +126,7 @@ public class UAirship {
 
     private static boolean queuePendingAirshipRequests = true;
 
-    public static final String DATA_OPTIN_KEY = "com.urbanairship.application.device.DATA_OPTIN";
+    public static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
 
     private DeepLinkListener deepLinkListener;
 
@@ -698,20 +699,20 @@ public class UAirship {
 
         // Airship components
         this.analytics = Analytics.newBuilder(application)
-                                  .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                                  .setConfigOptions(airshipConfigOptions)
-                                  .setPreferenceDataStore(preferenceDataStore)
-                                  .setAirshipChannel(channel)
-                                  .setEventManager(EventManager.newBuilder()
-                                                               .setEventResolver(new EventResolver(application))
-                                                               .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                                                               .setJobDispatcher(JobDispatcher.shared(application))
-                                                               .setPreferenceDataStore(preferenceDataStore)
-                                                               .setApiClient(new EventApiClient(application))
-                                                               .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
-                                                               .setJobAction(Analytics.ACTION_SEND)
-                                                               .build())
-                                  .build();
+                .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                .setConfigOptions(airshipConfigOptions)
+                .setPreferenceDataStore(preferenceDataStore)
+                .setAirshipChannel(channel)
+                .setEventManager(EventManager.newBuilder()
+                        .setEventResolver(new EventResolver(application))
+                        .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                        .setJobDispatcher(JobDispatcher.shared(application))
+                        .setPreferenceDataStore(preferenceDataStore)
+                        .setApiClient(new EventApiClient(application))
+                        .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
+                        .setJobAction(Analytics.ACTION_SEND)
+                        .build())
+                .build();
         components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -779,11 +780,11 @@ public class UAirship {
         // store current version as library version once check is performed
         this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
 
-        // Check if DataOptInEnabled has never been loaded
-        if (!this.preferenceDataStore.isSet(DATA_OPTIN_KEY)) {
-            boolean configDataOptInEnabledValue = airshipConfigOptions.dataOptInEnabled;
-            Logger.debug("Config - DataOptInEnabled key loaded : " + configDataOptInEnabledValue);
-            setDataOptIn(!configDataOptInEnabledValue);
+        // Check if dataCollection has never been loaded
+        if (!this.preferenceDataStore.isSet(DATA_COLLECTION_ENABLED_KEY)) {
+            boolean enabled = !airshipConfigOptions.dataCollectionOptInEnabled;
+            Logger.debug("Airship - Setting data collection enabled to %s", enabled);
+            setDataCollectionEnabled(enabled);
         }
     }
 
@@ -1014,29 +1015,29 @@ public class UAirship {
     }
 
     /**
-     * Sets the data opt-in flag. Enabled by default. Setting this flag to {@code false} will opt
-     * the device out of analytics, device token registration, named user association, and any pending
-     * events or attributes will be cleared.
+     * Enables/Disables data collection. Enabled by default unless {@link AirshipConfigOptions#dataCollectionOptInEnabled}
+     * is set to {@code true} on the first run.
+     * <p>
+     * When disabled, the device will stop collecting and sending data for named user, events,
+     * tags, attributes, associated identifiers, and location from the device.
      *
-     * @param enabled {@code true} to opt-in, {@code false} to opt-out.
+     * Push notifications will continue to work only if {@link PushManager#setPushTokenRegistrationEnabled(boolean)}
+     * has been explicitly set to {@code true}, otherwise it will default to the current state
+     * of {@link #isDataCollectionEnabled()}.
+     *
+     * @param enabled {@code true} to enable, {@code false} to disable.
      */
-    public void setDataOptIn(boolean enabled) {
-        if (isDataOptIn() == enabled) {
-            Logger.verbose("OptIn state is the same. Nothing happened.");
-        } else {
-            Logger.debug("Setting OptInData to : " + enabled);
-            this.preferenceDataStore.put(DATA_OPTIN_KEY, enabled);
-        }
+    public void setDataCollectionEnabled(boolean enabled) {
+        this.preferenceDataStore.put(DATA_COLLECTION_ENABLED_KEY, enabled);
     }
 
     /**
-     * Checks if data is opted-in or out.
+     * Checks if data collection is enabled or not.
      *
-     * @return {@code true} if data is opted-in, otherwise {@code false}.
+     * @return {@code true} if data collection is enabled, otherwise {@code false}.
      */
-    public boolean isDataOptIn() {
-        Logger.debug("OptInData is actually in state : " + this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true));
-        return this.preferenceDataStore.getBoolean(DATA_OPTIN_KEY, true);
+    public boolean isDataCollectionEnabled() {
+        return this.preferenceDataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, true);
     }
 
     /**

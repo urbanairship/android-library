@@ -202,7 +202,7 @@ public class AccengageTest {
         accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
-        verify(mockAirship, times(1)).setDataOptIn(true);
+        verify(mockAirship, times(1)).setDataCollectionEnabled(true);
     }
 
     /**
@@ -220,7 +220,7 @@ public class AccengageTest {
         accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
-        verify(mockAirship, times(1)).setDataOptIn(false);
+        verify(mockAirship, times(1)).setDataCollectionEnabled(false);
     }
 
 

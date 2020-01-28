@@ -58,7 +58,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .build();
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
         this.analytics = Analytics.newBuilder(TestApplication.getApplication())
                                   .setActivityMonitor(new TestActivityMonitor())
@@ -331,7 +331,7 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     @Test
-    public void testEditAssociatedIdentifiersDataOptedOut() {
+    public void testEditAssociatedIdentifiersDataCollectionDisabled() {
         analytics.editAssociatedIdentifiers()
                 .addIdentifier("customKey", "customValue")
                 .apply();
@@ -340,8 +340,8 @@ public class AnalyticsTest extends BaseTestCase {
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
 
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
-        analytics.onDataOptInChange(false);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        analytics.onDataCollectionEnabledChanged(false);
 
         assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
 
@@ -353,11 +353,11 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     @Test
-    public void testIsEnabledDataOptedOut() {
+    public void testIsEnabledDataCollectionDisabled() {
         assertTrue(analytics.isEnabled());
 
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
-        analytics.onDataOptInChange(false);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        analytics.onDataCollectionEnabledChanged(false);
 
         assertFalse(analytics.isEnabled());
 

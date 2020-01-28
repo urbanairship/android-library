@@ -17,7 +17,6 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -105,12 +104,12 @@ public abstract class AudienceChecks {
         PushManager pushManager = airship.getPushManager();
         AirshipChannel channel = airship.getChannel();
 
-        // Data opt-in
-        boolean isDataOptIn = airship.isDataOptIn();
+        // Data collection enabled
+        boolean isDataCollectionEnabled = airship.isDataCollectionEnabled();
 
         // Location opt-in
         if (audience.getLocationOptIn() != null) {
-            if (!isDataOptIn) {
+            if (!isDataCollectionEnabled) {
                 return false;
             }
 
@@ -123,7 +122,7 @@ public abstract class AudienceChecks {
         boolean notificationsOptIn = pushManager.areNotificationsOptedIn();
 
         if (audience.getNotificationsOptIn() != null) {
-            if (!isDataOptIn) {
+            if (!isDataCollectionEnabled) {
                 return false;
             }
 
@@ -139,7 +138,7 @@ public abstract class AudienceChecks {
 
         // Tags
         if (audience.getTagSelector() != null) {
-            if (!isDataOptIn) {
+            if (!isDataCollectionEnabled) {
                 return false;
             }
             if (!audience.getTagSelector().apply(channel.getTags(), tagGroups)) {

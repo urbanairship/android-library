@@ -8,9 +8,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.NamedUserJobHandler;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -63,7 +60,7 @@ public class NamedUserTest extends BaseTestCase {
         testRequest = new TestRequest();
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
         RequestFactory mockRequestFactory = mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
@@ -223,8 +220,8 @@ public class NamedUserTest extends BaseTestCase {
      * Test editTagGroups apply does not dispatch a job to update the tag groups when data opt-in is disabled.
      */
     @Test
-    public void testStartUpdateNamedUserTagsServiceDataOptInDisabled() {
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+    public void testStartUpdateNamedUserTagsServiceDataCollectionDisabled() {
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         namedUser.editTagGroups()
                  .addTag("tagGroup", "tag1")
@@ -279,21 +276,21 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     @Test
-    public void testNamedUserDataOptedOut() {
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+    public void testNamedUserDataCollectionDisabled() {
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
         namedUser.setId("some-user");
         assertNull(namedUser.getId());
     }
 
     @Test
-    public void testNamedUserClearOnDataOptedOut() {
+    public void testNamedUserClearOnDataCollectionDisabled() {
         namedUser.setId("cool");
         assertEquals("cool", namedUser.getId());
 
         clearInvocations(mockDispatcher);
 
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
-        namedUser.onDataOptInChange(false);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        namedUser.onDataCollectionEnabledChanged(false);
 
         assertNull(namedUser.getId());
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {

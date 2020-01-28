@@ -58,8 +58,8 @@ public abstract class AirshipComponent {
             public void onPreferenceChange(@NonNull String key) {
                 if (key.equals(enableKey)) {
                     onComponentEnableChange(isComponentEnabled());
-                } else if (key.equals(UAirship.DATA_OPTIN_KEY)) {
-                    onDataOptInChange(isDataOptIn());
+                } else if (key.equals(UAirship.DATA_COLLECTION_ENABLED_KEY)) {
+                    onDataCollectionEnabledChanged(isDataCollectionEnabled());
                 }
             }
         });
@@ -183,23 +183,23 @@ public abstract class AirshipComponent {
     }
 
     /**
-     * Check if the user is opted-in to data.
+     * Check if data collection is enabled.
      *
-     * @return The opt-in value.
+     * @return {@code true} if enabled, otherwise {@code false}
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected boolean isDataOptIn() {
-        return dataStore.getBoolean(UAirship.DATA_OPTIN_KEY, true);
+    protected boolean isDataCollectionEnabled() {
+        return dataStore.getBoolean(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
     }
 
     /**
-     * Called when the data opt-in changes.
+     * Called when the data collection enabled changes.
      *
-     * @param isOptedIn The opt-in value.
+     * @param isDataCollectionEnabled The enabled state.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onDataOptInChange(boolean isOptedIn) {}
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {}
 
 }

@@ -4,26 +4,26 @@
 
     <androidx.preference.PreferenceCategory app:title="@string/ua_user_settings_category">
 
-        <com.urbanairship.preference.OptInPreference
-            app:key="data_opt_in"
+        <com.urbanairship.preference.DataCollectionEnabledPreference
+            app:key="data_enabled"
             app:persistent="true"
-            app:summary="@string/ua_data_opt_preference_settings_summary"
-            app:title="@string/ua_data_optin_enabled_settings_title" />
+            app:summary="@string/ua_data_collection_enabled_setting_summary"
+            app:title="@string/ua_data_collection_enabled_setting_title" />
 
         <com.urbanairship.debug.deviceinfo.preferences.NamedUserPreference
-            app:dependency="data_opt_in"
+            app:dependency="data_enabled"
             app:key="named_user"
             app:persistent="false"
             app:title="@string/ua_named_user_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_opt_in"
+            app:dependency="data_enabled"
             app:key="attributes"
             app:persistent="false"
             app:title="@string/ua_channel_attributes_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_opt_in"
+            app:dependency="data_enabled"
             app:key="tags"
             app:persistent="false"
             app:title="@string/ua_tags_settings_title" />
@@ -31,7 +31,7 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
-        app:dependency="data_opt_in"
+        app:dependency="data_enabled"
         app:title="@string/ua_push_settings_category">
 
         <com.urbanairship.preference.PushEnablePreference
@@ -43,7 +43,7 @@
 
     <androidx.preference.PreferenceCategory
         android:title="@string/ua_analytics_settings_category"
-        app:dependency="data_opt_in">
+        app:dependency="data_enabled">
 
         <com.urbanairship.preference.AnalyticsEnablePreference
             app:key="analytics_preference"
@@ -57,7 +57,7 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
-        app:dependency="data_opt_in"
+        app:dependency="data_enabled"
         app:title="@string/ua_location_settings_category">
 
         <com.urbanairship.preference.LocationUpdatesEnabledPreference

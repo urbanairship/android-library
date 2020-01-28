@@ -9,6 +9,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
@@ -287,5 +288,21 @@ public class PushManagerTest extends BaseTestCase {
                 return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
             }
         }));
+    }
+
+    /**
+     * Test push token registration defaults to data collection enabled value.
+     */
+    @Test
+    public void testPushTokenRegistrationDefaultsToDataCollection() {
+        assertTrue(pushManager.isPushTokenRegistrationEnabled());
+        preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        assertFalse(pushManager.isPushTokenRegistrationEnabled());
+
+        pushManager.setPushTokenRegistrationEnabled(true);
+        assertTrue(pushManager.isPushTokenRegistrationEnabled());
+
+        preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        pushManager.setPushTokenRegistrationEnabled(true);
     }
 }

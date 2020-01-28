@@ -89,7 +89,7 @@ public class AirshipChannelTests extends BaseTestCase {
         mockPendingAttributeStore = mock(PendingAttributeMutationStore.class);
         dataStore = getApplication().preferenceDataStore;
 
-        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -419,11 +419,11 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
-     * Test channel registration payload when isDataOptIn is disabled
+     * Test channel registration payload when isDataCollectionEnabled is disabled
      */
     @Test
-    public void testChannelRegistrationPayloadDataOptInDisabled() throws ChannelRequestException {
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+    public void testChannelRegistrationPayloadDataCollectionDisabled() throws ChannelRequestException {
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
@@ -494,11 +494,11 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
-     * Test editTagGroups apply does not dispatch a job to update the tag groups when data opt-in is disabled.
+     * Test editTagGroups apply does not dispatch a job to update the tag groups when data collection is disabled.
      */
     @Test
-    public void testTagGroupUpdatesDataOptInDisabled() {
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+    public void testTagGroupUpdatesDataCollectionDisabled() {
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         airshipChannel.editTagGroups()
                       .addTag("tagGroup", "add")

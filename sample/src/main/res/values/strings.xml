@@ -13,7 +13,7 @@
     <string name="user_preference_category_title">User Settings</string>
 
     <string name="airship_preference_category_title">Airship Settings</string>
-    <string name="data_opt_in_enabled_settings">Enable Data Collection</string>
+    <string name="data_collection_enabled_setting">Enable Data Collection</string>
     <string name="push_preference_title">Enable Push</string>
     <string name="location_preference_title">Enable Location Updates</string>
     <string name="background_location_preference_title">Allow Background Location</string>

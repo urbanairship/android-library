@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ResourceType")
 public class UALocationManagerTest extends BaseTestCase {
@@ -42,7 +41,7 @@ public class UALocationManagerTest extends BaseTestCase {
         mockChannel = mock(AirshipChannel.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_OPTIN_KEY, true);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
         locationManager = new UALocationManager(TestApplication.getApplication(), dataStore, new TestActivityMonitor(), mockChannel);
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
@@ -97,12 +96,12 @@ public class UALocationManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testLocationUpdatesDataOptedOut() {
+    public void testLocationUpdatesDataCollectionDisabled() {
         locationManager.setLocationRequestOptions(options);
         locationManager.setLocationUpdatesEnabled(true);
         locationManager.setBackgroundLocationAllowed(true);
 
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
@@ -138,8 +137,8 @@ public class UALocationManagerTest extends BaseTestCase {
      * Test channel registration extender does not add the location settings when data opt-in is disabled.
      */
     @Test
-    public void testChannelRegistrationPayloadExtenderDataOptInDisabled() {
-        dataStore.put(UAirship.DATA_OPTIN_KEY, false);
+    public void testChannelRegistrationPayloadExtenderDataCollectionDisabled() {
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
         locationManager.init();

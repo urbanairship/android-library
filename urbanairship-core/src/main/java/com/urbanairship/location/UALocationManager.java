@@ -123,7 +123,7 @@ public class UALocationManager extends AirshipComponent {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (isDataOptIn()) {
+                if (isDataCollectionEnabled()) {
                     return builder.setLocationSettings(isLocationUpdatesEnabled());
                 }
 
@@ -272,7 +272,7 @@ public class UALocationManager extends AirshipComponent {
 
         final PendingResult<Location> pendingResult = new PendingResult<>();
 
-        if (!isLocationPermitted() || !isDataOptIn()) {
+        if (!isLocationPermitted() || !isDataCollectionEnabled()) {
             pendingResult.cancel();
             return pendingResult;
         }
@@ -322,7 +322,7 @@ public class UALocationManager extends AirshipComponent {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (isDataOptIn() && isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
+                if (isDataCollectionEnabled() && isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
                     LocationRequestOptions options = getLocationRequestOptions();
                     LocationRequestOptions lastLocationOptions = getLastUpdateOptions();
 
@@ -368,7 +368,7 @@ public class UALocationManager extends AirshipComponent {
      * otherwise <code>false</code>.
      */
     boolean isContinuousLocationUpdatesAllowed() {
-        return isDataOptIn() && isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
+        return isDataCollectionEnabled() && isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
     }
 
     /**
@@ -436,11 +436,11 @@ public class UALocationManager extends AirshipComponent {
      * @return <{@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
      */
     public boolean isOptIn() {
-        return isLocationPermitted() && isLocationUpdatesEnabled() && isDataOptIn();
+        return isLocationPermitted() && isLocationUpdatesEnabled() && isDataCollectionEnabled();
     }
 
     @Override
-    protected void onDataOptInChange(boolean isOptedIn) {
+    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
         updateServiceConnection();
     }
 

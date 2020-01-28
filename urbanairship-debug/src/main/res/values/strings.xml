@@ -46,8 +46,8 @@
     <string name="ua_opted_out">Opted-out</string>
 
     <string name="ua_user_settings_category">User Settings</string>
-    <string name="ua_data_optin_enabled_settings_title">Data Collection Enabled</string>
-    <string name="ua_data_opt_preference_settings_summary">Required for location, push, analytics, named user, attributes, and tags.</string>
+    <string name="ua_data_collection_enabled_setting_title">Data Collection Enabled</string>
+    <string name="ua_data_collection_enabled_setting_summary">Required for location, push, analytics, named user, attributes, and tags.</string>
     <string name="ua_named_user_settings_title">Named User</string>
     <string name="ua_tags_settings_title">Tags</string>
     <string name="ua_channel_attributes_settings_title">Channel Attributes</string>
