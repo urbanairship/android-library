@@ -474,6 +474,7 @@ public class UAirship {
             isTakingOff = false;
             sharedAirship = null;
             application = null;
+            queuePendingAirshipRequests = true;
         }
     }
 
