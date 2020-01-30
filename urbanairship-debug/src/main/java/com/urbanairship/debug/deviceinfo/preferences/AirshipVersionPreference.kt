@@ -25,6 +25,6 @@ class AirshipVersionPreference : Preference {
 
     override fun onClick() {
         super.onClick()
-        summary?.copyToClipboard(context, true)
+        summary.copyToClipboard(context, true)
     }
 }

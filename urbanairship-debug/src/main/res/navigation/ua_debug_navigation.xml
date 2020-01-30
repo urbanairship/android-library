@@ -4,6 +4,8 @@
     android:id="@+id/ua_debug"
     app:startDestination="@id/debugFragment">
 
+    <include app:graph="@navigation/ua_debug_device_info_navigation" />
+
     <fragment
         android:id="@+id/debugFragment"
         android:name="com.urbanairship.debug.DebugFragment"
@@ -14,40 +16,11 @@
         <action
             android:id="@+id/action_debugFragment_to_pushListFragment"
             app:destination="@id/pushListFragment" />
+        <action
+            android:id="@+id/action_debugFragment_to_ua_debug"
+            app:destination="@id/ua_debug_device_info_navigation" />
     </fragment>
 
-    <fragment
-        android:id="@+id/deviceInfoFragment"
-        android:name="com.urbanairship.debug.deviceinfo.DeviceInfoFragment"
-        android:label="@string/ua_device_info_title">
-        <action
-            android:id="@+id/action_deviceInfoFragment_to_tagsFragment"
-            app:destination="@id/deviceInfoTagsFragment" />
-        <action
-            android:id="@+id/action_deviceInfoFragment_to_deviceInfoAttributesFragment"
-            app:destination="@id/deviceInfoAttributesFragment" />
-        <action
-            android:id="@+id/action_deviceInfoFragment_to_deviceInfoTagGroupsFragment2"
-            app:destination="@id/deviceInfoTagGroupsFragment" />
-        <action
-            android:id="@+id/action_deviceInfoFragment_to_deviceInfoAssociatedIdentifiersFragment"
-            app:destination="@id/deviceInfoAssociatedIdentifiersFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/deviceInfoTagsFragment"
-        android:name="com.urbanairship.debug.deviceinfo.tag.TagsFragment"
-        android:label="@string/ua_tags_settings_title" />
-
-    <fragment
-        android:id="@+id/deviceInfoAttributesFragment"
-        android:name="com.urbanairship.debug.deviceinfo.attributes.AttributesFragment"
-        android:label="@string/ua_channel_attributes_settings_title" />
-
-    <fragment
-        android:id="@+id/deviceInfoAssociatedIdentifiersFragment"
-        android:name="com.urbanairship.debug.deviceinfo.identifiers.AssociatedIdentifiersFragment"
-        android:label="@string/ua_associated_identifiers" />
 
     <fragment
         android:id="@+id/eventListFragment"
@@ -83,9 +56,5 @@
             android:name="pushId"
             app:argType="string" />
     </fragment>
-    <fragment
-        android:id="@+id/deviceInfoTagGroupsFragment"
-        android:name="com.urbanairship.debug.deviceinfo.tag.groups.TagGroupFragment"
-        android:label="@string/ua_tag_groups_settings_title" />
 
 </navigation>

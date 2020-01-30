@@ -3,7 +3,7 @@
 
     <entry
         description="@string/ua_device_info_view_description"
-        navigationId="@id/deviceInfoFragment"
+        navigationId="@id/ua_debug_device_info_navigation"
         title="@string/ua_device_info_title" />
 
     <entry

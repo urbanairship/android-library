@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ua_debug_device_info_navigation"
+    app:startDestination="@id/deviceInfoFragment">
+
+    <fragment
+        android:id="@+id/deviceInfoFragment"
+        android:name="com.urbanairship.debug.deviceinfo.DeviceInfoFragment"
+        android:label="@string/ua_device_info_title">
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_tagsFragment"
+            app:destination="@id/deviceInfoTagsFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_deviceInfoAttributesFragment"
+            app:destination="@id/deviceInfoAttributesFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_deviceInfoTagGroupsFragment2"
+            app:destination="@id/deviceInfoTagGroupsFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_deviceInfoAssociatedIdentifiersFragment"
+            app:destination="@id/deviceInfoAssociatedIdentifiersFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/deviceInfoTagsFragment"
+        android:name="com.urbanairship.debug.deviceinfo.tag.TagsFragment"
+        android:label="@string/ua_tags_settings_title" />
+
+    <fragment
+        android:id="@+id/deviceInfoAttributesFragment"
+        android:name="com.urbanairship.debug.deviceinfo.attributes.AttributesFragment"
+        android:label="@string/ua_channel_attributes_settings_title" />
+
+
+    <fragment
+        android:id="@+id/deviceInfoAssociatedIdentifiersFragment"
+        android:name="com.urbanairship.debug.deviceinfo.identifiers.AssociatedIdentifiersFragment"
+        android:label="@string/ua_associated_identifiers" />
+
+    <fragment
+        android:id="@+id/deviceInfoTagGroupsFragment"
+        android:name="com.urbanairship.debug.deviceinfo.tag.groups.TagGroupFragment"
+        android:label="@string/ua_tag_groups_settings_title" />
+
+</navigation>

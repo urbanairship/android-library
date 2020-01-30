@@ -29,7 +29,7 @@
             app:title="@string/ua_tags_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_opt_in"
+            app:dependency="data_enabled"
             app:key="tagGroups"
             app:persistent="false"
             app:title="@string/ua_tag_groups_settings_title" />
@@ -61,7 +61,7 @@
             app:title="@string/ua_track_advertising_id_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_opt_in"
+            app:dependency="data_enabled"
             app:key="associated_identifiers"
             app:persistent="false"
             app:title="@string/ua_associated_identifiers" />
@@ -137,6 +137,11 @@
             app:key="push_token_preference"
             app:persistent="false"
             app:title="@string/ua_push_token_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.AirshipVersionPreference
+            app:key="airship_version"
+            app:persistent="false"
+            app:title="@string/ua_airship_version_settings_title" />
 
     </androidx.preference.PreferenceCategory>
 
