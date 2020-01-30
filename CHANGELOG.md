@@ -3,6 +3,22 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 12.2.0 - January 30, 2020
+=================================
+Minor release that adds support for number attributes, new data collection flags,
+and an Accengage transition module to facilitate Accengage customers upgrading to Airship.
+
+Chanages
+--------
+- Added support for number attributes.
+- Added `AirshipConfigOptions#dataCollectionOptInEnabled` and `UAirship#setDataCollectionEnabled(boolean)` 
+  to make it easier to control Airship data collection.
+- Added `urbanairship-accengage` module. This module migrates a device's attributes and ID to Airship,
+  and allows devices to receive push notifications from Accengage during the upgrade period.
+- Added option to automatically install Google's secure network provider before any Airship request
+  by adding metadata to the manifest with key `com.urbanairship.INSTALL_NETWORK_SECURITY_PROVIDER`.
+  The network installer is required for KitKat and older devices to work with the EUCS cloud site.
+
 Version 12.1.1 - January 16, 2020
 =================================
 Patch release to fix an issue with the same In-App Automation banner displaying multiple times on an activity

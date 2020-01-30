@@ -21,7 +21,7 @@ Airship SDK for Android.
      ...
 
      // Airship SDK - FCM
-     implementation 'com.urbanairship.android:urbanairship-fcm:12.1.1'
+     implementation 'com.urbanairship.android:urbanairship-fcm:12.2.0'
    }
 ```
 
