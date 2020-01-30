@@ -1,6 +1,6 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.deviceinfo
+package com.urbanairship.debug.deviceinfo.tag
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.urbanairship.UAirship
 import java.util.*
 
-class DeviceInfoTagsViewModel : ViewModel() {
+class TagsViewModel : ViewModel() {
 
     private val tagsLiveData = MutableLiveData<List<String>>()
     private val tags: MutableList<String>

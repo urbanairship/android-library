@@ -1,6 +1,6 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.deviceinfo
+package com.urbanairship.debug.deviceinfo.attributes
 
 import androidx.databinding.Observable
 import androidx.databinding.ObservableField
@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 
 import com.urbanairship.UAirship
 
-class DeviceInfoAttributesViewModel : ViewModel()  {
+class AttributesViewModel : ViewModel()  {
 
     val key = MutableLiveData<String>()
     val value = MutableLiveData<String>()

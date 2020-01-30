@@ -50,10 +50,11 @@
     <string name="ua_data_collection_enabled_setting_summary">Required for location, push, analytics, named user, attributes, and tags.</string>
     <string name="ua_named_user_settings_title">Named User</string>
     <string name="ua_tags_settings_title">Tags</string>
+    <string name="ua_tag_groups_settings_title">Tag Groups</string>
     <string name="ua_channel_attributes_settings_title">Channel Attributes</string>
 
     <string name="ua_analytics_settings_category">Analytics Settings</string>
-    <string name="ua_analytics_enabled_settings_title">Send Usage Data</string>
+    <string name="ua_analytics_enabled_settings_title">Analytics Enabled</string>
     <string name="ua_track_advertising_id_settings_title">Track Advertising ID</string>
 
     <string name="ua_push_settings_category">Push Settings</string>
@@ -87,7 +88,17 @@
     <string name="ua_toast_attributes_invalid_message">Please add valid attribute fields for your selected action</string>
 
     <string name="ua_current_tags">Current Tags</string>
-    <string name="ua_new_tag_hint">New Tag</string>
+    <string name="ua_tag_hint">Tag</string>
+    <string name="ua_tag_group_hint">Tag Group</string>
+    <string name="ua_add_tag">Add</string>
+    <string name="ua_remove_Tag">Remove</string>
+    <string name="ua_channel">Channel</string>
+    <string name="ua_named_user">Named User</string>
+
+    <string name="ua_associated_identifiers">Associated Identifiers</string>
+    <string name="ua_associated_key_hint">Name</string>
+    <string name="ua_associated_value_hint">Value</string>
+    <string name="ua_associated_identifiers_value_format">%1$s : %2$s</string>
 
     <string name="ua_device_info_title">Device Info</string>
     <string name="ua_device_info_view_description">View device info and settings</string>

@@ -28,6 +28,12 @@
             app:persistent="false"
             app:title="@string/ua_tags_settings_title" />
 
+        <androidx.preference.Preference
+            app:dependency="data_opt_in"
+            app:key="tagGroups"
+            app:persistent="false"
+            app:title="@string/ua_tag_groups_settings_title" />
+
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
@@ -53,6 +59,12 @@
         <com.urbanairship.debug.deviceinfo.preferences.EnableAdvertisingIdPreference
             app:persistent="false"
             app:title="@string/ua_track_advertising_id_settings_title" />
+
+        <androidx.preference.Preference
+            app:dependency="data_opt_in"
+            app:key="associated_identifiers"
+            app:persistent="false"
+            app:title="@string/ua_associated_identifiers" />
 
     </androidx.preference.PreferenceCategory>
 

@@ -1,6 +1,6 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.deviceinfo
+package com.urbanairship.debug.deviceinfo.tag
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -11,7 +11,7 @@ import com.urbanairship.debug.databinding.UaItemTagBinding
 /**
  * RecyclerView adapter for a list of tags.
  */
-class DeviceInfoTagAdapter : ListAdapter<String, DeviceInfoTagAdapter.ViewHolder>(TagFilterDiff()) {
+class TagAdapter : ListAdapter<String, TagAdapter.ViewHolder>(TagFilterDiff()) {
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
         val binding = UaItemTagBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)

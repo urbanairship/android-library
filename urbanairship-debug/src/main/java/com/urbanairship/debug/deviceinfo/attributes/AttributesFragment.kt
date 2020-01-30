@@ -1,30 +1,21 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.deviceinfo
+package com.urbanairship.debug.deviceinfo.attributes
 
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
-import android.widget.RadioButton
-import android.widget.TextView
-import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoAttributesBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import kotlinx.android.synthetic.main.ua_fragment_device_info_attributes.*
-import kotlinx.android.synthetic.main.ua_fragment_event_list.view.*
 
-class DeviceInfoAttributesFragment  : androidx.fragment.app.Fragment() {
-    private lateinit var viewModel: DeviceInfoAttributesViewModel
+class AttributesFragment  : androidx.fragment.app.Fragment() {
+    private lateinit var viewModel: AttributesViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(this).get(DeviceInfoAttributesViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(AttributesViewModel::class.java)
         val binding = UaFragmentDeviceInfoAttributesBinding.inflate(inflater, container, false)
 
         binding.lifecycleOwner = this

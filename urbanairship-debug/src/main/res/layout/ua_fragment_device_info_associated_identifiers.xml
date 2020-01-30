@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.urbanairship.debug.deviceinfo.tag.TagsViewModel" />
+            type="com.urbanairship.debug.deviceinfo.identifiers.AssociatedIdentifiersViewModel" />
 
     </data>
 
@@ -23,9 +23,8 @@
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-
             <EditText
-                android:id="@+id/add_tag_text"
+                android:id="@+id/id"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
@@ -33,45 +32,60 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
-                android:hint="@string/ua_tag_hint"
+                android:hint="@string/ua_associated_key_hint"
+                android:text="@={viewModel.key}"
                 android:inputType="text"
                 android:maxLines="1"
-                app:layout_constraintEnd_toStartOf="@+id/add_tag_button"
+                app:layout_constraintEnd_toStartOf="@+id/add"
                 app:layout_constraintHorizontal_chainStyle="spread_inside"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <EditText
+                android:id="@+id/value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="8dp"
+                android:hint="@string/ua_associated_value_hint"
+                android:text="@={viewModel.value}"
+                android:inputType="text"
+                android:maxLines="1"
+                app:layout_constraintEnd_toEndOf="@+id/id"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/id" />
+
             <ImageButton
-                android:id="@+id/add_tag_button"
+                android:id="@+id/add"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginRight="16dp"
+                android:enabled="@{viewModel.formValidator}"
+                android:onClick="@{() -> viewModel.add() }"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:tint="?attr/colorAccent"
+                app:layout_constraintBottom_toBottomOf="@+id/value"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/add_tag_text"
-                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ua_ic_add" />
 
-
             <TextView
-                android:id="@+id/textView2"
+                android:id="@+id/label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginLeft="16dp"
                 android:layout_marginTop="16dp"
-                android:text="@string/ua_current_tags"
+                android:text="@string/ua_associated_identifiers"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/add_tag_text" />
+                app:layout_constraintTop_toBottomOf="@+id/value" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
+                android:id="@+id/identifiers"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_marginStart="16dp"
@@ -86,7 +100,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+                app:layout_constraintTop_toBottomOf="@+id/label" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

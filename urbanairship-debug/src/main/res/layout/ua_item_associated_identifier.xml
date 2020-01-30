@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="key"
+            type="String" />
+
+        <variable
+            name="value"
+            type="String" />
+
+    </data>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:ellipsize="end"
+        android:focusable="false"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:text="@{String.format(@string/ua_associated_identifiers_value_format, key, value)}"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+</layout>

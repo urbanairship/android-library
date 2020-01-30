@@ -7,11 +7,11 @@
 
         <variable
             name="viewModel"
-            type="com.urbanairship.debug.deviceinfo.attributes.AttributesViewModel" />
+            type="com.urbanairship.debug.deviceinfo.tag.groups.TagGroupViewModel" />
 
         <import type="android.text.InputType" />
 
-        <import type="com.urbanairship.debug.deviceinfo.attributes.AttributeType" />
+        <import type="com.urbanairship.debug.deviceinfo.tag.groups.TagGroupType" />
 
     </data>
 
@@ -25,11 +25,13 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_constraintEnd_toStartOf="@+id/guideline"
+            app:layout_constraintStart_toStartOf="@+id/guideline">
 
 
             <EditText
-                android:id="@+id/keyEditText"
+                android:id="@+id/tagGroup"
                 android:layout_width="match_parent"
                 android:layout_height="62dp"
                 android:layout_marginStart="8dp"
@@ -37,19 +39,19 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
+                android:ems="10"
+                android:hint="@string/ua_tag_group_hint"
                 android:maxLength="1024"
-                android:ems="10"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:hint="@string/ua_attributes_key"
-                android:text="@={viewModel.key}"
+                android:text="@={viewModel.tagGroup}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/radioGroupAttributeType" />
+                app:layout_constraintTop_toBottomOf="@+id/radioGroupTagGroupType" />
 
             <EditText
-                android:id="@+id/valueEditText"
+                android:id="@+id/tag"
                 android:layout_width="match_parent"
                 android:layout_height="62dp"
                 android:layout_marginStart="8dp"
@@ -58,53 +60,42 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:ems="10"
+                android:hint="@string/ua_tag_hint"
+                android:inputType="text"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:hint="@string/ua_attributes_value"
-                android:inputType="@{viewModel.attributeType == AttributeType.NUMBER ? InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED : InputType.TYPE_CLASS_TEXT}"
-                android:text="@={viewModel.value}"
+                android:text="@={viewModel.tag}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/keyEditText" />
-
-            <TextView
-                android:id="@+id/attributeTypeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="16dp"
-                android:text="@string/ua_attributes_attribute_type"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/tagGroup" />
 
             <RadioGroup
-                android:id="@+id/radioGroupAttributeType"
+                android:id="@+id/radioGroupTagGroupType"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal"
-                app:layout_constraintBottom_toBottomOf="@+id/attributeTypeLabel"
-                app:layout_constraintStart_toEndOf="@+id/attributeTypeLabel"
-                app:layout_constraintTop_toTopOf="@+id/attributeTypeLabel">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <RadioButton
-                    android:id="@+id/stringButton"
+                    android:id="@+id/channel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:paddingRight="8dp"
-                    android:text="@string/ua_attributes_string" />
+                    android:text="@string/ua_channel" />
+
 
                 <RadioButton
-                    android:id="@+id/numberButton"
+                    android:id="@+id/namedUser"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/ua_attributes_number" />
+                    android:text="@string/ua_named_user" />
             </RadioGroup>
 
 
@@ -117,12 +108,12 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="24dp"
                 android:layout_marginRight="24dp"
-                android:enabled="@{viewModel.keyValidator &amp;&amp; viewModel.valueValidator}"
-                android:onClick="@{() -> viewModel.setAttribute() }"
+                android:enabled="@{viewModel.formValidator}"
+                android:onClick="@{() -> viewModel.addTag() }"
                 android:text="@string/ua_attributes_set"
                 app:layout_constraintEnd_toStartOf="@+id/guideline"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/valueEditText" />
+                app:layout_constraintTop_toBottomOf="@+id/tag" />
 
             <Button
                 android:id="@+id/removeAttributeButton"
@@ -133,12 +124,12 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="24dp"
                 android:layout_marginRight="24dp"
-                android:enabled="@{viewModel.keyValidator}"
-                android:onClick="@{() -> viewModel.removeAttribute() }"
-                android:text="@string/ua_attributes_remove"
+                android:enabled="@{viewModel.formValidator}"
+                android:onClick="@{() -> viewModel.removeTag() }"
+                android:text="@string/ua_remove_Tag"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/guideline"
-                app:layout_constraintTop_toBottomOf="@+id/valueEditText" />
+                app:layout_constraintTop_toBottomOf="@+id/tag" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline"

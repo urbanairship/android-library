@@ -1,6 +1,6 @@
 /* Copyright Urban Airship and Contributors */
 
-package com.urbanairship.debug.deviceinfo
+package com.urbanairship.debug.deviceinfo.tag
 
 import android.os.Bundle
 import android.view.KeyEvent
@@ -24,15 +24,15 @@ import com.urbanairship.util.UAStringUtil
 /**
  * Fragment that manages Urban Airship tags.
  */
-class DeviceInfoTagsFragment : androidx.fragment.app.Fragment() {
+class TagsFragment : androidx.fragment.app.Fragment() {
 
-    private lateinit var viewModel: DeviceInfoTagsViewModel
+    private lateinit var viewModel: TagsViewModel
     private lateinit var addTagButton: ImageButton
     private lateinit var addTagEditText: EditText
     private lateinit var recyclerView: RecyclerView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(this).get(DeviceInfoTagsViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(TagsViewModel::class.java)
         val binding = UaFragmentDeviceInfoTagsBinding.inflate(inflater, container, false)
         binding.setLifecycleOwner(this)
         binding.setViewModel(viewModel)
@@ -48,7 +48,7 @@ class DeviceInfoTagsFragment : androidx.fragment.app.Fragment() {
     }
 
     private fun initTagList() {
-        val tagAdapter = DeviceInfoTagAdapter()
+        val tagAdapter = TagAdapter()
         viewModel.getTags().observe(this, Observer<List<String>> { tagAdapter.submitList(it) })
 
         recyclerView.adapter = tagAdapter
@@ -64,7 +64,7 @@ class DeviceInfoTagsFragment : androidx.fragment.app.Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, i: Int) {
-                val tag = (viewHolder as DeviceInfoTagAdapter.ViewHolder).tag
+                val tag = (viewHolder as TagAdapter.ViewHolder).tag
                 viewModel.removeTag(tag!!)
             }
         })
