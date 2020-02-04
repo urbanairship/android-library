@@ -36,7 +36,6 @@ public final class ActionRegistry {
     private static final String ACTION_ENTRY_TAG = "ActionEntry";
     private static final String CLASS_ATTRIBUTE = "class";
     private static final String NAME_ATTRIBUTE = "name";
-    private static final String ALT_NAME_ATTRIBUTE = "altName";
     private static final String PREDICATE_ATTRIBUTE = "predicate";
 
     /**
@@ -180,63 +179,10 @@ public final class ActionRegistry {
      * @param context The application context.
      */
     public void registerDefaultActions(@NonNull Context context) {
-        XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
+        List<Entry> entries = ActionEntryParser.fromXml(context, R.xml.ua_default_actions);
 
-        try {
-            while (parser.next() != XmlPullParser.END_DOCUMENT) {
-
-                int tagType = parser.getEventType();
-                String tagName = parser.getName();
-
-                if (!(tagType == XmlPullParser.START_TAG && ACTION_ENTRY_TAG.equals(tagName))) {
-                    continue;
-                }
-
-                AttributeSetConfigParser configParser = new AttributeSetConfigParser(context, Xml.asAttributeSet(parser));
-
-                String className = configParser.getString(CLASS_ATTRIBUTE);
-                if (UAStringUtil.isEmpty(className)) {
-                    Logger.error("%s must specify class attribute.", ACTION_ENTRY_TAG);
-                    continue;
-                }
-
-                Class<? extends Action> c;
-                try {
-                    c = Class.forName(className).asSubclass(Action.class);
-                } catch (ClassNotFoundException e) {
-                    Logger.error("Action class %s not found. Skipping action registration.", className);
-                    continue;
-                }
-
-                // Handle primary and secondary names.
-                String actionName = configParser.getString(NAME_ATTRIBUTE);
-                if (actionName == null) {
-                    Logger.error("%s must specify name attribute.", ACTION_ENTRY_TAG);
-                    continue;
-                }
-                String altActionName = configParser.getString(ALT_NAME_ATTRIBUTE);
-                String[] names = UAStringUtil.isEmpty(altActionName) ? new String[] { actionName } : new String[] { actionName, altActionName };
-                Entry entry = registerAction(c, names);
-
-                // Handle optional predicate class.
-                String predicateClassName = configParser.getString(PREDICATE_ATTRIBUTE);
-                if (predicateClassName == null) {
-                    continue;
-                }
-
-                Predicate predicate;
-                try {
-                    predicate = Class.forName(predicateClassName).asSubclass(Predicate.class).newInstance();
-                    entry.setPredicate(predicate);
-                } catch (Exception e) {
-                    Logger.error("Predicate class %s not found. Skipping predicate.", predicateClassName);
-                }
-            }
-        } catch (XmlPullParserException | IOException | Resources.NotFoundException | NullPointerException e) {
-            // Note: NullPointerException can occur in rare circumstances further down the call stack
-            Logger.error(e, "Failed to parse ActionEntry.");
-        } finally {
-            parser.close();
+        for (Entry entry : entries) {
+            registerEntry(entry);
         }
     }
 
@@ -258,7 +204,7 @@ public final class ActionRegistry {
          * @param action The entry's action
          * @param names The names of the entry
          */
-        private Entry(@NonNull Action action, @NonNull List<String> names) {
+        Entry(@NonNull Action action, @NonNull List<String> names) {
             this.defaultAction = action;
             this.names = names;
         }
@@ -269,7 +215,7 @@ public final class ActionRegistry {
          * @param c The entry's action
          * @param names The names of the entry
          */
-        private Entry(@NonNull Class c, @NonNull List<String> names) {
+        Entry(@NonNull Class c, @NonNull List<String> names) {
             this.defaultActionClass = c;
             this.names = names;
         }
