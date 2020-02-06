@@ -107,5 +107,4 @@ class TagsFragment : androidx.fragment.app.Fragment() {
         }
         addTagEditText.text.clear()
     }
-
 }

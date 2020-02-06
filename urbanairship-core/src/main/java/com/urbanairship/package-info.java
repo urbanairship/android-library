@@ -8,4 +8,3 @@
  */
 
 package com.urbanairship;
-

@@ -28,5 +28,4 @@ internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.
         val binding = UaItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
-
 }

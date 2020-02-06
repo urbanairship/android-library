@@ -6,18 +6,20 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.XmlRes
 import com.urbanairship.Logger
 import com.urbanairship.util.UAStringUtil
+import java.io.IOException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.IOException
 
 /**
  * Debug entry.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-data class DebugEntry(val navigationId: Int,
-                      val title: String,
-                      val description: String?) {
+data class DebugEntry(
+    val navigationId: Int,
+    val title: String,
+    val description: String?
+) {
 
     companion object {
         private const val ENTRY_TAG = "entry"
@@ -83,5 +85,4 @@ data class DebugEntry(val navigationId: Int,
             return parser.getAttributeValue(null, identifier)
         }
     }
-
 }

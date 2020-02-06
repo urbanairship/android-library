@@ -11,12 +11,12 @@ import com.urbanairship.debug.extensions.copyToClipboard
 import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.Locale
 
 class LocalePreference : Preference {
-    private val localeManager:LocaleManager = LocaleManager.shared(context)
+    private val localeManager: LocaleManager = LocaleManager.shared(context)
 
-    private val localeListener:LocaleChangedListener = LocaleChangedListener { refreshPreference(it) }
+    private val localeListener: LocaleChangedListener = LocaleChangedListener { refreshPreference(it) }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {}
@@ -25,8 +25,7 @@ class LocalePreference : Preference {
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
-
-    private fun refreshPreference(locale:Locale) {
+    private fun refreshPreference(locale: Locale) {
         val weakThis = WeakReference(this)
         val handler = Handler(Looper.getMainLooper())
 

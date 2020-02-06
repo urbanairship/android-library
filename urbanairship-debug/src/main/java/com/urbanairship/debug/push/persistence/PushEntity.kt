@@ -13,16 +13,17 @@ import com.urbanairship.push.PushMessage
  */
 @Entity(tableName = "pushes")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-data class PushEntity(@PrimaryKey(autoGenerate = true)
-                           val id: Int,
-                           val pushId: String,
-                           val payload: String,
-                           val time: Long) {
+data class PushEntity(
+    @PrimaryKey(autoGenerate = true)
+         val id: Int,
+    val pushId: String,
+    val payload: String,
+    val time: Long
+) {
 
     constructor(pushMessage: PushMessage) : this(
             0,
             pushMessage.canonicalPushId ?: "MISSING",
             pushMessage.toJsonValue().toString(),
             System.currentTimeMillis())
-
 }

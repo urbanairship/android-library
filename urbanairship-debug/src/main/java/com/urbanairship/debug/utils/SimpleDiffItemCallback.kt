@@ -14,5 +14,4 @@ class SimpleDiffItemCallback<T> : DiffUtil.ItemCallback<T>() {
     override fun areContentsTheSame(t: T, t1: T): Boolean {
         return t == t1
     }
-
 }

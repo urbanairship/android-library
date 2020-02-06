@@ -34,7 +34,6 @@ class EventListViewModel(repository: EventRepository) : ViewModel() {
                 .setEnablePlaceholders(false)
                 .build()
 
-
         filters.forEach {
             it.isChecked.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
                 override fun onPropertyChanged(sender: Observable?, propertyId: Int) {

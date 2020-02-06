@@ -7,10 +7,9 @@ import androidx.databinding.ObservableField
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-
 import com.urbanairship.UAirship
 
-class AttributesViewModel : ViewModel()  {
+class AttributesViewModel : ViewModel() {
 
     val key = MutableLiveData<String>()
     val value = MutableLiveData<String>()
@@ -32,7 +31,7 @@ class AttributesViewModel : ViewModel()  {
 
         valueValidator.value = false
         valueValidator.addSource(value) {
-            valueValidator.value = when(attributeType.get()) {
+            valueValidator.value = when (attributeType.get()) {
                 AttributeType.STRING -> !value.value.isNullOrEmpty()
                 AttributeType.NUMBER -> value.value?.toDoubleOrNull() != null
                 else -> false
@@ -53,7 +52,7 @@ class AttributesViewModel : ViewModel()  {
         assert(keyValidator.value!!)
         assert(valueValidator.value!!)
 
-        when(attributeType.get()) {
+        when (attributeType.get()) {
             AttributeType.STRING -> {
                 UAirship.shared().channel.editAttributes()
                         .setAttribute(key.value!!, value.value!!)

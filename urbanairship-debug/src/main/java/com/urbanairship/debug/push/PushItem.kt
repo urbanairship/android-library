@@ -16,7 +16,7 @@ class PushItem(val pushEntity: PushEntity) {
         PushMessage.fromJsonValue(JsonValue.parseString(pushEntity.payload))
     }
 
-    val alert : String?
+    val alert: String?
     get() {
         if (UAStringUtil.isEmpty(message.alert)) {
             return null

@@ -7,4 +7,3 @@
  */
 
 package com.urbanairship.job;
-

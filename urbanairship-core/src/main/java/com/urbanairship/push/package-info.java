@@ -9,4 +9,3 @@
  */
 
 package com.urbanairship.push;
-

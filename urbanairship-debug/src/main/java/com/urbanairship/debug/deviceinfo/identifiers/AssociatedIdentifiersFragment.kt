@@ -63,5 +63,4 @@ class AssociatedIdentifiersFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbarWithNavController(R.id.toolbar)
     }
-
 }

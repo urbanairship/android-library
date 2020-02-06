@@ -453,7 +453,7 @@ public class TextInfo implements JsonSerializable {
          *
          * @param drawable The drawable resource ID.
          * @return The builder instance.
-         * 
+         *
          * @deprecated To be removed in SDK 12. Use {@link #setDrawable(Context, int)} instead.
          */
         @NonNull

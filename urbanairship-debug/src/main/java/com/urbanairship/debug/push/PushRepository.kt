@@ -15,5 +15,5 @@ import com.urbanairship.debug.push.persistence.PushEntity
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class PushRepository(val dao: PushDao) {
     fun getPushes(): DataSource.Factory<Int, PushEntity> = dao.getPushes()
-    fun getPush(pushId: String) : LiveData<PushEntity?> = dao.getPush(pushId)
+    fun getPush(pushId: String): LiveData<PushEntity?> = dao.getPush(pushId)
 }

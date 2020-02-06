@@ -307,4 +307,3 @@ public class AddCustomEventActionTest extends BaseTestCase {
     }
 
 }
-

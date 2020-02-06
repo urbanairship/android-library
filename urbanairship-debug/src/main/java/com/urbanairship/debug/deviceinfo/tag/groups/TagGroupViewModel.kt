@@ -15,7 +15,7 @@ class TagGroupViewModel : ViewModel() {
     val tag = MutableLiveData<String>()
     val tagGroupType = ObservableField<TagGroupType>(TagGroupType.CHANNEL)
     val formValidator = MediatorLiveData<Boolean>()
-    
+
     init {
         formValidator.value = false
         formValidator.addSource(tag) {
@@ -58,6 +58,4 @@ class TagGroupViewModel : ViewModel() {
             }
         }
     }
-
-
 }

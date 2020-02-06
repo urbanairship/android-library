@@ -4,7 +4,6 @@ package com.urbanairship.debug
 
 import android.content.Context
 import android.content.SharedPreferences
-
 import com.urbanairship.debug.event.EventRepository
 import com.urbanairship.debug.event.persistence.EventDao
 import com.urbanairship.debug.event.persistence.EventDatabase

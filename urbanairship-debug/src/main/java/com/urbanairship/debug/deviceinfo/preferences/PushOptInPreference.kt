@@ -25,7 +25,6 @@ class PushOptInPreference : Preference {
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-
     override fun getSummary(): CharSequence {
         return if (UAirship.shared().pushManager.isOptIn) context.getString(R.string.ua_opted_in) else context.getString(R.string.ua_opted_out)
     }

@@ -11,7 +11,7 @@ import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoTagGroupsBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
-class TagGroupFragment  : androidx.fragment.app.Fragment() {
+class TagGroupFragment : androidx.fragment.app.Fragment() {
     private lateinit var viewModel: TagGroupViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -29,7 +29,7 @@ class TagGroupFragment  : androidx.fragment.app.Fragment() {
             }
         }
 
-        when(viewModel.tagGroupType.get()) {
+        when (viewModel.tagGroupType.get()) {
             TagGroupType.CHANNEL -> binding.radioGroupTagGroupType.check(R.id.channel)
             TagGroupType.NAMED_USER -> binding.radioGroupTagGroupType.check(R.id.namedUser)
             else -> binding.radioGroupTagGroupType.check(R.id.channel)

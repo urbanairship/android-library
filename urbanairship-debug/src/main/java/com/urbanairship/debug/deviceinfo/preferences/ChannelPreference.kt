@@ -3,9 +3,7 @@ package com.urbanairship.debug.deviceinfo.preferences
 import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
-
 import android.util.AttributeSet
-
 import com.urbanairship.debug.extensions.copyToClipboard
 import com.urbanairship.preference.ChannelIdPreference
 

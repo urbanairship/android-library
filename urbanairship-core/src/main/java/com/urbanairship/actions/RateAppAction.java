@@ -185,4 +185,3 @@ public class RateAppAction extends Action {
     }
 
 }
-

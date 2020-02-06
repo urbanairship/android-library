@@ -6,7 +6,6 @@ import android.widget.NumberPicker
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.urbanairship.UAirship
 import com.urbanairship.debug.R
-import java.util.concurrent.TimeUnit
 
 /**
  * PreferenceDialogFragment to set the IAA (In-App Automation) Display Interval
@@ -19,7 +18,6 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
         super.onBindDialogView(view)
 
         numberPicker = view.findViewById(R.id.display_interval)
-
 
         numberPicker?.apply {
             minValue = MIN_VALUE
@@ -41,10 +39,9 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
      * Save the display interval in milliseconds
      */
     private fun saveDisplayInterval() {
-        var inAppPreference  = preference as InAppAutomationDisplayIntervalPreference?
+        var inAppPreference = preference as InAppAutomationDisplayIntervalPreference?
         inAppPreference?.setValue(numberPicker!!.value.toLong())
     }
-
 
     companion object {
 
@@ -64,5 +61,4 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
             return dialogFragment
         }
     }
-
 }

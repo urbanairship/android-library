@@ -11,7 +11,7 @@ import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoAttributesBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
-class AttributesFragment  : androidx.fragment.app.Fragment() {
+class AttributesFragment : androidx.fragment.app.Fragment() {
     private lateinit var viewModel: AttributesViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -29,7 +29,7 @@ class AttributesFragment  : androidx.fragment.app.Fragment() {
             }
         }
 
-        when(viewModel.attributeType.get()) {
+        when (viewModel.attributeType.get()) {
             AttributeType.STRING -> binding.radioGroupAttributeType.check(R.id.stringButton)
             AttributeType.NUMBER -> binding.radioGroupAttributeType.check(R.id.numberButton)
             else -> binding.radioGroupAttributeType.check(R.id.stringButton)

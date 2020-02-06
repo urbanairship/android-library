@@ -31,7 +31,6 @@ class TagAdapter : ListAdapter<String, TagAdapter.ViewHolder>(TagFilterDiff()) {
             binding.tag = tag
             binding.executePendingBindings()
         }
-
     }
 
     class TagFilterDiff : DiffUtil.ItemCallback<String>() {
@@ -43,6 +42,5 @@ class TagAdapter : ListAdapter<String, TagAdapter.ViewHolder>(TagFilterDiff()) {
         override fun areContentsTheSame(s: String, t1: String): Boolean {
             return s == t1
         }
-
     }
 }

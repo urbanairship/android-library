@@ -5,4 +5,3 @@
  */
 
 package com.urbanairship.widget;
-

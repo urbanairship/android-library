@@ -16,6 +16,8 @@ buildscript {
         gradlePluginVersion = '3.5.3'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
+        spotlessPluginVersion = '3.27.1'
+        ktlintPluginVersion = '0.36.0'
 
         // Dependencies
 
@@ -75,6 +77,8 @@ buildscript {
         classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayPluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
+        classpath "com.pinterest:ktlint:$ktlintPluginVersion"
     }
 }
 
@@ -102,5 +106,28 @@ task packageDocs(type: Tar, dependsOn: 'urbanairship-core:javadocRelease') {
 task getVersion() {
     doLast {
         println rootProject.airshipVersion
+    }
+}
+
+apply plugin: "com.diffplug.gradle.spotless"
+
+spotless {
+    java {
+        target '**/*.java'
+        targetExclude '.idea/**'
+
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+    kotlin {
+        target '**/*.kt'
+        targetExclude '.idea/**'
+
+        ktlint().userData(['max_line_length':'off'])
+
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
     }
 }

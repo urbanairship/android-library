@@ -634,4 +634,3 @@ public class PushMessageTest extends BaseTestCase {
         assertTrue(message.isAccengagePush());
     }
 }
-

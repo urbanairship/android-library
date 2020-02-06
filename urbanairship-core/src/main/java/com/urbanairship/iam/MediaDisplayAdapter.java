@@ -98,4 +98,3 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
     }
 
 }
-

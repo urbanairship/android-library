@@ -4,7 +4,6 @@ package com.urbanairship.debug.deviceinfo.preferences
 
 import android.content.Context
 import android.util.AttributeSet
-
 import com.urbanairship.UAirship
 import com.urbanairship.aaid.AdvertisingIdTracker
 import com.urbanairship.preference.UACheckBoxPreference
@@ -24,5 +23,4 @@ class EnableAdvertisingIdPreference : UACheckBoxPreference {
     override fun onApplyAirshipPreference(airship: UAirship, enabled: Boolean) {
         AdvertisingIdTracker.shared().isEnabled = enabled
     }
-
 }

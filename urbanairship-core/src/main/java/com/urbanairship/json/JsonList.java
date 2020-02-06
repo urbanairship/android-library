@@ -57,7 +57,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
     public JsonValue get(int location) {
         return list.get(location);
     }
-    
+
     /**
      * Searches this {@code List} for the specified object and returns the index of the
      * first occurrence.

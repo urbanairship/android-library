@@ -61,7 +61,7 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
         }
 
         override fun onDisplayPreferenceDialog(preference: Preference?) {
-            if(preference is InAppAutomationDisplayIntervalPreference) {
+            if (preference is InAppAutomationDisplayIntervalPreference) {
                 val dialogFragment = InAppAutomationDisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
                 dialogFragment.setTargetFragment(this, 0)
                 fragmentManager?.let { dialogFragment.show(it, DISPLAY_INTERVAL_TAG) }
@@ -78,6 +78,5 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
 
             private val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
         }
-
     }
 }

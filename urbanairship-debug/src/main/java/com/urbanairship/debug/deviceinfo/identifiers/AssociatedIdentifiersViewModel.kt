@@ -12,7 +12,7 @@ class AssociatedIdentifiersViewModel : ViewModel() {
 
     private val mutableIdentifiers = MutableLiveData<List<AssociatedIdentifier>>()
 
-    val identifiers : LiveData<List<AssociatedIdentifier>>
+    val identifiers: LiveData<List<AssociatedIdentifier>>
         get() = mutableIdentifiers
 
     val key = MutableLiveData<String>()
@@ -39,8 +39,8 @@ class AssociatedIdentifiersViewModel : ViewModel() {
         updateList()
     }
 
-    private fun isFormValid() :Boolean {
-        return !key.value.isNullOrEmpty() && !value.value.isNullOrEmpty();
+    private fun isFormValid(): Boolean {
+        return !key.value.isNullOrEmpty() && !value.value.isNullOrEmpty()
     }
 
     fun add() {

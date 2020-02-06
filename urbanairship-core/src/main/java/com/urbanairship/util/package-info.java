@@ -4,4 +4,3 @@
  * Airship Utilities
  */
 package com.urbanairship.util;
-

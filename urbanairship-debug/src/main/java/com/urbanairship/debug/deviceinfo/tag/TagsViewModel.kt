@@ -6,7 +6,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.urbanairship.UAirship
-import java.util.*
 
 class TagsViewModel : ViewModel() {
 
@@ -55,5 +54,4 @@ class TagsViewModel : ViewModel() {
     private fun updateList() {
         tagsLiveData.value = ArrayList(tags)
     }
-
 }

@@ -97,5 +97,3 @@ public class ScreenTrackingEventTest extends BaseTestCase {
     }
 
 }
-
-

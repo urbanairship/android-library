@@ -13,13 +13,15 @@ import com.urbanairship.analytics.Event
  */
 @Entity(tableName = "events")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-data class EventEntity(@PrimaryKey(autoGenerate = true)
-                       val id: Int,
-                       val eventId: String,
-                       val session: String,
-                       val payload: String,
-                       val time: Long,
-                       val type: String) {
+data class EventEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
+    val eventId: String,
+    val session: String,
+    val payload: String,
+    val time: Long,
+    val type: String
+) {
 
     constructor(event: Event, session: String) : this(
             0,

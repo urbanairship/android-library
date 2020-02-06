@@ -163,7 +163,7 @@ class EventListFragment : Fragment() {
             it.inflateMenu(R.menu.ua_menu_event)
 
             // initialize radio buttons
-            var radioBoxItem : MenuItem? = null
+            var radioBoxItem: MenuItem? = null
             when (storageDays) {
                 2 -> {
                     radioBoxItem = it.menu.findItem(R.id.ua_event_storage_days_02)
@@ -192,18 +192,18 @@ class EventListFragment : Fragment() {
                         if (it.groupId == R.id.ua_storage_days) {
                             when (it.itemId) {
                                 R.id.ua_event_storage_days_02 -> {
-                                    storageDays = 2;
+                                    storageDays = 2
                                 }
                                 R.id.ua_event_storage_days_05 -> {
-                                    storageDays = 5;
+                                    storageDays = 5
                                 }
                                 R.id.ua_event_storage_days_10 -> {
-                                    storageDays = 10;
+                                    storageDays = 10
                                 }
                                 R.id.ua_event_storage_days_30 -> {
-                                    storageDays = 30;
+                                    storageDays = 30
                                 }
-                             }
+                            }
                             GlobalScope.launch(Dispatchers.IO) {
                                 ServiceLocator.shared(context!!)
                                         .getEventRepository()

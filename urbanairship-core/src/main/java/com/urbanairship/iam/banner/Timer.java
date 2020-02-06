@@ -88,4 +88,3 @@ public abstract class Timer {
     protected abstract void onFinish();
 
 }
-

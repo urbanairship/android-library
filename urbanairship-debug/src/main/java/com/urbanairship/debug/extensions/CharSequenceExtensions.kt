@@ -6,7 +6,7 @@ import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ClipboardAction
 import com.urbanairship.debug.R
 
-fun CharSequence.copyToClipboard(context:Context, toast:Boolean = true){
+fun CharSequence.copyToClipboard(context: Context, toast: Boolean = true) {
     ActionRunRequest.createRequest(ClipboardAction.DEFAULT_REGISTRY_NAME)
             .setValue(this)
             .run { _, _ ->

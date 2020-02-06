@@ -648,4 +648,3 @@ public class ModalDisplayContent implements DisplayContent {
     }
 
 }
-

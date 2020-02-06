@@ -366,4 +366,3 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     }
 
 }
-

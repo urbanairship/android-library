@@ -7,7 +7,6 @@ import androidx.annotation.RestrictTo
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.urbanairship.debug.push.persistence.PushEntity
 
 /**
  * PushItem database.

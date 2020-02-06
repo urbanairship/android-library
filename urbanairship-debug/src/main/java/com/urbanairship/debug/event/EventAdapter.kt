@@ -15,7 +15,6 @@ import com.urbanairship.debug.event.persistence.EventEntity
  */
 internal class EventAdapter(private val callback: ((event: EventEntity) -> Unit)) : PagedListAdapter<EventEntity, EventAdapter.ViewHolder>(diffCallback) {
 
-
     class ViewHolder(val binding: UaItemEventBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

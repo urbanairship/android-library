@@ -10,7 +10,7 @@ import androidx.navigation.ui.NavigationUI
  */
 fun androidx.fragment.app.Fragment.setupToolbarWithNavController(@IdRes layoutId: Int): Toolbar? {
     var toolbar: Toolbar? = null
-    view?.let {view ->
+    view?.let { view ->
         toolbar = view.findViewById<Toolbar>(layoutId)
         toolbar?.let {
             NavigationUI.setupWithNavController(it, Navigation.findNavController(view))
