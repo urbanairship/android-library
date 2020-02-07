@@ -13,7 +13,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.math.BigDecimal;
@@ -142,9 +141,6 @@ public class CustomEvent extends Event implements JsonSerializable {
     private final String sendId;
 
     @Nullable
-    private final String metadata;
-
-    @Nullable
     private final String templateType;
 
     @NonNull
@@ -157,7 +153,6 @@ public class CustomEvent extends Event implements JsonSerializable {
         this.interactionType = UAStringUtil.isEmpty(builder.interactionType) ? null : builder.interactionType;
         this.interactionId = UAStringUtil.isEmpty(builder.interactionId) ? null : builder.interactionId;
         this.sendId = builder.pushSendId;
-        this.metadata = builder.pushMetadata;
         this.templateType = builder.templateType;
         this.properties = new HashMap<>(builder.properties);
     }
@@ -263,9 +258,7 @@ public class CustomEvent extends Event implements JsonSerializable {
             data.put(CONVERSION_SEND_ID, conversionSendId);
         }
 
-        if (!UAStringUtil.isEmpty(metadata)) {
-            data.put(CONVERSION_METADATA, metadata);
-        } else if (conversionMetadata != null) {
+        if (conversionMetadata != null) {
             data.put(CONVERSION_METADATA, conversionMetadata);
         } else {
             data.put(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
@@ -418,9 +411,6 @@ public class CustomEvent extends Event implements JsonSerializable {
         private String pushSendId;
 
         @Nullable
-        private String pushMetadata;
-
-        @Nullable
         private String templateType;
 
         @NonNull
@@ -523,13 +513,13 @@ public class CustomEvent extends Event implements JsonSerializable {
         /**
          * Sets the interaction type and ID from a {@link com.urbanairship.richpush.RichPushMessage}.
          *
-         * @param message The rich push message that created the custom event.
+         * @param richPushMessageId The rich push message ID that created the custom event.
          * @return The custom event builder.
          */
         @NonNull
-        public Builder setInteraction(@NonNull RichPushMessage message) {
+        public Builder setMessageCenterInteraction(@NonNull String richPushMessageId) {
             this.interactionType = MCRAP_TRANSACTION_TYPE;
-            this.interactionId = message.getMessageId();
+            this.interactionId = richPushMessageId;
             return this;
         }
 
@@ -562,7 +552,6 @@ public class CustomEvent extends Event implements JsonSerializable {
         public Builder setAttribution(@Nullable PushMessage pushMessage) {
             if (pushMessage != null) {
                 pushSendId = pushMessage.getSendId();
-                pushMetadata = pushMessage.getMetadata();
             }
             return this;
         }

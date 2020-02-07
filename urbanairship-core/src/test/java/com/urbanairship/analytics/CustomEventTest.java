@@ -206,7 +206,7 @@ public class CustomEventTest extends BaseTestCase {
         when(message.getMessageId()).thenReturn("message id");
 
         CustomEvent event = CustomEvent.newBuilder("event name")
-                                       .setInteraction(message)
+                                       .setMessageCenterInteraction(message.getMessageId())
                                        .build();
 
         EventTestUtils.validateEventValue(event, "interaction_id", "message id");

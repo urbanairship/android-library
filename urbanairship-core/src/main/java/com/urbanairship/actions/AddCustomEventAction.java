@@ -5,12 +5,10 @@ package com.urbanairship.actions;
 import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.Checks;
 
 import java.util.ArrayList;
@@ -66,9 +64,9 @@ public class AddCustomEventAction extends Action {
         JsonMap properties = customEventMap.opt(CustomEvent.PROPERTIES).getMap();
 
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder(eventName)
-                                                      .setTransactionId(transactionId)
-                                                      .setInteraction(interactionType, interactionId)
-                                                      .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
+                .setTransactionId(transactionId)
+                .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA))
+                .setInteraction(interactionType, interactionId);
 
         if (eventStringValue != null) {
             eventBuilder.setEventValue(eventStringValue);
@@ -79,10 +77,9 @@ public class AddCustomEventAction extends Action {
         // Try to fill in the interaction if its not set
         if (interactionId == null && interactionType == null) {
             String messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
-            RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
 
-            if (message != null) {
-                eventBuilder.setInteraction(message);
+            if (messageId != null) {
+                eventBuilder.setMessageCenterInteraction(messageId);
             }
         }
 
