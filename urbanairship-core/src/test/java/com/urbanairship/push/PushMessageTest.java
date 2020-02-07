@@ -12,8 +12,7 @@ import android.os.Parcel;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.OpenRichPushInboxAction;
-import com.urbanairship.actions.OverlayRichPushMessageAction;
+import com.urbanairship.actions.MessageCenterAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -451,7 +450,7 @@ public class PushMessageTest extends BaseTestCase {
     }
 
     /**
-     * Test get actions appends a OpenRichPushInboxAction if it contains a message ID and does
+     * Test get actions appends a MessageCenterAction if it contains a message ID and does
      * not already define a inbox action.
      */
     @Test
@@ -465,39 +464,20 @@ public class PushMessageTest extends BaseTestCase {
         bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
         PushMessage message = new PushMessage(bundle);
 
-        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message ID"));
+        actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message ID"));
         assertEquals(actions, message.getActions());
     }
 
     /**
      * Test get actions when the payload defines an inbox action that it does not append the
-     * OpenRichPushInboxAction action.
+     * MessageCenterAction action.
      */
     @Test
     public void testGetActionsContainsInboxAction() throws JsonException {
         Map<String, ActionValue> actions = new HashMap<>();
         actions.put("action_name", ActionValue.wrap("action_value"));
         actions.put("oh", ActionValue.wrap("hi"));
-        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("some other message ID"));
-
-        Bundle bundle = new Bundle();
-        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
-        bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
-        PushMessage message = new PushMessage(bundle);
-
-        assertEquals(actions, message.getActions());
-    }
-
-    /**
-     * Test get actions when the payload defines an overlay rich push message action that it does not append the
-     * OpenRichPushInboxAction action.
-     */
-    @Test
-    public void testGetActionsContainsOverlayMessageAction() throws JsonException {
-        Map<String, ActionValue> actions = new HashMap<>();
-        actions.put("action_name", ActionValue.wrap("action_value"));
-        actions.put("oh", ActionValue.wrap("hi"));
-        actions.put(OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME, ActionValue.wrap("some other message ID"));
+        actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("some other message ID"));
 
         Bundle bundle = new Bundle();
         bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());

@@ -6,7 +6,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,8 +33,6 @@ import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebView;
 
 import java.lang.ref.WeakReference;
@@ -57,7 +54,6 @@ public class HtmlActivity extends InAppMessageActivity {
             load();
         }
     };
-    private Cancelable fetchMessagesCallback;
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
@@ -217,11 +213,6 @@ public class HtmlActivity extends InAppMessageActivity {
 
         // Cancel any delayed loads
         handler.removeCallbacks(delayedLoadRunnable);
-
-        if (fetchMessagesCallback != null) {
-            fetchMessagesCallback.cancel();
-            fetchMessagesCallback = null;
-        }
     }
 
     /**
@@ -275,38 +266,8 @@ public class HtmlActivity extends InAppMessageActivity {
 
         Logger.info("Loading url: %s", url);
         error = null;
-
-
-        Uri uri = Uri.parse(url);
-
-        if (RichPushInbox.MESSAGE_DATA_SCHEME.equalsIgnoreCase(uri.getScheme())) {
-            final String messageId = uri.getSchemeSpecificPart();
-            RichPushMessage message = UAirship.shared()
-                                              .getInbox()
-                                              .getMessage(messageId);
-            if (message != null) {
-                webView.loadRichPushMessage(message);
-                message.markRead();
-            } else {
-                fetchMessagesCallback = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
-                    @Override
-                    public void onFinished(boolean success) {
-                        if (success && UAirship.shared().getInbox().getMessage(messageId) == null) {
-                            Logger.error("Message %s not found.", messageId);
-                            finish();
-                        }
-
-                        load();
-                    }
-                });
-
-            }
-        } else {
-            webView.loadUrl(uri.toString());
-        }
+        webView.loadUrl(url);
     }
-
-
 
     public void applySizeConstraints(HtmlDisplayContent displayContent) {
         if (displayContent.getWidth() == 0 && displayContent.getHeight() == 0) {

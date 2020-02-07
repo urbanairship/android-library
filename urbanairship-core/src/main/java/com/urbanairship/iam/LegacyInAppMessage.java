@@ -6,7 +6,7 @@ import android.graphics.Color;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.urbanairship.actions.OpenRichPushInboxAction;
+import com.urbanairship.actions.MessageCenterAction;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -258,7 +258,7 @@ public class LegacyInAppMessage {
         Map<String, JsonValue> clickActions = actionsJson.opt(ON_CLICK_KEY).optMap().getMap();
         if (!UAStringUtil.isEmpty(pushMessage.getRichPushMessageId())) {
             if (Collections.disjoint(clickActions.keySet(), INBOX_ACTION_NAMES)) {
-                clickActions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, JsonValue.wrapOpt(pushMessage.getRichPushMessageId()));
+                clickActions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, JsonValue.wrapOpt(pushMessage.getRichPushMessageId()));
             }
 
         }

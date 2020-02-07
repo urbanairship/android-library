@@ -55,12 +55,9 @@
         <name>^u</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.actions.OpenRichPushInboxAction">
+    <ActionEntry class="com.urbanairship.actions.MessageCenterAction">
         <name>open_mc_action</name>
         <name>^mc</name>
-    </ActionEntry>
-
-    <ActionEntry class="com.urbanairship.actions.OverlayRichPushMessageAction">
         <name>open_mc_overlay_action</name>
         <name>^mco</name>
     </ActionEntry>

@@ -8,7 +8,6 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushInbox;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,15 +16,15 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class OpenRichPushInboxActionTest extends BaseTestCase {
+public class MessageCenterActionTest extends BaseTestCase {
 
-    private OpenRichPushInboxAction action;
+    private MessageCenterAction action;
     private MessageCenter mockMessageCenter;
 
 
     @Before
     public void setup() {
-        action = new OpenRichPushInboxAction();
+        action = new MessageCenterAction();
 
         mockMessageCenter = mock(MessageCenter.class);
 

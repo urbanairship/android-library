@@ -24,7 +24,7 @@ import com.urbanairship.util.UAStringUtil;
  * <p>
  * Default Registration Names: ^mc, open_mc_action
  */
-public class OpenRichPushInboxAction extends Action {
+public class MessageCenterAction extends Action {
 
     /**
      * Default registry name
@@ -37,6 +37,24 @@ public class OpenRichPushInboxAction extends Action {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mc";
+
+    /**
+     * Overlay message center registry name
+     *
+     * @deprecated May be removed in a future SDK version. Use "open_mc_action" instead.
+     */
+    @NonNull
+    @Deprecated
+    public static final String REGISTRY_NAME_OVERLAY = "open_mc_overlay_action";
+
+    /**
+     * Overlay message center registry short name
+     *
+     * @deprecated May be removed in a future SDK version. Use "^mc" instead.
+     */
+    @NonNull
+    @Deprecated
+    public static final String REGISTRY_SHORT_NAME_OVERLAY = "^mco";
 
     /**
      * Message ID place holder. Will pull the message ID from the push metadata.

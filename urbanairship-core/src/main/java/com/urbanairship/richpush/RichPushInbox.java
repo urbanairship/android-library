@@ -18,8 +18,7 @@ import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.OpenRichPushInboxAction;
-import com.urbanairship.actions.OverlayRichPushMessageAction;
+import com.urbanairship.actions.MessageCenterAction;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -53,10 +52,10 @@ public class RichPushInbox extends AirshipComponent {
 
     @NonNull
     public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
-            OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
-            OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
-            OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
-            OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
+            MessageCenterAction.DEFAULT_REGISTRY_NAME,
+            MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME,
+            MessageCenterAction.REGISTRY_NAME_OVERLAY,
+            MessageCenterAction.REGISTRY_SHORT_NAME_OVERLAY);
 
     /**
      * A listener interface for receiving event callbacks related to inbox updates.

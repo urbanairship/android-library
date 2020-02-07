@@ -19,7 +19,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.OpenRichPushInboxAction;
+import com.urbanairship.actions.MessageCenterAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -477,7 +477,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
         if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
             if (Collections.disjoint(actions.keySet(), RichPushInbox.INBOX_ACTION_NAMES)) {
-                actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
+                actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
             }
         }
 
