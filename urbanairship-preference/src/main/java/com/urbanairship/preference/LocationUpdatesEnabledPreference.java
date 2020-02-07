@@ -3,26 +3,31 @@
 package com.urbanairship.preference;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+
 import android.util.AttributeSet;
 
+import com.urbanairship.AirshipExecutors;
+import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.HelperActivity;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.Executor;
 
 /**
  * CheckboxPreference to enable/disable location updates.
  */
 public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
+    private final Executor executor = AirshipExecutors.newSerialExecutor();
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -39,10 +44,35 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     @Override
     public void setChecked(boolean value) {
+        final WeakReference<LocationUpdatesEnabledPreference> weakReference = new WeakReference<>(this);
+
         if (isChecked != value && value && shouldRequestPermissions()) {
-            RequestPermissionsTask task = new RequestPermissionsTask(getContext(), this);
-            String[] permissions = new String[] { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, permissions);
+            final PendingResult<Boolean> checkedResult = new PendingResult<>();
+
+            checkedResult.addResultCallback(new ResultCallback<Boolean>() {
+                @Override
+                public void onResult(@Nullable Boolean result) {
+                    LocationUpdatesEnabledPreference preference = weakReference.get();
+                    if (preference != null) {
+                        preference.setChecked(result);
+                    }
+                }
+            });
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    int[] result = HelperActivity.requestPermissions(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
+                    Boolean checked = false;
+                    for (int element : result) {
+                        if (element == PackageManager.PERMISSION_GRANTED) {
+                            checked = true;
+                        }
+                    }
+
+                    checkedResult.setResult(checked);
+                }
+            });
         } else {
             super.setChecked(value);
         }
@@ -71,39 +101,4 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         airship.getLocationManager().setLocationUpdatesEnabled(enabled);
     }
-
-    private static class RequestPermissionsTask extends AsyncTask<String[], Void, Boolean> {
-
-        @SuppressLint("StaticFieldLeak")
-        private final Context context;
-        private final WeakReference<LocationUpdatesEnabledPreference> weakReference;
-
-        RequestPermissionsTask(Context context, LocationUpdatesEnabledPreference preference) {
-            this.context = context.getApplicationContext();
-            this.weakReference = new WeakReference<>(preference);
-        }
-
-        @NonNull
-        @Override
-        protected Boolean doInBackground(String[]... strings) {
-            int[] result = HelperActivity.requestPermissions(context, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
-            for (int element : result) {
-                if (element == PackageManager.PERMISSION_GRANTED) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-            LocationUpdatesEnabledPreference preference = weakReference.get();
-            if (preference != null) {
-                preference.setChecked(result);
-            }
-        }
-
-    }
-
 }

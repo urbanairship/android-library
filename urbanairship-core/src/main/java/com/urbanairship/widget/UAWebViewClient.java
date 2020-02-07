@@ -3,10 +3,8 @@
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -17,8 +15,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.R;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -47,11 +48,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.WeakHashMap;
+import java.util.concurrent.Executor;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * <p>
@@ -134,13 +137,27 @@ public class UAWebViewClient extends WebViewClient {
     private static String nativeBridge;
     private boolean faviconEnabled = false;
 
-    private final Map<WebView, InjectJsBridgeTask> injectJsBridgeTaskMap = new WeakHashMap<>();
+    private Executor executor = AirshipExecutors.newSerialExecutor();
+
+    private final Map<WebView, PendingResult<String>> bridgeResultMap = new WeakHashMap<>();
 
     /**
      * Default constructor.
      */
     public UAWebViewClient() {
         this(new ActionRunRequestFactory());
+    }
+
+    /**
+     * Constructs a UAWebViewClient with the specified ActionRunRequestFactory.
+     *
+     * @param actionRunRequestFactory The action run request factory.
+     * @param executor The executor.
+     */
+    @VisibleForTesting
+    UAWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory, Executor executor) {
+        this.actionRunRequestFactory = actionRunRequestFactory;
+        this.executor = executor;
     }
 
     /**
@@ -501,6 +518,35 @@ public class UAWebViewClient extends WebViewClient {
         return decodedActions;
     }
 
+    /**
+     * Helper method to read the native bridge from resources.
+     *
+     * @return The native bridge.
+     * @throws IOException if output steam read or write operations fail.
+     */
+    private String readNativeBridge(@NonNull final WebView view) throws IOException {
+        InputStream input = view.getContext().getResources().openRawResource(R.raw.ua_native_bridge);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try {
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = input.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, length);
+            }
+
+            return outputStream.toString();
+        } finally {
+            try {
+                input.close();
+                outputStream.close();
+            } catch (Exception e) {
+                Logger.debug(e, "Failed to close streams");
+            }
+        }
+    }
+
     @CallSuper
     @Override
     public void onPageFinished(@Nullable final WebView view, @Nullable String url) {
@@ -515,18 +561,86 @@ public class UAWebViewClient extends WebViewClient {
 
         Logger.info("Loading Airship Javascript interface.");
 
-        RichPushMessage message = getMessage(view);
-        InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view, message);
-        injectJsBridgeTaskMap.put(view, task);
-        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        final WeakReference<WebView> webViewWeakReference = new WeakReference<>(view);
+
+        final RichPushMessage message = getMessage(view);
+
+        final PendingResult<String> bridgeResult = new PendingResult<>();
+
+        bridgeResult.addResultCallback(new ResultCallback<String>() {
+            @Override
+            public void onResult(@Nullable String result) {
+                WebView webView = webViewWeakReference.get();
+                if (webView == null) {
+                    return;
+                }
+
+                if (Build.VERSION.SDK_INT >= 19) {
+                    webView.evaluateJavascript(result, null);
+                } else {
+                    webView.loadUrl("javascript:" + result);
+                }
+            }
+        });
+
+        Runnable injectJsBridgeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                final WebView webView = webViewWeakReference.get();
+                if (webView == null) {
+                    bridgeResult.setResult(null);
+                }
+
+                if (dateFormatter == null) {
+                    dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
+                    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+                }
+
+                /*
+                 * The native bridge will prototype _UAirship, so inject any additional
+                 * functionality under _UAirship and the final UAirship object will have
+                 * access to it.
+                 */
+                StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
+
+                // Getters
+                sb.append(createGetter("getDeviceModel", Build.MODEL))
+                  .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
+                  .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
+                  .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
+                  .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
+                  .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
+                  .append(createGetter("getChannelId", UAirship.shared().getChannel().getId()))
+                  .append(createGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().appKey))
+                  .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
+
+                if (TextUtils.isEmpty(nativeBridge)) {
+                    try {
+                        nativeBridge = readNativeBridge(webView);
+                    } catch (IOException e) {
+                        Logger.error("Failed to read native bridge.");
+                    }
+                }
+
+                sb.append(nativeBridge);
+
+                bridgeResult.setResult(sb.toString());
+            }
+        };
+
+        bridgeResultMap.put(view, bridgeResult);
+
+        executor.execute(injectJsBridgeRunnable);
     }
+
+
 
     @CallSuper
     @Override
     public void onPageStarted(@NonNull WebView view, @Nullable String url, @Nullable Bitmap favicon) {
-        InjectJsBridgeTask task = injectJsBridgeTaskMap.remove(view);
-        if (task != null) {
-            task.cancel(true);
+        PendingResult<String> injectJsBridgePendingResult = bridgeResultMap.remove(view);
+        if (injectJsBridgePendingResult != null) {
+            injectJsBridgePendingResult.cancel();
         }
     }
 
@@ -605,115 +719,4 @@ public class UAWebViewClient extends WebViewClient {
         }
 
     }
-
-    /**
-     * Async task to inject the Javascript bridge.
-     */
-    @SuppressLint("StaticFieldLeak")
-    private class InjectJsBridgeTask extends AsyncTask<Void, Void, String> {
-
-        @NonNull
-        private final WeakReference<WebView> webViewWeakReference;
-        private final Context context;
-
-        @Nullable
-        private final RichPushMessage message;
-
-        private InjectJsBridgeTask(Context context, WebView webView, @Nullable RichPushMessage message) {
-            this.context = context.getApplicationContext();
-            this.webViewWeakReference = new WeakReference<>(webView);
-            this.message = message;
-        }
-
-        @Nullable
-        @Override
-        protected String doInBackground(Void... params) {
-            final WebView webView = webViewWeakReference.get();
-            if (webView == null) {
-                return null;
-            }
-
-            if (dateFormatter == null) {
-                dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
-                dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-            }
-
-            /*
-             * The native bridge will prototype _UAirship, so inject any additional
-             * functionality under _UAirship and the final UAirship object will have
-             * access to it.
-             */
-            StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
-
-            // Getters
-            sb.append(createGetter("getDeviceModel", Build.MODEL))
-              .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
-              .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
-              .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
-              .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
-              .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
-              .append(createGetter("getChannelId", UAirship.shared().getChannel().getId()))
-              .append(createGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().appKey))
-              .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
-
-            if (TextUtils.isEmpty(nativeBridge)) {
-                try {
-                    nativeBridge = readNativeBridge();
-                } catch (IOException e) {
-                    Logger.error("Failed to read native bridge.");
-                }
-            }
-
-            sb.append(nativeBridge);
-
-            return sb.toString();
-        }
-
-        @Override
-        protected void onPostExecute(String jsBridge) {
-            WebView webView = webViewWeakReference.get();
-            if (webView == null) {
-                return;
-            }
-
-            injectJsBridgeTaskMap.remove(webView);
-
-            if (Build.VERSION.SDK_INT >= 19) {
-                webView.evaluateJavascript(jsBridge, null);
-            } else {
-                webView.loadUrl("javascript:" + jsBridge);
-            }
-        }
-
-        /**
-         * Helper method to read the native bridge from resources.
-         *
-         * @return The native bridge.
-         * @throws IOException if output steam read or write operations fail.
-         */
-        private String readNativeBridge() throws IOException {
-            InputStream input = context.getResources().openRawResource(R.raw.ua_native_bridge);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            try {
-                byte[] buffer = new byte[1024];
-                int length;
-
-                while ((length = input.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, length);
-                }
-
-                return outputStream.toString();
-            } finally {
-                try {
-                    input.close();
-                    outputStream.close();
-                } catch (Exception e) {
-                    Logger.debug(e, "Failed to close streams");
-                }
-            }
-        }
-
-    }
-
 }

@@ -4,7 +4,6 @@ package com.urbanairship.aaid;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.provider.Settings;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,6 +13,7 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -24,6 +24,7 @@ import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 /**
  * Helper class that auto tracks the android advertising Id. The ID will
@@ -31,6 +32,13 @@ import java.io.IOException;
  * using {@link Analytics#editAssociatedIdentifiers()}.
  */
 public class AdvertisingIdTracker extends AirshipComponent {
+    private final Executor executor = AirshipExecutors.newSerialExecutor();
+
+    interface Callback {
+        void onResult(@Nullable String advertisingId, boolean isLimitedTrackingEnabled);
+
+        void onError(Exception e);
+    }
 
     private static final String ENABLED_KEY = "com.urbanairship.analytics.ADVERTISING_ID_TRACKING";
 
@@ -149,7 +157,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
             return;
         }
 
-        UpdateIdTask task = new UpdateIdTask(getContext(), airship.getPlatformType(), new UpdateIdTask.Callback() {
+        final Callback callback = new Callback() {
             @Override
             public void onResult(String advertisingId, boolean isLimitedTrackingEnabled) {
                 if (!isEnabled() || !isDataCollectionEnabled()) {
@@ -179,66 +187,40 @@ public class AdvertisingIdTracker extends AirshipComponent {
             public void onError(Exception e) {
                 Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
             }
-        });
+        };
 
-        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String advertisingId = null;
+                boolean limitedAdTrackingEnabled = true;
+                Context context = getContext();
 
-    private static class UpdateIdTask extends AsyncTask<Void, Void, Void> {
+                switch (airship.getPlatformType()) {
+                    case UAirship.AMAZON_PLATFORM:
+                        advertisingId = Settings.Secure.getString(context.getContentResolver(), "advertising_id");
+                        limitedAdTrackingEnabled = Settings.Secure.getInt(context.getContentResolver(), "limit_ad_tracking", -1) == 0;
+                        break;
 
-        // Using application context
-        @SuppressLint("StaticFieldLeak")
-        private final Context context;
-        private final Callback callback;
-        private final int platform;
+                    case UAirship.ANDROID_PLATFORM:
+                        try {
+                            AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
+                            if (adInfo == null) {
+                                break;
+                            }
 
-        interface Callback {
-
-            void onResult(@Nullable String advertisingId, boolean isLimitedTrackingEnabled);
-
-            void onError(Exception e);
-
-        }
-
-        private UpdateIdTask(@NonNull Context context, @UAirship.Platform int platform, @NonNull Callback callback) {
-            this.context = context.getApplicationContext();
-            this.callback = callback;
-            this.platform = platform;
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-
-            String advertisingId = null;
-            boolean limitedAdTrackingEnabled = true;
-
-            switch (platform) {
-                case UAirship.AMAZON_PLATFORM:
-                    advertisingId = Settings.Secure.getString(context.getContentResolver(), "advertising_id");
-                    limitedAdTrackingEnabled = Settings.Secure.getInt(context.getContentResolver(), "limit_ad_tracking", -1) == 0;
-                    break;
-
-                case UAirship.ANDROID_PLATFORM:
-                    try {
-                        AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
-                        if (adInfo == null) {
-                            break;
+                            advertisingId = adInfo.getId();
+                            limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
+                        } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
+                            callback.onError(e);
+                            return;
                         }
 
-                        advertisingId = adInfo.getId();
-                        limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
-                    } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
-                        callback.onError(e);
-                        return null;
-                    }
+                        break;
+                }
 
-                    break;
+                callback.onResult(advertisingId, limitedAdTrackingEnabled);
             }
-
-            callback.onResult(advertisingId, limitedAdTrackingEnabled);
-            return null;
-        }
-
+        });
     }
-
 }

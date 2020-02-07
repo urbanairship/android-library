@@ -5,7 +5,6 @@ import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -17,11 +16,14 @@ import android.widget.ImageView;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.util.ImageUtils;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.util.concurrent.Executor;
 
 /**
  * Request to load a bitmap into an ImageView.
@@ -38,11 +40,14 @@ abstract class ImageRequest {
     private final WeakReference<ImageView> imageViewReference;
     private final Context context;
 
-    private ImageRequestAsyncTask task;
+    private PendingResult<Drawable> imageRequestPendingResult;
+
     private ViewTreeObserver.OnPreDrawListener preDrawListener;
     private int width;
     private int height;
     private boolean isCancelled = false;
+
+    private final Executor executor = AirshipExecutors.newSerialExecutor();
 
     /**
      * Creates a request.
@@ -75,9 +80,9 @@ abstract class ImageRequest {
             imageViewReference.clear();
         }
 
-        if (task != null) {
-            task.cancel(true);
-            task = null;
+        if (imageRequestPendingResult != null) {
+            imageRequestPendingResult.cancel();
+            imageRequestPendingResult = null;
         }
     }
 
@@ -139,8 +144,27 @@ abstract class ImageRequest {
                 imageView.setImageDrawable(null);
             }
 
-            this.task = new ImageRequestAsyncTask(this);
-            task.executeOnExecutor(AirshipExecutors.THREAD_POOL_EXECUTOR);
+            imageRequestPendingResult = new PendingResult<>();
+
+            imageRequestPendingResult.addResultCallback(new ResultCallback<Drawable>() {
+                @Override
+                public void onResult(@Nullable Drawable drawable) {
+                    if (drawable != null) {
+                        applyDrawable(drawable);
+                    }
+                }
+            });
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        imageRequestPendingResult.setResult(fetchDrawableOnBackground());
+                    } catch (IOException e) {
+                        Logger.debug(e, "Unable to fetch bitmap");
+                    }
+                }
+            });
         }
     }
 
@@ -160,29 +184,6 @@ abstract class ImageRequest {
      * @param imageView The image view.
      */
     abstract void onFinish(@Nullable ImageView imageView);
-
-    @MainThread
-    private void applyDrawable(Drawable drawable) {
-        if (isCancelled) {
-            return;
-        }
-
-        final ImageView imageView = imageViewReference.get();
-        if (drawable != null && imageView != null) {
-            // Transition drawable with a transparent drawable and the final drawable
-            TransitionDrawable td = new TransitionDrawable(new Drawable[] {
-                    new ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent)),
-                    drawable
-            });
-
-            imageView.setImageDrawable(td);
-            td.startTransition(FADE_IN_TIME_MS);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable instanceof AnimatedImageDrawable) {
-                ((AnimatedImageDrawable) drawable).start();
-            }
-        }
-    }
 
     @Nullable
     @WorkerThread
@@ -207,37 +208,26 @@ abstract class ImageRequest {
 
     }
 
-    /**
-     * Helper class. Just calls through to the request.
-     */
-    private static class ImageRequestAsyncTask extends AsyncTask<Void, Void, Drawable> {
-
-        private final ImageRequest request;
-
-        ImageRequestAsyncTask(@NonNull ImageRequest request) {
-            this.request = request;
+    @MainThread
+    private void applyDrawable(Drawable drawable) {
+        if (isCancelled) {
+            return;
         }
 
-        @Override
-        @WorkerThread
-        protected Drawable doInBackground(Void... params) {
-            try {
-                return request.fetchDrawableOnBackground();
-            } catch (IOException e) {
-                Logger.debug(e, "Unable to fetch bitmap");
-            }
+        final ImageView imageView = imageViewReference.get();
+        if (drawable != null && imageView != null) {
+            // Transition drawable with a transparent drawable and the final drawable
+            TransitionDrawable td = new TransitionDrawable(new Drawable[] {
+                    new ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent)),
+                    drawable
+            });
 
-            return null;
-        }
+            imageView.setImageDrawable(td);
+            td.startTransition(FADE_IN_TIME_MS);
 
-        @Override
-        @MainThread
-        protected void onPostExecute(@Nullable Drawable drawable) {
-            if (drawable != null) {
-                request.applyDrawable(drawable);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable instanceof AnimatedImageDrawable) {
+                ((AnimatedImageDrawable) drawable).start();
             }
         }
-
     }
-
 }

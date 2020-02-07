@@ -3,7 +3,6 @@
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.view.KeyEvent;
 import android.view.View;
@@ -36,8 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -53,12 +51,19 @@ import static org.mockito.Mockito.when;
 
 public class UAWebViewClientTest extends BaseTestCase {
 
-    ActionRunRequestFactory runRequestFactory;
-    UAWebViewClient client;
-    View rootView;
+    private ActionRunRequestFactory runRequestFactory;
+    private UAWebViewClient client;
+    private View rootView;
 
-    String webViewUrl;
-    WebView webView;
+    private String webViewUrl;
+    private WebView webView;
+
+    private Executor executor = new Executor() {
+        @Override
+        public void execute(Runnable runnable) {
+            runnable.run();
+        }
+    };
 
     @Before
     public void setup() {
@@ -79,7 +84,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         UAirship.shared().getWhitelist().addEntry("http://test-client");
 
-        client = new UAWebViewClient(runRequestFactory);
+        client = new UAWebViewClient(runRequestFactory, executor);
     }
 
     /**
@@ -262,15 +267,10 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     @SuppressLint("NewApi")
-    public void testOnPageFinished() throws InterruptedException {
+    public void testOnPageFinished() {
         client.onPageFinished(webView, webViewUrl);
 
-        // Execute all async tasks on the THREAD_POOL_EXECUTOR
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR;
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.SECONDS);
-
-        // Process any async task onPostExecutes
+        // Execute all runnables that have been enqueued on the foreground scheduler.
         Robolectric.flushForegroundThreadScheduler();
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -290,16 +290,11 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     @SuppressLint("NewApi")
-    public void testOnPageFinishedNotWhiteListed() throws InterruptedException {
+    public void testOnPageFinishedNotWhiteListed() {
         webViewUrl = "http://notwhitelisted";
         client.onPageFinished(webView, webViewUrl);
 
-        // Execute all async tasks on the THREAD_POOL_EXECUTOR
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR;
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.SECONDS);
-
-        // Process any async task onPostExecutes
+        // Execute all runnables that have been enqueued on the foreground scheduler.
         Robolectric.flushForegroundThreadScheduler();
 
         verifyZeroInteractions(webView);
@@ -554,5 +549,4 @@ public class UAWebViewClientTest extends BaseTestCase {
             verify(webView).evaluateJavascript(s, null);
         }
     }
-
 }
