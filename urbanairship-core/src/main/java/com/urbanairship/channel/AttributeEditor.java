@@ -3,11 +3,9 @@
 package com.urbanairship.channel;
 
 import com.urbanairship.Logger;
-import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -114,24 +112,6 @@ abstract public class AttributeEditor {
         return this;
     }
 
-    /**
-     * Sets a date attribute.
-     *
-     * @param key The attribute key greater than one character and less than 1024 characters in length.
-     * @param date The date attribute.
-     * @return The AttributeEditor.
-     */
-    @NonNull
-    public AttributeEditor setAttribute(@Size(min = 1, max = MAX_ATTRIBUTE_FIELD_LENGTH) @NonNull String key, @NonNull Date date) {
-        if (isInvalidField(key)) {
-            return this;
-        }
-
-        String dateString = DateUtils.createIso8601TimeStamp(date.getTime());
-
-        mutations.add(AttributeMutation.newSetAttributeMutation(key, dateString));
-        return this;
-    }
 
     /**
      * Removes an attribute.
