@@ -73,43 +73,8 @@ public class ShareAction extends Action {
                 .setType("text/plain")
                 .putExtra(Intent.EXTRA_TEXT, arguments.getValue().getString());
 
-        List<ResolveInfo> shareResolveInfos = new ArrayList<>();
-
-        for (ResolveInfo resolveInfo : UAirship.getPackageManager().queryIntentActivities(sharingIntent, 0)) {
-            if (resolveInfo.activityInfo == null) {
-                continue;
-            }
-
-            String packageName = resolveInfo.activityInfo.packageName;
-
-            if (packageName != null && !excludePackage(packageName)) {
-                shareResolveInfos.add(resolveInfo);
-            }
-        }
-
-        // Sort the share entries by display name
-        Collections.sort(shareResolveInfos, new ResolveInfo.DisplayNameComparator(UAirship.getPackageManager()));
-
-        List<Intent> intents = new ArrayList<>();
-        for (ResolveInfo resolveInfo : shareResolveInfos) {
-            String packageName = resolveInfo.resolvePackageName == null ? resolveInfo.activityInfo.packageName : resolveInfo.resolvePackageName;
-            Intent intent = new LabeledIntent(sharingIntent, packageName, resolveInfo.labelRes, resolveInfo.icon)
-                    .setPackage(packageName)
-                    .setClassName(packageName, resolveInfo.activityInfo.name);
-
-            intents.add(intent);
-        }
-
-        final Intent chooserIntent;
-        if (shareResolveInfos.isEmpty()) {
-            // Show any empty chooser by setting the target intent's package to an empty string
-            chooserIntent = Intent.createChooser(sharingIntent.setPackage(""), context.getString(R.string.ua_share_dialog_title))
-                                  .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        } else {
-            chooserIntent = Intent.createChooser(intents.remove(intents.size() - 1), context.getString(R.string.ua_share_dialog_title))
-                                  .putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Intent[0]))
-                                  .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
+        final Intent chooserIntent = Intent.createChooser(sharingIntent, context.getString(R.string.ua_share_dialog_title))
+                                           .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         context.startActivity(chooserIntent);
 
@@ -121,6 +86,8 @@ public class ShareAction extends Action {
      *
      * @param packageName The package name.
      * @return <code>true</code> to exclude the package from the chooser dialog, <code>false</code> to include the package.
+     *
+     * @deprecated To be removed in SDK 13. This functionality no longer works correctly.
      */
     protected boolean excludePackage(@NonNull String packageName) {
         return IGNORED_PACKAGES.contains(packageName);
