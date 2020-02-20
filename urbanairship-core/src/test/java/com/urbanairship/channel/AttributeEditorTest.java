@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -112,6 +113,20 @@ public class AttributeEditorTest extends BaseTestCase {
         assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
     }
 
+    @Test
+    public void testSetDateAttributes() {
+        Date date = new Date(1556532600000L);
+        Date date2 = new Date(1561803000000L);
+
+        editor.setAttribute("expected_key", date)
+              .setAttribute("expected_key2", date2)
+              .apply();
+
+        String expected = "[{\"action\":\"set\",\"value\":\"2019-04-29T10:10:00\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
+                "{\"action\":\"set\",\"value\":\"2019-06-29T10:10:00\",\"key\":\"expected_key2\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
+
+        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
+    }
 
     @Test
     public void testRemoveAttributes() {
