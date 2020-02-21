@@ -31,8 +31,12 @@
     <string name="ua_attributes_attribute_type">Attribute Type</string>
     <string name="ua_attributes_string">String</string>
     <string name="ua_attributes_number">Number</string>
+    <string name="ua_attributes_date">Date</string>
+    <string name="ua_attributes_time">Time</string>
     <string name="ua_attributes_key">Key</string>
     <string name="ua_attributes_value">Value</string>
+    <string name="ua_attribute_set">Attribute set!</string>
+    <string name="ua_attribute_removed">Attribute removed!</string>
 
     <string name="ua_event_view_title">Events</string>
     <string name="ua_event_view_description">Search and filter a list of recent events</string>

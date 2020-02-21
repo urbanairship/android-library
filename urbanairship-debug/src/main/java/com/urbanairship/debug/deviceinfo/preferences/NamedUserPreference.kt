@@ -13,7 +13,7 @@ import com.urbanairship.util.UAStringUtil
  */
 class NamedUserPreference(context: Context, attrs: AttributeSet) : EditTextPreference(context, attrs) {
 
-    override fun setText(text: String) {
+    override fun setText(text: String?) {
         val namedUser = if (UAStringUtil.isEmpty(text)) null else text
         UAirship.shared().namedUser.id = namedUser
         notifyChanged()
