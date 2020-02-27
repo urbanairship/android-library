@@ -107,8 +107,11 @@ public class AlarmOperationScheduler implements OperationScheduler {
                     return;
                 }
 
-                int operationId = intent.getIntExtra(ID_EXRA, -1);
-                operations.get(operationId).run();
+                final int operationId = intent.getIntExtra(ID_EXRA, -1);
+                final CancelableOperation operation = operations.get(operationId);
+                if (operation != null) {
+                    operation.run();
+                }
                 operations.remove(operationId);
             }
         };
