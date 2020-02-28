@@ -41,8 +41,10 @@ public class RichPushUser {
     private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
+    private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
     private final List<Listener> listeners = new ArrayList<>();
 
+    private String registeredChannelID;
     private final PreferenceDataStore preferences;
 
     RichPushUser(@NonNull PreferenceDataStore preferenceDataStore) {
@@ -110,6 +112,7 @@ public class RichPushUser {
         Logger.debug("RichPushUser - Setting Rich Push user: %s", userId);
         preferences.put(USER_ID_KEY, userId);
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
+        //preferences.put(REGISTERED_CHANNEL_ID_KEY);
     }
 
     /**
@@ -215,6 +218,14 @@ public class RichPushUser {
         }
 
         return out;
+    }
+
+    public String getRegisteredChannelID() {
+        return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
+    }
+
+    public void setRegisteredChannelID(String registeredChannelID) {
+        preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, registeredChannelID);
     }
 
 }

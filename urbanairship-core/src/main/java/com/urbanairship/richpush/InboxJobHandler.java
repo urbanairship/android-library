@@ -423,6 +423,7 @@ class InboxJobHandler {
         Logger.info("Created Rich Push user: %s", userId);
         dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME);
+        user.setRegisteredChannelID(channelId);
         user.setUser(userId, userToken);
 
         return true;
@@ -458,6 +459,11 @@ class InboxJobHandler {
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
             dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
+
+            if (!channelId.equals(user.getRegisteredChannelID())) {
+                user.setRegisteredChannelID(channelId);
+            }
+
             return true;
         }
 
