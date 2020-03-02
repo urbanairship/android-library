@@ -4,14 +4,10 @@ package com.urbanairship.richpush;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
