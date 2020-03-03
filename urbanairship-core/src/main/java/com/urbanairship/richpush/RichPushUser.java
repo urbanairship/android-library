@@ -214,12 +214,16 @@ public class RichPushUser {
         return out;
     }
 
-    public String getRegisteredChannelID() {
+    String getRegisteredChannelID() {
         return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
     }
 
-    public void setRegisteredChannelID(String registeredChannelID) {
+    void setRegisteredChannelID(String registeredChannelID) {
         preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, registeredChannelID);
+    }
+
+    boolean shouldUpdate() {
+        return (!this.getRegisteredChannelID().equals(UAirship.shared().getChannel().getId()));
     }
 
 }

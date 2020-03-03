@@ -209,8 +209,6 @@ public class RichPushInbox extends AirshipComponent {
     protected void init() {
         super.init();
 
-        String channelId = airshipChannel.getId();
-
         if (UAStringUtil.isEmpty(user.getId())) {
             final RichPushUser.Listener userListener = new RichPushUser.Listener() {
                 @Override
@@ -245,14 +243,15 @@ public class RichPushInbox extends AirshipComponent {
             dispatchUpdateUserJob(true);
         }
 
-        if (user.getId() != null) {
-            if (!user.getRegisteredChannelID().equals(channelId)) {
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                                         .build();
-                inboxJobHandler.performJob(jobInfo);
-                user.setRegisteredChannelID(channelId);
-            }
+        String channelId = airshipChannel.getId();
+
+        if (user.shouldUpdate()) {
+            JobInfo jobInfo = JobInfo.newBuilder()
+                                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                                     .build();
+            inboxJobHandler.performJob(jobInfo);
+            dispatchUpdateUserJob(true);
+            user.setRegisteredChannelID(channelId);
         }
 
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
