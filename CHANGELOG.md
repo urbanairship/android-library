@@ -8,7 +8,7 @@ Version 12.2.0 - January 30, 2020
 Minor release that adds support for number attributes, new data collection flags,
 and an Accengage transition module to facilitate Accengage customers upgrading to Airship.
 
-Chanages
+Changes
 --------
 - Added support for number attributes.
 - Added `AirshipConfigOptions#dataCollectionOptInEnabled` and `UAirship#setDataCollectionEnabled(boolean)` 
