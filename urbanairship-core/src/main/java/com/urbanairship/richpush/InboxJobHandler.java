@@ -172,17 +172,6 @@ class InboxJobHandler {
     }
 
     /**
-     * Verify that the user's registered channel ID is the correct one after an update.
-     *
-     * @param channelId The channelId
-     */
-    private void onUpdated(String channelId) {
-        if (!channelId.equals(user.getRegisteredChannelID())) {
-            user.setRegisteredChannelID(channelId);
-        }
-    }
-
-    /**
      * Set private properties to the User when it's created.
      *
      * @param userId
@@ -480,7 +469,7 @@ class InboxJobHandler {
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
             dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
-            onUpdated(channelId);
+            user.onUpdated(channelId);
             return true;
         }
 

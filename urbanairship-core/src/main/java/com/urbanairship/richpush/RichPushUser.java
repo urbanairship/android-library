@@ -86,6 +86,17 @@ public class RichPushUser {
     }
 
     /**
+     * Verify that the user's registered channel ID is the correct one after an update.
+     *
+     * @param channelId The channelId
+     */
+    void onUpdated(String channelId) {
+        if (!channelId.equals(this.getRegisteredChannelID())) {
+            this.setRegisteredChannelID(channelId);
+        }
+    }
+
+    /**
      * Returns whether the user has been created.
      *
      * @return <code>true</code> if the user has an id, <code>false</code> otherwise.
