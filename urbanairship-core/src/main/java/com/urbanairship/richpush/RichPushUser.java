@@ -90,9 +90,9 @@ public class RichPushUser {
      *
      * @param channelId The channelId
      */
-    void onUpdated(String channelId) {
+    void onUpdated(@Nullable String channelId) {
         if (!channelId.equals(this.getRegisteredChannelID())) {
-            this.setRegisteredChannelID(channelId);
+            preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
         }
     }
 
@@ -225,12 +225,8 @@ public class RichPushUser {
         return out;
     }
 
-    String getRegisteredChannelID() {
+    private String getRegisteredChannelID() {
         return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
-    }
-
-    void setRegisteredChannelID(String registeredChannelID) {
-        preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, registeredChannelID);
     }
 
     boolean shouldUpdate() {

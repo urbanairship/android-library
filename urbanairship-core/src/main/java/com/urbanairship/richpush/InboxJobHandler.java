@@ -4,6 +4,7 @@ package com.urbanairship.richpush;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
@@ -174,11 +175,11 @@ class InboxJobHandler {
     /**
      * Set private properties to the User when it's created.
      *
-     * @param userId
-     * @param userToken
-     * @param channelId
+     * @param userId The user's Id
+     * @param userToken The user's token
+     * @param channelId The channel Id that will be registered
      */
-    private void onCreated(String userId, String userToken, String channelId) {
+    private void onCreated(String userId, String userToken, @Nullable String channelId) {
         user.setRegisteredChannelID(channelId);
         user.setUser(userId, userToken);
     }
