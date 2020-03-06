@@ -14,6 +14,12 @@ jobs:
       - name: Get the version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Get the release notes
+        id: get_release_notes
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          NOTES=$(awk "/## Version $VERSION/{flag=1;next}/## Version/{flag=0}flag" CHANGELOG.md)
+          echo ::set-output name=NOTES::$NOTES
       - name: Verify Version
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
@@ -41,3 +47,13 @@ jobs:
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
           gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
+      - name: Github Release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.get_release_notes.outputs.NOTES }}
+          draft: false
+          prerelease: false
