@@ -180,7 +180,7 @@ class InboxJobHandler {
      * @param channelId The channel Id that will be registered
      */
     private void onCreated(String userId, String userToken, @Nullable String channelId) {
-        user.setRegisteredChannelID(channelId);
+        user.setRegisteredChannelId(channelId);
         user.setUser(userId, userToken);
     }
 

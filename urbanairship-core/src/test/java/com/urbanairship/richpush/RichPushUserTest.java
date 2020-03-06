@@ -161,7 +161,7 @@ public class RichPushUserTest extends BaseTestCase {
      */
     @Test
     public void testShouldUpdate() {
-        user.setRegisteredChannelID("oldChannelId");
+        user.setRegisteredChannelId("oldChannelId");
         assertTrue(user.shouldUpdate());
     }
 
@@ -172,7 +172,7 @@ public class RichPushUserTest extends BaseTestCase {
     public void testShouldUpdateFalse() {
         // Set a channel ID
         when(mockChannel.getId()).thenReturn("fakeChannelId");
-        user.setRegisteredChannelID("fakeChannelId");
+        user.setRegisteredChannelId("fakeChannelId");
         assertFalse(user.shouldUpdate());
     }
 

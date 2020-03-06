@@ -91,7 +91,7 @@ public class RichPushUser {
      * @param channelId The channelId
      */
     void onUpdated(@Nullable String channelId) {
-        if (!channelId.equals(this.getRegisteredChannelID())) {
+        if (!channelId.equals(this.getRegisteredChannelId())) {
             preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
         }
     }
@@ -225,12 +225,28 @@ public class RichPushUser {
         return out;
     }
 
-    private String getRegisteredChannelID() {
+    /**
+     * Retrieve and return the registered Channel ID stored in the DataStore.
+     * If none is stored, return an empty string.
+     *
+     * @return The registered Channel ID String
+     */
+    private String getRegisteredChannelId() {
         return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
     }
 
+    /**
+     * Save in the DataStore the Channel ID used for registration.
+     *
+     * @param channelId The ChannelId String
+     */
+    void setRegisteredChannelId(String channelId) {
+        preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
+    }
+
+
     boolean shouldUpdate() {
-        return (!this.getRegisteredChannelID().equals(UAirship.shared().getChannel().getId()));
+        return (!this.getRegisteredChannelId().equals(UAirship.shared().getChannel().getId()));
     }
 
 }

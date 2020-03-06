@@ -245,7 +245,7 @@ public class RichPushInbox extends AirshipComponent {
                                      .build();
             inboxJobHandler.performJob(jobInfo);
             dispatchUpdateUserJob(true);
-            user.setRegisteredChannelID(airshipChannel.getId());
+            user.setRegisteredChannelId(airshipChannel.getId());
         }
 
         if (user.getId() == null && airshipChannel.getId() != null) {
