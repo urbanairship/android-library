@@ -2,6 +2,17 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 12.2.1 - March 6, 2020
+Patch release improving SDK stability.
+
+### Changes
+- Fixed NullPointerException crash in AlarmOperationScheduler
+- Fixed ClasssCastException crash in JobScheduler
+- Fixed SQLExceptions crashes in In-App Automation
+
+Apps with any of these issues, and apps using In-App automation are encouraged
+to update.
+
 ## Version 12.2.0 - January 30, 2020
 Minor release that adds support for number attributes, new data collection flags,
 and an Accengage transition module to facilitate Accengage customers upgrading to Airship.
