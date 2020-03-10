@@ -4,6 +4,7 @@ package com.urbanairship.richpush;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -260,8 +261,8 @@ public class RichPushUser {
     }
 
 
+    @VisibleForTesting
     boolean shouldUpdate() {
         return (!this.getRegisteredChannelId().equals(UAirship.shared().getChannel().getId()));
     }
-
 }
