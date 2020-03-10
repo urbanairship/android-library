@@ -2,12 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 12.2.2 - March 10, 2020
+Patch release to fix a whitelisting issue that prevented youtube and video URLs from working
+properly in In-App Automation.
+
 ## Version 12.2.1 - March 6, 2020
 Patch release improving SDK stability.
 
 ### Changes
 - Fixed NullPointerException crash in AlarmOperationScheduler
-- Fixed ClasssCastException crash in JobScheduler
+- Fixed ClassCastException crash in JobScheduler
 - Fixed SQLExceptions crashes in In-App Automation
 
 Apps with any of these issues, and apps using In-App automation are encouraged

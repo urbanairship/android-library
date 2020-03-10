@@ -36,13 +36,6 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
       - name: Build
         run: ./gradlew build packageDocs
-      - name: Upload bintray
-        env:
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew bintrayUpload
       - name: Upload docs
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
@@ -57,3 +50,10 @@ jobs:
           body: ${{ steps.get_release_notes.outputs.NOTES }}
           draft: false
           prerelease: false
+      - name: Upload bintray
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew bintrayUpload -x urbanairship-debug:bintrayUpload
