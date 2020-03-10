@@ -41,7 +41,9 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
             return OK;
         }
 
-        if (!MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) && isWhiteListed(mediaInfo.getUrl())) {
+        boolean isWhiteListed = isWhiteListed(mediaInfo.getUrl());
+
+        if (!isWhiteListed && !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
             Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
             return CANCEL;
         }
