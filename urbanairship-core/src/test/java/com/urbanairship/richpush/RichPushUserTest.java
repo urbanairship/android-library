@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static com.urbanairship.richpush.RichPushUser.USER_REGISTERED_CHANNEL_ID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -30,6 +31,7 @@ public class RichPushUserTest extends BaseTestCase {
     PreferenceDataStore dataStore;
     TestUserListener listener;
     AirshipChannel mockChannel;
+    RichPushUser mockUser;
 
     @Before
     public void setUp() {
@@ -38,7 +40,8 @@ public class RichPushUserTest extends BaseTestCase {
         listener = new TestUserListener();
         user.addListener(listener);
 
-        mockChannel = Mockito.mock(AirshipChannel .class);
+        mockChannel = Mockito.mock(AirshipChannel.class);
+        mockUser = Mockito.mock(RichPushUser.class);
         TestApplication.getApplication().setChannel(mockChannel);
 
     }
@@ -161,7 +164,7 @@ public class RichPushUserTest extends BaseTestCase {
      */
     @Test
     public void testShouldUpdate() {
-        user.setRegisteredChannelId("oldChannelId");
+        dataStore.put(USER_REGISTERED_CHANNEL_ID_KEY, "oldChannelId");
         assertTrue(user.shouldUpdate());
     }
 
@@ -171,8 +174,8 @@ public class RichPushUserTest extends BaseTestCase {
     @Test
     public void testShouldUpdateFalse() {
         // Set a channel ID
-        when(mockChannel.getId()).thenReturn("fakeChannelId");
-        user.setRegisteredChannelId("fakeChannelId");
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        dataStore.put(USER_REGISTERED_CHANNEL_ID_KEY, fakeChannelId);
         assertFalse(user.shouldUpdate());
     }
 
