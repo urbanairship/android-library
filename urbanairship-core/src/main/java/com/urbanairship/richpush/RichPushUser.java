@@ -97,6 +97,20 @@ public class RichPushUser {
     }
 
     /**
+     * Set private properties to the User when it's created.
+     *
+     * @param userId The user's Id
+     * @param userToken The user's token
+     * @param channelId The channel Id that will be registered
+     */
+     void onCreated(@Nullable String userId, @Nullable String userToken, @Nullable String channelId) {
+        this.setRegisteredChannelId(channelId);
+        if (userId != null && userToken != null) {
+            this.setUser(userId, userToken);
+        }
+    }
+
+    /**
      * Returns whether the user has been created.
      *
      * @return <code>true</code> if the user has an id, <code>false</code> otherwise.
@@ -231,6 +245,7 @@ public class RichPushUser {
      *
      * @return The registered Channel ID String
      */
+    @NonNull
     private String getRegisteredChannelId() {
         return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
     }
@@ -240,7 +255,7 @@ public class RichPushUser {
      *
      * @param channelId The ChannelId String
      */
-    void setRegisteredChannelId(String channelId) {
+    private void setRegisteredChannelId(String channelId) {
         preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
     }
 

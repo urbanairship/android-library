@@ -173,18 +173,6 @@ class InboxJobHandler {
     }
 
     /**
-     * Set private properties to the User when it's created.
-     *
-     * @param userId The user's Id
-     * @param userToken The user's token
-     * @param channelId The channel Id that will be registered
-     */
-    private void onCreated(String userId, String userToken, @Nullable String channelId) {
-        user.setRegisteredChannelId(channelId);
-        user.setUser(userId, userToken);
-    }
-
-    /**
      * Update the inbox messages.
      *
      * @return <code>true</code> if messages were updated, otherwise <code>false</code>.
@@ -436,7 +424,7 @@ class InboxJobHandler {
         Logger.info("Created Rich Push user: %s", userId);
         dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME);
-        onCreated(userId, userToken, channelId);
+        user.onCreated(userId, userToken, channelId);
         return true;
     }
 

@@ -239,19 +239,9 @@ public class RichPushInbox extends AirshipComponent {
             }
         });
 
-        if (airshipChannel.getId() != null && user.shouldUpdate()) {
-            JobInfo jobInfo = JobInfo.newBuilder()
-                                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                                     .build();
-            inboxJobHandler.performJob(jobInfo);
-            dispatchUpdateUserJob(true);
-            user.setRegisteredChannelId(airshipChannel.getId());
-        }
-
-        if (user.getId() == null && airshipChannel.getId() != null) {
+        if (user.shouldUpdate()) {
             dispatchUpdateUserJob(true);
         }
-
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
             @NonNull
             @Override
