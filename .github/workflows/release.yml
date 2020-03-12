@@ -68,4 +68,10 @@ jobs:
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew bintrayUpload -x urbanairship-debug:bintrayUpload
+        run: |
+          ./gradlew urbanairship-core:bintrayUpload --stacktrace
+          ./gradlew urbanairship-fcm:bintrayUpload --stacktrace
+          ./gradlew urbanairship-adm:bintrayUpload --stacktrace
+          ./gradlew urbanairship-accengage:bintrayUpload --stacktrace
+          ./gradlew urbanairship-preference:bintrayUpload --stacktrace
+          ./gradlew urbanairship-ads-identifier:bintrayUpload --stacktrace
