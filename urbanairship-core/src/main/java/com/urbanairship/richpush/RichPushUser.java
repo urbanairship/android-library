@@ -91,7 +91,7 @@ public class RichPushUser {
      *
      * @param channelId The channelId
      */
-    void onUpdated(String channelId) {
+    void onUpdated(@NonNull String channelId) {
         if (!channelId.equals(this.getRegisteredChannelId())) {
             preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
         }
@@ -104,11 +104,9 @@ public class RichPushUser {
      * @param userToken The user's token
      * @param channelId The channel Id that will be registered
      */
-     void onCreated(String userId, String userToken, String channelId) {
+     void onCreated(@NonNull String userId, @NonNull String userToken, @NonNull String channelId) {
         this.setRegisteredChannelId(channelId);
-        if (userId != null && userToken != null) {
-            this.setUser(userId, userToken);
-        }
+        this.setUser(userId, userToken);
     }
 
     /**
