@@ -24,7 +24,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebChromeClient;
-import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
 import java.lang.annotation.Retention;
@@ -60,7 +59,7 @@ public class MessageFragment extends Fragment {
     protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
 
 
-    private UAWebView webView;
+    private MessageWebView webView;
     private View progressBar;
     private RichPushMessage message;
     private View errorPage;
@@ -87,7 +86,7 @@ public class MessageFragment extends Fragment {
 
     /**
      * Subclasses can override to replace with their own layout.  If doing so, the
-     * returned view hierarchy <em>must</em> have a UAWebView whose id
+     * returned view hierarchy <em>must</em> have a MessageWebView whose id
      * is {@code android.R.id.message}, a progress view whose id is {@code android.R.id.progress},
      * and can optionally error page with a view id {@code R.id.error}.
      *
@@ -131,8 +130,8 @@ public class MessageFragment extends Fragment {
         }
 
         webView = view.findViewById(android.R.id.message);
-        if (webView == null) {
-            throw new RuntimeException("Your content must have a UAWebView whose id attribute is 'android.R.id.message'");
+        if ((webView == null) || !(webView instanceof MessageWebView)) {
+            throw new RuntimeException("Your content must have a MessageWebView whose id attribute is 'android.R.id.message'");
         }
 
         errorPage = view.findViewById(R.id.error);

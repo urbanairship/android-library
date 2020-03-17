@@ -23,7 +23,6 @@ import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
-import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -33,7 +32,7 @@ import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.widget.UAWebView;
+import com.urbanairship.widget.AirshipWebView;
 
 import java.lang.ref.WeakReference;
 
@@ -44,7 +43,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
     private static final long RETRY_DELAY_MS = 20000; // 20 seconds
 
-    private UAWebView webView;
+    private AirshipWebView webView;
     private Integer error = null;
     private Handler handler;
     private String url;

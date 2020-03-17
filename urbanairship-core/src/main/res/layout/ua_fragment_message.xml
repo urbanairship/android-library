@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.urbanairship.widget.UAWebView
+    <com.urbanairship.messagecenter.MessageWebView
         android:id="@android:id/message"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

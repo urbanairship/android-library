@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.urbanairship.widget.UAWebView
+        <com.urbanairship.widget.AirshipWebView
             android:id="@+id/web_view"
             style="@style/UrbanAirship.InAppHtml.WebView"
             android:layout_width="match_parent"
