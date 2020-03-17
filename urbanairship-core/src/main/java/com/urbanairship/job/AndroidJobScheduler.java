@@ -57,13 +57,25 @@ class AndroidJobScheduler implements Scheduler {
      * @param millisecondsDelay Minimum amount of time in milliseconds to delay the jobInfo.
      * @throws SchedulerException if the schedule fails.
      */
-    @SuppressLint("MissingPermission")
     private void scheduleJob(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long millisecondsDelay) throws SchedulerException {
         JobScheduler scheduler = getScheduler(context);
         if (scheduler == null) {
             return;
         }
 
+        try {
+            android.app.job.JobInfo androidJobInfo = createAndroidJobInfo(context, jobInfo, scheduleId, millisecondsDelay);
+            if (scheduler.schedule(androidJobInfo) == JobScheduler.RESULT_FAILURE) {
+                throw new SchedulerException("Android JobScheduler failed to schedule job.");
+            }
+            Logger.verbose("AndroidJobScheduler: Scheduling jobInfo: %s scheduleId: %s", jobInfo, scheduleId);
+        } catch (Exception e) {
+            throw new SchedulerException("Android JobScheduler failed to schedule job: ", e);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private android.app.job.JobInfo createAndroidJobInfo(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long millisecondsDelay) {
         ComponentName component = new ComponentName(context, AndroidJobService.class);
         android.app.job.JobInfo.Builder builder = new android.app.job.JobInfo.Builder(scheduleId, component)
                 .setExtras(jobInfo.toPersistableBundle());
@@ -80,16 +92,7 @@ class AndroidJobScheduler implements Scheduler {
             builder.setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_ANY);
         }
 
-        try {
-            if (scheduler.schedule(builder.build()) == JobScheduler.RESULT_FAILURE) {
-                throw new SchedulerException("Android JobScheduler failed to schedule job.");
-            }
-
-            Logger.verbose("AndroidJobScheduler: Scheduling jobInfo: %s scheduleId: %s", jobInfo, scheduleId);
-
-        } catch (RuntimeException e) {
-            throw new SchedulerException("Android JobScheduler failed to schedule job: ", e);
-        }
+        return builder.build();
     }
 
     /**

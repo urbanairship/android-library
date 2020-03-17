@@ -92,12 +92,11 @@ public class RichPushInboxTest extends BaseTestCase {
     }
 
     /**
-     * Test init updates the user if it does not have an ID but we have a channel ID.
+     * Test init dispatches the user update job if necessary.
      */
     @Test
-    public void testInitNoUser() {
-        when(mockUser.getId()).thenReturn(null);
-        when(mockChannel.getId()).thenReturn("channel");
+    public void testInitUserShouldUpdate() {
+        when(mockUser.shouldUpdate()).thenReturn(true);
 
         inbox.init();
 

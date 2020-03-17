@@ -534,14 +534,7 @@ public class AutomationDataManager extends DataManager {
     @NonNull
     List<ScheduleEntry> getScheduleEntries(@NonNull String group) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_GROUP + "=?" + ORDER_SCHEDULES_STATEMENT;
-        Cursor cursor = rawQuery(query, new String[] { String.valueOf(group) });
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<ScheduleEntry> entries = generateSchedules(cursor);
-        cursor.close();
-        return entries;
+        return fetchSchedules(query, new String[] { group });
     }
 
     /**
@@ -552,14 +545,7 @@ public class AutomationDataManager extends DataManager {
     @NonNull
     List<ScheduleEntry> getScheduleEntries() {
         String query = GET_SCHEDULES_QUERY + ORDER_SCHEDULES_STATEMENT;
-        Cursor cursor = rawQuery(query, null);
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<ScheduleEntry> entries = generateSchedules(cursor);
-        cursor.close();
-        return entries;
+        return fetchSchedules(query, null);
     }
 
     /**
@@ -590,13 +576,8 @@ public class AutomationDataManager extends DataManager {
             @Override
             public void perform(@NonNull List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
-
-                Cursor cursor = rawQuery(query, subset.toArray(new String[0]));
-                if (cursor != null) {
-                    schedules.addAll(generateSchedules(cursor));
-                    cursor.close();
-                }
-
+                List<ScheduleEntry> entries = fetchSchedules(query, subset.toArray(new String[0]));
+                schedules.addAll(entries);
             }
         });
 
@@ -612,15 +593,7 @@ public class AutomationDataManager extends DataManager {
     @NonNull
     List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int executionState) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = ?";
-        Cursor cursor = rawQuery(query, new String[] { String.valueOf(executionState) });
-
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<ScheduleEntry> entries = generateSchedules(cursor);
-        cursor.close();
-        return entries;
+        return fetchSchedules(query, new String[] { String.valueOf(executionState) });
     }
 
     /**
@@ -637,15 +610,7 @@ public class AutomationDataManager extends DataManager {
         }
 
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " IN ( " + repeat("?", executionStates.length, ", ") + ")";
-        Cursor cursor = rawQuery(query, states);
-
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<ScheduleEntry> entries = generateSchedules(cursor);
-        cursor.close();
-        return entries;
+        return fetchSchedules(query, states);
     }
 
     /**
@@ -659,15 +624,7 @@ public class AutomationDataManager extends DataManager {
                 " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " != " + ScheduleEntry.STATE_FINISHED +
                 " AND a." + ScheduleEntry.COLUMN_NAME_END + " >= 0 AND a." + ScheduleEntry.COLUMN_NAME_END + " <= ?";
 
-        Cursor cursor = rawQuery(query, new String[] { String.valueOf(System.currentTimeMillis()) });
-
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<ScheduleEntry> entries = generateSchedules(cursor);
-        cursor.close();
-        return entries;
+        return fetchSchedules(query, new String[] { String.valueOf(System.currentTimeMillis()) });
     }
 
     /**
@@ -691,22 +648,30 @@ public class AutomationDataManager extends DataManager {
     @NonNull
     List<TriggerEntry> getActiveTriggerEntries(int type, @NonNull String scheduleId) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId });
 
-        if (cursor == null) {
-            return triggers;
+        Cursor cursor = null;
+        try {
+            cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId });
+
+            if (cursor == null) {
+                return triggers;
+            }
+
+            // create triggers
+            cursor.moveToFirst();
+
+            while (!cursor.isAfterLast()) {
+                TriggerEntry triggerEntry = new TriggerEntry(cursor);
+                triggers.add(triggerEntry);
+                cursor.moveToNext();
+            }
+
+            cursor.close();
+        } catch (SQLException e) {
+            Logger.error(e, "AutomationDataManager - Unable to get triggers.");
+        } finally {
+            closeCursor(cursor);
         }
-
-        // create triggers
-        cursor.moveToFirst();
-
-        while (!cursor.isAfterLast()) {
-            TriggerEntry triggerEntry = new TriggerEntry(cursor);
-            triggers.add(triggerEntry);
-            cursor.moveToNext();
-        }
-
-        cursor.close();
         return triggers;
     }
 
@@ -722,6 +687,26 @@ public class AutomationDataManager extends DataManager {
         }
 
         return DatabaseUtils.queryNumEntries(db, ScheduleEntry.TABLE_NAME);
+    }
+
+    private List<ScheduleEntry> fetchSchedules(@NonNull String query, @Nullable String[] queryArgs) {
+        Cursor cursor = null;
+
+        try {
+            cursor = rawQuery(query, queryArgs);
+
+            if (cursor == null) {
+                return Collections.emptyList();
+            }
+
+            return generateSchedules(cursor);
+        } catch (SQLException e) {
+            Logger.error(e, "AutomationDataManager - Unable to get schedules.");
+        } finally {
+            closeCursor(cursor);
+        }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -775,6 +760,16 @@ public class AutomationDataManager extends DataManager {
                 operation.perform(remaining);
                 remaining.clear();
             }
+        }
+    }
+
+    private static void closeCursor(@Nullable Cursor cursor) {
+        try {
+            if (cursor != null) {
+                cursor.close();
+            }
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to close cursor.");
         }
     }
 

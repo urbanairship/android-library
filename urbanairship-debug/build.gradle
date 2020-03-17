@@ -75,4 +75,3 @@ dependencies {
     implementation project(':urbanairship-preference')
 }
 
-bintrayUpload.enabled = false

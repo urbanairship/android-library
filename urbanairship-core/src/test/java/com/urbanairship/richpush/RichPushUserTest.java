@@ -5,25 +5,31 @@ package com.urbanairship.richpush;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.channel.AirshipChannel;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 public class RichPushUserTest extends BaseTestCase {
 
     private final String fakeUserId = "fakeUserId";
     private final String fakeToken = "fakeToken";
+    private final String fakeChannelId = "fakeChannelId";
 
-    RichPushUser user;
-    PreferenceDataStore dataStore;
-    TestUserListener listener;
+    private RichPushUser user;
+    private PreferenceDataStore dataStore;
+    private TestUserListener listener;
+    private AirshipChannel mockChannel;
+    private RichPushUser mockUser;
 
     @Before
     public void setUp() {
@@ -31,6 +37,11 @@ public class RichPushUserTest extends BaseTestCase {
         user = new RichPushUser(dataStore);
         listener = new TestUserListener();
         user.addListener(listener);
+
+        mockChannel = Mockito.mock(AirshipChannel.class);
+        mockUser = Mockito.mock(RichPushUser.class);
+        TestApplication.getApplication().setChannel(mockChannel);
+
     }
 
     /**
@@ -144,6 +155,25 @@ public class RichPushUserTest extends BaseTestCase {
         // Verify the listener received a success callback
         assertFalse("Listener should be notified of user update failed.",
                 listener.lastUpdateUserResult);
+    }
+
+    /**
+     * Tests if the user should be updated
+     */
+    @Test
+    public void testShouldUpdate() {
+        assertTrue(user.shouldUpdate());
+    }
+
+    /**
+     * Tests if the user should not be updated
+     */
+    @Test
+    public void testShouldUpdateFalse() {
+        // Set a channel ID
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        dataStore.put("com.urbanairship.user.REGISTERED_CHANNEL_ID", fakeChannelId);
+        assertFalse(user.shouldUpdate());
     }
 
     /**

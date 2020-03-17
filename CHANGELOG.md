@@ -1,17 +1,29 @@
-Android ChangeLog
-=================
+# Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
-Version 12.2.0 - January 30, 2020
-=================================
+## Version 12.2.2 - March 10, 2020
+Patch release to fix a whitelisting issue that prevented youtube and video URLs from working
+properly in In-App Automation.
+
+## Version 12.2.1 - March 6, 2020
+Patch release improving SDK stability.
+
+### Changes
+- Fixed NullPointerException crash in AlarmOperationScheduler
+- Fixed ClassCastException crash in JobScheduler
+- Fixed SQLExceptions crashes in In-App Automation
+
+Apps with any of these issues, and apps using In-App automation are encouraged
+to update.
+
+## Version 12.2.0 - January 30, 2020
 Minor release that adds support for number attributes, new data collection flags,
 and an Accengage transition module to facilitate Accengage customers upgrading to Airship.
 
-Chanages
---------
+### Changes
 - Added support for number attributes.
-- Added `AirshipConfigOptions#dataCollectionOptInEnabled` and `UAirship#setDataCollectionEnabled(boolean)` 
+- Added `AirshipConfigOptions#dataCollectionOptInEnabled` and `UAirship#setDataCollectionEnabled(boolean)`
   to make it easier to control Airship data collection.
 - Added `urbanairship-accengage` module. This module migrates a device's attributes and ID to Airship,
   and allows devices to receive push notifications from Accengage during the upgrade period.
@@ -19,45 +31,36 @@ Chanages
   by adding metadata to the manifest with key `com.urbanairship.INSTALL_NETWORK_SECURITY_PROVIDER`.
   The network installer is required for KitKat and older devices to work with the EUCS cloud site.
 
-Version 12.1.1 - January 16, 2020
-=================================
+## Version 12.1.1 - January 16, 2020
 Patch release to fix an issue with the same In-App Automation banner displaying multiple times on an activity
 if the activity goes through a resume/pause/resume lifecycle state without a stop. This could occur
 when starting an activity with NEW_TASK and CLEAR_TOP flags if the banner is already displaying. Apps
 that are experiencing this issue with In-App Automation should update.
 
-Changes
--------
+### Changes
 - Fixed In-App Automation banner from displaying multiple times on a single activity in certain situations.
 
-Version 12.1.0 - December 18, 2019
-==================================
+## Version 12.1.0 - December 18, 2019
 Minor release that adds an accessor the In-App Automation name.
 
-Changes
--------
+### Changes
 - Added name accessor for In-App Automations.
 - Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
 - Fixed application starting a new activity instead of resuming the current activity when launching from a notification.
 
-Version 10.1.4 - December 13, 2019
-==================================
+## Version 10.1.4 - December 13, 2019
 Fixes stability issues with in-app automation.
 
-Changes
--------
+### Changes
 - Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
 
-Version 9.7.3 - December 13, 2019
-==================================
+## Version 9.7.3 - December 13, 2019
 Fixes stability issues with in-app automation.
 
-Changes
--------
+### Changes
 - Fixed a crash when specifying duplicate locale audience conditions for an In-App Automation.
 
-Version 12.0.0 - November 15, 2019
-==================================
+## Version 12.0.0 - November 15, 2019
 Major release decoupling Airship channel registration from push functionality,
 and adding support for channel attributes, which allow key value pairs to be
 associated with the application's Airship channel for segmentation purposes.
@@ -65,140 +68,115 @@ associated with the application's Airship channel for segmentation purposes.
 Custom channel attributes are currently a beta feature. If you wish to
 participate in the beta program, please complete our [signup form](https://www.airship.com/lp/sign-up-now-to-participate-in-the-advanced-segmentation-beta-program/).
 
-Changes
--------
+### Changes
 - Added a new `AirshipChannel` class
 - Channel related functionality in PushManager is now deprecated
 - Added a new `AirshipChannel.AttributeEditor` class
 - Added a new `editAttributes` method to `AirshipChannel`
 - Android compile and target SDK versions are now 29
 
-Version 11.0.5 - September 16, 2019
-===================================
+## Version 11.0.5 - September 16, 2019
 Patch release to fix an issue with custom event attribution when adding a custom event through a Message
 Center message. Apps that add events in a Message Center message should update.
 
-Version 10.1.3 - September 16, 2019
-===================================
+## Version 10.1.3 - September 16, 2019
 Patch release to fix an issue with custom event attribution when adding a custom event through a Message
 Center message. Apps that add events in a Message Center message should update.
 
-Version 11.0.4 - August 30, 2019
-================================
+## Version 11.0.4 - August 30, 2019
 Patch release to fix an issue with reporting the wrong push ID in the NotificationListener. Applications
 that rely on the notification ID should update.
 
-Version 10.1.2 - August 30, 2019
-================================
+## Version 10.1.2 - August 30, 2019
 Patch release to fix an issue with reporting the wrong push ID in the NotificationListener. Applications
 that rely on the notification ID should update.
 
-Version 9.7.2 - August 30, 2019
-===============================
+## Version 9.7.2 - August 30, 2019
 Fixes an issue where push message could result in duplicate push notifications. Applications that are
 running 9.4.0 - 9.7.1 should update.
 
-Changes
--------
+### Changes
 - Fixes issue with double processing messages on older devices.
 
-Version 11.0.3 - August 9, 2019
-===============================
+## Version 11.0.3 - August 9, 2019
 Patch release to fix direct open reporting for notifications when an activity is resumed from
 the background. Applications running 11.x should update.
 
-Changes
--------
+### Changes
 - Fixed direct open attributions for push notifications.
 
-Version 10.1.1 - August 9, 2019
-===============================
+## Version 10.1.1 - August 9, 2019
 Patch release to fix direct open reporting for notifications when an activity is resumed from
 the background. Applications running 10.x should update.
 
-Changes
--------
+### Changes
 - Fixed direct open attributions for push notifications.
 
-Version 11.0.2 - August 1, 2019
-===============================
+## Version 11.0.2 - August 1, 2019
 Patch release to fix an issue with not starting a custom activity with the intent filter action
 `com.urbanairship.VIEW_RICH_PUSH_MESSAGE` for custom MessageCenter implementations and a fix for
 a minor fullscreen In-App Automation style issue. Apps that have custom message center implementations
 should update.
 
-Changes
--------
+### Changes
 - Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
 - Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
 
-Version 10.1.0 - August 1, 2019
-===============================
+## Version 10.1.0 - August 1, 2019
 Minor release that backports changes and fixes from 11.0.2 release.
 
-Changes
--------
+### Changes
 - Updated banner in-app message adapter to make it easier to customize the banner view.
 - Fixed not starting an activity for the intent action `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
 - Fixed top padding on the fullscreen In-App Automation when the header is the top most element.
 - Synchronize use of SimpleDateFormat instance across threads.
 
-Version 11.0.1 - July 17, 2019
-==============================
+## Version 11.0.1 - July 17, 2019
 Patch release to fix a rare crash caused by accessing a SimpleDateFormat across multiple threads.
 
-Changes
--------
+### Changes
 - Synchronize use of SimpleDateFormat instance across threads.
 
-Version 11.0.0 - July 11, 2019
-==============================
+## Version 11.0.0 - July 11, 2019
 Major release that migrates from the Android Support Libraries to the Jetpack (AndroidX) Libraries.
 Applications are required to migrate to Android X before using this version. For more info, see
 [Migrating to AndroidX](https://developer.android.com/jetpack/androidx/migrate)
 
-Changes
--------
+### Changes
 - Migrated to AndroidX.
 - Updated banner in-app message adapter to make it easier to customize the banner view.
 - Allow defining notification channel `sound` with a raw resource ID through XML instead of a URL.
 
 
-Version 10.0.2 - June 26, 2019
-==============================
+## Version 10.0.2 - June 26, 2019
 Patch release to fix issues with the banner in-app message type and background location
 updates on Android O+.
 
-Changes
--------
+### Changes
 
 - Fixed banner in-app messages not dismissing when clicking the banner body.
 - Fixed banner in-app messages not auto dismissing.
 - Fixed background location updates on Android O+.
 
-Version 10.0.1 - June 4, 2019
-=============================
+## Version 10.0.1 - June 4, 2019
 Patch release fixing a minor regression in AirshipNotifiationProvider
 when overriding small icon resources via the push API.
 
-Changes
--------
+### Changes
 
 - AirshipNotificationProvider defaults to the small icon specified in
   the PushMessage, if available.
 - AirshipNotificationProvider uses getters instead of instance variables
   when building its default NotificationArguments.
 
-Version 10.0.0 - May 22, 2019
-=============================
+## Version 10.0.0 - May 22, 2019
 Major release that addresses new background restrictions with Android Q,
 includes enhancements to In-App Automation, and adds notification channel
 compatibility to simplify notification channel settings across Android versions.
 
 [9.x to 10.x Migration Guide](https://github.com/urbanairship/android-library/tree/master/documentation/migration/migration-guide-9-10.md)
 
-Changes
--------
+### Changes
 
 ### Packages
 - Removed `urbanairship-sdk` and `urbanairship-gcm`. Apps should use `urbanairship-fcm`
@@ -244,29 +222,24 @@ Changes
   when using messages with button drawables.
 
 
-Version 9.7.1 - March 14, 2019
-==============================
+## Version 9.7.1 - March 14, 2019
 
 Fixed a security issue within Urban Airship SDK, that could allow trusted URL redirects in certain
 edge cases. All applications that are using Urban Airship SDK 9.0.0 - 9.7.0 should update as soon as
 possible. For more details, please email security@urbanairship.com.
 
-Version 9.7.0 - January 22, 2019
-================================
+## Version 9.7.0 - January 22, 2019
 Minor release that allows listing for Urban Airship log messages.
 
-Changes
--------
+### Changes
 - Added ability to listen for logs using a LoggerListener on the Logger class.
 - Modal, HTML in-app automation window animations are now defined in the style sheets to
   make them easier to override.
 
 
-Version 9.6.1 - January 10, 2019
-================================
+## Version 9.6.1 - January 10, 2019
 
-Changes
--------
+### Changes
 - SDK will now catch any exceptions when attempting to post a notification. None of the notification
   factories provided by the SDK exhibit this behavior, but it's possible that a custom notification
   factory could produce an exception.
@@ -275,12 +248,10 @@ Changes
 - The UAWebViewClient will no longer attempt to fetch favicons.
 
 
-Version 9.6.0 - December 5, 2018
-================================
+## Version 9.6.0 - December 5, 2018
 Minor release that targets Android P and updates dependencies.
 
-Changes
--------
+### Changes
 - Updated compile and target SDK version 28 (Android P)
 - Updated urbanairship-core dependencies:
   - Support library version to 28.0.0
@@ -293,86 +264,72 @@ Changes
   - play-services-gcm to 16.0.0
 
 
-Version 9.5.6 - November 20, 2018
-=================================
+## Version 9.5.6 - November 20, 2018
 
 Patch release that fixes a race condition when a named user ID changes at the same time as a named
 user tag group update is being POSTed. Any apps that are using named user tag groups should update.
 
-Version 9.5.5 - November 14, 2018
-=================================
+## Version 9.5.5 - November 14, 2018
 
 Patch release that fixes an issue with Autopilot. If early take off was disabled it would prevent the
 display of push notifications. Apps that disable early take off should update.
 
-Changes
--------
+### Changes
 - Fixed PersistableBundle NPE.
 - Fixed ChannelCapture tool sometimes throwing an exception.
 - Attempt automatic take off when receiving a new push or token from FCM.
 - Marked `RichPushUser#update(boolean)` as library only. Applications should not call this method. It
   is handled internally by the SDK.
 
-Version 9.5.4 - October 25, 2018
-================================
+## Version 9.5.4 - October 25, 2018
 
 Patch to fix an issue where if two in-app messages have an audience condition for the same tag group,
 only the newest tag group will be requested properly. Apps that use in-app automation should update.
 
-Version 9.5.3 - October 15, 2018
-================================
+## Version 9.5.3 - October 15, 2018
 Patch release that fixes displaying HTML in-app messages as full screen
 on smaller screen (w480dp) devices.
 
-Version 9.5.2 - September 20, 2018
-==================================
+## Version 9.5.2 - September 20, 2018
 
 Patch release to fix build errors when building with code shrinking enabled while proguard is disabled.
 
-Version 9.5.1 - September 11, 2018
-==================================
+## Version 9.5.1 - September 11, 2018
 
 Patch release to fix a rare NPE with banner messages in In-App Automation. Apps supporting banner
 messages should update to this version.
 
-Version 9.5.0 - September 4, 2018
-=================================
+## Version 9.5.0 - September 4, 2018
 
 Minor release that adds support for tag group audiences, miss behaviors and resizable HTML messages in
 In-App Automation. HTML in-app messages are now displayed as dialogs by default, with an option
 to display fullscreen on smaller devices.
 
-Changes
--------
+### Changes
 - Added support for tag group audience conditions for in-app messages.
 - Added `isReady` method to InAppMessageAdapter so that adapters can
   wait for custom app conditions to be fulfilled before displaying
 - Fixed media layout in the modal in-app messages when using template HEADER_MEDIA_BODY.
 - Fixed videos autoplaying in an in-app message.
 
-Version 9.4.2 - August 7, 2018
-==============================
+## Version 9.4.2 - August 7, 2018
 
 Patch release to fix proguard warnings with ADM.
 
-Changes
--------
+### Changes
 - Update proguard rules.
 
 
-Version 9.4.1 - July 26, 2018
-=============================
+## Version 9.4.1 - July 26, 2018
 
 Patch release that fixes a bug in the json matcher that caused app version equality checks to malfunction.
 Apps that use in-app automation with version triggers or audience conditions should update.
 
-Changes
--------
+### Changes
 - Fixed JsonMatcher scope parsing.
 
 
-Version 9.4.0 - July 19, 2018
-=============================
+## Version 9.4.0 - July 19, 2018
 
 Minor release that adds new NotificationFactory APIs to better handle limited background
 time when building notifications. This release also addresses ANRs from the GCM and ADM
@@ -385,8 +342,7 @@ has time to display the notification and it will be lost. To avoid this issue, e
 if the notification is taking too long, or use `NotificationFactory#requiresLongRunningTask(PushMessage)`
 if the notification requires more than 10 seconds.
 
-Changes
--------
+### Changes
 - Deprecated `NotificationFactory#createNotificationResult(PushMessage, int)` in favor of `NotificationFactory#createNotificationResult(PushMessage, int, boolean)` that also tells the factory if it has longer than 10 seconds to build the notification.
 - Added listener to the Whitelist class to reject URLs.
 - Added method to generate AirshipConfigOptions from a Properties instance.
@@ -394,33 +350,27 @@ Changes
 - Fixed issue where HTML in-app automation messages were cancelled instead being displayed.
 
 
-Version 9.3.2 - June 28, 2018
-=============================
+## Version 9.3.2 - June 28, 2018
 
 Fixed an issue where if you define an end time on a automation schedule (action or in-app messages),
 it would mark it as expired during the next app init, even if the schedule was not still current. Any app
 using either action automation or in-app messages should update.
 
-Changes
--------
+### Changes
 - Fixed marking current schedules with an end time as expired.
 
-Version 9.3.1 - June 15, 2018
-=============================
+## Version 9.3.1 - June 15, 2018
 
 Fixed issues with in-app automation not displaying due to the display being paused by default. Apps
 that use in-app automation should update.
 
-Changes
--------
+### Changes
 - Fixed In-app automation display being paused by default.
 - Fixed CoreActivity having a visible theme.
 
-Version 9.3.0 - June 7, 2018
-============================
+## Version 9.3.0 - June 7, 2018
 
-Changes
--------
+### Changes
 - Added support to add custom notification action buttons from xml.
 - Added missing `play-services-base` dependency to `urbanairship-fcm`.
 - Added method to InAppMessageManager to pause display of in-app messages.
@@ -428,8 +378,7 @@ Changes
 - Removed use of custom permissions in the manifest.
 
 
-Version 9.2.0 - May 16, 2018
-============================
+## Version 9.2.0 - May 16, 2018
 
 Minor release that includes new APIs to allow extending in-app messages before they are displayed to
 the user, exposes information on the ResolutionInfo, and adds a new NotificationFactory create method
@@ -437,8 +386,7 @@ that allows retrying a failed notification at a later time. This release also in
 Rate App Action crashing on Marshmallow and older devices. Applications that use the rate
 app action should update.
 
-Changes
--------
+### Changes
 - Added message extenders to the InAppMessageManager.
 - Added a new optional createNotification method that returns status.
 - Expose type, duration, and button info on the ResolutionInfo class.
@@ -446,26 +394,22 @@ Changes
 - Fixed Rate App Action crashes.
 
 
-Version 9.1.1 - May 14, 2018
-=============================
+## Version 9.1.1 - May 14, 2018
 
 Patch release to fix issues with proguard as well as enables fullscreen video for landing pages and
 message center.
 
-Changes
--------
+### Changes
 - Enable fullscreen video for landing pages and message center.
 - Added new error message when trying to display a message center message that is no longer available.
 - Fixed proguard issue.
 
-Version 9.1.0 - April 18, 2018
-==============================
+## Version 9.1.0 - April 18, 2018
 
 Minor release that introduces support for FCM apis, modular packages, and in-app message design
 updates. For FCM migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/blob/master/documentation/migration/migration-guide-fcm.md).
 
-Changes
--------
+### Changes
 - Added support for FCM Google Play Services dependency.
 - When using `urbanairship-fcm`, setting the FCM sender ID in the airship config options is now optional.
 - Moved push providers into own packages - `urbanairship-fcm`, `urbanairship-gcm`, `urbanairship-adm`,
@@ -479,89 +423,74 @@ Changes
 - Updated to Play Services version 15.0.0 and Support Library 27.1.1. Tracking
   Advertising IDs now require the `play-services-ads-identifier` dependency.
 
-Bug Fixes
----------
+### Bug Fixes
 - Added calls to takeOff autopilot when in-app message activities are being restored when the app is suspended.
 - Fixed packages not declaring the proper dependencies in the pom file.
 
 
-Version 9.0.6 - April 5, 2018
-=============================
+## Version 9.0.6 - April 5, 2018
 
 Patch release to fix an issue with delaying takeOff. Applications that make use of the isReady method
 may want to update.
 
-Changes
--------
+### Changes
 - Remove wait for takeOff in the PushService
 - Allow autopilot creation to be retried if the app info is unavailable
 
-Version 9.0.5 - March 28, 2018
-==============================
+## Version 9.0.5 - March 28, 2018
 
 Patch release to fix a BadParcelableException when accessing the PushMessage from an intent's bundle
 on some devices.
 
-Changes
--------
+### Changes
 - Fixed BadParcelableException when handling push messages from intents.
 - Fixed lint warnings/errors.
 
 
-Version 9.0.4 - March 21, 2018
-==============================
+## Version 9.0.4 - March 21, 2018
 
 Patch release to fix a NPE due to a race condition in the in-app messaging manager and fixes an issue with
 cancelling in-app automation messages. Applications running older versions of SDK 9.0 should update.
 
-Changes
--------
+### Changes
 - Added proguard rule to keep Autopilot class
 - Fixed crash in the in-app automation manager.
 - Fixed issue with cancelling in-app automation messages.
 
-Version 9.0.3 - March 14, 2018
-==============================
+## Version 9.0.3 - March 14, 2018
 
 Patch release to fix a NPE introduced in 9.0.2 when sending a
 notification with a button without any actions.
 
-Changes
--------
+### Changes
 - Fixed NPE in core receiver.
 - Allow custom schemes when whitelisting urls.
 
-Version 9.0.2 - March 5, 2018
-=============================
+## Version 9.0.2 - March 5, 2018
 
 Patch release to fix an issue with background services in Android O and a background ANR
 when delaying takeOff. Applications that are targeting Android O and take advantage of
 push notification actions should update.
 
-Changes
--------
+### Changes
  - Fixed ANR when takeOff is delayed.
  - Fixed IllegalStateException when opening a push notification with actions.
 
 
-Version 9.0.1 - February 13, 2018
-=================================
+## Version 9.0.1 - February 13, 2018
 
 Patch release to fix a minor display issue and data validation for in-app messaging.
 
-Changes
--------
+### Changes
 - Fixed in-app message displays when using the EXCLUDE_FROM_AUTO_SHOW flag in the manifest.
 - Added missing checks for identifier lengths for both in-app messages and message buttons.
 
 
-Version 9.0.0 - January 31, 2018
-================================
+## Version 9.0.0 - January 31, 2018
 
 Major release required for new in-app messaging capabilities.
 
-New features
-------------
+### New Features
 - In-app messaging v2. The new in-app messaging module includes several different
   view types that are fully configurable, including modal, banner, and fullscreen. An
   in-app message is able to be triggered using the same rules as the Action automation
@@ -581,161 +510,131 @@ New features
 - Updated to Google Play Services 11.8.0 and Support Library 27.0.2.
 
 
-Version 8.9.7 - January 22, 2018
-================================
+## Version 8.9.7 - January 22, 2018
 
 Fixes a bug with location updates not generating events that was introduced in 8.6. Applications that
 make use of this feature should update.
 
-Changes
--------
+### Changes
 - Fixed location updates not generating analytic events.
 
-Version 8.9.6 - November 21, 2017
-=================================
+## Version 8.9.6 - November 21, 2017
 
 Fixes a bug with channel registration updates happening too often if you set the alias as an empty
 string instead of null. Applications that are seeing frequent channel updates should update.
 
-Changes
--------
+### Changes
 - Fixed channel registration updates.
 
-Version 8.9.5 - November 20, 2017
-=================================
+## Version 8.9.5 - November 20, 2017
 
-Changes
--------
+### Changes
 - Removes the use of AsyncTaskCompat.
 - Added proguard rules to ignore warnings for classes that use optional dependencies.
 
 
-Version 8.9.4 - October 24, 2017
-================================
+## Version 8.9.4 - October 24, 2017
 
 Minor change to the dependencies to depend on 26.0.2 instead of 26.1.0 of the support libraries
 to prevent pulling in the architecture components. Applications that want to use 26.1.0 can continue
 to do so by defining 26.1.0 in the app's build.gradle file. The SDK is still fully compatible with 26.1.0.
 
-Changes
--------
+### Changes
 - Change support library version to 26.0.2.
 
 
-Version 8.9.3 - October 17, 2017
-================================
+## Version 8.9.3 - October 17, 2017
 
 Fixes a NPE during channel registration if the devices do not have any tags set. Apps running
 8.9.1 or 8.9.2 should update.
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed a NPE during channel registration.
 
 
-Version 8.9.2 - October 13, 2017
-================================
+## Version 8.9.2 - October 13, 2017
 
 Bug fixes for a rare NPE that can occur on takeoff when loading XML resources
 on takeOff. Any apps seeing this crash should update.
 
-Bug Fixes
----------
+### Bug Fixes
 - Catch Android framework NPEs in ActionButtonGroupsParser and ActioRegistry
   XML resource loading
 
-Version 8.9.1 - October 9, 2017
-===============================
+## Version 8.9.1 - October 9, 2017
 
 Bug fixes for the Urban Airship mParticle kit and for some applications that are experiencing large number
 of channel registration updates.
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed Channel Registration Payload equality checks to prevent extra channel registration updates.
 - Fixed NPE when receiving a push with the Urban Airship mParticle kit.
 
 
-Version 8.9.0 - September 28, 2017
-==================================
+## Version 8.9.0 - September 28, 2017
 
 Minor feature release.
 
-New Features
-------------
+### New Features
 - Added airship config options to set the production and development FCM sender ID. Applications that
   use the same sender ID for both production and development can use `fcmSenderId` to be used in
   both modes.
 - Made the Timer class public for in-app messaging customization.
 - Updated Google Play Services to 11.4 and Support Library to 26.1.0
 
-Deprecations
-------------
+### Deprecations
 - gcmSender is deprecated in the AirshipConfig options. Use fcmSenderId instead.
 
 
-Version 8.8.4 - September 22, 2017
-==================================
+## Version 8.8.4 - September 22, 2017
 
 Patch release for a crash involving the analytics event resolver.
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed NPE for an edge case where session ID is null during a database maintenance operation.
 
 
-Version 8.8.3 - September 13, 2017
-==================================
+## Version 8.8.3 - September 13, 2017
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed not retrying push registration in the same app session when Google Play Services is out of date.
 - Fixed security exceptions when trying to start background services.
 - Fixed NPE when the push service was started with a null intent.
 - Fixed processing push messages sent from other providers when using the same GCM sender ID.
 
-Version 8.8.2 - August 14, 2017
-===============================
+## Version 8.8.2 - August 14, 2017
 
 Patch release for a rare crash involving GCM push handling. Any apps using
 GCM and experiencing NPEs in GCMPushReceiver should update.
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed NPE in GCMPushReceiver for the rare case of null extras.
 
 
-Version 8.8.1 - August 8, 2017
-==============================
+## Version 8.8.1 - August 8, 2017
 
 Patch release for Message Center and GCM Registration.
 
-Bug Fixes
----------
+### Bug Fixes
  - Fixed an index out of bounds exception in the MessageViewAdapter.
  - Fixed NPE in the MessageListFragment.
  - Fixed GCM security exception when trying to register for push.
 
 
-Version 8.8.0 - July 25, 2017
-=============================
+## Version 8.8.0 - July 25, 2017
 
 Minor release relevant for users requiring high priority delivery support for Android O.
 
-New Features
-------------
+### New Features
 - Exposed the in-app message display timer on the InAppMessageFragment.
 - Added high priority delivery support for Android O.
 
-Bug Fixes
----------
+### Bug Fixes
 - Added null checks to prevent a very rare potential null pointer exception when an intent is received without extras in the AdmPushReceiver.
 
-Version 8.7.0 - July 18, 2017
-=============================
+## Version 8.7.0 - July 18, 2017
 
-New Features
-------------
+### New Features
 - Added a fallback job scheduler using the Android Jobs API for Lollipop+ devices when the GcmNetworkManager
   is unavailable. By default, Urban Airship will schedule jobs with Ids between 3000000 - 3000099.
   The start ID can be changed from 3000000 by adding metadata to the AndroidManifest.xml with
@@ -746,33 +645,27 @@ New Features
   with the value `false` to the AndroidManifest.xml.
 
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed warning logs about starting services while the device is in the background on Android O.
 - Fixed trying to use the alarm manager to schedule jobs as a fallback on Android O when the GcmNetworkManager is unavailable.
 - Added workaround for invalid GCM tokens - https://github.com/googlesamples/google-services/issues/231
 - Fixed cursors not being closed in the on device automation.
 
-Version 8.6.1 - July 3, 2017
-============================
+## Version 8.6.1 - July 3, 2017
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed another GcmNetworkManager crash due to an IllegalArgumentException (https://issuetracker.google.com/issues/37113668).
 
-Version 8.6.0 - June 20, 2017
-=============================
+## Version 8.6.0 - June 20, 2017
 
-New Features
-------------
+### New Features
 - Android O compatibility.
 - Added support for setting the default notification channel in Airship Config options.
 - Added support for setting the notification channel per push from the push API.
 - Added a default notification channel. Currently the default channel's name and description is only
   available in english. Other localizations will be provided in an SDK update.
 
-Behavior Changes
-----------------
+### Behavior Changes
 - Android O devices will only have 10 seconds to process a push notification. Custom notification factories
   that require more time can implement `public boolean requiresLongRunningTask(PushMessage message)` to have
   the SDK schedule a job to process the notification when the application has more than 10 seconds.
@@ -784,62 +677,47 @@ Behavior Changes
 - Fetching images for a big picture notification style will timeout after 10 seconds. If the image times out,
   the notification will be posted without the big picture style.
 
-Bug Fixes
----------
+### Bug Fixes
 - Added proguard rules to prevent default Urban Airship actions from being stripped out.
 - Fixed tag actions predicates from being applied.
 
-Version 8.5.1 - June 1, 2017
-============================
+## Version 8.5.1 - June 1, 2017
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed a rare crash that is caused by GcmNetworkManager throwing an IllegalArgumentException (https://issuetracker.google.com/issues/37113668).
 
-Version 8.5.0 - May 31, 2017
-============================
+## Version 8.5.0 - May 31, 2017
 
-New Features
-------------
+### New Features
 - Added a getExtra method to the PushMessage class.
 - Added support for setting notification tags from the push API.
 - Added support for overriding the icon color/image from the push API.
 
-Behavior Changes
-----------------
+### Behavior Changes
 - Updated the ActionRegistry to lazy-load actions from a resource file.
 - Updated pass requests to use basic access authentication.
 
-Deprecations
-------------
+### Deprecations
 - Alias is now deprecated. It will be removed in SDK 10.0.0.
 
-Version 8.4.3 - May 24, 2017
-============================
+## Version 8.4.3 - May 24, 2017
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed potential time in app reporting bug caused by app suspension.
 
-Version 8.4.2 - May 23, 2017
-============================
+## Version 8.4.2 - May 23, 2017
 
-Bug Fixes
----------
+### Bug Fixes
  - Fixed crash when rescheduling tag group updates with GcmNetworkManager.
 
-Version 8.4.1 - May 10, 2017
-============================
+## Version 8.4.1 - May 10, 2017
 
-Bug Fixes
----------
+### Bug Fixes
  - Fixed bug that caused some ADM devices to crash during registration.
 
-Version 8.4.0 - May 2, 2017
-===========================
+## Version 8.4.0 - May 2, 2017
 
-New Features
-------------
+### New Features
 - Added support for delayed automation action schedules. The execution of an
 automated schedule can now be delayed by up to 30 seconds or made contingent
 upon some condition.
@@ -848,87 +726,69 @@ upon some condition.
 notifications.
 - Added an automation trigger for app init events.
 
-Behavior Changes
-----------------
+### Behavior Changes
 - Updated the channel capture tool to function when push is not enabled.
 - Decreased the automation schedule limit from 1000 to 100.
 
 
-Version 8.3.2 - April 5, 2017
-==============================
+## Version 8.3.2 - April 5, 2017
 
-Bug Fixes
----------
+### Bug Fixes
  - Fixed a bug that occurs when setting tags on devices migrating from old SDKs.
 
-Version 8.3.1 - March 22, 2017
-==============================
+## Version 8.3.1 - March 22, 2017
 
-Bug Fixes
----------
+### Bug Fixes
  - Fixed channel registration bug that prevented device tags from updating.
 
-Version 8.3.0 - February 16, 2017
-=================================
+## Version 8.3.0 - February 16, 2017
 
-New Features
-------------
+### New Features
 - Added accessor to get the app key in the Javascript native bridge.
 - Added support for onNewIntent for both MessageCenterActivity and MessageActivity.
 - Added support for intent action com.urbanairship.VIEW_RICH_PUSH_INBOX in the MessageCenterActivity.
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed marking the app-compat library resources as hidden.
 - Fixed inbox style notifications to actually display inbox lines.
 
-Behavior Changes
-----------------
+### Behavior Changes
 - Big picture images will now override the largeIcon to the image to expose
   a thumbnail of the image when the notification is collapsed.
 - Channel Capture tool is now disabled by default if the app is able
   to receive background push. A new action has been added to enable the
   tool for a limited duration.
 
-Deprecations
-------------
+### Deprecations
 - AdmUtils class and GcmConstants interface are now deprecated. They will be removed in 9.0.0.
 
-Version 8.2.5 - January 9, 2017
-===============================
+## Version 8.2.5 - January 9, 2017
 - Fixed bug that caused devices running Ice Cream Sandwich to crash when
   fetching the default Bluetooth adapter.
 
-Version 8.2.4 - December 22, 2016
-=================================
+## Version 8.2.4 - December 22, 2016
 - Fixed rare crash in location service for some older devices.
 - Fixed typo in `book now` interactive notification button.
 
-Version 8.2.3 - December 16, 2016
-=================================
+## Version 8.2.3 - December 16, 2016
 - Updated consumer proguard rule for parcelables to prevent preserving all names in Parcelable classes.
 
-Version 8.2.2 - December 9, 2016
-================================
+## Version 8.2.2 - December 9, 2016
 - Fixed regression where minSDK reverted back to 16.
 - Fixed possible NPE when auto tracking advertising ID.
 - Removed `.js` extension on the ua_native_bridge file.
 
-Version 8.2.1 - December 6, 2016
-================================
+## Version 8.2.1 - December 6, 2016
 - Fixed MessageFragment empty view when recreating the fragment's view.
 
-Version 8.2.0 - November 29, 2016
-=================================
+## Version 8.2.0 - November 29, 2016
 - Added external ID setter to PassRequest class.
 - Fixed MessageListFragment empty view when recreating the fragment's view.
 
-Version 8.1.1 - November 21, 2016
-=================================
+## Version 8.1.1 - November 21, 2016
 - Fixed rare NPE when ClipboardManager service is unavailable.
 
-Version 8.1.0 - November 18, 2016
-=================================
+## Version 8.1.0 - November 18, 2016
 - Added support for resizable landing pages.
 - Added support for being able to perform `set` operation on tag groups.
 - Added support for tag groups in the add and remove tag actions.
@@ -937,28 +797,23 @@ Version 8.1.0 - November 18, 2016
 - Changed default predicate on the AddCustomEventAction to accept more situations.
 - Changed RetailEventTemplate to only set `ltv` on purchase events.
 
-Version 8.0.4 - November 11, 2016
-=================================
+## Version 8.0.4 - November 11, 2016
 - Fixed `unmarshalling unknown type` exception when using location updates.
 - Fixed NPE in AirshipService.
 - Updated minSDKVersion to 15 from 16.
 
-Version 8.0.3 - October 13, 2016
-================================
+## Version 8.0.3 - October 13, 2016
 - Fixed quiet time if end hour is before the start hour.
 
-Version 8.0.2 - October 4, 2016
-===============================
+## Version 8.0.2 - October 4, 2016
 - Fixed analytics issue causing app foreground events during screen rotation.
 - Fixed bug when running actions synchronously.
 - Reduced inbox user update calls.
 
-Version 8.0.1 - September 16, 2016
-==================================
+## Version 8.0.1 - September 16, 2016
 - Fixed message center duplicate ID crash in nested fragments.
 
-Version 8.0.0 - September 13, 2016
-==================================
+## Version 8.0.0 - September 13, 2016
 - Removed deprecated APIs.
 - Updated minSdkVersion to 16.
 - Allowed actions to run on the UI thread.
@@ -967,8 +822,7 @@ Version 8.0.0 - September 13, 2016
 - Fixed notification display failure when receiving a big picture URL to an unsupported file type.
 - Fixed regression introduced in 7.3.0 where ADM fails to generate a registration token.
 
-Version 7.3.0 - August 31, 2016
-===============================
+## Version 7.3.0 - August 31, 2016
 - Added Custom Event templates.
 - Added action automation to schedule actions to run when predefined conditions are met.
 - Added action situation `SITUATION_AUTOMATION` for actions that are triggered from automation.
@@ -978,31 +832,25 @@ Version 7.3.0 - August 31, 2016
 - Fixed issue resulting in latent uploads of event batches greater than 1KB.
 - Built SDK against Android N.
 
-Version 7.2.5 - August 26, 2016
-===============================
+## Version 7.2.5 - August 26, 2016
 - Added support to route display message requests through the custom message center.
 
-Version 7.2.4 - August 12, 2016
-===============================
+## Version 7.2.4 - August 12, 2016
 - Fixed potential NPE in applications using the Gimbal adapter when serializing a RegionEvent without an RSSI value set.
 
-Version 7.2.3 - August 11, 2016
-===============================
+## Version 7.2.3 - August 11, 2016
 - Fixed Location module from constantly canceling and requesting location updates when using the
   standard location adapter and location services are disabled.
 - Fixed building the sample and library on PCs.
 
-Version 7.2.2 - August 4, 2016
-==============================
+## Version 7.2.2 - August 4, 2016
 - Fixed blocking the calling thread when asynchronously requesting UAirship instance if the
   application performs long operations in the onReadyCallback during takeOff.
 
-Version 7.2.1 - July 27, 2016
-=============================
+## Version 7.2.1 - July 27, 2016
 - Fixed an issue where the `quiet time enabled` setting wasn’t properly migrated from a key change in 7.1.0.
 
-Version 7.2.0 - June 21, 2016
-=============================
+## Version 7.2.0 - June 21, 2016
 - The internal GCM integration has been updated to not conflict with other integrations and will no longer trigger the
   GcmListenerService when receiving GCM messages. Any application that contains additional GCM clients outside of Urban
   Airship needs to register the GcmReceiver from Google Play Services in the AndroidManifest.xml.
@@ -1015,33 +863,27 @@ Version 7.2.0 - June 21, 2016
 - Removed `sample-lib`, `sample` now build against the sdk module directly.
 - Added pass creation APIs to generate an Android Pay deep link.
 
-Version 7.1.5 - June 1, 2016
-============================
+## Version 7.1.5 - June 1, 2016
 - Fixed bug preventing the removal of expired RichPushMessages on empty RichPushInbox update responses.
 
-Version 7.1.4 - May 25, 2016
-============================
+## Version 7.1.4 - May 25, 2016
 - Ignore expired RichPushMessages when reloading the RichPushInbox.
 - Fixed potential IllegalStateException when dismissing in-app messages.
 - Fixed rare IllegalArgumentException due to an invalid URI when listening for content changes (Only reported
 on an HTC device).
 
-Version 7.1.3 - May 11, 2016
-============================
+## Version 7.1.3 - May 11, 2016
 - Channel registration failures will now notify AirshipReceiver on 500s.
 - Prevent erroneous `RichPushInbox.Listener.onInboxUpdated` update during takeOff.
 - Prevent an extra channel registration during first run.
 
-Version 7.1.2 - April 28, 2016
-==============================
+## Version 7.1.2 - April 28, 2016
 - Fixed 60 second delay when displaying message center push notifications.
 
-Version 7.1.1 - April 26, 2016
-==============================
+## Version 7.1.1 - April 26, 2016
 - Prevent possible ANR when executing the OnReadyCallback during takeOff().
 
-Version 7.1.0 - April 21, 2016
-==============================
+## Version 7.1.0 - April 21, 2016
 - Message Center filtering.
 - Associated identifiers editor API.
 - Associated identifiers support limited ad tracking.
@@ -1059,31 +901,26 @@ Version 7.1.0 - April 21, 2016
 - Remote input support.
 - Deprecated BaseIntentReceiver in favor of AirshipReceiver.
 
-Version 7.0.4 - March 25, 2016
-==============================
+## Version 7.0.4 - March 25, 2016
 - Fixed SecurityException on Samsung devices running Lollipop when scheduling alarms beyond the allowed limit.
 - Fixed video playback in landing pages and Message Center.
 - Fixed rare BadParcelableException by avoiding custom parcelable use in broadcasted intents.
 
-Version 7.0.3 - February 24, 2016
-=================================
+## Version 7.0.3 - February 24, 2016
  - Fixed rare RunTimeException when checking for location permissions in UALocationManager.
 
-Version 7.0.2 - February 17, 2016
-=================================
+## Version 7.0.2 - February 17, 2016
  - Removed the icon padding for in-app message buttons without an icon.
  - Fixed the OnePlus READ_CLIPBOARD security exception in the channel capture tool.
 
-Version 7.0.1 - February 5, 2016
-================================
+## Version 7.0.1 - February 5, 2016
  - Fixed MessageCenterFragment selection loss on configuration changes.
  - Catch SecurityExceptions when attempting to register for GCM.
  - The LocationService now checks if the application has location permissions before starting.
  - Added a Message Center indicator to the Sample.
  - Simplified the Sample's ParseDeepLinkActivity.
 
-Version 7.0.0 - January 28, 2016
-================================
+## Version 7.0.0 - January 28, 2016
  - Includes support for out of the box Message Center. The Message Center can be themed to match the application
    or it can be overridden with a custom Message Center implementation.
  - Replaced the usage of com.android.internal.util.Predicate with ActionRegistry.Predicate in the ActionRegistry.
@@ -1094,23 +931,19 @@ Version 7.0.0 - January 28, 2016
    the aar artifact provided in a maven repository.
  - Replaced RichPushSample and PushSample with a new unified sample.
 
-Version 6.4.3 - January 8, 2016
-===============================
+## Version 6.4.3 - January 8, 2016
  - Fixed background push calling the wrong com.urbanairship.push.BaseIntentReceiver callback.
 
-Version 6.4.2 - January 5, 2016
-===============================
+## Version 6.4.2 - January 5, 2016
  - Added a check that Google Play Services version is greater than 8.1.
  - Fixed a possible crash when a device has too many installed apps during the Google Play Store availability check.
 
-Version 6.4.1 - November 11, 2015
-=================================
+## Version 6.4.1 - November 11, 2015
  - Fixed share action dropping the last entry.
  - Fixed rare null pointer exception in our channel capture tool.
  - Added an improved workaround for the GCM security exception.
 
-Version 6.4.0 - October 29, 2015
-================================
+## Version 6.4.0 - October 29, 2015
  - Added a flag to disable sending the GCM/ADM token with channel registration.
  - Added support for screen tracking.
  - Location permissions are now automatically requested when using the LocationUpdatesEnabledPreference
@@ -1118,13 +951,11 @@ Version 6.4.0 - October 29, 2015
  - Added new toast action that displays text in a toast.
  - Fixed displaying in-app messages with translucent status bars.
 
-Version 6.3.1 - October 23, 2015
-================================
+## Version 6.3.1 - October 23, 2015
  - Fixed possible GCM security exception when receiving messages during upgrade.
  - Improved HTTP 301 handling for big picture notifications.
 
-Version 6.3.0 - October 1, 2015
-===============================
+## Version 6.3.0 - October 1, 2015
  - Support for custom defined properties in custom events.
  - Support for setting associated device identifiers for analytics.
  - Added InstallReceiver to track install attributions.
@@ -1134,25 +965,21 @@ Version 6.3.0 - October 1, 2015
  - Updated the minimum Android SDK version to 10 (Gingerbread).
  - Fixed location updates when using the fused location provider.
 
-Version 6.2.3 - August 28, 2015
-===============================
+## Version 6.2.3 - August 28, 2015
  - Fixed missing resources in Eclipse style library project.
  - Fixed malformed rich push user requests introduced in 6.2.0 by correcting the user update payload.
  - Removed check for android.permission.GET_ACCOUNTS.
 
-Version 6.2.2 - August 24, 2015
-===============================
+## Version 6.2.2 - August 24, 2015
  - Schedules alarms with FLAG_UPDATE_CURRENT instead of FLAG_CANCEL_CURRENT to prevent SecurityExceptions
    on Samsung devices running Lollipop.
  - Rich Push API client no longer performs remote deletes when messages are omitted in the message
    list retrieval. This mitigates an edge case when a user’s inbox contains more than 500 messages.
 
-Version 6.2.1 - August 20, 2015
-===============================
+## Version 6.2.1 - August 20, 2015
  - Updated the samples to point to 6.2.1.
 
-Version 6.2.0 - August 19, 2015
-===============================
+## Version 6.2.0 - August 19, 2015
  - GCM registration now uses Instance ID tokens instead of registration IDs.
  - Google Play Services 7.5 or newer is required for GCM registration.
  - Added AndroidManifest.xml for automatic manifest merging. Existing integration
@@ -1161,23 +988,19 @@ Version 6.2.0 - August 19, 2015
  - Added a default landing page theme and layout to display as a modal overlay.
  - Fixed NPE when creating a CustomLayoutNotificationFactory before takeOff.
 
-Version 6.1.3 - July 28, 2015
-=============================
+## Version 6.1.3 - July 28, 2015
  - Fixed UAWebView not displaying the soft keyboard when interacting with an html input field.
  - Catches SecurityException when attempting to use UrbanAirship location without the proper location
    permissions. Useful for Android M when location permissions can be revoked.
 
-Version 6.1.2 - July 1, 2015
-============================
+## Version 6.1.2 - July 1, 2015
  - Fixed tag group error logging.
  - First version available through https://bintray.com/urbanairship.
 
-Version 6.1.1 - June 24, 2015
-=============================
+## Version 6.1.1 - June 24, 2015
  - Fixed tag group retries.
 
-Version 6.1.0 - June 22, 2015
-=============================
+## Version 6.1.0 - June 22, 2015
  - Support for channel and named user tag groups.
  - Support for displaying RichPushMessages in the LandingPageActivity.
  - Added new action "open_mc_overlay_action" that displays a RichPushMessage in a LandingPageActivity.
@@ -1194,16 +1017,13 @@ Version 6.1.0 - June 22, 2015
  - Updated the minimum sdk version to API 8 (Froyo).
 
 
-Version 6.0.2 - May 21, 2015
-=============================
+## Version 6.0.2 - May 21, 2015
  - Fix intermittent in-app message crashes.
 
-Version 6.0.1 - April 3, 2015
-=============================
+## Version 6.0.1 - April 3, 2015
  - Fix deadlock caused by an expired in-app message.
 
-Version 6.0.0 - March 31, 2015
-==============================
+## Version 6.0.0 - March 31, 2015
  - Support for in-app messaging.
  - Support for associating and disassociating a channel to a named user.
  - Added a flag to enable/disable analytics at runtime. Useful for providing a privacy opt-out switch.
@@ -1213,8 +1033,7 @@ Version 6.0.0 - March 31, 2015
  - Exposed the PushMessage directly instead of the Push bundle when broadcasting push events.
  - Fixed Urban Airship Javascript bridge when the associated RichPushMessage contains invalid characters in its title.
 
- Actions framework
- -----------------
+ ### Actions framework
    - Added new ActionValue class that limits the type of values ActionArguments and ActionResults
      can contain.
    - ActionArgument's metadata now returns a bundle of metadata.
@@ -1224,45 +1043,37 @@ Version 6.0.0 - March 31, 2015
    - Replaced the RichPushMessage with its ID in the ActionArguments metadata when triggering actions
      from a web view with an associated RichPushMessage.
 
-Version 5.1.6 - March 5, 2015
-=============================
+## Version 5.1.6 - March 5, 2015
  - Added Intent flag FLAG_ACTIVITY_SINGLE_TOP when automatically launching the application from a notification open to prevent
    relaunching the launcher activity if its already on top.
  - Fixed the Airship Javascript bridge sometimes failing to load on API 19+.
 
-Version 5.1.5 - January 27, 2015
-================================
+## Version 5.1.5 - January 27, 2015
  - Fixed a regression introduced in 5.1.4 where the LocationService will cause a NPE if started with a null intent.
 
-Samples
--------
+### Samples
  - Fixed the Rich Push Sample's deep linking.
 
-Version 5.1.4 - December 31, 2014
-=================================
+## Version 5.1.4 - December 31, 2014
  - Updated logging usage to use the various log levels more appropriately.
  - Default to mixed content mode MIXED_CONTENT_COMPATIBILITY_MODE on all UAWebViews. This allows landing
    pages and rich messages to continue to display images from non https sources.
 
-Version 5.1.3 - December 15, 2014
-=================================
+## Version 5.1.3 - December 15, 2014
  - Fixed crash that occurred when the fused location provider failed to connect. Applications with the UA
    location service in their manifest were potentially impacted.
  - Added workaround for an Ice Cream Sandwich issue (https://code.google.com/p/android/issues/detail?id=20915)
    in which the AsyncTask would be initialized on the wrong thread and throw a RuntimeException.
 
-Version 5.1.2 - December 8, 2014
-================================
+## Version 5.1.2 - December 8, 2014
  - Fix crash when building against Google Play Services 6.5 without the location APIs.
  - Updated samples to the latest Android gradle plugin 1.0.0.
 
-Version 5.1.1 - December 8, 2014
-================================
+## Version 5.1.1 - December 8, 2014
  - Fixed GCMPushReceiver crash when receiving unordered broadcasts due to a misconfigured AndroidManifest.xml.
  - Updated samples to the latest Android gradle plugin 1.0.0-rc4.
 
-Version 5.1.0 - November 3, 2014
-================================
+## Version 5.1.0 - November 3, 2014
  - Advanced notification support through the Push API, including support for Android Wear and styles.
  - Added setter on provided notification factories to set the notification accent color for Android Lollipop.
  - Includes enhanced security in the Urban Airship Javascript interface by providing a URL whitelist.
@@ -1272,33 +1083,27 @@ Version 5.1.0 - November 3, 2014
  - The default notification flags are no longer applied after the notification factory. Instead, they are
    now expected to be set in the factory.
 
-Samples
--------
+### Samples
  - Fixed the CoreReceiver priority in AndroidManifest.xml for Push Sample and Rich Push Sample by
    moving the priority from the receiver to the receiver's intent filter.
  - Rich Push Sample has been updated with material design and simplified navigation.
 
-Version 5.0.3 - October 23, 2014
-================================
+## Version 5.0.3 - October 23, 2014
  - Removed "allowBackup" from the libraries application manifest entry to avoid merge conflicts with
  the Android manifest merger.
 
-Version 5.0.2 - October 21, 2014
-================================
+## Version 5.0.2 - October 21, 2014
  - Fix issue with running actions through the JavaScript native bridge from the "ualibraryready" event.
  - Fix issue with landing page not displaying on top of the launcher activity.
 
-Version 5.0.1 - October 8, 2014
-===============================
+## Version 5.0.1 - October 8, 2014
  - Fix issue with channel not creating when missing Google Play Services for GCM registration.
  - Fix issue with the Urban Airship Javascript interface not loading for custom web views that extend
    UAWebView.
 
-Version 5.0.0 - October 1, 2014
-===============================
+## Version 5.0.0 - October 1, 2014
 
-New Features
-------------
+### New Features
  - Unified support for both GCM (Google) and ADM (Amazon) transports.
  - Includes support for interactive notifications. Includes more than 25 built-in
    interactive notification sets, including button resources for 9 languages.
@@ -1325,54 +1130,44 @@ New Features
  - It is no longer necessary to check for Urban Airship Actions when deciding to
    launch the application in the push intent receiver.
 
-Packaging Changes
------------------
+### Packaging Changes
  - Urban Airship library is now a library project with resources. Eclipse users will
    have to import the library as a project and reference it in the projects settings. An
    aar package is provided for Android Studio users.
  - The library now depends on the latest version of the v4 support library.
  - GCM and Fused location depends on the Google Play Services library.
 
-Sample Changes
---------------
+### Sample Changes
  - Samples now set up to work with both GCM (Google) and ADM (Amazon).
 
 
-Amazon Only - Version 4.0.0 - July 14, 2014
-===========================================
+Amazon Only - ## Version 4.0.0 - July 14, 2014
  - Initial Amazon release.
 
-Version 4.0.4 - August 5, 2014
-==============================
+## Version 4.0.4 - August 5, 2014
  - Fix regression in 4.0.3 that broke webview actions for devices running API 17 or higher.
 
-Version 4.0.3 - July 21, 2014
-=============================
+## Version 4.0.3 - July 21, 2014
  - Add if-modified-since header and accept 304 not modified responses for Rich Application message listing.
  - Remove any usage of addJavascriptInterface for Android devices older than API 17 to prevent abuse of upstream security issue CVE-2012-6636.
 
-Samples Changes
----------------
+### Samples Changes
  - Updated to use the latest Android Gradle plugin and build tools.
 
-Version 4.0.2 - April 30, 2014
-==============================
+## Version 4.0.2 - April 30, 2014
  - Fix NPE when defining a Landing Page Activity with no meta data elements.
  - Fix location security issue where all location data was broadcasted with
    implicit intents. Thank you to Yu-Cheng Lin for reporting this issue.
  - Added ability to set the intent receiver for location updates on UALocationManager.
 
-Push Sample Changes
--------------------
+### Push Sample Changes
  - Use local broadcast receiver from the support package to broadcast intents to
  the application.
 
-Version 4.0.1 - March 26, 2014
-==============================
+## Version 4.0.1 - March 26, 2014
 - Fix possible rich push user token corruption.
 
-Version 4.0.0 - March 25, 2014
-==============================
+## Version 4.0.0 - March 25, 2014
 - Added Urban Airship Actions framework - a generic framework that provides a convenient way to
 automatically perform tasks by name in response to push notifications, Rich App Page interactions and JavaScript.
 - Added UAWebViewClient class to be used with RichPushMessageWebView and LandingPageWebView to
@@ -1385,57 +1180,47 @@ provide proper auth and inject the javascript bridge.
 - Deprecated Javascript interface methods isMessageRead, markMessageRead, markMessageUnread,
 navigateTo, getViewWidth, getViewHeight, and getDeviceOrientation.
 
-Rich Push Sample Changes
-------------------------
+### Rich Push Sample Changes
  - Updated AndroidManifest.xml for Actions.
  - Added custom Landing Page layout and styles.
  - Added MessagePagerFragment to display Rich Application Pages in a view pager.
  - Refactored inbox sample code to move most of the logic to fragments.
  - Added deep linking.
 
-Push Sample Changes
--------------------
+### Push Sample Changes
  - Updated AndroidManifest.xml for Actions.
  - Added deep linking.
 
-Version 3.3.2 - March 7, 2014 - Internal Release
-================================================
+## Version 3.3.2 - March 7, 2014 - Internal Release
 - Use nondestructive User api requests.  Allows multiple device tokens and APIDS
 to share a single user.
 - Deprecated RichPushUser getApids, setApids, addApids.
 
-Version 3.3.1 - February 24, 2014
-=================================
+## Version 3.3.1 - February 24, 2014
 - Persist Urban Airship push ids to help prevent duplicate pushes.
 - Fix analytics crash when using autopilot with background location.
 
-Version 3.3.0 - January 15, 2014
-================================
+## Version 3.3.0 - January 15, 2014
 - For rich push enabled apps, automatically refresh rich push messages when the application is foregrounded.
 - Remove unused RichPushManager listener callbacks.
 - Prevent multiple APID registration when database read and write failures occur.
 
-Sample changes
---------------
+### Sample changes
 - Remove action bar sherlock dependency, replaced with AppCompat in the android support v7 library.
 - Added calls to the webkit's onPause/onResume methods for api >= 11 when displaying a rich push message.
 - Android Gradle plugin support (Gradle 1.9 with the plugin 0.7.0).
 
-Version 3.2.3 - December 19, 2013
-=================================
+## Version 3.2.3 - December 19, 2013
 - Fix possible NPE when the rich push service unexpectedly die.
 - Fix a possible crash in the content resolver when it throws an unexpected runtime exception.
 
-Version 3.2.2 - December 4, 2013
-================================
+## Version 3.2.2 - December 4, 2013
 - Exposes UA push identifiers to the application in the push receiver and notification builder.
 
-Version 3.2.1 - November 18, 2013
-================================
+## Version 3.2.1 - November 18, 2013
 - Fixed database exception crash when uploading analytics in multi-process applications.
 
-Version 3.2.0 - October 31, 2013
-================================
+## Version 3.2.0 - October 31, 2013
 - Added support for server side expired Rich Push Messages.
 - Added support for setting contentIntent on a notification through the notification builder.
 - Added process manifest validation for Urban Airship services and receivers.
@@ -1443,8 +1228,7 @@ Version 3.2.0 - October 31, 2013
 - Added wake lock expiration to ensure wake locks do not wake the app indefinitely.
 - Fix permission crash when using location with permission ACCESS_COARSE_LOCATION.
 
-Version 3.1.0 - July 31, 2013
-=============================
+## Version 3.1.0 - July 31, 2013
 - Removed tags and alias from rich push user. Tags and aliases are now only set on the APID.
 - QuietTimePickerPreference now respects the system/locale settings in UI components.
 - Rich push inbox style notification now respects quiet time, vibrate, and sound preferences.
@@ -1454,8 +1238,7 @@ Version 3.1.0 - July 31, 2013
   - Added getMessageSentDateMS that returns the unix epoch time in milliseconds.
   - Added seconds to getMessageSentDate to return format "yyyy-MM-dd HH:mm:ss.SSSZ".
 
-Version 3.0.0 - June 10, 2013
-=============================
+## Version 3.0.0 - June 10, 2013
 - Rich Push Inbox no longer implements or exposes any cursors.
 - Added warnings when running on BlackBerry.
 - Added default Android preferences for push, location, vibration, quiet time and sound.
@@ -1469,8 +1252,7 @@ Version 3.0.0 - June 10, 2013
 - Fixed security exception crash when registering with GCM.
 - Fixed javascript bridge on devices targetting API 17 because of missing annotation.
 
-Rich Push Sample changes
-------------------------
+### Rich Push Sample changes
 - New preferences screen using built-in Android preferences
   - Added Advanced Settings: APID, UserID, Set Alias, Add Tags
 - Updated the Home and Inbox layouts
@@ -1479,12 +1261,10 @@ Rich Push Sample changes
 - Added a custom Inbox style notification builder
 - Added automated ui tests
 
-Push Sample changes
--------------------
+### Push Sample changes
 - Added extra preferences screen using built-in Android preferences
 
-Version 2.1.4 - April 4, 2013
-=================================
+## Version 2.1.4 - April 4, 2013
 - Fixed crash when switching rapidly between message and inbox views for RichPushSample.
 - Fixed crash in phone layout whenever a message is opened from a push notification for RichPushSample.
 - Add ActivityLifecycleCallbacks to record session events and warn devs for incomplete implementation.
@@ -1492,8 +1272,7 @@ Version 2.1.4 - April 4, 2013
   Added 'minimumSdkVersion' parameter in airshipconfig.properties file. This value is used for detecting
   incomplete activity instrumentation.
 
-Version 2.1.3 - March 22, 2013
-=================================
+## Version 2.1.3 - March 22, 2013
 - Use application package name instead of app name for user-agent creation.
 - Fixed crash in inbox view running on a non-paned (phone) view for RichPushSample.
 - Added validation for integer values in .properties files
@@ -1508,35 +1287,29 @@ Version 2.1.3 - March 22, 2013
 - Updated sample config files to use strings for properties mapped to system constants..
 - Updated sample apps to use the default Android Proguard config file.
 
-Version 2.1.2 - February 15, 2013
-=================================
+## Version 2.1.2 - February 15, 2013
 - Fix for push opt-out analytics
 
-Version 2.1.1 - February 14, 2013
-=================================
+## Version 2.1.1 - February 14, 2013
 - Now with Rich Push
 - Property files now allow strings in addition to integer values for properties mapped to system constants
 
-Version 2.1.0 - February 7, 2013
-================================
+## Version 2.1.0 - February 7, 2013
 - Moved In-App Purchase code from the library to the IAP Sample.
 
-Version 2.0.5 - January 29, 2013
-================================
+## Version 2.0.5 - January 29, 2013
 - Fixed incorrect location parameter handling (min update intervals)
 - Stop the PushService after GCM registration is complete and all
   additional work has been passed to worker services.
 - Updated internal test suite
 
-Version 2.0.4 - January 2, 2013
-===============================
+## Version 2.0.4 - January 2, 2013
 - Fixed ExceptionInInitializerError that could arise on firstrun
   using Helium transport
 - Sample app PushPreferencesActivity no longer accesses location-related
   preferences if location is not enabled
 
-Version 2.0.3 - December 12, 2012
-=================================
+## Version 2.0.3 - December 12, 2012
 - Fixed miscellaneous crashes based on submitted crash reports.
 - Format locations in a locale-independent manner.
 - Reset the GCM registration ID when the package is replaced (requires addition of
@@ -1549,21 +1322,17 @@ Version 2.0.3 - December 12, 2012
   to delegate the takeOff to a class declared in the manifest.
 - The library will no longer stop the PushService on shutdown if the transport is GCM (not necessary).
 
-Version 2.0.2 - November 13, 2012
-=================================
+## Version 2.0.2 - November 13, 2012
 - Added checks for duplicate messages based on the UA canonical push ID
 
-Version 2.0.1 - October 31, 2012
-================================
+## Version 2.0.1 - October 31, 2012
 - Fixed a crash issue during push receipt.
 
-Version 2.0.0 RC2 - October 12, 2012
-====================================
+## Version 2.0.0 RC2 - October 12, 2012
 - Run all GCM registrations in a worker service
 - Added validation for new manifest requirements
 
-Version 2.0.0 RC1 - October 1, 2012
-===============================
+## Version 2.0.0 RC1 - October 1, 2012
 - Added GCM support and removed C2DM support
 - Added Rich Push support
 - Replaced use of Android shared preferences with a SQL-backed provider. This was done to address
@@ -1576,19 +1345,16 @@ Version 2.0.0 RC1 - October 1, 2012
 - FIX: The library will no longer attempt to register with the API if a Helium connection cannot be
   established.
 
-Version 1.1.6 - August 29, 2012
-===============================
+## Version 1.1.6 - August 29, 2012
 - Catch all exceptions (even unchecked ones) in the Helium connection loop. This is designed to help
   mitigate OS and Carrier/MFR mod bugs like the one addressed in 1.1.5 and an IllegalArgumentException
   reported by a customer that was originating in a low-level OS component.
 
-Version 1.1.5 - August 22, 2012
-===============================
+## Version 1.1.5 - August 22, 2012
 - FIXED: Addressed crash in java.net.NetworkInterface. Library will explicitly catch a
   NullPointerException caused by ICS bug. See http://code.google.com/p/android/issues/detail?id=33661
 
-Version 1.1.4 - July 31, 2012
-=============================
+## Version 1.1.4 - July 31, 2012
 - FIXED: Reset backoffTime after successful C2DM registration
 - FIXED: Updated the copyright for 2012
 - FIXED: Removed logging of app secret in takeOff
@@ -1599,35 +1365,29 @@ Version 1.1.4 - July 31, 2012
 - Wrapped db calls in EventDataManager so sqliteexception's won't kill apps.
 - Added the application package name to implicitly broadcasted actions.
 
-Version 1.1.3 - May 4, 2012
-===========================
+## Version 1.1.3 - May 4, 2012
 - FIXED: issue with location event payload
 
-Version 1.1.2 - May 1, 2012
-===========================
+## Version 1.1.2 - May 1, 2012
 - FIXED: incorrect handling of minimum updated time in location preferences
 - FIXED: unnecessary starting of location service
 - Updated target SDK level of sample apps to API level 9 to address ICS
   notification background rendering issues
 
-Version 1.1.1 - April 11, 2012
-=============================
+## Version 1.1.1 - April 11, 2012
 - FIXED: Issues with background location
 - FIXED: Issues with no location providers enabled
 - Sample App updates
 
-Version 1.1.0 - April 3, 2012
-=============================
+## Version 1.1.0 - April 3, 2012
 - Added location collection for Push to Location
 - FIXED: C2DM null APIDs will now be regenerated
 - FIXED: C2DM deregistration race condition is resolved
 
-Version 1.0.9 - March 1, 2012
-=================================
+## Version 1.0.9 - March 1, 2012
 - FIXED: Character encoding bug preventing push registration with Unicode tags
 
-Version 1.0.8 - February 16, 2012
-=================================
+## Version 1.0.8 - February 16, 2012
 - FIXED: Hybrid mode now works on the Kindle Fire
 - FIXED: Retry inserts to analytics DB when write fails due to DB lock
 - FIXED: Connectivity issues following device sleep
@@ -1636,12 +1396,10 @@ Version 1.0.8 - February 16, 2012
 - Added a note to the "Holding Pattern" error to indicate that it can occur during scheduled maintenance.
 - Added an option to wake a wifi-only device periodically to receive notifications
 
-Version 1.0.7 - December 15, 2011
-=================================
+## Version 1.0.7 - December 15, 2011
 - FIXED: Crash occurring when UA API registrations were disabled
 
-Version 1.0.6 - December 14, 2011
-=================================
+## Version 1.0.6 - December 14, 2011
 - FIXED: Cached Helium server list is no longer removed when the connection is destroyed
 - FIXED: Helium connections dropped due to network reachability issues will no longer invalidate the server
 - Improved reconnection logic when Android sends multiple connectivity intents
@@ -1649,12 +1407,10 @@ Version 1.0.6 - December 14, 2011
 - Added a short 3 sec delay after server lookup to allow server-side state to propagate
 - Use elapsed realtime clock for heartbeat timer rather than the wall clock
 
-Version 1.0.5
-=============
+## Version 1.0.5
 - Improved socket keepalive logic
 
-Version 1.0.4
-=============
+## Version 1.0.4
 - StrictMode compatibility for analytics events and com.urbanairship.restcient.*
 - Fixed incomptibility between Request.executeAsync and API level 11+
 - Improved InventoryAdapter and Drawable caching in IAPSample
@@ -1663,12 +1419,10 @@ Version 1.0.4
 - Disabling push results in a call to DELETE an existing APID on go.urbanairship.com
 - Improved C2DM registration handling
 
-Version 1.0.3
-=============
+## Version 1.0.3
 - Fixed an issue preventing immediate connections to Helium when re-enabling push notifications
 
-Version 1.0.2
-=============
+## Version 1.0.2
 
 - Improved Helium connectivity
 - Added push expiration handling
@@ -1676,17 +1430,14 @@ Version 1.0.2
 - PushService now stops when push is disabled
 - Added helpful logging, removed unhelpful logging
 
-Version 1.0.1
-=============
+## Version 1.0.1
 
-New Features
-------------
+### New Features
 - Manifest validation for both IAP and Push reports permission, receiver and service
   misconfiguration in the log
 - AirshipConfigOptions validation now reports specific errors in the log
 
-Push Changes
-------------
+### Push Changes
 - Explicitly log errors when PushService is started before UAirship.takeOff has been called.
 - Documented and deprecated PushManager.EXTRA_STRING_EXTRA. Push extras should be sent as a
   Map<String,String>
@@ -1700,8 +1451,7 @@ Push Changes
   payload is null or empty. To override this behavior, provide your own implementation of
   PushNotificationBuilder.
 
-IAP Changes
------------
+### IAP Changes
 - Moved IMarketBillingService from the JAR to the sample project (requires projects to include
   IMarketBillingService.aidl in their source tree)
 - Repackaged all Google billing code to prevent conflicts (no action required)
@@ -1709,24 +1459,20 @@ IAP Changes
 - IAP download paths are now sanitized to prevent write failure on SD cards
 - Purchased products can now be restored at any time
 
-Version 1.0.0
-=============
+## Version 1.0.0
 
-New Features
-------------
+### New Features
 - Added Push Settings UI to PushSample
 - Devices can now switch from C2DM to Helium
 
-Bug Fixes
----------
+### Bug Fixes
 - Properly handle C2DM failures in devices with an API Level < 8
 - Ignore C2DM registration intents if the current transport type
   does not use C2DM
 - Properly deregister a device from C2DM if push is disabled
 - Fixed a Helium push NPE if UA servers refuse connections
 
-Other Changes
--------------
+### Other Changes
 - Cleaned up logging
 - Replaced various broadcast receivers with com.urbanairship.CoreReceiver (this requires
   a Manifext.xml change as the CoreReceiver package changed)
@@ -1734,25 +1480,20 @@ Other Changes
 - Added C2DM Ping capability (invisible push for audience counting)
 - Updated sample projects with improved layouts and explicit Honeycomb compatibility
 
+## Version 0.9.1
 
-Version 0.9.1
-=============
-
-New Features
-------------
+### New Features
 - C2DM Support
 - Reports Support
 - Built in APID Tagging and Alias support
 
-Bug Fixes
----------
+### Bug Fixes
 - Fixed asynchronous image loading issue in the InventoryAdapter class in StoreFront sample
 - Notification builders can now return null if a notification should not be displayed
 - Sending a notification with an empty alert field prevents the notification from being
   displayed by the default notification builders
 
-Other Changes
--------------
+### Other Changes
 - Combined Push/IAP HTTP clients in the rest client package
 - IAP Sorting updates
 - EmbeddedPushService is now called PushService (to accommodate C2DM). A manifest change is
