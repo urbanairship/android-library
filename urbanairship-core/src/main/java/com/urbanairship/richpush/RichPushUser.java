@@ -4,14 +4,11 @@ package com.urbanairship.richpush;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -41,6 +38,7 @@ public class RichPushUser {
     private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
+    private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
     private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
@@ -86,6 +84,29 @@ public class RichPushUser {
                 listener.onUserUpdated(success);
             }
         }
+    }
+
+    /**
+     * Verify that the user's registered channel ID is the correct one after an update.
+     *
+     * @param channelId The channelId
+     */
+    void onUpdated(@NonNull String channelId) {
+        if (!channelId.equals(this.getRegisteredChannelId())) {
+            preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
+        }
+    }
+
+    /**
+     * Set private properties to the User when it's created.
+     *
+     * @param userId The user's Id
+     * @param userToken The user's token
+     * @param channelId The channel Id that will be registered
+     */
+     void onCreated(@NonNull String userId, @NonNull String userToken, @NonNull String channelId) {
+        this.setRegisteredChannelId(channelId);
+        this.setUser(userId, userToken);
     }
 
     /**
@@ -217,4 +238,29 @@ public class RichPushUser {
         return out;
     }
 
+    /**
+     * Retrieve and return the registered Channel ID stored in the DataStore.
+     * If none is stored, return an empty string.
+     *
+     * @return The registered Channel ID String
+     */
+    @NonNull
+    private String getRegisteredChannelId() {
+        return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
+    }
+
+    /**
+     * Save in the DataStore the Channel ID used for registration.
+     *
+     * @param channelId The ChannelId String
+     */
+    private void setRegisteredChannelId(@NonNull String channelId) {
+        preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
+    }
+
+
+    @VisibleForTesting
+    boolean shouldUpdate() {
+        return (!this.getRegisteredChannelId().equals(UAirship.shared().getChannel().getId()));
+    }
 }

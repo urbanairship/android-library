@@ -4,6 +4,7 @@ package com.urbanairship.richpush;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
@@ -423,8 +424,7 @@ class InboxJobHandler {
         Logger.info("Created Rich Push user: %s", userId);
         dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME);
-        user.setUser(userId, userToken);
-
+        user.onCreated(userId, userToken, channelId);
         return true;
     }
 
@@ -458,6 +458,7 @@ class InboxJobHandler {
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
             dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
+            user.onUpdated(channelId);
             return true;
         }
 
