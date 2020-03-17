@@ -38,7 +38,7 @@ public class RichPushUser {
     private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
-    public static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
+    private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
     private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
