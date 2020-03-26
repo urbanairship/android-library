@@ -6,3 +6,5 @@ include ':urbanairship-core',
         ':urbanairship-debug',
         ':urbanairship-accengage',
         ":sample"
+include ':urbanairship-hms'
+include ':urbanairship-hms-stub'
