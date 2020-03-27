@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.push.PushProvider;
 
 import junit.framework.Assert;
 
@@ -107,7 +108,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals(minPayload.tags, new HashSet<>(Arrays.asList("new", "tags")));
         assertEquals(minPayload.locationSettings, false);
         assertEquals(minPayload.appVersion, "234");
-        assertEquals((Object)minPayload.apiVersion, 234);
+        assertEquals((Object) minPayload.apiVersion, 234);
         assertEquals(minPayload.sdkVersion, "2.3.4");
         assertEquals(minPayload.deviceModel, "Other device model");
         assertEquals(minPayload.carrier, "Other carrier");
@@ -559,4 +560,48 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
+
+    @Test
+    public void testDeliveryTypeAndroid() throws JsonException {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
+                .setDeliveryType(PushProvider.HMS_DELIVERY_TYPE)
+                .build();
+
+        JsonValue expected = JsonMap.newBuilder()
+                                    .put("channel", JsonMap.newBuilder()
+                                                           .put("set_tags", false)
+                                                           .put("device_type", "android")
+                                                           .put("opt_in", false)
+                                                           .put("background", false)
+                                                           .put("android", JsonMap.newBuilder()
+                                                                                  .put("delivery_type", "hms")
+                                                                                  .build())
+                                                           .build())
+                                    .build()
+                                    .toJsonValue();
+
+        assertEquals(expected, payload.toJsonValue());
+    }
+
+    @Test
+    public void testDeliveryTypeAmazon()  {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE)
+                .setDeliveryType(PushProvider.ADM_DELIVERY_TYPE)
+                .build();
+
+        JsonValue expected = JsonMap.newBuilder()
+                                    .put("channel", JsonMap.newBuilder()
+                                                           .put("set_tags", false)
+                                                           .put("device_type", "amazon")
+                                                           .put("opt_in", false)
+                                                           .put("background", false)
+                                                           .build())
+                                    .build()
+                                    .toJsonValue();
+
+        assertEquals(expected, payload.toJsonValue());
+    }
+
 }

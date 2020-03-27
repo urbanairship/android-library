@@ -299,21 +299,36 @@ public class PushManager extends AirshipComponent {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (isPushTokenRegistrationEnabled()) {
-                    if (getPushToken() == null) {
-                        performPushRegistration(false);
-                    }
-                    builder.setPushAddress(getPushToken());
-                }
-
-                return builder.setOptIn(isOptIn())
-                        .setBackgroundEnabled(isPushEnabled() && isPushAvailable());
+                return extendChannelRegistrationPayload(builder);
             }
         });
 
         notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
 
         dispatchUpdatePushTokenJob();
+    }
+
+    @NonNull
+    private ChannelRegistrationPayload.Builder extendChannelRegistrationPayload(@NonNull ChannelRegistrationPayload.Builder builder) {
+
+        String pushToken = null;
+        if (isPushTokenRegistrationEnabled()) {
+            if (getPushToken() == null) {
+                performPushRegistration(false);
+            }
+
+            pushToken = getPushToken();
+        }
+
+        builder.setPushAddress(pushToken);
+        PushProvider provider = getPushProvider();
+
+        if (pushToken != null && provider != null && provider.getPlatform() == UAirship.ANDROID_PLATFORM) {
+            builder.setDeliveryType(provider.getDeliveryType());
+        }
+
+        return builder.setOptIn(isOptIn())
+                      .setBackgroundEnabled(isPushEnabled() && isPushAvailable());
     }
 
     /**

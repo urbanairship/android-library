@@ -36,6 +36,12 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         return UAirship.AMAZON_PLATFORM;
     }
 
+    @NonNull
+    @Override
+    public String getDeliveryType() {
+        return PushProvider.ADM_DELIVERY_TYPE;
+    }
+
     @Override
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {

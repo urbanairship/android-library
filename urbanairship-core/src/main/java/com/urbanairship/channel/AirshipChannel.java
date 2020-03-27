@@ -473,10 +473,10 @@ public class AirshipChannel extends AirshipComponent {
 
         switch (platform) {
             case UAirship.ANDROID_PLATFORM:
-                builder.setDeviceType("android");
+                builder.setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE);
                 break;
             case UAirship.AMAZON_PLATFORM:
-                builder.setDeviceType("amazon");
+                builder.setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE);
                 break;
         }
 

@@ -28,6 +28,12 @@ public class HmsPushProvider implements PushProvider {
         return UAirship.ANDROID_PLATFORM;
     }
 
+    @NonNull
+    @Override
+    public String getDeliveryType() {
+        return PushProvider.HMS_DELIVERY_TYPE;
+    }
+
     @Nullable
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {

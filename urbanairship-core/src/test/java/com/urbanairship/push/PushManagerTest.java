@@ -305,4 +305,32 @@ public class PushManagerTest extends BaseTestCase {
         preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
         assertTrue(pushManager.isPushTokenRegistrationEnabled());
     }
+
+    @Test
+    public void testDeliveryTypeAndroidPlatform() throws PushProvider.RegistrationException {
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        pushManager.init();
+        verify(mockAirshipChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getPlatform()).thenReturn(UAirship.ANDROID_PLATFORM);
+        when(mockPushProvider.getDeliveryType()).thenReturn(PushProvider.FCM_DELIVERY_TYPE);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+
+        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
+
+        ChannelRegistrationPayload payload = extender.extend(builder).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
+                .setPushAddress("token")
+                .setDeliveryType(PushProvider.FCM_DELIVERY_TYPE)
+                .setBackgroundEnabled(true)
+                .build();
+
+        assertEquals(expected, payload);
+    }
+
 }
