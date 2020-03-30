@@ -65,6 +65,11 @@ public class WhitelistTest extends BaseTestCase {
         assertTrue(whitelist.isWhitelisted("https://www.youtube.com/embed/wJelEXaPhJ8", Whitelist.SCOPE_OPEN_URL));
         assertFalse(whitelist.isWhitelisted("https://www.youtube.com/embed/wJelEXaPhJ8", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
         assertFalse(whitelist.isWhitelisted("https://www.youtube.com/embed/wJelEXaPhJ8", Whitelist.SCOPE_ALL));
+
+        // EU
+        assertTrue(whitelist.isWhitelisted("https://dl.asnapieu.com/binary/token/", Whitelist.SCOPE_OPEN_URL));
+        assertTrue(whitelist.isWhitelisted("https://dl.asnapieu.com/binary/token/", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(whitelist.isWhitelisted("https://dl.asnapieu.com/binary/token/", Whitelist.SCOPE_ALL));
     }
 
     /**

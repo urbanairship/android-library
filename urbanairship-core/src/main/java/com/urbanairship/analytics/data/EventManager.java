@@ -64,6 +64,8 @@ public class EventManager {
     private final long backgroundReportingIntervalMS;
     private final String jobAction;
 
+    private final Object eventLock = new Object();
+
     private boolean isScheduled;
 
     /**
@@ -125,10 +127,12 @@ public class EventManager {
      */
     @WorkerThread
     public void addEvent(@NonNull Event event, @NonNull String sessionId) {
-        eventResolver.insertEvent(event, sessionId);
+        synchronized (eventLock) {
+            eventResolver.insertEvent(event, sessionId);
 
-        // Handle database max size exceeded
-        eventResolver.trimDatabase(preferenceDataStore.getInt(MAX_TOTAL_DB_SIZE_KEY, EventResponse.MAX_TOTAL_DB_SIZE_BYTES));
+            // Handle database max size exceeded
+            eventResolver.trimDatabase(preferenceDataStore.getInt(MAX_TOTAL_DB_SIZE_KEY, EventResponse.MAX_TOTAL_DB_SIZE_BYTES));
+        }
 
         switch (event.getPriority()) {
             case Event.HIGH_PRIORITY:
@@ -159,7 +163,9 @@ public class EventManager {
      */
     @WorkerThread
     public void deleteEvents() {
-        eventResolver.deleteAllEvents();
+        synchronized (eventLock) {
+            eventResolver.deleteAllEvents();
+        }
     }
 
     /**
@@ -186,18 +192,27 @@ public class EventManager {
         isScheduled = false;
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
-        final int eventCount = eventResolver.getEventCount();
+        int eventCount;
+        Map<String, String> events;
 
-        if (eventCount <= 0) {
-            Logger.debug("EventManager - No events to send.");
-            return true;
+        synchronized (eventLock) {
+            eventCount = eventResolver.getEventCount();
+
+            if (eventCount <= 0) {
+                Logger.debug("EventManager - No events to send.");
+                return true;
+            }
+
+            final int avgSize = Math.max(1, eventResolver.getDatabaseSize() / eventCount);
+
+            //pull enough events to fill a batch (roughly)
+            int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize);
+            events = eventResolver.getEvents(batchEventCount);
         }
 
-        final int avgSize = eventResolver.getDatabaseSize() / eventCount;
-
-        //pull enough events to fill a batch (roughly)
-        int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize);
-        Map<String, String> events = eventResolver.getEvents(batchEventCount);
+        if (events.isEmpty()) {
+            return true;
+        }
 
         EventResponse response = apiClient.sendEvents(airship, events.values());
 
@@ -207,7 +222,10 @@ public class EventManager {
         }
 
         Logger.debug("EventManager - Analytic events uploaded.");
-        eventResolver.deleteEvents(events.keySet());
+
+        synchronized (eventLock) {
+            eventResolver.deleteEvents(events.keySet());
+        }
 
         // Update preferences
         preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getMaxTotalSize());

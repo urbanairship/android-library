@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 12.2.3 - March 30, 2020
+Patch release to fix missing whitelist entries for EUCS cloud site and to fix a crash in event manager.
+
+### Changes
+- Fixed ArithmeticException in EventManager due to a race condition of disabling analytics at the same time as an event upload.
+- Added Airship EUCS URLs to whitelist.
+
 ## Version 12.2.2 - March 10, 2020
 Patch release to fix a whitelisting issue that prevented youtube and video URLs from working
 properly in In-App Automation.

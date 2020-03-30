@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '12.2.2'
+        airshipVersion = '12.2.3'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = beta
@@ -13,7 +13,7 @@ buildscript {
         minSdkVersion = 16
 
         // Gradle plugins
-        gradlePluginVersion = '3.5.3'
+        gradlePluginVersion = '3.6.1'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
         spotlessPluginVersion = '3.27.1'
