@@ -311,6 +311,7 @@ public class Whitelist {
         Whitelist whitelist = new Whitelist();
         whitelist.addEntry("https://*.urbanairship.com");
         whitelist.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
+        whitelist.addEntry("https://*.asnapieu.com");
         if (airshipConfigOptions.whitelist != null) {
             for (String entry : airshipConfigOptions.whitelist) {
                 whitelist.addEntry(entry);
