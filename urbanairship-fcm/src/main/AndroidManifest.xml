@@ -1,19 +1,15 @@
-<manifest package="com.urbanairship.push.fcm"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.urbanairship.push.fcm"
     android:versionCode="1"
     android:versionName="1.0">
 
     <application>
-
-        <!-- Firebase checks permissions at runtime -->
         <service
             android:name="com.urbanairship.push.fcm.AirshipFirebaseMessagingService"
-            tools:ignore="ExportedService">
+            android:exported="false">
             <intent-filter android:priority="-1">
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
     </application>
 </manifest>
