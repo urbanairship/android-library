@@ -32,7 +32,7 @@ import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.widget.AirshipWebView;
+import com.urbanairship.webkit.AirshipWebView;
 
 import java.lang.ref.WeakReference;
 

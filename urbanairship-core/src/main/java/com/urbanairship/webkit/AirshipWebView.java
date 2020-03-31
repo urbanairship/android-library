@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.widget;
+package com.urbanairship.webkit;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -195,8 +195,8 @@ public class AirshipWebView extends WebView {
 
     @Override
     public void setWebViewClient(@Nullable WebViewClient webViewClient) {
-        if (webViewClient != null && !(webViewClient instanceof UAWebViewClient)) {
-            Logger.warn("The web view client should extend UAWebViewClient to support Airship url overrides and triggering actions from.");
+        if (webViewClient != null && !(webViewClient instanceof AirshipWebViewClient)) {
+            Logger.warn("The web view client should extend AirshipWebViewClient to support Airship url overrides and triggering actions from.");
         }
 
         this.webViewClient = webViewClient;
@@ -209,13 +209,13 @@ public class AirshipWebView extends WebView {
     @SuppressLint("NewApi")
     protected void onPreLoad() {
         if (getWebViewClientCompat() == null) {
-            Logger.debug("No web view client set, setting a default UAWebViewClient for landing page view.");
-            setWebViewClient(new UAWebViewClient());
+            Logger.debug("No web view client set, setting a default AirshipWebViewClient for landing page view.");
+            setWebViewClient(new AirshipWebViewClient());
         }
 
         // Clear the last set auth request
-        if (currentClientAuthRequestUrl != null && getWebViewClientCompat() != null && getWebViewClientCompat() instanceof UAWebViewClient) {
-            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClientCompat();
+        if (currentClientAuthRequestUrl != null && getWebViewClientCompat() != null && getWebViewClientCompat() instanceof AirshipWebViewClient) {
+            AirshipWebViewClient webViewClient = (AirshipWebViewClient) getWebViewClientCompat();
             webViewClient.removeAuthRequestCredentials(currentClientAuthRequestUrl);
             currentClientAuthRequestUrl = null;
         }
@@ -257,8 +257,8 @@ public class AirshipWebView extends WebView {
     protected void setClientAuthRequest(@Nullable String url, @NonNull String username, @NonNull String password) {
         currentClientAuthRequestUrl = url;
 
-        if (getWebViewClientCompat() != null && getWebViewClientCompat() instanceof UAWebViewClient) {
-            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClientCompat();
+        if (getWebViewClientCompat() != null && getWebViewClientCompat() instanceof AirshipWebViewClient) {
+            AirshipWebViewClient webViewClient = (AirshipWebViewClient) getWebViewClientCompat();
 
             String host = Uri.parse(url).getHost();
             if (host != null) {

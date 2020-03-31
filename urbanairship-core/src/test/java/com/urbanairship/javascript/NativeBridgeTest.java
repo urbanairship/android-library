@@ -1,22 +1,16 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.widget;
+package com.urbanairship.javascript;
 
-import android.annotation.SuppressLint;
-import android.os.Build;
-import android.view.KeyEvent;
-import android.view.View;
-import android.webkit.ValueCallback;
-import android.webkit.WebView;
+import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.actions.ActionRunRequestExtender;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
@@ -25,11 +19,9 @@ import com.urbanairship.actions.StubbedActionRunRequest;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.robolectric.Robolectric;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,10 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -49,14 +39,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class UAWebViewClientTest extends BaseTestCase {
+public class NativeBridgeTest extends BaseTestCase {
+
+    private NativeBridge nativeBridge;
 
     private ActionRunRequestFactory runRequestFactory;
-    private UAWebViewClient client;
-    private View rootView;
-
-    private String webViewUrl;
-    private WebView webView;
+    private ActionRunRequestExtender runRequestExtender;
+    private JavaScriptExecutor javaScriptExecutor;
+    private NativeBridge.CommandDelegate commandDelegate;
 
     private Executor executor = new Executor() {
         @Override
@@ -68,30 +58,25 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Before
     public void setup() {
         runRequestFactory = mock(ActionRunRequestFactory.class);
-        rootView = mock(View.class);
-
-        webView = Mockito.mock(WebView.class);
-        when(webView.getRootView()).thenReturn(rootView);
-
-        webViewUrl = "http://test-client";
-        when(webView.getUrl()).then(new Answer<Object>() {
+        runRequestExtender = mock(ActionRunRequestExtender.class);
+        when(runRequestExtender.extend(any(ActionRunRequest.class))).then(new Answer<ActionRunRequest>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return webViewUrl;
+            public ActionRunRequest answer(InvocationOnMock invocation) throws Throwable {
+                return (ActionRunRequest) invocation.getArgument(0);
             }
         });
-        when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
-        UAirship.shared().getWhitelist().addEntry("http://test-client");
+        javaScriptExecutor = mock(JavaScriptExecutor.class);
+        commandDelegate = mock(NativeBridge.CommandDelegate.class);
 
-        client = new UAWebViewClient(runRequestFactory, executor);
+        nativeBridge = new NativeBridge(runRequestFactory, executor);
     }
 
     /**
      * Test run basic actions command
      */
     @Test
-    public void testRunBasicActionsCommand() throws ActionValueException {
+    public void testRunBasicActionsCommand() {
         ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
 
@@ -99,8 +84,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         when(runRequestFactory.createActionRequest("anotherAction")).thenReturn(anotherActionRunRequest);
 
         String url = "uairship://run-basic-actions?action=value&anotherAction=anotherValue";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify that the action runner ran the "action" action
         verify(actionRunRequest).setValue(ActionValue.wrap("value"));
@@ -111,13 +95,18 @@ public class UAWebViewClientTest extends BaseTestCase {
         verify(anotherActionRunRequest).setValue(eq(ActionValue.wrap("anotherValue")));
         verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
+
+        verify(runRequestExtender).extend(actionRunRequest);
+        verify(runRequestExtender).extend(anotherActionRunRequest);
+
+        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
      * Test run basic actions command with encoded arguments
      */
     @Test
-    public void testRunBasicActionsCommandEncodedParamters() throws ActionValueException {
+    public void testRunBasicActionsCommandEncodedParameters() {
         ActionRunRequest removeTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("^-t")).thenReturn(removeTagRunRequest);
@@ -125,8 +114,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // uairship://run-basic-actions?^+t=addTag&^-t=removeTag
         String encodedUrl = "uairship://run-basic-actions?%5E%2Bt=addTag&%5E-t=removeTag";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, encodedUrl));
+        assertTrue(nativeBridge.onHandleCommand(encodedUrl, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify that the action runner ran the removeTag action
         verify(removeTagRunRequest).setValue(ActionValue.wrap("removeTag"));
@@ -137,6 +125,11 @@ public class UAWebViewClientTest extends BaseTestCase {
         verify(addTagRunRequest).setValue(ActionValue.wrap("addTag"));
         verify(addTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
+
+        verify(runRequestExtender).extend(removeTagRunRequest);
+        verify(runRequestExtender).extend(addTagRunRequest);
+
+        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -144,10 +137,9 @@ public class UAWebViewClientTest extends BaseTestCase {
      * any actions.
      */
     @Test
-    public void testRunActionsCommandEncodedParamatersWithBogusParameter() {
+    public void testRunActionsCommandEncodedParametersWithBogusParameter() {
         String encodedUrl = "uairship://run-actions?%5E%2Bt=addTag&%5E-t=removeTag&bogus={{{}}}";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, encodedUrl));
+        assertTrue(nativeBridge.onHandleCommand(encodedUrl, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify action were not executed
         verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
@@ -162,8 +154,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
 
         String url = "uairship://run-basic-actions?addTag";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(new ActionValue());
@@ -177,8 +168,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testRunBasicActionsCommandNoParameters() {
         String url = "uairship://run-basic-actions";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
     }
@@ -196,8 +186,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // uairship://run-actions?action={"key":"value"}&anotherAction=["one","two"]
         String url = "uairship://run-actions?action=%7B%20%22key%22%3A%22value%22%20%7D&anotherAction=%5B%22one%22%2C%22two%22%5D";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify the action "action" ran with a map
         Map<String, Object> expectedMap = new HashMap<>();
@@ -213,6 +202,11 @@ public class UAWebViewClientTest extends BaseTestCase {
         verify(anotherActionRunRequest).setValue(ActionValue.wrap(expectedList));
         verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
+
+        verify(runRequestExtender).extend(actionRunRequest);
+        verify(runRequestExtender).extend(anotherActionRunRequest);
+
+        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -222,8 +216,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     public void testRunActionsCommandNoParameters() {
         // uairship://run-actions?action={"key":"value"}&anotherAction=["one","two"]
         String url = "uairship://run-actions";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
     }
@@ -237,67 +230,15 @@ public class UAWebViewClientTest extends BaseTestCase {
         when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
 
         String url = "uairship://run-actions?action";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         verify(actionRunRequest).setValue(new ActionValue());
         verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(actionRunRequest).run(any(ActionCompletionCallback.class));
-    }
 
-    /**
-     * Test any uairship scheme does not get intercepted when the webview's url is not white listed.
-     */
-    @Test
-    public void testRunActionNotWhiteListed() {
-        webViewUrl = "http://not-white-listed";
-        String url = "uairship://run-actions?action";
+        verify(runRequestExtender).extend(actionRunRequest);
 
-        assertFalse("Client should not override any ua scheme urls from an url that is not white listed",
-                client.shouldOverrideUrlLoading(webView, url));
-
-        webViewUrl = null;
-
-        assertFalse("Client should not override any ua scheme urls from a null url",
-                client.shouldOverrideUrlLoading(webView, url));
-    }
-
-    /**
-     * Test onPageFinished loads the js bridge
-     */
-    @Test
-    @SuppressLint("NewApi")
-    public void testOnPageFinished() {
-        client.onPageFinished(webView, webViewUrl);
-
-        // Execute all runnables that have been enqueued on the foreground scheduler.
-        Robolectric.flushForegroundThreadScheduler();
-
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
-                @Override
-                public boolean matches(String argument) {
-                    return argument.startsWith("javascript:");
-                }
-            }));
-        } else {
-            verify(webView).evaluateJavascript(any(String.class), eq((ValueCallback<String>) null));
-        }
-    }
-
-    /**
-     * Test the js interface is not injected if the url is not white listed.
-     */
-    @Test
-    @SuppressLint("NewApi")
-    public void testOnPageFinishedNotWhiteListed() {
-        webViewUrl = "http://notwhitelisted";
-        client.onPageFinished(webView, webViewUrl);
-
-        // Execute all runnables that have been enqueued on the foreground scheduler.
-        Robolectric.flushForegroundThreadScheduler();
-
-        verifyZeroInteractions(webView);
+        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -309,7 +250,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
-        client.setActionCompletionCallback(completionCallback);
+        nativeBridge.setActionCompletionCallback(completionCallback);
 
         ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
@@ -325,60 +266,10 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(addTagRunRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-basic-actions?addTag=what";
-
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify our callback was called
         verify(completionCallback).onFinish(arguments, result);
-    }
-
-    /**
-     * Test close command calls onClose
-     */
-    @Test
-    public void testCloseCommand() {
-        String url = "uairship://close";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
-
-        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
-            @Override
-            public boolean matches(KeyEvent event) {
-                return KeyEvent.ACTION_DOWN == event.getAction() &&
-                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
-            }
-        }));
-
-        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
-            @Override
-            public boolean matches(KeyEvent event) {
-                return KeyEvent.ACTION_UP == event.getAction() &&
-                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
-            }
-        }));
-    }
-
-    /**
-     * Test close simulates a back press on the activity
-     */
-    @Test
-    public void testOnClose() {
-        client.onClose(webView);
-
-        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
-            @Override
-            public boolean matches(KeyEvent event) {
-                return KeyEvent.ACTION_DOWN == event.getAction() &&
-                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
-            }
-        }));
-
-        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
-            @Override
-            public boolean matches(KeyEvent event) {
-                return KeyEvent.ACTION_UP == event.getAction() &&
-                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
-            }
-        }));
     }
 
     /**
@@ -388,9 +279,10 @@ public class UAWebViewClientTest extends BaseTestCase {
     public void testActionCallInvalidArguments() {
         // actionName = {invalid_json}}}
         String url = "uairship://run-action-cb/actionName/%7Binvalid_json%7D%7D%7D/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verifyWebView("UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
+        verify(javaScriptExecutor)
+                .executeJavaScript("UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
     }
 
     /**
@@ -416,9 +308,10 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verifyWebView("UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
+        verify(javaScriptExecutor)
+                .executeJavaScript("UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
     }
 
     /**
@@ -444,9 +337,9 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verifyWebView("UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
+        verify(javaScriptExecutor).executeJavaScript("UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
     }
 
     /**
@@ -472,9 +365,10 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verifyWebView("UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
+        verify(javaScriptExecutor)
+                .executeJavaScript("UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
     }
 
     /**
@@ -500,9 +394,10 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verifyWebView("UAirship.finishAction(null, \"action_result\", 'callbackId');");
+        verify(javaScriptExecutor)
+                .executeJavaScript("UAirship.finishAction(null, \"action_result\", 'callbackId');");
 
         // Verify the action request
         verify(runRequest).run(any(ActionCompletionCallback.class));
@@ -519,7 +414,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
-        client.setActionCompletionCallback(completionCallback);
+        nativeBridge.setActionCompletionCallback(completionCallback);
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -536,17 +431,31 @@ public class UAWebViewClientTest extends BaseTestCase {
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
-        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify our callback was called
         verify(completionCallback).onFinish(arguments, result);
     }
 
-    private void verifyWebView(String s) {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            verify(webView).loadUrl("javascript:" + s);
-        } else {
-            verify(webView).evaluateJavascript(s, null);
-        }
+
+    /**
+     * Test close command calls onClose
+     */
+    @Test
+    public void testCloseCommand() {
+        String url = "uairship://close";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+
+        verify(commandDelegate).onClose();
+    }
+
+    /**
+     * Test extending the bridge with a custom call.
+     */
+    @Test
+    public void testExtendingBridge() {
+        String url = "uairship://foo";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        verify(commandDelegate).onAirshipCommand("foo", Uri.parse(url));
     }
 }

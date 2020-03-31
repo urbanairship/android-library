@@ -8,7 +8,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.richpush.RichPushUser;
-import com.urbanairship.widget.AirshipWebView;
+import com.urbanairship.webkit.AirshipWebView;
 
 import java.util.HashMap;
 

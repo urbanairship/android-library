@@ -24,7 +24,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebChromeClient;
-import com.urbanairship.widget.UAWebViewClient;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -57,7 +56,6 @@ public class MessageFragment extends Fragment {
      * Message has been deleted or expired.
      */
     protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
-
 
     private MessageWebView webView;
     private View progressBar;
@@ -139,10 +137,10 @@ public class MessageFragment extends Fragment {
         webView.setAlpha(0);
 
         // Set a custom RichPushWebViewClient view client to listen for the page finish
-        // Note: UAWebViewClient is required to load the proper auth and to
+        // Note: MessageWebViewClient is required to load the proper auth and to
         // inject the Airship Javascript interface.  When overriding any methods
         // make sure to call through to the super's implementation.
-        webView.setWebViewClient(new UAWebViewClient() {
+        webView.setWebViewClient(new MessageWebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
