@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * A cancelable operation that executes its task on a specific looper.
  */
-public abstract class CancelableOperation implements Cancelable, Runnable {
+public class CancelableOperation implements Cancelable, Runnable {
 
     private boolean isFinished = false;
     private boolean isRunning = false;

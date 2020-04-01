@@ -11,10 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
+
+import android.os.Looper;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import com.urbanairship.AirshipExecutors;
+import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.ResultCallback;
@@ -30,6 +33,8 @@ import java.util.concurrent.Executor;
  */
 abstract class ImageRequest {
 
+    private final Executor EXECUTOR = AirshipExecutors.THREAD_POOL_EXECUTOR;
+
     /**
      * Duration of the fade in animation when loading a bitmap into the image view in milliseconds.
      */
@@ -40,14 +45,11 @@ abstract class ImageRequest {
     private final WeakReference<ImageView> imageViewReference;
     private final Context context;
 
-    private PendingResult<Drawable> imageRequestPendingResult;
+    private final CancelableOperation pendingRequest = new CancelableOperation();
 
     private ViewTreeObserver.OnPreDrawListener preDrawListener;
     private int width;
     private int height;
-    private boolean isCancelled = false;
-
-    private final Executor executor = AirshipExecutors.newSerialExecutor();
 
     /**
      * Creates a request.
@@ -73,17 +75,12 @@ abstract class ImageRequest {
      */
     @MainThread
     void cancel() {
-        isCancelled = true;
         ImageView imageView = imageViewReference.get();
         if (imageView != null && preDrawListener != null) {
             imageView.getViewTreeObserver().removeOnPreDrawListener(preDrawListener);
             imageViewReference.clear();
         }
-
-        if (imageRequestPendingResult != null) {
-            imageRequestPendingResult.cancel();
-            imageRequestPendingResult = null;
-        }
+        pendingRequest.cancel();
     }
 
     /**
@@ -91,7 +88,7 @@ abstract class ImageRequest {
      */
     @MainThread
     void execute() {
-        if (isCancelled) {
+        if (pendingRequest.isCancelled()) {
             return;
         }
 
@@ -144,22 +141,31 @@ abstract class ImageRequest {
                 imageView.setImageDrawable(null);
             }
 
-            imageRequestPendingResult = new PendingResult<>();
-
-            imageRequestPendingResult.addResultCallback(new ResultCallback<Drawable>() {
-                @Override
-                public void onResult(@Nullable Drawable drawable) {
-                    if (drawable != null) {
-                        applyDrawable(drawable);
-                    }
-                }
-            });
-
-            executor.execute(new Runnable() {
+            EXECUTOR.execute(new Runnable() {
                 @Override
                 public void run() {
+                    if (pendingRequest.isCancelled()) {
+                        return;
+                    }
+
                     try {
-                        imageRequestPendingResult.setResult(fetchDrawableOnBackground());
+                        final Drawable drawable = fetchDrawableOnBackground();
+
+                        if (drawable != null) {
+                            pendingRequest.addOnRun(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (pendingRequest.isCancelled()) {
+                                        return;
+                                    }
+
+                                    applyDrawable(drawable);
+                                }
+                            });
+
+                            pendingRequest.run();
+                        }
+
                     } catch (IOException e) {
                         Logger.debug(e, "Unable to fetch bitmap");
                     }
@@ -210,10 +216,6 @@ abstract class ImageRequest {
 
     @MainThread
     private void applyDrawable(Drawable drawable) {
-        if (isCancelled) {
-            return;
-        }
-
         final ImageView imageView = imageViewReference.get();
         if (drawable != null && imageView != null) {
             // Transition drawable with a transparent drawable and the final drawable
