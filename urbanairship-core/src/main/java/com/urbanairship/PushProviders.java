@@ -3,18 +3,23 @@
 package com.urbanairship;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.urbanairship.push.PushProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Loads push providers.
+ * @hide
  */
-class PushProviders {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class PushProviders {
 
     private static final String FCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.fcm.FcmPushProvider";
     private static final String ADM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.adm.AdmPushProvider";
@@ -112,6 +117,10 @@ class PushProviders {
         return providers;
     }
 
+    public List<PushProvider> getAvailableProviders() {
+        return Collections.unmodifiableList(availableProviders);
+    }
+
     /**
      * Gets the best provider for the specified platform.
      *
@@ -171,7 +180,7 @@ class PushProviders {
         return null;
     }
 
-    public List<String> createAllowedProviderClassList() {
+    List<String> createAllowedProviderClassList() {
         List<String> providers = new ArrayList<>();
         if (airshipConfigOptions.allowedTransports.contains(AirshipConfigOptions.FCM_TRANSPORT)) {
             providers.add(FCM_PUSH_PROVIDER_CLASS);

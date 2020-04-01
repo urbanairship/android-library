@@ -3,6 +3,8 @@
 package com.urbanairship.remotedata;
 
 import android.net.Uri;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -10,15 +12,21 @@ import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * API client for fetching remote data.
@@ -35,11 +43,18 @@ public class RemoteDataApiClient {
     // ISO 3166-2 two digit language code
     private static final String LANGUAGE_QUERY_PARAM = "language";
 
+    private static final String MANUFACTURER_QUERY_PARAM = "manufacturer";
+    private static final String PUSH_PROVIDER_QUERY_PARAM = "push_providers";
+
+    private static final List<String> MANUFACTURERS_WHITE_LIST = Collections.singletonList("huawei");
+
     private static final String AMAZON = "amazon";
     private static final String ANDROID = "android";
 
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;
+    private final PushProviders pushProviders;
+    private final int platform;
 
     @Nullable
     private URL url;
@@ -48,20 +63,30 @@ public class RemoteDataApiClient {
      * RemoteDataApiClient constructor.
      *
      * @param configOptions The config options.
+     * @param platform The platform.
+     * @param pushProviders The push providers
      */
-    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions) {
-        this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions,
+                        @UAirship.Platform int platform,
+                        @NonNull PushProviders pushProviders) {
+        this(configOptions, platform, pushProviders, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     /**
      * RemoteDataApiClient constructor.
-     *
      * @param configOptions The config options.
+     * @param platform The platform.
+     * @param pushProviders The push providers
      * @param requestFactory A RequestFactory.
      */
     @VisibleForTesting
-    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+    RemoteDataApiClient(@NonNull AirshipConfigOptions configOptions,
+                        @UAirship.Platform int platform,
+                        @NonNull PushProviders pushProviders,
+                        @NonNull RequestFactory requestFactory) {
         this.configOptions = configOptions;
+        this.platform = platform;
+        this.pushProviders = pushProviders;
         this.requestFactory = requestFactory;
     }
 
@@ -102,15 +127,26 @@ public class RemoteDataApiClient {
             return url;
         }
 
-        // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}
+        // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
 
         try {
             Uri.Builder builder = Uri.parse(configOptions.remoteDataUrl)
                                      .buildUpon()
                                      .appendEncodedPath(REMOTE_DATA_PATH)
                                      .appendPath(configOptions.appKey)
-                                     .appendPath(UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
+                                     .appendPath(platform == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
                                      .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
+
+
+            String manufacturer = getManufacturer();
+            if (shouldIncludeManufacturer(manufacturer)) {
+                builder.appendQueryParameter(MANUFACTURER_QUERY_PARAM, manufacturer);
+            }
+
+            String providers = getPushProviderCsv();
+            if (providers != null) {
+                builder.appendQueryParameter(PUSH_PROVIDER_QUERY_PARAM, providers);
+            }
 
             if (!UAStringUtil.isEmpty(locale.getLanguage())) {
                 builder.appendQueryParameter(LANGUAGE_QUERY_PARAM, locale.getLanguage());
@@ -129,4 +165,30 @@ public class RemoteDataApiClient {
         return url;
     }
 
+    private boolean shouldIncludeManufacturer(@NonNull String manufacturer) {
+        return MANUFACTURERS_WHITE_LIST.contains(manufacturer.toLowerCase());
+    }
+
+    @NonNull
+    private static String getManufacturer() {
+        String manufacturer = Build.MANUFACTURER;
+        if (manufacturer == null) {
+            return "";
+        }
+        return manufacturer.toLowerCase(Locale.US);
+    }
+
+    @Nullable
+    private String getPushProviderCsv() {
+        Set<String> deliveryTypes = new HashSet<>();
+        for (PushProvider provider : pushProviders.getAvailableProviders()) {
+            deliveryTypes.add(provider.getDeliveryType());
+        }
+
+        if (deliveryTypes.isEmpty()) {
+            return null;
+        }
+
+        return UAStringUtil.join(deliveryTypes, ",");
+    }
 }

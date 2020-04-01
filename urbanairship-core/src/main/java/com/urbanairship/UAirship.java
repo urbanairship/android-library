@@ -152,6 +152,7 @@ public class UAirship {
     Automation automation;
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
+    PushProviders providers;
 
     @Platform
     int platform;
@@ -679,7 +680,7 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
-        PushProviders providers = PushProviders.load(application, airshipConfigOptions);
+        this.providers = PushProviders.load(application, airshipConfigOptions);
 
         this.platform = determinePlatform(providers);
         this.pushProvider = determinePushProvider(platform, providers);
@@ -1021,7 +1022,7 @@ public class UAirship {
      * <p>
      * When disabled, the device will stop collecting and sending data for named user, events,
      * tags, attributes, associated identifiers, and location from the device.
-     *
+     * <p>
      * Push notifications will continue to work only if {@link PushManager#setPushTokenRegistrationEnabled(boolean)}
      * has been explicitly set to {@code true}, otherwise it will default to the current state
      * of {@link #isDataCollectionEnabled()}.
@@ -1039,6 +1040,18 @@ public class UAirship {
      */
     public boolean isDataCollectionEnabled() {
         return this.preferenceDataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, true);
+    }
+
+    /**
+     * Gets the push providers.
+     *
+     * @return The push providers.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public PushProviders getPushProviders() {
+        return providers;
     }
 
     /**

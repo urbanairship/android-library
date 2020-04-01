@@ -44,7 +44,7 @@ public class RemoteDataJobHandler {
      * @param airship A UAirship instance.
      */
     RemoteDataJobHandler(@NonNull Context context, @NonNull UAirship airship) {
-        this(airship.getRemoteData(), new RemoteDataApiClient(airship.getAirshipConfigOptions()), LocaleManager.shared(context));
+        this(airship.getRemoteData(), new RemoteDataApiClient(airship.getAirshipConfigOptions(), airship.getPlatformType(), airship.getPushProviders()), LocaleManager.shared(context));
     }
 
     /**
