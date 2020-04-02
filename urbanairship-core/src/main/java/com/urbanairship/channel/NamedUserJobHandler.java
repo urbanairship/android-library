@@ -2,19 +2,18 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Job handler for the NamedUser.
@@ -50,7 +49,7 @@ class NamedUserJobHandler {
      * @param dataStore The preference data store.
      */
     NamedUserJobHandler(@NonNull UAirship airship, @NonNull PreferenceDataStore dataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        this(airship, dataStore, tagGroupRegistrar, new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+        this(airship, dataStore, tagGroupRegistrar, new NamedUserApiClient(airship.getRuntimeConfig()));
     }
 
     @VisibleForTesting

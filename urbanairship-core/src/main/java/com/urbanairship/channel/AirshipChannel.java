@@ -8,10 +8,10 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -74,21 +74,19 @@ public class AirshipChannel extends AirshipComponent {
     private static final String LAST_REGISTRATION_PAYLOAD_KEY = "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD";
     private static final String ATTRIBUTE_DATASTORE_KEY = "com.urbanairship.push.ATTRIBUTE_DATA_STORE";
 
-    private final AirshipConfigOptions configOptions;
     private final ChannelApiClient channelApiClient;
     private final AttributeApiClient attributeApiClient;
     private final TagGroupRegistrar tagGroupRegistrar;
     private final JobDispatcher jobDispatcher;
     private final LocaleManager localeManager;
 
-    @UAirship.Platform
-    private final int platform;
     private final List<AirshipChannelListener> airshipChannelListeners = new CopyOnWriteArrayList<>();
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
     private final Object tagLock = new Object();
     private final Object attributeLock = new Object();
 
     private final PendingAttributeMutationStore attributeMutationStore;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     private boolean channelTagRegistrationEnabled = true;
     private boolean channelCreationDelayEnabled;
@@ -118,39 +116,35 @@ public class AirshipChannel extends AirshipComponent {
      *
      * @param context The application context.
      * @param dataStore The preference data store.
-     * @param configOptions The config options.
-     * @param platform The current platform.
+     * @param runtimeConfig The runtime config.
      * @param tagGroupRegistrar The tag group registrar.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AirshipChannel(@NonNull Context context,
                           @NonNull PreferenceDataStore dataStore,
-                          @NonNull AirshipConfigOptions configOptions,
-                          @UAirship.Platform int platform,
+                          @NonNull AirshipRuntimeConfig runtimeConfig,
                           @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        this(context, dataStore, configOptions, new ChannelApiClient(configOptions),
-                tagGroupRegistrar, platform, LocaleManager.shared(context), JobDispatcher.shared(context),
-                new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY), new AttributeApiClient(platform, configOptions));
+        this(context, dataStore, runtimeConfig, new ChannelApiClient(runtimeConfig),
+                tagGroupRegistrar, LocaleManager.shared(context), JobDispatcher.shared(context),
+                new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY), new AttributeApiClient(runtimeConfig));
     }
 
     @VisibleForTesting
     AirshipChannel(@NonNull Context context,
                    @NonNull PreferenceDataStore dataStore,
-                   @NonNull AirshipConfigOptions configOptions,
+                   @NonNull AirshipRuntimeConfig runtimeConfig,
                    @NonNull ChannelApiClient channelApiClient,
                    @NonNull TagGroupRegistrar tagGroupRegistrar,
-                   @UAirship.Platform int platform,
                    @NonNull LocaleManager localeManager,
                    @NonNull JobDispatcher jobDispatcher,
                    @NonNull PendingAttributeMutationStore attributeMutationStore,
                    @NonNull AttributeApiClient attributeApiClient) {
         super(context, dataStore);
 
-        this.configOptions = configOptions;
+        this.runtimeConfig = runtimeConfig;
         this.channelApiClient = channelApiClient;
         this.tagGroupRegistrar = tagGroupRegistrar;
-        this.platform = platform;
         this.localeManager = localeManager;
         this.jobDispatcher = jobDispatcher;
         this.attributeMutationStore = attributeMutationStore;
@@ -170,7 +164,7 @@ public class AirshipChannel extends AirshipComponent {
             Log.d(UAirship.getAppName() + " Channel ID", getId());
         }
 
-        channelCreationDelayEnabled = getId() == null && configOptions.channelCreationDelayEnabled;
+        channelCreationDelayEnabled = getId() == null && runtimeConfig.getConfigOptions().channelCreationDelayEnabled;
     }
 
     /**
@@ -471,7 +465,7 @@ public class AirshipChannel extends AirshipComponent {
                 .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
                 .setApid(getDataStore().getString(APID_KEY, null));
 
-        switch (platform) {
+        switch (runtimeConfig.getPlatform()) {
             case UAirship.ANDROID_PLATFORM:
                 builder.setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE);
                 break;

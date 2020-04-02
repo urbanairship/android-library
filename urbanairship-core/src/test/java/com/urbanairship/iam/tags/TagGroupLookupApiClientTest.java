@@ -1,11 +1,10 @@
 package com.urbanairship.iam.tags;/* Copyright Airship and Contributors */
 
-import androidx.annotation.NonNull;
-
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -23,6 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -30,7 +31,7 @@ import static org.junit.Assert.assertNull;
 public class TagGroupLookupApiClientTest extends BaseTestCase {
 
     private TestRequest testRequest;
-    private AirshipConfigOptions configOptions;
+    private TestAirshipRuntimeConfig runtimeConfig;
     private RequestFactory requestFactory;
     private TagGroupLookupApiClient client;
     private Map<String, Set<String>> requestTags;
@@ -46,12 +47,10 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
         responseTags.put("cool-response", new HashSet<String>());
         responseTags.get("cool-response").add("cool");
 
-        configOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("https://test.urbanairship.com/")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setDeviceUrl("https://test.urbanairship.com")
+                                                   .build());
 
         testRequest = new TestRequest();
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
@@ -73,7 +72,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
             }
         };
 
-        this.client = new TagGroupLookupApiClient(configOptions, requestFactory);
+        this.client = new TagGroupLookupApiClient(runtimeConfig, requestFactory);
     }
 
     /**
@@ -81,7 +80,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
      */
     @Test
     public void lookupTagsAndroid() throws JsonException {
-        TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
+        TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         assertEquals(200, response.status);
         assertEquals("lastModifiedTime", response.lastModifiedTime);
@@ -95,7 +94,8 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
      */
     @Test
     public void lookupTagsAmazon() throws JsonException {
-        TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.AMAZON_PLATFORM, requestTags, null);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
+        TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         assertEquals(200, response.status);
         assertEquals("lastModifiedTime", response.lastModifiedTime);
@@ -112,7 +112,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
         testRequest.response = Response.newBuilder(400)
                                        .build();
 
-        TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
+        TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         assertEquals(400, response.status);
         assertNull(response.lastModifiedTime);
@@ -126,7 +126,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
     @Test
     public void testCachedResponse() throws JsonException {
         // Get a valid response
-        TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
+        TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
         verifyRequest(UAirship.ANDROID_PLATFORM, "some-channel", requestTags, null);
 
         // Update the response to return a 200 with the same lastModified time as the
@@ -139,7 +139,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
                                                                .build().toString())
                                        .build();
 
-        TagGroupResponse cachedResponse = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, response);
+        TagGroupResponse cachedResponse = client.lookupTagGroups("some-channel", requestTags, response);
         verifyRequest(UAirship.ANDROID_PLATFORM, "some-channel", requestTags, response.lastModifiedTime);
 
         // Should return the original response
@@ -152,7 +152,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
     @Test
     public void testCachedResponseNewData() {
         // Get a valid response
-        TagGroupResponse response = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, null);
+        TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         // Update the response to return new data
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
@@ -163,7 +163,7 @@ public class TagGroupLookupApiClientTest extends BaseTestCase {
                                                                .build().toString())
                                        .build();
 
-        TagGroupResponse newResponse = client.lookupTagGroups("some-channel", UAirship.ANDROID_PLATFORM, requestTags, response);
+        TagGroupResponse newResponse = client.lookupTagGroups("some-channel", requestTags, response);
 
         // Should return the original response
         assertNotEquals(newResponse, response);

@@ -2,27 +2,25 @@
 
 package com.urbanairship.iam.tags;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushManager;
 import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-App Message Manager helper class that manages tag group audience data.
@@ -90,14 +88,16 @@ public class TagGroupManager {
     /**
      * Default constructor.
      *
-     * @param configOptions The airship config options.
+     * @param runtimeConfig The runtime config.
      * @param airshipChannel The Airship channel.
      * @param tagGroupRegistrar The tag group registrar.
      * @param dataStore The preference data store.
      */
-    public TagGroupManager(@NonNull AirshipConfigOptions configOptions, @NonNull AirshipChannel airshipChannel,
-                           @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupLookupApiClient(configOptions), airshipChannel,
+    public TagGroupManager(@NonNull AirshipRuntimeConfig runtimeConfig,
+                           @NonNull AirshipChannel airshipChannel,
+                           @NonNull TagGroupRegistrar tagGroupRegistrar,
+                           @NonNull PreferenceDataStore dataStore) {
+        this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel,
                 new TagGroupHistorian(tagGroupRegistrar, dataStore, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
@@ -371,7 +371,7 @@ public class TagGroupManager {
             cachedResponse = null;
         }
 
-        TagGroupResponse response = client.lookupTagGroups(airshipChannel.getId(), UAirship.shared().getPlatformType(), requestTags, cachedResponse);
+        TagGroupResponse response = client.lookupTagGroups(airshipChannel.getId(), requestTags, cachedResponse);
 
         if (response == null) {
             Logger.error("Failed to refresh the cache.");

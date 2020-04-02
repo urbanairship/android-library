@@ -9,6 +9,7 @@ import android.telephony.TelephonyManager;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
@@ -54,7 +55,6 @@ import static org.mockito.Mockito.when;
 public class AirshipChannelTests extends BaseTestCase {
 
     private AirshipChannel airshipChannel;
-    private AirshipConfigOptions options;
     private ChannelApiClient mockClient;
     private AttributeApiClient mockAttributeClient;
     private PendingAttributeMutationStore mockPendingAttributeStore;
@@ -63,10 +63,10 @@ public class AirshipChannelTests extends BaseTestCase {
 
     private JobDispatcher mockDispatcher;
     private TestLocaleManager testLocaleManager;
-    private String timestamp = "expected_timestamp";
 
     private PreferenceDataStore dataStore;
 
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     private static final JobInfo UPDATE_REGISTRATION_JOB = JobInfo.newBuilder()
                                                                   .setAction("ACTION_UPDATE_CHANNEL_REGISTRATION")
@@ -91,15 +91,12 @@ public class AirshipChannelTests extends BaseTestCase {
 
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         testLocaleManager = new TestLocaleManager();
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                options, mockClient, mockTagGroupRegistrar, UAirship.ANDROID_PLATFORM, testLocaleManager,
+                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
                 mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
     }
 
@@ -466,9 +463,7 @@ public class AirshipChannelTests extends BaseTestCase {
      */
     @Test
     public void testAmazonChannelRegistrationPayload() throws ChannelRequestException {
-        airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                options, mockClient, mockTagGroupRegistrar, UAirship.AMAZON_PLATFORM, testLocaleManager,
-                mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
@@ -740,7 +735,6 @@ public class AirshipChannelTests extends BaseTestCase {
         assertEquals(tags, airshipChannel.getTags());
     }
 
-
     /**
      * Tests trimming of tag's white space when tag is only white space.
      */
@@ -859,27 +853,31 @@ public class AirshipChannelTests extends BaseTestCase {
      */
     @Test
     public void testDelayChannelCreation() {
-        options = new AirshipConfigOptions.Builder()
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(false)
                 .build();
 
+        runtimeConfig.setConfigOptions(configOptions);
+
         airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                options, mockClient, mockTagGroupRegistrar, UAirship.ANDROID_PLATFORM, testLocaleManager,
+                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
                 mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
 
         airshipChannel.init();
         assertFalse(airshipChannel.isChannelCreationDelayEnabled());
 
-        options = new AirshipConfigOptions.Builder()
+        configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
 
+        runtimeConfig.setConfigOptions(configOptions);
+
         airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                options, mockClient, mockTagGroupRegistrar, UAirship.ANDROID_PLATFORM, testLocaleManager,
+                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
                 mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
 
         airshipChannel.init();
@@ -892,14 +890,17 @@ public class AirshipChannelTests extends BaseTestCase {
     @Test
     public void testEnableChannelCreation() {
         // Enable channel delay
-        options = new AirshipConfigOptions.Builder()
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
 
+        runtimeConfig.setConfigOptions(configOptions);
+
+
         airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                options, mockClient, mockTagGroupRegistrar, UAirship.ANDROID_PLATFORM, testLocaleManager,
+                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
                 mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
 
         airshipChannel.init();
@@ -927,6 +928,7 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     private static class TestListener implements AirshipChannelListener {
+
         boolean onChannelCreatedCalled;
         boolean onChannelUpdatedCalled;
 
@@ -939,5 +941,7 @@ public class AirshipChannelTests extends BaseTestCase {
         public void onChannelUpdated(@NonNull String channelId) {
             onChannelUpdatedCalled = true;
         }
+
     }
+
 }

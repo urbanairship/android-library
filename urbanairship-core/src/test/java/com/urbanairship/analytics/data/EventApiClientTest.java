@@ -6,6 +6,7 @@ import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.TestRequest;
@@ -41,9 +42,12 @@ public class EventApiClientTest extends BaseTestCase {
     private EventApiClient client;
     private TestRequest testRequest;
     private TestLocaleManager localeManager;
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setUp() {
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+
         events.add("{\"some\":\"json\"}");
 
         testRequest = new TestRequest();
@@ -59,7 +63,7 @@ public class EventApiClientTest extends BaseTestCase {
         TestApplication.getApplication().setInbox(inbox);
 
         localeManager = new TestLocaleManager();
-        client = new EventApiClient(TestApplication.getApplication(), mockRequestFactory, localeManager);
+        client = new EventApiClient(TestApplication.getApplication(), runtimeConfig, mockRequestFactory, localeManager);
     }
 
     /**
@@ -136,8 +140,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAmazonDeviceFamily() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
-
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
                                        .setResponseMessage("OK")
                                        .setResponseBody(events.toString())

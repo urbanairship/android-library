@@ -13,12 +13,6 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -30,6 +24,9 @@ import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.config.AirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
@@ -58,6 +55,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 /**
  * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
@@ -78,7 +81,7 @@ public class UAirship {
     @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
-    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
+    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Platform {
     }
@@ -153,9 +156,7 @@ public class UAirship {
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
     PushProviders providers;
-
-    @Platform
-    int platform;
+    AirshipRuntimeConfig runtimeConfig;
 
     /**
      * Constructs an instance of UAirship.
@@ -654,6 +655,17 @@ public class UAirship {
     }
 
     /**
+     * Airship runtime config.
+     *
+     * @return The Airship runtime config.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public AirshipRuntimeConfig getRuntimeConfig() {
+        return runtimeConfig;
+    }
+
+    /**
      * Sets the image loader.
      *
      * @param imageLoader The image loader.
@@ -676,23 +688,25 @@ public class UAirship {
      * Initializes UAirship instance.
      */
     private void init() {
+
         // Create and init the preference data store first
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
         this.providers = PushProviders.load(application, airshipConfigOptions);
-
-        this.platform = determinePlatform(providers);
+        int platform = determinePlatform(providers);
         this.pushProvider = determinePushProvider(platform, providers);
 
         if (this.pushProvider != null) {
             Logger.info("Using push provider: %s", this.pushProvider);
         }
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
+        this.runtimeConfig = createRuntimeConfig(airshipConfigOptions, platform);
+
+        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(runtimeConfig, preferenceDataStore);
         tagGroupRegistrar.migrateKeys();
 
-        this.channel = new AirshipChannel(application, preferenceDataStore, airshipConfigOptions, platform, tagGroupRegistrar);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar);
         components.add(channel);
 
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -701,20 +715,20 @@ public class UAirship {
 
         // Airship components
         this.analytics = Analytics.newBuilder(application)
-                .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                .setConfigOptions(airshipConfigOptions)
-                .setPreferenceDataStore(preferenceDataStore)
-                .setAirshipChannel(channel)
-                .setEventManager(EventManager.newBuilder()
-                        .setEventResolver(new EventResolver(application))
-                        .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                        .setJobDispatcher(JobDispatcher.shared(application))
-                        .setPreferenceDataStore(preferenceDataStore)
-                        .setApiClient(new EventApiClient(application))
-                        .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
-                        .setJobAction(Analytics.ACTION_SEND)
-                        .build())
-                .build();
+                                  .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                                  .setConfigOptions(airshipConfigOptions)
+                                  .setPreferenceDataStore(preferenceDataStore)
+                                  .setAirshipChannel(channel)
+                                  .setEventManager(EventManager.newBuilder()
+                                                               .setEventResolver(new EventResolver(application))
+                                                               .setActivityMonitor(GlobalActivityMonitor.shared(application))
+                                                               .setJobDispatcher(JobDispatcher.shared(application))
+                                                               .setPreferenceDataStore(preferenceDataStore)
+                                                               .setApiClient(new EventApiClient(application, this.runtimeConfig))
+                                                               .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
+                                                               .setJobAction(Analytics.ACTION_SEND)
+                                                               .build())
+                                  .build();
         components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -726,7 +740,7 @@ public class UAirship {
         this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application), channel);
         components.add(this.locationManager);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, this.pushProvider, channel);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel);
         components.add(this.pushManager);
 
         this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar, channel);
@@ -744,14 +758,13 @@ public class UAirship {
         this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application));
         components.add(this.remoteData);
 
-        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, this.remoteData);
+        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
         components.add(this.remoteConfigManager);
 
-        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions,
-                analytics, this.remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
+        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
-        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, this.inAppMessageManager, this.analytics);
+        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, inAppMessageManager, analytics);
         components.add(this.legacyInAppMessageManager);
 
         for (String className : OPTIONAL_COMPONENTS) {
@@ -788,6 +801,25 @@ public class UAirship {
             Logger.debug("Airship - Setting data collection enabled to %s", enabled);
             setDataCollectionEnabled(enabled);
         }
+    }
+
+    private static AirshipRuntimeConfig createRuntimeConfig(AirshipConfigOptions configOptions, @Platform int platform) {
+        final AirshipUrlConfig airshipUrlConfig = AirshipUrlConfig.newBuilder()
+                                                                  .setAnalyticsUrl(configOptions.analyticsUrl)
+                                                                  .setDeviceUrl(configOptions.deviceUrl)
+                                                                  .setRemoteDataUrl(configOptions.remoteDataUrl)
+                                                                  .setWalletUrl(configOptions.walletUrl)
+                                                                  .build();
+
+        AirshipUrlConfigProvider urlConfigProvider = new AirshipUrlConfigProvider() {
+            @NonNull
+            @Override
+            public AirshipUrlConfig getConfig() {
+                return airshipUrlConfig;
+            }
+        };
+
+        return new AirshipRuntimeConfig(urlConfigProvider, configOptions, platform);
     }
 
     /**
@@ -983,7 +1015,7 @@ public class UAirship {
      */
     @Platform
     public int getPlatformType() {
-        return platform;
+        return runtimeConfig.getPlatform();
     }
 
     /**
@@ -1175,4 +1207,5 @@ public class UAirship {
 
         return null;
     }
+
 }

@@ -9,13 +9,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -26,7 +23,6 @@ import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +30,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * A client that handles uploading analytic events
@@ -44,40 +45,39 @@ import java.util.TimeZone;
 public class EventApiClient {
 
     private static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
-
     private static final String NOT_ALLOWED = "NOT_ALLOWED";
-
     private static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
+    private static final String WARP9_PATH = "warp9/";
 
-    @NonNull
     private final RequestFactory requestFactory;
-
-    @NonNull
     private final LocaleManager localeManager;
-
-    @NonNull
     private final Context context;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     /**
      * Default constructor.
      *
      * @param context The application context.
      */
-    public EventApiClient(@NonNull Context context) {
-        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared(context));
+    public EventApiClient(@NonNull Context context, @NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(context, runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY, LocaleManager.shared(context));
     }
 
     /**
      * Create the EventApiClient
      *
      * @param context The application context.
-     * @param requestFactory The requestFactory.
+     * @param runtimeConfig The airship runtime config.
      * @param localeManager The locale manager.
      */
     @VisibleForTesting
-    EventApiClient(@NonNull Context context, @NonNull RequestFactory requestFactory, @NonNull LocaleManager localeManager) {
-        this.requestFactory = requestFactory;
+    EventApiClient(@NonNull Context context,
+                   @NonNull AirshipRuntimeConfig runtimeConfig,
+                   @NonNull RequestFactory requestFactory,
+                   @NonNull LocaleManager localeManager) {
         this.context = context;
+        this.runtimeConfig = runtimeConfig;
+        this.requestFactory = requestFactory;
         this.localeManager = localeManager;
     }
 
@@ -95,6 +95,16 @@ public class EventApiClient {
             return null;
         }
 
+        URL url = runtimeConfig.getUrlConfig()
+                               .analyticsUrl()
+                               .appendEncodedPath(WARP9_PATH)
+                               .build();
+
+        if (url == null) {
+            Logger.debug("Analytics URL is null, unable to send events.");
+            return null;
+        }
+
         List<JsonValue> eventJSON = new ArrayList<>();
 
         for (String eventPayload : events) {
@@ -107,20 +117,8 @@ public class EventApiClient {
 
         String payload = new JsonList(eventJSON).toString();
 
-        String url = airship.getAirshipConfigOptions().analyticsUrl + "warp9/";
-        URL analyticsServerUrl = null;
-        try {
-            analyticsServerUrl = new URL(url);
-        } catch (MalformedURLException e) {
-            Logger.error(e, "EventApiClient - Invalid analyticsServer: %s", url);
-        }
-
-        if (analyticsServerUrl == null) {
-            return null;
-        }
-
         String deviceFamily;
-        if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
+        if (runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM) {
             deviceFamily = "amazon";
         } else {
             deviceFamily = "android";
@@ -149,7 +147,7 @@ public class EventApiClient {
             }
         }
 
-        Request request = requestFactory.createRequest("POST", analyticsServerUrl)
+        Request request = requestFactory.createRequest("POST", url)
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
                                         .setHeader("X-UA-Device-Family", deviceFamily)

@@ -2,9 +2,10 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -32,20 +33,18 @@ public class ChannelApiClientTest extends BaseTestCase {
     private ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
     private ChannelApiClient client;
     private TestRequest testRequest;
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setUp() {
         testRequest = new TestRequest();
 
-        // Set hostURL
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("https://go-demo.urbanairship.com/")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setDeviceUrl("https://go-demo.urbanairship.com")
+                                                   .build());
 
-        client = new ChannelApiClient(airshipConfigOptions, new RequestFactory() {
+        client = new ChannelApiClient(runtimeConfig, new RequestFactory() {
             @NonNull
             @Override
             public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {

@@ -4,15 +4,12 @@ package com.urbanairship.remotedata;
 
 import android.content.Context;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PushProviders;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -23,8 +20,6 @@ import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowBuild;
 
 import java.net.HttpURLConnection;
@@ -35,6 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,14 +47,11 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     private PushProviders pushProviders;
 
     private List<PushProvider> availableProviders;
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setUp() {
-        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         testRequest = new TestRequest();
         RequestFactory requestFactory = new RequestFactory() {
@@ -73,7 +68,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         pushProviders = mock(PushProviders.class);
         when(pushProviders.getAvailableProviders()).thenReturn(availableProviders);
 
-        client = new RemoteDataApiClient(configOptions, UAirship.ANDROID_PLATFORM, pushProviders, requestFactory);
+        client = new RemoteDataApiClient(runtimeConfig, pushProviders, requestFactory);
     }
 
     /**

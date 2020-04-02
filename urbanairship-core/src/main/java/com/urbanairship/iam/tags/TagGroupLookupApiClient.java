@@ -2,26 +2,24 @@
 
 package com.urbanairship.iam.tags;
 
-import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Tag Group lookup API client.
@@ -45,54 +43,48 @@ class TagGroupLookupApiClient {
     private static final String AMAZON_PLATFORM = "amazon";
 
     private final RequestFactory requestFactory;
-    private final URL url;
-    private final AirshipConfigOptions configOptions;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     /**
      * Default constructor.
      *
-     * @param configOptions The config options.
+     * @param runtimeConfig The runtime config.
      */
-    TagGroupLookupApiClient(@NonNull AirshipConfigOptions configOptions) {
-        this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    TagGroupLookupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    TagGroupLookupApiClient(@NonNull AirshipConfigOptions configOptions, RequestFactory requestFactory) {
-        this.configOptions = configOptions;
+    TagGroupLookupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
+                            @NonNull RequestFactory requestFactory) {
+        this.runtimeConfig = runtimeConfig;
         this.requestFactory = requestFactory;
-        this.url = getUrl(configOptions);
-    }
-
-    private URL getUrl(AirshipConfigOptions configOptions) {
-        Uri uri = Uri.withAppendedPath(Uri.parse(configOptions.deviceUrl), CHANNEL_TAG_LOOKUP_PATH);
-        try {
-            return new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            Logger.error(e, "Invalid URL: %s", uri);
-            return null;
-        }
     }
 
     /**
      * Looks up the tag groups.
      *
      * @param channelId The channel ID.
-     * @param platform The channel's platform.
      * @param requestedTags The tags to request.
      * @param cachedResponse Optional cached response.
      * @return A tag group response.
      */
     @Nullable
-    TagGroupResponse lookupTagGroups(String channelId, @UAirship.Platform int platform,
-                                     Map<String, Set<String>> requestedTags, @Nullable TagGroupResponse cachedResponse) {
+    TagGroupResponse lookupTagGroups(String channelId,
+                                     Map<String, Set<String>> requestedTags,
+                                     @Nullable TagGroupResponse cachedResponse) {
+
+        URL url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(CHANNEL_TAG_LOOKUP_PATH)
+                               .build();
 
         if (url == null) {
-            Logger.error("No URL, unable to process request.");
+            Logger.debug("Tag Group URL is null, unable to fetch tag groups.");
             return null;
         }
 
-        String deviceType = platform == UAirship.AMAZON_PLATFORM ? AMAZON_PLATFORM : ANDROID_PLATFORM;
+        String deviceType = runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? AMAZON_PLATFORM : ANDROID_PLATFORM;
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_ID_KEY, channelId)
@@ -105,7 +97,7 @@ class TagGroupLookupApiClient {
         Logger.debug("Looking up tags with payload: %s", tagPayload);
 
         Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(configOptions.appKey, configOptions.appSecret)
+                                          .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                           .setRequestBody(tagPayload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
