@@ -25,8 +25,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.config.AirshipUrlConfig;
-import com.urbanairship.config.AirshipUrlConfigProvider;
+import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
@@ -701,7 +700,8 @@ public class UAirship {
             Logger.info("Using push provider: %s", this.pushProvider);
         }
 
-        this.runtimeConfig = createRuntimeConfig(airshipConfigOptions, platform);
+        RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
+        this.runtimeConfig = new AirshipRuntimeConfig(remoteAirshipUrlConfigProvider, airshipConfigOptions, platform);
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(runtimeConfig, preferenceDataStore);
         tagGroupRegistrar.migrateKeys();
@@ -759,6 +759,7 @@ public class UAirship {
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
+        this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
@@ -801,25 +802,6 @@ public class UAirship {
             Logger.debug("Airship - Setting data collection enabled to %s", enabled);
             setDataCollectionEnabled(enabled);
         }
-    }
-
-    private static AirshipRuntimeConfig createRuntimeConfig(AirshipConfigOptions configOptions, @Platform int platform) {
-        final AirshipUrlConfig airshipUrlConfig = AirshipUrlConfig.newBuilder()
-                                                                  .setAnalyticsUrl(configOptions.analyticsUrl)
-                                                                  .setDeviceUrl(configOptions.deviceUrl)
-                                                                  .setRemoteDataUrl(configOptions.remoteDataUrl)
-                                                                  .setWalletUrl(configOptions.walletUrl)
-                                                                  .build();
-
-        AirshipUrlConfigProvider urlConfigProvider = new AirshipUrlConfigProvider() {
-            @NonNull
-            @Override
-            public AirshipUrlConfig getConfig() {
-                return airshipUrlConfig;
-            }
-        };
-
-        return new AirshipRuntimeConfig(urlConfigProvider, configOptions, platform);
     }
 
     /**
