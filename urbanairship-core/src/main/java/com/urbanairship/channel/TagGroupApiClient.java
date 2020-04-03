@@ -2,13 +2,9 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
@@ -16,6 +12,10 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.net.URL;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * TagGroup API client.
@@ -31,17 +31,17 @@ class TagGroupApiClient extends BaseApiClient {
 
     private static final String AUDIENCE_KEY = "audience";
 
-    @UAirship.Platform
-    private final int platform;
+    private final AirshipRuntimeConfig runtimeConfig;
 
-    TagGroupApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions) {
-        this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    TagGroupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    TagGroupApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(configOptions, requestFactory);
-        this.platform = platform;
+    TagGroupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
+                      @NonNull RequestFactory requestFactory) {
+        super(runtimeConfig, requestFactory);
+        this.runtimeConfig = runtimeConfig;
     }
 
     /**
@@ -53,9 +53,13 @@ class TagGroupApiClient extends BaseApiClient {
      */
     @Nullable
     Response updateTagGroups(@TagGroupRegistrar.TagGroupType int type, @NonNull String audienceId, @NonNull TagGroupsMutation mutation) {
-        URL tagUrl = getDeviceUrl(type == TagGroupRegistrar.NAMED_USER ? NAMED_USER_TAG_GROUP_PATH : CHANNEL_TAGS_PATH);
+
+        String path = type == TagGroupRegistrar.NAMED_USER ? NAMED_USER_TAG_GROUP_PATH : CHANNEL_TAGS_PATH;
+
+        URL tagUrl = runtimeConfig.getUrlConfig().deviceUrl().appendEncodedPath(path).build();
+
         if (tagUrl == null) {
-            Logger.error("Invalid tag URL. Unable to update tagGroups.");
+            Logger.debug("Tag URL null. Unable to update tagGroups.");
             return null;
         }
 
@@ -114,7 +118,7 @@ class TagGroupApiClient extends BaseApiClient {
     private String getTagGroupAudienceSelector(@TagGroupRegistrar.TagGroupType int type) {
         switch (type) {
             case TagGroupRegistrar.CHANNEL:
-                switch (platform) {
+                switch (runtimeConfig.getPlatform()) {
                     case UAirship.AMAZON_PLATFORM:
                         return AMAZON_CHANNEL_KEY;
 

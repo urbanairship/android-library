@@ -2,8 +2,9 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
@@ -12,6 +13,7 @@ import com.urbanairship.json.JsonValue;
 import java.net.URL;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
@@ -26,18 +28,22 @@ class ChannelApiClient extends BaseApiClient {
      */
     private static final String CHANNEL_ID_KEY = "channel_id";
 
+    private AirshipRuntimeConfig runtimeConfig;
+
     /**
      * Default constructor.
      *
-     * @param configOptions Airship config options.
+     * @param runtimeConfig Airship runtime config.
      */
-    ChannelApiClient(@NonNull AirshipConfigOptions configOptions) {
-        this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    ChannelApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
-    ChannelApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(configOptions, requestFactory);
+    ChannelApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
+                     @NonNull RequestFactory requestFactory) {
+        super(runtimeConfig, requestFactory);
+        this.runtimeConfig = runtimeConfig;
     }
 
     /**
@@ -48,7 +54,12 @@ class ChannelApiClient extends BaseApiClient {
      */
     @NonNull
     ChannelResponse<String> createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) throws ChannelRequestException {
-        URL url = getDeviceUrl(CHANNEL_API_PATH);
+        URL url = getDeviceUrl(null);
+        if (url == null) {
+            Logger.debug("CRA URL is null, unable to create channel.");
+            return null;
+        }
+
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Creating channel with payload: %s", payload);
 
@@ -77,7 +88,12 @@ class ChannelApiClient extends BaseApiClient {
      * @param channelPayload An instance of ChannelRegistrationPayload
      */
     ChannelResponse<Void> updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) throws ChannelRequestException {
-        URL url = getDeviceUrl(CHANNEL_API_PATH + channelId);
+        URL url = getDeviceUrl(channelId);
+        if (url == null) {
+            Logger.debug("CRA URL is null, unable to update channel.");
+            return null;
+        }
+
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: %s", payload);
 
@@ -87,6 +103,19 @@ class ChannelApiClient extends BaseApiClient {
         }
 
         return new ChannelResponse<>(null, response);
+    }
+
+    @Nullable
+    private URL getDeviceUrl(@Nullable String channelId) {
+        UrlBuilder builder = runtimeConfig.getUrlConfig()
+                                          .deviceUrl()
+                                          .appendEncodedPath(CHANNEL_API_PATH);
+
+        if (channelId != null) {
+            builder.appendPath(channelId);
+        }
+
+        return builder.build();
     }
 
 }

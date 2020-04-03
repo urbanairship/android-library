@@ -2,15 +2,15 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Remote config data for {@link InAppMessageManager}.
@@ -24,20 +24,6 @@ class InAppRemoteConfig {
 
     private InAppRemoteConfig(@NonNull TagGroupsConfig tagGroupsConfig) {
         this.tagGroupsConfig = tagGroupsConfig;
-    }
-
-    @NonNull
-    private InAppRemoteConfig combine(@NonNull InAppRemoteConfig config) {
-        TagGroupsConfig tagGroupsConfig;
-        if (this.tagGroupsConfig != null && config.tagGroupsConfig != null) {
-            tagGroupsConfig = this.tagGroupsConfig.combine(config.tagGroupsConfig);
-        } else if (this.tagGroupsConfig == null) {
-            tagGroupsConfig = config.tagGroupsConfig;
-        } else {
-            tagGroupsConfig = this.tagGroupsConfig;
-        }
-
-        return new InAppRemoteConfig(tagGroupsConfig);
     }
 
     /**

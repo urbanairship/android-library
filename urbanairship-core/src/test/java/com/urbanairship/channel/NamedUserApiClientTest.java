@@ -2,11 +2,10 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
-import com.urbanairship.UAirship;
-import com.urbanairship.channel.NamedUserApiClient;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 
@@ -30,6 +29,7 @@ public class NamedUserApiClientTest extends BaseTestCase {
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private NamedUserApiClient client;
     private TestRequest testRequest;
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setUp() {
@@ -38,15 +38,9 @@ public class NamedUserApiClientTest extends BaseTestCase {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        // Set hostURL
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("https://go-demo.urbanairship.com/")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
+        client = new NamedUserApiClient(runtimeConfig, mockRequestFactory);
     }
 
     /**
@@ -85,18 +79,10 @@ public class NamedUserApiClientTest extends BaseTestCase {
      * Test associate and disassociate with malformed host URL returns null.
      */
     @Test
-    public void testMalformedUrl() {
+    public void testNullUrl() {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
 
-        // Set hostURL
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("files://thisIsMalformed")
-                .build();
-
-        client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
 
         Response response = client.associate(fakeNamedUserId, fakeChannelId);
         assertNull("Response should be null", response);
@@ -104,5 +90,4 @@ public class NamedUserApiClientTest extends BaseTestCase {
         response = client.disassociate(fakeChannelId);
         assertNull("Response should be null", response);
     }
-
 }

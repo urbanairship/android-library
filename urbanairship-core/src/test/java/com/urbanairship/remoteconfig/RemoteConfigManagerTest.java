@@ -2,9 +2,6 @@
 
 package com.urbanairship.remoteconfig;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonMap;
@@ -15,6 +12,8 @@ import com.urbanairship.remotedata.RemoteDataPayload;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,9 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,48 @@ public class RemoteConfigManagerTest extends BaseTestCase {
 
         this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, remoteData, testModuleAdapter);
         this.remoteConfigManager.init();
+    }
+
+    @Test
+    public void testMissingAirshipConfig() {
+        RemoteAirshipConfigListener listener = Mockito.mock(RemoteAirshipConfigListener.class);
+        remoteConfigManager.addRemoteAirshipConfigListener(listener);
+
+        JsonMap json = JsonMap.EMPTY_MAP;
+
+        RemoteDataPayload remoteDataPayload = createRemoteDataPayload("app_config", 0, json);
+        updates.onNext(Collections.singleton(remoteDataPayload));
+
+        ArgumentCaptor<RemoteAirshipConfig> argumentCaptor = ArgumentCaptor.forClass(RemoteAirshipConfig.class);
+        verify(listener).onRemoteConfigUpdated(argumentCaptor.capture());
+
+        RemoteAirshipConfig config = argumentCaptor.getValue();
+        assertEquals(JsonMap.EMPTY_MAP.toJsonValue(), config.toJsonValue());
+    }
+
+
+    @Test
+    public void testAirshipConfig() {
+        RemoteAirshipConfigListener listener = Mockito.mock(RemoteAirshipConfigListener.class);
+        remoteConfigManager.addRemoteAirshipConfigListener(listener);
+
+        JsonMap json = JsonMap.newBuilder()
+                              .put("airship_config", JsonMap.newBuilder()
+                                                           .putOpt("device_api_url", "https://deivce-api.examaple.com")
+                                                           .putOpt("remote_data_url", "https://remote-data.examaple.com")
+                                                           .putOpt("wallet_api_url", "https://wallet-api.examaple.com")
+                                                           .putOpt("analytics_api_url", "https://analytics-api.examaple.com")
+                                                           .build())
+                              .build();
+
+        RemoteDataPayload remoteDataPayload = createRemoteDataPayload("app_config", 0, json);
+        updates.onNext(Collections.singleton(remoteDataPayload));
+
+        ArgumentCaptor<RemoteAirshipConfig> argumentCaptor = ArgumentCaptor.forClass(RemoteAirshipConfig.class);
+        verify(listener).onRemoteConfigUpdated(argumentCaptor.capture());
+
+        RemoteAirshipConfig config = argumentCaptor.getValue();
+        assertEquals(json.get("airship_config"), config.toJsonValue());
     }
 
     @Test
@@ -95,12 +139,12 @@ public class RemoteConfigManagerTest extends BaseTestCase {
     @Test
     public void testRemoteConfig() {
         JsonMap fooConfig = JsonMap.newBuilder()
-                                                  .put("some_config_name", "some_config_value")
-                                                  .build();
+                                   .put("some_config_name", "some_config_value")
+                                   .build();
 
         JsonMap barConfig = JsonMap.newBuilder()
-                                                  .put("some_other_config_name", "some_other_config_value")
-                                                  .build();
+                                   .put("some_other_config_name", "some_other_config_value")
+                                   .build();
 
         JsonMap commonData = JsonMap.newBuilder()
                                     .put("foo", fooConfig)
@@ -108,8 +152,8 @@ public class RemoteConfigManagerTest extends BaseTestCase {
                                     .build();
 
         JsonMap androidFooOverrideConfig = JsonMap.newBuilder()
-                                                             .put("some_other_config_name", "some_other_config_value")
-                                                             .build();
+                                                  .put("some_other_config_name", "some_other_config_value")
+                                                  .build();
 
         JsonMap androidData = JsonMap.newBuilder()
                                      .put("foo", androidFooOverrideConfig)

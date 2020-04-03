@@ -3,9 +3,6 @@
 package com.urbanairship.remotedata;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -19,6 +16,10 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.Locale;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Job handler for fetching remote data
@@ -44,7 +45,9 @@ public class RemoteDataJobHandler {
      * @param airship A UAirship instance.
      */
     RemoteDataJobHandler(@NonNull Context context, @NonNull UAirship airship) {
-        this(airship.getRemoteData(), new RemoteDataApiClient(airship.getAirshipConfigOptions()), LocaleManager.shared(context));
+        this(airship.getRemoteData(),
+                new RemoteDataApiClient(airship.getRuntimeConfig(), airship.getPushProviders()),
+                LocaleManager.shared(context));
     }
 
     /**

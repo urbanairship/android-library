@@ -2,14 +2,10 @@
 
 package com.urbanairship.iam.tags;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
-import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static junit.framework.Assert.assertEquals;
@@ -102,7 +100,7 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Test
     public void getTags() {
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         TagGroupResult result = manager.getTags(requestTags);
@@ -124,14 +122,14 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Test
     public void getTagsUsesCache() {
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         TagGroupResult result = manager.getTags(requestTags);
 
         TagGroupResult cachedResult = manager.getTags(requestTags);
 
-        verify(mockClient).lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+        verify(mockClient).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
         verifyNoMoreInteractions(mockClient);
 
         // Results should be the same
@@ -145,7 +143,7 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Test
     public void getTagsUsesLocalData() {
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         // Add the tag "story" so we should get "cool" "story" back instead of just "cool".
@@ -187,7 +185,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         requestTags.put("device", tagSet("server tag", "local tag"));
 
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         TagGroupResult result = manager.getTags(requestTags);
@@ -214,7 +212,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         requestTags.put("device", tagSet("server tag"));
 
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         TagGroupResult result = manager.getTags(requestTags);
@@ -285,7 +283,7 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Test
     public void getTagsBadResponse() {
         // Set up a 400 response
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(400, null, null));
 
         TagGroupResult result = manager.getTags(requestTags);
@@ -303,19 +301,19 @@ public class TagGroupManagerTest extends BaseTestCase {
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(response);
 
         TagGroupResult result = manager.getTags(requestTags);
         assertTrue(result.success);
 
-        verify(mockClient, times(1)).lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+        verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
         clock.currentTimeMillis += TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
 
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), response))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
                 .thenReturn(response);
 
         // Fetch tag again
@@ -323,7 +321,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         assertTrue(result.success);
 
         // Verify the second call was made with the previous cached response
-        verify(mockClient, times(1)).lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), response);
+        verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), response);
     }
 
     /**
@@ -338,19 +336,19 @@ public class TagGroupManagerTest extends BaseTestCase {
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(response);
 
         TagGroupResult result = manager.getTags(requestTags);
         assertTrue(result.success);
 
-        verify(mockClient, times(1)).lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+        verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
         clock.currentTimeMillis += TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
 
         // Set up a 400 response
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), response))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
                 .thenReturn(new TagGroupResponse(400, null, null));
 
         // Fetch tag again, should still be success
@@ -371,13 +369,13 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Test
     public void getTagsNewTags() {
         // Set up a response that returns all the tags
-        when(mockClient.lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null))
+        when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
         manager.getTags(requestTags);
 
         verify(mockClient, times(1))
-                .lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+                .lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Request a new tag that the manager did not previously request.
         requestTags.get("some-group").add("new-tag");
@@ -385,7 +383,7 @@ public class TagGroupManagerTest extends BaseTestCase {
         manager.getTags(requestTags);
 
         verify(mockClient, times(1))
-                .lookupTagGroups(channelId, UAirship.ANDROID_PLATFORM, getExpectedClientRequestTags(), null);
+                .lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         verifyNoMoreInteractions(mockClient);
     }

@@ -90,6 +90,12 @@ public class AirshipConfigOptions {
     public static final String FCM_TRANSPORT = "FCM";
 
     /**
+     * The HMS transport type for Push.
+     */
+    @NonNull
+    public static final String HMS_TRANSPORT = "HMS";
+
+    /**
      * Airship app key.
      * <p>
      * This string is generated automatically when you create an app in the Airship
@@ -513,7 +519,7 @@ public class AirshipConfigOptions {
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
-        private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT));
+        private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
         private List<String> whitelist = new ArrayList<>();
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;

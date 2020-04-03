@@ -37,6 +37,12 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return UAirship.ANDROID_PLATFORM;
     }
 
+    @NonNull
+    @Override
+    public String getDeliveryType() {
+        return PushProvider.FCM_DELIVERY_TYPE;
+    }
+
     // Suppressing MissingFirebaseInstanceTokenRefresh, FirebaseInstanceIdService is deprecated
     // but the lint warning does not seem to check for the new method.
     @SuppressLint("MissingFirebaseInstanceTokenRefresh")

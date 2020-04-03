@@ -29,16 +29,19 @@ import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.PlatformUtils;
 
 import org.robolectric.Robolectric;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.TestLifecycleApplication;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 
+import androidx.test.core.app.ApplicationProvider;
+
 public class TestApplication extends Application implements TestLifecycleApplication {
 
     public ActivityLifecycleCallbacks callback;
     public PreferenceDataStore preferenceDataStore;
+
+    private TestAirshipRuntimeConfig testRuntimeConfig;
 
     @Override
     public void onCreate() {
@@ -52,23 +55,23 @@ public class TestApplication extends Application implements TestLifecycleApplica
             }
         };
 
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("app_key")
-                .setDevelopmentAppSecret("app_secret")
-                .setInProduction(false)
-                .build();
+
+        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
         UAirship.application = this;
         UAirship.isFlying = true;
         UAirship.isTakingOff = true;
 
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
-        UAirship.sharedAirship.platform = UAirship.ANDROID_PLATFORM;
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.ANDROID_PLATFORM, airshipConfigOptions, preferenceDataStore);
 
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, tagGroupRegistrar);
+        UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
+
+        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.sharedAirship.runtimeConfig, preferenceDataStore);
+
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar);
 
         UAirship.sharedAirship.analytics = Analytics.newBuilder(this)
                                                     .setActivityMonitor(new TestActivityMonitor())
@@ -80,7 +83,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
                                                                                  .setActivityMonitor(new TestActivityMonitor())
                                                                                  .setJobDispatcher(JobDispatcher.shared(this))
                                                                                  .setPreferenceDataStore(preferenceDataStore)
-                                                                                 .setApiClient(new EventApiClient(this))
+                                                                                 .setApiClient(new EventApiClient(this, UAirship.sharedAirship.runtimeConfig))
                                                                                  .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
                                                                                  .setJobAction(Analytics.ACTION_SEND)
                                                                                  .build())
@@ -99,7 +102,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, new TestActivityMonitor());
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor());
-        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,
+        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, UAirship.sharedAirship.analytics,
                 UAirship.sharedAirship.remoteData, new TestActivityMonitor(), UAirship.sharedAirship.channel, tagGroupRegistrar);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
@@ -109,11 +112,11 @@ public class TestApplication extends Application implements TestLifecycleApplica
     }
 
     public void setPlatform(int platform) {
-        UAirship.sharedAirship.platform = PlatformUtils.parsePlatform(platform);
+        testRuntimeConfig.setPlatform(PlatformUtils.parsePlatform(platform));
     }
 
     public static TestApplication getApplication() {
-        return (TestApplication) RuntimeEnvironment.application;
+        return (TestApplication) ApplicationProvider.getApplicationContext();
     }
 
     public void setApplicationMetrics(ApplicationMetrics metrics) {
@@ -134,10 +137,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setInAppMessageManager(InAppMessageManager inAppMessageManager) {
         UAirship.shared().inAppMessageManager = inAppMessageManager;
-    }
-
-    public void setRemoteData(RemoteData remoteData) {
-        UAirship.shared().remoteData = remoteData;
     }
 
     public void setOptions(AirshipConfigOptions options) {

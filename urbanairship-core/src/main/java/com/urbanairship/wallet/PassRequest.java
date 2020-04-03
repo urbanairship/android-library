@@ -3,16 +3,13 @@
 package com.urbanairship.wallet;
 
 import android.annotation.SuppressLint;
-import android.net.Uri;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
 import android.text.TextUtils;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -21,13 +18,15 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 /**
  * Defines a request to fetch a {@link Pass}.
@@ -36,8 +35,8 @@ public class PassRequest {
 
     private static final Executor DEFAULT_REQUEST_EXECUTOR = AirshipExecutors.newSerialExecutor();
 
-    private static final String DEPRECATED_PATH_FORMAT = "v1/pass/%s?api_key=%s";
-    private static final String PATH_FORMAT = "v1/pass/%s";
+    private static final String PASS_PATH = "v1/pass";
+    private static final String API_KEY_QUERY_PARAM = "api_key";
 
     private static final String API_REVISION_HEADER_NAME = "Api-Revision";
     private static final String API_REVISION = "1.2";
@@ -128,12 +127,10 @@ public class PassRequest {
             @Override
             public void run() {
                 Logger.info("Requesting pass %s", templateId);
-                URL url;
+                URL url = getPassUrl();
 
-                try {
-                    url = getPassUrl();
-                } catch (MalformedURLException e) {
-                    Logger.error(e, "PassRequest - Invalid pass URL");
+                if (url == null) {
+                    Logger.error( "PassRequest - Invalid pass URL");
                     requestCallback.setResult(-1, null);
                     return;
                 }
@@ -215,19 +212,24 @@ public class PassRequest {
      * Gets the pass request URL.
      *
      * @return The pass request URL.
-     * @throws MalformedURLException if URL string is malformed.
      */
-    @NonNull
-    URL getPassUrl() throws MalformedURLException {
-        Uri uri;
-        if (userName == null) {
-            uri = Uri.withAppendedPath(Uri.parse(UAirship.shared().getAirshipConfigOptions().walletUrl), String.format(Locale.US, DEPRECATED_PATH_FORMAT, templateId, apiKey));
-        } else {
-            uri = Uri.withAppendedPath(Uri.parse(UAirship.shared().getAirshipConfigOptions().walletUrl), String.format(Locale.US, PATH_FORMAT, templateId));
-        }
+    @Nullable
+    URL getPassUrl() {
 
-        return new URL(uri.toString());
+        UrlBuilder urlBuilder = UAirship.shared()
+                                        .getRuntimeConfig()
+                                        .getUrlConfig()
+                                        .walletUrl()
+                                        .appendEncodedPath(PASS_PATH)
+                                        .appendEncodedPath(templateId);
+
+        // User name support requires apiKey to be set on the URL.
+        if (userName == null) {
+            urlBuilder.appendQueryParameter(API_KEY_QUERY_PARAM, apiKey);
+        }
+        return urlBuilder.build();
     }
+
 
     @NonNull
     @Override

@@ -2,9 +2,11 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
+import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -24,8 +26,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 
-import static com.urbanairship.UAirship.AMAZON_PLATFORM;
-import static com.urbanairship.UAirship.ANDROID_PLATFORM;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -34,18 +34,18 @@ import static org.junit.Assert.assertEquals;
 public class AttributeApiClientTest extends BaseTestCase {
 
     private TestRequest testRequest;
-    private AirshipConfigOptions configOptions;
     private RequestFactory requestFactory;
     private List<AttributeMutation> mutations;
+    private TestAirshipRuntimeConfig runtimeConfig;
+    private AttributeApiClient client;
 
     @Before
     public void setUp() {
-        configOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("https://test.urbanairship.com/")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setDeviceUrl("https://test.urbanairship.com")
+                                                   .build());
+
 
         testRequest = new TestRequest();
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
@@ -66,6 +66,8 @@ public class AttributeApiClientTest extends BaseTestCase {
 
         mutations = new ArrayList<>();
         mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", "expected_key"));
+
+        client = new AttributeApiClient(runtimeConfig, requestFactory);
     }
 
     /**
@@ -73,8 +75,6 @@ public class AttributeApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAttributeUpdateAndroid() throws JsonException {
-        AttributeApiClient client = new AttributeApiClient(ANDROID_PLATFORM, configOptions, requestFactory);
-
         List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
 
         Response response = client.updateAttributes("expected_identifier", expectedMutations);
@@ -102,7 +102,7 @@ public class AttributeApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAttributeUpdateAmazon() throws JsonException {
-        AttributeApiClient client = new AttributeApiClient(AMAZON_PLATFORM, configOptions, requestFactory);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
 

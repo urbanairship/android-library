@@ -3,9 +3,6 @@
 package com.urbanairship.remoteconfig;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
@@ -29,6 +26,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Remote config manager.
@@ -45,6 +47,11 @@ public class RemoteConfigManager extends AirshipComponent {
 
     // Disable config key
     private static final String DISABLE_INFO_KEY = "disable_features";
+
+    // Airship config key
+    private static final String AIRSHIP_CONFIG_KEY = "airship_config";
+
+    private Collection<RemoteAirshipConfigListener> listeners = new CopyOnWriteArraySet<>();
 
     // comparator for remote config payload sorting
     private static Comparator<RemoteDataPayload> COMPARE_BY_PAYLOAD_TYPE = new Comparator<RemoteDataPayload>() {
@@ -63,6 +70,7 @@ public class RemoteConfigManager extends AirshipComponent {
     private final RemoteData remoteData;
     private final ModuleAdapter moduleAdapter;
     private Subscription subscription;
+    private RemoteAirshipConfig remoteAirshipConfig;
 
     /**
      * Default constructor.
@@ -75,7 +83,7 @@ public class RemoteConfigManager extends AirshipComponent {
     }
 
     @VisibleForTesting
-    public RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
+    RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
         super(context, dataStore);
         this.remoteData = remoteData;
         this.moduleAdapter = moduleAdapter;
@@ -124,8 +132,15 @@ public class RemoteConfigManager extends AirshipComponent {
         List<DisableInfo> disableInfos = new ArrayList<>();
         Map<String, JsonValue> moduleConfigs = new HashMap<>();
 
+        JsonValue airshipConfig = JsonValue.NULL;
+
         for (String key : config.keySet()) {
             JsonValue value = config.opt(key);
+
+            if (AIRSHIP_CONFIG_KEY.equals(key)) {
+                airshipConfig = value;
+                continue;
+            }
 
             if (DISABLE_INFO_KEY.equals(key)) {
                 for (JsonValue disableInfoJson : value.optList()) {
@@ -141,6 +156,8 @@ public class RemoteConfigManager extends AirshipComponent {
             moduleConfigs.put(key, value);
         }
 
+        updateRemoteAirshipConfig(airshipConfig);
+
         apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()));
 
         // Notify new config
@@ -153,6 +170,26 @@ public class RemoteConfigManager extends AirshipComponent {
             } else {
                 moduleAdapter.onNewConfig(module, moduleConfig.optMap());
             }
+        }
+    }
+
+    /**
+     * Adds a listener for {@link RemoteAirshipConfig} changes.
+     *
+     * @param listener The listener.
+     */
+    public void addRemoteAirshipConfigListener(@NonNull RemoteAirshipConfigListener listener) {
+        listeners.add(listener);
+    }
+
+    private void updateRemoteAirshipConfig(@NonNull JsonValue value) {
+        this.remoteAirshipConfig = RemoteAirshipConfig.fromJson(value);
+        notifyRemoteConfigUpdated();
+    }
+
+    private void notifyRemoteConfigUpdated() {
+        for (RemoteAirshipConfigListener listener : this.listeners) {
+            listener.onRemoteConfigUpdated(remoteAirshipConfig);
         }
     }
 
@@ -170,7 +207,6 @@ public class RemoteConfigManager extends AirshipComponent {
      *
      * @param disableInfos The list of disable infos.
      */
-
     private void apply(@NonNull List<DisableInfo> disableInfos) {
         Set<String> disableModules = new HashSet<>();
         Set<String> enabledModules = new HashSet<>(Modules.ALL_MODULES);

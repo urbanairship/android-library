@@ -1,0 +1,8 @@
+description = "Airship Android SDK HMS plugin"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+    compileOnly project(':urbanairship-hms-stub')
+}

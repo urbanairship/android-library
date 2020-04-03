@@ -6,8 +6,12 @@ import android.content.Context;
 
 import com.urbanairship.UAirship;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 
 /**
  * Defines a push provider.
@@ -15,6 +19,20 @@ import androidx.annotation.Nullable;
  * @hide
  */
 public interface PushProvider {
+
+    @StringDef({ ADM_DELIVERY_TYPE, FCM_DELIVERY_TYPE, HMS_DELIVERY_TYPE })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeliveryType {
+    }
+
+    @NonNull
+    String ADM_DELIVERY_TYPE = "adm";
+
+    @NonNull
+    String FCM_DELIVERY_TYPE = "fcm";
+
+    @NonNull
+    String HMS_DELIVERY_TYPE = "hms";
 
     /**
      * Registration exceptions
@@ -66,6 +84,15 @@ public interface PushProvider {
     int getPlatform();
 
     /**
+     * Returns the delivery type.
+     *
+     * @return The delivery type.
+     */
+    @DeliveryType
+    @NonNull
+    String getDeliveryType();
+
+    /**
      * Gets the push registration token.
      *
      * @param context The application context.
@@ -90,5 +117,4 @@ public interface PushProvider {
      * @return {@code true} if the push provider is supported on the device, otherwise {@code false}.
      */
     boolean isSupported(@NonNull Context context);
-
 }

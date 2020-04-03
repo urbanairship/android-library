@@ -3,13 +3,13 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
@@ -20,7 +20,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +28,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Job handler for {@link RichPushInbox} component.
@@ -57,17 +60,16 @@ class InboxJobHandler {
 
     static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
 
-    private static final String DELETE_MESSAGES_PATH = "api/user/%s/messages/delete/";
-    private static final String MARK_READ_MESSAGES_PATH = "api/user/%s/messages/unread/";
-    private static final String MESSAGES_PATH = "api/user/%s/messages/";
+    private static final String USER_API_PATH = "api/user/";
+
+    private static final String DELETE_MESSAGES_PATH = "messages/delete/";
+    private static final String MARK_READ_MESSAGES_PATH = "messages/unread/";
+    private static final String MESSAGES_PATH = "messages/";
+    private static final String MESSAGE_PATH = "messages/message/";
 
     private static final String DELETE_MESSAGES_KEY = "delete";
     private static final String MARK_READ_MESSAGES_KEY = "mark_as_read";
-    private static final String MESSAGE_URL = "api/user/%s/messages/message/%s/";
     private static final String CHANNEL_ID_HEADER = "X-UA-Channel-ID";
-
-    private static final String USER_CREATION_PATH = "api/user/";
-    private static final String USER_UPDATE_PATH = "api/user/%s/";
 
     private static final String LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME";
     private static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
@@ -77,25 +79,29 @@ class InboxJobHandler {
     private static final String PAYLOAD_ADD_KEY = "add";
 
     private final RichPushResolver resolver;
-    private final String deviceUrl;
+    private final AirshipRuntimeConfig runtimeConfig;
     private final RichPushUser user;
     private final RequestFactory requestFactory;
     private final PreferenceDataStore dataStore;
     private final UAirship airship;
 
-    InboxJobHandler(Context context, @NonNull UAirship airship, PreferenceDataStore dataStore) {
+    InboxJobHandler(@NonNull Context context,
+                    @NonNull UAirship airship,
+                    @NonNull PreferenceDataStore dataStore) {
         this(airship, dataStore, RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
     }
 
     @VisibleForTesting
-    InboxJobHandler(UAirship airship, PreferenceDataStore dataStore,
-                    RequestFactory requestFactory, RichPushResolver resolver) {
+    InboxJobHandler(@NonNull UAirship airship,
+                    @NonNull PreferenceDataStore dataStore,
+                    @NonNull RequestFactory requestFactory,
+                    @NonNull RichPushResolver resolver) {
+        this.airship = airship;
         this.dataStore = dataStore;
+        this.runtimeConfig = airship.getRuntimeConfig();
         this.requestFactory = requestFactory;
         this.resolver = resolver;
-        this.airship = airship;
         this.user = airship.getInbox().getUser();
-        this.deviceUrl = airship.getAirshipConfigOptions().deviceUrl;
     }
 
     /**
@@ -180,13 +186,14 @@ class InboxJobHandler {
     private boolean updateMessages() {
         Logger.info("Refreshing inbox messages.");
 
-        URL getMessagesURL = getUserURL(MESSAGES_PATH, user.getId());
-        if (getMessagesURL == null) {
+        URL url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId(), MESSAGES_PATH);
+        if (url == null) {
+            Logger.debug("User URL null, unable to update message.");
             return false;
         }
 
         Logger.verbose("InboxJobHandler - Fetching inbox messages.");
-        Response response = requestFactory.createRequest("GET", getMessagesURL)
+        Response response = requestFactory.createRequest("GET", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
@@ -281,8 +288,11 @@ class InboxJobHandler {
             return;
         }
 
-        URL deleteMessagesURL = getUserURL(DELETE_MESSAGES_PATH, user.getId());
-        if (deleteMessagesURL == null) {
+        AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
+
+        URL url = getUserApiUrl(urlConfig, user.getId(), DELETE_MESSAGES_PATH);
+        if (url == null) {
+            Logger.debug("User URL null, unable to sync deleted messages.");
             return;
         }
 
@@ -292,10 +302,10 @@ class InboxJobHandler {
          * Note: If we can't delete the messages on the server, leave them untouched
          * and we'll get them next time.
          */
-        JsonMap payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
+        JsonMap payload = buildMessagesPayload(urlConfig, DELETE_MESSAGES_KEY, idsToDelete);
 
         Logger.verbose("InboxJobHandler - Deleting inbox messages with payload: %s", payload);
-        Response response = requestFactory.createRequest("POST", deleteMessagesURL)
+        Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
                                           .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
@@ -319,8 +329,10 @@ class InboxJobHandler {
             return;
         }
 
-        URL markMessagesReadURL = getUserURL(MARK_READ_MESSAGES_PATH, user.getId());
-        if (markMessagesReadURL == null) {
+        AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
+        URL url = getUserApiUrl(urlConfig, user.getId(), MARK_READ_MESSAGES_PATH);
+        if (url == null) {
+            Logger.debug("User URL null, unable to sync read messages.");
             return;
         }
 
@@ -330,10 +342,10 @@ class InboxJobHandler {
          * Note: If we can't mark the messages read on the server, leave them untouched
          * and we'll get them next time.
          */
-        JsonMap payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
+        JsonMap payload = buildMessagesPayload(urlConfig, MARK_READ_MESSAGES_KEY, idsToUpdate);
 
         Logger.verbose("InboxJobHandler - Marking inbox messages read request with payload: %s", payload);
-        Response response = requestFactory.createRequest("POST", markMessagesReadURL)
+        Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
                                           .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
@@ -350,17 +362,21 @@ class InboxJobHandler {
     /**
      * Builds the message payload.
      *
+     * @param urlConfig The url config.
      * @param root String root of payload.
      * @param ids Set of message ID strings.
      * @return A message payload as a JsonMap.
      */
     @NonNull
-    private JsonMap buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
+    private JsonMap buildMessagesPayload(@NonNull AirshipUrlConfig urlConfig, @NonNull String root, @NonNull Set<String> ids) {
         List<String> urls = new ArrayList<>();
         String userId = this.user.getId();
+
         for (String id : ids) {
-            String url = deviceUrl + String.format(MESSAGE_URL, userId, id);
-            urls.add(url);
+            URL url = getUserApiUrl(urlConfig, userId, MESSAGE_PATH, id);
+            if (url != null) {
+                urls.add(url.toString());
+            }
         }
 
         JsonMap payload = JsonMap.newBuilder()
@@ -383,14 +399,15 @@ class InboxJobHandler {
             return false;
         }
 
-        URL userCreationURL = getUserURL(USER_CREATION_PATH);
-        if (userCreationURL == null) {
+        URL url = getUserApiUrl(runtimeConfig.getUrlConfig());
+        if (url == null) {
+            Logger.debug("User URL null, unable to create user.");
             return false;
         }
 
         String payload = createNewUserPayload(channelId);
         Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: %s", payload);
-        Response response = requestFactory.createRequest("POST", userCreationURL)
+        Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(airship.getAirshipConfigOptions().appKey, airship.getAirshipConfigOptions().appSecret)
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
@@ -441,14 +458,15 @@ class InboxJobHandler {
             return false;
         }
 
-        URL userUpdateURL = getUserURL(USER_UPDATE_PATH, user.getId());
-        if (userUpdateURL == null) {
+        URL url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId());
+        if (url == null) {
+            Logger.debug("User URL null, unable to update user.");
             return false;
         }
 
         String payload = createUpdateUserPayload(channelId);
         Logger.verbose("InboxJobHandler - Updating user with payload: %s", payload);
-        Response response = requestFactory.createRequest("POST", userUpdateURL)
+        Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
@@ -499,7 +517,7 @@ class InboxJobHandler {
      */
     @NonNull
     private String getPayloadChannelsKey() {
-        if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
+        if (runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM) {
             return PAYLOAD_AMAZON_CHANNELS_KEY;
         } else {
             return PAYLOAD_ANDROID_CHANNELS_KEY;
@@ -509,18 +527,22 @@ class InboxJobHandler {
     /**
      * Gets the URL for inbox/user api calls
      *
-     * @param path The url path.
-     * @param args Url arguments.
+     * @param urlConfig The url config.
+     * @param paths Additional paths.
      * @return The URL or null if an error occurred.
      */
-    private URL getUserURL(String path, Object... args) {
-        String urlString = String.format(deviceUrl + path, args);
-        try {
-            return new URL(urlString);
-        } catch (MalformedURLException e) {
-            Logger.error(e, "Invalid userURL");
+    @Nullable
+    private URL getUserApiUrl(@NonNull AirshipUrlConfig urlConfig, String... paths) {
+        UrlBuilder builder = urlConfig.deviceUrl().appendEncodedPath(USER_API_PATH);
+
+        for (String path : paths) {
+            if (!path.endsWith("/")) {
+                path = path + "/";
+            }
+            builder.appendEncodedPath(path);
         }
-        return null;
+
+        return builder.build();
     }
 
 }

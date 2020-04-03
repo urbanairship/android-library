@@ -6,16 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.AlarmOperationScheduler;
@@ -30,6 +21,8 @@ import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
@@ -39,7 +32,6 @@ import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -54,6 +46,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-app messaging manager.
@@ -118,7 +118,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Default constructor.
      *
      * @param context The application context.
-     * @param configOptions The config options.
+     * @param runtimeConfig The runtime config.
      * @param analytics Analytics instance.
      * @param activityMonitor The activity monitor.
      * @param remoteData Remote data.
@@ -126,9 +126,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions configOptions,
-                               @NonNull Analytics analytics, @NonNull RemoteData remoteData, ActivityMonitor activityMonitor,
-                               @NonNull AirshipChannel airshipChannel, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+    public InAppMessageManager(@NonNull Context context,
+                               @NonNull PreferenceDataStore preferenceDataStore,
+                               @NonNull AirshipRuntimeConfig runtimeConfig,
+                               @NonNull Analytics analytics,
+                               @NonNull RemoteData remoteData,
+                               @NonNull ActivityMonitor activityMonitor,
+                               @NonNull AirshipChannel airshipChannel,
+                               @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
@@ -145,14 +150,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
                 .setAnalytics(analytics)
                 .setActivityMonitor(activityMonitor)
-                .setDataManager(new AutomationDataManager(context, configOptions.appKey, "in-app"))
+                .setDataManager(new AutomationDataManager(context, runtimeConfig.getConfigOptions().appKey, "in-app"))
                 .setScheduleLimit(200)
                 .setDriver(driver)
                 .setOperationScheduler(AlarmOperationScheduler.shared(context))
                 .build();
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
-        this.tagGroupManager = new TagGroupManager(configOptions, airshipChannel, tagGroupRegistrar, preferenceDataStore);
+        this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, tagGroupRegistrar, preferenceDataStore);
         this.assetManager = new AssetManager(context);
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());

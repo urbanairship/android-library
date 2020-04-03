@@ -17,6 +17,12 @@ public class TestPushProvider implements PushProvider {
         return UAirship.ANDROID_PLATFORM;
     }
 
+    @NonNull
+    @Override
+    public String getDeliveryType() {
+        return PushProvider.FCM_DELIVERY_TYPE;
+    }
+
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         return registrationToken;
@@ -31,5 +37,6 @@ public class TestPushProvider implements PushProvider {
     public boolean isSupported(@NonNull Context context) {
         return true;
     }
+
 
 }

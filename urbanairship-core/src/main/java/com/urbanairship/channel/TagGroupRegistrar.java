@@ -2,16 +2,9 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAHttpStatusUtil;
 
@@ -19,6 +12,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * Tag group registrar.
@@ -81,12 +80,12 @@ public class TagGroupRegistrar {
     /**
      * Default constructor.
      *
-     * @param platform The platform.
-     * @param configOptions The config options.
+     * @param runtimeConfig The runtime config.
      * @param dataStore The data store.
      */
-    public TagGroupRegistrar(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupApiClient(platform, configOptions),
+    public TagGroupRegistrar(@NonNull AirshipRuntimeConfig runtimeConfig,
+                             @NonNull PreferenceDataStore dataStore) {
+        this(new TagGroupApiClient(runtimeConfig),
                 new PendingTagGroupMutationStore(dataStore, NAMED_USER_PENDING_TAG_GROUP_MUTATIONS_KEY),
                 new PendingTagGroupMutationStore(dataStore, CHANNEL_PENDING_TAG_GROUP_MUTATIONS_KEY));
     }

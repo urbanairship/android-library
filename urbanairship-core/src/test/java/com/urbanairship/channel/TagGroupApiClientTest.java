@@ -2,15 +2,13 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-
 import com.google.common.collect.Lists;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.channel.TagGroupApiClient;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -25,6 +23,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
 
+import androidx.annotation.NonNull;
+
 import static org.junit.Assert.assertEquals;
 
 public class TagGroupApiClientTest extends BaseTestCase {
@@ -33,15 +33,15 @@ public class TagGroupApiClientTest extends BaseTestCase {
     private AirshipConfigOptions configOptions;
     private RequestFactory requestFactory;
     private TagGroupsMutation mutation;
+    private TestAirshipRuntimeConfig runtimeConfig;
+    private TagGroupApiClient client;
 
     @Before
     public void setUp() {
-        configOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setInProduction(false)
-                .setDeviceUrl("https://test.urbanairship.com/")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setDeviceUrl("https://test.urbanairship.com")
+                                                   .build());
 
         testRequest = new TestRequest();
         testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
@@ -61,6 +61,8 @@ public class TagGroupApiClientTest extends BaseTestCase {
         };
 
         mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+
+        client = new TagGroupApiClient(runtimeConfig, requestFactory);
     }
 
     /**
@@ -68,8 +70,6 @@ public class TagGroupApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAndroidChannelTagUpdate() throws JsonException {
-        TagGroupApiClient client = new TagGroupApiClient(UAirship.ANDROID_PLATFORM, configOptions, requestFactory);
-
         Response response = client.updateTagGroups(TagGroupRegistrar.CHANNEL, "identifier", mutation);
         assertEquals(testRequest.response, response);
         assertEquals("https://test.urbanairship.com/api/channels/tags/", testRequest.getURL().toString());
@@ -91,8 +91,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAmazonChannelTagUpdate() throws JsonException {
-        TagGroupApiClient client = new TagGroupApiClient(UAirship.AMAZON_PLATFORM, configOptions, requestFactory);
-
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         Response response = client.updateTagGroups(TagGroupRegistrar.CHANNEL, "identifier", mutation);
         assertEquals(testRequest.response, response);
         assertEquals("https://test.urbanairship.com/api/channels/tags/", testRequest.getURL().toString());
@@ -102,7 +101,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
                                       .put("audience", JsonMap.newBuilder()
                                                               .put("amazon_channel", "identifier")
                                                               .build())
-                                      .putAll(mutation.toJsonValue().getMap())
+                                      .putAll(mutation.toJsonValue().optMap())
                                       .build();
 
         JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
@@ -114,8 +113,6 @@ public class TagGroupApiClientTest extends BaseTestCase {
      */
     @Test
     public void testNamedUserTagUpdate() throws JsonException {
-        TagGroupApiClient client = new TagGroupApiClient(UAirship.ANDROID_PLATFORM, configOptions, requestFactory);
-
         Response response = client.updateTagGroups(TagGroupRegistrar.NAMED_USER, "identifier", mutation);
         assertEquals(testRequest.response, response);
         assertEquals("https://test.urbanairship.com/api/named_users/tags/", testRequest.getURL().toString());
@@ -125,7 +122,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
                                       .put("audience", JsonMap.newBuilder()
                                                               .put("named_user_id", "identifier")
                                                               .build())
-                                      .putAll(mutation.toJsonValue().getMap())
+                                      .putAll(mutation.toJsonValue().optMap())
                                       .build();
 
         JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
