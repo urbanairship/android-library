@@ -1,21 +1,24 @@
 package com.urbanairship.analytics.data;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.WorkerThread;
+import android.content.Context;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.util.Checks;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * Handles event storage and uploading.
@@ -24,6 +27,9 @@ import java.util.concurrent.TimeUnit;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventManager {
+
+    @NonNull
+    public static final String ACTION_SEND = "ACTION_SEND";
 
     static final String MAX_TOTAL_DB_SIZE_KEY = "com.urbanairship.analytics.MAX_TOTAL_DB_SIZE";
     static final String MAX_BATCH_SIZE_KEY = "com.urbanairship.analytics.MAX_BATCH_SIZE";
@@ -61,26 +67,34 @@ public class EventManager {
     private final ActivityMonitor activityMonitor;
     private final EventResolver eventResolver;
     private final EventApiClient apiClient;
-    private final long backgroundReportingIntervalMS;
-    private final String jobAction;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     private final Object eventLock = new Object();
 
     private boolean isScheduled;
 
-    /**
-     * Default constructor.
-     *
-     * @param builder The builder instance.
-     */
-    private EventManager(@NonNull Builder builder) {
-        this.preferenceDataStore = builder.preferenceDataStore;
-        this.jobDispatcher = builder.jobDispatcher;
-        this.activityMonitor = builder.activityMonitor;
-        this.eventResolver = builder.eventResolver;
-        this.apiClient = builder.apiClient;
-        this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
-        this.jobAction = builder.jobAction;
+    public EventManager(@NonNull Context context,
+                 @NonNull PreferenceDataStore preferenceDataStore,
+                 @NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(preferenceDataStore, runtimeConfig, JobDispatcher.shared(context),GlobalActivityMonitor.shared(context),
+                new EventResolver(context), new EventApiClient(runtimeConfig));
+    }
+
+    @VisibleForTesting
+    EventManager(@NonNull PreferenceDataStore preferenceDataStore,
+                        @NonNull AirshipRuntimeConfig runtimeConfig,
+                        @NonNull JobDispatcher jobDispatcher,
+                        @NonNull ActivityMonitor activityMonitor,
+                        @NonNull EventResolver eventResolver,
+                        @NonNull EventApiClient apiClient) {
+
+        this.preferenceDataStore = preferenceDataStore;
+        this.runtimeConfig = runtimeConfig;
+        this.jobDispatcher = jobDispatcher;
+        this.activityMonitor = activityMonitor;
+        this.eventResolver = eventResolver;
+        this.apiClient = apiClient;
+
     }
 
     /**
@@ -106,8 +120,8 @@ public class EventManager {
 
         Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(jobAction)
                                  .setId(JobInfo.ANALYTICS_EVENT_UPLOAD)
+                                 .setAction(ACTION_SEND)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(Analytics.class)
                                  .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
@@ -151,7 +165,7 @@ public class EventManager {
                     long currentTime = System.currentTimeMillis();
                     long lastSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0);
                     long sendDelta = currentTime - lastSendTime;
-                    long minimumWait = Math.max(backgroundReportingIntervalMS - sendDelta, getNextSendDelay());
+                    long minimumWait = Math.max(runtimeConfig.getConfigOptions().backgroundReportingIntervalMS - sendDelta, getNextSendDelay());
                     scheduleEventUpload(Math.max(minimumWait, LOW_PRIORITY_BATCH_DELAY), TimeUnit.MILLISECONDS);
                 }
                 break;
@@ -184,11 +198,11 @@ public class EventManager {
     /**
      * Uploads events.
      *
-     * @param airship The airship instance.
+     * @param headers The analytic headers.
      * @return {@code true} if the events uploaded, otherwise {@code false}.
      */
     @WorkerThread
-    public boolean uploadEvents(@NonNull UAirship airship) {
+    public boolean uploadEvents(@NonNull Map<String, String> headers) {
         isScheduled = false;
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
@@ -214,7 +228,7 @@ public class EventManager {
             return true;
         }
 
-        EventResponse response = apiClient.sendEvents(airship, events.values());
+        EventResponse response = apiClient.sendEvents(events.values(), headers);
 
         if (response == null || response.getStatus() != 200) {
             Logger.debug("EventManager - Analytic upload failed.");
@@ -239,129 +253,4 @@ public class EventManager {
 
         return true;
     }
-
-    /**
-     * Builder factory method.
-     *
-     * @return A new builder instance.
-     */
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
-    /**
-     * EventManager builder
-     */
-    public static class Builder {
-
-        private PreferenceDataStore preferenceDataStore;
-        private JobDispatcher jobDispatcher;
-        private ActivityMonitor activityMonitor;
-        private EventResolver eventResolver;
-        private EventApiClient apiClient;
-        private String jobAction;
-        private long backgroundReportingIntervalMS;
-
-        /**
-         * Sets the {@link PreferenceDataStore}.
-         *
-         * @param preferenceDataStore The {@link PreferenceDataStore}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setPreferenceDataStore(@NonNull PreferenceDataStore preferenceDataStore) {
-            this.preferenceDataStore = preferenceDataStore;
-            return this;
-        }
-
-        /**
-         * Sets the {@link JobDispatcher}.
-         *
-         * @param jobDispatcher The {@link JobDispatcher}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
-            this.jobDispatcher = jobDispatcher;
-            return this;
-        }
-
-        /**
-         * Sets the {@link ActivityMonitor}.
-         *
-         * @param activityMonitor The {@link ActivityMonitor}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
-            this.activityMonitor = activityMonitor;
-            return this;
-        }
-
-        /**
-         * Sets the {@link EventResolver}.
-         *
-         * @param eventResolver The {@link EventResolver}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setEventResolver(@NonNull EventResolver eventResolver) {
-            this.eventResolver = eventResolver;
-            return this;
-        }
-
-        /**
-         * Sets the {@link EventApiClient}.
-         *
-         * @param apiClient The {@link EventApiClient}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setApiClient(@NonNull EventApiClient apiClient) {
-            this.apiClient = apiClient;
-            return this;
-        }
-
-        /**
-         * Sets the job action to be used when scheduling event uploads.
-         *
-         * @param jobAction The job action.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setJobAction(@NonNull String jobAction) {
-            this.jobAction = jobAction;
-            return this;
-        }
-
-        /**
-         * Sets low priority event background reporting interval in milliseconds.
-         *
-         * @param backgroundReportingIntervalMS The background reporting interval in milliseconds.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setBackgroundReportingIntervalMS(long backgroundReportingIntervalMS) {
-            this.backgroundReportingIntervalMS = backgroundReportingIntervalMS;
-            return this;
-        }
-
-        /**
-         * Builds the event manager.
-         *
-         * @return An event manager instance.
-         */
-        @NonNull
-        public EventManager build() {
-            Checks.checkNotNull(jobDispatcher, "Missing job dispatcher.");
-            Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
-            Checks.checkNotNull(eventResolver, "Missing event resolver.");
-            Checks.checkNotNull(apiClient, "Missing events api client.");
-            Checks.checkNotNull(jobAction, "Missing job action.");
-            Checks.checkArgument(backgroundReportingIntervalMS > 0, "Missing background reporting interval.");
-            return new EventManager(this);
-        }
-
-    }
-
 }

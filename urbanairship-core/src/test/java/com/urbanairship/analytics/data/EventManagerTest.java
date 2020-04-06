@@ -2,8 +2,8 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
@@ -16,6 +16,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,8 @@ public class EventManagerTest extends BaseTestCase {
     private ActivityMonitor mockActivityMonitor;
     private PreferenceDataStore dataStore;
 
+    private TestAirshipRuntimeConfig testAirshipRuntimeConfig;
+
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
@@ -45,16 +48,10 @@ public class EventManagerTest extends BaseTestCase {
         mockActivityMonitor = mock(ActivityMonitor.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
+        testAirshipRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        eventManager = EventManager.newBuilder()
-                                   .setEventResolver(mockEventResolver)
-                                   .setActivityMonitor(mockActivityMonitor)
-                                   .setApiClient(mockClient)
-                                   .setPreferenceDataStore(dataStore)
-                                   .setJobDispatcher(mockDispatcher)
-                                   .setBackgroundReportingIntervalMS(400)
-                                   .setJobAction("upload")
-                                   .build();
+        eventManager = new EventManager(dataStore, testAirshipRuntimeConfig, mockDispatcher,
+                mockActivityMonitor, mockEventResolver, mockClient);
     }
 
     /**
@@ -72,7 +69,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("upload") && jobInfo.getInitialDelay() == 10000L;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() == 10000L;
             }
         }));
     }
@@ -95,7 +92,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("upload") && jobInfo.getInitialDelay() > 10000;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() > 10000;
             }
         }));
     }
@@ -107,6 +104,9 @@ public class EventManagerTest extends BaseTestCase {
     public void testSendingEvents() {
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("foo", "bar");
 
         // Set up data manager to return 2 count for events.
         // Note: we only have one event, but it should only ask for one to upload
@@ -131,13 +131,13 @@ public class EventManagerTest extends BaseTestCase {
         when(response.getMinBatchInterval()).thenReturn(100);
 
         // Return the response
-        when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
+        when(mockClient.sendEvents(events.values(), headers)).thenReturn(response);
 
         // Start the upload process
-        assertTrue(eventManager.uploadEvents(UAirship.shared()));
+        assertTrue(eventManager.uploadEvents(headers));
 
         // Check mockClients receives the events
-        verify(mockClient).sendEvents(UAirship.shared(), events.values());
+        verify(mockClient).sendEvents(events.values(), headers);
 
         // Check data manager deletes events
         verify(mockEventResolver).deleteEvents(events.keySet());
@@ -151,7 +151,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("upload");
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND);
             }
         }));
     }
@@ -168,7 +168,7 @@ public class EventManagerTest extends BaseTestCase {
         when(mockEventResolver.getDatabaseSize()).thenReturn(100000);
         when(mockEventResolver.getEventCount()).thenReturn(1000);
 
-        eventManager.uploadEvents(UAirship.shared());
+        eventManager.uploadEvents(Collections.<String, String>emptyMap());
 
         // Verify it only asked for 500
         verify(mockEventResolver).getEvents(500);
@@ -181,6 +181,10 @@ public class EventManagerTest extends BaseTestCase {
     public void testSendEventsFails() {
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("foo", "bar");
+
         when(mockEventResolver.getEventCount()).thenReturn(1);
         when(mockEventResolver.getDatabaseSize()).thenReturn(100);
         when(mockEventResolver.getEvents(1)).thenReturn(events);
@@ -188,12 +192,12 @@ public class EventManagerTest extends BaseTestCase {
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
 
         // Start the upload process
-        when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(null);
+        when(mockClient.sendEvents(events.values(), headers)).thenReturn(null);
 
-        assertFalse(eventManager.uploadEvents(UAirship.shared()));
+        assertFalse(eventManager.uploadEvents(headers));
 
         // Check mockClient receives the events
-        verify(mockClient).sendEvents(UAirship.shared(), events.values());
+        verify(mockClient).sendEvents(events.values(), headers);
 
         // If it fails, it should skip deleting events
         verify(mockEventResolver, never()).deleteEvents(events.keySet());
@@ -219,7 +223,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("upload") && jobInfo.getInitialDelay() == 0;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() == 0;
             }
         }));
     }

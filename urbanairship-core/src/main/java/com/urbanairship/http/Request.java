@@ -3,9 +3,6 @@
 package com.urbanairship.http;
 
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import android.util.Base64;
 
 import com.urbanairship.Logger;
@@ -27,6 +24,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Http request wrapper.
@@ -114,6 +115,18 @@ public class Request {
     @NonNull
     public Request setIfModifiedSince(long timeMS) {
         this.ifModifiedSince = timeMS;
+        return this;
+    }
+
+    /**
+     * Adds additional request headers.
+     *
+     * @param headers The headers.
+     * @return The request.
+     */
+    @NonNull
+    public Request addHeaders(@NonNull Map<String, String> headers) {
+        responseProperties.putAll(headers);
         return this;
     }
 

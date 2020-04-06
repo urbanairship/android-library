@@ -8,16 +8,12 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.data.EventApiClient;
-import com.urbanairship.analytics.data.EventManager;
-import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
@@ -55,7 +51,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
             }
         };
 
-
         testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
@@ -73,26 +68,12 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar);
 
-        UAirship.sharedAirship.analytics = Analytics.newBuilder(this)
-                                                    .setActivityMonitor(new TestActivityMonitor())
-                                                    .setConfigOptions(airshipConfigOptions)
-                                                    .setPreferenceDataStore(preferenceDataStore)
-                                                    .setAirshipChannel(UAirship.sharedAirship.channel)
-                                                    .setEventManager(EventManager.newBuilder()
-                                                                                 .setEventResolver(new EventResolver(this))
-                                                                                 .setActivityMonitor(new TestActivityMonitor())
-                                                                                 .setJobDispatcher(JobDispatcher.shared(this))
-                                                                                 .setPreferenceDataStore(preferenceDataStore)
-                                                                                 .setApiClient(new EventApiClient(this, UAirship.sharedAirship.runtimeConfig))
-                                                                                 .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
-                                                                                 .setJobAction(Analytics.ACTION_SEND)
-                                                                                 .build())
-                                                    .build();
+        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
 
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, new TestActivityMonitor(), UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel);
+        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
+        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();

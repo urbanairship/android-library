@@ -3,15 +3,12 @@
 package com.urbanairship.analytics;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.StringDef;
+import android.os.Build;
 
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -19,145 +16,41 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
-import com.urbanairship.util.Checks;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * This class is the primary interface to the Airship Analytics API.
  */
 public class Analytics extends AirshipComponent {
-
-    /**
-     * Job action to send an event.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public static final String ACTION_SEND = "ACTION_SEND";
-
-    /**
-     * Minimum amount of delay when {@link #uploadEvents()} is called.
-     */
-    public static final long SCHEDULE_SEND_DELAY_SECONDS = 10;
-
-    private static final String KEY_PREFIX = "com.urbanairship.analytics";
-    private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
-    private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
-
-    private final PreferenceDataStore preferenceDataStore;
-    private final ActivityMonitor activityMonitor;
-    private final EventManager eventManager;
-    private final ApplicationListener listener;
-    private final AirshipConfigOptions configOptions;
-    private final AirshipChannel airshipChannel;
-    private final Executor executor;
-    private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
-    private final List<EventListener> eventListeners = new ArrayList<>();
-
-    private final Object associatedIdentifiersLock = new Object();
-
-    private AnalyticsJobHandler analyticsJobHandler;
-
-    // Session state
-    private String sessionId;
-    private String conversionSendId;
-    private String conversionMetadata;
-
-    // Screen state
-    private String currentScreen;
-    private String previousScreen;
-    private long screenStartTime;
-
-    /**
-     * SDK Extensions enum
-     * @hide
-     */
-    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ExtensionName {}
-
-    /**
-     * SDK Extension = Cordova
-     * @hide
-     */
-    @NonNull
-    public static final String EXTENSION_CORDOVA = "cordova";
-
-    /**
-     * SDK Extension = Flutter
-     * @hide
-     */
-    @NonNull
-    public static final String EXTENSION_FLUTTER = "flutter";
-
-    /**
-     * SDK Extension = React-Native
-     * @hide
-     */
-    @NonNull
-    public static final String EXTENSION_REACT_NATIVE = "react-native";
-
-    /**
-     * SDK Extension = Unity
-     * @hide
-     */
-    @NonNull
-    public static final String EXTENSION_UNITY = "unity";
-
-    /**
-     * SDK Extension = Xamarin
-     * @hide
-     */
-    @NonNull
-    public static final String EXTENSION_XAMARIN = "xamarin";
-
-    @NonNull
-    private final Map<String, String> sdkExtensions = new HashMap<>();
-
-    /**
-     * The Analytics constructor.
-     *
-     * @param builder The builder instance.
-     */
-    private Analytics(@NonNull Builder builder) {
-        super(builder.context, builder.preferenceDataStore);
-        this.preferenceDataStore = builder.preferenceDataStore;
-        this.configOptions = builder.configOptions;
-        this.activityMonitor = builder.activityMonitor;
-        this.eventManager = builder.eventManager;
-        this.airshipChannel = builder.airshipChannel;
-        this.executor = builder.executor == null ? AirshipExecutors.newSerialExecutor() : builder.executor;
-        this.sessionId = UUID.randomUUID().toString();
-
-        this.listener = new ApplicationListener() {
-            @Override
-            public void onForeground(final long time) {
-                Analytics.this.onForeground(time);
-            }
-
-            @Override
-            public void onBackground(final long time) {
-                Analytics.this.onBackground(time);
-            }
-        };
-    }
 
     /**
      * Listener for all Airship events.
@@ -172,27 +65,160 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
+     * Delegate to add analytics headers.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public interface AnalyticsHeaderDelegate {
+
+        @NonNull
+        Map<String, String> onCreateAnalyticsHeaders();
+
+    }
+
+    /**
+     * SDK Extensions enum
+     *
+     * @hide
+     */
+    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ExtensionName {}
+
+    /**
+     * SDK Extension = Cordova
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_CORDOVA = "cordova";
+
+    /**
+     * SDK Extension = Flutter
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_FLUTTER = "flutter";
+
+    /**
+     * SDK Extension = React-Native
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_REACT_NATIVE = "react-native";
+
+    /**
+     * SDK Extension = Unity
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_UNITY = "unity";
+
+    /**
+     * SDK Extension = Xamarin
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_XAMARIN = "xamarin";
+
+    /**
+     * Minimum amount of delay when {@link #uploadEvents()} is called.
+     */
+    private static final long SCHEDULE_SEND_DELAY_SECONDS = 10;
+
+    private static final String KEY_PREFIX = "com.urbanairship.analytics";
+    private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
+    private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
+
+    private final ActivityMonitor activityMonitor;
+    private final EventManager eventManager;
+    private final ApplicationListener listener;
+    private final AirshipRuntimeConfig runtimeConfig;
+    private final AirshipChannel airshipChannel;
+    private final Executor executor;
+    private final LocaleManager localeManager;
+    private final List<AnalyticsListener> analyticsListeners = new CopyOnWriteArrayList<>();
+    private final List<EventListener> eventListeners = new CopyOnWriteArrayList<>();
+    private final List<AnalyticsHeaderDelegate> headerDelegates = new CopyOnWriteArrayList<>();
+
+    private final Object associatedIdentifiersLock = new Object();
+
+    // Session state
+    private String sessionId;
+    private String conversionSendId;
+    private String conversionMetadata;
+
+    // Screen state
+    private String currentScreen;
+    private String previousScreen;
+    private long screenStartTime;
+
+    @NonNull
+    private final List<String> sdkExtensions = new ArrayList<>();
+
+    public Analytics(@NonNull Context context,
+                     @NonNull PreferenceDataStore dataStore,
+                     @NonNull AirshipRuntimeConfig runtimeConfig,
+                     @NonNull AirshipChannel channel) {
+        this(context, dataStore, runtimeConfig, channel, GlobalActivityMonitor.shared(context),
+                LocaleManager.shared(context), AirshipExecutors.newSerialExecutor(),
+                new EventManager(context, dataStore, runtimeConfig));
+    }
+
+    @VisibleForTesting
+    Analytics(@NonNull Context context,
+              @NonNull PreferenceDataStore dataStore,
+              @NonNull AirshipRuntimeConfig runtimeConfig,
+              @NonNull AirshipChannel airshipChannel,
+              @NonNull ActivityMonitor activityMonitor,
+              @NonNull LocaleManager localeManager,
+              @NonNull Executor executor,
+              @NonNull EventManager eventManager) {
+        super(context, dataStore);
+        this.runtimeConfig = runtimeConfig;
+        this.airshipChannel = airshipChannel;
+        this.activityMonitor = activityMonitor;
+        this.localeManager = localeManager;
+        this.executor = executor;
+        this.eventManager = eventManager;
+
+        this.sessionId = UUID.randomUUID().toString();
+        this.listener = new ApplicationListener() {
+            @Override
+            public void onForeground(final long time) {
+                Analytics.this.onForeground(time);
+            }
+
+            @Override
+            public void onBackground(final long time) {
+                Analytics.this.onBackground(time);
+            }
+        };
+    }
+
+    /**
+     * Adds an analytic header delegate.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addHeaderDelegate(@NonNull AnalyticsHeaderDelegate headerDelegate) {
+        headerDelegates.add(headerDelegate);
+    }
+
+    /**
      * Adds an event listener.
      *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void addEventListener(@NonNull EventListener eventListener) {
-        synchronized (eventListeners) {
-            eventListeners.add(eventListener);
-        }
-    }
-
-    /**
-     * Removes an event listener.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void removeEventListener(@NonNull EventListener eventListener) {
-        synchronized (eventListeners) {
-            eventListeners.remove(eventListener);
-        }
+        eventListeners.add(eventListener);
     }
 
     @Override
@@ -217,7 +243,6 @@ public class Analytics extends AirshipComponent {
             }
         });
 
-
     }
 
     @Override
@@ -232,11 +257,24 @@ public class Analytics extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JobInfo.JobResult
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (analyticsJobHandler == null) {
-            analyticsJobHandler = new AnalyticsJobHandler(airship, eventManager);
+        if (EventManager.ACTION_SEND.equals(jobInfo.getAction())) {
+            if (!isEnabled()) {
+                return JobInfo.JOB_FINISHED;
+            }
+
+            if (airshipChannel.getId() == null) {
+                Logger.debug("AnalyticsJobHandler - No channel ID, skipping analytics send.");
+                return JobInfo.JOB_FINISHED;
+            }
+
+            if (!eventManager.uploadEvents(getAnalyticHeaders())) {
+                return JobInfo.JOB_RETRY;
+            }
+
+            return JobInfo.JOB_FINISHED;
         }
 
-        return analyticsJobHandler.performJob(jobInfo);
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -412,7 +450,7 @@ public class Analytics extends AirshipComponent {
      * @param enabled {@code true} to enable analytics, {@code false} to disable.
      */
     public void setEnabled(boolean enabled) {
-        boolean previousValue = preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
+        boolean previousValue = getDataStore().getBoolean(ANALYTICS_ENABLED_KEY, true);
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
@@ -423,7 +461,7 @@ public class Analytics extends AirshipComponent {
             Logger.warn("Analytics - Analytics is disabled until data collection is opted in.");
         }
 
-        preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
+        getDataStore().put(ANALYTICS_ENABLED_KEY, enabled);
     }
 
     private void clearPendingEvents() {
@@ -441,7 +479,7 @@ public class Analytics extends AirshipComponent {
         if (!isDataCollectionEnabled) {
             clearPendingEvents();
             synchronized (associatedIdentifiersLock) {
-                preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+                getDataStore().remove(ASSOCIATED_IDENTIFIERS_KEY);
             }
         }
     }
@@ -456,7 +494,7 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
     public boolean isEnabled() {
-        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataCollectionEnabled();
+        return runtimeConfig.getConfigOptions().analyticsEnabled && getDataStore().getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataCollectionEnabled();
     }
 
     /**
@@ -500,7 +538,7 @@ public class Analytics extends AirshipComponent {
                         return;
                     }
 
-                    preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
+                    getDataStore().put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
                     addEvent(new AssociateIdentifiersEvent(identifiers));
                 }
             }
@@ -516,13 +554,13 @@ public class Analytics extends AirshipComponent {
     public AssociatedIdentifiers getAssociatedIdentifiers() {
         synchronized (associatedIdentifiersLock) {
             try {
-                JsonValue value = preferenceDataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY);
+                JsonValue value = getDataStore().getJsonValue(ASSOCIATED_IDENTIFIERS_KEY);
                 if (!value.isNull()) {
                     return AssociatedIdentifiers.fromJson(value);
                 }
             } catch (JsonException e) {
                 Logger.error(e, "Unable to parse associated identifiers.");
-                preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+                getDataStore().remove(ASSOCIATED_IDENTIFIERS_KEY);
             }
 
             return new AssociatedIdentifiers();
@@ -554,7 +592,7 @@ public class Analytics extends AirshipComponent {
         currentScreen = screen;
 
         if (screen != null) {
-            for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
+            for (AnalyticsListener listener : analyticsListeners) {
                 listener.onScreenTracked(screen);
             }
         }
@@ -576,9 +614,7 @@ public class Analytics extends AirshipComponent {
      * @param analyticsListener The {@link AnalyticsListener}.
      */
     public void addAnalyticsListener(@NonNull AnalyticsListener analyticsListener) {
-        synchronized (analyticsListeners) {
-            analyticsListeners.add(analyticsListener);
-        }
+        analyticsListeners.add(analyticsListener);
     }
 
     /**
@@ -587,9 +623,7 @@ public class Analytics extends AirshipComponent {
      * @param analyticsListener The {@link AnalyticsListener}.
      */
     public void removeAnalyticsListener(@NonNull AnalyticsListener analyticsListener) {
-        synchronized (analyticsListeners) {
-            analyticsListeners.remove(analyticsListener);
-        }
+        analyticsListeners.remove(analyticsListener);
     }
 
     /**
@@ -598,11 +632,11 @@ public class Analytics extends AirshipComponent {
      * @param event The event.
      */
     private void applyListeners(@NonNull Event event) {
-        for (EventListener listener : new ArrayList<>(eventListeners)) {
+        for (EventListener listener : eventListeners) {
             listener.onEventAdded(event, getSessionId());
         }
 
-        for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
+        for (AnalyticsListener listener :analyticsListeners) {
             switch (event.getType()) {
                 case CustomEvent.TYPE:
                     if (event instanceof CustomEvent) {
@@ -620,6 +654,70 @@ public class Analytics extends AirshipComponent {
         }
     }
 
+    private Map<String, String> getAnalyticHeaders() {
+        Map<String, String> headers = new HashMap<>();
+
+        // Delegates
+        for (AnalyticsHeaderDelegate delegate : headerDelegates) {
+            headers.putAll(delegate.onCreateAnalyticsHeaders());
+        }
+
+        // App info
+        headers.put("X-UA-Package-Name", getPackageName());
+        headers.put("X-UA-Package-Version", getPackageVersion());
+        headers.put("X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT));
+
+        // Airship info
+        headers.put("X-UA-Device-Family", runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? "amazon" : "android");
+        headers.put("X-UA-Lib-Version", UAirship.getVersion());
+        headers.put("X-UA-App-Key", runtimeConfig.getConfigOptions().appKey);
+        headers.put("X-UA-In-Production", Boolean.toString(runtimeConfig.getConfigOptions().inProduction));
+
+        headers.put("X-UA-Channel-ID", airshipChannel.getId());
+        headers.put("X-UA-Push-Address", airshipChannel.getId());
+
+        if (!sdkExtensions.isEmpty()) {
+            headers.put("X-UA-Frameworks", UAStringUtil.join(sdkExtensions, ","));
+        }
+
+        // Device info
+        headers.put("X-UA-Device-Model", Build.MODEL);
+        headers.put("X-UA-Timezone", TimeZone.getDefault().getID());
+
+        Locale locale = localeManager.getDefaultLocale();
+        if (!UAStringUtil.isEmpty(locale.getLanguage())) {
+            headers.put("X-UA-Locale-Language", locale.getLanguage());
+
+            if (!UAStringUtil.isEmpty(locale.getCountry())) {
+                headers.put("X-UA-Locale-Country", locale.getCountry());
+            }
+
+            if (!UAStringUtil.isEmpty(locale.getVariant())) {
+                headers.put("X-UA-Locale-Variant", locale.getVariant());
+            }
+        }
+
+        return headers;
+    }
+
+    @Nullable
+    private String getPackageName() {
+        try {
+            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).packageName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private String getPackageVersion() {
+        try {
+            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
     /**
      * Registers an SDK extension with the analytics module.
      *
@@ -632,143 +730,9 @@ public class Analytics extends AirshipComponent {
         extension = extension.toLowerCase();
 
         // normalize version
-        version = version.replace(",","");
+        version = version.replace(",", "");
 
-        sdkExtensions.put(extension, version);
+        sdkExtensions.add(extension + ":" + version);
     }
 
-    /**
-     * The registered SDK extensions.
-     *
-     * @return The SDK extensions as a map of extension name to extension version
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public Map<String, String> getExtensions() {
-        return sdkExtensions;
-    }
-
-    /**
-     * Builder factory method.
-     *
-     * @param context The application context.
-     * @return A new builder instance.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static Builder newBuilder(@NonNull Context context) {
-        return new Builder(context);
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static class Builder {
-
-        private PreferenceDataStore preferenceDataStore;
-        private final Context context;
-        private ActivityMonitor activityMonitor;
-        private EventManager eventManager;
-        private AirshipConfigOptions configOptions;
-        public AirshipChannel airshipChannel;
-        private Executor executor;
-
-        /**
-         * Builder constructor.
-         *
-         * @param context The application context.
-         */
-        public Builder(@NonNull Context context) {
-            this.context = context.getApplicationContext();
-        }
-
-        /**
-         * Sets the {@link PreferenceDataStore}.
-         *
-         * @param preferenceDataStore The {@link PreferenceDataStore}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setPreferenceDataStore(@NonNull PreferenceDataStore preferenceDataStore) {
-            this.preferenceDataStore = preferenceDataStore;
-            return this;
-        }
-
-        /**
-         * Sets the {@link ActivityMonitor}.
-         *
-         * @param activityMonitor The {@link ActivityMonitor}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
-            this.activityMonitor = activityMonitor;
-            return this;
-        }
-
-        /**
-         * Sets the {@link EventManager}.
-         *
-         * @param eventManager The {@link EventManager}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setEventManager(@NonNull EventManager eventManager) {
-            this.eventManager = eventManager;
-            return this;
-        }
-
-        /**
-         * Sets the {@link AirshipConfigOptions}.
-         *
-         * @param configOptions The {@link AirshipConfigOptions}.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setConfigOptions(@NonNull AirshipConfigOptions configOptions) {
-            this.configOptions = configOptions;
-            return this;
-        }
-
-        /**
-         * Sets the analytics executor.
-         *
-         * @param executor The analytics executor.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setExecutor(@NonNull Executor executor) {
-            this.executor = executor;
-            return this;
-        }
-
-        /**
-         * Sets the Airship channel.
-         *
-         * @param airshipChannel The Airship channel.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setAirshipChannel(@NonNull AirshipChannel airshipChannel) {
-            this.airshipChannel = airshipChannel;
-            return this;
-        }
-
-        /**
-         * Builds the analytics instance.
-         *
-         * @return The analytics instance.
-         */
-        @NonNull
-        public Analytics build() {
-            Checks.checkNotNull(context, "Missing context.");
-            Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
-            Checks.checkNotNull(eventManager, "Missing event manager.");
-            Checks.checkNotNull(configOptions, "Missing config options.");
-            Checks.checkNotNull(airshipChannel, "Missing Airship channel.");
-            return new Analytics(this);
-        }
-    }
 }

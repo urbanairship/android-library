@@ -18,6 +18,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,24 +32,23 @@ import static org.mockito.Mockito.verify;
 @SuppressWarnings("ResourceType")
 public class UALocationManagerTest extends BaseTestCase {
 
-    UALocationManager locationManager;
-    LocationRequestOptions options;
-    Analytics analytics;
-    AirshipChannel mockChannel;
-    PreferenceDataStore dataStore;
+    private UALocationManager locationManager;
+    private LocationRequestOptions options;
+    private Analytics mockAnalytics;
+    private AirshipChannel mockChannel;
+    private PreferenceDataStore dataStore;
 
     @Before
     public void setUp() {
-        analytics = mock(Analytics.class);
+        mockAnalytics = mock(Analytics.class);
         mockChannel = mock(AirshipChannel.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        locationManager = new UALocationManager(TestApplication.getApplication(), dataStore, new TestActivityMonitor(), mockChannel);
+        locationManager = new UALocationManager(TestApplication.getApplication(), dataStore,
+                mockChannel, mockAnalytics, new TestActivityMonitor());
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
-
-        TestApplication.getApplication().setAnalytics(analytics);
     }
 
     /**
@@ -92,7 +94,7 @@ public class UALocationManagerTest extends BaseTestCase {
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
 
-        verify(analytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
+        verify(mockAnalytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     @Test
@@ -106,7 +108,7 @@ public class UALocationManagerTest extends BaseTestCase {
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
 
-        verify(analytics, never()).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
+        verify(mockAnalytics, never()).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     /**
@@ -156,4 +158,22 @@ public class UALocationManagerTest extends BaseTestCase {
 
         assertEquals(expected, payload);
     }
+
+    @Test
+    public void testAnalyticHeaders() {
+        ArgumentCaptor<Analytics.AnalyticsHeaderDelegate> captor = ArgumentCaptor.forClass(Analytics.AnalyticsHeaderDelegate.class);
+        locationManager.init();
+        verify(mockAnalytics).addHeaderDelegate(captor.capture());
+
+        Analytics.AnalyticsHeaderDelegate delegate = captor.getValue();
+        assertNotNull(delegate);
+
+        Map<String, String> expectedHeaders = new HashMap<>();
+        expectedHeaders.put("X-UA-Location-Permission", "NOT_ALLOWED");
+        expectedHeaders.put("X-UA-Location-Service-Enabled", "false");
+
+        Map<String, String> headers = delegate.onCreateAnalyticsHeaders();
+        assertEquals(expectedHeaders, headers);
+    }
+
 }

@@ -2,27 +2,36 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
+import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Mock;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,14 +39,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("ResourceType")
 public class AnalyticsTest extends BaseTestCase {
 
     private Analytics analytics;
@@ -45,6 +52,10 @@ public class AnalyticsTest extends BaseTestCase {
     private EventManager mockEventManager;
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
+    private TestLocaleManager testLocaleManager;
+    private Executor executor;
+    private TestAirshipRuntimeConfig runtimeConfig;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
@@ -52,29 +63,25 @@ public class AnalyticsTest extends BaseTestCase {
         this.mockEventManager = Mockito.mock(EventManager.class);
         this.mockChannel = Mockito.mock(AirshipChannel.class);
 
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .build();
+        this.dataStore = TestApplication.getApplication().preferenceDataStore;
+        this.dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
+        this.testLocaleManager = new TestLocaleManager();
+        this.activityMonitor = new TestActivityMonitor();
 
-        this.analytics = Analytics.newBuilder(TestApplication.getApplication())
-                                  .setActivityMonitor(new TestActivityMonitor())
-                                  .setConfigOptions(airshipConfigOptions)
-                                  .setPreferenceDataStore(dataStore)
-                                  .setEventManager(mockEventManager)
-                                  .setAirshipChannel(mockChannel)
-                                  .setExecutor(new Executor() {
-                                      @Override
-                                      public void execute(@NonNull Runnable runnable) {
-                                          runnable.run();
-                                      }
-                                  })
-                                  .build();
+        this.executor = new Executor() {
+            @Override
+            public void execute(@NonNull Runnable runnable) {
+                runnable.run();
+            }
+        };
 
-        analytics.init();
+        this.runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+
+        this.analytics = new Analytics(TestApplication.getApplication(), dataStore, runtimeConfig,
+                mockChannel, activityMonitor, testLocaleManager, executor, mockEventManager);
+
+        this.analytics.init();
     }
 
     /**
@@ -161,13 +168,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setAnalyticsEnabled(false)
                 .build();
 
-        this.analytics = Analytics.newBuilder(TestApplication.getApplication())
-                                  .setActivityMonitor(new TestActivityMonitor())
-                                  .setConfigOptions(options)
-                                  .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
-                                  .setEventManager(mockEventManager)
-                                  .setAirshipChannel(mockChannel)
-                                  .build();
+        runtimeConfig.setConfigOptions(options);
 
         analytics.addEvent(new AppForegroundEvent(100));
         verifyZeroInteractions(mockEventManager);
@@ -315,26 +316,11 @@ public class AnalyticsTest extends BaseTestCase {
         verifyZeroInteractions(mockJobDispatcher);
     }
 
-    /**
-     * Test that SDK extensions are registered correctly
-     */
-    @Test
-    public void testSDKExtensions() {
-        analytics.registerSDKExtension("cordova", "1.2.3");
-        analytics.registerSDKExtension("unity", "5,.6,.7,,,");
-
-        Map<String, String> expectedExtensions = new HashMap<>();
-        expectedExtensions.put("cordova", "1.2.3");
-        expectedExtensions.put("unity", "5.6.7");
-
-        assertEquals(expectedExtensions, analytics.getExtensions());
-    }
-
     @Test
     public void testEditAssociatedIdentifiersDataCollectionDisabled() {
         analytics.editAssociatedIdentifiers()
-                .addIdentifier("customKey", "customValue")
-                .apply();
+                 .addIdentifier("customKey", "customValue")
+                 .apply();
 
         // Verify identifiers are stored
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
@@ -346,8 +332,8 @@ public class AnalyticsTest extends BaseTestCase {
         assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
 
         analytics.editAssociatedIdentifiers()
-                .addIdentifier("customKey", "customValue")
-                .apply();
+                 .addIdentifier("customKey", "customValue")
+                 .apply();
 
         assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
     }
@@ -364,4 +350,281 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.setEnabled(true);
         assertFalse(analytics.isEnabled());
     }
+
+    /**
+     * Tests sending events
+     */
+    @Test
+    public void testSendingEvents() {
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn(null);
+
+        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(true);
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test sending events when there's no channel ID present
+     */
+    @Test
+    public void testSendingWithNoChannelID() {
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn(null);
+
+        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test sending events when analytics is disabled.
+     */
+    @Test
+    public void testSendingWithAnalyticsDisabled() {
+        analytics.setEnabled(false);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test sending events when the upload fails
+     */
+    @Test
+    public void testSendEventsFails() {
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        assertEquals(JobInfo.JOB_RETRY, analytics.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * This verifies all required and most optional headers.
+     */
+    @Test
+    public void testRequestHeaders() {
+        testLocaleManager.setDefaultLocale(new Locale("en", "US", "POSIX"));
+        analytics.setEnabled(true);
+        analytics.registerSDKExtension("cordova", "1.2.3");
+        when(mockChannel.getId()).thenReturn("channel");
+
+        String[][] expectedHeaders = new String[][] {
+                { "X-UA-Device-Family", "android" },
+                { "X-UA-Package-Name", UAirship.getPackageName() },
+                { "X-UA-Package-Version", UAirship.getPackageInfo().versionName },
+                { "X-UA-App-Key", runtimeConfig.getConfigOptions().appKey },
+                { "X-UA-In-Production", Boolean.toString(runtimeConfig.getConfigOptions().inProduction) },
+                { "X-UA-Device-Model", Build.MODEL },
+                { "X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT) },
+                { "X-UA-Lib-Version", UAirship.getVersion() },
+                { "X-UA-Timezone", TimeZone.getDefault().getID() },
+                { "X-UA-Locale-Language", "en" },
+                { "X-UA-Locale-Country", "US" },
+                { "X-UA-Locale-Variant", "POSIX" },
+                { "X-UA-Frameworks", "cordova:1.2.3" },
+                { "X-UA-Channel-ID", "channel" }
+        };
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+
+        for (String[] keyValuePair : expectedHeaders) {
+            String actualValue = headers.get(keyValuePair[0]);
+            assertEquals(keyValuePair[1], actualValue);
+        }
+    }
+
+    /**
+     * Test that amazon is set as the device family when the platform is amazon.
+     */
+    @Test
+    public void testAmazonDeviceFamily() {
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertEquals("amazon", headers.get("X-UA-Device-Family"));
+    }
+
+    /**
+     * This verifies that we don't add the X-UA-Locale-Country if the country
+     * field is blank on the locale.
+     */
+    @Test
+    public void testRequestHeaderEmptyLocaleCountryHeaders() {
+        testLocaleManager.setDefaultLocale(new Locale("en", "", "POSIX"));
+
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertNull(headers.get("X-UA-Locale-Country"));
+    }
+
+    /**
+     * This verifies that we don't add the X-UA-Locale-Variant if the variant
+     * field is blank on the locale.
+     */
+    @Test
+    public void testRequestHeaderEmptyLocaleVariantHeaders() {
+        testLocaleManager.setDefaultLocale(new Locale("en", "US", ""));
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertNull(headers.get("X-UA-Locale-Variant"));
+    }
+
+    /**
+     * This verifies that we don't add any locale fields if the language
+     * is empty.
+     */
+    @Test
+    public void testRequestHeaderEmptyLanguageLocaleHeaders() {
+        testLocaleManager.setDefaultLocale(new Locale("", "US", "POSIX"));
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertNull(headers.get("X-UA-Locale-Language"));
+        assertNull(headers.get("X-UA-Locale-Country"));
+        assertNull(headers.get("X-UA-Locale-Variant"));
+    }
+
+    /**
+     * Test that SDK extensions are registered correctly
+     */
+    @Test
+    public void testSDKExtensions() {
+        analytics.registerSDKExtension("cordova", "1.2.3");
+        analytics.registerSDKExtension("unity", "5,.6,.7,,,");
+
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertEquals("cordova:1.2.3,unity:5.6.7", headers.get("X-UA-Frameworks"));
+    }
+
+    /**
+     * Test that analytics header delegates are able to provide additional headers.
+     */
+    @Test
+    public void testAnalyticHeaderDelegate() {
+        analytics.setEnabled(true);
+        when(mockChannel.getId()).thenReturn("channel");
+
+        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
+            @NonNull
+            @Override
+            public Map<String, String> onCreateAnalyticsHeaders() {
+                return Collections.singletonMap("foo", "bar");
+            }
+        });
+
+        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
+            @NonNull
+            @Override
+            public Map<String, String> onCreateAnalyticsHeaders() {
+                Map<String, String> map = new HashMap<>();
+                map.put("cool", "story");
+                map.put("neat", "rad");
+                return map;
+            }
+        });
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertEquals("bar", headers.get("foo"));
+        assertEquals("story", headers.get("cool"));
+        assertEquals("rad", headers.get("neat"));
+
+        // Verify it still includes other headers
+        assertEquals("android", headers.get("X-UA-Device-Family"));
+    }
+
 }

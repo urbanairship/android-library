@@ -5,14 +5,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationManagerCompat;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
@@ -20,6 +12,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -47,6 +40,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -212,6 +213,7 @@ public class PushManager extends AirshipComponent {
 
     //singleton stuff
     private final Context context;
+    private final Analytics analytics;
     private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private final PreferenceDataStore preferenceDataStore;
@@ -241,14 +243,15 @@ public class PushManager extends AirshipComponent {
      * @param configOptions The airship config options.
      * @param pushProvider The push provider.
      * @param airshipChannel The airship channel.
+     * @param analytics The analytics instance.
      * @hide
      */
     public PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                        @NonNull AirshipConfigOptions configOptions, @Nullable PushProvider pushProvider,
-                       @NonNull AirshipChannel airshipChannel) {
+                       @NonNull AirshipChannel airshipChannel, @NonNull Analytics analytics) {
 
         this(context, preferenceDataStore, configOptions, pushProvider,
-                airshipChannel, JobDispatcher.shared(context));
+                airshipChannel, analytics, JobDispatcher.shared(context));
     }
 
     /**
@@ -257,12 +260,14 @@ public class PushManager extends AirshipComponent {
     @VisibleForTesting
     PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                 @NonNull AirshipConfigOptions configOptions, PushProvider provider,
-                @NonNull AirshipChannel airshipChannel, @NonNull JobDispatcher dispatcher) {
+                @NonNull AirshipChannel airshipChannel, @NonNull Analytics analytics,
+                @NonNull JobDispatcher dispatcher) {
         super(context, preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
         this.pushProvider = provider;
         this.airshipChannel = airshipChannel;
+        this.analytics = analytics;
         this.jobDispatcher = dispatcher;
         this.notificationProvider = new AirshipNotificationProvider(context, configOptions);
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
@@ -300,6 +305,14 @@ public class PushManager extends AirshipComponent {
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
                 return extendChannelRegistrationPayload(builder);
+            }
+        });
+
+        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
+            @NonNull
+            @Override
+            public Map<String, String> onCreateAnalyticsHeaders() {
+                return createAnalyticsHeaders();
             }
         });
 
@@ -650,8 +663,8 @@ public class PushManager extends AirshipComponent {
     @Deprecated
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.newBuilder()
-                .setQuietTimeInterval(startTime, endTime)
-                .build();
+                                                               .setQuietTimeInterval(startTime, endTime)
+                                                               .build();
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
@@ -1110,10 +1123,10 @@ public class PushManager extends AirshipComponent {
 
     private void dispatchUpdatePushTokenJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-                .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
-                .setAirshipComponent(PushManager.class)
-                .build();
+                                 .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
 
         jobDispatcher.dispatch(jobInfo);
     }
@@ -1182,4 +1195,12 @@ public class PushManager extends AirshipComponent {
     List<InternalNotificationListener> getInternalNotificationListeners() {
         return internalNotificationListeners;
     }
+
+    private Map<String, String> createAnalyticsHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-UA-Channel-Opted-In", Boolean.toString(isOptIn()));
+        headers.put("X-UA-Channel-Background-Enabled", Boolean.toString(isPushEnabled() && isPushAvailable()));
+        return headers;
+    }
+
 }

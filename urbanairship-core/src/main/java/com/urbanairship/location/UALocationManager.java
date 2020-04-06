@@ -6,14 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
@@ -22,9 +18,11 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
@@ -32,7 +30,16 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
+import androidx.core.location.LocationManagerCompat;
 
 /**
  * High level interface for interacting with location.
@@ -44,6 +51,10 @@ public class UALocationManager extends AirshipComponent {
     private static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
     private static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
 
+    private static final String NOT_ALLOWED = "NOT_ALLOWED";
+    private static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
+    private static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
+
     private final Context context;
     private final UALocationProvider locationProvider;
     private final ApplicationListener listener;
@@ -51,6 +62,7 @@ public class UALocationManager extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final List<LocationListener> locationListeners = new ArrayList<>();
     private final AirshipChannel airshipChannel;
+    private final Analytics analytics;
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -76,15 +88,28 @@ public class UALocationManager extends AirshipComponent {
     };
 
     /**
-     * Creates a UALocationManager. Normally only one UALocationManager instance should exist, and
-     * can be accessed from {@link com.urbanairship.UAirship#getLocationManager()}.
+     * Default constructor.
      *
-     * @param context Application context
-     * @param preferenceDataStore The preferences data store.
+     * @param context The context.
+     * @param preferenceDataStore The data store.
+     * @param airshipChannel The channel instance.
+     * @param analytics The analytics instance.
      * @hide
      */
-    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                             @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public UALocationManager(@NonNull Context context,
+                             @NonNull PreferenceDataStore preferenceDataStore,
+                             @NonNull AirshipChannel airshipChannel,
+                             @NonNull Analytics analytics) {
+        this(context, preferenceDataStore, airshipChannel, analytics, GlobalActivityMonitor.shared(context));
+    }
+
+    @VisibleForTesting
+    UALocationManager(@NonNull final Context context,
+                      @NonNull PreferenceDataStore preferenceDataStore,
+                      @NonNull AirshipChannel airshipChannel,
+                      @NonNull Analytics analytics,
+                      @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
 
         this.context = context.getApplicationContext();
@@ -107,6 +132,7 @@ public class UALocationManager extends AirshipComponent {
         this.backgroundThread = new AirshipHandlerThread("location");
 
         this.airshipChannel = airshipChannel;
+        this.analytics = analytics;
     }
 
     @Override
@@ -128,6 +154,14 @@ public class UALocationManager extends AirshipComponent {
                 }
 
                 return builder;
+            }
+        });
+
+        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
+            @NonNull
+            @Override
+            public Map<String, String> onCreateAnalyticsHeaders() {
+                return createAnalyticsHeaders();
             }
         });
     }
@@ -282,7 +316,7 @@ public class UALocationManager extends AirshipComponent {
             public void onResult(@Nullable Location result) {
                 if (result != null) {
                     Logger.info("Received single location update: %s", result);
-                    UAirship.shared().getAnalytics().recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
+                    analytics.recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
                 }
             }
         });
@@ -413,9 +447,7 @@ public class UALocationManager extends AirshipComponent {
         }
 
         // Record the location
-        UAirship.shared()
-                .getAnalytics()
-                .recordLocation(location, getLocationRequestOptions(), LocationEvent.UPDATE_TYPE_CONTINUOUS);
+        analytics.recordLocation(location, getLocationRequestOptions(), LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     /**
@@ -466,6 +498,33 @@ public class UALocationManager extends AirshipComponent {
         }
 
         return null;
+    }
+
+    private boolean isSystemLocationServicesEnabled() {
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager == null) {
+            return false;
+        }
+        return LocationManagerCompat.isLocationEnabled(locationManager);
+    }
+
+    private Map<String, String> createAnalyticsHeaders() {
+        Map<String, String> headers = new HashMap<>();
+
+        String locationPermission;
+        if (isLocationPermitted()) {
+            if (isSystemLocationServicesEnabled()) {
+                locationPermission = ALWAYS_ALLOWED;
+            } else {
+                locationPermission = SYSTEM_LOCATION_DISABLED;
+            }
+        } else {
+            locationPermission = NOT_ALLOWED;
+        }
+
+        headers.put("X-UA-Location-Permission", locationPermission);
+        headers.put("X-UA-Location-Service-Enabled", Boolean.toString(isLocationUpdatesEnabled()));
+        return headers;
     }
 
 }

@@ -10,6 +10,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
@@ -23,6 +24,8 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
@@ -49,12 +52,14 @@ public class PushManagerTest extends BaseTestCase {
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockAirshipChannel;
     private PushProvider mockPushProvider;
+    private Analytics mockAnalytics;
 
     @Before
     public void setup() {
         mockDispatcher = mock(JobDispatcher.class);
         mockAirshipChannel = mock(AirshipChannel.class);
         mockPushProvider = mock(PushProvider.class);
+        mockAnalytics = mock(Analytics.class);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
@@ -64,7 +69,7 @@ public class PushManagerTest extends BaseTestCase {
                 .build();
 
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options,
-                mockPushProvider, mockAirshipChannel, mockDispatcher);
+                mockPushProvider, mockAirshipChannel, mockAnalytics, mockDispatcher);
     }
 
     /**
@@ -333,4 +338,20 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals(expected, payload);
     }
 
+    @Test
+    public void testAnalyticHeaders() {
+        ArgumentCaptor<Analytics.AnalyticsHeaderDelegate> captor = ArgumentCaptor.forClass(Analytics.AnalyticsHeaderDelegate.class);
+        pushManager.init();
+        verify(mockAnalytics).addHeaderDelegate(captor.capture());
+
+        Analytics.AnalyticsHeaderDelegate delegate = captor.getValue();
+        assertNotNull(delegate);
+
+        Map<String, String> expectedHeaders = new HashMap<>();
+        expectedHeaders.put("X-UA-Channel-Opted-In", "false");
+        expectedHeaders.put("X-UA-Channel-Background-Enabled", "false");
+
+        Map<String, String> headers = delegate.onCreateAnalyticsHeaders();
+        assertEquals(expectedHeaders, headers);
+    }
 }

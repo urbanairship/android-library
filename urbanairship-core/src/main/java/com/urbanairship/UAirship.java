@@ -16,9 +16,6 @@ import android.os.SystemClock;
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.data.EventApiClient;
-import com.urbanairship.analytics.data.EventManager;
-import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
@@ -32,7 +29,6 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
@@ -714,21 +710,7 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
-        this.analytics = Analytics.newBuilder(application)
-                                  .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                                  .setConfigOptions(airshipConfigOptions)
-                                  .setPreferenceDataStore(preferenceDataStore)
-                                  .setAirshipChannel(channel)
-                                  .setEventManager(EventManager.newBuilder()
-                                                               .setEventResolver(new EventResolver(application))
-                                                               .setActivityMonitor(GlobalActivityMonitor.shared(application))
-                                                               .setJobDispatcher(JobDispatcher.shared(application))
-                                                               .setPreferenceDataStore(preferenceDataStore)
-                                                               .setApiClient(new EventApiClient(application, this.runtimeConfig))
-                                                               .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
-                                                               .setJobAction(Analytics.ACTION_SEND)
-                                                               .build())
-                                  .build();
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, channel);
         components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -737,10 +719,10 @@ public class UAirship {
         this.inbox = new RichPushInbox(application, preferenceDataStore, channel);
         components.add(this.inbox);
 
-        this.locationManager = new UALocationManager(application, preferenceDataStore, GlobalActivityMonitor.shared(application), channel);
+        this.locationManager = new UALocationManager(application, preferenceDataStore, channel, analytics);
         components.add(this.locationManager);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
         this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar, channel);
