@@ -81,6 +81,8 @@
     <string name="ua_push_provider_settings_title">Push Provider</string>
     <string name="ua_current_locale_settings_title">Current Locale</string>
     <string name="ua_airship_version_settings_title">Airship SDK Version</string>
+    <string name="ua_device_manufacturer_settings_title">Manufacturer</string>
+
 
     <string name="ua_channel_id">Channel</string>
 

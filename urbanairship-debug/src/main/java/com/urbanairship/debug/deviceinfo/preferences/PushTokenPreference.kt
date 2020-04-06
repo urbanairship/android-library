@@ -8,15 +8,12 @@ import android.os.Looper
 import android.util.AttributeSet
 import androidx.preference.Preference
 import com.urbanairship.UAirship
-import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.copyToClipboard
 import com.urbanairship.push.PushTokenListener
 
 class PushTokenPreference : Preference {
 
-    private val pushTokenListener = object : PushTokenListener {
-        override fun onPushTokenUpdated(token: String) = postUpdate()
-    }
+    private val pushTokenListener = PushTokenListener { postUpdate() }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {}
@@ -25,13 +22,13 @@ class PushTokenPreference : Preference {
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
-    override fun getSummary(): CharSequence {
-        return UAirship.shared().pushManager.pushToken ?: context.getString(R.string.ua_none)
+    override fun getSummary(): CharSequence? {
+        return UAirship.shared().pushManager.pushToken
     }
 
     override fun onClick() {
         super.onClick()
-        summary.copyToClipboard(context, true)
+        summary?.copyToClipboard(context, true)
     }
 
     override fun onAttached() {

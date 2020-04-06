@@ -111,11 +111,6 @@
             app:persistent="false"
             app:title="@string/ua_user_id_settings_title" />
 
-        <com.urbanairship.debug.deviceinfo.preferences.LocalePreference
-            app:key="locale_preference"
-            app:persistent="false"
-            app:title="@string/ua_current_locale_settings_title" />
-
 
         <com.urbanairship.debug.deviceinfo.preferences.PushOptInPreference
             app:key="push_opt_in_status_preference"
@@ -142,6 +137,16 @@
             app:key="airship_version"
             app:persistent="false"
             app:title="@string/ua_airship_version_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.LocalePreference
+            app:key="locale_preference"
+            app:persistent="false"
+            app:title="@string/ua_current_locale_settings_title" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.DeviceManufacturerPreference
+            app:key="device_manufacturer"
+            app:persistent="false"
+            app:title="@string/ua_device_manufacturer_settings_title" />
 
     </androidx.preference.PreferenceCategory>
 
