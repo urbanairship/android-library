@@ -2,17 +2,20 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-
-import com.urbanairship.UAirship;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.concurrent.Callable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
 /**
  * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
- * either {@link RichPushInbox#startInboxActivity()} or {@link RichPushInbox#startMessageActivity(String)}.
+ * either {@link MessageCenter#showMessageCenter()} ()} or {@link MessageCenter#showMessageCenter(String)}.
  * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
@@ -62,6 +65,8 @@ public class MessageCenterAction extends Action {
     @NonNull
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
+    private final Callable<MessageCenter> messageCenterCallable;
+
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
@@ -79,9 +84,30 @@ public class MessageCenterAction extends Action {
         }
     }
 
+    public MessageCenterAction() {
+        this(new Callable<MessageCenter>() {
+            @Override
+            public MessageCenter call() throws Exception {
+                return MessageCenter.shared();
+            }
+        });
+    }
+
+    @VisibleForTesting
+    MessageCenterAction(@NonNull Callable<MessageCenter>  messageCenterCallable) {
+        this.messageCenterCallable = messageCenterCallable;
+    }
+
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
+
+        MessageCenter messageCenter;
+        try {
+            messageCenter = messageCenterCallable.call();
+        } catch (Exception e) {
+            return ActionResult.newErrorResult(e);
+        }
 
         String messageId = arguments.getValue().getString();
 
@@ -97,10 +123,9 @@ public class MessageCenterAction extends Action {
         }
 
         if (UAStringUtil.isEmpty(messageId)) {
-            UAirship.shared().getMessageCenter().showMessageCenter();
-
+            messageCenter.showMessageCenter();
         } else {
-            UAirship.shared().getMessageCenter().showMessageCenter(messageId);
+            messageCenter.showMessageCenter(messageId);
         }
 
         return ActionResult.newEmptyResult();

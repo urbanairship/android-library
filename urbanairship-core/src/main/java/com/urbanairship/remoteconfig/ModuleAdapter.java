@@ -1,17 +1,19 @@
-package com.urbanairship.remoteconfig;
 /* Copyright Airship and Contributors */
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.urbanairship.remoteconfig;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.messagecenter.MessageCenter;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Used by {@link RemoteConfigManager} to handle mapping modules to airship components.
@@ -51,7 +53,7 @@ class ModuleAdapter {
      * @return The matching airship components.
      */
     @NonNull
-    static Collection<? extends AirshipComponent> findAirshipComponents(@NonNull String module) {
+    private Collection<? extends AirshipComponent> findAirshipComponents(@NonNull String module) {
         switch (module) {
             case Modules.LOCATION_MODULE:
                 return Collections.singleton(UAirship.shared().getLocationManager());
@@ -66,7 +68,7 @@ class ModuleAdapter {
                 return Collections.singleton(UAirship.shared().getInAppMessagingManager());
 
             case Modules.MESSAGE_CENTER:
-                return Arrays.asList(UAirship.shared().getInbox(), UAirship.shared().getMessageCenter());
+                return Arrays.asList(MessageCenter.shared());
 
             case Modules.PUSH_MODULE:
                 return Collections.singletonList(UAirship.shared().getPushManager());
@@ -78,7 +80,7 @@ class ModuleAdapter {
                 return Collections.singletonList(UAirship.shared().getChannel());
         }
 
-        Logger.verbose("ModuleAdapter - Unknown module: %s", module);
+        Logger.verbose("ModuleAdapter - Unable to find module: %s", module);
         return Collections.emptyList();
     }
 

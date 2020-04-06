@@ -95,13 +95,13 @@ public class MessageActivity extends ThemedActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        UAirship.shared().getInbox().addListener(updateMessageListener);
+        MessageCenter.shared().getInbox().addListener(updateMessageListener);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        UAirship.shared().getInbox().removeListener(updateMessageListener);
+        MessageCenter.shared().getInbox().removeListener(updateMessageListener);
     }
 
     /**
@@ -110,7 +110,7 @@ public class MessageActivity extends ThemedActivity {
      * @param messageId The message Id.
      */
     private void updateTitle(@Nullable String messageId) {
-        RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
+        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(messageId);
         if (message == null) {
             setTitle(null);
         } else {

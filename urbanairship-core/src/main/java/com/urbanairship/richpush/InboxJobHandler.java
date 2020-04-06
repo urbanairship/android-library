@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.UrlBuilder;
@@ -81,27 +82,36 @@ class InboxJobHandler {
     private final RichPushResolver resolver;
     private final AirshipRuntimeConfig runtimeConfig;
     private final RichPushUser user;
+    private final RichPushInbox inbox;
     private final RequestFactory requestFactory;
     private final PreferenceDataStore dataStore;
-    private final UAirship airship;
+    private final AirshipChannel channel;
 
     InboxJobHandler(@NonNull Context context,
-                    @NonNull UAirship airship,
+                    @NonNull RichPushInbox inbox,
+                    @NonNull RichPushUser user,
+                    @NonNull AirshipChannel channel,
+                    @NonNull AirshipRuntimeConfig runtimeConfig,
                     @NonNull PreferenceDataStore dataStore) {
-        this(airship, dataStore, RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
+        this(inbox, user, channel, runtimeConfig, dataStore,
+                RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
     }
 
     @VisibleForTesting
-    InboxJobHandler(@NonNull UAirship airship,
+    InboxJobHandler(@NonNull RichPushInbox inbox,
+                    @NonNull RichPushUser user,
+                    @NonNull AirshipChannel channel,
+                    @NonNull AirshipRuntimeConfig runtimeConfig,
                     @NonNull PreferenceDataStore dataStore,
                     @NonNull RequestFactory requestFactory,
                     @NonNull RichPushResolver resolver) {
-        this.airship = airship;
+        this.inbox = inbox;
+        this.user = user;
+        this.channel = channel;
         this.dataStore = dataStore;
-        this.runtimeConfig = airship.getRuntimeConfig();
+        this.runtimeConfig = runtimeConfig;
         this.requestFactory = requestFactory;
         this.resolver = resolver;
-        this.user = airship.getInbox().getUser();
     }
 
     /**
@@ -133,13 +143,13 @@ class InboxJobHandler {
      * Updates the message list.
      */
     private void onUpdateMessages() {
-        if (!RichPushUser.isCreated()) {
+        if (!user.isUserCreated()) {
             Logger.debug("InboxJobHandler - User has not been created, canceling messages update");
-            airship.getInbox().onUpdateMessagesFinished(false);
+            inbox.onUpdateMessagesFinished(false);
         } else {
             boolean success = this.updateMessages();
-            airship.getInbox().refresh(true);
-            airship.getInbox().onUpdateMessagesFinished(success);
+            inbox.refresh(true);
+            inbox.onUpdateMessagesFinished(success);
             this.syncReadMessageState();
             this.syncDeletedMessageState();
         }
@@ -169,13 +179,13 @@ class InboxJobHandler {
         }
 
         boolean success;
-        if (!RichPushUser.isCreated()) {
+        if (!user.isUserCreated()) {
             success = this.createUser();
         } else {
             success = this.updateUser();
         }
 
-        airship.getInbox().getUser().onUserUpdated(success);
+        user.onUserUpdated(success);
     }
 
     /**
@@ -196,7 +206,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("GET", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
+                                          .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setIfModifiedSince(dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0))
                                           .execute();
 
@@ -308,7 +318,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
+                                          .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
@@ -348,7 +358,7 @@ class InboxJobHandler {
         Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
-                                          .setHeader(CHANNEL_ID_HEADER, airship.getChannel().getId())
+                                          .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
@@ -393,7 +403,7 @@ class InboxJobHandler {
      * @return <code>true</code> if user was created, otherwise <code>false</code>.
      */
     private boolean createUser() {
-        String channelId = airship.getChannel().getId();
+        String channelId = channel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.debug("InboxJobHandler - No Channel. User will be created after channel registrations finishes.");
             return false;
@@ -408,7 +418,7 @@ class InboxJobHandler {
         String payload = createNewUserPayload(channelId);
         Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: %s", payload);
         Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(airship.getAirshipConfigOptions().appKey, airship.getAirshipConfigOptions().appSecret)
+                                          .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
@@ -451,7 +461,7 @@ class InboxJobHandler {
      * @return <code>true</code> if user was updated, otherwise <code>false</code>.
      */
     private boolean updateUser() {
-        String channelId = airship.getChannel().getId();
+        String channelId = channel.getId();
 
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.debug("InboxJobHandler - No Channel. Skipping Rich Push user update.");
@@ -544,5 +554,4 @@ class InboxJobHandler {
 
         return builder.build();
     }
-
 }

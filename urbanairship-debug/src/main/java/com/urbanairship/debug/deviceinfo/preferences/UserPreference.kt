@@ -5,9 +5,9 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import androidx.preference.Preference
-import com.urbanairship.UAirship
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.copyToClipboard
+import com.urbanairship.messagecenter.MessageCenter
 
 class UserPreference : Preference {
 
@@ -24,6 +24,6 @@ class UserPreference : Preference {
     }
 
     override fun getSummary(): CharSequence {
-        return UAirship.shared().inbox.user.id ?: context.getString(R.string.ua_none)
+        return MessageCenter.shared().inbox.user.id ?: context.getString(R.string.ua_none)
     }
 }

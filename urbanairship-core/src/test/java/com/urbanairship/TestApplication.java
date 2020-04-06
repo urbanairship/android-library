@@ -16,12 +16,10 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.PlatformUtils;
 
 import org.robolectric.Robolectric;
@@ -71,14 +69,12 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
 
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.messageCenter = new MessageCenter(this, preferenceDataStore);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, new TestActivityMonitor());
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
@@ -160,14 +156,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setLocationManager(UALocationManager locationManager) {
         UAirship.shared().locationManager = locationManager;
-    }
-
-    public void setInbox(RichPushInbox inbox) {
-        UAirship.shared().inbox = inbox;
-    }
-
-    public void setMessageCenter(MessageCenter messageCenter) {
-        UAirship.sharedAirship.messageCenter = messageCenter;
     }
 
     public void setAutomation(Automation automation) {

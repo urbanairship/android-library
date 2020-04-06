@@ -5,7 +5,6 @@ package com.urbanairship.messagecenter;
 import android.os.Bundle;
 import android.webkit.WebView;
 
-import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.javascript.JavaScriptEnvironment;
@@ -71,7 +70,7 @@ public class MessageWebViewClient extends AirshipWebViewClient {
                     .addGetter("getMessageId", (message != null) ? message.getMessageId() : null)
                     .addGetter("getMessageTitle", (message != null) ? message.getTitle() : null)
                     .addGetter("getMessageSentDate", (message != null) ? DATE_FORMATTER.format(message.getSentDate()) : null)
-                    .addGetter("getUserId", UAirship.shared().getInbox().getUser().getId());
+                    .addGetter("getUserId", MessageCenter.shared().getUser().getId());
     }
 
     /**
@@ -84,7 +83,7 @@ public class MessageWebViewClient extends AirshipWebViewClient {
     @MainThread
     @Nullable
     private RichPushMessage getMessage(@NonNull WebView webView) {
-        return UAirship.shared().getInbox().getMessageByUrl(webView.getUrl());
+        return MessageCenter.shared().getInbox().getMessageByUrl(webView.getUrl());
     }
 
 }

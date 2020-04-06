@@ -5,13 +5,14 @@ package com.urbanairship.messagecenter;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.view.MenuInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatDelegate;
-import android.view.MenuInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 /**
  * Wrapper for {@link AppCompatDelegate}.

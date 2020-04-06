@@ -5,11 +5,6 @@ package com.urbanairship.messagecenter;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.CallSuper;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,13 +15,18 @@ import android.widget.TextView;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebChromeClient;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 /**
  * Fragment that displays a {@link RichPushMessage}.
@@ -350,14 +350,14 @@ public class MessageFragment extends Fragment {
         showProgress();
         error = null;
 
-        message = UAirship.shared().getInbox().getMessage(getMessageId());
+        message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
         if (message == null) {
             Logger.debug("MessageFragment - Fetching messages.");
-            fetchMessageRequest = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+            fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
                 @Override
                 public void onFinished(boolean success) {
-                    message = UAirship.shared().getInbox().getMessage(getMessageId());
+                    message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
                     if (!success) {
                         showErrorPage(ERROR_FETCHING_MESSAGES);

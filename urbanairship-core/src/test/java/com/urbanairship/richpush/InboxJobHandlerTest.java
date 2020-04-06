@@ -2,10 +2,9 @@
 
 package com.urbanairship.richpush;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -14,7 +13,6 @@ import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
@@ -49,18 +49,20 @@ public class InboxJobHandlerTest extends BaseTestCase {
     private RichPushUser user;
     private PreferenceDataStore dataStore;
     private TestUserListener userListener;
+    private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setup() {
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+
         userListener = new TestUserListener();
-        user = UAirship.shared().getInbox().getUser();
+        user = new RichPushUser(dataStore);
         user.addListener(userListener);
 
         inbox = mock(RichPushInbox.class);
         when(inbox.getUser()).thenReturn(user);
-        TestApplication.getApplication().setInbox(inbox);
 
-        dataStore = TestApplication.getApplication().preferenceDataStore;
         requests = new ArrayList<>();
         responses = new HashMap<>();
 
@@ -86,8 +88,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Clear any user or password
         user.setUser(null, null);
 
-        jobHandler = new InboxJobHandler(UAirship.shared(),
-                TestApplication.getApplication().preferenceDataStore,
+        jobHandler = new InboxJobHandler(inbox, user, mockChannel,
+                runtimeConfig, TestApplication.getApplication().preferenceDataStore,
                 requestFactory, mock(RichPushResolver.class));
     }
 
@@ -352,7 +354,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testCreateUserWithAmazonChannel() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
@@ -466,7 +468,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testUpdateUserAmazon() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a user

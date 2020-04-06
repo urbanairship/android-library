@@ -7,14 +7,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
-import androidx.annotation.CallSuper;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +17,21 @@ import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 /**
  * Fragment that displays the Airship Message Center.
@@ -90,7 +90,7 @@ public class MessageListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.richPushInbox = UAirship.shared().getInbox();
+        this.richPushInbox = MessageCenter.shared().getInbox();
         updateAdapterMessages();
     }
 
@@ -124,7 +124,7 @@ public class MessageListFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 RichPushMessage message = getMessage(position);
                 if (message != null) {
-                    UAirship.shared().getMessageCenter().showMessageCenter(message.getMessageId());
+                    MessageCenter.shared().showMessageCenter(message.getMessageId());
                 }
             }
         });

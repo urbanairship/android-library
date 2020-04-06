@@ -50,7 +50,7 @@ public class RichPushUserTest extends BaseTestCase {
     @Test
     public void testIsCreatedTrue() {
         user.setUser(fakeUserId, fakeToken);
-        assertTrue("Should return true.", RichPushUser.isCreated());
+        assertTrue("Should return true.", user.isUserCreated());
     }
 
     /**
@@ -60,7 +60,7 @@ public class RichPushUserTest extends BaseTestCase {
     public void testIsCreatedFalse() {
         // Clear any user or user token
         user.setUser(null, null);
-        assertFalse("Should return false.", RichPushUser.isCreated());
+        assertFalse("Should return false.", user.isUserCreated());
     }
 
     /**
@@ -69,7 +69,7 @@ public class RichPushUserTest extends BaseTestCase {
     @Test
     public void testIsCreatedFalseNoUserToken() {
         user.setUser(fakeUserId, null);
-        assertFalse("Should return false.", RichPushUser.isCreated());
+        assertFalse("Should return false.", user.isUserCreated());
     }
 
     /**

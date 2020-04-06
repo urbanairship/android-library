@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.channel.AirshipChannel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,10 +26,12 @@ public class MessageCenterTest extends BaseTestCase {
 
     private MessageCenter messageCenter;
     private ShadowApplication shadowApplication;
+    private AirshipChannel channel;
 
     @Before
     public void setup() {
-        this.messageCenter = new MessageCenter(getApplication(), getApplication().preferenceDataStore);
+        channel = mock(AirshipChannel.class);
+        this.messageCenter = new MessageCenter(getApplication(), getApplication().preferenceDataStore, channel);
         shadowApplication = shadowOf(getApplication());
     }
 

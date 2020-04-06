@@ -31,15 +31,14 @@ import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.modules.AccengageModuleLoader;
-import com.urbanairship.modules.AccengageModuleLoaderFactory;
 import com.urbanairship.modules.AccengageNotificationHandler;
+import com.urbanairship.modules.ModuleLoader;
+import com.urbanairship.modules.ModuleLoaders;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAStringUtil;
 
@@ -67,8 +66,6 @@ public class UAirship {
             "com.urbanairship.aaid.AdvertisingIdTracker",
             "com.urbanairship.debug.DebugManager"
     };
-
-    private static final String ACCENGAGE_MODULE_LOADER_FACTORY = "com.urbanairship.accengage.AccengageModuleLoaderFactoryImpl";
 
     /**
      * Broadcast that is sent when UAirship is finished taking off.
@@ -136,7 +133,6 @@ public class UAirship {
     PreferenceDataStore preferenceDataStore;
     PushProvider pushProvider;
     PushManager pushManager;
-    RichPushInbox inbox;
     AirshipChannel channel;
     UALocationManager locationManager;
     Whitelist whitelist;
@@ -145,7 +141,6 @@ public class UAirship {
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
-    MessageCenter messageCenter;
     NamedUser namedUser;
     Automation automation;
     ImageLoader imageLoader;
@@ -716,9 +711,6 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
-        this.inbox = new RichPushInbox(application, preferenceDataStore, channel);
-        components.add(this.inbox);
-
         this.locationManager = new UALocationManager(application, preferenceDataStore, channel, analytics);
         components.add(this.locationManager);
 
@@ -730,9 +722,6 @@ public class UAirship {
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
-
-        this.messageCenter = new MessageCenter(application, preferenceDataStore);
-        components.add(this.messageCenter);
 
         this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, GlobalActivityMonitor.shared(application));
         components.add(this.automation);
@@ -757,10 +746,18 @@ public class UAirship {
             }
         }
 
-        AccengageModuleLoader accengageModuleLoader = createAccengageModuleLoader(application, preferenceDataStore, channel, pushManager, analytics);
+        // Accengage
+        AccengageModuleLoader accengageModuleLoader = ModuleLoaders.accengageLoader(application,
+                preferenceDataStore, channel, pushManager, analytics);
         if (accengageModuleLoader != null) {
             components.addAll(accengageModuleLoader.getComponents());
             this.accengageNotificationHandler = accengageModuleLoader.getAccengageNotificationHandler();
+        }
+
+        // Message Center
+        ModuleLoader messageCenterLoader = ModuleLoaders.messageCenterLoader(application, preferenceDataStore, channel);
+        if (messageCenterLoader != null) {
+            components.addAll(messageCenterLoader.getComponents());
         }
 
         for (AirshipComponent component : components) {
@@ -836,16 +833,6 @@ public class UAirship {
     @NonNull
     public AirshipChannel getChannel() {
         return channel;
-    }
-
-    /**
-     * Returns the {@link com.urbanairship.richpush.RichPushInbox} instance.
-     *
-     * @return The {@link com.urbanairship.richpush.RichPushInbox} instance.
-     */
-    @NonNull
-    public RichPushInbox getInbox() {
-        return inbox;
     }
 
     /**
@@ -927,16 +914,6 @@ public class UAirship {
     @NonNull
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
-    }
-
-    /**
-     * The default Message Center.
-     *
-     * @return The default message center.
-     */
-    @NonNull
-    public MessageCenter getMessageCenter() {
-        return messageCenter;
     }
 
     /**
@@ -1147,26 +1124,6 @@ public class UAirship {
             Logger.error(e, "Unable to create component %s", className);
         } catch (ClassNotFoundException e) {
             return null;
-        }
-
-        return null;
-    }
-
-    @Nullable
-    private AccengageModuleLoader createAccengageModuleLoader(Context context, PreferenceDataStore preferenceDataStore,
-                                                              AirshipChannel channel, PushManager pushManager, Analytics analytics) {
-        try {
-            Class clazz = Class.forName(ACCENGAGE_MODULE_LOADER_FACTORY);
-            Object object = clazz.newInstance();
-
-            if (object instanceof AccengageModuleLoaderFactory) {
-                AccengageModuleLoaderFactory factory = (AccengageModuleLoaderFactory) object;
-                return factory.build(context, preferenceDataStore, channel, pushManager, analytics);
-            }
-        } catch (ClassNotFoundException e) {
-            return null;
-        } catch (Exception e) {
-            Logger.error(e, "Unable to create loader %s", ACCENGAGE_MODULE_LOADER_FACTORY);
         }
 
         return null;

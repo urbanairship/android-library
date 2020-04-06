@@ -11,7 +11,6 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.json.JSONException;
@@ -36,7 +35,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
     @Action.Situation
     int[] acceptedSituations;
     Analytics analytics;
-    RichPushMessage message;
 
     @Before
     public void setup() {
@@ -54,13 +52,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         analytics = mock(Analytics.class);
         TestApplication.getApplication().setAnalytics(analytics);
-
-        RichPushInbox richPushInbox = mock(RichPushInbox.class);
-        message = mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("message id");
-        when(richPushInbox.getMessage("message id")).thenReturn(message);
-
-        TestApplication.getApplication().setInbox(richPushInbox);
     }
 
     /**
@@ -230,7 +221,6 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
-        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 

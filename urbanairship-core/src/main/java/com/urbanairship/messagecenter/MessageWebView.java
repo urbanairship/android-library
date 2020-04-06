@@ -5,7 +5,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.richpush.RichPushUser;
 import com.urbanairship.webkit.AirshipWebView;
@@ -78,7 +77,7 @@ public class MessageWebView extends AirshipWebView {
             return;
         }
 
-        RichPushUser user = UAirship.shared().getInbox().getUser();
+        RichPushUser user = MessageCenter.shared().getUser();
 
         // Send authorization in the headers if the web view supports it
         HashMap<String, String> headers = new HashMap<>();

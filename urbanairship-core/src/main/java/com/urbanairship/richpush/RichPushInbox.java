@@ -5,13 +5,7 @@ package com.urbanairship.richpush;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
-import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -43,12 +37,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 /**
  * The RichPushInbox singleton provides access to the device's local inbox data.
  * Modifications (e.g., deletions or mark read) will be sent to the Airship
  * server the next time the inbox is synchronized.
  */
-public class RichPushInbox extends AirshipComponent {
+public class RichPushInbox {
 
     @NonNull
     public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
@@ -98,31 +98,6 @@ public class RichPushInbox extends AirshipComponent {
 
     }
 
-    /**
-     * Intent action to view the rich push inbox.
-     *
-     * @deprecated Use {@link MessageCenter#VIEW_MESSAGE_CENTER_INTENT_ACTION}.
-     */
-    @Deprecated
-    @NonNull
-    public static final String VIEW_INBOX_INTENT_ACTION = MessageCenter.VIEW_MESSAGE_CENTER_INTENT_ACTION;
-
-    /**
-     * Intent action to view a rich push message.
-     *
-     * @deprecated Use {@link MessageCenter#VIEW_MESSAGE_CENTER_INTENT_ACTION}.
-     */
-    @Deprecated
-    public static final String VIEW_MESSAGE_INTENT_ACTION = MessageCenter.VIEW_MESSAGE_INTENT_ACTION;
-
-    /**
-     * Scheme used for @{code message:<MESSAGE_ID>} when requesting to view a message with
-     * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE}.
-     * @deprecated Use {@link MessageCenter#MESSAGE_DATA_SCHEME}.
-     */
-    @Deprecated
-    public static final String MESSAGE_DATA_SCHEME = MessageCenter.MESSAGE_DATA_SCHEME;
-
     private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
 
     private final static Object inboxLock = new Object();
@@ -170,8 +145,6 @@ public class RichPushInbox extends AirshipComponent {
     RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
                   @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor,
                   @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
-        super(context, dataStore);
-
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
@@ -184,7 +157,7 @@ public class RichPushInbox extends AirshipComponent {
             public void onForeground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                                         .setAirshipComponent(RichPushInbox.class)
+                                         .setAirshipComponent(MessageCenter.class)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -195,7 +168,7 @@ public class RichPushInbox extends AirshipComponent {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
                                          .setId(JobInfo.RICH_PUSH_SYNC_MESSAGE_STATE)
-                                         .setAirshipComponent(RichPushInbox.class)
+                                         .setAirshipComponent(MessageCenter.class)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -204,10 +177,11 @@ public class RichPushInbox extends AirshipComponent {
         this.activityMonitor = activityMonitor;
     }
 
-    @Override
-    protected void init() {
-        super.init();
-
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void init() {
         if (UAStringUtil.isEmpty(user.getId())) {
             final RichPushUser.Listener userListener = new RichPushUser.Listener() {
                 @Override
@@ -241,6 +215,7 @@ public class RichPushInbox extends AirshipComponent {
         if (user.shouldUpdate()) {
             dispatchUpdateUserJob(true);
         }
+
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
             @NonNull
             @Override
@@ -253,20 +228,23 @@ public class RichPushInbox extends AirshipComponent {
     /**
      * @hide
      */
-    @Override
     @WorkerThread
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (inboxJobHandler == null) {
-            inboxJobHandler = new InboxJobHandler(context, airship, dataStore);
+            inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
+                    airship.getRuntimeConfig(), dataStore);
         }
 
         return inboxJobHandler.performJob(jobInfo);
     }
 
-    @Override
-    protected void tearDown() {
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void tearDown() {
         activityMonitor.removeApplicationListener(listener);
     }
 
@@ -278,27 +256,6 @@ public class RichPushInbox extends AirshipComponent {
     @NonNull
     public RichPushUser getUser() {
         return user;
-    }
-
-    /**
-     * Starts the message center activity. This method calls through to {@link MessageCenter#showMessageCenter()}.
-     * @deprecated Use {@link MessageCenter#showMessageCenter()} instead.
-     */
-    @Deprecated
-    public void startInboxActivity() {
-        UAirship.shared().getMessageCenter().showMessageCenter();
-    }
-
-    /**
-     * Starts the message center activity to display a specific message Id. This method calls through to
-     * @link MessageCenter#showMessageCenter(String)}.
-     *
-     * @param messageId An ID of a {@link RichPushMessage} to display.
-     * @deprecated Use {@link MessageCenter#showMessageCenter(String)} instead.
-     */
-    @Deprecated
-    public void startMessageActivity(@NonNull String messageId) {
-        UAirship.shared().getMessageCenter().showMessageCenter(messageId);
     }
 
     /**
@@ -377,7 +334,7 @@ public class RichPushInbox extends AirshipComponent {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                          .setId(JobInfo.RICH_PUSH_UPDATE_MESSAGES)
-                                         .setAirshipComponent(RichPushInbox.class)
+                                         .setAirshipComponent(MessageCenter.class)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -697,7 +654,6 @@ public class RichPushInbox extends AirshipComponent {
             // Save the unreadMessageIds
             Set<String> previousUnreadMessageIds = new HashSet<>(unreadMessages.keySet());
             Set<String> previousReadMessageIds = new HashSet<>(readMessages.keySet());
-
             Set<String> previousDeletedMessageIds = new HashSet<>(deletedMessageIds);
 
             // Clear the current messages
@@ -774,7 +730,7 @@ public class RichPushInbox extends AirshipComponent {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .setId(JobInfo.RICH_PUSH_UPDATE_USER)
-                                 .setAirshipComponent(RichPushInbox.class)
+                                 .setAirshipComponent(MessageCenter.class)
                                  .setExtras(JsonMap.newBuilder()
                                                    .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
                                                    .build())
@@ -800,7 +756,7 @@ public class RichPushInbox extends AirshipComponent {
         private final FetchMessagesCallback callback;
         boolean result;
 
-        public PendingFetchMessagesCallback(FetchMessagesCallback callback, Looper looper) {
+        PendingFetchMessagesCallback(FetchMessagesCallback callback, Looper looper) {
             super(looper);
             this.callback = callback;
         }

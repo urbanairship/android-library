@@ -7,10 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -23,6 +19,7 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
@@ -34,6 +31,11 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.Map;
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
@@ -135,9 +137,9 @@ class IncomingPushRunnable implements Runnable {
         }
 
         // Refresh inbox
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
+        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && MessageCenter.shared().getInbox().getMessage(message.getRichPushMessageId()) == null) {
             Logger.debug("PushJobHandler - Received a Rich Push.");
-            airship.getInbox().fetchMessages();
+            MessageCenter.shared().getInbox().fetchMessages();
         }
 
         // Run the push actions

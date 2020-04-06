@@ -3,18 +3,18 @@
 package com.urbanairship.sample.inbox;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.UAirship;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.messagecenter.MessageFragment;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.sample.R;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
@@ -39,7 +39,7 @@ public class InboxMessageFragment extends MessageFragment {
 
         NavController navController =  Navigation.findNavController(view);
 
-        RichPushMessage message = UAirship.shared().getInbox().getMessage(getMessageId());
+        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
         NavDestination navDestination = navController.getCurrentDestination();
         if (navDestination != null) {

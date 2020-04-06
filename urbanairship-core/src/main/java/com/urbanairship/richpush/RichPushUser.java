@@ -2,18 +2,19 @@
 
 package com.urbanairship.richpush;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * The Airship rich push user.
@@ -115,10 +116,11 @@ public class RichPushUser {
      * @return <code>true</code> if the user has an id, <code>false</code> otherwise.
      */
     public static boolean isCreated() {
-        UAirship airship = UAirship.shared();
-        String userId = airship.getInbox().getUser().getId();
-        String userToken = airship.getInbox().getUser().getPassword();
-        return (!UAStringUtil.isEmpty(userId) && !UAStringUtil.isEmpty(userToken));
+        return MessageCenter.shared().getUser().isUserCreated();
+    }
+
+    boolean isUserCreated() {
+        return (!UAStringUtil.isEmpty(getId()) && !UAStringUtil.isEmpty(getPassword()));
     }
 
     /**

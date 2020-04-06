@@ -5,17 +5,22 @@ package com.urbanairship.messagecenter;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushUser;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 /**
- * Primary interface for configuring the default
- * Message Center implementation.
+ * Airship Message Center.
  */
 public class MessageCenter extends AirshipComponent {
 
@@ -38,6 +43,8 @@ public class MessageCenter extends AirshipComponent {
     @NonNull
     public static final String MESSAGE_DATA_SCHEME = "message";
 
+    private static volatile MessageCenter sharedInstance;
+
     /**
      * Listener for showing the message center. If set, the listener
      * will be called to show the message center instead of the default behavior. For more
@@ -55,8 +62,27 @@ public class MessageCenter extends AirshipComponent {
 
     }
 
+    private final RichPushInbox inbox;
     private RichPushInbox.Predicate predicate;
     private OnShowMessageCenterListener onShowMessageCenterListener;
+
+    /**
+     * Gets the shared Accengage instance.
+     *
+     * @return The shared Accengage instance.
+     */
+    @NonNull
+    public static MessageCenter shared() {
+        if (sharedInstance == null) {
+            sharedInstance = (MessageCenter) UAirship.shared().getComponent(MessageCenter.class);
+        }
+
+        if (sharedInstance == null) {
+            throw new IllegalStateException("Takeoff must be called");
+        }
+
+        return sharedInstance;
+    }
 
     /**
      * Default constructor.
@@ -66,8 +92,59 @@ public class MessageCenter extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public MessageCenter(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
+    public MessageCenter(@NonNull Context context,
+                         @NonNull PreferenceDataStore dataStore,
+                         @NonNull AirshipChannel channel) {
         super(context, dataStore);
+        this.inbox = new RichPushInbox(context, dataStore, channel);
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected void init() {
+        super.init();
+        inbox.init();
+    }
+
+    /**
+     * @hide
+     */
+    @WorkerThread
+    @JobInfo.JobResult
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+        return inbox.onPerformJob(airship, jobInfo);
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void tearDown() {
+        inbox.tearDown();
+    }
+
+    /**
+     * Returns the inbox.
+     *
+     * @return The inbox.
+     */
+    @NonNull
+    public RichPushInbox getInbox() {
+        return inbox;
+    }
+
+    /**
+     * Returns the inbox user.
+     *
+     * @return The inbox user.
+     */
+    @NonNull
+    public RichPushUser getUser() {
+        return inbox.getUser();
     }
 
     /**

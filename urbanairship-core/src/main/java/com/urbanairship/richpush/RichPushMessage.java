@@ -3,18 +3,19 @@
 package com.urbanairship.richpush;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * The primary data structure for Rich Push messages.
@@ -258,7 +259,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = false;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getInbox().markMessagesRead(set);
+            MessageCenter.shared().getInbox().markMessagesRead(set);
         }
     }
 
@@ -270,7 +271,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getInbox().markMessagesUnread(set);
+            MessageCenter.shared().getInbox().markMessagesUnread(set);
         }
     }
 
@@ -282,7 +283,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             deleted = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getInbox().deleteMessages(set);
+            MessageCenter.shared().getInbox().deleteMessages(set);
         }
     }
 

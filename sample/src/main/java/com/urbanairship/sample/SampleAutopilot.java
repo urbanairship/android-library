@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
+import com.urbanairship.messagecenter.MessageCenter;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Autopilot that enables user notifications on first run.
@@ -34,7 +36,7 @@ public class SampleAutopilot extends Autopilot {
             airship.getPushManager().setUserNotificationsEnabled(true);
         }
 
-        airship.getMessageCenter().setOnShowMessageCenterListener(messageId -> {
+        MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken
             // with multi navigation host fragments
             Uri uri;

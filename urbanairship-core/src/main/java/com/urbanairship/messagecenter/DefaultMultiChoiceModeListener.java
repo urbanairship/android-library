@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import androidx.annotation.NonNull;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -10,11 +9,12 @@ import android.view.MenuItem;
 import android.widget.AbsListView;
 
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 /**
  * The default {@link android.widget.AbsListView.MultiChoiceModeListener} for the {@link MessageListFragment}
@@ -107,11 +107,11 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
         }
 
         if (item.getItemId() == R.id.mark_read) {
-            UAirship.shared().getInbox().markMessagesRead(getCheckedMessageIds());
+            MessageCenter.shared().getInbox().markMessagesRead(getCheckedMessageIds());
             mode.finish();
 
         } else if (item.getItemId() == R.id.delete) {
-            UAirship.shared().getInbox().deleteMessages(getCheckedMessageIds());
+            MessageCenter.shared().getInbox().deleteMessages(getCheckedMessageIds());
             mode.finish();
 
         } else if (item.getItemId() == R.id.select_all) {

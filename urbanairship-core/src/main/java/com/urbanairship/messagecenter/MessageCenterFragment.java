@@ -9,11 +9,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.CallSuper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.core.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,10 +25,16 @@ import com.urbanairship.util.ViewUtils;
 
 import java.util.List;
 
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.fragment.app.Fragment;
+
 /**
  * The Airship Message Center. The message list will be displayed using the {@link MessageListFragment},
- * and messages will be displayed either in a split view using {@link MessageFragment} or by
- * triggering {@link RichPushInbox#startMessageActivity(String)}.
+ * and messages will be displayed either in a split view using {@link MessageFragment} or by starting
+ * an activity with the action {@link MessageCenter#VIEW_MESSAGE_INTENT_ACTION}.
  */
 public class MessageCenterFragment extends Fragment {
 
@@ -232,7 +233,7 @@ public class MessageCenterFragment extends Fragment {
         super.onResume();
 
         if (isTwoPane) {
-            UAirship.shared().getInbox().addListener(inboxListener);
+            MessageCenter.shared().getInbox().addListener(inboxListener);
         }
 
         updateCurrentMessage();
@@ -246,7 +247,7 @@ public class MessageCenterFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        UAirship.shared().getInbox().removeListener(inboxListener);
+        MessageCenter.shared().getInbox().removeListener(inboxListener);
     }
 
     /**
@@ -256,7 +257,7 @@ public class MessageCenterFragment extends Fragment {
      */
     @NonNull
     private List<RichPushMessage> getMessages() {
-        return UAirship.shared().getInbox().getMessages(predicate);
+        return MessageCenter.shared().getInbox().getMessages(predicate);
     }
 
     /**
@@ -282,7 +283,7 @@ public class MessageCenterFragment extends Fragment {
             return;
         }
 
-        RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
+        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(messageId);
         if (message == null) {
             currentMessagePosition = -1;
         } else {
@@ -339,7 +340,7 @@ public class MessageCenterFragment extends Fragment {
     }
 
     private void updateCurrentMessage() {
-        RichPushMessage message = UAirship.shared().getInbox().getMessage(currentMessageId);
+        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(currentMessageId);
         List<RichPushMessage> messages = getMessages();
 
         if (isTwoPane && currentMessagePosition != -1 && !messages.contains(message)) {

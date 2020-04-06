@@ -2,19 +2,20 @@ package com.urbanairship.sample;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 
 /**
@@ -104,14 +105,14 @@ public class MainActivity extends AppCompatActivity {
             PlayServicesUtils.handleAnyPlayServicesError(this);
         }
 
-        UAirship.shared().getInbox().addListener(inboxListener);
+        MessageCenter.shared().getInbox().addListener(inboxListener);
         showMessageCenterIndicator();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        UAirship.shared().getInbox().removeListener(inboxListener);
+        MessageCenter.shared().getInbox().removeListener(inboxListener);
     }
 
     @Override
@@ -137,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
      * Shows a Message Center indicator.
      */
     private void showMessageCenterIndicator() {
-        List<RichPushMessage> unreadMessage = UAirship.shared().getInbox().getUnreadMessages();
+        List<RichPushMessage> unreadMessage = MessageCenter.shared().getInbox().getUnreadMessages();
 
         // Skip showing the indicator if we have no unread messages or no new messages since the last display
         if (unreadMessage.isEmpty() || messageCenterLastSentDate >= unreadMessage.get(0).getSentDateMS()) {
@@ -164,5 +165,4 @@ public class MainActivity extends AppCompatActivity {
 
         messageCenterSnackbar.show();
     }
-
 }

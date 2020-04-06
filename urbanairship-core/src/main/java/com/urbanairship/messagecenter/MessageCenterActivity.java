@@ -43,7 +43,7 @@ public class MessageCenterActivity extends ThemedActivity {
         }
 
         // Apply the default message center predicate
-        messageCenterFragment.setPredicate(UAirship.shared().getMessageCenter().getPredicate());
+        messageCenterFragment.setPredicate(MessageCenter.shared().getPredicate());
     }
 
 

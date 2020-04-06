@@ -5,12 +5,13 @@ package com.urbanairship.actions;
 import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.Callable;
 
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -24,11 +25,13 @@ public class MessageCenterActionTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        action = new MessageCenterAction();
-
         mockMessageCenter = mock(MessageCenter.class);
-
-        TestApplication.getApplication().setMessageCenter(mockMessageCenter);
+        action = new MessageCenterAction(new Callable<MessageCenter>() {
+            @Override
+            public MessageCenter call() throws Exception {
+                return mockMessageCenter;
+            }
+        });
     }
 
     /**
