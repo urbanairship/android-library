@@ -25,6 +25,9 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.push.PushListener;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
@@ -80,12 +83,21 @@ public class RemoteData extends AirshipComponent {
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
 
+    /**
+     * The Push key indicating that a remote data update is required.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @VisibleForTesting
+    static final String REMOTE_DATA_UPDATE_KEY = "com.urbanairship.remote-data.update";
+
     private final JobDispatcher jobDispatcher;
     private final LocaleManager localeManager;
     private RemoteDataJobHandler jobHandler;
     private final PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
+    private final PushManager pushManager;
+    private final PushListener pushListener;
 
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
@@ -113,11 +125,13 @@ public class RemoteData extends AirshipComponent {
      * @param preferenceDataStore The preference data store
      * @param configOptions The config options.
      * @param activityMonitor The activity monitor.
+     * @param pushManager The push manager.
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                      @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor) {
+                      @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
+                      @NonNull PushManager pushManager) {
         this(context, preferenceDataStore, configOptions, activityMonitor,
-                JobDispatcher.shared(context), LocaleManager.shared(context));
+                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager);
     }
 
     /**
@@ -128,11 +142,12 @@ public class RemoteData extends AirshipComponent {
      * @param activityMonitor The activity monitor.
      * @param dispatcher The job dispatcher.
      * @param localeManager The locale manager.
+     * @param pushManager The push manager.
      */
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager) {
+               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.appKey, DATABASE_NAME);
@@ -141,6 +156,17 @@ public class RemoteData extends AirshipComponent {
         this.payloadUpdates = Subject.create();
         this.activityMonitor = activityMonitor;
         this.localeManager = localeManager;
+        this.pushManager = pushManager;
+
+        this.pushListener = new PushListener() {
+            @WorkerThread
+            @Override
+            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+                if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
+                    refresh();
+                }
+            }
+        };
     }
 
     @Override
@@ -162,10 +188,13 @@ public class RemoteData extends AirshipComponent {
         if (shouldRefresh()) {
             refresh();
         }
+
+        pushManager.addPushListener(pushListener);
     }
 
     @Override
     protected void tearDown() {
+        pushManager.removePushListener(pushListener);
         activityMonitor.removeApplicationListener(applicationListener);
         backgroundThread.quit();
     }

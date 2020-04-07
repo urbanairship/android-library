@@ -474,29 +474,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertEquals(notification.ledARGB, channelCompat.getLightColor());
     }
 
-    /**
-     * Test the legacy in-app message manager is notified of the push.
-     */
-    @Test
-    public void testNotifyLegacyIamManager() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
-
-        PushMessage push = new PushMessage(pushBundle);
-        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
-                .setProviderClass(testPushProvider.getClass().toString())
-                .setMessage(push)
-                .setNotificationManager(notificationManager)
-                .setLongRunning(true)
-                .build();
-
-        pushRunnable.run();
-
-        verify(legacyInAppMessageManager).onPushReceived(push);
-    }
-
     private Notification createNotification() {
         return new NotificationCompat.Builder(RuntimeEnvironment.application, "some-channel")
                 .setContentTitle("Test NotificationBuilder Title")

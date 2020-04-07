@@ -7,10 +7,17 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.push.PushListener;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.shadows.ShadowApplication;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -27,12 +34,22 @@ public class MessageCenterTest extends BaseTestCase {
     private MessageCenter messageCenter;
     private ShadowApplication shadowApplication;
     private AirshipChannel channel;
+    private PushManager pushManager;
+    private Inbox inbox;
+    private PushListener pushListener;
 
     @Before
     public void setup() {
         channel = mock(AirshipChannel.class);
-        this.messageCenter = new MessageCenter(getApplication(), getApplication().preferenceDataStore, channel);
+        inbox = mock(Inbox.class);
+        pushManager = mock(PushManager.class);
+        this.messageCenter = new MessageCenter(getApplication(), getApplication().preferenceDataStore, inbox, pushManager);
         shadowApplication = shadowOf(getApplication());
+
+        ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
+        messageCenter.init();
+        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        pushListener = pushListenerArgumentCaptor.getValue();
     }
 
     @Test
@@ -127,4 +144,16 @@ public class MessageCenterTest extends BaseTestCase {
         assertNull(MessageCenter.parseMessageId(intent));
     }
 
+    @Test
+    public void testPushListener() {
+        Map<String, String> pushData = new HashMap<>();
+        pushData.put(PushMessage.EXTRA_RICH_PUSH_ID, "messageID");
+        PushMessage message = new PushMessage(pushData);
+
+        when(inbox.getMessage("messageID")).thenReturn(null);
+
+        pushListener.onPushReceived(message, true);
+
+        verify(inbox).fetchMessages();
+    }
 }

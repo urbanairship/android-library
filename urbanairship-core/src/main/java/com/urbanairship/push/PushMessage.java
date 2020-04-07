@@ -315,16 +315,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Checks if the message is signaling remote data refresh.
-     *
-     * @return <code>true</code> if the message is signalling remote data refresh, otherwise
-     * <code>false</code>.
-     */
-    boolean isRemoteData() {
-        return data.containsKey("com.urbanairship.remote-data.update");
-    }
-
-    /**
      * Gets an extra from the push bundle.
      *
      * @param key The extra key.

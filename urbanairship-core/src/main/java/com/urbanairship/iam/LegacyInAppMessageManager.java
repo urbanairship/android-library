@@ -3,9 +3,12 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.graphics.Color;
 import androidx.annotation.ColorInt;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
@@ -18,7 +21,12 @@ import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.push.InternalNotificationListener;
+import com.urbanairship.push.NotificationActionButtonInfo;
+import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.NotificationProxyReceiver;
+import com.urbanairship.push.PushListener;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -28,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Legacy in-app message manager.
  */
-public class LegacyInAppMessageManager extends AirshipComponent {
+public class LegacyInAppMessageManager extends AirshipComponent  {
 
     // Preference data store keys
     private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
@@ -59,6 +67,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     private final InAppMessageManager inAppMessageManager;
     private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
+    private final PushManager pushManager;
     private MessageBuilderExtender messageBuilderExtender;
     private ScheduleInfoBuilderExtender scheduleBuilderExtender;
     private boolean displayAsapEnabled = true;
@@ -107,11 +116,13 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public LegacyInAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull InAppMessageManager inAppMessageManager, @NonNull Analytics analytics) {
+    public LegacyInAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull InAppMessageManager inAppMessageManager,
+                                     @NonNull Analytics analytics, @NonNull PushManager push) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.inAppMessageManager = inAppMessageManager;
         this.analytics = analytics;
+        this.pushManager = push;
     }
 
     @Override
@@ -122,6 +133,78 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         preferenceDataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
         preferenceDataStore.remove(AUTO_DISPLAY_ENABLED_KEY);
         preferenceDataStore.remove(LAST_DISPLAYED_ID_KEY);
+
+        pushManager.addPushListener(new PushListener() {
+            @Override
+            @WorkerThread
+            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+                LegacyInAppMessage legacyInAppMessage = null;
+
+                try {
+                    legacyInAppMessage = LegacyInAppMessage.fromPush(message);
+                } catch (IllegalArgumentException | JsonException e) {
+                    Logger.error(e, "LegacyInAppMessageManager - Unable to create in-app message from push payload");
+                }
+
+                if (legacyInAppMessage == null) {
+                    return;
+                }
+
+                InAppMessageScheduleInfo scheduleInfo = createScheduleInfo(UAirship.getApplicationContext(), legacyInAppMessage);
+                if (scheduleInfo == null) {
+                    return;
+                }
+
+                final String messageId = scheduleInfo.getInAppMessage().getId();
+
+                Logger.debug("LegacyInAppMessageManager - Received a Push with an in-app message.");
+
+                final String pendingMessageId = preferenceDataStore.getString(PENDING_MESSAGE_ID, null);
+
+                // Cancel the previous pending message if it's still scheduled
+                if (pendingMessageId != null) {
+                    inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
+                        @Override
+                        public void onResult(@Nullable Boolean result) {
+                            if (result != null && result) {
+                                Logger.debug("LegacyInAppMessageManager - Pending in-app message replaced.");
+                                ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessageReplaced(pendingMessageId, messageId);
+                                analytics.addEvent(resolutionEvent);
+                            }
+                        }
+                    });
+                }
+
+                // Schedule the new one
+                inAppMessageManager.scheduleMessage(scheduleInfo);
+
+                // Store the pending ID
+                preferenceDataStore.put(PENDING_MESSAGE_ID, messageId);
+            }
+        });
+
+        pushManager.addInternalNotificationListener(new InternalNotificationListener() {
+            @Override
+            @MainThread
+            public void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
+                final PushMessage push = notificationInfo.getMessage();
+                if (push.getSendId() == null || !push.containsKey(PushMessage.EXTRA_IN_APP_MESSAGE)) {
+                    return;
+                }
+
+                inAppMessageManager.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
+                    @Override
+                    public void onResult(@Nullable Boolean result) {
+                        if (result != null && result) {
+                            Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
+                            // Direct open event
+                            ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessagePushOpened(push.getSendId());
+                            analytics.addEvent(resolutionEvent);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -170,83 +253,6 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      */
     public boolean getDisplayAsapEnabled() {
         return displayAsapEnabled;
-    }
-
-    /**
-     * Called when a push is received in {@link com.urbanairship.push.IncomingPushRunnable}.
-     *
-     * @param push The push message.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onPushReceived(@NonNull final PushMessage push) {
-        LegacyInAppMessage legacyInAppMessage = null;
-
-        try {
-            legacyInAppMessage = LegacyInAppMessage.fromPush(push);
-        } catch (IllegalArgumentException | JsonException e) {
-            Logger.error(e, "LegacyInAppMessageManager - Unable to create in-app message from push payload");
-        }
-
-        if (legacyInAppMessage == null) {
-            return;
-        }
-
-        InAppMessageScheduleInfo scheduleInfo = createScheduleInfo(UAirship.getApplicationContext(), legacyInAppMessage);
-        if (scheduleInfo == null) {
-            return;
-        }
-
-        final String messageId = scheduleInfo.getInAppMessage().getId();
-
-        Logger.debug("LegacyInAppMessageManager - Received a Push with an in-app message.");
-
-        final String pendingMessageId = preferenceDataStore.getString(PENDING_MESSAGE_ID, null);
-
-        // Cancel the previous pending message if its still scheduled
-        if (pendingMessageId != null) {
-            inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
-                @Override
-                public void onResult(@Nullable Boolean result) {
-                    if (result != null && result) {
-                        Logger.debug("LegacyInAppMessageManager - Pending in-app message replaced.");
-                        ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessageReplaced(pendingMessageId, messageId);
-                        analytics.addEvent(resolutionEvent);
-                    }
-                }
-            });
-        }
-
-        // Schedule the new one
-        inAppMessageManager.scheduleMessage(scheduleInfo);
-
-        // Store the pending ID
-        preferenceDataStore.put(PENDING_MESSAGE_ID, messageId);
-    }
-
-    /**
-     * Called when a push is interacted with in {@link NotificationProxyReceiver}.
-     *
-     * @param push The push message.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onPushResponse(@NonNull final PushMessage push) {
-        if (push.getSendId() == null || !push.containsKey(PushMessage.EXTRA_IN_APP_MESSAGE)) {
-            return;
-        }
-
-        inAppMessageManager.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
-            @Override
-            public void onResult(@Nullable Boolean result) {
-                if (result != null && result) {
-                    Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
-                    // Direct open event
-                    ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessagePushOpened(push.getSendId());
-                    analytics.addEvent(resolutionEvent);
-                }
-            }
-        });
     }
 
     /**
@@ -320,7 +326,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
         // Buttons
         if (legacyMessage.getButtonGroupId() != null) {
-            NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(legacyMessage.getButtonGroupId());
+            NotificationActionButtonGroup group = pushManager.getNotificationActionGroup(legacyMessage.getButtonGroupId());
 
             if (group != null) {
                 for (int i = 0; i < group.getNotificationActionButtons().size(); i++) {

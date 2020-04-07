@@ -8,15 +8,21 @@ import android.net.Uri;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
+import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.push.PushListener;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 /**
@@ -62,8 +68,10 @@ public class MessageCenter extends AirshipComponent {
 
     }
 
+    private final PushManager pushManager;
     private final Inbox inbox;
     private OnShowMessageCenterListener onShowMessageCenterListener;
+    private final PushListener pushListener;
 
     /**
      * Gets the shared Message Center instance.
@@ -80,14 +88,46 @@ public class MessageCenter extends AirshipComponent {
      *
      * @param context The application context.
      * @param dataStore The preference data store.
+     * @param pushManager The push manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public MessageCenter(@NonNull Context context,
                          @NonNull PreferenceDataStore dataStore,
-                         @NonNull AirshipChannel channel) {
+                         @NonNull AirshipChannel channel,
+                         @NonNull PushManager pushManager) {
+        this(context, dataStore, new Inbox(context, dataStore, channel), pushManager);
+    }
+
+    /**
+     * Constructor for testing.
+     *
+     * @param context The application context.
+     * @param dataStore The preference data store.
+     * @param inbox The inbox.
+     * @param pushManager The push manager.
+     * @hide
+     */
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    MessageCenter(@NonNull Context context,
+                  @NonNull PreferenceDataStore dataStore,
+                  @NonNull Inbox inbox,
+                  @NonNull PushManager pushManager) {
         super(context, dataStore);
-        this.inbox = new Inbox(context, dataStore, channel);
+        this.pushManager = pushManager;
+        this.inbox = inbox;
+
+        this.pushListener = new PushListener() {
+            @WorkerThread
+            @Override
+            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+                if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
+                    Logger.debug("MessageCenter - Received a Rich Push.");
+                    getInbox().fetchMessages();
+                }
+            }
+        };
     }
 
     /**
@@ -98,6 +138,8 @@ public class MessageCenter extends AirshipComponent {
     protected void init() {
         super.init();
         inbox.init();
+
+        pushManager.addPushListener(pushListener);
     }
 
     /**
@@ -126,6 +168,7 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void tearDown() {
         inbox.tearDown();
+        pushManager.removePushListener(pushListener);
     }
 
     /**

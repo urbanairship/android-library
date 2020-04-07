@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.ModuleLoader;
+import com.urbanairship.push.PushManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -20,5 +21,6 @@ import androidx.annotation.RestrictTo;
 public interface MessageCenterModuleLoaderFactory {
     ModuleLoader build(@NonNull Context context,
                        @NonNull PreferenceDataStore dataStore,
-                       @NonNull AirshipChannel airshipChannel);
+                       @NonNull AirshipChannel airshipChannel,
+                       @NonNull PushManager pushManager);
 }

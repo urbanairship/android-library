@@ -726,7 +726,7 @@ public class UAirship {
         this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, GlobalActivityMonitor.shared(application));
         components.add(this.automation);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application));
+        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application), pushManager);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
@@ -736,7 +736,7 @@ public class UAirship {
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
-        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, inAppMessageManager, analytics);
+        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, inAppMessageManager, analytics, pushManager);
         components.add(this.legacyInAppMessageManager);
 
         for (String className : OPTIONAL_COMPONENTS) {
@@ -755,7 +755,7 @@ public class UAirship {
         }
 
         // Message Center
-        ModuleLoader messageCenterLoader = ModuleLoaders.messageCenterLoader(application, preferenceDataStore, channel);
+        ModuleLoader messageCenterLoader = ModuleLoaders.messageCenterLoader(application, preferenceDataStore, channel, pushManager);
         if (messageCenterLoader != null) {
             components.addAll(messageCenterLoader.getComponents());
         }

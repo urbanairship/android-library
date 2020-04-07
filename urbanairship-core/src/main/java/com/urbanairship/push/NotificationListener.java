@@ -31,7 +31,7 @@ public interface NotificationListener {
     boolean onNotificationOpened(@NonNull NotificationInfo notificationInfo);
 
     /**
-     * Called when a background notification action button is tapped.
+     * Called when a foreground notification action button is tapped.
      *
      * @param notificationInfo The notification info.
      * @return <code>true</code> if the application was launched, otherwise <code>false</code>. If
