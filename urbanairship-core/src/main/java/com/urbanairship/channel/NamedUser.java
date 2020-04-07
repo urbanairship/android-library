@@ -5,6 +5,7 @@ package com.urbanairship.channel;
 import android.content.Context;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -102,6 +103,15 @@ public class NamedUser extends AirshipComponent {
         }
     }
 
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.NAMED_USER;
+    }
     /**
      * @hide
      */

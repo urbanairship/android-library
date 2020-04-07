@@ -202,4 +202,16 @@ public abstract class AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {}
 
+    /**
+     * The component group.
+     *
+     * @return The component group.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.NONE;
+    }
+
 }

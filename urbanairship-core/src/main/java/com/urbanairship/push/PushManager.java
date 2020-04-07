@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Build;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
@@ -319,6 +320,16 @@ public class PushManager extends AirshipComponent {
         notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
 
         dispatchUpdatePushTokenJob();
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.PUSH;
     }
 
     @NonNull

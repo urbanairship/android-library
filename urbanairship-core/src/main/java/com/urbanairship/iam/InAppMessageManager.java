@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.AlarmOperationScheduler;
@@ -307,6 +308,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
             remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
         }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.IN_APP;
     }
 
     /**

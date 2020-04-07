@@ -2,15 +2,18 @@
 
 package com.urbanairship.remoteconfig;
 
+import android.util.SparseArray;
+
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.messagecenter.MessageCenter;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +22,8 @@ import androidx.annotation.Nullable;
  * Used by {@link RemoteConfigManager} to handle mapping modules to airship components.
  */
 class ModuleAdapter {
+
+    private SparseArray<Set<AirshipComponent>> componentGroupMap = null;
 
     /**
      * Enables/disables airship components that map to the module name.
@@ -56,32 +61,56 @@ class ModuleAdapter {
     private Collection<? extends AirshipComponent> findAirshipComponents(@NonNull String module) {
         switch (module) {
             case Modules.LOCATION_MODULE:
-                return Collections.singleton(UAirship.shared().getLocationManager());
+                return getComponentsByGroup(AirshipComponentGroups.LOCATION);
 
             case Modules.ANALYTICS_MODULE:
-                return Collections.singleton(UAirship.shared().getAnalytics());
+                return getComponentsByGroup(AirshipComponentGroups.ANALYTICS);
 
             case Modules.AUTOMATION_MODULE:
-                return Collections.singleton(UAirship.shared().getAutomation());
+                return getComponentsByGroup(AirshipComponentGroups.ACTION_AUTOMATION);
 
             case Modules.IN_APP_MODULE:
-                return Collections.singleton(UAirship.shared().getInAppMessagingManager());
+                return getComponentsByGroup(AirshipComponentGroups.IN_APP);
 
             case Modules.MESSAGE_CENTER:
-                return Arrays.asList(MessageCenter.shared());
+                return getComponentsByGroup(AirshipComponentGroups.MESSAGE_CENTER);
 
             case Modules.PUSH_MODULE:
-                return Collections.singletonList(UAirship.shared().getPushManager());
+                return getComponentsByGroup(AirshipComponentGroups.PUSH);
 
             case Modules.NAMED_USER_MODULE:
-                return Collections.singletonList(UAirship.shared().getNamedUser());
+                return getComponentsByGroup(AirshipComponentGroups.NAMED_USER);
 
             case Modules.CHANNEL_MODULE:
-                return Collections.singletonList(UAirship.shared().getChannel());
+                return getComponentsByGroup(AirshipComponentGroups.CHANNEL);
         }
 
         Logger.verbose("ModuleAdapter - Unable to find module: %s", module);
         return Collections.emptyList();
+    }
+
+    @NonNull
+    private Set<AirshipComponent> getComponentsByGroup(@AirshipComponentGroups.Group int group) {
+        if (componentGroupMap == null) {
+            componentGroupMap = createComponentGroupMap(UAirship.shared().getComponents());
+        }
+
+        return componentGroupMap.get(group, Collections.<AirshipComponent>emptySet());
+    }
+
+    @NonNull
+    private static SparseArray<Set<AirshipComponent>> createComponentGroupMap(@NonNull Collection<AirshipComponent> components) {
+        SparseArray<Set<AirshipComponent>> componentMap = new SparseArray<>();
+        for (AirshipComponent component : components) {
+            Set<AirshipComponent> group = componentMap.get(component.getComponentGroup());
+            if (group == null) {
+                group = new HashSet<>();
+                componentMap.put(component.getComponentGroup(), group);
+            }
+            group.add(component);
+        }
+
+        return componentMap;
     }
 
 }

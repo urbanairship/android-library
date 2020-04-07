@@ -8,6 +8,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -241,6 +242,16 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         return JobInfo.JOB_FINISHED;
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.CHANNEL;
     }
 
     /**

@@ -12,6 +12,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -164,6 +165,16 @@ public class UALocationManager extends AirshipComponent {
                 return createAnalyticsHeaders();
             }
         });
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.LOCATION;
     }
 
     /**

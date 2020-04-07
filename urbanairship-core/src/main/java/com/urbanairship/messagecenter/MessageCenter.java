@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -107,6 +108,16 @@ public class MessageCenter extends AirshipComponent {
     protected void init() {
         super.init();
         inbox.init();
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.MESSAGE_CENTER;
     }
 
     /**

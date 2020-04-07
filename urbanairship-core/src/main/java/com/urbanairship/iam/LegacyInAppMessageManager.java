@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
@@ -121,6 +122,16 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         preferenceDataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
         preferenceDataStore.remove(AUTO_DISPLAY_ENABLED_KEY);
         preferenceDataStore.remove(LAST_DISPLAYED_ID_KEY);
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.IN_APP;
     }
 
     /**

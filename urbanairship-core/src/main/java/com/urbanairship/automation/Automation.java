@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
@@ -74,6 +75,16 @@ public class Automation extends AirshipComponent {
         }
 
         automationEngine.start();
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.ACTION_AUTOMATION;
     }
 
     /**

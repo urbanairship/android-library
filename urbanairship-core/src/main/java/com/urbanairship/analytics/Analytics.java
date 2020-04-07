@@ -9,6 +9,7 @@ import android.location.Location;
 import android.os.Build;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -242,7 +243,16 @@ public class Analytics extends AirshipComponent {
 
             }
         });
+    }
 
+    /**
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public int getComponentGroup() {
+        return AirshipComponentGroups.ANALYTICS;
     }
 
     @Override
