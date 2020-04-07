@@ -7,11 +7,13 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.util.HashMap;
@@ -34,6 +36,7 @@ public class MessageCenterTest extends BaseTestCase {
     private AirshipChannel channel;
     private PushManager pushManager;
     private Inbox inbox;
+    private PushListener pushListener;
 
     @Before
     public void setup() {
@@ -42,18 +45,11 @@ public class MessageCenterTest extends BaseTestCase {
         pushManager = mock(PushManager.class);
         this.messageCenter = new MessageCenter(getApplication(), getApplication().preferenceDataStore, inbox, pushManager);
         shadowApplication = shadowOf(getApplication());
-    }
 
-    @Test
-    public void testInit() {
+        ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         messageCenter.init();
-        verify(pushManager).addPushListener(messageCenter);
-    }
-
-    @Test
-    public void testTeardown() {
-        messageCenter.tearDown();
-        verify(pushManager).removePushListener(messageCenter);
+        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        pushListener = pushListenerArgumentCaptor.getValue();
     }
 
     @Test
@@ -149,14 +145,14 @@ public class MessageCenterTest extends BaseTestCase {
     }
 
     @Test
-    public void testOnPushReceived() {
+    public void testPushListener() {
         Map<String, String> pushData = new HashMap<>();
         pushData.put(PushMessage.EXTRA_RICH_PUSH_ID, "messageID");
         PushMessage message = new PushMessage(pushData);
 
         when(inbox.getMessage("messageID")).thenReturn(null);
 
-        messageCenter.onPushReceived(message, true);
+        pushListener.onPushReceived(message, true);
 
         verify(inbox).fetchMessages();
     }

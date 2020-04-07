@@ -28,7 +28,7 @@ import androidx.annotation.WorkerThread;
 /**
  * Airship Message Center.
  */
-public class MessageCenter extends AirshipComponent implements PushListener {
+public class MessageCenter extends AirshipComponent {
 
     /**
      * Intent action to view the message center.
@@ -71,6 +71,7 @@ public class MessageCenter extends AirshipComponent implements PushListener {
     private final PushManager pushManager;
     private final Inbox inbox;
     private OnShowMessageCenterListener onShowMessageCenterListener;
+    private final PushListener pushListener;
 
     /**
      * Gets the shared Message Center instance.
@@ -95,9 +96,7 @@ public class MessageCenter extends AirshipComponent implements PushListener {
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull AirshipChannel channel,
                          @NonNull PushManager pushManager) {
-        super(context, dataStore);
-        this.pushManager = pushManager;
-        this.inbox = new Inbox(context, dataStore, channel);
+        this(context, dataStore, new Inbox(context, dataStore, channel), pushManager);
     }
 
     /**
@@ -118,6 +117,17 @@ public class MessageCenter extends AirshipComponent implements PushListener {
         super(context, dataStore);
         this.pushManager = pushManager;
         this.inbox = inbox;
+
+        this.pushListener = new PushListener() {
+            @WorkerThread
+            @Override
+            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+                if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
+                    Logger.debug("MessageCenter - Received a Rich Push.");
+                    getInbox().fetchMessages();
+                }
+            }
+        };
     }
 
     /**
@@ -129,7 +139,7 @@ public class MessageCenter extends AirshipComponent implements PushListener {
         super.init();
         inbox.init();
 
-        pushManager.addPushListener(this);
+        pushManager.addPushListener(pushListener);
     }
 
     /**
@@ -158,16 +168,7 @@ public class MessageCenter extends AirshipComponent implements PushListener {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void tearDown() {
         inbox.tearDown();
-        pushManager.removePushListener(this);
-    }
-
-    @WorkerThread
-    @Override
-    public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
-            Logger.debug("MessageCenter - Received a Rich Push.");
-            getInbox().fetchMessages();
-        }
+        pushManager.removePushListener(pushListener);
     }
 
     /**

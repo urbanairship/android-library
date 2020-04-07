@@ -15,6 +15,7 @@ import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Observable;
@@ -24,6 +25,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
@@ -57,8 +59,10 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload emptyPayload;
     private TestLocaleManager localeManager;
     private PushManager pushManager;
+    private PushListener pushListener;
 
-    private void createRemoteData() {
+    @Before
+    public void setup() {
         activityMonitor = new TestActivityMonitor();
 
         mockDispatcher = mock(JobDispatcher.class);
@@ -75,12 +79,6 @@ public class RemoteDataTest extends BaseTestCase {
 
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
                 activityMonitor, mockDispatcher, localeManager, pushManager);
-    }
-
-    @Before
-    public void setup() {
-        createRemoteData();
-
         payload = RemoteDataPayload.newBuilder()
                                    .setType("type")
                                    .setTimeStamp(123)
@@ -97,25 +95,15 @@ public class RemoteDataTest extends BaseTestCase {
                                         .build();
         emptyPayload = RemoteDataPayload.emptyPayload("type");
 
+        ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         remoteData.init();
+        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        pushListener = pushListenerArgumentCaptor.getValue();
     }
 
     @After
     public void teardown() {
         remoteData.tearDown();
-    }
-
-    @Test
-    public void testInit() {
-        createRemoteData();
-        remoteData.init();
-        verify(pushManager).addPushListener(remoteData);
-    }
-
-    @Test
-    public void testTeardown() {
-        remoteData.tearDown();
-        verify(pushManager).removePushListener(remoteData);
     }
 
     @Test
@@ -126,7 +114,7 @@ public class RemoteDataTest extends BaseTestCase {
         pushData.put(RemoteData.REMOTE_DATA_UPDATE_KEY, "remoteDataUpdate");
         PushMessage message = new PushMessage(pushData);
 
-        remoteData.onPushReceived(message, true);
+        pushListener.onPushReceived(message, true);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override

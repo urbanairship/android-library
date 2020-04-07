@@ -51,7 +51,7 @@ import java.util.Set;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class RemoteData extends AirshipComponent implements PushListener {
+public class RemoteData extends AirshipComponent {
 
     /**
      * The remote data store.
@@ -97,6 +97,7 @@ public class RemoteData extends AirshipComponent implements PushListener {
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
     private final PushManager pushManager;
+    private final PushListener pushListener;
 
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
@@ -156,6 +157,16 @@ public class RemoteData extends AirshipComponent implements PushListener {
         this.activityMonitor = activityMonitor;
         this.localeManager = localeManager;
         this.pushManager = pushManager;
+
+        this.pushListener = new PushListener() {
+            @WorkerThread
+            @Override
+            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+                if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
+                    refresh();
+                }
+            }
+        };
     }
 
     @Override
@@ -178,12 +189,12 @@ public class RemoteData extends AirshipComponent implements PushListener {
             refresh();
         }
 
-        pushManager.addPushListener(this);
+        pushManager.addPushListener(pushListener);
     }
 
     @Override
     protected void tearDown() {
-        pushManager.removePushListener(this);
+        pushManager.removePushListener(pushListener);
         activityMonitor.removeApplicationListener(applicationListener);
         backgroundThread.quit();
     }
@@ -197,15 +208,6 @@ public class RemoteData extends AirshipComponent implements PushListener {
         }
 
         return jobHandler.performJob(jobInfo);
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @WorkerThread
-    @Override
-    public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-        if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
-            refresh();
-        }
     }
 
     /**
