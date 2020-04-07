@@ -117,10 +117,6 @@ class NotificationIntentProcessor {
             airship.getAnalytics().setConversionMetadata(notificationInfo.getMessage().getMetadata());
         }
 
-        // Notify the legacy in-app message manager about the push
-        airship.getLegacyInAppMessageManager().onPushResponse(notificationInfo.getMessage());
-
-
         NotificationListener listener = airship.getPushManager().getNotificationListener();
 
         if (actionButtonInfo != null) {

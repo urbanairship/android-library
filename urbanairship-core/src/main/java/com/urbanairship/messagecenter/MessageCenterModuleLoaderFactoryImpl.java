@@ -7,6 +7,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleLoaderFactory;
 import com.urbanairship.modules.ModuleLoader;
 import com.urbanairship.modules.SimpleModuleLoader;
+import com.urbanairship.push.PushManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -19,8 +20,8 @@ import androidx.annotation.RestrictTo;
 public class MessageCenterModuleLoaderFactoryImpl implements MessageCenterModuleLoaderFactory {
 
     @Override
-    public ModuleLoader build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel) {
-        MessageCenter messageCenter = new MessageCenter(context, dataStore, airshipChannel);
+    public ModuleLoader build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager) {
+        MessageCenter messageCenter = new MessageCenter(context, dataStore, airshipChannel, pushManager);
         return SimpleModuleLoader.singleComponent(messageCenter);
     }
 }

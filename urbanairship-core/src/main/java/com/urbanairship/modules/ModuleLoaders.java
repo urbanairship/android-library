@@ -57,14 +57,15 @@ public class ModuleLoaders {
     @Nullable
     public static ModuleLoader messageCenterLoader(@NonNull Context context,
                                                    @NonNull PreferenceDataStore preferenceDataStore,
-                                                   @NonNull AirshipChannel channel) {
+                                                   @NonNull AirshipChannel channel,
+                                                   @NonNull PushManager pushManager) {
         try {
             Class clazz = Class.forName(MESSAGE_CENTER_MODULE_LOADER_FACTORY);
             Object object = clazz.newInstance();
 
             if (object instanceof MessageCenterModuleLoaderFactory) {
                 MessageCenterModuleLoaderFactory factory = (MessageCenterModuleLoaderFactory) object;
-                return factory.build(context, preferenceDataStore, channel);
+                return factory.build(context, preferenceDataStore, channel, pushManager);
             }
         } catch (ClassNotFoundException e) {
             return null;

@@ -131,22 +131,10 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        // Refresh remote data
-        if (message.isRemoteData()) {
-            airship.getRemoteData().refresh();
-        }
-
-        // Refresh inbox
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && MessageCenter.shared().getInbox().getMessage(message.getRichPushMessageId()) == null) {
-            Logger.debug("PushJobHandler - Received a Rich Push.");
-            MessageCenter.shared().getInbox().fetchMessages();
-        }
-
         // Run the push actions
         runActions();
 
-        // Notify components of the push
-        airship.getLegacyInAppMessageManager().onPushReceived(message);
+        // Set last received metadata
         airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
 
         // Finish processing the push

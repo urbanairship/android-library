@@ -11,9 +11,12 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestLocaleManager;
+import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
 
@@ -29,9 +32,11 @@ import org.robolectric.shadows.ShadowLooper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import static org.mockito.Mockito.clearInvocations;
@@ -51,9 +56,9 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
     private TestLocaleManager localeManager;
+    private PushManager pushManager;
 
-    @Before
-    public void setup() {
+    private void createRemoteData() {
         activityMonitor = new TestActivityMonitor();
 
         mockDispatcher = mock(JobDispatcher.class);
@@ -66,8 +71,15 @@ public class RemoteDataTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
+        pushManager = mock(PushManager.class);
+
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
-                activityMonitor, mockDispatcher, localeManager);
+                activityMonitor, mockDispatcher, localeManager, pushManager);
+    }
+
+    @Before
+    public void setup() {
+        createRemoteData();
 
         payload = RemoteDataPayload.newBuilder()
                                    .setType("type")
@@ -91,6 +103,39 @@ public class RemoteDataTest extends BaseTestCase {
     @After
     public void teardown() {
         remoteData.tearDown();
+    }
+
+    @Test
+    public void testInit() {
+        createRemoteData();
+        remoteData.init();
+        verify(pushManager).addPushListener(remoteData);
+    }
+
+    @Test
+    public void testTeardown() {
+        remoteData.tearDown();
+        verify(pushManager).removePushListener(remoteData);
+    }
+
+    @Test
+    public void testOnPushReceived() {
+        clearInvocations(mockDispatcher);
+
+        Map<String, String> pushData = new HashMap<>();
+        pushData.put(RemoteData.REMOTE_DATA_UPDATE_KEY, "remoteDataUpdate");
+        PushMessage message = new PushMessage(pushData);
+
+        remoteData.onPushReceived(message, true);
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+            }
+        }));
+
+        verifyNoMoreInteractions(mockDispatcher);
     }
 
     /**

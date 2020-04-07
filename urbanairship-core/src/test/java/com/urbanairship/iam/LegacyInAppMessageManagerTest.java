@@ -12,6 +12,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.iam.banner.BannerDisplayContent;
+import com.urbanairship.push.NotificationInfo;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
@@ -35,15 +37,16 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     PreferenceDataStore preferenceDataStore;
     InAppMessageManager inAppMessageManager;
     Analytics analytics;
-
     PushMessage pushMessage;
+    PushManager pushManager;
 
     @Before
     public void setup() {
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
         inAppMessageManager = mock(InAppMessageManager.class);
         analytics = mock(Analytics.class);
-        legacyInAppMessageManager = new LegacyInAppMessageManager(TestApplication.getApplication(), preferenceDataStore, inAppMessageManager, analytics);
+        pushManager = mock(PushManager.class);
+        legacyInAppMessageManager = new LegacyInAppMessageManager(TestApplication.getApplication(), preferenceDataStore, inAppMessageManager, analytics, pushManager);
 
         String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
                 "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
@@ -60,8 +63,15 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     }
 
     @Test
+    public void testInit() {
+        legacyInAppMessageManager.init();
+        verify(pushManager).addPushListener(legacyInAppMessageManager);
+        verify(pushManager).addInternalNotificationListener(legacyInAppMessageManager);
+    }
+
+    @Test
     public void testPushReceived() {
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         verify(inAppMessageManager).scheduleMessage(argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
             @Override
@@ -87,7 +97,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testPushReceivedCancelsPreviousIam() {
         // Receive the first push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Create a new push
         Bundle extras = pushMessage.getPushBundle();
@@ -100,7 +110,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the other push
-        legacyInAppMessageManager.onPushReceived(otherPush);
+        legacyInAppMessageManager.onPushReceived(otherPush, true);
 
         // Verify it added a resolution event for the previous message
         verify(analytics).addEvent(any(ResolutionEvent.class));
@@ -109,7 +119,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testPushReceivedPreviousAlreadyDisplayed() {
         // Receive the first push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Create a new push
         Bundle extras = pushMessage.getPushBundle();
@@ -122,7 +132,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the other push
-        legacyInAppMessageManager.onPushReceived(otherPush);
+        legacyInAppMessageManager.onPushReceived(otherPush, true);
 
         // Verify it did not add a resolution event for the previous message
         verify(analytics, never()).addEvent(any(ResolutionEvent.class));
@@ -131,7 +141,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testPushResponse() {
         // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
@@ -139,7 +149,8 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the response
-        legacyInAppMessageManager.onPushResponse(pushMessage);
+        NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
+        legacyInAppMessageManager.onNotificationResponse(info, null);
 
         // Verify it added a resolution event for the message
         verify(analytics).addEvent(any(ResolutionEvent.class));
@@ -148,7 +159,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     @Test
     public void testPushResponseAlreadyDisplayed() {
         // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
@@ -156,7 +167,8 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the response
-        legacyInAppMessageManager.onPushResponse(pushMessage);
+        NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
+        legacyInAppMessageManager.onNotificationResponse(info, null);
 
         // Verify it did not add a resolution event for the message
         verify(analytics, never()).addEvent(any(ResolutionEvent.class));
@@ -173,7 +185,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         });
 
         // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
         verifyZeroInteractions(inAppMessageManager);
@@ -190,7 +202,7 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         });
 
         // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
+        legacyInAppMessageManager.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
         verifyZeroInteractions(inAppMessageManager);

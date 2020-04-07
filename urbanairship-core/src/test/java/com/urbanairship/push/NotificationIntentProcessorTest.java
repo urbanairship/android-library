@@ -110,9 +110,6 @@ public class NotificationIntentProcessorTest extends BaseTestCase {
         verify(analytics).setConversionSendId(message.getSendId());
         verify(analytics).setConversionMetadata(message.getMetadata());
 
-        // Verify the legacy in-app manager was notified
-        verify(legacyInAppMessageManager).onPushResponse(message);
-
         // Verify the application was launched
         verifyApplicationLaunched();
 
@@ -153,9 +150,6 @@ public class NotificationIntentProcessorTest extends BaseTestCase {
         // Verify the conversion id and metadata was set
         verify(analytics).setConversionSendId(message.getSendId());
         verify(analytics).setConversionMetadata(message.getMetadata());
-
-        // Verify the legacy in-app manager was notified
-        verify(legacyInAppMessageManager).onPushResponse(message);
 
         // Verify the notification was dismissed
         verify(notificationManager).cancel("TAG", 150);
