@@ -155,8 +155,6 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-
-
         final NotificationProvider provider = getNotificationProvider(airship);
 
         if (provider == null) {

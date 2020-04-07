@@ -161,7 +161,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
 
                 final String pendingMessageId = preferenceDataStore.getString(PENDING_MESSAGE_ID, null);
 
-                // Cancel the previous pending message if its still scheduled
+                // Cancel the previous pending message if it's still scheduled
                 if (pendingMessageId != null) {
                     inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
                         @Override
