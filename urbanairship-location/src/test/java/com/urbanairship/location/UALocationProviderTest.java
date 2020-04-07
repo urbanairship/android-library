@@ -7,14 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 
-import com.urbanairship.BaseTestCase;
 import com.urbanairship.ResultCallback;
-import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
+
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -24,7 +27,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UALocationProviderTest extends BaseTestCase {
+@Config(sdk = 28)
+@RunWith(AndroidJUnit4.class)
+public class UALocationProviderTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -39,7 +44,7 @@ public class UALocationProviderTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        context = TestApplication.getApplication();
+        context = ApplicationProvider.getApplicationContext();
 
         locationCallback = new ResultCallback<Location>() {
             @Override

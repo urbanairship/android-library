@@ -4,8 +4,6 @@ package com.urbanairship.analytics;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.Location;
 import android.os.Build;
 
 import com.urbanairship.AirshipComponent;
@@ -15,7 +13,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
-import com.urbanairship.analytics.location.LocationEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -26,8 +24,6 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
-import com.urbanairship.location.LocationRequestOptions;
-import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
@@ -325,42 +321,6 @@ public class Analytics extends AirshipComponent {
         });
 
         applyListeners(event);
-    }
-
-    /**
-     * Records a location.
-     *
-     * @param location The location to record.
-     */
-    public void recordLocation(@NonNull Location location) {
-        recordLocation(location, null, LocationEvent.UPDATE_TYPE_SINGLE);
-    }
-
-    /**
-     * Records a location.
-     *
-     * @param location The new location.
-     * @param options The location request options.
-     * @param updateType The update type.
-     */
-    public void recordLocation(@NonNull Location location, @Nullable LocationRequestOptions options, @LocationEvent.UpdateType int updateType) {
-        int requestedAccuracy;
-        int distance;
-
-        if (options == null) {
-            requestedAccuracy = -1;
-            distance = -1;
-        } else {
-            distance = (int) options.getMinDistance();
-            if (options.getPriority() == LocationRequestOptions.PRIORITY_HIGH_ACCURACY) {
-                requestedAccuracy = Criteria.ACCURACY_FINE;
-            } else {
-                requestedAccuracy = Criteria.ACCURACY_COARSE;
-            }
-        }
-
-        LocationEvent event = new LocationEvent(location, updateType, requestedAccuracy, distance, isAppInForeground());
-        addEvent(event);
     }
 
     /**

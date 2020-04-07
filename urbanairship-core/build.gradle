@@ -16,8 +16,6 @@ dependencies {
     api "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
     api "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
 
-    // Optional
-    compileOnly "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
     compileOnly "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 

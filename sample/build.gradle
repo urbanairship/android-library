@@ -44,9 +44,6 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
 
-    // Allows Airship location services to use Fused Location
-    implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
-
     // Airship ADM
     implementation project(':urbanairship-adm')
 
@@ -63,8 +60,10 @@ dependencies {
     // Airship Preferences
     implementation project(':urbanairship-preference')
 
-    implementation project(':urbanairship-accengage')
-
+    // Airship location
+    implementation project(':urbanairship-location')
+    // Allows Airship location services to use Fused Location
+    implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
 
     // Testing-only dependencies
     androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"

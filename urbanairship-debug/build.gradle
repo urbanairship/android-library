@@ -37,6 +37,7 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
+    implementation project(':urbanairship-location')
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"

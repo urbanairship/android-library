@@ -9,7 +9,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -18,6 +17,8 @@ import com.urbanairship.ResultCallback;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Location adapter for the standard Android location.

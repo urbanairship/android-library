@@ -2,35 +2,41 @@
 
 package com.urbanairship.location;
 
+import android.content.Context;
 import android.location.Location;
 
-import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.TestActivityMonitor;
-import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.location.LocationEvent;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.robolectric.annotation.Config;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-@SuppressWarnings("ResourceType")
-public class UALocationManagerTest extends BaseTestCase {
+@Config(sdk = 28)
+@RunWith(AndroidJUnit4.class)
+public class AirshipLocationManagerTest {
 
     private AirshipLocationManager locationManager;
     private LocationRequestOptions options;
@@ -43,11 +49,12 @@ public class UALocationManagerTest extends BaseTestCase {
         mockAnalytics = mock(Analytics.class);
         mockChannel = mock(AirshipChannel.class);
 
-        dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore = new PreferenceDataStore(ApplicationProvider.getApplicationContext());
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        locationManager = new AirshipLocationManager(TestApplication.getApplication(), dataStore,
-                mockChannel, mockAnalytics, new TestActivityMonitor());
+        Context context = ApplicationProvider.getApplicationContext();
+        locationManager = new AirshipLocationManager(context, dataStore,
+                mockChannel, mockAnalytics, GlobalActivityMonitor.shared(context));
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
     }
 
@@ -91,10 +98,10 @@ public class UALocationManagerTest extends BaseTestCase {
         locationManager.setLocationUpdatesEnabled(true);
         locationManager.setBackgroundLocationAllowed(true);
 
-        Location location = new Location("provider");
+        final Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
 
-        verify(mockAnalytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
+        verify(mockAnalytics).addEvent(any(LocationEvent.class));
     }
 
     @Test
@@ -108,7 +115,7 @@ public class UALocationManagerTest extends BaseTestCase {
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
 
-        verify(mockAnalytics, never()).recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
+        verify(mockAnalytics, never()).addEvent(any(LocationEvent.class));
     }
 
     /**

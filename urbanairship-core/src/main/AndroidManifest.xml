@@ -94,10 +94,6 @@
 
         <service android:name="com.urbanairship.job.AirshipService" />
 
-        <receiver
-            android:name="com.urbanairship.location.LocationReceiver"
-            android:exported="false" />
-
         <service
             android:name="com.urbanairship.job.AndroidJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />

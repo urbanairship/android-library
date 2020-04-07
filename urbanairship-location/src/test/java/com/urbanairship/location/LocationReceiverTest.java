@@ -7,15 +7,17 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 
-import com.urbanairship.BaseTestCase;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -26,7 +28,9 @@ import static org.mockito.Mockito.verify;
 /**
  * Unit tests for the Location Service
  */
-public class LocationReceiverTest extends BaseTestCase {
+@Config(sdk = 28)
+@RunWith(AndroidJUnit4.class)
+public class LocationReceiverTest {
 
     private LocationReceiver locationReceiver;
     private AirshipLocationManager locationManager;
@@ -107,7 +111,7 @@ public class LocationReceiverTest extends BaseTestCase {
         if (extras != null) {
             intent.putExtras(extras);
         }
-        locationReceiver.onReceive(getApplication(), intent);
+        locationReceiver.onReceive(ApplicationProvider.getApplicationContext(), intent);
     }
 
 }

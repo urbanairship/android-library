@@ -1,0 +1,17 @@
+description = "Airship Android SDK Location module"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+
+    // Optional
+    compileOnly "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
+
+    // Tests
+    testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+}

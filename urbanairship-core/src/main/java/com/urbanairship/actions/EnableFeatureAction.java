@@ -15,7 +15,6 @@ import android.provider.Settings;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.location.AirshipLocationManager;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.HelperActivity;
@@ -64,14 +63,13 @@ public class EnableFeatureAction extends Action {
     public static final String FEATURE_USER_NOTIFICATIONS = "user_notifications";
 
     /**
-     * Action value to enable location. See {@link AirshipLocationManager#setLocationUpdatesEnabled(boolean)}
+     * Action value to enable location.
      */
     @NonNull
     public static final String FEATURE_LOCATION = "location";
 
     /**
-     * Action value to enable location with background updates. See {@link AirshipLocationManager#setLocationUpdatesEnabled(boolean)}
-     * and {@link AirshipLocationManager#setBackgroundLocationAllowed(boolean)}
+     * Action value to enable location with background updates.
      */
     @NonNull
     public static final String FEATURE_BACKGROUND_LOCATION = "background_location";

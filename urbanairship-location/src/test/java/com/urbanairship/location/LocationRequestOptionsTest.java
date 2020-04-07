@@ -4,19 +4,24 @@ package com.urbanairship.location;
 
 import android.os.Parcel;
 
-import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import static junit.framework.Assert.assertEquals;
 
-public class LocationRequestOptionsTest extends BaseTestCase {
+@Config(sdk = 28)
+@RunWith(AndroidJUnit4.class)
+public class LocationRequestOptionsTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
