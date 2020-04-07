@@ -10,7 +10,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.ValueMatcher;
-import com.urbanairship.location.UALocationManager;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
@@ -39,7 +39,7 @@ public class AudienceChecksTest extends BaseTestCase {
 
     private AirshipChannel airshipChannel;
     private PushManager pushManager;
-    private UALocationManager locationManager;
+    private AirshipLocationClient locationClient;
     private Context context;
     private ApplicationMetrics applicationMetrics;
 
@@ -47,13 +47,13 @@ public class AudienceChecksTest extends BaseTestCase {
     public void setup() {
         airshipChannel = mock(AirshipChannel.class);
         pushManager = mock(PushManager.class);
-        locationManager = mock(UALocationManager.class);
+        locationClient = mock(AirshipLocationClient.class);
         applicationMetrics = mock(ApplicationMetrics.class);
         context = TestApplication.getApplication();
 
         TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
-        TestApplication.getApplication().setLocationManager(locationManager);
+        TestApplication.getApplication().setLocationClient(locationClient);
         TestApplication.getApplication().setApplicationMetrics(applicationMetrics);
     }
 
@@ -97,7 +97,7 @@ public class AudienceChecksTest extends BaseTestCase {
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedOut));
 
-        when(locationManager.isOptIn()).thenReturn(true);
+        when(locationClient.isOptIn()).thenReturn(true);
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedOut));
     }

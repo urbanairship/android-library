@@ -5,11 +5,12 @@ package com.urbanairship.preference;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * CheckboxPreference to allow/disallow background location updates.
@@ -31,12 +32,23 @@ public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPrefer
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return airship.getLocationManager().isBackgroundLocationAllowed();
+        if (airship.getLocationClient() != null) {
+            return airship.getLocationClient().isBackgroundLocationAllowed();
+        } else {
+            return false;
+        }
     }
 
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
-        airship.getLocationManager().setBackgroundLocationAllowed(enabled);
+        if (airship.getLocationClient() != null) {
+            airship.getLocationClient().setBackgroundLocationAllowed(enabled);
+        }
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UAirship.shared().getLocationClient() != null && super.isEnabled();
     }
 
 }

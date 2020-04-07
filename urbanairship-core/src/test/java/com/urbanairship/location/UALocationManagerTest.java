@@ -10,7 +10,7 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.analytics.location.LocationEvent;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.verify;
 @SuppressWarnings("ResourceType")
 public class UALocationManagerTest extends BaseTestCase {
 
-    private UALocationManager locationManager;
+    private AirshipLocationManager locationManager;
     private LocationRequestOptions options;
     private Analytics mockAnalytics;
     private AirshipChannel mockChannel;
@@ -46,7 +46,7 @@ public class UALocationManagerTest extends BaseTestCase {
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        locationManager = new UALocationManager(TestApplication.getApplication(), dataStore,
+        locationManager = new AirshipLocationManager(TestApplication.getApplication(), dataStore,
                 mockChannel, mockAnalytics, new TestActivityMonitor());
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
     }

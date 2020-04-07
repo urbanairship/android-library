@@ -2,13 +2,14 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.modules.location.AirshipLocationClient;
 
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 /**
  * Action to fetch a map of device properties.
@@ -80,10 +81,11 @@ public class FetchDeviceInfoAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
+        AirshipLocationClient locationClient = UAirship.shared().getLocationClient();
         JsonMap.Builder properties = JsonMap.newBuilder()
                                             .put(CHANNEL_ID_KEY, UAirship.shared().getChannel().getId())
                                             .put(PUSH_OPT_IN_KEY, UAirship.shared().getPushManager().isOptIn())
-                                            .put(LOCATION_ENABLED_KEY, UAirship.shared().getLocationManager().isLocationUpdatesEnabled())
+                                            .put(LOCATION_ENABLED_KEY, locationClient != null && locationClient.isLocationUpdatesEnabled())
                                             .putOpt(NAMED_USER_ID_KEY, UAirship.shared().getNamedUser().getId());
 
         Set<String> tags = UAirship.shared().getChannel().getTags();

@@ -1,11 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.location;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
+package com.urbanairship.analytics.location;
 
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.Event;
@@ -18,6 +13,11 @@ import com.urbanairship.util.UAStringUtil;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 /**
  * A RegionEvent defines a region with an identifier, major and minor and optional
@@ -317,7 +317,7 @@ public class RegionEvent extends Event implements JsonSerializable {
     }
 
     /**
-     * Builder class for {@link com.urbanairship.location.RegionEvent} Objects.
+     * Builder class for {@link RegionEvent} Objects.
      */
     public static class Builder {
 

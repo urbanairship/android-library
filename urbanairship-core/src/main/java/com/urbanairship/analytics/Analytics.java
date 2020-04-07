@@ -15,6 +15,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.analytics.location.LocationEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -26,7 +27,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.location.LocationRequestOptions;
-import com.urbanairship.location.RegionEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;

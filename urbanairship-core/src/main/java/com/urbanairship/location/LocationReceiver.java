@@ -7,15 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * A receiver that handles requesting location from either the Fused Location
@@ -34,14 +36,22 @@ public class LocationReceiver extends BroadcastReceiver {
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
     private final Executor executor;
+    private final Callable<AirshipLocationManager> locationManagerCallable;
 
     @VisibleForTesting
-    LocationReceiver(Executor executor) {
+    LocationReceiver(Executor executor, Callable<AirshipLocationManager> locationManagerCallable) {
         this.executor = executor;
+        this.locationManagerCallable = locationManagerCallable;
     }
 
     public LocationReceiver() {
-        this(AirshipExecutors.THREAD_POOL_EXECUTOR);
+        this(AirshipExecutors.THREAD_POOL_EXECUTOR, new Callable<AirshipLocationManager>() {
+            @Override
+            public AirshipLocationManager call() throws Exception {
+                UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+                return AirshipLocationManager.shared();
+            }
+        });
     }
 
     @Override
@@ -49,7 +59,6 @@ public class LocationReceiver extends BroadcastReceiver {
         if (intent == null || intent.getAction() == null) {
             return;
         }
-
 
         if (!ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
             Logger.verbose("LocationReceiver - Received intent with invalid action: %s", intent.getAction());
@@ -64,15 +73,16 @@ public class LocationReceiver extends BroadcastReceiver {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
-
-                if (airship == null) {
+                AirshipLocationManager locationManager;
+                try {
+                    locationManager = locationManagerCallable.call();
+                } catch (Exception e) {
                     Logger.error("Airship took too long to takeOff. Dropping location update.");
                     result.finish();
                     return;
                 }
 
-                onLocationUpdate(airship, intent);
+                onLocationUpdate(locationManager, intent);
 
                 if (result != null) {
                     result.finish();
@@ -84,16 +94,17 @@ public class LocationReceiver extends BroadcastReceiver {
     /**
      * Called when an intent is received with action ACTION_LOCATION_UPDATE.
      *
+     * @param locationManager The location manager.
      * @param intent The received intent.
      */
-    private void onLocationUpdate(@NonNull UAirship airship, @NonNull Intent intent) {
+    private void onLocationUpdate(@NonNull AirshipLocationManager locationManager, @NonNull Intent intent) {
         // Fused location sometimes has an "Unmarshalling unknown type" runtime exception on 4.4.2 devices
         Location location;
         try {
             // If a provider is enabled or disabled notify the adapters so they can update providers.
             if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
                 Logger.debug("LocationReceiver - One of the location providers was enabled or disabled.");
-                airship.getLocationManager().onSystemLocationProvidersChanged();
+                locationManager.onSystemLocationProvidersChanged();
                 return;
             }
 
@@ -106,7 +117,7 @@ public class LocationReceiver extends BroadcastReceiver {
         }
 
         if (location != null) {
-            airship.getLocationManager().onLocationUpdate(location);
+            locationManager.onLocationUpdate(location);
         }
     }
 

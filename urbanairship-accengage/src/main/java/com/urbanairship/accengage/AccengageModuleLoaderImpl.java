@@ -8,9 +8,8 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.modules.AccengageModuleLoader;
-import com.urbanairship.modules.AccengageNotificationHandler;
-import com.urbanairship.modules.ModuleLoader;
+import com.urbanairship.modules.accengage.AccengageModuleLoader;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.notifications.NotificationProvider;
 

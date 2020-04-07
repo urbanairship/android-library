@@ -5,10 +5,6 @@ package com.urbanairship.analytics;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 
 import com.urbanairship.Logger;
@@ -22,6 +18,11 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * This abstract class encapsulates analytics events.

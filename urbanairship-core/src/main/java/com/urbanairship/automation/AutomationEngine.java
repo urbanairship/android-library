@@ -26,7 +26,7 @@ import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.location.RegionEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Scheduler;

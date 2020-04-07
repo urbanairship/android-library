@@ -8,7 +8,7 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.location.RegionEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 
 import org.junit.Before;
 import org.junit.Test;

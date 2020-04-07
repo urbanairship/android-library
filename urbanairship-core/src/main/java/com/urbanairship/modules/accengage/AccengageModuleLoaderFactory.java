@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.modules;
+package com.urbanairship.modules.accengage;
 
 import android.content.Context;
 

@@ -21,7 +21,7 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.modules.AccengageNotificationHandler;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;

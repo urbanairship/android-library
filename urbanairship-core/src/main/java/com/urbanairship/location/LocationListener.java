@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 /**
  * A location change listener. Used to listen for location updates by adding
- * the listener using {@link com.urbanairship.location.UALocationManager#addLocationListener(LocationListener)}.
+ * the listener using {@link AirshipLocationManager#addLocationListener(LocationListener)}.
  */
 public interface LocationListener {
 

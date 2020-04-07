@@ -12,18 +12,21 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.location.AirshipLocationManager;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.HelperActivity;
 import com.urbanairship.util.PermissionsRequester;
 
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * An action that enables features. Running the action with value {@link #FEATURE_LOCATION} or {@link #FEATURE_BACKGROUND_LOCATION}
@@ -61,14 +64,14 @@ public class EnableFeatureAction extends Action {
     public static final String FEATURE_USER_NOTIFICATIONS = "user_notifications";
 
     /**
-     * Action value to enable location. See {@link com.urbanairship.location.UALocationManager#setLocationUpdatesEnabled(boolean)}
+     * Action value to enable location. See {@link AirshipLocationManager#setLocationUpdatesEnabled(boolean)}
      */
     @NonNull
     public static final String FEATURE_LOCATION = "location";
 
     /**
-     * Action value to enable location with background updates. See {@link com.urbanairship.location.UALocationManager#setLocationUpdatesEnabled(boolean)}
-     * and {@link com.urbanairship.location.UALocationManager#setBackgroundLocationAllowed(boolean)}
+     * Action value to enable location with background updates. See {@link AirshipLocationManager#setLocationUpdatesEnabled(boolean)}
+     * and {@link AirshipLocationManager#setBackgroundLocationAllowed(boolean)}
      */
     @NonNull
     public static final String FEATURE_BACKGROUND_LOCATION = "background_location";
@@ -128,19 +131,28 @@ public class EnableFeatureAction extends Action {
     public ActionResult perform(@NonNull ActionArguments arguments) {
         String feature = arguments.getValue().getString();
         Checks.checkNotNull(feature, "Missing feature.");
+        AirshipLocationClient locationClient = UAirship.shared().getLocationClient();
 
         switch (feature) {
             case FEATURE_BACKGROUND_LOCATION:
+                if (locationClient == null) {
+                    return ActionResult.newEmptyResult();
+                }
+
                 if (requestLocationPermissions()) {
-                    UAirship.shared().getLocationManager().setLocationUpdatesEnabled(true);
-                    UAirship.shared().getLocationManager().setBackgroundLocationAllowed(true);
+                    locationClient.setLocationUpdatesEnabled(true);
+                    locationClient.setBackgroundLocationAllowed(true);
                     return ActionResult.newResult(ActionValue.wrap(true));
                 }
 
                 return ActionResult.newResult(ActionValue.wrap(false));
             case FEATURE_LOCATION:
+                if (locationClient == null) {
+                    return ActionResult.newEmptyResult();
+                }
+
                 if (requestLocationPermissions()) {
-                    UAirship.shared().getLocationManager().setLocationUpdatesEnabled(true);
+                    locationClient.setLocationUpdatesEnabled(true);
                     return ActionResult.newResult(ActionValue.wrap(true));
                 }
 

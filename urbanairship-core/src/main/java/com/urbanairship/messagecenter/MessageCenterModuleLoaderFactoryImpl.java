@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.modules.MessageCenterModuleLoaderFactory;
+import com.urbanairship.modules.messagecenter.MessageCenterModuleLoaderFactory;
 import com.urbanairship.modules.ModuleLoader;
 import com.urbanairship.modules.SimpleModuleLoader;
 

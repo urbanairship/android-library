@@ -10,7 +10,7 @@ import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
-import com.urbanairship.location.RegionEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
 

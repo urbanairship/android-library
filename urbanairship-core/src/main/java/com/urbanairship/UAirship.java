@@ -30,11 +30,12 @@ import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.location.UALocationManager;
-import com.urbanairship.modules.AccengageModuleLoader;
-import com.urbanairship.modules.AccengageNotificationHandler;
 import com.urbanairship.modules.ModuleLoader;
 import com.urbanairship.modules.ModuleLoaders;
+import com.urbanairship.modules.accengage.AccengageModuleLoader;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
+import com.urbanairship.modules.location.AirshipLocationClient;
+import com.urbanairship.modules.location.LocationModuleLoader;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
@@ -134,7 +135,7 @@ public class UAirship {
     PushProvider pushProvider;
     PushManager pushManager;
     AirshipChannel channel;
-    UALocationManager locationManager;
+    AirshipLocationClient locationClient;
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
     LegacyInAppMessageManager legacyInAppMessageManager;
@@ -711,9 +712,6 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
-        this.locationManager = new UALocationManager(application, preferenceDataStore, channel, analytics);
-        components.add(this.locationManager);
-
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
@@ -758,6 +756,14 @@ public class UAirship {
         ModuleLoader messageCenterLoader = ModuleLoaders.messageCenterLoader(application, preferenceDataStore, channel);
         if (messageCenterLoader != null) {
             components.addAll(messageCenterLoader.getComponents());
+        }
+
+        // Location
+        LocationModuleLoader locationModuleLoader = ModuleLoaders.locationLoader(application,
+                preferenceDataStore, channel, analytics);
+        if (locationModuleLoader != null) {
+            components.addAll(locationModuleLoader.getComponents());
+            this.locationClient = locationModuleLoader.getLocationClient();
         }
 
         for (AirshipComponent component : components) {
@@ -836,13 +842,14 @@ public class UAirship {
     }
 
     /**
-     * Returns the {@link com.urbanairship.location.UALocationManager} instance.
+     * Returns the {@link AirshipLocationClient} instance.
      *
-     * @return The {@link com.urbanairship.location.UALocationManager} instance.
+     * @return The {@link AirshipLocationClient} instance.
      */
-    @NonNull
-    public UALocationManager getLocationManager() {
-        return locationManager;
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public AirshipLocationClient getLocationClient() {
+        return locationClient;
     }
 
     /**

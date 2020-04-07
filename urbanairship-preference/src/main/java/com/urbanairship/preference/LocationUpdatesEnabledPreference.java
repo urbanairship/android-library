@@ -7,11 +7,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-
 import android.util.AttributeSet;
 
 import com.urbanairship.AirshipExecutors;
@@ -22,6 +17,10 @@ import com.urbanairship.util.HelperActivity;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 /**
  * CheckboxPreference to enable/disable location updates.
@@ -94,11 +93,22 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return airship.getLocationManager().isLocationUpdatesEnabled();
+        if (airship.getLocationClient() != null) {
+            return airship.getLocationClient().isLocationUpdatesEnabled();
+        } else {
+            return false;
+        }
     }
 
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
-        airship.getLocationManager().setLocationUpdatesEnabled(enabled);
+        if (airship.getLocationClient() != null) {
+            airship.getLocationClient().setLocationUpdatesEnabled(enabled);
+        }
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UAirship.shared().getLocationClient() != null && super.isEnabled();
     }
 }

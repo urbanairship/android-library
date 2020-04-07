@@ -17,7 +17,7 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
-import com.urbanairship.location.RegionEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 
 import org.junit.After;
 import org.junit.Before;

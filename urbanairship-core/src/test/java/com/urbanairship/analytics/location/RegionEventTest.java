@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.location;
+package com.urbanairship.analytics.location;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.EventTestUtils;

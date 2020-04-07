@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.location;
+package com.urbanairship.analytics.location;
 
 import androidx.annotation.FloatRange;
 import androidx.annotation.IntRange;

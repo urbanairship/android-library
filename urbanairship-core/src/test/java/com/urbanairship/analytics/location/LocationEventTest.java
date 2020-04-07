@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.location;
 
 import android.location.Location;
 
@@ -143,7 +143,7 @@ public class LocationEventTest extends BaseTestCase {
         String[] expectedKeys = new String[] { "session_id", "lat", "long", "requested_accuracy", "update_type",
                 "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground" };
 
-        JsonMap eventData = JsonValue.parseString(event.createEventPayload("sessionId")).optMap().get(Event.DATA_KEY).optMap();
+        JsonMap eventData = JsonValue.parseString(event.createEventPayload("sessionId")).optMap().get("data").optMap();
 
         for (String key : expectedKeys) {
             assertTrue(eventData.containsKey(key));

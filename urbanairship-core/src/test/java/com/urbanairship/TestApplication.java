@@ -15,8 +15,8 @@ import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.location.UALocationManager;
-import com.urbanairship.modules.AccengageNotificationHandler;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
@@ -69,7 +69,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
 
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -154,8 +153,8 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().pushManager = pushManager;
     }
 
-    public void setLocationManager(UALocationManager locationManager) {
-        UAirship.shared().locationManager = locationManager;
+    public void setLocationClient(AirshipLocationClient locationClient) {
+        UAirship.shared().locationClient = locationClient;
     }
 
     public void setAutomation(Automation automation) {

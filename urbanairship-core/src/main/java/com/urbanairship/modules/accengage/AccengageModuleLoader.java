@@ -1,4 +1,6 @@
-package com.urbanairship.modules;
+package com.urbanairship.modules.accengage;
+
+import com.urbanairship.modules.ModuleLoader;
 
 import androidx.annotation.RestrictTo;
 

@@ -1,4 +1,4 @@
-package com.urbanairship.modules;
+package com.urbanairship.modules.accengage;
 
 import com.urbanairship.push.notifications.NotificationProvider;
 

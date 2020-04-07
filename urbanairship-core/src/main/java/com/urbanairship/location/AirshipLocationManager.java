@@ -20,7 +20,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.analytics.location.LocationEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -28,6 +28,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ import androidx.core.location.LocationManagerCompat;
 /**
  * High level interface for interacting with location.
  */
-public class UALocationManager extends AirshipComponent {
+public class AirshipLocationManager extends AirshipComponent implements AirshipLocationClient {
 
     private static final String LAST_REQUESTED_LOCATION_OPTIONS_KEY = "com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS";
     private static final String LOCATION_UPDATES_ENABLED_KEY = "com.urbanairship.location.LOCATION_UPDATES_ENABLED";
@@ -64,6 +65,8 @@ public class UALocationManager extends AirshipComponent {
     private final List<LocationListener> locationListeners = new ArrayList<>();
     private final AirshipChannel airshipChannel;
     private final Analytics analytics;
+    private static volatile AirshipLocationManager sharedInstance;
+
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -89,6 +92,24 @@ public class UALocationManager extends AirshipComponent {
     };
 
     /**
+     * Gets the shared location instance.
+     *
+     * @return The shared location instance.
+     */
+    @NonNull
+    public static AirshipLocationManager shared() {
+        if (sharedInstance == null) {
+            sharedInstance = (AirshipLocationManager) UAirship.shared().getComponent(AirshipLocationManager.class);
+        }
+
+        if (sharedInstance == null) {
+            throw new IllegalStateException("Takeoff must be called");
+        }
+
+        return sharedInstance;
+    }
+
+    /**
      * Default constructor.
      *
      * @param context The context.
@@ -98,19 +119,19 @@ public class UALocationManager extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public UALocationManager(@NonNull Context context,
-                             @NonNull PreferenceDataStore preferenceDataStore,
-                             @NonNull AirshipChannel airshipChannel,
-                             @NonNull Analytics analytics) {
+    public AirshipLocationManager(@NonNull Context context,
+                                  @NonNull PreferenceDataStore preferenceDataStore,
+                                  @NonNull AirshipChannel airshipChannel,
+                                  @NonNull Analytics analytics) {
         this(context, preferenceDataStore, airshipChannel, analytics, GlobalActivityMonitor.shared(context));
     }
 
     @VisibleForTesting
-    UALocationManager(@NonNull final Context context,
-                      @NonNull PreferenceDataStore preferenceDataStore,
-                      @NonNull AirshipChannel airshipChannel,
-                      @NonNull Analytics analytics,
-                      @NonNull ActivityMonitor activityMonitor) {
+    AirshipLocationManager(@NonNull final Context context,
+                           @NonNull PreferenceDataStore preferenceDataStore,
+                           @NonNull AirshipChannel airshipChannel,
+                           @NonNull Analytics analytics,
+                           @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
 
         this.context = context.getApplicationContext();
@@ -118,12 +139,12 @@ public class UALocationManager extends AirshipComponent {
         this.listener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
-                UALocationManager.this.updateServiceConnection();
+                AirshipLocationManager.this.updateServiceConnection();
             }
 
             @Override
             public void onBackground(long time) {
-                UALocationManager.this.updateServiceConnection();
+                AirshipLocationManager.this.updateServiceConnection();
             }
         };
         this.activityMonitor = activityMonitor;
@@ -195,47 +216,33 @@ public class UALocationManager extends AirshipComponent {
     }
 
     /**
-     * Checks if continuous location updates is enabled or not.
-     * <p>
-     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
-     * region triggers, location segmentation, push to local time).
-     *
-     * @return <code>true</code> if location updates are enabled, otherwise
-     * <code>false</code>.
+     * {@inheritDoc}
      */
+    @Override
     public boolean isLocationUpdatesEnabled() {
         return preferenceDataStore.getBoolean(LOCATION_UPDATES_ENABLED_KEY, false);
     }
 
     /**
-     * Enable or disable continuous location updates.
-     * <p>
-     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
-     * region triggers, location segmentation, push to local time).
-     *
-     * @param enabled If location updates should be enabled or not.
+     * {@inheritDoc}
      */
+    @Override
     public void setLocationUpdatesEnabled(boolean enabled) {
         preferenceDataStore.put(LOCATION_UPDATES_ENABLED_KEY, enabled);
     }
 
     /**
-     * Checks if continuous location updates are allowed to continue
-     * when the application is in the background.
-     *
-     * @return <code>true</code> if continuous location update are allowed,
-     * otherwise <code>false</code>.
+     * {@inheritDoc}
      */
+    @Override
     public boolean isBackgroundLocationAllowed() {
         return preferenceDataStore.getBoolean(BACKGROUND_UPDATES_ALLOWED_KEY, false);
     }
 
     /**
-     * Enable or disable allowing continuous updates to continue in
-     * the background.
-     *
-     * @param enabled If background updates are allowed in the background or not.
+     * {@inheritDoc}
      */
+    @Override
     public void setBackgroundLocationAllowed(boolean enabled) {
         preferenceDataStore.put(BACKGROUND_UPDATES_ALLOWED_KEY, enabled);
     }
@@ -474,10 +481,9 @@ public class UALocationManager extends AirshipComponent {
     }
 
     /**
-     * Returns {@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
-     *
-     * @return <{@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
+     * {@inheritDoc}
      */
+    @Override
     public boolean isOptIn() {
         return isLocationPermitted() && isLocationUpdatesEnabled() && isDataCollectionEnabled();
     }

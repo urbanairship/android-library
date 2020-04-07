@@ -10,8 +10,8 @@ import androidx.annotation.RestrictTo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.modules.AccengageModuleLoader;
-import com.urbanairship.modules.AccengageModuleLoaderFactory;
+import com.urbanairship.modules.accengage.AccengageModuleLoader;
+import com.urbanairship.modules.accengage.AccengageModuleLoaderFactory;
 import com.urbanairship.push.PushManager;
 
 /**

@@ -1,17 +1,19 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.location;
 
 import android.location.Location;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
 
+import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 
 /**
  * This class captures all the necessary information for Airship

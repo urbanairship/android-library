@@ -5,7 +5,7 @@ import android.content.Context;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.location.UALocationManager;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.PermissionsRequester;
 
@@ -34,7 +34,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     private @Action.Situation
     int[] rejectedSituations;
     private PushManager pushManager;
-    private UALocationManager locationManager;
+    private AirshipLocationClient locationClient;
 
     private PermissionsRequester permissionsRequester;
 
@@ -59,10 +59,10 @@ public class EnableFeatureActionTest extends BaseTestCase {
         };
 
         pushManager = mock(PushManager.class);
-        locationManager = mock(UALocationManager.class);
+        locationClient = mock(AirshipLocationClient.class);
 
         TestApplication.getApplication().setPushManager(pushManager);
-        TestApplication.getApplication().setLocationManager(locationManager);
+        TestApplication.getApplication().setLocationClient(locationClient);
     }
 
     /**
@@ -113,7 +113,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
-        verify(locationManager).setLocationUpdatesEnabled(true);
+        verify(locationClient).setLocationUpdatesEnabled(true);
         assertTrue(result.getValue().getBoolean(false));
     }
 
@@ -127,7 +127,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
-        verifyZeroInteractions(locationManager);
+        verifyZeroInteractions(locationClient);
         assertFalse(result.getValue().getBoolean(true));
     }
 
@@ -141,8 +141,8 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);
-        verify(locationManager).setLocationUpdatesEnabled(true);
-        verify(locationManager).setBackgroundLocationAllowed(true);
+        verify(locationClient).setLocationUpdatesEnabled(true);
+        verify(locationClient).setBackgroundLocationAllowed(true);
 
         assertTrue(result.getValue().getBoolean(false));
     }
@@ -157,7 +157,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);
-        verifyZeroInteractions(locationManager);
+        verifyZeroInteractions(locationClient);
         assertFalse(result.getValue().getBoolean(true));
     }
 

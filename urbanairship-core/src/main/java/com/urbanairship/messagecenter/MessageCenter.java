@@ -68,9 +68,9 @@ public class MessageCenter extends AirshipComponent {
     private OnShowMessageCenterListener onShowMessageCenterListener;
 
     /**
-     * Gets the shared Accengage instance.
+     * Gets the shared Message Center instance.
      *
-     * @return The shared Accengage instance.
+     * @return The shared Message Center  instance.
      */
     @NonNull
     public static MessageCenter shared() {

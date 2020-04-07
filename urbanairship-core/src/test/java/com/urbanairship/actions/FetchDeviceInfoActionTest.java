@@ -5,11 +5,11 @@ package com.urbanairship.actions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.location.UALocationManager;
-import com.urbanairship.channel.NamedUser;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
@@ -30,7 +30,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
     private AirshipChannel airshipChannel;
     private PushManager pushManager;
     private NamedUser namedUser;
-    private UALocationManager locationManager;
+    private AirshipLocationClient locationClient;
     private FetchDeviceInfoAction action;
 
     @Action.Situation
@@ -41,11 +41,11 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         airshipChannel = mock(AirshipChannel.class);
         pushManager = mock(PushManager.class);
         namedUser = mock(NamedUser.class);
-        locationManager = mock(UALocationManager.class);
+        locationClient = mock(AirshipLocationClient.class);
         TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setNamedUser(namedUser);
-        TestApplication.getApplication().setLocationManager(locationManager);
+        TestApplication.getApplication().setLocationClient(locationClient);
 
         this.action = new FetchDeviceInfoAction();
 
@@ -85,7 +85,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         when(airshipChannel.getId()).thenReturn(channelId);
         when(pushManager.isOptIn()).thenReturn(true);
         when(airshipChannel.getTags()).thenReturn(new HashSet<>(tags));
-        when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
+        when(locationClient.isLocationUpdatesEnabled()).thenReturn(true);
         when(namedUser.getId()).thenReturn(namedUserId);
 
         JsonMap result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)).getValue().getMap();
@@ -107,7 +107,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         when(airshipChannel.getId()).thenReturn(channelId);
         when(pushManager.isOptIn()).thenReturn(true);
         when(airshipChannel.getTags()).thenReturn(new HashSet<String>());
-        when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
+        when(locationClient.isLocationUpdatesEnabled()).thenReturn(true);
         when(namedUser.getId()).thenReturn(namedUserId);
 
         JsonMap result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)).getValue().getMap();

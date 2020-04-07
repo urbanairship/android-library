@@ -6,15 +6,16 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -28,17 +29,21 @@ import static org.mockito.Mockito.verify;
 public class LocationReceiverTest extends BaseTestCase {
 
     private LocationReceiver locationReceiver;
-    private UALocationManager locationManager;
+    private AirshipLocationManager locationManager;
 
     @Before
     public void setup() {
-        locationManager = mock(UALocationManager.class);
-        TestApplication.getApplication().setLocationManager(locationManager);
+        locationManager = mock(AirshipLocationManager.class);
 
         locationReceiver = new LocationReceiver(new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
+            }
+        }, new Callable<AirshipLocationManager>() {
+            @Override
+            public AirshipLocationManager call() throws Exception {
+                return locationManager;
             }
         });
     }

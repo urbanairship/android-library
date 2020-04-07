@@ -3,16 +3,11 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.os.ConfigurationCompat;
-import androidx.core.os.LocaleListCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.location.UALocationManager;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
@@ -23,6 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.os.ConfigurationCompat;
+import androidx.core.os.LocaleListCompat;
 
 /**
  * Audience checks.
@@ -100,7 +101,7 @@ public abstract class AudienceChecks {
         }
 
         UAirship airship = UAirship.shared();
-        UALocationManager locationManager = airship.getLocationManager();
+        AirshipLocationClient locationClient = airship.getLocationClient();
         PushManager pushManager = airship.getPushManager();
         AirshipChannel channel = airship.getChannel();
 
@@ -113,7 +114,8 @@ public abstract class AudienceChecks {
                 return false;
             }
 
-            if (audience.getLocationOptIn() != locationManager.isOptIn()) {
+            boolean optedIn = locationClient != null && locationClient.isOptIn();
+            if (audience.getLocationOptIn() != optedIn) {
                 return false;
             }
         }

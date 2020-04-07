@@ -1,11 +1,12 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.modules;
+package com.urbanairship.modules.messagecenter;
 
 import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.modules.ModuleLoader;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
