@@ -197,15 +197,7 @@ public class Accengage extends AirshipComponent {
      */
     @NonNull
     public static Accengage shared() {
-        if (sharedInstance == null) {
-            sharedInstance = (Accengage) UAirship.shared().getComponent(Accengage.class);
-        }
-
-        if (sharedInstance == null) {
-            throw new IllegalStateException("Takeoff must be called");
-        }
-
-        return sharedInstance;
+        return UAirship.shared().requireComponent(Accengage.class);
     }
 
     /**

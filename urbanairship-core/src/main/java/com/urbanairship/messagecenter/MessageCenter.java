@@ -43,8 +43,6 @@ public class MessageCenter extends AirshipComponent {
     @NonNull
     public static final String MESSAGE_DATA_SCHEME = "message";
 
-    private static volatile MessageCenter sharedInstance;
-
     private Predicate<Message> predicate;
 
     /**
@@ -70,19 +68,11 @@ public class MessageCenter extends AirshipComponent {
     /**
      * Gets the shared Message Center instance.
      *
-     * @return The shared Message Center  instance.
+     * @return The shared Message Center instance.
      */
     @NonNull
     public static MessageCenter shared() {
-        if (sharedInstance == null) {
-            sharedInstance = (MessageCenter) UAirship.shared().getComponent(MessageCenter.class);
-        }
-
-        if (sharedInstance == null) {
-            throw new IllegalStateException("Takeoff must be called");
-        }
-
-        return sharedInstance;
+        return UAirship.shared().requireComponent(MessageCenter.class);
     }
 
     /**

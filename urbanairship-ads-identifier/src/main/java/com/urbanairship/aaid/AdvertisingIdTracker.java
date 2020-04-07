@@ -2,12 +2,8 @@
 
 package com.urbanairship.aaid;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.provider.Settings;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -26,25 +22,28 @@ import com.urbanairship.util.UAStringUtil;
 import java.io.IOException;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 /**
  * Helper class that auto tracks the android advertising Id. The ID will
  * automatically be set on {@link Analytics} by editing the associated identifiers
  * using {@link Analytics#editAssociatedIdentifiers()}.
  */
 public class AdvertisingIdTracker extends AirshipComponent {
+
     private final Executor executor = AirshipExecutors.newSerialExecutor();
 
     interface Callback {
+
         void onResult(@Nullable String advertisingId, boolean isLimitedTrackingEnabled);
 
         void onError(Exception e);
+
     }
 
     private static final String ENABLED_KEY = "com.urbanairship.analytics.ADVERTISING_ID_TRACKING";
-
-    // Using application context
-    @SuppressLint("StaticFieldLeak")
-    private static AdvertisingIdTracker sharedInstance;
 
     private UAirship airship;
 
@@ -74,15 +73,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
      */
     @NonNull
     public static AdvertisingIdTracker shared() {
-        if (sharedInstance == null) {
-            sharedInstance = (AdvertisingIdTracker) UAirship.shared().getComponent(AdvertisingIdTracker.class);
-        }
-
-        if (sharedInstance == null) {
-            throw new IllegalStateException("Takeoff must be called");
-        }
-
-        return sharedInstance;
+        return UAirship.shared().requireComponent(AdvertisingIdTracker.class);
     }
 
     @Override
@@ -223,4 +214,5 @@ public class AdvertisingIdTracker extends AirshipComponent {
             }
         });
     }
+
 }

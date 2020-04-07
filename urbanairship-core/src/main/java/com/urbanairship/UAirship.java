@@ -48,7 +48,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
@@ -125,8 +127,8 @@ public class UAirship {
     public static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
 
     private DeepLinkListener deepLinkListener;
-
-    final List<AirshipComponent> components = new ArrayList<>();
+    private final Map<Class, AirshipComponent> componentClassMap = new HashMap<>();
+    private final List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -985,15 +987,47 @@ public class UAirship {
      * @return The component, or null if not found.
      * @hide
      */
+    @SuppressWarnings("unchecked")
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public AirshipComponent getComponent(Class<? extends AirshipComponent> clazz) {
-        for (AirshipComponent component : components) {
-            if (component.getClass().equals(clazz)) {
-                return component;
+    public <T extends AirshipComponent> T getComponent(Class<T> clazz) {
+        AirshipComponent found = null;
+
+        AirshipComponent cached = componentClassMap.get(clazz);
+        if (cached != null) {
+            found = cached;
+        } else {
+            for (AirshipComponent component : components) {
+                if (component.getClass().equals(clazz)) {
+                    found = component;
+                    componentClassMap.put(clazz, found);
+                    break;
+                }
             }
         }
+
+        if (found != null) {
+            return (T) found;
+        }
+
         return null;
+    }
+
+    /**
+     * Gets an AirshipComponent by class or throws an exception if there is no AirshipComponent for the class.
+     *
+     * @param clazz The component class.
+     * @return The component.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public <T extends AirshipComponent> T requireComponent(Class<T> clazz) {
+        T component = getComponent(clazz);
+        if (component == null) {
+            throw new IllegalArgumentException("Unable to find component " + clazz);
+        }
+        return component;
     }
 
     /**

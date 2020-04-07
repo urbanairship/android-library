@@ -65,8 +65,6 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     private final List<LocationListener> locationListeners = new ArrayList<>();
     private final AirshipChannel airshipChannel;
     private final Analytics analytics;
-    private static volatile AirshipLocationManager sharedInstance;
-
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -98,15 +96,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      */
     @NonNull
     public static AirshipLocationManager shared() {
-        if (sharedInstance == null) {
-            sharedInstance = (AirshipLocationManager) UAirship.shared().getComponent(AirshipLocationManager.class);
-        }
-
-        if (sharedInstance == null) {
-            throw new IllegalStateException("Takeoff must be called");
-        }
-
-        return sharedInstance;
+        return UAirship.shared().requireComponent(AirshipLocationManager.class);
     }
 
     /**
