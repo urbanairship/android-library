@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.messagecenter;
+package com.urbanairship.activity;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

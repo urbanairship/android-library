@@ -7,8 +7,6 @@ import android.view.View;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.richpush.RichPushTestUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +24,7 @@ public class MessageViewAdapterTest extends BaseTestCase {
     public void setup() {
         messageViewAdapter = new MessageViewAdapter(TestApplication.getApplication(), 0) {
             @Override
-            protected void bindView(@NonNull View view, @NonNull RichPushMessage message, int position) {
+            protected void bindView(@NonNull View view, @NonNull Message message, int position) {
 
             }
         };
@@ -39,11 +37,11 @@ public class MessageViewAdapterTest extends BaseTestCase {
         assertNull(messageViewAdapter.getItem(-1));
 
         // Set
-        messageViewAdapter.set(Arrays.asList(RichPushTestUtils.createMessage("id-0", null, false), RichPushTestUtils.createMessage("id-1", null, false)));
+        messageViewAdapter.set(Arrays.asList(MessageCenterTestUtils.createMessage("id-0", null, false), MessageCenterTestUtils.createMessage("id-1", null, false)));
 
         // Verify messages are available
-        assertEquals("id-0", ((RichPushMessage) messageViewAdapter.getItem(0)).getMessageId());
-        assertEquals("id-1", ((RichPushMessage) messageViewAdapter.getItem(1)).getMessageId());
+        assertEquals("id-0", ((Message) messageViewAdapter.getItem(0)).getMessageId());
+        assertEquals("id-1", ((Message) messageViewAdapter.getItem(1)).getMessageId());
 
         // Test non-empty message view adapter
         assertNull(messageViewAdapter.getItem(2));
@@ -57,7 +55,7 @@ public class MessageViewAdapterTest extends BaseTestCase {
         assertEquals(-1, messageViewAdapter.getItemId(-1));
 
         // Set
-        messageViewAdapter.set(Arrays.asList(RichPushTestUtils.createMessage("id-0", null, false), RichPushTestUtils.createMessage("id-1", null, false)));
+        messageViewAdapter.set(Arrays.asList(MessageCenterTestUtils.createMessage("id-0", null, false), MessageCenterTestUtils.createMessage("id-1", null, false)));
 
         // Verify messages are available
         assertEquals("id-0".hashCode(), messageViewAdapter.getItemId(0));

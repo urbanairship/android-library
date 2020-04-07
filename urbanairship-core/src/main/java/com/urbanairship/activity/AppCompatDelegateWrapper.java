@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.messagecenter;
+package com.urbanairship.activity;
 
 import android.app.Activity;
 import android.content.res.Configuration;

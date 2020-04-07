@@ -9,16 +9,15 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.analytics.data.EventsStorage;
 import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.richpush.RichPushDataManager;
-import com.urbanairship.richpush.RichPushTable;
 import com.urbanairship.util.DataManager;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Manages access to Airship Preferences and Rich Push Message data.
@@ -324,8 +323,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @return A database model configured for rich push messages.
          */
         static DatabaseModel createRichPushModel(@NonNull Context context, @NonNull String appKey) {
-            DataManager model = new RichPushDataManager(context, appKey);
-            return new DatabaseModel(model, RichPushTable.TABLE_NAME, RichPushTable.COLUMN_NAME_MESSAGE_ID);
+            DataManager model = new MessageCenterDataManager(context, appKey);
+            return new DatabaseModel(model, MessageCenterDataManager.MessageTable.TABLE_NAME, MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID);
         }
 
         /**

@@ -2,7 +2,7 @@
 
 package com.urbanairship.widget;
 
-import com.urbanairship.messagecenter.MessageWebViewClient;
+import com.urbanairship.messagecenter.webkit.MessageWebViewClient;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
 import androidx.annotation.NonNull;

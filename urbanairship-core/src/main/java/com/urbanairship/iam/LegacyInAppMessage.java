@@ -3,10 +3,8 @@
 package com.urbanairship.iam;
 
 import android.graphics.Color;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.urbanairship.actions.MessageCenterAction;
+import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -22,7 +20,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.urbanairship.richpush.RichPushInbox.INBOX_ACTION_NAMES;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import static com.urbanairship.messagecenter.Inbox.INBOX_ACTION_NAMES;
 
 /**
  * Legacy in-app message model object.

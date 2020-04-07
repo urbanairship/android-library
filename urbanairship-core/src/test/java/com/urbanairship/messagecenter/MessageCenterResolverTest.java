@@ -1,31 +1,32 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 
-public class RichPushResolverTest extends BaseTestCase {
+public class MessageCenterResolverTest extends BaseTestCase {
 
-    private RichPushResolver resolver;
+    private MessageCenterResolver resolver;
 
     @Before
     public void setUp() {
-        resolver = new RichPushResolver(RuntimeEnvironment.application);
+        resolver = new MessageCenterResolver(ApplicationProvider.getApplicationContext());
 
         // Populate the MCRAP database with 10 messages
         for (int i = 0; i < 10; i++) {
-            RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
+            MessageCenterTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
         }
     }
 
@@ -50,7 +51,7 @@ public class RichPushResolverTest extends BaseTestCase {
         int updated = resolver.markMessagesRead(keys);
         assertEquals(keys.size(), updated);
 
-        for (RichPushMessage message : resolver.getMessages()) {
+        for (Message message : resolver.getMessages()) {
             if (!message.isRead()) {
                 continue;
             }
@@ -97,7 +98,7 @@ public class RichPushResolverTest extends BaseTestCase {
         updated = resolver.markMessagesUnread(keys);
         assertEquals(keys.size(), updated);
 
-        for (RichPushMessage message : resolver.getMessages()) {
+        for (Message message : resolver.getMessages()) {
             assertFalse(message.isRead());
         }
     }
@@ -115,7 +116,7 @@ public class RichPushResolverTest extends BaseTestCase {
         int updated = resolver.markMessagesDeleted(keys);
         assertEquals(keys.size(), updated);
 
-        for (RichPushMessage message : resolver.getMessages()) {
+        for (Message message : resolver.getMessages()) {
             if (!message.isDeleted()) {
                 continue;
             }
@@ -144,7 +145,7 @@ public class RichPushResolverTest extends BaseTestCase {
         int deleted = resolver.deleteMessages(keys);
         assertEquals(keys.size(), deleted);
 
-        for (RichPushMessage message : resolver.getMessages()) {
+        for (Message message : resolver.getMessages()) {
             assertFalse(keys.contains(message.getMessageId()));
         }
 

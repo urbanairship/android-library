@@ -9,7 +9,6 @@ import android.view.MenuItem;
 import android.widget.AbsListView;
 
 import com.urbanairship.R;
-import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -63,7 +62,7 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
         final SparseBooleanArray checked = messageListFragment.getAbsListView().getCheckedItemPositions();
         for (int i = 0; i < checked.size(); i++) {
             if (checked.valueAt(i)) {
-                RichPushMessage message = messageListFragment.getMessage(checked.keyAt(i));
+                Message message = messageListFragment.getMessage(checked.keyAt(i));
                 if (message != null && !message.isRead()) {
                     containsUnreadMessage = true;
                     break;
@@ -87,7 +86,7 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
         final SparseBooleanArray checked = messageListFragment.getAbsListView().getCheckedItemPositions();
         for (int i = 0; i < checked.size(); i++) {
             if (checked.valueAt(i)) {
-                RichPushMessage message = messageListFragment.getMessage(checked.keyAt(i));
+                Message message = messageListFragment.getMessage(checked.keyAt(i));
                 if (message != null && !message.isRead()) {
                     containsUnreadMessage = true;
                     break;
@@ -139,7 +138,7 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
         final SparseBooleanArray checked = messageListFragment.getAbsListView().getCheckedItemPositions();
         for (int i = 0; i < checked.size(); i++) {
             if (checked.valueAt(i)) {
-                RichPushMessage message = messageListFragment.getMessage(checked.keyAt(i));
+                Message message = messageListFragment.getMessage(checked.keyAt(i));
                 if (message != null) {
                     messageIds.add(message.getMessageId());
                 }

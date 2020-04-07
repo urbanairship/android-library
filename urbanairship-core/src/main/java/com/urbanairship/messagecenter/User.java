@@ -1,16 +1,15 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,7 +18,7 @@ import androidx.annotation.VisibleForTesting;
 /**
  * The Airship rich push user.
  */
-public class RichPushUser {
+public class User {
 
     /**
      * A listener interface for receiving events for user updates.
@@ -40,11 +39,11 @@ public class RichPushUser {
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
     private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
-    private final List<Listener> listeners = new ArrayList<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     private final PreferenceDataStore preferences;
 
-    RichPushUser(@NonNull PreferenceDataStore preferenceDataStore) {
+    User(@NonNull PreferenceDataStore preferenceDataStore) {
         this.preferences = preferenceDataStore;
         String password = preferences.getString(USER_PASSWORD_KEY, null);
 
@@ -63,9 +62,7 @@ public class RichPushUser {
      * @param listener An object implementing the {@link Listener} interface.
      */
     public void addListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     /**
@@ -74,16 +71,12 @@ public class RichPushUser {
      * @param listener An object implementing the {@link Listener} interface.
      */
     public void removeListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
+        listeners.remove(listener);
     }
 
     void onUserUpdated(boolean success) {
-        synchronized (listeners) {
-            for (Listener listener : new ArrayList<>(listeners)) {
-                listener.onUserUpdated(success);
-            }
+        for (Listener listener : listeners) {
+            listener.onUserUpdated(success);
         }
     }
 

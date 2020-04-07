@@ -1,11 +1,14 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.messagecenter.actions;
 
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.Inbox;
+import com.urbanairship.messagecenter.Message;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Callable;
@@ -14,7 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
+ * Starts an activity to display either the {@link Inbox} or a {@link Message} using
  * either {@link MessageCenter#showMessageCenter()} ()} or {@link MessageCenter#showMessageCenter(String)}.
  * <p>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,

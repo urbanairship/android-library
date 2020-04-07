@@ -5,16 +5,16 @@ package com.urbanairship.messagecenter;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentTransaction;
 import android.view.MenuItem;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.activity.ThemedActivity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentTransaction;
 
 /**
  * Manages the message view pager and display messages
@@ -25,7 +25,7 @@ public class MessageActivity extends ThemedActivity {
 
     private String messageId;
 
-    private final RichPushInbox.Listener updateMessageListener = new RichPushInbox.Listener() {
+    private final InboxListener updateMessageListener = new InboxListener() {
         @Override
         public void onInboxUpdated() {
             if (messageId != null) {
@@ -110,7 +110,7 @@ public class MessageActivity extends ThemedActivity {
      * @param messageId The message Id.
      */
     private void updateTitle(@Nullable String messageId) {
-        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(messageId);
+        Message message = MessageCenter.shared().getInbox().getMessage(messageId);
         if (message == null) {
             setTitle(null);
         } else {
@@ -121,6 +121,7 @@ public class MessageActivity extends ThemedActivity {
     @SuppressLint("UnknownNullness")
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         String newMessageId = MessageCenter.parseMessageId(intent);
         if (newMessageId != null) {
             messageId = newMessageId;

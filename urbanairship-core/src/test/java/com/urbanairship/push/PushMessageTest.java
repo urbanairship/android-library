@@ -12,7 +12,7 @@ import android.os.Parcel;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.MessageCenterAction;
+import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 

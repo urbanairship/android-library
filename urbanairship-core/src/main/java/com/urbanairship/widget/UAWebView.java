@@ -5,7 +5,7 @@ package com.urbanairship.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.urbanairship.messagecenter.MessageWebView;
+import com.urbanairship.messagecenter.webkit.MessageWebView;
 import com.urbanairship.webkit.AirshipWebView;
 
 import androidx.annotation.NonNull;

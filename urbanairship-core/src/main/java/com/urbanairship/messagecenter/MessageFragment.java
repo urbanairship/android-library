@@ -15,8 +15,8 @@ import android.widget.TextView;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.webkit.MessageWebView;
+import com.urbanairship.messagecenter.webkit.MessageWebViewClient;
 import com.urbanairship.widget.UAWebChromeClient;
 
 import java.lang.annotation.Retention;
@@ -29,7 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 /**
- * Fragment that displays a {@link RichPushMessage}.
+ * Fragment that displays a {@link Message}.
  */
 public class MessageFragment extends Fragment {
 
@@ -59,7 +59,7 @@ public class MessageFragment extends Fragment {
 
     private MessageWebView webView;
     private View progressBar;
-    private RichPushMessage message;
+    private Message message;
     private View errorPage;
     private Button retryButton;
     private TextView errorMessage;
@@ -334,9 +334,9 @@ public class MessageFragment extends Fragment {
     }
 
     /**
-     * Returns the fragment's {@link RichPushMessage} ID.
+     * Returns the fragment's {@link Message} ID.
      *
-     * @return The {@link RichPushMessage} ID.
+     * @return The {@link Message} ID.
      */
     @Nullable
     public String getMessageId() {
@@ -354,7 +354,7 @@ public class MessageFragment extends Fragment {
 
         if (message == null) {
             Logger.debug("MessageFragment - Fetching messages.");
-            fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+            fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new Inbox.FetchMessagesCallback() {
                 @Override
                 public void onFinished(boolean success) {
                     message = MessageCenter.shared().getInbox().getMessage(getMessageId());

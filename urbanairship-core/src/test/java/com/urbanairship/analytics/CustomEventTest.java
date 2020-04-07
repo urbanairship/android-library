@@ -9,7 +9,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.Message;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -202,7 +202,7 @@ public class CustomEventTest extends BaseTestCase {
      */
     @Test
     public void testInteractionFromMessage() throws JSONException {
-        RichPushMessage message = mock(RichPushMessage.class);
+        Message message = mock(Message.class);
         when(message.getMessageId()).thenReturn("message id");
 
         CustomEvent event = CustomEvent.newBuilder("event name")

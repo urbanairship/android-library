@@ -1,12 +1,13 @@
-package com.urbanairship.messagecenter;
+package com.urbanairship.messagecenter.webkit;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 
 import com.urbanairship.Logger;
-import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.richpush.RichPushUser;
+import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.messagecenter.Message;
+import com.urbanairship.messagecenter.User;
 import com.urbanairship.webkit.AirshipWebView;
 
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import androidx.annotation.Nullable;
  */
 public class MessageWebView extends AirshipWebView {
 
-    private RichPushMessage currentMessage;
+    private Message currentMessage;
 
     /**
      * MessageWebView Constructor
@@ -71,13 +72,13 @@ public class MessageWebView extends AirshipWebView {
      * @param message The RichPushMessage that will be displayed.
      */
     @SuppressLint("NewApi")
-    public void loadRichPushMessage(@Nullable RichPushMessage message) {
+    public void loadRichPushMessage(@Nullable Message message) {
         if (message == null) {
             Logger.error("Unable to load null message into MessageWebView");
             return;
         }
 
-        RichPushUser user = MessageCenter.shared().getUser();
+        User user = MessageCenter.shared().getUser();
 
         // Send authorization in the headers if the web view supports it
         HashMap<String, String> headers = new HashMap<>();
@@ -100,7 +101,7 @@ public class MessageWebView extends AirshipWebView {
      * @return The current RichPushMessage that was loaded.
      */
     @Nullable
-    public RichPushMessage getCurrentMessage() {
+    public Message getCurrentMessage() {
         return currentMessage;
     }
 

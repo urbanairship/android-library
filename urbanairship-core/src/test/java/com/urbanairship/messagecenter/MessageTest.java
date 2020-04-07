@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
@@ -16,7 +16,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-public class RichPushMessageTest extends BaseTestCase {
+public class MessageTest extends BaseTestCase {
 
     private static final String MCRAP_MESSAGE = "{\"content_size\":44,\"extra\":{}," +
             "\"message_url\":\"https:\\/\\/device-api.urbanairship.com\\/api\\/user\\/test\\/messages\\/message\\/MESSAGE_ID\\/\"," +
@@ -30,7 +30,7 @@ public class RichPushMessageTest extends BaseTestCase {
      */
     @Test
     public void testMessage() throws JsonException {
-        RichPushMessage message = RichPushMessage.create(JsonValue.parseString(MCRAP_MESSAGE), true, false);
+        Message message = Message.create(JsonValue.parseString(MCRAP_MESSAGE), true, false);
 
         assertEquals("MESSAGE_ID", message.getMessageId());
         assertEquals("MESSAGE_TITLE", message.getTitle());
@@ -63,7 +63,7 @@ public class RichPushMessageTest extends BaseTestCase {
         Map<String, JsonValue> map = JsonValue.parseString(MCRAP_MESSAGE).getMap().getMap();
         map.put("message_expiry", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000l)));
 
-        RichPushMessage message = RichPushMessage.create(JsonValue.wrap(map), true, false);
+        Message message = Message.create(JsonValue.wrap(map), true, false);
 
         // Expiry
         assertEquals(10000l, message.getExpirationDateMS().longValue());

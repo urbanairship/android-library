@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.messagecenter;
+package com.urbanairship.messagecenter.webkit;
 
 import android.os.Bundle;
 import android.webkit.WebView;
@@ -8,7 +8,8 @@ import android.webkit.WebView;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.javascript.JavaScriptEnvironment;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.messagecenter.Message;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
 import java.text.SimpleDateFormat;
@@ -46,7 +47,7 @@ public class MessageWebViewClient extends AirshipWebViewClient {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected ActionRunRequest extendActionRequest(@NonNull ActionRunRequest request, @NonNull WebView webView) {
         Bundle metadata = new Bundle();
-        RichPushMessage message = getMessage(webView);
+        Message message = getMessage(webView);
         if (message != null) {
             metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
@@ -63,7 +64,7 @@ public class MessageWebViewClient extends AirshipWebViewClient {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected JavaScriptEnvironment.Builder extendJavascriptEnvironment(@NonNull JavaScriptEnvironment.Builder builder, @NonNull WebView webView) {
-        final RichPushMessage message = getMessage(webView);
+        final Message message = getMessage(webView);
 
         return super.extendJavascriptEnvironment(builder,webView)
                     .addGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1)
@@ -82,7 +83,7 @@ public class MessageWebViewClient extends AirshipWebViewClient {
      */
     @MainThread
     @Nullable
-    private RichPushMessage getMessage(@NonNull WebView webView) {
+    private Message getMessage(@NonNull WebView webView) {
         return MessageCenter.shared().getInbox().getMessageByUrl(webView.getUrl());
     }
 

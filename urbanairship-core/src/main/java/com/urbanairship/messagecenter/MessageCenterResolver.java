@@ -1,13 +1,11 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UrbanAirshipProvider;
@@ -15,6 +13,7 @@ import com.urbanairship.UrbanAirshipResolver;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.MessageCenterDataManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -22,15 +21,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * Rich Push specific database operations.
  */
-class RichPushResolver extends UrbanAirshipResolver {
+class MessageCenterResolver extends UrbanAirshipResolver {
 
-    private static final String WHERE_CLAUSE_CHANGED = RichPushTable.COLUMN_NAME_UNREAD +
-            " <> " + RichPushTable.COLUMN_NAME_UNREAD_ORIG;
-    private static final String WHERE_CLAUSE_READ = RichPushTable.COLUMN_NAME_UNREAD + " = ?";
-    private static final String WHERE_CLAUSE_MESSAGE_ID = RichPushTable.COLUMN_NAME_MESSAGE_ID + " = ?";
+    private static final String WHERE_CLAUSE_CHANGED = MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD +
+            " <> " + MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD_ORIG;
+    private static final String WHERE_CLAUSE_READ = MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD + " = ?";
+    private static final String WHERE_CLAUSE_MESSAGE_ID = MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID + " = ?";
     private static final String FALSE_VALUE = "0";
     private static final String TRUE_VALUE = "1";
     private final Uri uri;
@@ -40,19 +42,19 @@ class RichPushResolver extends UrbanAirshipResolver {
      *
      * @param context The application context.
      */
-    RichPushResolver(Context context) {
+    MessageCenterResolver(Context context) {
         super(context);
         this.uri = UrbanAirshipProvider.getRichPushContentUri(context);
     }
 
     /**
-     * Gets all the {@link RichPushMessage} instances from the database.
+     * Gets all the {@link Message} instances from the database.
      *
-     * @return A list of {@link RichPushMessage}.
+     * @return A list of {@link Message}.
      */
     @NonNull
-    List<RichPushMessage> getMessages() {
-        List<RichPushMessage> messages = new ArrayList<>();
+    List<Message> getMessages() {
+        List<Message> messages = new ArrayList<>();
 
         Cursor cursor = this.query(this.uri, null, null, null, null);
         if (cursor == null) {
@@ -62,11 +64,11 @@ class RichPushResolver extends UrbanAirshipResolver {
         // Read all the messages from the database
         while (cursor.moveToNext()) {
             try {
-                String messageJson = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
-                boolean unreadClient = cursor.getInt(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD)) == 1;
-                boolean deleted = cursor.getInt(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_DELETED)) == 1;
+                String messageJson = cursor.getString(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
+                boolean unreadClient = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD)) == 1;
+                boolean deleted = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED)) == 1;
 
-                RichPushMessage message = RichPushMessage.create(JsonValue.parseString(messageJson), unreadClient, deleted);
+                Message message = Message.create(JsonValue.parseString(messageJson), unreadClient, deleted);
                 if (message != null) {
                     messages.add(message);
                 }
@@ -81,7 +83,7 @@ class RichPushResolver extends UrbanAirshipResolver {
     }
 
     /**
-     * Gets all the {@link RichPushMessage} IDs in the database.
+     * Gets all the {@link Message} IDs in the database.
      *
      * @return A set of message IDs.
      */
@@ -92,7 +94,7 @@ class RichPushResolver extends UrbanAirshipResolver {
     }
 
     /**
-     * Gets the IDs of {@link RichPushMessage} in the database where the message is marked read on the
+     * Gets the IDs of {@link Message} in the database where the message is marked read on the
      * client, but not the origin.
      *
      * @return A set of message IDs.
@@ -105,14 +107,14 @@ class RichPushResolver extends UrbanAirshipResolver {
     }
 
     /**
-     * Gets the deleted {@link RichPushMessage} IDs in the database.
+     * Gets the deleted {@link Message} IDs in the database.
      *
      * @return A set of message IDs.
      */
     @NonNull
     Set<String> getDeletedMessageIds() {
         Cursor cursor = this.query(this.uri, null,
-                RichPushTable.COLUMN_NAME_DELETED + " = ?", new String[] { TRUE_VALUE },
+                MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED + " = ?", new String[] { TRUE_VALUE },
                 null);
         return getMessageIdsFromCursor(cursor);
     }
@@ -125,7 +127,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int markMessagesRead(@NonNull Set<String> messageIds) {
         ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_UNREAD, false);
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD, false);
         return this.updateMessages(messageIds, values);
     }
 
@@ -137,7 +139,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int markMessagesUnread(@NonNull Set<String> messageIds) {
         ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_UNREAD, true);
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD, true);
         return this.updateMessages(messageIds, values);
     }
 
@@ -149,7 +151,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int markMessagesDeleted(@NonNull Set<String> messageIds) {
         ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_DELETED, true);
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED, true);
         return this.updateMessages(messageIds, values);
     }
 
@@ -161,7 +163,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int markMessagesReadOrigin(@NonNull Set<String> messageIds) {
         ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, false);
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD_ORIG, false);
         return this.updateMessages(messageIds, values);
     }
 
@@ -172,7 +174,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      * @return Count of messages that were deleted.
      */
     int deleteMessages(@NonNull Set<String> messageIds) {
-        String query = RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )";
+        String query = MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )";
         return this.delete(this.uri, query, messageIds.toArray(new String[0]));
     }
 
@@ -189,7 +191,7 @@ class RichPushResolver extends UrbanAirshipResolver {
 
             if (values != null) {
                 // Set the client unread status the same as the origin for new messages
-                values.put(RichPushTable.COLUMN_NAME_UNREAD, values.getAsBoolean(RichPushTable.COLUMN_NAME_UNREAD_ORIG));
+                values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD, values.getAsBoolean(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD_ORIG));
                 contentValues.add(values);
             }
         }
@@ -230,7 +232,7 @@ class RichPushResolver extends UrbanAirshipResolver {
     private int updateMessages(@NonNull Set<String> messageIds, @NonNull ContentValues values) {
         return this.update(this.uri,
                 values,
-                RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )",
+                MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )",
                 messageIds.toArray(new String[0]));
     }
 
@@ -251,7 +253,7 @@ class RichPushResolver extends UrbanAirshipResolver {
         int messageIdIndex = -1;
         while (cursor.moveToNext()) {
             if (messageIdIndex == -1) {
-                messageIdIndex = cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID);
+                messageIdIndex = cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID);
             }
             ids.add(cursor.getString(messageIdIndex));
         }
@@ -277,25 +279,25 @@ class RichPushResolver extends UrbanAirshipResolver {
 
         JsonMap messageMap = messagePayload.optMap();
 
-        if (UAStringUtil.isEmpty(messageMap.opt(RichPushMessage.MESSAGE_ID_KEY).getString())) {
+        if (UAStringUtil.isEmpty(messageMap.opt(Message.MESSAGE_ID_KEY).getString())) {
             Logger.error("RichPushResolver - Message is missing an ID: %s", messagePayload);
             return null;
         }
 
         ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_TIMESTAMP, messageMap.opt(RichPushMessage.MESSAGE_SENT_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_MESSAGE_ID, messageMap.opt(RichPushMessage.MESSAGE_ID_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_MESSAGE_URL, messageMap.opt(RichPushMessage.MESSAGE_URL_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, messageMap.opt(RichPushMessage.MESSAGE_BODY_URL_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL, messageMap.opt(RichPushMessage.MESSAGE_READ_URL_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_TITLE, messageMap.opt(RichPushMessage.TITLE_KEY).getString());
-        values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, messageMap.opt(RichPushMessage.UNREAD_KEY).getBoolean(true));
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_TIMESTAMP, messageMap.opt(Message.MESSAGE_SENT_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID, messageMap.opt(Message.MESSAGE_ID_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_URL, messageMap.opt(Message.MESSAGE_URL_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_BODY_URL, messageMap.opt(Message.MESSAGE_BODY_URL_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_READ_URL, messageMap.opt(Message.MESSAGE_READ_URL_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_TITLE, messageMap.opt(Message.TITLE_KEY).getString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD_ORIG, messageMap.opt(Message.UNREAD_KEY).getBoolean(true));
 
-        values.put(RichPushTable.COLUMN_NAME_EXTRA, messageMap.opt(RichPushMessage.EXTRA_KEY).toString());
-        values.put(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageMap.toString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_EXTRA, messageMap.opt(Message.EXTRA_KEY).toString());
+        values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageMap.toString());
 
-        if (messageMap.containsKey(RichPushMessage.MESSAGE_EXPIRY_KEY)) {
-            values.put(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageMap.opt(RichPushMessage.MESSAGE_EXPIRY_KEY).getString());
+        if (messageMap.containsKey(Message.MESSAGE_EXPIRY_KEY)) {
+            values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageMap.opt(Message.MESSAGE_EXPIRY_KEY).getString());
         }
 
         return values;

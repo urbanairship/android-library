@@ -6,9 +6,9 @@ import android.os.Bundle;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.messagecenter.InboxListener;
+import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private final static String LAST_MESSAGE_SENT_DATE = "LAST_MC_SENT_DATE";
 
-    private RichPushInbox.Listener inboxListener = () -> showMessageCenterIndicator();
+    private InboxListener inboxListener = () -> showMessageCenterIndicator();
 
     private Snackbar messageCenterSnackbar;
     private long messageCenterLastSentDate;
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
      * Shows a Message Center indicator.
      */
     private void showMessageCenterIndicator() {
-        List<RichPushMessage> unreadMessage = MessageCenter.shared().getInbox().getUnreadMessages();
+        List<Message> unreadMessage = MessageCenter.shared().getInbox().getUnreadMessages();
 
         // Skip showing the indicator if we have no unread messages or no new messages since the last display
         if (unreadMessage.isEmpty() || messageCenterLastSentDate >= unreadMessage.get(0).getSentDateMS()) {

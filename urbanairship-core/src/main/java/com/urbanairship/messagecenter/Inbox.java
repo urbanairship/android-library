@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.content.Context;
 import android.os.Handler;
@@ -10,9 +10,10 @@ import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
+import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.MessageCenterAction;
+import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -22,7 +23,6 @@ import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
@@ -44,11 +45,11 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 /**
- * The RichPushInbox singleton provides access to the device's local inbox data.
+ * The inbox provides access to the device's local inbox data.
  * Modifications (e.g., deletions or mark read) will be sent to the Airship
  * server the next time the inbox is synchronized.
  */
-public class RichPushInbox {
+public class Inbox {
 
     @NonNull
     public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
@@ -56,18 +57,6 @@ public class RichPushInbox {
             MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME,
             MessageCenterAction.REGISTRY_NAME_OVERLAY,
             MessageCenterAction.REGISTRY_SHORT_NAME_OVERLAY);
-
-    /**
-     * A listener interface for receiving event callbacks related to inbox updates.
-     */
-    public interface Listener {
-
-        /**
-         * Called when the inbox is updated.
-         */
-        void onInboxUpdated();
-
-    }
 
     /**
      * A callback used to be notified when refreshing messages.
@@ -83,33 +72,18 @@ public class RichPushInbox {
 
     }
 
-    /**
-     * Predicate interface for {@link RichPushMessage}.
-     */
-    public interface Predicate {
-
-        /**
-         * Applies the predicate to the provided message.
-         *
-         * @param message A {@link RichPushMessage} instance.
-         * @return {@code true} if the message matches the predicate, otherwise {@code false}.
-         */
-        boolean apply(@NonNull RichPushMessage message);
-
-    }
-
     private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
 
     private final static Object inboxLock = new Object();
-    private final List<Listener> listeners = new ArrayList<>();
+    private final List<InboxListener> listeners = new CopyOnWriteArrayList<>();
 
     private final Set<String> deletedMessageIds = new HashSet<>();
-    private final Map<String, RichPushMessage> unreadMessages = new HashMap<>();
-    private final Map<String, RichPushMessage> readMessages = new HashMap<>();
-    private final Map<String, RichPushMessage> messageUrlMap = new HashMap<>();
+    private final Map<String, Message> unreadMessages = new HashMap<>();
+    private final Map<String, Message> readMessages = new HashMap<>();
+    private final Map<String, Message> messageUrlMap = new HashMap<>();
 
-    private final RichPushResolver richPushResolver;
-    private final RichPushUser user;
+    private final MessageCenterResolver messageCenterResolver;
+    private final User user;
     private final Executor executor;
     private final Context context;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -131,10 +105,10 @@ public class RichPushInbox {
      * @param dataStore The preference data store.
      * @hide
      */
-    public RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                         @NonNull AirshipChannel airshipChannel) {
-        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore),
-                new RichPushResolver(context), AirshipExecutors.newSerialExecutor(),
+    public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+                 @NonNull AirshipChannel airshipChannel) {
+        this(context, dataStore, JobDispatcher.shared(context), new User(dataStore),
+                new MessageCenterResolver(context), AirshipExecutors.newSerialExecutor(),
                 GlobalActivityMonitor.shared(context), airshipChannel);
     }
 
@@ -142,13 +116,13 @@ public class RichPushInbox {
      * @hide
      */
     @VisibleForTesting
-    RichPushInbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
-                  @NonNull RichPushUser user, @NonNull RichPushResolver resolver, @NonNull Executor executor,
-                  @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
+    Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
+          @NonNull User user, @NonNull MessageCenterResolver resolver, @NonNull Executor executor,
+          @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
-        this.richPushResolver = resolver;
+        this.messageCenterResolver = resolver;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
         this.airshipChannel = airshipChannel;
@@ -181,9 +155,9 @@ public class RichPushInbox {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void init() {
+    void init() {
         if (UAStringUtil.isEmpty(user.getId())) {
-            final RichPushUser.Listener userListener = new RichPushUser.Listener() {
+            final User.Listener userListener = new User.Listener() {
                 @Override
                 public void onUserUpdated(boolean success) {
                     if (success) {
@@ -231,7 +205,7 @@ public class RichPushInbox {
     @WorkerThread
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
                     airship.getRuntimeConfig(), dataStore);
@@ -244,40 +218,36 @@ public class RichPushInbox {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void tearDown() {
+    void tearDown() {
         activityMonitor.removeApplicationListener(listener);
     }
 
     /**
-     * Returns the {@link RichPushUser}.
+     * Returns the {@link User}.
      *
-     * @return The {@link RichPushUser}.
+     * @return The {@link User}.
      */
     @NonNull
-    public RichPushUser getUser() {
+    public User getUser() {
         return user;
     }
 
     /**
      * Subscribe a listener for inbox update event callbacks.
      *
-     * @param listener An object implementing the {@link RichPushInbox.Listener} interface.
+     * @param listener An object implementing the {@link InboxListener} interface.
      */
-    public void addListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
+    public void addListener(@NonNull InboxListener listener) {
+        listeners.add(listener);
     }
 
     /**
      * Unsubscribe a listener for inbox update event callbacks.
      *
-     * @param listener An object implementing the {@link RichPushInbox.Listener} interface.
+     * @param listener An object implementing the {@link InboxListener} interface.
      */
-    public void removeListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
+    public void removeListener(@NonNull InboxListener listener) {
+        listeners.remove(listener);
     }
 
     /**
@@ -287,7 +257,7 @@ public class RichPushInbox {
      * the application foregrounds or when a notification with an associated message is received.
      * <p>
      * If the fetch request completes and results in a change to the messages,
-     * {@link Listener#onInboxUpdated()} will be called.
+     * {@link InboxListener#onInboxUpdated()} will be called.
      */
     public void fetchMessages() {
         fetchMessages(null, null);
@@ -300,7 +270,7 @@ public class RichPushInbox {
      * the application foregrounds or when a notification with an associated message is received.
      * <p>
      * If the fetch request completes and results in a change to the messages,
-     * {@link Listener#onInboxUpdated()} will be called.
+     * {@link InboxListener#onInboxUpdated()} will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
@@ -317,7 +287,7 @@ public class RichPushInbox {
      * the application foregrounds or when a notification with an associated message is received.
      * <p>
      * If the fetch request completes and results in a change to the messages,
-     * {@link Listener#onInboxUpdated()} will be called.
+     * {@link InboxListener#onInboxUpdated()} will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @param looper The looper to post the callback on.
@@ -414,14 +384,14 @@ public class RichPushInbox {
      * @return A filtered collection of messages
      */
     @NonNull
-    private Collection<RichPushMessage> filterMessages(@NonNull Collection<RichPushMessage> messages, @Nullable Predicate predicate) {
-        List<RichPushMessage> filteredMessages = new ArrayList<>();
+    private Collection<Message> filterMessages(@NonNull Collection<Message> messages, @Nullable Predicate<Message> predicate) {
+        List<Message> filteredMessages = new ArrayList<>();
 
         if (predicate == null) {
             return messages;
         }
 
-        for (RichPushMessage message : messages) {
+        for (Message message : messages) {
             if (predicate.apply(message)) {
                 filteredMessages.add(message);
             }
@@ -435,12 +405,12 @@ public class RichPushInbox {
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of filtered and sorted {@link RichPushMessage}s.
+     * @return List of filtered and sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getMessages(@Nullable Predicate predicate) {
+    public List<Message> getMessages(@Nullable Predicate<Message> predicate) {
         synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>();
+            List<Message> messages = new ArrayList<>();
             messages.addAll(filterMessages(unreadMessages.values(), predicate));
             messages.addAll(filterMessages(readMessages.values(), predicate));
             Collections.sort(messages, MESSAGE_COMPARATOR);
@@ -451,10 +421,10 @@ public class RichPushInbox {
     /**
      * Gets a list of RichPushMessages. Sorted by descending sent-at date.
      *
-     * @return List of sorted {@link RichPushMessage}s.
+     * @return List of sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getMessages() {
+    public List<Message> getMessages() {
         return getMessages(null);
     }
 
@@ -463,12 +433,12 @@ public class RichPushInbox {
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of sorted {@link RichPushMessage}s.
+     * @return List of sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getUnreadMessages(@Nullable Predicate predicate) {
+    public List<Message> getUnreadMessages(@Nullable Predicate<Message> predicate) {
         synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>(filterMessages(unreadMessages.values(), predicate));
+            List<Message> messages = new ArrayList<>(filterMessages(unreadMessages.values(), predicate));
             Collections.sort(messages, MESSAGE_COMPARATOR);
             return messages;
         }
@@ -477,10 +447,10 @@ public class RichPushInbox {
     /**
      * Gets a list of unread RichPushMessages. Sorted by descending sent-at date.
      *
-     * @return List of sorted {@link RichPushMessage}s.
+     * @return List of sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getUnreadMessages() {
+    public List<Message> getUnreadMessages() {
         return getUnreadMessages(null);
     }
 
@@ -489,12 +459,12 @@ public class RichPushInbox {
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of sorted {@link RichPushMessage}s.
+     * @return List of sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getReadMessages(@Nullable Predicate predicate) {
+    public List<Message> getReadMessages(@Nullable Predicate<Message> predicate) {
         synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>(filterMessages(readMessages.values(), predicate));
+            List<Message> messages = new ArrayList<>(filterMessages(readMessages.values(), predicate));
             Collections.sort(messages, MESSAGE_COMPARATOR);
             return messages;
         }
@@ -503,21 +473,21 @@ public class RichPushInbox {
     /**
      * Gets a list of read RichPushMessages. Sorted by descending sent-at date.
      *
-     * @return List of sorted {@link RichPushMessage}s.
+     * @return List of sorted {@link Message}s.
      */
     @NonNull
-    public List<RichPushMessage> getReadMessages() {
+    public List<Message> getReadMessages() {
         return getReadMessages(null);
     }
 
     /**
-     * Get the {@link RichPushMessage} with the corresponding message ID.
+     * Get the {@link Message} with the corresponding message ID.
      *
-     * @param messageId The message ID of the desired {@link RichPushMessage}.
-     * @return A {@link RichPushMessage} or <code>null</code> if one does not exist.
+     * @param messageId The message ID of the desired {@link Message}.
+     * @return A {@link Message} or <code>null</code> if one does not exist.
      */
     @Nullable
-    public RichPushMessage getMessage(@Nullable String messageId) {
+    public Message getMessage(@Nullable String messageId) {
         if (messageId == null) {
             return null;
         }
@@ -531,13 +501,13 @@ public class RichPushInbox {
     }
 
     /**
-     * Get the {@link RichPushMessage} with the corresponding message body URL.
+     * Get the {@link Message} with the corresponding message body URL.
      *
-     * @param messageUrl The message body URL of the desired {@link RichPushMessage}.
-     * @return A {@link RichPushMessage} or <code>null</code> if one does not exist.
+     * @param messageUrl The message body URL of the desired {@link Message}.
+     * @return A {@link Message} or <code>null</code> if one does not exist.
      */
     @Nullable
-    public RichPushMessage getMessageByUrl(@Nullable String messageUrl) {
+    public Message getMessageByUrl(@Nullable String messageUrl) {
         if (messageUrl == null) {
             return null;
         }
@@ -550,7 +520,7 @@ public class RichPushInbox {
     // actions
 
     /**
-     * Mark {@link RichPushMessage}s read in bulk.
+     * Mark {@link Message}s read in bulk.
      *
      * @param messageIds A set of message ids.
      */
@@ -558,14 +528,14 @@ public class RichPushInbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                richPushResolver.markMessagesRead(messageIds);
+                messageCenterResolver.markMessagesRead(messageIds);
             }
         });
 
         synchronized (inboxLock) {
             for (String messageId : messageIds) {
 
-                RichPushMessage message = unreadMessages.get(messageId);
+                Message message = unreadMessages.get(messageId);
 
                 if (message != null) {
                     message.unreadClient = false;
@@ -579,7 +549,7 @@ public class RichPushInbox {
     }
 
     /**
-     * Mark {@link RichPushMessage}s unread in bulk.
+     * Mark {@link Message}s unread in bulk.
      *
      * @param messageIds A set of message ids.
      */
@@ -587,14 +557,14 @@ public class RichPushInbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                richPushResolver.markMessagesUnread(messageIds);
+                messageCenterResolver.markMessagesUnread(messageIds);
             }
         });
 
         synchronized (inboxLock) {
             for (String messageId : messageIds) {
 
-                RichPushMessage message = readMessages.get(messageId);
+                Message message = readMessages.get(messageId);
 
                 if (message != null) {
                     message.unreadClient = true;
@@ -608,7 +578,7 @@ public class RichPushInbox {
     }
 
     /**
-     * Mark {@link RichPushMessage}s deleted.
+     * Mark {@link Message}s deleted.
      * <p>
      * Note that in most cases these messages aren't immediately deleted on the server, but they will
      * be inaccessible on the device as soon as they're marked deleted.
@@ -619,14 +589,14 @@ public class RichPushInbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                richPushResolver.markMessagesDeleted(messageIds);
+                messageCenterResolver.markMessagesDeleted(messageIds);
             }
         });
 
         synchronized (inboxLock) {
             for (String messageId : messageIds) {
 
-                RichPushMessage message = getMessage(messageId);
+                Message message = getMessage(messageId);
                 if (message != null) {
                     message.deleted = true;
                     unreadMessages.remove(messageId);
@@ -646,7 +616,7 @@ public class RichPushInbox {
      */
     void refresh(boolean notify) {
 
-        List<RichPushMessage> messageList = richPushResolver.getMessages();
+        List<Message> messageList = messageCenterResolver.getMessages();
 
         // Sync the messages
         synchronized (inboxLock) {
@@ -662,7 +632,7 @@ public class RichPushInbox {
             messageUrlMap.clear();
 
             // Process the new messages
-            for (RichPushMessage message : messageList) {
+            for (Message message : messageList) {
 
                 // Deleted
                 if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {
@@ -715,10 +685,8 @@ public class RichPushInbox {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                synchronized (listeners) {
-                    for (Listener listener : new ArrayList<>(listeners)) {
-                        listener.onInboxUpdated();
-                    }
+                for (InboxListener listener : listeners) {
+                    listener.onInboxUpdated();
                 }
             }
         });
@@ -739,10 +707,10 @@ public class RichPushInbox {
         jobDispatcher.dispatch(jobInfo);
     }
 
-    static class SentAtRichPushMessageComparator implements Comparator<RichPushMessage> {
+    static class SentAtRichPushMessageComparator implements Comparator<Message> {
 
         @Override
-        public int compare(@NonNull RichPushMessage lhs, @NonNull RichPushMessage rhs) {
+        public int compare(@NonNull Message lhs, @NonNull Message rhs) {
             if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
                 return lhs.getMessageId().compareTo(rhs.getMessageId());
             } else {

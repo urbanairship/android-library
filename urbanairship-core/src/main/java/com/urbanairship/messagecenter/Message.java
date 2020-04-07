@@ -1,12 +1,11 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.os.Bundle;
 
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
@@ -18,9 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * The primary data structure for Rich Push messages.
+ * The primary data structure for messages.
  */
-public class RichPushMessage implements Comparable<RichPushMessage> {
+public class Message implements Comparable<Message> {
 
     // JSON KEYS
     final static String MESSAGE_EXPIRY_KEY = "message_expiry";
@@ -48,7 +47,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     boolean deleted = false;
     boolean unreadClient;
 
-    private RichPushMessage() {
+    private Message() {
     }
 
     /**
@@ -60,7 +59,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @return A RichPushMessage instance, or {@code null} if the message payload is invalid.
      */
     @Nullable
-    static RichPushMessage create(@NonNull JsonValue messagePayload, boolean unreadClient, boolean deleted) {
+    static Message create(@NonNull JsonValue messagePayload, boolean unreadClient, boolean deleted) {
         JsonMap messageMap = messagePayload.getMap();
         if (messageMap == null) {
             return null;
@@ -86,7 +85,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             return null;
         }
 
-        RichPushMessage message = new RichPushMessage();
+        Message message = new Message();
         message.messageId = messageId;
         message.messageUrl = messageUrl;
         message.messageBodyUrl = messageBodyUrl;
@@ -322,17 +321,17 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     }
 
     @Override
-    public int compareTo(@NonNull RichPushMessage another) {
+    public int compareTo(@NonNull Message another) {
         return this.getMessageId().compareTo(another.getMessageId());
     }
 
     @Override
     public boolean equals(@Nullable Object o) {
-        if (!(o instanceof RichPushMessage)) {
+        if (!(o instanceof Message)) {
             return false;
         }
 
-        RichPushMessage that = (RichPushMessage) o;
+        Message that = (Message) o;
 
         if (this == that) {
             return true;

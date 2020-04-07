@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
@@ -35,12 +35,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * Job handler for {@link RichPushInbox} component.
+ * Job handler for {@link Inbox} component.
  */
 class InboxJobHandler {
 
     /**
-     * Starts the service in order to update just the {@link RichPushMessage}'s messages.
+     * Starts the service in order to update just the {@link Message}'s messages.
      */
     static final String ACTION_RICH_PUSH_MESSAGES_UPDATE = "ACTION_RICH_PUSH_MESSAGES_UPDATE";
 
@@ -50,7 +50,7 @@ class InboxJobHandler {
     static final String ACTION_SYNC_MESSAGE_STATE = "ACTION_SYNC_MESSAGE_STATE";
 
     /**
-     * Starts the service in order to update just the {@link RichPushUser} itself.
+     * Starts the service in order to update just the {@link User} itself.
      */
     static final String ACTION_RICH_PUSH_USER_UPDATE = "ACTION_RICH_PUSH_USER_UPDATE";
 
@@ -79,32 +79,32 @@ class InboxJobHandler {
     private static final String PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels";
     private static final String PAYLOAD_ADD_KEY = "add";
 
-    private final RichPushResolver resolver;
+    private final MessageCenterResolver resolver;
     private final AirshipRuntimeConfig runtimeConfig;
-    private final RichPushUser user;
-    private final RichPushInbox inbox;
+    private final User user;
+    private final Inbox inbox;
     private final RequestFactory requestFactory;
     private final PreferenceDataStore dataStore;
     private final AirshipChannel channel;
 
     InboxJobHandler(@NonNull Context context,
-                    @NonNull RichPushInbox inbox,
-                    @NonNull RichPushUser user,
+                    @NonNull Inbox inbox,
+                    @NonNull User user,
                     @NonNull AirshipChannel channel,
                     @NonNull AirshipRuntimeConfig runtimeConfig,
                     @NonNull PreferenceDataStore dataStore) {
         this(inbox, user, channel, runtimeConfig, dataStore,
-                RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
+                RequestFactory.DEFAULT_REQUEST_FACTORY, new MessageCenterResolver(context));
     }
 
     @VisibleForTesting
-    InboxJobHandler(@NonNull RichPushInbox inbox,
-                    @NonNull RichPushUser user,
+    InboxJobHandler(@NonNull Inbox inbox,
+                    @NonNull User user,
                     @NonNull AirshipChannel channel,
                     @NonNull AirshipRuntimeConfig runtimeConfig,
                     @NonNull PreferenceDataStore dataStore,
                     @NonNull RequestFactory requestFactory,
-                    @NonNull RichPushResolver resolver) {
+                    @NonNull MessageCenterResolver resolver) {
         this.inbox = inbox;
         this.user = user;
         this.channel = channel;
@@ -115,7 +115,7 @@ class InboxJobHandler {
     }
 
     /**
-     * Called to handle jobs from {@link RichPushInbox#onPerformJob(UAirship, JobInfo)}.
+     * Called to handle jobs from {@link Inbox#onPerformJob(UAirship, JobInfo)}.
      *
      * @param jobInfo The airship jobInfo.
      * @return The job result.
@@ -263,7 +263,7 @@ class InboxJobHandler {
                 continue;
             }
 
-            String messageId = message.optMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
+            String messageId = message.optMap().opt(Message.MESSAGE_ID_KEY).getString();
             if (messageId == null) {
                 Logger.error("InboxJobHandler - Invalid message payload, missing message ID: %s", message);
                 continue;

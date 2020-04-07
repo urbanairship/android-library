@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
@@ -19,27 +19,25 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-public class RichPushUserTest extends BaseTestCase {
+public class UserTest extends BaseTestCase {
 
     private final String fakeUserId = "fakeUserId";
     private final String fakeToken = "fakeToken";
     private final String fakeChannelId = "fakeChannelId";
 
-    private RichPushUser user;
+    private User user;
     private PreferenceDataStore dataStore;
     private TestUserListener listener;
     private AirshipChannel mockChannel;
-    private RichPushUser mockUser;
 
     @Before
     public void setUp() {
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        user = new RichPushUser(dataStore);
+        user = new User(dataStore);
         listener = new TestUserListener();
         user.addListener(listener);
 
         mockChannel = Mockito.mock(AirshipChannel.class);
-        mockUser = Mockito.mock(RichPushUser.class);
         TestApplication.getApplication().setChannel(mockChannel);
 
     }
@@ -123,7 +121,7 @@ public class RichPushUserTest extends BaseTestCase {
         dataStore.put("com.urbanairship.user.PASSWORD", fakeToken);
         dataStore.put("com.urbanairship.user.ID", fakeUserId);
 
-        user = new RichPushUser(dataStore);
+        user = new User(dataStore);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
         assertEquals("User password should match", fakeToken, user.getPassword());
@@ -179,7 +177,7 @@ public class RichPushUserTest extends BaseTestCase {
     /**
      * Listener that captures the last update user result
      */
-    private class TestUserListener implements RichPushUser.Listener {
+    private class TestUserListener implements User.Listener {
 
         Boolean lastUpdateUserResult = null;
 

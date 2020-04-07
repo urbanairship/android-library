@@ -11,7 +11,7 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.Message;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -132,7 +132,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMCRAP() throws JSONException {
-        RichPushMessage message = mock(RichPushMessage.class);
+        Message message = mock(Message.class);
         when(message.getMessageId()).thenReturn("message id");
 
         Map map = new HashMap();
@@ -162,7 +162,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMCRAPInteractionSet() throws JSONException {
-        RichPushMessage message = mock(RichPushMessage.class);
+        Message message = mock(Message.class);
         when(message.getMessageId()).thenReturn("message id");
 
         Map map = new HashMap();

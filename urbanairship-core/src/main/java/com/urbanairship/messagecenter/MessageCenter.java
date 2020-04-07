@@ -7,12 +7,11 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushUser;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,6 +44,8 @@ public class MessageCenter extends AirshipComponent {
 
     private static volatile MessageCenter sharedInstance;
 
+    private Predicate<Message> predicate;
+
     /**
      * Listener for showing the message center. If set, the listener
      * will be called to show the message center instead of the default behavior. For more
@@ -62,8 +63,7 @@ public class MessageCenter extends AirshipComponent {
 
     }
 
-    private final RichPushInbox inbox;
-    private RichPushInbox.Predicate predicate;
+    private final Inbox inbox;
     private OnShowMessageCenterListener onShowMessageCenterListener;
 
     /**
@@ -96,7 +96,7 @@ public class MessageCenter extends AirshipComponent {
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull AirshipChannel channel) {
         super(context, dataStore);
-        this.inbox = new RichPushInbox(context, dataStore, channel);
+        this.inbox = new Inbox(context, dataStore, channel);
     }
 
     /**
@@ -133,7 +133,7 @@ public class MessageCenter extends AirshipComponent {
      * @return The inbox.
      */
     @NonNull
-    public RichPushInbox getInbox() {
+    public Inbox getInbox() {
         return inbox;
     }
 
@@ -143,7 +143,7 @@ public class MessageCenter extends AirshipComponent {
      * @return The inbox user.
      */
     @NonNull
-    public RichPushUser getUser() {
+    public User getUser() {
         return inbox.getUser();
     }
 
@@ -153,7 +153,7 @@ public class MessageCenter extends AirshipComponent {
      * @return The default inbox predicate.
      */
     @Nullable
-    public RichPushInbox.Predicate getPredicate() {
+    public Predicate<Message> getPredicate() {
         return predicate;
     }
 
@@ -162,7 +162,7 @@ public class MessageCenter extends AirshipComponent {
      *
      * @param predicate The default inbox predicate.
      */
-    public void setPredicate(@Nullable RichPushInbox.Predicate predicate) {
+    public void setPredicate(@Nullable Predicate<Message> predicate) {
         this.predicate = predicate;
     }
 

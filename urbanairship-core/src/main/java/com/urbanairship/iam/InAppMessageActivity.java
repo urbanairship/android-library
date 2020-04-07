@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.messagecenter.ThemedActivity;
+import com.urbanairship.activity.ThemedActivity;
 
 /**
  * In-app message activity.

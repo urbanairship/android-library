@@ -12,6 +12,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.messagecenter.Message;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
@@ -511,7 +512,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         }
 
         /**
-         * Sets the interaction type and ID from a {@link com.urbanairship.richpush.RichPushMessage}.
+         * Sets the interaction type and ID from a {@link Message}.
          *
          * @param richPushMessageId The rich push message ID that created the custom event.
          * @return The custom event builder.

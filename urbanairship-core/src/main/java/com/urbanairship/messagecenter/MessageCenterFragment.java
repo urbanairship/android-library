@@ -17,10 +17,8 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.urbanairship.Predicate;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.List;
@@ -44,7 +42,7 @@ public class MessageCenterFragment extends Fragment {
     private static final String STATE_ABS_LIST_VIEW = "listView";
     private static final String STATE_PENDING_MESSAGE_ID = "pendingMessageId";
 
-    private RichPushInbox.Predicate predicate;
+    private Predicate<Message> predicate;
 
     private MessageListFragment messageListFragment;
     private boolean isTwoPane;
@@ -54,7 +52,7 @@ public class MessageCenterFragment extends Fragment {
     private int currentMessagePosition = -1;
     private String pendingMessageId;
 
-    private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
+    private final InboxListener inboxListener = new InboxListener() {
         @Override
         public void onInboxUpdated() {
             updateCurrentMessage();
@@ -212,7 +210,7 @@ public class MessageCenterFragment extends Fragment {
                 absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        RichPushMessage message = messageListFragment.getMessage(position);
+                        Message message = messageListFragment.getMessage(position);
                         if (message != null) {
                             showMessage(message.getMessageId());
                         }
@@ -256,7 +254,7 @@ public class MessageCenterFragment extends Fragment {
      * @return The filtered list of messages.
      */
     @NonNull
-    private List<RichPushMessage> getMessages() {
+    private List<Message> getMessages() {
         return MessageCenter.shared().getInbox().getMessages(predicate);
     }
 
@@ -283,7 +281,7 @@ public class MessageCenterFragment extends Fragment {
             return;
         }
 
-        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(messageId);
+        Message message = MessageCenter.shared().getInbox().getMessage(messageId);
         if (message == null) {
             currentMessagePosition = -1;
         } else {
@@ -340,8 +338,8 @@ public class MessageCenterFragment extends Fragment {
     }
 
     private void updateCurrentMessage() {
-        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(currentMessageId);
-        List<RichPushMessage> messages = getMessages();
+        Message message = MessageCenter.shared().getInbox().getMessage(currentMessageId);
+        List<Message> messages = getMessages();
 
         if (isTwoPane && currentMessagePosition != -1 && !messages.contains(message)) {
             if (messages.size() == 0) {
@@ -364,7 +362,7 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param predicate A predicate for filtering messages.
      */
-    public void setPredicate(@Nullable RichPushInbox.Predicate predicate) {
+    public void setPredicate(@Nullable Predicate<Message> predicate) {
         this.predicate = predicate;
     }
 

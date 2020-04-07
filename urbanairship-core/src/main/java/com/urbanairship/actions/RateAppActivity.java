@@ -18,7 +18,7 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.messagecenter.ThemedActivity;
+import com.urbanairship.activity.ThemedActivity;
 
 /**
  * An activity that displays a Rate App prompt that links to an app store.

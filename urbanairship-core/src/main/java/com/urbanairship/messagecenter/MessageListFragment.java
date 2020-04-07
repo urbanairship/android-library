@@ -16,9 +16,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
+import com.urbanairship.Predicate;
 import com.urbanairship.R;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.ArrayList;
@@ -55,17 +54,17 @@ public class MessageListFragment extends Fragment {
 
     private SwipeRefreshLayout refreshLayout;
     private AbsListView absListView;
-    private RichPushInbox richPushInbox;
+    private Inbox inbox;
     private MessageViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
     private String currentMessageId;
-    private RichPushInbox.Predicate predicate;
+    private Predicate<Message> predicate;
     private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
 
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
-    private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
+    private final InboxListener inboxListener = new InboxListener() {
         @Override
         public void onInboxUpdated() {
             updateAdapterMessages();
@@ -77,8 +76,8 @@ public class MessageListFragment extends Fragment {
      *
      * @return The filtered list of messages.
      */
-    private List<RichPushMessage> getMessages() {
-        return richPushInbox.getMessages(predicate);
+    private List<Message> getMessages() {
+        return inbox.getMessages(predicate);
     }
 
     private void updateAdapterMessages() {
@@ -90,7 +89,7 @@ public class MessageListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.richPushInbox = MessageCenter.shared().getInbox();
+        this.inbox = MessageCenter.shared().getInbox();
         updateAdapterMessages();
     }
 
@@ -122,7 +121,7 @@ public class MessageListFragment extends Fragment {
         getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                RichPushMessage message = getMessage(position);
+                Message message = getMessage(position);
                 if (message != null) {
                     MessageCenter.shared().showMessageCenter(message.getMessageId());
                 }
@@ -230,7 +229,7 @@ public class MessageListFragment extends Fragment {
     protected MessageViewAdapter createMessageViewAdapter(@NonNull Context context) {
         return new MessageViewAdapter(context, R.layout.ua_item_mc) {
             @Override
-            protected void bindView(@NonNull View view, @NonNull RichPushMessage message, final int position) {
+            protected void bindView(@NonNull View view, @NonNull Message message, final int position) {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
@@ -253,13 +252,13 @@ public class MessageListFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        richPushInbox.addListener(inboxListener);
+        inbox.addListener(inboxListener);
 
         // Set latest messages
         updateAdapterMessages();
 
         // refresh the inbox
-        richPushInbox.fetchMessages();
+        inbox.fetchMessages();
 
         if (getAbsListView() != null) {
             getAbsListView().invalidate();
@@ -271,7 +270,7 @@ public class MessageListFragment extends Fragment {
         super.onPause();
 
         // Remove listeners for message changes
-        richPushInbox.removeListener(inboxListener);
+        inbox.removeListener(inboxListener);
 
         if (fetchMessagesOperation != null) {
             fetchMessagesOperation.cancel();
@@ -286,7 +285,7 @@ public class MessageListFragment extends Fragment {
             fetchMessagesOperation.cancel();
         }
 
-        fetchMessagesOperation = richPushInbox.fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+        fetchMessagesOperation = inbox.fetchMessages(new Inbox.FetchMessagesCallback() {
             @Override
             public void onFinished(boolean success) {
                 if (refreshLayout != null) {
@@ -327,15 +326,15 @@ public class MessageListFragment extends Fragment {
     }
 
     /**
-     * Returns a the {@link RichPushMessage} at a given position.
+     * Returns a the {@link Message} at a given position.
      *
      * @param position The list position.
-     * @return The {@link RichPushMessage} at a given position.
+     * @return The {@link Message} at a given position.
      */
     @Nullable
-    public RichPushMessage getMessage(int position) {
+    public Message getMessage(int position) {
         if (adapter != null && adapter.getCount() > position) {
-            return (RichPushMessage) adapter.getItem(position);
+            return (Message) adapter.getItem(position);
         }
         return null;
     }
@@ -394,7 +393,7 @@ public class MessageListFragment extends Fragment {
         }
     }
 
-    void setPredicate(RichPushInbox.Predicate predicate) {
+    void setPredicate(Predicate<Message> predicate) {
         this.predicate = predicate;
         if (getAdapter() != null) {
             updateAdapterMessages();

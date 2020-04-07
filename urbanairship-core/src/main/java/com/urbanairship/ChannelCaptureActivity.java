@@ -18,7 +18,7 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ClipboardAction;
 import com.urbanairship.actions.OpenExternalUrlAction;
 import com.urbanairship.actions.ShareAction;
-import com.urbanairship.messagecenter.ThemedActivity;
+import com.urbanairship.activity.ThemedActivity;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 

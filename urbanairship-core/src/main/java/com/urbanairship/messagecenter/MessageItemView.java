@@ -24,7 +24,6 @@ import android.widget.TextView;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.images.ImageRequestOptions;
-import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
 /**
@@ -138,7 +137,7 @@ public class MessageItemView extends FrameLayout {
      * @param message The message.
      * @param placeholder Image place holder.
      */
-    void updateMessage(@NonNull RichPushMessage message, @DrawableRes int placeholder) {
+    void updateMessage(@NonNull Message message, @DrawableRes int placeholder) {
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
         if (message.isRead()) {

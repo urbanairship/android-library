@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.messagecenter.MessageFragment;
-import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.messagecenter.Message;
 import com.urbanairship.sample.R;
 
 import androidx.annotation.NonNull;
@@ -39,7 +39,7 @@ public class InboxMessageFragment extends MessageFragment {
 
         NavController navController =  Navigation.findNavController(view);
 
-        RichPushMessage message = MessageCenter.shared().getInbox().getMessage(getMessageId());
+        Message message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
         NavDestination navDestination = navController.getCurrentDestination();
         if (navDestination != null) {

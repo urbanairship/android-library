@@ -1,11 +1,12 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
+import com.urbanairship.Predicate;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.channel.AirshipChannel;
@@ -22,7 +23,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -43,22 +44,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class RichPushInboxTest extends BaseTestCase {
+public class InboxTest extends BaseTestCase {
 
-    private RichPushInbox inbox;
-    private RichPushInbox.Predicate testPredicate;
-    private RichPushUser mockUser;
+    private Inbox inbox;
+    private Predicate<Message> testPredicate;
+    private User mockUser;
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockChannel;
 
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
-        mockUser = mock(RichPushUser.class);
+        mockUser = mock(User.class);
         mockChannel = mock(AirshipChannel.class);
 
-        Context context = RuntimeEnvironment.application;
-        RichPushResolver resolver = new RichPushResolver(context);
+        Context context = ApplicationProvider.getApplicationContext();
+        MessageCenterResolver resolver = new MessageCenterResolver(context);
         Executor executor = new Executor() {
             @Override
             public void execute(Runnable runnable) {
@@ -66,12 +67,12 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         };
 
-        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor, new TestActivityMonitor(), mockChannel);
+        inbox = new Inbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor, new TestActivityMonitor(), mockChannel);
 
         // Only the "even" messages
-        testPredicate = new RichPushInbox.Predicate() {
+        testPredicate = new Predicate<Message>() {
             @Override
-            public boolean apply(@NonNull RichPushMessage message) {
+            public boolean apply(@NonNull Message message) {
                 String substring = message.getMessageId().replace("_message_id", "");
                 int index = Integer.parseInt(substring);
                 return index % 2 == 0;
@@ -80,12 +81,12 @@ public class RichPushInboxTest extends BaseTestCase {
 
         // Populate the MCRAP database with 10 messages
         for (int i = 0; i < 10; i++) {
-            RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
+            MessageCenterTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
         }
 
         // Put some expired messages in there (these should not show up after refresh)
         for (int i = 10; i < 15; i++) {
-            RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id", null, true);
+            MessageCenterTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id", null, true);
         }
 
         inbox.refresh(false);
@@ -211,8 +212,8 @@ public class RichPushInboxTest extends BaseTestCase {
         assertEquals(7, inbox.getUnreadCount());
         assertEquals(3, inbox.getReadCount());
 
-        Map<String, RichPushMessage> readMessages = createIdToMessageMap(inbox.getReadMessages());
-        Map<String, RichPushMessage> unreadMessages = createIdToMessageMap(inbox.getUnreadMessages());
+        Map<String, Message> readMessages = createIdToMessageMap(inbox.getReadMessages());
+        Map<String, Message> unreadMessages = createIdToMessageMap(inbox.getUnreadMessages());
 
         // Verify the read message are in the right lists
         for (String readId : markedReadIds) {
@@ -287,7 +288,7 @@ public class RichPushInboxTest extends BaseTestCase {
      */
     @Test
     public void testRefreshMessageResponse() {
-        RichPushInbox.FetchMessagesCallback callback = mock(RichPushInbox.FetchMessagesCallback.class);
+        Inbox.FetchMessagesCallback callback = mock(Inbox.FetchMessagesCallback.class);
 
         // Start refreshing messages
         inbox.fetchMessages();
@@ -309,7 +310,7 @@ public class RichPushInboxTest extends BaseTestCase {
      */
     @Test
     public void testRefreshMessagesWithCallback() {
-        RichPushInbox.FetchMessagesCallback callback = mock(RichPushInbox.FetchMessagesCallback.class);
+        Inbox.FetchMessagesCallback callback = mock(Inbox.FetchMessagesCallback.class);
 
         inbox.fetchMessages(callback);
 
@@ -334,7 +335,7 @@ public class RichPushInboxTest extends BaseTestCase {
      */
     @Test
     public void testFetchMessagesFailWithCallback() {
-        RichPushInbox.FetchMessagesCallback callback = mock(RichPushInbox.FetchMessagesCallback.class);
+        Inbox.FetchMessagesCallback callback = mock(Inbox.FetchMessagesCallback.class);
 
         inbox.fetchMessages(callback);
 
@@ -359,7 +360,7 @@ public class RichPushInboxTest extends BaseTestCase {
      */
     @Test
     public void testFetchMessagesCallbackCanceled() {
-        RichPushInbox.FetchMessagesCallback callback = mock(RichPushInbox.FetchMessagesCallback.class);
+        Inbox.FetchMessagesCallback callback = mock(Inbox.FetchMessagesCallback.class);
 
         Cancelable cancelable = inbox.fetchMessages(callback);
         cancelable.cancel();
@@ -388,11 +389,11 @@ public class RichPushInboxTest extends BaseTestCase {
 
         // regular style
 
-        List<RichPushMessage> messages = inbox.getMessages();
+        List<Message> messages = inbox.getMessages();
         Assert.assertEquals(messages.size(), inbox.getCount());
 
         // filtered style
-        List<RichPushMessage> filteredMessages = inbox.getMessages(testPredicate);
+        List<Message> filteredMessages = inbox.getMessages(testPredicate);
 
         Assert.assertEquals(filteredMessages.size(), inbox.getCount() / 2);
     }
@@ -409,13 +410,13 @@ public class RichPushInboxTest extends BaseTestCase {
         // Mark messages read
         inbox.markMessagesRead(messageIds);
 
-        List<RichPushMessage> unreadMessages = inbox.getUnreadMessages();
+        List<Message> unreadMessages = inbox.getUnreadMessages();
         Assert.assertEquals(unreadMessages.size(), 6);
 
-        List<RichPushMessage> filteredMessages = inbox.getUnreadMessages(testPredicate);
+        List<Message> filteredMessages = inbox.getUnreadMessages(testPredicate);
         Assert.assertEquals(filteredMessages.size(), 3);
 
-        for (RichPushMessage message : filteredMessages) {
+        for (Message message : filteredMessages) {
             String substring = message.getMessageId().replace("_message_id", "");
             int index = Integer.parseInt(substring);
             Assert.assertEquals(index % 2, 0);
@@ -434,13 +435,13 @@ public class RichPushInboxTest extends BaseTestCase {
         // Mark messages read
         inbox.markMessagesRead(messageIds);
 
-        List<RichPushMessage> readMessages = inbox.getReadMessages();
+        List<Message> readMessages = inbox.getReadMessages();
         Assert.assertEquals(readMessages.size(), 4);
 
-        List<RichPushMessage> filteredMessages = inbox.getReadMessages(testPredicate);
+        List<Message> filteredMessages = inbox.getReadMessages(testPredicate);
         Assert.assertEquals(filteredMessages.size(), 2);
 
-        for (RichPushMessage message : filteredMessages) {
+        for (Message message : filteredMessages) {
             String substring = message.getMessageId().replace("_message_id", "");
             int index = Integer.parseInt(substring);
             Assert.assertEquals(index % 2, 0);
@@ -454,10 +455,10 @@ public class RichPushInboxTest extends BaseTestCase {
      * @param messages List of messages to convert
      * @return A map of rich push messages
      */
-    private static Map<String, RichPushMessage> createIdToMessageMap(List<RichPushMessage> messages) {
-        Map<String, RichPushMessage> messageMap = new HashMap<>();
+    private static Map<String, Message> createIdToMessageMap(List<Message> messages) {
+        Map<String, Message> messageMap = new HashMap<>();
 
-        for (RichPushMessage message : messages) {
+        for (Message message : messages) {
             messageMap.put(message.getMessageId(), message);
         }
 

@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 
 public class InboxJobHandlerTest extends BaseTestCase {
 
-    private RichPushInbox inbox;
+    private Inbox inbox;
 
     private InboxJobHandler jobHandler;
 
@@ -46,7 +46,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
     private AirshipChannel mockChannel;
 
-    private RichPushUser user;
+    private User user;
     private PreferenceDataStore dataStore;
     private TestUserListener userListener;
     private TestAirshipRuntimeConfig runtimeConfig;
@@ -57,10 +57,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         userListener = new TestUserListener();
-        user = new RichPushUser(dataStore);
+        user = new User(dataStore);
         user.addListener(userListener);
 
-        inbox = mock(RichPushInbox.class);
+        inbox = mock(Inbox.class);
         when(inbox.getUser()).thenReturn(user);
 
         requests = new ArrayList<>();
@@ -90,7 +90,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         jobHandler = new InboxJobHandler(inbox, user, mockChannel,
                 runtimeConfig, TestApplication.getApplication().preferenceDataStore,
-                requestFactory, mock(RichPushResolver.class));
+                requestFactory, mock(MessageCenterResolver.class));
     }
 
     /**
@@ -571,7 +571,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
     /**
      * Listener that captures the last update user result
      */
-    private class TestUserListener implements RichPushUser.Listener {
+    private class TestUserListener implements User.Listener {
 
         Boolean lastUpdateUserResult = null;
 
