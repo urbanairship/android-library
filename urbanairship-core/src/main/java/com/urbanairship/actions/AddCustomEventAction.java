@@ -84,29 +84,7 @@ public class AddCustomEventAction extends Action {
         }
 
         if (properties != null) {
-            for (Map.Entry<String, JsonValue> property : properties) {
-                if (property.getValue().isBoolean()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().getBoolean(false));
-                } else if (property.getValue().isDouble()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().getDouble(0));
-                } else if (property.getValue().isNumber()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().getLong(0));
-                } else if (property.getValue().isString()) {
-                    eventBuilder.addProperty(property.getKey(), property.getValue().optString());
-                } else if (property.getValue().isJsonList()) {
-                    List<String> strings = new ArrayList<>();
-
-                    for (JsonValue jsonValue : property.getValue().optList()) {
-                        if (jsonValue.isString()) {
-                            strings.add(jsonValue.getString());
-                        } else {
-                            strings.add(jsonValue.toString());
-                        }
-                    }
-
-                    eventBuilder.addProperty(property.getKey(), strings);
-                }
-            }
+            eventBuilder.setProperties(properties);
         }
 
         CustomEvent event = eventBuilder.build();

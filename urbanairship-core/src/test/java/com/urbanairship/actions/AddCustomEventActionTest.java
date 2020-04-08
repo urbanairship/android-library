@@ -284,16 +284,16 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         EventTestUtils.validateNestedEventValue(event, "properties", "boolean", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.49");
-        EventTestUtils.validateNestedEventValue(event, "properties", "string", "\"some string value\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "string", "some string value");
         EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648");
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
 
-        // Validate the custom String[] property
+        // Validate the custom JsonList property
         JsonList array = EventTestUtils.getEventData(event).get("properties").getMap().get("array").getList();
         assertEquals(3, array.size());
         assertEquals("string value", array.get(0).getString());
-        assertEquals("true", array.get(1).getString());
-        assertEquals("124", array.get(2).getString());
+        assertTrue(array.get(1).getBoolean(false));
+        assertEquals(124.0, array.get(2).getDouble(0));
     }
 
 }

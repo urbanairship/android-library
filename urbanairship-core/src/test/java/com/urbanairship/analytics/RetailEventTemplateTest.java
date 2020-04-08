@@ -64,10 +64,10 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"retail-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"browsed-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a browsed retail event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"nike\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "retail-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "browsed-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a browsed retail event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
         EventTestUtils.validateNestedEventValue(event, "properties", "new_item", "true");
     }
 
@@ -107,10 +107,10 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", 1990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"retail-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"added-to-cart-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is an added to cart retail event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"columbia\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "retail-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "added-to-cart-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is an added to cart retail event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "columbia");
         EventTestUtils.validateNestedEventValue(event, "properties", "new_item", "true");
     }
 
@@ -150,10 +150,10 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"retail-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-product-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a starred retail event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"nike\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "retail-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "starred-product-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a starred retail event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
         EventTestUtils.validateNestedEventValue(event, "properties", "new_item", "true");
     }
 
@@ -192,13 +192,13 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 49990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
-        EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "medium", "\"social\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "source", "facebook");
+        EventTestUtils.validateNestedEventValue(event, "properties", "medium", "social");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"retail-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"shared-product-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a shared retail event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"nike\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "retail-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "shared-product-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a shared retail event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
         EventTestUtils.validateNestedEventValue(event, "properties", "new_item", "true");
     }
 
@@ -238,10 +238,10 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"retail-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"purchased-product-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a purchased retail event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "\"nike\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "retail-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "purchased-product-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a purchased retail event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
     }
 
 }

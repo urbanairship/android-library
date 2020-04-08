@@ -60,13 +60,13 @@ public class MediaEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
         EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a starred content media event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "type", "\"audio type\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "author", "\"The Cool UA\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "media-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "starred-content-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a starred content media event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "audio type");
+        EventTestUtils.validateNestedEventValue(event, "properties", "author", "The Cool UA");
         EventTestUtils.validateNestedEventValue(event, "properties", "feature", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "\"November 4, 2015\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "November 4, 2015");
     }
 
     /**
@@ -103,13 +103,13 @@ public class MediaEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.STARRED_CONTENT_EVENT);
         EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a starred content media event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "type", "\"audio type\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "author", "\"The Cool UA\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "media-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "starred-content-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a starred content media event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "audio type");
+        EventTestUtils.validateNestedEventValue(event, "properties", "author", "The Cool UA");
         EventTestUtils.validateNestedEventValue(event, "properties", "feature", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "\"November 4, 2015\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "November 4, 2015");
     }
 
     /**
@@ -146,15 +146,15 @@ public class MediaEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.SHARED_CONTENT_EVENT);
         EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "medium", "\"social\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"shared-content-ID 2\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a shared content media event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "type", "\"video type\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "author", "\"The Cool UA\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "source", "facebook");
+        EventTestUtils.validateNestedEventValue(event, "properties", "medium", "social");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "media-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "shared-content-ID 2");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a shared content media event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "video type");
+        EventTestUtils.validateNestedEventValue(event, "properties", "author", "The Cool UA");
         EventTestUtils.validateNestedEventValue(event, "properties", "feature", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "\"November 4, 2015\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "November 4, 2015");
     }
 
     /**
@@ -192,13 +192,13 @@ public class MediaEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateEventValue(event, "event_value", 2990000.0);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"consumed-content-ID 1\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "description", "\"This is a consumed content media event.\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "type", "\"audio type\"");
-        EventTestUtils.validateNestedEventValue(event, "properties", "author", "\"The Cool UA\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "media-category");
+        EventTestUtils.validateNestedEventValue(event, "properties", "id", "consumed-content-ID 1");
+        EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a consumed content media event.");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "audio type");
+        EventTestUtils.validateNestedEventValue(event, "properties", "author", "The Cool UA");
         EventTestUtils.validateNestedEventValue(event, "properties", "feature", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "\"November 4, 2015\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "published_date", "November 4, 2015");
     }
 
 }

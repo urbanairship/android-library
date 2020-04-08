@@ -60,7 +60,7 @@ public class AccountEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "event_value", 123000000L);
         EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"Premium\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "Premium");
     }
 
 }

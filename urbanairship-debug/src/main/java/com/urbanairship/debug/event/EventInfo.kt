@@ -18,7 +18,7 @@ internal class EventInfo {
         private const val LOCATION_EVENT = "location"
         private const val REGION_EVENT = "region_event"
         private const val SCREEN_EVENT = "screen_tracking"
-        private const val CUSTOM_EVENT = "custom_event"
+        private const val CUSTOM_EVENT = "enhanced_custom_event"
         private const val IAA_RESOLUTION_EVENT = "in_app_resolution"
         private const val IAA_DISPLAY_EVENT = "in_app_display"
         private const val APP_BACKGROUND_EVENT = "app_background"

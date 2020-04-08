@@ -17,7 +17,6 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +29,7 @@ public class CustomEvent extends Event implements JsonSerializable {
     /**
      * The event type.
      */
-    static final String TYPE = "custom_event";
+    static final String TYPE = "enhanced_custom_event";
 
     /**
      * The interaction ID key.
@@ -114,14 +113,9 @@ public class CustomEvent extends Event implements JsonSerializable {
     public static final int MAX_CHARACTER_LENGTH = 255;
 
     /**
-     * The max number of custom properties.
+     * The max size of total properties in bytes.
      */
-    public static final int MAX_PROPERTIES = 100;
-
-    /**
-     * The max size of a collection that is allowed in a custom property.
-     */
-    public static final int MAX_PROPERTY_COLLECTION_SIZE = 20;
+    public static final int MAX_TOTAL_PROPERTIES_SIZE = 65536;
 
     @NonNull
     private final String eventName;
@@ -145,7 +139,7 @@ public class CustomEvent extends Event implements JsonSerializable {
     private final String templateType;
 
     @NonNull
-    private final Map<String, Object> properties;
+    private final JsonMap properties;
 
     private CustomEvent(@NonNull Builder builder) {
         this.eventName = builder.eventName;
@@ -155,7 +149,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         this.interactionId = UAStringUtil.isEmpty(builder.interactionId) ? null : builder.interactionId;
         this.sendId = builder.pushSendId;
         this.templateType = builder.templateType;
-        this.properties = new HashMap<>(builder.properties);
+        this.properties = new JsonMap(builder.properties);
     }
 
     /**
@@ -225,7 +219,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      * @return The properties.
      */
     @NonNull
-    public Map<String, Object> getProperties() {
+    public JsonMap getProperties() {
         return properties;
     }
 
@@ -265,20 +259,8 @@ public class CustomEvent extends Event implements JsonSerializable {
             data.put(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
         }
 
-        JsonMap.Builder propertiesPayload = JsonMap.newBuilder();
-
-        // Properties
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            if (entry.getValue() instanceof Collection) {
-                propertiesPayload.put(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).getList());
-            } else {
-                // Everything else can be stringified
-                propertiesPayload.putOpt(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).toString());
-            }
-        }
-
-        if (propertiesPayload.build().getMap().size() > 0) {
-            data.put(PROPERTIES, propertiesPayload.build());
+        if (properties.getMap().size() > 0) {
+            data.put(PROPERTIES, properties);
         }
 
         return data.build();
@@ -340,38 +322,10 @@ public class CustomEvent extends Event implements JsonSerializable {
             isValid = false;
         }
 
-        if (properties.size() > MAX_PROPERTIES) {
-            Logger.error("Number of custom properties exceeds %s", MAX_PROPERTIES);
+        int length = properties.toJsonValue().toString().getBytes().length;
+        if (length > MAX_TOTAL_PROPERTIES_SIZE) {
+            Logger.error("Total custom properties size (%s bytes) exceeds maximum size of %s bytes.", length, MAX_TOTAL_PROPERTIES_SIZE);
             isValid = false;
-        }
-
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            if (entry.getKey().length() > MAX_CHARACTER_LENGTH) {
-                Logger.error("The custom property %s is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
-                isValid = false;
-            }
-
-            if (entry.getValue() instanceof Collection) {
-                Collection collection = (Collection) entry.getValue();
-                if (collection.size() > MAX_PROPERTY_COLLECTION_SIZE) {
-                    Logger.error("The custom property %s contains a Collection<String> that is larger than %s", entry.getKey(), MAX_PROPERTY_COLLECTION_SIZE);
-                    isValid = false;
-                }
-
-                for (Object object : collection) {
-                    String string = String.valueOf(object);
-                    if (string.length() > MAX_CHARACTER_LENGTH) {
-                        Logger.error("The custom property %s contains a value that is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
-                        isValid = false;
-                    }
-                }
-            } else if (entry.getValue() instanceof String) {
-                String stringValue = (String) entry.getValue();
-                if (stringValue.length() > MAX_CHARACTER_LENGTH) {
-                    Logger.error("The custom property %s contains a value that is larger than %s characters.", entry.getKey(), MAX_CHARACTER_LENGTH);
-                    isValid = false;
-                }
-            }
         }
 
         return isValid;
@@ -415,7 +369,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         private String templateType;
 
         @NonNull
-        private final Map<String, Object> properties = new HashMap<>();
+        private Map<String, JsonValue> properties = new HashMap<>();;
 
         /**
          * Creates a new custom event builder
@@ -428,6 +382,25 @@ public class CustomEvent extends Event implements JsonSerializable {
          */
         public Builder(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String eventName) {
             this.eventName = eventName;
+        }
+
+        /**
+         * Sets a JsonMap representing the event properties.
+         * <p>
+         * If the total added properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event
+         * to be invalid.
+         *
+         * @param properties A JsonMap of the event's properties.
+         * @return The custom event builder.
+         */
+        public Builder setProperties(@Nullable JsonMap properties) {
+            if (properties == null) {
+                this.properties.clear();
+                return this;
+            }
+
+            this.properties = properties.getMap();
+            return this;
         }
 
         /**
@@ -500,7 +473,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         /**
          * Sets the transaction ID.
          * <p>
-         * If the transaction ID exceeds 255 characters it will cause the event to be invalid.
+         * If the transaction ID exceeds {@link #MAX_CHARACTER_LENGTH} characters it will cause the event to be invalid.
          *
          * @param transactionId The event's transaction ID.
          * @return The custom event builder.
@@ -527,7 +500,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         /**
          * Sets the interaction type and ID for the event.
          * <p>
-         * If any field exceeds 255 characters it will cause the event to be invalid.
+         * If any non-property field exceeds {@link #MAX_CHARACTER_LENGTH} characters it will cause the event to be invalid.
          *
          * @param interactionType The event's interaction type.
          * @param interactionId The event's interaction ID.
@@ -574,95 +547,24 @@ public class CustomEvent extends Event implements JsonSerializable {
         /**
          * Adds a custom property to the event.
          * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name or value
-         * of the property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         * If the total added properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event
+         * to be invalid.
          *
          * @param name The property name.
-         * @param value The property value.
+         * @param value A property value.
+         *
          * @return The custom event builder.
          */
-        @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
-                                   @NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String value) {
-            properties.put(name, value);
+        public Builder addProperty(@NonNull @Size(min = 1) String name,
+                                   @NonNull JsonValue value) {
+            properties.put(name, JsonValue.wrap(value));
             return this;
         }
 
         /**
          * Adds a custom property to the event.
          * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
-         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
-         *
-         * @param name The property name.
-         * @param value The property value.
-         * @return The custom event builder.
-         */
-        @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, int value) {
-            properties.put(name, value);
-            return this;
-        }
-
-        /**
-         * Adds a custom property to the event.
-         * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
-         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
-         *
-         * @param name The property name.
-         * @param value The property value.
-         * @return The custom event builder.
-         */
-        @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, long value) {
-            properties.put(name, value);
-            return this;
-        }
-
-        /**
-         * Adds a custom property to the event.
-         * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
-         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
-         *
-         * @param name The property name.
-         * @param value The property value.
-         * @return The custom event builder.
-         * @throws java.lang.NumberFormatException if the value is infinite or not a number
-         */
-        @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, double value) {
-            if (Double.isNaN(value) || Double.isInfinite(value)) {
-                throw new NumberFormatException("Infinity or NaN: " + value);
-            }
-
-            properties.put(name, value);
-            return this;
-        }
-
-        /**
-         * Adds a custom property to the event.
-         * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
-         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
-         *
-         * @param name The property name.
-         * @param value The property value.
-         * @return The custom event builder.
-         */
-        @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, boolean value) {
-            properties.put(name, value);
-            return this;
-        }
-
-        /**
-         * Adds a custom property to the event.
-         * <p>
-         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, if the name of the
-         * property, or any of the Strings within its value exceeds {@link #MAX_CHARACTER_LENGTH}, or
-         * if the value contains more than {@link #MAX_PROPERTY_COLLECTION_SIZE} it will cause the event
+         * If the total added properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event
          * to be invalid.
          *
          * @param name The property name.
@@ -670,10 +572,97 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @return The custom event builder.
          */
         @NonNull
-        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
-                                   @NonNull @Size(min = 1, max = MAX_PROPERTY_COLLECTION_SIZE) Collection<String> value) {
+        public Builder addProperty(@NonNull @Size(min = 1) String name,
+                                   @NonNull @Size(min = 1) String value) {
+            properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
 
-            properties.put(name, new ArrayList<>(value));
+        /**
+         * Adds a custom property to the event.
+         * <p>
+         * If the total added properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event
+         * to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        @NonNull
+        public Builder addProperty(@NonNull @Size(min = 1) String name, int value) {
+            properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p>
+         * If the total added properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event
+         * to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        @NonNull
+        public Builder addProperty(@NonNull @Size(min = 1) String name, long value) {
+            properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p>
+         * If the total number of properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} it will cause the event
+         * to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         * @throws java.lang.NumberFormatException if the value is infinite or not a number
+         */
+        @NonNull
+        public Builder addProperty(@NonNull @Size(min = 1) String name, double value) {
+            if (Double.isNaN(value) || Double.isInfinite(value)) {
+                throw new NumberFormatException("Infinity or NaN: " + value);
+            }
+
+            properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p>
+         * If the total number of properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} it will cause the event
+         * to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        @NonNull
+        public Builder addProperty(@NonNull @Size(min = 1) String name, boolean value) {
+            properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p>
+         * If the or if the total of properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         *
+         * @deprecated Use {@link #addProperty(String name, JsonValue value)} instead.
+         */
+        @NonNull
+        @Deprecated
+        public Builder addProperty(@NonNull String name,
+                                   @NonNull Collection<String> value) {
+            properties.put(name, JsonValue.wrapOpt(value));
             return this;
         }
 
@@ -686,7 +675,5 @@ public class CustomEvent extends Event implements JsonSerializable {
         public CustomEvent build() {
             return new CustomEvent(this);
         }
-
     }
-
 }
