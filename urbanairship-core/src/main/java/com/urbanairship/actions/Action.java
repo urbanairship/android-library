@@ -2,14 +2,13 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
-import com.urbanairship.automation.ActionAutomation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 
 /**
  * The base action class that describes an operation to perform.
@@ -87,7 +86,7 @@ public abstract class Action {
     public final static int SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON = 5;
 
     /**
-     * Situation where an action is triggered from {@link ActionAutomation}.
+     * Situation where an action is triggered from Action Automation.
      */
     public final static int SITUATION_AUTOMATION = 6;
 

@@ -2,11 +2,12 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * A screen tracking event allows users to track an activity by associating a
@@ -97,9 +98,13 @@ class ScreenTrackingEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         return JsonMap.newBuilder()
                       .put(SCREEN_KEY, screen)
                       .put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime))

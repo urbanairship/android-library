@@ -6,15 +6,16 @@ import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Analytics event when a push arrives.
@@ -131,9 +132,13 @@ public class PushArrivedEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
 
         JsonMap.Builder builder = JsonMap.newBuilder()
                                          .put(PUSH_ID_KEY, !UAStringUtil.isEmpty(message.getSendId()) ? message.getSendId() : DEFAULT_SEND_ID)

@@ -39,6 +39,7 @@ dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-location')
     implementation project(':urbanairship-messagecenter')
+    implementation project(':urbanairship-automation')
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"

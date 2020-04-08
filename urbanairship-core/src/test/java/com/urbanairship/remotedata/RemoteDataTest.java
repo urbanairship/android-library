@@ -3,7 +3,6 @@
 package com.urbanairship.remotedata;
 
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
@@ -11,7 +10,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestLocaleManager;
-import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
@@ -40,6 +38,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;

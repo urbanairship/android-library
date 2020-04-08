@@ -5,11 +5,6 @@ package com.urbanairship.actions;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
@@ -17,6 +12,12 @@ import com.urbanairship.UAirship;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * ActionRunRequests provides a fluent API for running Actions.
@@ -105,9 +106,11 @@ public class ActionRunRequest {
      * Creates a new action RunRequest.
      *
      * @param action The action to run.
+     * @hide
      */
     @VisibleForTesting
-    ActionRunRequest(@NonNull Action action) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public ActionRunRequest(@NonNull Action action) {
         this.action = action;
     }
 

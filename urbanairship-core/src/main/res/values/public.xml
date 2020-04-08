@@ -39,32 +39,9 @@
     <public name="ua_select_all" type="string" />
     <public name="ua_selected_count" type="plurals" />
 
-
     <!-- Attributes -->
     <public name="mixed_content_mode" type="attr" />
-    <public name="inAppMessageBannerStyle" type="attr" />
-    <public name="optCardBackgroundColor" type="attr" />
-    <public name="optCardCornerRadius" type="attr" />
-    <public name="optCardElevation" type="attr" />
-    <public name="bannerFontPath" type="attr" />
-    <public name="bannerTextAppearance" type="attr" />
-    <public name="bannerPrimaryColor" type="attr" />
-    <public name="bannerSecondaryColor" type="attr" />
-    <public name="bannerDismissButtonDrawable" type="attr" />
-    <public name="bannerNoDismissButton" type="attr" />
-    <public name="bannerActionButtonTextAppearance" type="attr" />
     <public name="ua_state_highlighted" type="attr" />
-
-    <!-- Styles -->
-    <public name="InAppMessage.Banner.TextAppearance" type="style" />
-    <public name="InAppMessage.Banner" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.Card" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.Text" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.Divider" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.DismissButton" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButton" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButtonContainer" type="style" />
-    <public name="Widget.UrbanAirship.InAppMessage.Banner" type="style" />
 
     <!-- Ids -->
     <public name="close_button" type="id" />

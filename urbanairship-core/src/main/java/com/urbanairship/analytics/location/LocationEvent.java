@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * This class captures all the necessary information for Airship
@@ -112,9 +113,13 @@ public class LocationEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         return JsonMap.newBuilder()
                       .put(LATITUDE_KEY, latitude)
                       .put(LONGITUDE_KEY, longitude)

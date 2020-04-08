@@ -2,8 +2,6 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -11,6 +9,8 @@ import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,7 +47,7 @@ public class EventTest extends BaseTestCase {
 
         @NonNull
         @Override
-        protected JsonMap getEventData() {
+        public JsonMap getEventData() {
             return JsonMap.newBuilder().put("some key", "some value").build();
         }
 

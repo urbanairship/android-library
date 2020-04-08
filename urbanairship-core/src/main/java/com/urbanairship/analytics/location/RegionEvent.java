@@ -17,6 +17,7 @@ import java.util.Locale;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.Size;
 
 /**
@@ -210,9 +211,13 @@ public class RegionEvent extends Event implements JsonSerializable {
         return boundaryEvent;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         JsonMap.Builder data = JsonMap.newBuilder()
                                       .put(REGION_ID, regionId)
                                       .put(SOURCE, source)

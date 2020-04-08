@@ -9,4 +9,5 @@ include ':urbanairship-core',
         ':urbanairship-hms-stub',
         ':urbanairship-location',
         ':urbanairship-messagecenter',
+        ':urbanairship-automation',
         ":sample"

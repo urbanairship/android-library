@@ -2,13 +2,14 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Event to set the associated identifiers.
@@ -54,9 +55,13 @@ class AssociateIdentifiersEvent extends Event {
         return isValid;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonMap getEventData() {
         return JsonValue.wrapOpt(ids).optMap();
     }
 

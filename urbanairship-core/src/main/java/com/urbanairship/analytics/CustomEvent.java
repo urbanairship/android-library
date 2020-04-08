@@ -228,9 +228,13 @@ public class CustomEvent extends Event implements JsonSerializable {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         JsonMap.Builder data = JsonMap.newBuilder();
 
         String conversionSendId = UAirship.shared().getAnalytics().getConversionSendId();

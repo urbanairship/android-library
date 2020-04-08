@@ -23,6 +23,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * This abstract class encapsulates analytics events.
@@ -146,9 +147,12 @@ public abstract class Event {
      * Create the event data.
      *
      * @return The event data.
+     * @hide
      */
     @NonNull
-    protected abstract JsonMap getEventData();
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public abstract JsonMap getEventData();
 
     /**
      * Returns the connection type.

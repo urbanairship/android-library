@@ -3,12 +3,13 @@
 package com.urbanairship.analytics;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.NotificationActionButtonInfo;
 import com.urbanairship.push.NotificationInfo;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * An event that captures information regarding an interactive notification action open.
@@ -60,9 +61,13 @@ public class InteractiveNotificationEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         JsonMap.Builder builder = JsonMap.newBuilder()
                                          .put(SEND_ID_KEY, sendId)
                                          .put(BUTTON_GROUP_KEY, buttonGroupId)

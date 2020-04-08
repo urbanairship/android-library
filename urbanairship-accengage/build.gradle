@@ -4,6 +4,7 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
+    implementation project(':urbanairship-automation')
 
     // Tests
     testImplementation "junit:junit:$rootProject.junitVersion"

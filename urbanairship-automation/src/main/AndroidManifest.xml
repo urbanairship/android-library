@@ -1,0 +1,36 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.urbanairship.automation"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application>
+
+        <activity
+            android:name="com.urbanairship.iam.html.HtmlActivity"
+            android:exported="false"
+            android:theme="@style/UrbanAirship.InAppHtml.Activity">
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
+        </activity>
+
+        <activity
+            android:name="com.urbanairship.iam.fullscreen.FullScreenActivity"
+            android:exported="false"
+            android:theme="@style/UrbanAirship.InAppFullscreen.Activity">
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
+        </activity>
+
+        <activity
+            android:name="com.urbanairship.iam.modal.ModalActivity"
+            android:exported="false"
+            android:theme="@style/UrbanAirship.InAppModal.Activity">
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
+        </activity>
+
+    </application>
+</manifest>

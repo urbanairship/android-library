@@ -2,10 +2,11 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 class AppBackgroundEvent extends Event {
 
@@ -26,9 +27,13 @@ class AppBackgroundEvent extends Event {
         return TYPE;
     }
 
-    @Override
+    /**
+     * @hide
+     */
     @NonNull
-    protected final JsonMap getEventData() {
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         return JsonMap.newBuilder()
                       .put(CONNECTION_TYPE_KEY, getConnectionType())
                       .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())

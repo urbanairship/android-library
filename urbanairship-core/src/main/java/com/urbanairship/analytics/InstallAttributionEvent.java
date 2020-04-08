@@ -2,9 +2,10 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Event to track Google Play Store referrals
@@ -32,9 +33,13 @@ class InstallAttributionEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonMap getEventData() {
         return JsonMap.newBuilder()
                       .put(PLAY_STORE_REFERRER, referrer)
                       .build();

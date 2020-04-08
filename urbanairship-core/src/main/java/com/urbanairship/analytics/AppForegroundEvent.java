@@ -4,10 +4,12 @@ package com.urbanairship.analytics;
 
 import android.content.pm.PackageInfo;
 import android.os.Build;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 class AppForegroundEvent extends Event {
 
@@ -29,9 +31,13 @@ class AppForegroundEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * @hide
+     */
     @NonNull
     @Override
-    protected final JsonMap getEventData() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final JsonMap getEventData() {
         PackageInfo packageInfo = UAirship.getPackageInfo();
         return JsonMap.newBuilder()
                       .put(CONNECTION_TYPE_KEY, getConnectionType())
