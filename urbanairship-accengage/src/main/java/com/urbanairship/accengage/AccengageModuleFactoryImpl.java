@@ -1,0 +1,41 @@
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.accengage;
+
+import android.content.Context;
+
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.analytics.Analytics;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.modules.accengage.AccengageModule;
+import com.urbanairship.modules.accengage.AccengageModuleFactory;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.notifications.NotificationProvider;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+
+/**
+ * Accengage module loader factory.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AccengageModuleFactoryImpl implements AccengageModuleFactory {
+
+    @Override
+    public AccengageModule build(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+                                 @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
+                                 @NonNull Analytics analytics) {
+
+        final Accengage accengage = new Accengage(context, dataStore, airshipChannel, pushManager, analytics);
+        return new AccengageModule(accengage, new AccengageNotificationHandler() {
+            @NonNull
+            @Override
+            public NotificationProvider getNotificationProvider() {
+                return accengage.getNotificationProvider();
+            }
+        });
+    }
+}

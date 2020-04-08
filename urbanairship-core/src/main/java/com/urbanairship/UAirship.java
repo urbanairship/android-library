@@ -26,12 +26,12 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.Whitelist;
-import com.urbanairship.modules.ModuleLoader;
-import com.urbanairship.modules.ModuleLoaders;
-import com.urbanairship.modules.accengage.AccengageModuleLoader;
+import com.urbanairship.modules.Module;
+import com.urbanairship.modules.Modules;
+import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
-import com.urbanairship.modules.location.LocationModuleLoader;
+import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
@@ -731,33 +731,24 @@ public class UAirship {
         }
 
         // Accengage
-        AccengageModuleLoader accengageModuleLoader = ModuleLoaders.accengageLoader(application,
-                preferenceDataStore, channel, pushManager, analytics);
-        if (accengageModuleLoader != null) {
-            components.addAll(accengageModuleLoader.getComponents());
-            this.accengageNotificationHandler = accengageModuleLoader.getAccengageNotificationHandler();
-        }
+        AccengageModule accengageModule = Modules.accengage(application, preferenceDataStore, channel, pushManager, analytics);
+        processModule(accengageModule);
+        this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
 
         // Message Center
-        ModuleLoader messageCenterLoader = ModuleLoaders.messageCenterLoader(application, preferenceDataStore, channel, pushManager);
-        if (messageCenterLoader != null) {
-            components.addAll(messageCenterLoader.getComponents());
-        }
+        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, channel, pushManager);
+        processModule(messageCenterModule);
 
         // Location
-        LocationModuleLoader locationModuleLoader = ModuleLoaders.locationLoader(application,
-                preferenceDataStore, channel, analytics);
-        if (locationModuleLoader != null) {
-            components.addAll(locationModuleLoader.getComponents());
-            this.locationClient = locationModuleLoader.getLocationClient();
-        }
+        LocationModule locationModule = Modules.location(application, preferenceDataStore, channel, analytics);
+        processModule(locationModule);
+        this.locationClient = locationModule == null ? null : locationModule.getLocationClient();
 
         // Automation
-        ModuleLoader automationLoader = ModuleLoaders.automationLoader(application, preferenceDataStore,
-                runtimeConfig, channel, pushManager, analytics, remoteData, tagGroupRegistrar);
-        if (automationLoader != null) {
-            components.addAll(automationLoader.getComponents());
-        }
+        Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
+                channel, pushManager, analytics, remoteData, tagGroupRegistrar);
+        processModule(automationModule);
+
 
         for (AirshipComponent component : components) {
             component.init();
@@ -779,6 +770,12 @@ public class UAirship {
             boolean enabled = !airshipConfigOptions.dataCollectionOptInEnabled;
             Logger.debug("Airship - Setting data collection enabled to %s", enabled);
             setDataCollectionEnabled(enabled);
+        }
+    }
+
+    private void processModule(@Nullable Module module) {
+        if (module != null) {
+            components.addAll(module.getComponents());
         }
     }
 

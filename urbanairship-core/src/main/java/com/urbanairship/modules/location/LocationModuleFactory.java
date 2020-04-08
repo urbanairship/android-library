@@ -12,14 +12,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
- * Location module loader factory.
+ * Location module factory.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface LocationModuleLoaderFactory {
-    LocationModuleLoader build(@NonNull Context context,
-                               @NonNull PreferenceDataStore dataStore,
-                               @NonNull AirshipChannel airshipChannel,
-                               @NonNull Analytics analytics);
+public interface LocationModuleFactory {
+    LocationModule build(@NonNull Context context,
+                         @NonNull PreferenceDataStore dataStore,
+                         @NonNull AirshipChannel airshipChannel,
+                         @NonNull Analytics analytics);
 }

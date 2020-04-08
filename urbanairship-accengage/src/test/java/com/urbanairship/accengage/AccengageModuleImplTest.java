@@ -2,14 +2,11 @@ package com.urbanairship.accengage;
 
 import android.app.Application;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.modules.accengage.AccengageModuleLoader;
+import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.notifications.NotificationProvider;
 
@@ -18,15 +15,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
-public class AccengageModuleLoaderImplTest {
+public class AccengageModuleImplTest {
 
-    private AccengageModuleLoader accengageModuleLoader;
+    private AccengageModule accengageModuleLoader;
 
     @Before
     public void setup() {
@@ -36,7 +36,7 @@ public class AccengageModuleLoaderImplTest {
         PushManager mockPush = mock(PushManager.class);
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
 
-        accengageModuleLoader = new AccengageModuleLoaderFactoryImpl().build(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics);
+        accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics);
     }
 
     @Test

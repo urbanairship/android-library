@@ -13,18 +13,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
- * Accengage module loader factory.
+ * Accengage module factory.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AccengageModuleLoaderFactory {
+public interface AccengageModuleFactory {
 
-    AccengageModuleLoader build(@NonNull Context context,
-                                @NonNull PreferenceDataStore dataStore,
-                                @NonNull AirshipChannel airshipChannel,
-                                @NonNull PushManager manager,
-                                @NonNull Analytics analytics);
+    AccengageModule build(@NonNull Context context,
+                          @NonNull PreferenceDataStore dataStore,
+                          @NonNull AirshipChannel airshipChannel,
+                          @NonNull PushManager manager,
+                          @NonNull Analytics analytics);
 
 
 }
