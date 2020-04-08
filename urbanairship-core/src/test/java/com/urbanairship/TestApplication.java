@@ -8,12 +8,9 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
-import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
@@ -75,11 +72,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar, UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, new TestActivityMonitor());
-        UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics, UAirship.sharedAirship.pushManager);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor(), UAirship.sharedAirship.pushManager);
-        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, UAirship.sharedAirship.analytics,
-                UAirship.sharedAirship.remoteData, new TestActivityMonitor(), UAirship.sharedAirship.channel, tagGroupRegistrar);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();
@@ -107,18 +100,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().analytics = analytics;
     }
 
-    public void setLegacyInAppMessageManager(LegacyInAppMessageManager legacyInAppMessageManager) {
-        UAirship.shared().legacyInAppMessageManager = legacyInAppMessageManager;
-    }
-
-    public void setInAppMessageManager(InAppMessageManager inAppMessageManager) {
-        UAirship.shared().inAppMessageManager = inAppMessageManager;
-    }
-
     public void setOptions(AirshipConfigOptions options) {
         UAirship.shared().airshipConfigOptions = options;
     }
-
 
     public void setAccengageNotificationHandler(AccengageNotificationHandler notificationHandler) {
         UAirship.shared().accengageNotificationHandler = notificationHandler;
@@ -155,10 +139,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setLocationClient(AirshipLocationClient locationClient) {
         UAirship.shared().locationClient = locationClient;
-    }
-
-    public void setAutomation(Automation automation) {
-        UAirship.shared().automation = automation;
     }
 
     public void setChannelCapture(ChannelCapture channelCapture) {

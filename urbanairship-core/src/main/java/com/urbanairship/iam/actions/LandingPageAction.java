@@ -1,26 +1,34 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.iam.actions;
 
 import android.net.Uri;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.util.AirshipComponentUtils;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
+
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Schedules a landing page to display ASAP.
@@ -69,17 +77,36 @@ public class LandingPageAction extends Action {
      */
     public static float DEFAULT_BORDER_RADIUS = 2;
 
+    private final Callable<InAppMessageManager> inAppCallable;
+
     private float borderRadius = DEFAULT_BORDER_RADIUS;
+
+    /**
+     * Default constructor.
+     */
+    public LandingPageAction() {
+        this(AirshipComponentUtils.callableForComponent(InAppMessageManager.class));
+    }
+
+    @VisibleForTesting
+    LandingPageAction(@NonNull Callable<InAppMessageManager> inAppCallable) {
+        this.inAppCallable = inAppCallable;
+    }
 
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
+        InAppMessageManager inAppMessageManager;
+        try {
+            inAppMessageManager = inAppCallable.call();
+        } catch (Exception e) {
+            return ActionResult.newErrorResult(e);
+        }
+
         final Uri uri = parseUri(arguments);
         Checks.checkNotNull(uri, "URI should not be null");
 
-        UAirship.shared()
-                .getInAppMessagingManager()
-                .scheduleMessage(createScheduleInfo(uri, arguments));
+        inAppMessageManager.scheduleMessage(createScheduleInfo(uri, arguments));
         return ActionResult.newEmptyResult();
     }
 

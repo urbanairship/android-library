@@ -1,9 +1,13 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.iam.actions;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.InAppMessageScheduleInfo;
@@ -17,6 +21,7 @@ import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -32,9 +37,13 @@ public class LandingPageActionTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        action = new LandingPageAction();
         inAppMessageManager = mock(InAppMessageManager.class);
-        getApplication().setInAppMessageManager(inAppMessageManager);
+        action = new LandingPageAction(new Callable<InAppMessageManager>() {
+            @Override
+            public InAppMessageManager call() throws Exception {
+                return inAppMessageManager;
+            }
+        });
 
         whitelist = UAirship.shared().getWhitelist();
         whitelist.setOpenUrlWhitelistingEnabled(true);

@@ -17,16 +17,12 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.automation.Automation;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.iam.InAppActivityMonitor;
-import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.Whitelist;
@@ -139,13 +135,10 @@ public class UAirship {
     AirshipChannel channel;
     AirshipLocationClient locationClient;
     Whitelist whitelist;
-    InAppMessageManager inAppMessageManager;
-    LegacyInAppMessageManager legacyInAppMessageManager;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
     NamedUser namedUser;
-    Automation automation;
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
     PushProviders providers;
@@ -723,21 +716,12 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, GlobalActivityMonitor.shared(application));
-        components.add(this.automation);
-
         this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application), pushManager);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
-
-        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(application), channel, tagGroupRegistrar);
-        components.add(this.inAppMessageManager);
-
-        this.legacyInAppMessageManager = new LegacyInAppMessageManager(application, preferenceDataStore, inAppMessageManager, analytics, pushManager);
-        components.add(this.legacyInAppMessageManager);
 
         for (String className : OPTIONAL_COMPONENTS) {
             AirshipComponent component = createOptionalComponent(className, application, preferenceDataStore);
@@ -766,6 +750,13 @@ public class UAirship {
         if (locationModuleLoader != null) {
             components.addAll(locationModuleLoader.getComponents());
             this.locationClient = locationModuleLoader.getLocationClient();
+        }
+
+        // Automation
+        ModuleLoader automationLoader = ModuleLoaders.automationLoader(application, preferenceDataStore,
+                runtimeConfig, channel, pushManager, analytics, remoteData, tagGroupRegistrar);
+        if (automationLoader != null) {
+            components.addAll(automationLoader.getComponents());
         }
 
         for (AirshipComponent component : components) {
@@ -855,26 +846,6 @@ public class UAirship {
     }
 
     /**
-     * Returns the legacy {@link com.urbanairship.iam.LegacyInAppMessageManager} instance
-     *
-     * @return The legacy {@link com.urbanairship.iam.LegacyInAppMessageManager} instance.
-     */
-    @NonNull
-    public LegacyInAppMessageManager getLegacyInAppMessageManager() {
-        return legacyInAppMessageManager;
-    }
-
-    /**
-     * Returns the {@link com.urbanairship.iam.InAppMessageManager} instance.
-     *
-     * @return The {@link com.urbanairship.iam.InAppMessageManager} instance.
-     */
-    @NonNull
-    public InAppMessageManager getInAppMessagingManager() {
-        return inAppMessageManager;
-    }
-
-    /**
      * Returns the RemoteData instance.
      *
      * @return The RemoteData instance.
@@ -923,16 +894,6 @@ public class UAirship {
     @NonNull
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
-    }
-
-    /**
-     * Returns the {@link com.urbanairship.automation.Automation} instance.
-     *
-     * @return The {@link com.urbanairship.automation.Automation} instance.
-     */
-    @NonNull
-    public Automation getAutomation() {
-        return automation;
     }
 
     /**

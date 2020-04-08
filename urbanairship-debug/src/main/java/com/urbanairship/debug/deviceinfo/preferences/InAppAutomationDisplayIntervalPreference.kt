@@ -5,8 +5,8 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import androidx.preference.DialogPreference
-import com.urbanairship.UAirship
 import com.urbanairship.debug.R
+import com.urbanairship.iam.InAppMessageManager
 import java.util.concurrent.TimeUnit
 
 /**
@@ -22,7 +22,7 @@ class InAppAutomationDisplayIntervalPreference : DialogPreference {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
     private fun getValue(): Long {
-        return TimeUnit.SECONDS.convert(UAirship.shared().inAppMessagingManager.displayInterval, TimeUnit.MILLISECONDS)
+        return TimeUnit.SECONDS.convert(InAppMessageManager.shared().displayInterval, TimeUnit.MILLISECONDS)
     }
 
     override fun getSummary(): CharSequence {
@@ -31,7 +31,7 @@ class InAppAutomationDisplayIntervalPreference : DialogPreference {
 
     fun setValue(v: Long) {
         if (v != getValue()) {
-            UAirship.shared().inAppMessagingManager.setDisplayInterval(v, TimeUnit.SECONDS)
+            InAppMessageManager.shared().setDisplayInterval(v, TimeUnit.SECONDS)
             notifyChanged()
         }
     }

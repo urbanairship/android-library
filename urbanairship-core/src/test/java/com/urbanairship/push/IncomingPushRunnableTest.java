@@ -9,16 +9,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
-import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
@@ -39,6 +35,10 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.Collections;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -65,7 +65,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private PushManager pushManager;
     private NotificationManagerCompat notificationManager;
     private Analytics analytics;
-    private LegacyInAppMessageManager legacyInAppMessageManager;
     private NotificationChannelRegistry mockChannelRegistry;
 
     private TestNotificationProvider notificationProvider;
@@ -118,9 +117,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         });
 
         analytics = mock(Analytics.class);
-        legacyInAppMessageManager = mock(LegacyInAppMessageManager.class);
 
-        TestApplication.getApplication().setLegacyInAppMessageManager(legacyInAppMessageManager);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
 

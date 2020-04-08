@@ -3,6 +3,9 @@
 package com.urbanairship.actions;
 
 import android.os.Bundle;
+
+import com.urbanairship.automation.ActionAutomation;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -33,7 +36,7 @@ public final class ActionArguments {
     public static final String REMOTE_INPUT_METADATA = "com.urbanairship.REMOTE_INPUT";
 
     /**
-     * Metadata attached to action arguments when running scheduled actions from {@link com.urbanairship.automation.Automation}.
+     * Metadata attached to action arguments when running scheduled actions from {@link ActionAutomation}.
      * The value is stored as a {@link com.urbanairship.automation.ActionSchedule}.
      */
     @NonNull

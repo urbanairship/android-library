@@ -1,13 +1,16 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.automation.actions;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
-import com.urbanairship.TestApplication;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.ActionTestUtils;
+import com.urbanairship.automation.ActionAutomation;
 import com.urbanairship.automation.ActionSchedule;
 import com.urbanairship.automation.ActionScheduleInfo;
-import com.urbanairship.automation.Automation;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -17,6 +20,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -28,7 +32,7 @@ import static org.mockito.Mockito.when;
 
 public class ScheduleActionTest extends BaseTestCase {
 
-    private Automation automation;
+    private ActionAutomation automation;
     private JsonMap scheduleJson;
     private ScheduleAction action;
 
@@ -40,10 +44,14 @@ public class ScheduleActionTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        this.automation = mock(Automation.class);
-        TestApplication.getApplication().setAutomation(automation);
+        this.automation = mock(ActionAutomation.class);
 
-        this.action = new ScheduleAction();
+        this.action = new ScheduleAction(new Callable<ActionAutomation>() {
+            @Override
+            public ActionAutomation call() throws Exception {
+                return automation;
+            }
+        });
 
         // Accepted situations
         this.acceptedSituations = new int[] {

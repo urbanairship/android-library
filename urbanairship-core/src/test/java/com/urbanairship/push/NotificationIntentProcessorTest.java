@@ -13,7 +13,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
-import com.urbanairship.iam.LegacyInAppMessageManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +38,6 @@ public class NotificationIntentProcessorTest extends BaseTestCase {
     private Context context;
     private NotificationManager notificationManager;
     private Analytics analytics;
-    private LegacyInAppMessageManager legacyInAppMessageManager;
     private final Executor executor = new Executor() {
         @Override
         public void execute(Runnable command) {
@@ -59,13 +57,11 @@ public class NotificationIntentProcessorTest extends BaseTestCase {
         context = mock(Context.class);
         notificationManager = mock(NotificationManager.class);
         analytics = mock(Analytics.class);
-        legacyInAppMessageManager = mock(LegacyInAppMessageManager.class);
         notificationListener = mock(NotificationListener.class);
 
         PushManager pushManager = mock(PushManager.class);
         when(pushManager.getNotificationListener()).thenReturn(notificationListener);
 
-        TestApplication.getApplication().setLegacyInAppMessageManager(legacyInAppMessageManager);
         TestApplication.getApplication().setAnalytics(analytics);
         TestApplication.getApplication().setPushManager(pushManager);
 

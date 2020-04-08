@@ -14,11 +14,11 @@ import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionRunRequest;
-import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.actions.OpenExternalUrlAction;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.iam.actions.LandingPageAction;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.InternalNotificationListener;
 import com.urbanairship.push.NotificationActionButtonInfo;
@@ -34,8 +34,6 @@ import androidx.annotation.VisibleForTesting;
  * Accengage module.
  */
 public class Accengage extends AirshipComponent {
-
-    private static Accengage sharedInstance;
 
     private final AirshipChannel airshipChannel;
     private final PushManager pushManager;

@@ -8,12 +8,16 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.accengage.AccengageModuleLoader;
 import com.urbanairship.modules.accengage.AccengageModuleLoaderFactory;
+import com.urbanairship.modules.automation.AutomationModuleLoaderFactory;
 import com.urbanairship.modules.location.LocationModuleLoader;
 import com.urbanairship.modules.location.LocationModuleLoaderFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleLoaderFactory;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.remotedata.RemoteData;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +34,7 @@ public class ModuleLoaders {
     private static final String ACCENGAGE_MODULE_LOADER_FACTORY = "com.urbanairship.accengage.AccengageModuleLoaderFactoryImpl";
     private static final String MESSAGE_CENTER_MODULE_LOADER_FACTORY = "com.urbanairship.messagecenter.MessageCenterModuleLoaderFactoryImpl";
     private static final String LOCATION_MODULE_LOADER_FACTORY = "com.urbanairship.location.LocationModuleLoaderFactoryImpl";
+    private static final String AUTOMATION_MODULE_LOADER_FACTORY = "com.urbanairship.automation.AutomationModuleLoaderFactoryImpl";
 
     @Nullable
     public static AccengageModuleLoader accengageLoader(@NonNull Context context,
@@ -97,5 +102,33 @@ public class ModuleLoaders {
 
         return null;
     }
+
+    @Nullable
+    public static ModuleLoader automationLoader(@NonNull Context context,
+                                                @NonNull PreferenceDataStore dataStore,
+                                                @NonNull AirshipRuntimeConfig runtimeConfig,
+                                                @NonNull AirshipChannel airshipChannel,
+                                                @NonNull PushManager pushManager,
+                                                @NonNull Analytics analytics,
+                                                @NonNull RemoteData remoteData,
+                                                @NonNull TagGroupRegistrar tagGroupRegistrar) {
+        try {
+            Class clazz = Class.forName(AUTOMATION_MODULE_LOADER_FACTORY);
+            Object object = clazz.newInstance();
+
+            if (object instanceof AutomationModuleLoaderFactory) {
+                AutomationModuleLoaderFactory factory = (AutomationModuleLoaderFactory) object;
+                return factory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
+                        analytics, remoteData, tagGroupRegistrar);
+            }
+        } catch (ClassNotFoundException e) {
+            return null;
+        } catch (Exception e) {
+            Logger.error(e, "Unable to create loader %s", LOCATION_MODULE_LOADER_FACTORY);
+        }
+
+        return null;
+    }
+
 
 }

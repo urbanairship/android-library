@@ -1,14 +1,20 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.automation.actions;
 
-import androidx.annotation.NonNull;
-
-import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionResult;
+import com.urbanairship.automation.ActionAutomation;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.AirshipComponentUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Action to cancel automation schedules.
@@ -60,6 +66,23 @@ public class CancelSchedulesAction extends Action {
     @NonNull
     public static final String ALL = "all";
 
+    private final Callable<ActionAutomation> actionAutomationCallable;
+
+    /**
+     * Default constructor.
+     */
+    public CancelSchedulesAction() {
+        this(AirshipComponentUtils.callableForComponent(ActionAutomation.class));
+    }
+
+    /**
+     * @hide
+     */
+    @VisibleForTesting
+    CancelSchedulesAction(@NonNull Callable<ActionAutomation> actionAutomationCallable) {
+        this.actionAutomationCallable = actionAutomationCallable;
+    }
+
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
@@ -84,23 +107,29 @@ public class CancelSchedulesAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
+        ActionAutomation actionAutomation;
+        try {
+            actionAutomation = actionAutomationCallable.call();
+        } catch (Exception e) {
+            return ActionResult.newErrorResult(e);
+        }
 
         JsonValue jsonValue = arguments.getValue().toJsonValue();
 
         // All
         if (jsonValue.isString() && ALL.equalsIgnoreCase(jsonValue.getString())) {
-            UAirship.shared().getAutomation().cancelAll();
+            actionAutomation.cancelAll();
             return ActionResult.newEmptyResult();
         }
 
         // Groups
         JsonValue groupsJson = jsonValue.optMap().opt(GROUPS);
         if (groupsJson.isString()) {
-            UAirship.shared().getAutomation().cancelGroup(groupsJson.optString());
+            actionAutomation.cancelGroup(groupsJson.optString());
         } else if (groupsJson.isJsonList()) {
             for (JsonValue value : groupsJson.optList()) {
                 if (value.isString()) {
-                    UAirship.shared().getAutomation().cancelGroup(value.optString());
+                    actionAutomation.cancelGroup(value.optString());
                 }
             }
         }
@@ -108,7 +137,7 @@ public class CancelSchedulesAction extends Action {
         // IDs
         JsonValue idsJson = jsonValue.optMap().opt(IDS);
         if (idsJson.isString()) {
-            UAirship.shared().getAutomation().cancel(idsJson.optString());
+            actionAutomation.cancel(idsJson.optString());
         } else if (idsJson.isJsonList()) {
             List<String> ids = new ArrayList<>();
             for (JsonValue value : idsJson.optList()) {
@@ -117,7 +146,7 @@ public class CancelSchedulesAction extends Action {
                 }
             }
 
-            UAirship.shared().getAutomation().cancel(ids);
+            actionAutomation.cancel(ids);
         }
 
         return ActionResult.newEmptyResult();

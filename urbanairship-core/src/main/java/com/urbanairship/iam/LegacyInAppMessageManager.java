@@ -2,13 +2,6 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.graphics.Color;
-import androidx.annotation.ColorInt;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
@@ -24,7 +17,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.push.InternalNotificationListener;
 import com.urbanairship.push.NotificationActionButtonInfo;
 import com.urbanairship.push.NotificationInfo;
-import com.urbanairship.push.NotificationProxyReceiver;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -32,6 +24,13 @@ import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 /**
  * Legacy in-app message manager.
@@ -106,6 +105,16 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
         @NonNull
         InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
 
+    }
+
+    /**
+     * Gets the shared Legacy In-App Message Manager instance.
+     *
+     * @return The shared Legacy In-App Message Manager instance.
+     */
+    @NonNull
+    public static LegacyInAppMessageManager shared() {
+        return UAirship.shared().requireComponent(LegacyInAppMessageManager.class);
     }
 
     /**

@@ -116,6 +116,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     };
 
     /**
+     * Gets the shared In-App Message Manager instance.
+     *
+     * @return The shared In-App Message Manager instance.
+     */
+    @NonNull
+    public static InAppMessageManager shared() {
+        return UAirship.shared().requireComponent(InAppMessageManager.class);
+    }
+
+    /**
      * Default constructor.
      *
      * @param context The application context.

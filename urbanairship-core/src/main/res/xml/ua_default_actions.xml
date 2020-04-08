@@ -13,7 +13,7 @@
         <name>^+t</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.actions.CancelSchedulesAction">
+    <ActionEntry class="com.urbanairship.automation.actions.CancelSchedulesAction">
         <name>cancel_scheduled_actions</name>
         <name>^csa</name>
     </ActionEntry>
@@ -45,7 +45,7 @@
         <name>^fdi</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.actions.LandingPageAction">
+    <ActionEntry class="com.urbanairship.iam.actions.LandingPageAction">
         <name>landing_page_action</name>
         <name>^p</name>
     </ActionEntry>
@@ -69,7 +69,7 @@
         <name>^-t</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.actions.ScheduleAction">
+    <ActionEntry class="com.urbanairship.automation.actions.ScheduleAction">
         <name>schedule_actions</name>
         <name>^sa</name>
     </ActionEntry>

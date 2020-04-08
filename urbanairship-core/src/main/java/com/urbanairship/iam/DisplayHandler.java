@@ -5,13 +5,14 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Display handler for in-app message displays.
@@ -124,7 +125,7 @@ public class DisplayHandler implements Parcelable {
     @Nullable
     private InAppMessageManager getInAppMessagingManager() {
         if (UAirship.isTakingOff() || UAirship.isFlying()) {
-            return UAirship.shared().getInAppMessagingManager();
+            return InAppMessageManager.shared();
         }
         return null;
     }

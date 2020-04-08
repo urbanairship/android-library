@@ -9,6 +9,7 @@ import com.urbanairship.messagecenter.Inbox;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.util.AirshipComponentUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Callable;
@@ -88,12 +89,7 @@ public class MessageCenterAction extends Action {
     }
 
     public MessageCenterAction() {
-        this(new Callable<MessageCenter>() {
-            @Override
-            public MessageCenter call() throws Exception {
-                return MessageCenter.shared();
-            }
-        });
+        this(AirshipComponentUtils.callableForComponent(MessageCenter.class));
     }
 
     @VisibleForTesting

@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.actions;
+package com.urbanairship.automation.actions;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
-import com.urbanairship.automation.Automation;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionTestUtils;
+import com.urbanairship.automation.ActionAutomation;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
@@ -13,6 +15,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -22,7 +25,7 @@ import static org.mockito.Mockito.verify;
 
 public class CancelSchedulesActionTest extends BaseTestCase {
 
-    private Automation automation;
+    private ActionAutomation automation;
     private CancelSchedulesAction action;
 
     @Action.Situation
@@ -33,10 +36,14 @@ public class CancelSchedulesActionTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        this.automation = mock(Automation.class);
-        TestApplication.getApplication().setAutomation(automation);
+        this.automation = mock(ActionAutomation.class);
 
-        this.action = new CancelSchedulesAction();
+        this.action = new CancelSchedulesAction(new Callable<ActionAutomation>() {
+            @Override
+            public ActionAutomation call() throws Exception {
+                return automation;
+            }
+        });
 
         // Accepted situations
         this.acceptedSituations = new int[] {

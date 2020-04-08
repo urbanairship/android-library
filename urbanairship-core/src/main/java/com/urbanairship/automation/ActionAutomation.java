@@ -3,8 +3,6 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
@@ -16,6 +14,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.json.JsonMap;
 
 import java.util.Collection;
@@ -24,11 +23,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+
 /**
- * This class is the primary interface to the Airship On Device Automation API. If accessed outside
- * of the main process, the class methods will no-op.
+ * Action automation.
  */
-public class Automation extends AirshipComponent {
+public class ActionAutomation extends AirshipComponent {
 
     /**
      * The Action Automation data store.
@@ -43,6 +44,16 @@ public class Automation extends AirshipComponent {
     public static final long SCHEDULES_LIMIT = 100;
 
     /**
+     * Gets the shared Action automation instance.
+     *
+     * @return The shared Action automation instance.
+     */
+    @NonNull
+    public static ActionAutomation shared() {
+        return UAirship.shared().requireComponent(ActionAutomation.class);
+    }
+
+    /**
      * Default constructor.
      *
      * @param context The application context.
@@ -51,9 +62,9 @@ public class Automation extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Automation(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                      @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics,
-                      @NonNull ActivityMonitor activityMonitor) {
+    public ActionAutomation(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                            @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics,
+                            @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
 
         this.automationEngine = new AutomationEngine.Builder<ActionSchedule>()
