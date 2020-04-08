@@ -13,7 +13,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -26,7 +25,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,13 +48,6 @@ import androidx.annotation.WorkerThread;
  * server the next time the inbox is synchronized.
  */
 public class Inbox {
-
-    @NonNull
-    public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
-            MessageCenterAction.DEFAULT_REGISTRY_NAME,
-            MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME,
-            MessageCenterAction.REGISTRY_NAME_OVERLAY,
-            MessageCenterAction.REGISTRY_SHORT_NAME_OVERLAY);
 
     /**
      * A callback used to be notified when refreshing messages.

@@ -17,13 +17,10 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.messagecenter.Inbox;
-import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -251,6 +248,8 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     private static final String DEFAULT_SOUND_NAME = "default";
 
+    private static final String MESSAGE_CENTER_ACTION = "^mc";
+
     private Bundle pushBundle;
     private final Map<String, String> data;
 
@@ -461,9 +460,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
 
         if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
-            if (Collections.disjoint(actions.keySet(), Inbox.INBOX_ACTION_NAMES)) {
-                actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
-            }
+            actions.put(MESSAGE_CENTER_ACTION, ActionValue.wrap(getRichPushMessageId()));
         }
 
         return actions;

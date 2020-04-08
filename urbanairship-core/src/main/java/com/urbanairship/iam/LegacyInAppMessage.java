@@ -4,7 +4,6 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 
-import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -22,8 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import static com.urbanairship.messagecenter.Inbox.INBOX_ACTION_NAMES;
 
 /**
  * Legacy in-app message model object.
@@ -47,6 +44,7 @@ public class LegacyInAppMessage {
     private static final String BUTTON_ACTIONS_KEY = "button_actions";
 
     private static final long DEFAULT_EXPIRY_MS = 2592000000L; // 30 days
+    private static final String MESSAGE_CENTER_ACTION = "^mc";
 
     private final long expiryMS;
     private final String alert;
@@ -258,10 +256,7 @@ public class LegacyInAppMessage {
         // On click actions
         Map<String, JsonValue> clickActions = actionsJson.opt(ON_CLICK_KEY).optMap().getMap();
         if (!UAStringUtil.isEmpty(pushMessage.getRichPushMessageId())) {
-            if (Collections.disjoint(clickActions.keySet(), INBOX_ACTION_NAMES)) {
-                clickActions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, JsonValue.wrapOpt(pushMessage.getRichPushMessageId()));
-            }
-
+            clickActions.put(MESSAGE_CENTER_ACTION, JsonValue.wrap(pushMessage.getRichPushMessageId()));
         }
         builder.setClickActionValues(clickActions);
 

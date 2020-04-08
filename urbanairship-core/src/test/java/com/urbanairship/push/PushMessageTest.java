@@ -469,25 +469,6 @@ public class PushMessageTest extends BaseTestCase {
     }
 
     /**
-     * Test get actions when the payload defines an inbox action that it does not append the
-     * MessageCenterAction action.
-     */
-    @Test
-    public void testGetActionsContainsInboxAction() throws JsonException {
-        Map<String, ActionValue> actions = new HashMap<>();
-        actions.put("action_name", ActionValue.wrap("action_value"));
-        actions.put("oh", ActionValue.wrap("hi"));
-        actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("some other message ID"));
-
-        Bundle bundle = new Bundle();
-        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
-        bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
-        PushMessage message = new PushMessage(bundle);
-
-        assertEquals(actions, message.getActions());
-    }
-
-    /**
      * Test get notification sound.
      */
     @Test
