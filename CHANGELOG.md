@@ -2,6 +2,24 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.0.0 beta - April 8, 2020
+
+Beta release for SDK 13. This release adds support for enhanced custom events, date attributes, HMS push provider, and breaks
+the `urbanairship-core` module into several modules: `urbanairship-core`, `urbanairship-messagecenter`, `urbanairship-automation`, and
+`urbananairship-location`. This allows apps to pull in only the feature modules they use. Most of the changes in this release reflect the restructuring that makes this possible.
+
+Changes
+-------
+- Break out feature modules from `urbanairship-core`:
+  - `urbanairship-messagecenter`: Message Center
+  - `urbanairship-automation`: InApp Automation/Messaging, Landing Page Action, and Action Automation
+  - `urbananairship-location`: Airship Location
+- Updated CustomEvents to allow arbitrary JSON as properties.
+- Added module `urbanairship-hms` that adds support for Huawei Mobile Services (HMS).
+- Added date attribute support.
+- Removed usage of deprecated AsyncTask.
+
+
 ## Version 12.2.3 - March 30, 2020
 Patch release to fix missing whitelist entries for EUCS cloud site and to fix a crash in event manager.
 

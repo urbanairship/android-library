@@ -2,10 +2,10 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '12.2.3'
+        airshipVersion = '13.0.0'
 
         // Airship Version Qualifier beta, release, etc...
-        // airshipVersionQualifier = beta
+        airshipVersionQualifier = "beta"
 
         // Android SDK Versions
         compileSdkVersion = 29
@@ -105,7 +105,11 @@ task packageDocs(type: Tar, dependsOn: 'urbanairship-core:javadocRelease') {
 
 task getVersion() {
     doLast {
-        println rootProject.airshipVersion
+        def version = airshipVersion
+        if (project.hasProperty("airshipVersionQualifier")) {
+            version += "-" + airshipVersionQualifier
+        }
+        println version
     }
 }
 
