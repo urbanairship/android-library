@@ -5,11 +5,6 @@ package com.urbanairship.iam.modal;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.core.view.ViewCompat;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.Button;
@@ -27,7 +22,13 @@ import com.urbanairship.iam.view.BoundedLinearLayout;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.iam.view.MediaView;
-import com.urbanairship.widget.UAWebChromeClient;
+import com.urbanairship.webkit.AirshipWebChromeClient;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.core.view.ViewCompat;
 
 /**
  * Modal in-app message activity.
@@ -99,7 +100,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
 
         // Media
         if (displayContent.getMedia() != null) {
-            mediaView.setChromeClient(new UAWebChromeClient(this));
+            mediaView.setChromeClient(new AirshipWebChromeClient(this));
             InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), getMessageAssets());
         } else {
             mediaView.setVisibility(View.GONE);

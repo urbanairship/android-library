@@ -11,7 +11,6 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.messagecenter.Message;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -27,7 +26,6 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class AddCustomEventActionTest extends BaseTestCase {
 
@@ -132,14 +130,11 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMCRAP() throws JSONException {
-        Message message = mock(Message.class);
-        when(message.getMessageId()).thenReturn("message id");
-
         Map map = new HashMap();
         map.put(CustomEvent.EVENT_NAME, "event name");
 
         Bundle metadata = new Bundle();
-        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "message id");
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
@@ -162,15 +157,12 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMCRAPInteractionSet() throws JSONException {
-        Message message = mock(Message.class);
-        when(message.getMessageId()).thenReturn("message id");
-
         Map map = new HashMap();
         map.put(CustomEvent.EVENT_NAME, "event name");
         map.put(CustomEvent.INTERACTION_TYPE, "interaction type");
 
         Bundle metadata = new Bundle();
-        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "message id");
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 

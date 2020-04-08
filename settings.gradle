@@ -8,4 +8,5 @@ include ':urbanairship-core',
         ':urbanairship-hms',
         ':urbanairship-hms-stub',
         ':urbanairship-location',
+        ':urbanairship-messagecenter',
         ":sample"

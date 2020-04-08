@@ -1,0 +1,14 @@
+description = "Airship Android SDK Message Center module"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+
+    // Tests
+    testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+}

@@ -2,17 +2,11 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.messagecenter.Message;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
@@ -20,6 +14,11 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
 
 /**
  * A class that represents a custom event for the application.
@@ -485,7 +484,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         }
 
         /**
-         * Sets the interaction type and ID from a {@link Message}.
+         * Sets the interaction type and ID from a Message Center message.
          *
          * @param richPushMessageId The rich push message ID that created the custom event.
          * @return The custom event builder.

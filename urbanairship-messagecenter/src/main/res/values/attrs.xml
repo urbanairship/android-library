@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme attributes -->
+    <declare-styleable name="Theme">
+        <!-- Attribute to allow style override for the Message Center -->
+        <attr name="messageCenterStyle" format="reference" />
+    </declare-styleable>
+
+    <!-- Style attributes for Message Center  -->
+    <declare-styleable name="MessageCenter">
+        <!-- Message item's background -->
+        <attr name="messageCenterItemBackground" format="reference" />
+
+        <!-- Message title text appearance -->
+        <attr name="messageCenterItemTitleTextAppearance" format="reference" />
+
+        <!-- Message date text appearance -->
+        <attr name="messageCenterItemDateTextAppearance" format="reference" />
+
+        <!-- Text appearance for the message not selected message when displaying the Message Center
+          in a split view -->
+        <attr name="messageNotSelectedTextAppearance" format="reference" />
+
+        <!-- Text for the message not selected message when displaying the Message Center in a split view -->
+        <attr name="messageNotSelectedText" format="string" />
+
+        <!-- Empty Message Center message text appearance -->
+        <attr name="messageCenterEmptyMessageTextAppearance" format="reference" />
+
+        <!-- Empty Message Center message text -->
+        <attr name="messageCenterEmptyMessageText" format="string" />
+
+        <!-- Message Center list divider color -->
+        <attr name="messageCenterDividerColor" format="color" />
+
+        <!-- If the Message Center should display message icons or not -->
+        <attr name="messageCenterItemIconEnabled" format="boolean" />
+
+        <!-- Icon placeholder -->
+        <attr name="messageCenterItemIconPlaceholder" format="reference" />
+
+    </declare-styleable>
+
+</resources>

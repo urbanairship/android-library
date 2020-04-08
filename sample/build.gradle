@@ -60,6 +60,9 @@ dependencies {
     // Airship Preferences
     implementation project(':urbanairship-preference')
 
+    // Airship Message Center
+    implementation project(':urbanairship-messagecenter')
+
     // Airship location
     implementation project(':urbanairship-location')
     // Allows Airship location services to use Fused Location

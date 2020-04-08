@@ -12,7 +12,6 @@ import android.os.Parcel;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.messagecenter.actions.MessageCenterAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -464,7 +463,7 @@ public class PushMessageTest extends BaseTestCase {
         bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
         PushMessage message = new PushMessage(bundle);
 
-        actions.put(MessageCenterAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message ID"));
+        actions.put("^mc", ActionValue.wrap("message ID"));
         assertEquals(actions, message.getActions());
     }
 

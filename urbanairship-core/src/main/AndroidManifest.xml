@@ -43,14 +43,6 @@
             android:theme="@android:style/Theme.NoDisplay" />
 
         <activity
-            android:name="com.urbanairship.messagecenter.MessageActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.urbanairship.messagecenter.MessageCenterActivity"
-            android:exported="false"
-            android:label="@string/ua_message_center_title" />
-
-        <activity
             android:name="com.urbanairship.util.HelperActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.HelperActivity">

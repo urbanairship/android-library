@@ -19,7 +19,6 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
@@ -27,7 +26,6 @@ import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.Map;
 import java.util.UUID;

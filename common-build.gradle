@@ -30,6 +30,8 @@ android {
     lintOptions {
         check 'Interoperability'
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 // Create the pom configuration:

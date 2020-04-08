@@ -11,7 +11,6 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.messagecenter.Message;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -22,7 +21,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -205,11 +203,8 @@ public class CustomEventTest extends BaseTestCase {
      */
     @Test
     public void testInteractionFromMessage() throws JSONException {
-        Message message = mock(Message.class);
-        when(message.getMessageId()).thenReturn("message id");
-
         CustomEvent event = CustomEvent.newBuilder("event name")
-                                       .setMessageCenterInteraction(message.getMessageId())
+                                       .setMessageCenterInteraction("message id")
                                        .build();
 
         EventTestUtils.validateEventValue(event, "interaction_id", "message id");

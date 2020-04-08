@@ -43,7 +43,6 @@
     <!-- Attributes -->
     <public name="mixed_content_mode" type="attr" />
     <public name="inAppMessageBannerStyle" type="attr" />
-    <public name="messageCenterStyle" type="attr" />
     <public name="optCardBackgroundColor" type="attr" />
     <public name="optCardCornerRadius" type="attr" />
     <public name="optCardElevation" type="attr" />
@@ -54,16 +53,6 @@
     <public name="bannerDismissButtonDrawable" type="attr" />
     <public name="bannerNoDismissButton" type="attr" />
     <public name="bannerActionButtonTextAppearance" type="attr" />
-    <public name="messageCenterItemBackground" type="attr" />
-    <public name="messageCenterItemTitleTextAppearance" type="attr" />
-    <public name="messageCenterItemDateTextAppearance" type="attr" />
-    <public name="messageNotSelectedTextAppearance" type="attr" />
-    <public name="messageNotSelectedText" type="attr" />
-    <public name="messageCenterEmptyMessageTextAppearance" type="attr" />
-    <public name="messageCenterEmptyMessageText" type="attr" />
-    <public name="messageCenterDividerColor" type="attr" />
-    <public name="messageCenterItemIconEnabled" type="attr" />
-    <public name="messageCenterItemIconPlaceholder" type="attr" />
     <public name="ua_state_highlighted" type="attr" />
 
     <!-- Styles -->
@@ -76,20 +65,9 @@
     <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButton" type="style" />
     <public name="Widget.UrbanAirship.InAppMessage.Banner.ActionButtonContainer" type="style" />
     <public name="Widget.UrbanAirship.InAppMessage.Banner" type="style" />
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Container" type="style" />
-    <public name="Widget.UrbanAirship.MessageCenter.Item.CheckBox" type="style" />
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Icon" type="style" />
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Title" type="style" />
-    <public name="Widget.UrbanAirship.MessageCenter.Item.Date" type="style" />
-    <public name="MessageCenter.Item.Title.TextAppearance" type="style" />
-    <public name="MessageCenter.Item.Date.TextAppearance" type="style" />
-    <public name="MessageCenter.EmptyMessage.TextAppearance" type="style" />
-    <public name="MessageCenter.MessageNotSelected.TextAppearance" type="style" />
-    <public name="MessageCenter" type="style" />
 
     <!-- Ids -->
     <public name="close_button" type="id" />
-    <public name="message_list_container" type="id" />
     <public name="retry_button" type="id" />
     <public name="error" type="id" />
 
