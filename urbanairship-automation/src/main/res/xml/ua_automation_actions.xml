@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <ActionEntry class="com.urbanairship.automation.actions.CancelSchedulesAction">
+        <name>cancel_scheduled_actions</name>
+        <name>^csa</name>
+    </ActionEntry>
+
+    <ActionEntry class="com.urbanairship.iam.actions.LandingPageAction">
+        <name>landing_page_action</name>
+        <name>^p</name>
+    </ActionEntry>
+
+    <ActionEntry class="com.urbanairship.automation.actions.ScheduleAction">
+        <name>schedule_actions</name>
+        <name>^sa</name>
+    </ActionEntry>
+</resources>

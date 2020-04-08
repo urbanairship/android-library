@@ -3,22 +3,11 @@
 package com.urbanairship.actions;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.content.res.XmlResourceParser;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.SparseArray;
-import android.util.Xml;
 
-import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.util.AttributeSetConfigParser;
 import com.urbanairship.util.UAStringUtil;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,16 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.XmlRes;
+
 /**
  * Class responsible for runtime-persisting actions and associating them
  * with names and predicates.
  */
-public final class ActionRegistry {
-
-    private static final String ACTION_ENTRY_TAG = "ActionEntry";
-    private static final String CLASS_ATTRIBUTE = "class";
-    private static final String NAME_ATTRIBUTE = "name";
-    private static final String PREDICATE_ATTRIBUTE = "predicate";
+public class ActionRegistry {
 
     /**
      * ActionArgument predicate
@@ -174,12 +163,23 @@ public final class ActionRegistry {
     }
 
     /**
-     * Registers default actions using a resource file.
+     * Registers default actions.
      *
      * @param context The application context.
      */
     public void registerDefaultActions(@NonNull Context context) {
-        List<Entry> entries = ActionEntryParser.fromXml(context, R.xml.ua_default_actions);
+        registerActions(context, R.xml.ua_default_actions);
+    }
+
+    /**
+     * Registers actions from a resource.
+     * @param context The context.
+     * @param actionsXml The actions XML resource ID.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void registerActions(@NonNull Context context, @XmlRes int actionsXml) {
+        List<Entry> entries = ActionEntryParser.fromXml(context, actionsXml);
 
         for (Entry entry : entries) {
             registerEntry(entry);

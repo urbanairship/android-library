@@ -48,7 +48,7 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
         ActionAutomation automation = new ActionAutomation(context, dataStore, runtimeConfig.getConfigOptions(), analytics, GlobalActivityMonitor.shared(context));
 
         Collection<AirshipComponent> components = Arrays.asList(inAppMessageManager, legacyInAppMessageManager, automation);
-        return Module.multipleComponents(components);
+        return Module.multipleComponents(components, R.xml.ua_automation_actions);
     }
 
 }

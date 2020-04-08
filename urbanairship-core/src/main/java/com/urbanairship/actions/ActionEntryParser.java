@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.urbanairship.Logger;
+import com.urbanairship.util.UAStringUtil;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -138,12 +139,13 @@ class ActionEntryParser {
 
         ActionRegistry.Entry entry = new ActionRegistry.Entry(clazz, names);
 
-        ActionRegistry.Predicate predicate;
-        try {
-            predicate = Class.forName(predicateClassName).asSubclass(ActionRegistry.Predicate.class).newInstance();
-            entry.setPredicate(predicate);
-        } catch (Exception e) {
-            Logger.error("Predicate class %s not found. Skipping predicate.", predicateClassName);
+        if (!UAStringUtil.isEmpty(predicateClassName)) {
+            try {
+                ActionRegistry.Predicate predicate = Class.forName(predicateClassName).asSubclass(ActionRegistry.Predicate.class).newInstance();
+                entry.setPredicate(predicate);
+            } catch (Exception e) {
+                Logger.error("Predicate class %s not found. Skipping predicate.", predicateClassName);
+            }
         }
 
         return entry;

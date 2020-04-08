@@ -776,6 +776,7 @@ public class UAirship {
     private void processModule(@Nullable Module module) {
         if (module != null) {
             components.addAll(module.getComponents());
+            module.registerActions(application, getActionRegistry());
         }
     }
 

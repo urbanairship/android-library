@@ -13,11 +13,6 @@
         <name>^+t</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.automation.actions.CancelSchedulesAction">
-        <name>cancel_scheduled_actions</name>
-        <name>^csa</name>
-    </ActionEntry>
-
     <ActionEntry class="com.urbanairship.actions.ChannelCaptureAction">
         <name>channel_capture_action</name>
         <name>^cc</name>
@@ -45,21 +40,9 @@
         <name>^fdi</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.iam.actions.LandingPageAction">
-        <name>landing_page_action</name>
-        <name>^p</name>
-    </ActionEntry>
-
     <ActionEntry class="com.urbanairship.actions.OpenExternalUrlAction">
         <name>open_external_url_action</name>
         <name>^u</name>
-    </ActionEntry>
-
-    <ActionEntry class="com.urbanairship.messagecenter.actions.MessageCenterAction">
-        <name>open_mc_action</name>
-        <name>^mc</name>
-        <name>open_mc_overlay_action</name>
-        <name>^mco</name>
     </ActionEntry>
 
     <ActionEntry
@@ -67,11 +50,6 @@
         predicate="com.urbanairship.actions.tags.RemoveTagsAction$RemoveTagsPredicate">
         <name>remove_tags_action</name>
         <name>^-t</name>
-    </ActionEntry>
-
-    <ActionEntry class="com.urbanairship.automation.actions.ScheduleAction">
-        <name>schedule_actions</name>
-        <name>^sa</name>
     </ActionEntry>
 
     <ActionEntry class="com.urbanairship.actions.ShareAction">

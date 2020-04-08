@@ -22,7 +22,7 @@ public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactor
     @Override
     public Module build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager) {
         MessageCenter messageCenter = new MessageCenter(context, dataStore, airshipChannel, pushManager);
-        return Module.singleComponent(messageCenter);
+        return Module.singleComponent(messageCenter, R.xml.ua_message_center_actions);
     }
 
 }
