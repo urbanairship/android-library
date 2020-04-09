@@ -81,7 +81,8 @@ public class AttributeSetConfigParser implements ConfigParser {
             return context.getResources().getStringArray(resourceId);
         }
 
-        return null;
+        String value = attributeSet.getAttributeValue(null, name);
+        return value.split("[, ]+");
     }
 
 
