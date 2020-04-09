@@ -82,6 +82,10 @@ public class AttributeSetConfigParser implements ConfigParser {
         }
 
         String value = attributeSet.getAttributeValue(null, name);
+        if (value == null) {
+            return new String[0];
+        }
+
         return value.split("[, ]+");
     }
 
