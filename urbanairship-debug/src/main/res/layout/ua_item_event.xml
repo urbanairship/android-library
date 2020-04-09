@@ -67,7 +67,7 @@
             <TextView
                 android:id="@+id/time"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="24dp"
                 android:textAppearance="@style/AirshipDebug.ItemSubTitle"
                 app:formatTime="@{viewModel.time}"
                 tools:text="@tools:sample/lorem[4]" />

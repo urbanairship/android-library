@@ -36,6 +36,7 @@
             <Button
                 android:id="@+id/channelId"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?colorAccent"
                 android:layout_width="wrap_content"
                 android:layout_height="51dp"
                 android:layout_marginStart="8dp"

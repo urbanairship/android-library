@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="color_primary_dark">#004bff</color>
-    <color name="color_primary">#000000</color>
-    <color name="color_accent">#ff0b48</color>
-    <color name="message_read">#004bff</color>
-
-</resources>

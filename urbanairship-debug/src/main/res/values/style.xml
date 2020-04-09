@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="AirshipDebug" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimaryDark">#004bff</item>
+        <!-- Customize your theme here. -->
+        <item name="colorPrimaryVariant">#000000</item>
         <item name="colorPrimary">#000000</item>
-        <item name="colorAccent">#ff0b48</item>
-    </style>
-
-    <style name="AirshipDebug.Toolbar">
-        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="colorSecondary">#ff0b48</item>
+        <item name="colorSecondaryVariant">#c40021</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">#0023ca</item>
     </style>
 
     <style name="AirshipDebug.ItemTitle" parent="@style/TextAppearance.MaterialComponents.Subtitle1" />

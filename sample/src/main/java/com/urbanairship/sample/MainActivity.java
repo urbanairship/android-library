@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-
 /**
  * Main application entry point.
  */
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection ResourceType - For the duration field of the snackbar when defining a custom duration
         messageCenterSnackbar = Snackbar.make(findViewById(R.id.nav_host_container), text, Snackbar.LENGTH_LONG)
-                                        .setActionTextColor(ContextCompat.getColor(this, R.color.color_accent))
+                                        .setActionTextColor(ContextCompat.getColor(this, R.color.accent))
                                         .setAction(R.string.view, v -> {
                                             messageCenterSnackbar.dismiss();
                                             navigationView.setSelectedItemId(R.id.inbox);
