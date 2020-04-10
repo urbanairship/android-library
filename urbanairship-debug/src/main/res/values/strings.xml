@@ -38,9 +38,39 @@
     <string name="ua_attribute_set">Attribute set!</string>
     <string name="ua_attribute_removed">Attribute removed!</string>
 
+    <string name="ua_custom_event_property_value_false">false</string>
+    <string name="ua_custom_event_property_value_true">true</string>
+    <string name="ua_custom_event_property_type">Property Type</string>
+    <string name="ua_custom_event_property_name">Name</string>
+    <string name="ua_custom_event_property_value">Value</string>
+    <string name="ua_custom_event_property_string">String</string>
+    <string name="ua_custom_event_property_number">Number</string>
+    <string name="ua_custom_event_property_boolean">Boolean</string>
+    <string name="ua_custom_event_property_json">JSON</string>
+    <string name="ua_custom_event_property_save">Save</string>
+    <string name="ua_custom_event_property_cancel">Cancel</string>
+    <string name="ua_custom_event_error_missing_required">Required</string>
+    <string name="ua_custom_event_error_invalid_json">Invalid JSON</string>
+    <string name="ua_custom_event_error_invalid_interaction">Required for interaction</string>
+
+    <string name="ua_custom_event_field_name">Event Name</string>
+    <string name="ua_custom_event_field_value">Event Value</string>
+    <string name="ua_custom_event_field_interaction_id">Interaction Id</string>
+    <string name="ua_custom_event_field_interaction_type">Interaction Type</string>
+    <string name="ua_custom_event_field_transaction_id">Transaction Id</string>
+    <string name="ua_custom_event_field_properties">Properties</string>
+
+    <string name="ua_custom_event_add_property">Add Property</string>
+    <string name="ua_custom_event_create">Create</string>
+
+
+
     <string name="ua_event_view_title">Events</string>
     <string name="ua_event_view_description">Search and filter a list of recent events</string>
-    
+
+    <string name="ua_custom_event_view_title">Create Event</string>
+    <string name="ua_custom_event_view_description">Create custom events</string>
+
     <string name="ua_none">None</string>
 
     <string name="ua_delete">Delete</string>

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.urbanairship.debug.customevent.PropertyViewModel" />
+
+        <variable
+            name="handlers"
+            type="com.urbanairship.debug.customevent.PropertyFragment" />
+
+
+        <import type="android.view.View" />
+
+        <import type="com.urbanairship.debug.customevent.PropertyType" />
+
+    </data>
+
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include layout="@layout/ua_include_appbar" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/nameLayout"
+                    style="@style/Widget.AirshipDebug.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginRight="8dp"
+                    android:hint="@string/ua_custom_event_property_name"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    airshipErrorMessage="@{viewModel.nameValidator ? null : @string/ua_custom_event_error_missing_required}"
+                    app:layout_constraintTop_toBottomOf="@+id/radioGroupPropertyType">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:text="@={viewModel.name}" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+
+                <FrameLayout
+                    android:id="@+id/valueFrameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginRight="8dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/nameLayout">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.AirshipDebug.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="@string/ua_custom_event_property_value"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
+                        android:visibility="@{viewModel.propertyType == PropertyType.STRING ? View.VISIBLE : View.GONE}">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="@{viewModel.propertyType == PropertyType.STRING}"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:text="@={viewModel.stringValue}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.AirshipDebug.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="@string/ua_custom_event_property_value"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
+                        android:visibility="@{viewModel.propertyType == PropertyType.NUMBER ? View.VISIBLE : View.GONE}">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="@{viewModel.propertyType == PropertyType.NUMBER}"
+                            android:inputType="number|numberSigned|numberDecimal"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:text="@={viewModel.numberValue}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.AirshipDebug.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="@string/ua_attributes_value"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_invalid_json}"
+                        android:visibility="@{viewModel.propertyType == PropertyType.JSON ? View.VISIBLE : View.GONE}">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="@{viewModel.propertyType == PropertyType.JSON}"
+                            android:inputType="textMultiLine"
+                            android:text="@={viewModel.jsonValue}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:enabled="@{viewModel.propertyType == PropertyType.BOOLEAN}"
+                        android:onClick="@{() -> viewModel.toggleBoolean()}"
+                        android:text="@{viewModel.booleanValue ? @string/ua_custom_event_property_value_true : @string/ua_custom_event_property_value_false }"
+                        android:visibility="@{viewModel.propertyType == PropertyType.BOOLEAN ? View.VISIBLE : View.GONE}" />
+
+                </FrameLayout>
+
+
+                <TextView
+                    android:id="@+id/propertyTypeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/ua_custom_event_property_type"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/radioGroupPropertyType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/propertyTypeLabel"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/stringChip"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingRight="8dp"
+                        android:text="@string/ua_custom_event_property_string"
+                        android:textColor="@color/ua_chip_text_color"
+                        app:chipBackgroundColor="@color/ua_chip_bg_color" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/numberChip"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ua_custom_event_property_number"
+                        android:textColor="@color/ua_chip_text_color"
+                        app:chipBackgroundColor="@color/ua_chip_bg_color" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/booleanChip"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ua_custom_event_property_boolean"
+                        android:textColor="@color/ua_chip_text_color"
+                        app:chipBackgroundColor="@color/ua_chip_bg_color" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/jsonChip"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ua_custom_event_property_json"
+                        android:textColor="@color/ua_chip_text_color"
+                        app:chipBackgroundColor="@color/ua_chip_bg_color" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <Button
+                    android:id="@+id/setPropertyButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginRight="24dp"
+                    android:onClick="@{() -> handlers.save()}"
+                    android:text="@string/ua_custom_event_property_save"
+                    app:layout_constraintEnd_toStartOf="@+id/guideline"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/valueFrameLayout" />
+
+                <Button
+                    android:id="@+id/cancelPropertyButton"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginRight="24dp"
+                    android:onClick="@{() -> handlers.cancel()}"
+
+                    android:text="@string/ua_custom_event_property_cancel"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/guideline"
+                    app:layout_constraintTop_toBottomOf="@+id/valueFrameLayout" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.5" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.core.widget.NestedScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

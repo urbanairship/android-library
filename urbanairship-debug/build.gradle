@@ -26,6 +26,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         javaCompileOptions {
             annotationProcessorOptions {
@@ -52,6 +56,7 @@ dependencies {
 
     // Navigation
     implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
+    implementation "androidx.navigation:navigation-fragment-ktx:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$rootProject.androidxNavigationVersion"
 
