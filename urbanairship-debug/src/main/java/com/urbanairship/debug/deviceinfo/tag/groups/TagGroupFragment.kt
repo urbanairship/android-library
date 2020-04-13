@@ -6,12 +6,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoTagGroupsBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
-class TagGroupFragment : androidx.fragment.app.Fragment() {
+class TagGroupFragment : Fragment() {
     private lateinit var viewModel: TagGroupViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -21,18 +22,16 @@ class TagGroupFragment : androidx.fragment.app.Fragment() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        binding.radioGroupTagGroupType.setOnCheckedChangeListener { _, checkedId ->
-            if (checkedId == R.id.channel) {
-                viewModel.tagGroupType.set(TagGroupType.CHANNEL)
-            } else {
-                viewModel.tagGroupType.set(TagGroupType.NAMED_USER)
+        binding.radioGroupIdentifierType.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.channelChip -> viewModel.tagGroupType.set(TagGroupType.CHANNEL)
+                R.id.namedUserChip -> viewModel.tagGroupType.set(TagGroupType.NAMED_USER)
             }
         }
 
         when (viewModel.tagGroupType.get()) {
-            TagGroupType.CHANNEL -> binding.radioGroupTagGroupType.check(R.id.channel)
-            TagGroupType.NAMED_USER -> binding.radioGroupTagGroupType.check(R.id.namedUser)
-            else -> binding.radioGroupTagGroupType.check(R.id.channel)
+            TagGroupType.CHANNEL -> binding.radioGroupIdentifierType.check(R.id.channelChip)
+            TagGroupType.NAMED_USER -> binding.radioGroupIdentifierType.check(R.id.namedUserChip)
         }
 
         return binding.root

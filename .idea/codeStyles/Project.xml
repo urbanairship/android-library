@@ -37,6 +37,10 @@
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT" value="2147483647" />
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT_FOR_MEMBERS" value="2147483647" />
     </JetCodeStyleSettings>
+    <XML>
+      <option name="XML_KEEP_LINE_BREAKS" value="true" />
+      <option name="XML_KEEP_BLANK_LINES" value="1" />
+    </XML>
     <codeStyleSettings language="JAVA">
       <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1" />
       <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />

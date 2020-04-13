@@ -20,7 +20,6 @@
 
     </data>
 
-
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -32,7 +31,6 @@
             android:layout_height="wrap_content"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -40,6 +38,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/nameLayout"
                     style="@style/Widget.AirshipDebug.TextInputLayout"
+                    airshipErrorMessage="@{viewModel.nameValidator ? null : @string/ua_custom_event_error_missing_required}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -51,7 +50,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    airshipErrorMessage="@{viewModel.nameValidator ? null : @string/ua_custom_event_error_missing_required}"
                     app:layout_constraintTop_toBottomOf="@+id/radioGroupPropertyType">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -64,7 +62,6 @@
                         android:text="@={viewModel.name}" />
 
                 </com.google.android.material.textfield.TextInputLayout>
-
 
                 <FrameLayout
                     android:id="@+id/valueFrameLayout"
@@ -82,11 +79,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.AirshipDebug.TextInputLayout"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
                         android:hint="@string/ua_custom_event_property_value"
-                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                         android:visibility="@{viewModel.propertyType == PropertyType.STRING ? View.VISIBLE : View.GONE}">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -102,11 +99,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.AirshipDebug.TextInputLayout"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
                         android:hint="@string/ua_custom_event_property_value"
-                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                         android:visibility="@{viewModel.propertyType == PropertyType.NUMBER ? View.VISIBLE : View.GONE}">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -122,11 +119,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.AirshipDebug.TextInputLayout"
+                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_invalid_json}"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
                         android:hint="@string/ua_attributes_value"
-                        airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_invalid_json}"
                         android:visibility="@{viewModel.propertyType == PropertyType.JSON ? View.VISIBLE : View.GONE}">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -148,7 +145,6 @@
                         android:visibility="@{viewModel.propertyType == PropertyType.BOOLEAN ? View.VISIBLE : View.GONE}" />
 
                 </FrameLayout>
-
 
                 <TextView
                     android:id="@+id/propertyTypeLabel"
@@ -257,5 +253,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.core.widget.NestedScrollView>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
 </layout>

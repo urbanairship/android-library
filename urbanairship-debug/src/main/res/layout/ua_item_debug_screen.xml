@@ -35,8 +35,6 @@
             android:textAppearance="@style/AirshipDebug.ItemSubTitle"
             tools:text="@tools:sample/lorem[4]" />
 
-
     </LinearLayout>
-
 
 </layout>

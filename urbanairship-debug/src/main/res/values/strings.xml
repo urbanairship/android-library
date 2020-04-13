@@ -132,6 +132,8 @@
     <string name="ua_channel">Channel</string>
     <string name="ua_named_user">Named User</string>
 
+    <string name="ua_identifier">Identifier</string>
+
     <string name="ua_associated_identifiers">Associated Identifiers</string>
     <string name="ua_associated_key_hint">Name</string>
     <string name="ua_associated_value_hint">Value</string>

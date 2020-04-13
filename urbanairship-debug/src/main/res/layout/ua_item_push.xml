@@ -25,10 +25,10 @@
 
         <TextView
             android:id="@+id/alert"
-            android:textAppearance="@style/AirshipDebug.ItemTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@{push.alert ?? @string/ua_push_empty_alert}"
+            android:textAppearance="@style/AirshipDebug.ItemTitle"
             tools:text="@tools:sample/lorem[3]" />
 
         <TextView
@@ -45,8 +45,8 @@
             android:id="@+id/time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:formatTime="@{push.time}"
             android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+            app:formatTime="@{push.time}"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/alert"
             tools:text="10:30" />

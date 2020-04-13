@@ -111,11 +111,11 @@
                 android:clickable="@{collapseAlpha > 0f}"
                 android:enabled="false"
                 android:scaleType="center"
+                android:src="@drawable/ua_ic_chevron_down"
                 android:tint="?colorAccent"
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/ua_ic_chevron_down" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/expand"
@@ -126,11 +126,11 @@
                 android:background="@android:color/white"
                 android:clickable="@{expandAlpha > 0f}"
                 android:scaleType="center"
+                android:src="@drawable/ua_ic_chevron_up"
                 android:tint="?colorAccent"
                 app:layout_constraintBottom_toTopOf="@id/guide_peek_height"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/ua_ic_chevron_up" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/event_filters"

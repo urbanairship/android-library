@@ -19,6 +19,6 @@
         android:gravity="center_vertical"
         android:maxLines="1"
         android:text="@{name}"
-        android:textAppearance="@style/AirshipDebug.ItemTitle"/>
+        android:textAppearance="@style/AirshipDebug.ItemTitle" />
 
 </layout>

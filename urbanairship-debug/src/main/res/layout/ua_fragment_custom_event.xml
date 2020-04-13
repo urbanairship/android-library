@@ -29,10 +29,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/nameLayout"
                     style="@style/Widget.AirshipDebug.TextInputLayout"
+                    airshipErrorMessage="@{viewModel.nameValidator ? null : @string/ua_custom_event_error_missing_required}"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
@@ -41,7 +41,6 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginRight="16dp"
                     android:hint="@string/ua_custom_event_field_name"
-                    airshipErrorMessage="@{viewModel.nameValidator ? null : @string/ua_custom_event_error_missing_required}"
 
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -63,6 +62,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/valueLayout"
                     style="@style/Widget.AirshipDebug.TextInputLayout"
+                    airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
@@ -73,7 +73,6 @@
                     android:hint="@string/ua_custom_event_field_value"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    airshipErrorMessage="@{viewModel.valueValidator ? null : @string/ua_custom_event_error_missing_required}"
                     app:layout_constraintTop_toBottomOf="@+id/nameLayout">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -126,6 +125,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/interactionIdLayout"
                     style="@style/Widget.AirshipDebug.TextInputLayout"
+                    airshipErrorMessage="@{viewModel.interactionIdValidator ? null : @string/ua_custom_event_error_invalid_interaction}"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
@@ -134,7 +134,6 @@
                     android:layout_marginEnd="8dp"
                     android:layout_marginRight="8dp"
                     android:hint="@string/ua_custom_event_field_interaction_id"
-                    airshipErrorMessage="@{viewModel.interactionIdValidator ? null : @string/ua_custom_event_error_invalid_interaction}"
                     app:layout_constraintEnd_toStartOf="@+id/guideline"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/transactionIdLayout">
@@ -155,6 +154,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/interactionTypeLayout"
                     style="@style/Widget.AirshipDebug.TextInputLayout"
+                    airshipErrorMessage="@{viewModel.interactionTypeValidator ? null : @string/ua_custom_event_error_invalid_interaction}"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -163,7 +163,6 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginRight="16dp"
                     android:hint="@string/ua_custom_event_field_interaction_type"
-                    airshipErrorMessage="@{viewModel.interactionTypeValidator ? null : @string/ua_custom_event_error_invalid_interaction}"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline"
                     app:layout_constraintTop_toBottomOf="@+id/transactionIdLayout">
@@ -211,15 +210,16 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
                     android:layout_marginLeft="24dp"
                     android:layout_marginEnd="24dp"
                     android:layout_marginRight="24dp"
+                    android:overScrollMode="never"
                     android:scrollbarStyle="outsideOverlay"
                     android:scrollbars="vertical"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constrainedHeight="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
@@ -230,4 +230,5 @@
         </androidx.core.widget.NestedScrollView>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
 </layout>

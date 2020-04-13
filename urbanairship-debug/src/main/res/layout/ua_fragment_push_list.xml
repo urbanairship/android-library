@@ -19,7 +19,6 @@
 
         <include layout="@layout/ua_include_appbar" />
 
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/pushes"
             android:layout_width="match_parent"

@@ -34,7 +34,6 @@
             android:background="@drawable/ua_oval_background"
             app:backgroundTint="@{EventInfo.getColor(context, viewModel.type)}">
 
-
             <TextView
                 android:id="@+id/icon_text"
                 android:layout_width="wrap_content"
