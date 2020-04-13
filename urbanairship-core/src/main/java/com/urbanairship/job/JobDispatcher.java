@@ -210,13 +210,13 @@ public class JobDispatcher {
      * @param jobId The job ID.
      * @return A scheduler ID.
      */
-    private int getScheduleId(int jobId) {
+    private synchronized int getScheduleId(int jobId) {
         if (jobIdStart == null) {
             ApplicationInfo ai = null;
             try {
                 ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            } catch (PackageManager.NameNotFoundException e) {
-                Logger.error("Failed get application info.");
+            } catch (Exception e) {
+                Logger.error(e, "Failed to get application info.");
             }
 
             if (ai != null && ai.metaData != null) {
