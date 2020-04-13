@@ -10,15 +10,16 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Dispatches jobs. When a job is dispatched with a delay or specifies that it requires network activity,
@@ -205,13 +206,13 @@ public class JobDispatcher {
      * @param jobId The job ID.
      * @return A scheduler ID.
      */
-    private int getScheduleId(int jobId) {
+    private synchronized int getScheduleId(int jobId) {
         if (jobIdStart == null) {
             ApplicationInfo ai = null;
             try {
                 ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            } catch (PackageManager.NameNotFoundException e) {
-                Logger.error("Failed get application info.");
+            } catch (Exception e) {
+                Logger.error(e, "Failed to get application info.");
             }
 
             if (ai != null && ai.metaData != null) {

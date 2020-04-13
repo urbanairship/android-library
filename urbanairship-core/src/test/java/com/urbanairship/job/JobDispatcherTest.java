@@ -4,8 +4,9 @@ package com.urbanairship.job;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.os.TransactionTooLargeException;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
@@ -15,12 +16,18 @@ import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
+import androidx.annotation.NonNull;
+
 import static junit.framework.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 public class JobDispatcherTest extends BaseTestCase {
@@ -126,4 +133,31 @@ public class JobDispatcherTest extends BaseTestCase {
         verify(mockFallbackScheduler).cancel(context, 3000007);
     }
 
+    @Test
+    public void testCatchesTransactionTooLargeException() throws PackageManager.NameNotFoundException, SchedulerException {
+        Context context = mock(Context.class);
+        when(context.getApplicationContext()).thenReturn(context);
+        when(context.getPackageName()).thenReturn("package");
+
+        PackageManager pm = Mockito.mock(PackageManager.class);
+
+        when(context.getPackageManager()).thenReturn(pm);
+        when(pm.getApplicationInfo(anyString(), anyInt())).thenThrow(new RuntimeException(new TransactionTooLargeException()));
+
+        JobDispatcher dispatcher = new JobDispatcher(context, new JobDispatcher.SchedulerFactory() {
+            @NonNull
+            @Override
+            public Scheduler createScheduler(Context context) {
+                return mockScheduler;
+            }
+
+            @NonNull
+            @Override
+            public Scheduler createFallbackScheduler(Context context) {
+                return mockFallbackScheduler;
+            }
+        }, activityMonitor);
+
+        dispatcher.dispatch(jobInfo);
+    }
 }
