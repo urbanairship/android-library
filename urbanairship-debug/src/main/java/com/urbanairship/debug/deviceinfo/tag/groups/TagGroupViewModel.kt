@@ -13,7 +13,7 @@ class TagGroupViewModel : ViewModel() {
 
     val tagGroup = MutableLiveData<String>()
     val tag = MutableLiveData<String>()
-    val tagGroupType = ObservableField<TagGroupType>(TagGroupType.CHANNEL)
+    val tagGroupType = ObservableField(TagGroupType.CHANNEL)
     val formValidator = MediatorLiveData<Boolean>()
 
     init {
@@ -44,11 +44,11 @@ class TagGroupViewModel : ViewModel() {
         tag.value = null
     }
 
-    fun isValid(): Boolean {
+    private fun isValid(): Boolean {
         return !tag.value.isNullOrEmpty() && !tagGroup.value.isNullOrEmpty()
     }
 
-    fun tagEditor(): TagGroupsEditor {
+    private fun tagEditor(): TagGroupsEditor {
         return when (tagGroupType.get()!!) {
             TagGroupType.CHANNEL -> {
                 UAirship.shared().channel.editTagGroups()

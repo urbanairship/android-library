@@ -81,7 +81,6 @@ public class PushProviders {
     @NonNull
     private List<PushProvider> createProviders() {
         List<PushProvider> providers = new ArrayList<>();
-        List<String> providerClasses = new ArrayList<>();
 
         for (String className : createAllowedProviderClassList()) {
             PushProvider pushProvider = null;
@@ -111,7 +110,6 @@ public class PushProviders {
             }
 
             providers.add(pushProvider);
-            providerClasses.add(className);
         }
 
         return providers;

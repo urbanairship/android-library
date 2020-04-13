@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Activity listener that forwards activity events to a list of listeners.
@@ -40,49 +41,49 @@ public class ForwardingActivityListener implements ActivityListener {
     }
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle bundle) {
+    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityCreated(activity, bundle);
         }
     }
 
     @Override
-    public void onActivityStarted(Activity activity) {
+    public void onActivityStarted(@NonNull Activity activity) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityStarted(activity);
         }
     }
 
     @Override
-    public void onActivityResumed(Activity activity) {
+    public void onActivityResumed(@NonNull Activity activity) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityResumed(activity);
         }
     }
 
     @Override
-    public void onActivityPaused(Activity activity) {
+    public void onActivityPaused(@NonNull Activity activity) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityPaused(activity);
         }
     }
 
     @Override
-    public void onActivityStopped(Activity activity) {
+    public void onActivityStopped(@NonNull Activity activity) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityStopped(activity);
         }
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @Nullable Bundle bundle) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivitySaveInstanceState(activity, bundle);
         }
     }
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
+    public void onActivityDestroyed(@NonNull Activity activity) {
         for (ActivityListener listener : new ArrayList<>(listeners)) {
             listener.onActivityDestroyed(activity);
         }

@@ -47,6 +47,7 @@ public class Response {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "Response{" +
                 "responseBody='" + responseBody + '\'' +

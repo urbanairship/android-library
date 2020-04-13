@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -24,7 +24,7 @@ class AssociatedIdentifiersFragment : Fragment() {
     private lateinit var viewModel: AssociatedIdentifiersViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(this).get(AssociatedIdentifiersViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(AssociatedIdentifiersViewModel::class.java)
         val binding = UaFragmentDeviceInfoAssociatedIdentifiersBinding.inflate(inflater, container, false)
         binding.apply {
             lifecycleOwner = this@AssociatedIdentifiersFragment
@@ -32,7 +32,7 @@ class AssociatedIdentifiersFragment : Fragment() {
         }
 
         val idAdapter = AssociatedIdentifiersAdapter()
-        viewModel.identifiers.observe(this, Observer(idAdapter::submitList))
+        viewModel.identifiers.observe(viewLifecycleOwner, Observer(idAdapter::submitList))
 
         binding.identifiers.apply {
             adapter = idAdapter

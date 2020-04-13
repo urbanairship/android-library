@@ -43,7 +43,7 @@ public abstract class FileUtils {
 
         File[] children = file.listFiles();
         if (children != null) {
-            for (File child : file.listFiles()) {
+            for (File child : children) {
                 if (!deleteRecursively(child)) {
                     return false;
                 }
@@ -142,8 +142,7 @@ public abstract class FileUtils {
      * @param closeables Closeables.
      */
     private static void endRequest(@Nullable URLConnection connection, @NonNull Closeable... closeables) {
-        for (int i = 0; i < closeables.length; i++) {
-            Closeable closeable = closeables[i];
+        for (Closeable closeable : closeables) {
             if (closeable == null) {
                 continue;
             }

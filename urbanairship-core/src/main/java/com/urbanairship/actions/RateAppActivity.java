@@ -42,6 +42,7 @@ public class RateAppActivity extends ThemedActivity {
 
     @Override
     public void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
         Logger.debug("RateAppActivity - New intent received for rate app activity");
         restartActivity(intent.getData(), intent.getExtras());
     }

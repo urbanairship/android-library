@@ -15,7 +15,7 @@ internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.
 
     class ViewHolder(val binding: UaItemEventFilterBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
-    override fun onBindViewHolder(holder: EventFilterAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.apply {
             with(holder.binding) {
                 filter = this@apply
@@ -24,7 +24,7 @@ internal class EventFilterAdapter : ListAdapter<EventFilter, EventFilterAdapter.
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventFilterAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = UaItemEventFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }

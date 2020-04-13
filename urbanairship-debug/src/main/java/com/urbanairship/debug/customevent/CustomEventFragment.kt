@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentCustomEventBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import com.urbanairship.json.JsonValue
 
 class CustomEventFragment : Fragment() {
     private val viewModel: CustomEventViewModel by navGraphViewModels(R.id.ua_debug_custom_event_navigation)
@@ -35,7 +34,7 @@ class CustomEventFragment : Fragment() {
                     Navigation.findNavController(binding.root).navigate(R.id.customEventPropertyFragment, args)
                 }
             }
-            viewModel.properties.observe(viewLifecycleOwner, Observer<Map<String, JsonValue>> { properties ->
+            viewModel.properties.observe(viewLifecycleOwner, Observer { properties ->
                 propertyAdapter.submitList(properties.map {
                     Pair(it.key, it.value)
                 })

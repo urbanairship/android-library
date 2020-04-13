@@ -34,15 +34,18 @@ public class MessageCenterActivity extends ThemedActivity {
 
         setDisplayHomeAsUpEnabled(true);
 
-        if (savedInstanceState == null) {
-            messageCenterFragment = MessageCenterFragment.newInstance(MessageCenter.parseMessageId(getIntent()));
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(android.R.id.content, messageCenterFragment, "MESSAGE_CENTER_FRAGMENT")
-                    .commitNow();
-        } else {
+        if (savedInstanceState != null) {
             messageCenterFragment = (MessageCenterFragment) getSupportFragmentManager().findFragmentByTag("MESSAGE_CENTER_FRAGMENT");
         }
+
+         if (messageCenterFragment == null) {
+             messageCenterFragment = MessageCenterFragment.newInstance(MessageCenter.parseMessageId(getIntent()));
+             getSupportFragmentManager()
+                     .beginTransaction()
+                     .add(android.R.id.content, messageCenterFragment, "MESSAGE_CENTER_FRAGMENT")
+                     .commitNow();
+         }
+
         // Apply the default message center predicate
         messageCenterFragment.setPredicate(MessageCenter.shared().getPredicate());
     }

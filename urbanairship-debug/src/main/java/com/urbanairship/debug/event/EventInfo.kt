@@ -8,6 +8,7 @@ import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import com.urbanairship.debug.R
 import com.urbanairship.json.JsonMap
+import java.util.Locale
 
 /**
  * Event colors, initials, details helpers.
@@ -87,17 +88,17 @@ internal class EventInfo {
                 PUSH_ARRIVED_EVENT -> "PA"
                 ASSOCIATE_IDENTIFIERS_EVENT -> "AI"
                 INSTALL_ATTRIBUTION_EVENT -> "IA"
-                else -> type.firstOrEmpty().toUpperCase()
+                else -> type.firstOrEmpty().toUpperCase(Locale.ROOT)
             }
         }
 
         fun getDetailedEventName(context: Context, type: String, eventData: JsonMap): String? {
             val shortEventName = getEventName(context, type)
             return when (type) {
-                EventInfo.LOCATION_EVENT -> "$shortEventName ${eventData.opt("lat")}, ${eventData.opt("long")}"
-                EventInfo.REGION_EVENT -> "$shortEventName  ${eventData.opt("source").getString("")}: ${eventData.opt("action").getString("").toUpperCase()} ${eventData.opt("region_id")}"
-                EventInfo.SCREEN_EVENT -> "$shortEventName  ${eventData.opt("screen").getString("")}"
-                EventInfo.CUSTOM_EVENT -> "$shortEventName  ${eventData.opt("event_name").getString("")}"
+                LOCATION_EVENT -> "$shortEventName ${eventData.opt("lat")}, ${eventData.opt("long")}"
+                REGION_EVENT -> "$shortEventName  ${eventData.opt("source").getString("")}: ${eventData.opt("action").getString("").toUpperCase(Locale.ROOT)} ${eventData.opt("region_id")}"
+                SCREEN_EVENT -> "$shortEventName  ${eventData.opt("screen").getString("")}"
+                CUSTOM_EVENT -> "$shortEventName  ${eventData.opt("event_name").getString("")}"
                 else -> shortEventName
             }
         }

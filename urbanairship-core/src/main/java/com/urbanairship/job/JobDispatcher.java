@@ -178,6 +178,10 @@ public class JobDispatcher {
 
         if (jobInfo.isNetworkAccessRequired()) {
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) {
+                return true;
+            }
+
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
             return activeNetwork == null || !activeNetwork.isConnected();
         }

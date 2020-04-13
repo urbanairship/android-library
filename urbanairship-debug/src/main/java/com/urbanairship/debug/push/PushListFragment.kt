@@ -8,10 +8,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.urbanairship.debug.R
@@ -22,10 +22,10 @@ import com.urbanairship.debug.extensions.setupToolbarWithNavController
 /**
  * PushItem list fragment.
  */
-class PushListFragment : androidx.fragment.app.Fragment() {
+class PushListFragment : Fragment() {
 
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
-        ViewModelProviders.of(this, ViewModelFactory(context!!)).get(PushListViewModel::class.java)
+        ViewModelProvider(this, ViewModelFactory(requireContext())).get(PushListViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -39,14 +39,14 @@ class PushListFragment : androidx.fragment.app.Fragment() {
             }
         }
 
-        viewModel.pushes.observe(this, Observer(pushAdapter::submitList))
+        viewModel.pushes.observe(viewLifecycleOwner, Observer(pushAdapter::submitList))
 
         dataBinding.apply {
             lifecycleOwner = this@PushListFragment
             viewModel = this@PushListFragment.viewModel
 
             pushes.apply {
-                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+                addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
                 adapter = pushAdapter
             }
         }

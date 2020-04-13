@@ -58,7 +58,7 @@ public class Module {
      * @return The module.
      */
     public static Module multipleComponents(@NonNull Collection<AirshipComponent> components, @XmlRes int actionsXmlId) {
-        return new Module(new HashSet<AirshipComponent>(components), actionsXmlId);
+        return new Module(new HashSet<>(components), actionsXmlId);
     }
 
     /**

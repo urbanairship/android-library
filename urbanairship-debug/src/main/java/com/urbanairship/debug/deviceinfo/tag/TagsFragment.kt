@@ -12,7 +12,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -32,10 +32,10 @@ class TagsFragment : androidx.fragment.app.Fragment() {
     private lateinit var recyclerView: RecyclerView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(this).get(TagsViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(TagsViewModel::class.java)
         val binding = UaFragmentDeviceInfoTagsBinding.inflate(inflater, container, false)
-        binding.setLifecycleOwner(this)
-        binding.setViewModel(viewModel)
+        binding.lifecycleOwner = viewLifecycleOwner
+        binding.viewModel = viewModel
 
         this.addTagButton = binding.addTagButton
         this.addTagEditText = binding.addTagText
@@ -44,15 +44,15 @@ class TagsFragment : androidx.fragment.app.Fragment() {
         initAddTag()
         initTagList()
 
-        return binding.getRoot()
+        return binding.root
     }
 
     private fun initTagList() {
         val tagAdapter = TagAdapter()
-        viewModel.getTags().observe(this, Observer<List<String>> { tagAdapter.submitList(it) })
+        viewModel.getTags().observe(viewLifecycleOwner, Observer { tagAdapter.submitList(it) })
 
         recyclerView.adapter = tagAdapter
-        recyclerView.addItemDecoration(DividerItemDecoration(context!!, LinearLayout.VERTICAL))
+        recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), LinearLayout.VERTICAL))
 
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {

@@ -88,8 +88,10 @@ public class TagGroupUtils {
         for (Map.Entry<String, Set<String>> entry : lh.entrySet()) {
             String tagGroup = entry.getKey();
 
-            if (rh.containsKey(tagGroup)) {
-                Set<String> tags = new HashSet<>(rh.get(tagGroup));
+            Set<String> rhTags = rh.get(tagGroup);
+
+            if (rhTags != null) {
+                Set<String> tags = new HashSet<>(rhTags);
                 tags.retainAll(entry.getValue());
                 result.put(tagGroup, tags);
             }

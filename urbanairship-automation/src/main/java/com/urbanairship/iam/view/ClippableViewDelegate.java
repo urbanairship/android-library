@@ -34,7 +34,7 @@ class ClippableViewDelegate {
     }
 
     /**
-     * Must be called in the view {@link View#onLayout(boolean, int, int, int, int)}.
+     * Must be called in the view View#onLayout.
      *
      * @param changed This is a new size or position for this view
      * @param left Left position, relative to parent
@@ -52,7 +52,7 @@ class ClippableViewDelegate {
     }
 
     /**
-     * Must be called in the view {@link View#onDraw(Canvas)}.
+     * Must be called in the view View#onDraw.
      *
      * @param canvas The view's canvas.
      */

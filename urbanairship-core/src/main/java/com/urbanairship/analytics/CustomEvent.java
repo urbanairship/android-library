@@ -372,7 +372,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         private String templateType;
 
         @NonNull
-        private Map<String, JsonValue> properties = new HashMap<>();;
+        private Map<String, JsonValue> properties = new HashMap<>();
 
         /**
          * Creates a new custom event builder

@@ -148,7 +148,7 @@ public final class PreferenceDataStore {
      */
     public boolean getBoolean(@NonNull String key, boolean defaultValue) {
         String value = getPreference(key).get();
-        return value == null ? defaultValue : Boolean.valueOf(value);
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 
     /**
@@ -323,8 +323,7 @@ public final class PreferenceDataStore {
      * the database, otherwise <code>false</code>
      */
     public boolean putSync(@NonNull String key, @Nullable String value) {
-        String stringValue = value == null ? null : String.valueOf(value);
-        return getPreference(key).putSync(stringValue);
+        return getPreference(key).putSync(value);
     }
 
     /**

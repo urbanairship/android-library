@@ -16,7 +16,7 @@ internal class DebugEntryAdapter(private val callback: ((screen: DebugEntry) -> 
 
     class ViewHolder(val binding: UaItemDebugScreenBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
 
-    override fun onBindViewHolder(holder: DebugEntryAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.apply {
             with(holder.binding) {
                 screen = this@apply
@@ -28,7 +28,7 @@ internal class DebugEntryAdapter(private val callback: ((screen: DebugEntry) -> 
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DebugEntryAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = UaItemDebugScreenBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }

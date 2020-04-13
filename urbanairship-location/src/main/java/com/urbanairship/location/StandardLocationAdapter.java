@@ -41,12 +41,10 @@ class StandardLocationAdapter implements LocationAdapter {
         locationManager.removeUpdates(pendingIntent);
 
         List<String> providers = locationManager.getProviders(criteria, false);
-        if (providers != null) {
-            for (String provider : providers) {
-                Logger.verbose("StandardLocationAdapter - Update listening provider enable/disabled for: %s", provider);
-                //noinspection MissingPermission
-                locationManager.requestLocationUpdates(provider, Long.MAX_VALUE, Float.MAX_VALUE, pendingIntent);
-            }
+        for (String provider : providers) {
+            Logger.verbose("StandardLocationAdapter - Update listening provider enable/disabled for: %s", provider);
+            //noinspection MissingPermission
+            locationManager.requestLocationUpdates(provider, Long.MAX_VALUE, Float.MAX_VALUE, pendingIntent);
         }
 
         String bestProvider = getBestProvider(context, criteria, options);
@@ -148,10 +146,6 @@ class StandardLocationAdapter implements LocationAdapter {
 
         if (options.getPriority() == LocationRequestOptions.PRIORITY_NO_POWER) {
             List<String> availableProviders = locationManager.getProviders(criteria, true);
-            if (availableProviders == null) {
-                return null;
-            }
-
             if (availableProviders.contains(LocationManager.PASSIVE_PROVIDER)) {
                 return LocationManager.PASSIVE_PROVIDER;
             } else {
@@ -259,16 +253,14 @@ class StandardLocationAdapter implements LocationAdapter {
         @SuppressLint("MissingPermission")
         private void listenForProvidersEnabled() {
             List<String> providers = locationManager.getProviders(criteria, false);
-            if (providers != null) {
-                for (String provider : providers) {
-                    Logger.verbose("StandardLocationAdapter - Single location request listening provider enable/disabled for: %s", provider);
+            for (String provider : providers) {
+                Logger.verbose("StandardLocationAdapter - Single location request listening provider enable/disabled for: %s", provider);
 
-                    //noinspection MissingPermission
-                    locationManager.requestLocationUpdates(provider,
-                            Long.MAX_VALUE,
-                            Float.MAX_VALUE,
-                            providerEnabledListeners);
-                }
+                //noinspection MissingPermission
+                locationManager.requestLocationUpdates(provider,
+                        Long.MAX_VALUE,
+                        Float.MAX_VALUE,
+                        providerEnabledListeners);
             }
         }
 

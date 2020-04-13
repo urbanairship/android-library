@@ -29,10 +29,7 @@ class EventListViewModel(repository: EventRepository) : ViewModel() {
     private var activeFilters = ArrayList<EventFilter>()
 
     init {
-        val pageListConfig = PagedList.Config.Builder()
-                .setPageSize(PAGE_SIZE)
-                .setEnablePlaceholders(false)
-                .build()
+        val pageListConfig = PagedList.Config.Builder().setPageSize(PAGE_SIZE).setEnablePlaceholders(false).build()
 
         filters.forEach {
             it.isChecked.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -58,7 +55,11 @@ class EventListViewModel(repository: EventRepository) : ViewModel() {
             if (it.isEmpty()) {
                 LivePagedListBuilder(repository.getEvents(), pageListConfig).build()
             } else {
-                val types = it.filter { it.isChecked.get() }.map { it.type }.toList()
+                val types = it.filter { eventFilter ->
+                    eventFilter.isChecked.get()
+                }.map { eventFilter ->
+                    eventFilter.type
+                }.toList()
                 LivePagedListBuilder(repository.getEvents(types), pageListConfig).build()
             }
         }

@@ -127,7 +127,7 @@ public class MessageFragment extends Fragment {
         }
 
         webView = view.findViewById(android.R.id.message);
-        if ((webView == null) || !(webView instanceof MessageWebView)) {
+        if (webView == null) {
             throw new RuntimeException("Your content must have a MessageWebView whose id attribute is 'android.R.id.message'");
         }
 

@@ -16,7 +16,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.urbanairship.debug.R
@@ -48,7 +47,7 @@ class EventListFragment : Fragment() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
 
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
-        ViewModelProviders.of(this, ViewModelFactory(context!!)).get(EventListViewModel::class.java)
+        ViewModelProvider(this, ViewModelFactory(requireContext())).get(EventListViewModel::class.java)
     }
 
     private var collapseAlpha = ObservableFloat(0f)
@@ -75,7 +74,7 @@ class EventListFragment : Fragment() {
         set(days) {
             // save to shared preferences
             sharedPreferences?.apply {
-                edit().putInt(EventListFragment.STORAGE_DAYS_KEY, days).apply()
+                edit().putInt(STORAGE_DAYS_KEY, days).apply()
             }
         }
 
@@ -88,7 +87,7 @@ class EventListFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val dataBinding = DataBindingUtil.inflate<UaFragmentEventListBinding>(inflater, R.layout.ua_fragment_event_list, container, false)
         bottomSheetBehavior = BottomSheetBehavior.from(dataBinding.filterSheet)
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(p0: View, slideOffset: Float) {
                 updateCollapseAlpha(slideOffset)
             }
@@ -109,8 +108,8 @@ class EventListFragment : Fragment() {
             }
         }
 
-        viewModel.events.observe(this, Observer(eventAdapter::submitList))
-        viewModel.activeFiltersLiveData.observe(this, Observer {
+        viewModel.events.observe(viewLifecycleOwner, Observer(eventAdapter::submitList))
+        viewModel.activeFiltersLiveData.observe(viewLifecycleOwner, Observer {
             updateFiltersLayout()
         })
 
@@ -179,18 +178,18 @@ class EventListFragment : Fragment() {
                 }
             }
 
-            radioBoxItem?.let {
-                it.isChecked = true
+            radioBoxItem?.let { menuItem ->
+                menuItem.isChecked = true
             }
 
             // set up click handlers
-            it.setOnMenuItemClickListener {
-                when (it.itemId) {
+            it.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
                     R.id.ua_event_settings -> {
                     }
                     else -> {
-                        if (it.groupId == R.id.ua_storage_days) {
-                            when (it.itemId) {
+                        if (menuItem.groupId == R.id.ua_storage_days) {
+                            when (menuItem.itemId) {
                                 R.id.ua_event_storage_days_02 -> {
                                     storageDays = 2
                                 }
@@ -205,12 +204,12 @@ class EventListFragment : Fragment() {
                                 }
                             }
                             GlobalScope.launch(Dispatchers.IO) {
-                                ServiceLocator.shared(context!!)
+                                ServiceLocator.shared(requireContext())
                                         .getEventRepository()
                                         .trimOldEvents(storageDays)
                             }
-                            if (it.isCheckable) {
-                                it.isChecked = true
+                            if (menuItem.isCheckable) {
+                                menuItem.isChecked = true
                             }
                         }
                     }

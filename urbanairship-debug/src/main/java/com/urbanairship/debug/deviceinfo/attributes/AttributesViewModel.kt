@@ -15,7 +15,7 @@ class AttributesViewModel : ViewModel() {
     val numberValue = MutableLiveData<String>()
     val dateValue = MutableLiveData<Date>()
 
-    val attributeType = MutableLiveData<AttributeType>(AttributeType.STRING)
+    val attributeType = MutableLiveData(AttributeType.STRING)
     val keyValidator = MediatorLiveData<Boolean>()
     val valueValidator = MediatorLiveData<Boolean>()
 

@@ -23,9 +23,9 @@ class PropertyFragment : Fragment() {
     private val customEventViewModel: CustomEventViewModel by navGraphViewModels(R.id.ua_debug_custom_event_navigation)
 
     private val propertyViewModel by lazy(LazyThreadSafetyMode.NONE) {
-        val name = arguments?.getString(PropertyFragment.ARGUMENT_PROPERTY_NAME)
+        val name = arguments?.getString(ARGUMENT_PROPERTY_NAME)
         val value = name?.let { customEventViewModel.getProperty(it) }
-        ViewModelProvider(this, PropertyFragment.ViewModelFactory(requireContext(), name, value)).get(PropertyViewModel::class.java)
+        ViewModelProvider(this, ViewModelFactory(requireContext(), name, value)).get(PropertyViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

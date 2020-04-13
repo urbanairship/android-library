@@ -2,7 +2,6 @@
 
 package com.urbanairship.push.fcm;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -18,14 +17,12 @@ import androidx.annotation.NonNull;
 public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
-    @SuppressLint("UnknownNullness")
-    public void onMessageReceived(RemoteMessage message) {
+    public void onMessageReceived(@NonNull RemoteMessage message) {
         AirshipFirebaseIntegration.processMessageSync(getApplicationContext(), message);
     }
 
     @Override
-    @SuppressLint("UnknownNullness")
-    public void onNewToken(String token) {
+    public void onNewToken(@NonNull String token) {
         AirshipFirebaseIntegration.processNewToken(getApplicationContext());
     }
 

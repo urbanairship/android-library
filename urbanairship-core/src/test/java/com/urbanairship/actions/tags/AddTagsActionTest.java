@@ -8,11 +8,12 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagEditor;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,20 +27,20 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class AddTagsActionTest extends BaseTestCase {
 
     AddTagsAction action;
-    PushManager pushManager;
+    AirshipChannel channel;
 
     @Before
     public void setup() {
-        pushManager = mock(PushManager.class);
-        TestApplication.getApplication().setPushManager(pushManager);
+        channel = mock(AirshipChannel.class);
+        TestApplication.getApplication().setChannel(channel);
         action = new AddTagsAction();
     }
 
@@ -48,27 +49,32 @@ public class AddTagsActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() {
-        Set<String> existingTags = new HashSet<>();
-        existingTags.add("tagOne");
-        existingTags.add("tagTwo");
+        final Set<String> addedTags = new HashSet<>();
+        TagEditor tagEditor = new TagEditor() {
+            @Override
+            protected void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
+                addedTags.addAll(tagsToAdd);
+                assertTrue(tagsToRemove.isEmpty());
+                assertFalse(clear);
+            }
+        };
 
-        when(pushManager.getTags()).thenReturn(existingTags);
+        when(channel.editTags()).thenReturn(tagEditor);
 
-        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "tagThree");
+        // Add foo and bar
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, Arrays.asList("foo", "bar"));
         ActionResult result = action.perform(args);
 
-        assertTrue("Add tags action should return 'null' result", result.getValue().isNull());
+        assertTrue(result.getValue().isNull());
 
-        // Verify we have original tags plus the added tagThree
-        Set<String> expectedTags = new HashSet<>(existingTags);
-        expectedTags.add("tagThree");
-        verify(pushManager).setTags(expectedTags);
+        Set<String> expectedTags = new HashSet<>(Arrays.asList("foo", "bar"));
+        assertEquals(expectedTags, addedTags);
     }
 
     @Test
     public void testPerformTagGroups() throws Exception {
         final Map<String, Set<String>> added = new HashMap<>();
-        PushManager pushManager = mock(PushManager.class);
+
         NamedUser namedUser = mock(NamedUser.class);
         TagGroupsEditor tagGroupsEditor = new TagGroupsEditor() {
             @NonNull
@@ -79,10 +85,9 @@ public class AddTagsActionTest extends BaseTestCase {
             }
         };
 
-        when(pushManager.editTagGroups()).thenReturn(tagGroupsEditor);
+        when(channel.editTagGroups()).thenReturn(tagGroupsEditor);
         when(namedUser.editTagGroups()).thenReturn(tagGroupsEditor);
 
-        TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setNamedUser(namedUser);
 
         JsonValue tags = JsonValue.wrapOpt(Arrays.asList("tag1", "tag2", "tag3"));

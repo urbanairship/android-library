@@ -313,10 +313,8 @@ public class Whitelist {
         whitelist.addEntry("https://*.urbanairship.com");
         whitelist.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
         whitelist.addEntry("https://*.asnapieu.com");
-        if (airshipConfigOptions.whitelist != null) {
-            for (String entry : airshipConfigOptions.whitelist) {
-                whitelist.addEntry(entry);
-            }
+        for (String entry : airshipConfigOptions.whitelist) {
+            whitelist.addEntry(entry);
         }
 
         whitelist.setOpenUrlWhitelistingEnabled(airshipConfigOptions.enableUrlWhitelisting);

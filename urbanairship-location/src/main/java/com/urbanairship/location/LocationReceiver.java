@@ -47,7 +47,7 @@ public class LocationReceiver extends BroadcastReceiver {
     public LocationReceiver() {
         this(AirshipExecutors.THREAD_POOL_EXECUTOR, new Callable<AirshipLocationManager>() {
             @Override
-            public AirshipLocationManager call() throws Exception {
+            public AirshipLocationManager call() {
                 UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
                 return AirshipLocationManager.shared();
             }

@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -33,15 +32,7 @@ import androidx.annotation.RestrictTo;
  */
 public class AdvertisingIdTracker extends AirshipComponent {
 
-    private final Executor executor = AirshipExecutors.newSerialExecutor();
-
-    interface Callback {
-
-        void onResult(@Nullable String advertisingId, boolean isLimitedTrackingEnabled);
-
-        void onError(Exception e);
-
-    }
+    private final Executor EXECUTOR = AirshipExecutors.newSerialExecutor();
 
     private static final String ENABLED_KEY = "com.urbanairship.analytics.ADVERTISING_ID_TRACKING";
 
@@ -148,39 +139,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
             return;
         }
 
-        final Callback callback = new Callback() {
-            @Override
-            public void onResult(String advertisingId, boolean isLimitedTrackingEnabled) {
-                if (!isEnabled() || !isDataCollectionEnabled()) {
-                    return;
-                }
-
-                AssociatedIdentifiers associatedIdentifiers = airship.getAnalytics()
-                                                                     .getAssociatedIdentifiers();
-
-                if (advertisingId != null && (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
-                        associatedIdentifiers.isLimitAdTrackingEnabled() != isLimitedTrackingEnabled)) {
-
-                    synchronized (AdvertisingIdTracker.this) {
-                        if (!isEnabled()) {
-                            return;
-                        }
-
-                        airship.getAnalytics()
-                               .editAssociatedIdentifiers()
-                               .setAdvertisingId(advertisingId, isLimitedTrackingEnabled)
-                               .apply();
-                    }
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
-            }
-        };
-
-        executor.execute(new Runnable() {
+        EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
                 String advertisingId = null;
@@ -203,14 +162,34 @@ public class AdvertisingIdTracker extends AirshipComponent {
                             advertisingId = adInfo.getId();
                             limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                         } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
-                            callback.onError(e);
+                            Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
                             return;
                         }
 
                         break;
                 }
 
-                callback.onResult(advertisingId, limitedAdTrackingEnabled);
+                if (!isEnabled() || !isDataCollectionEnabled()) {
+                    return;
+                }
+
+                AssociatedIdentifiers associatedIdentifiers = airship.getAnalytics()
+                                                                     .getAssociatedIdentifiers();
+
+                if (advertisingId != null && (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
+                        associatedIdentifiers.isLimitAdTrackingEnabled() != limitedAdTrackingEnabled)) {
+
+                    synchronized (AdvertisingIdTracker.this) {
+                        if (!isEnabled()) {
+                            return;
+                        }
+
+                        airship.getAnalytics()
+                               .editAssociatedIdentifiers()
+                               .setAdvertisingId(advertisingId, limitedAdTrackingEnabled)
+                               .apply();
+                    }
+                }
             }
         });
     }

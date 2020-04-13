@@ -57,7 +57,7 @@ class ChannelApiClient extends BaseApiClient {
         URL url = getDeviceUrl(null);
         if (url == null) {
             Logger.debug("CRA URL is null, unable to create channel.");
-            return null;
+            throw new ChannelRequestException("Missing URL");
         }
 
         String payload = channelPayload.toJsonValue().toString();

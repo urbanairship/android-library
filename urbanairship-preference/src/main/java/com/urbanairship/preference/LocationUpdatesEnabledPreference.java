@@ -53,7 +53,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
                 public void onResult(@Nullable Boolean result) {
                     LocationUpdatesEnabledPreference preference = weakReference.get();
                     if (preference != null) {
-                        preference.setChecked(result);
+                        preference.setChecked(result == null ? false : result);
                     }
                 }
             });
@@ -62,10 +62,11 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
                 @Override
                 public void run() {
                     int[] result = HelperActivity.requestPermissions(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
-                    Boolean checked = false;
+                    boolean checked = false;
                     for (int element : result) {
                         if (element == PackageManager.PERMISSION_GRANTED) {
                             checked = true;
+                            break;
                         }
                     }
 

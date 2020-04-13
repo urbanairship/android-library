@@ -51,7 +51,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
             return admId;
         }
 
-        RegistrationReceiver registerReceiver = new RegistrationReceiver();
+        final RegistrationReceiver registerReceiver = new RegistrationReceiver();
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT);
@@ -60,7 +60,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         context.registerReceiver(registerReceiver, intentFilter, AMAZON_SEND_PERMISSION, new Handler(Looper.getMainLooper()));
         AdmWrapper.startRegistration(context);
 
-        synchronized (registerReceiver) {
+        synchronized (RegistrationReceiver.class) {
             try {
                 registerReceiver.wait(REGISTRATION_TIMEOUT_MS);
             } catch (InterruptedException e) {
@@ -139,7 +139,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
                 setResultCode(Activity.RESULT_OK);
             }
 
-            synchronized (this) {
+            synchronized (RegistrationReceiver.class) {
                 this.notifyAll();
             }
         }

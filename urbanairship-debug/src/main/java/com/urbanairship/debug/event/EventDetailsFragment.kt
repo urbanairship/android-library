@@ -7,9 +7,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.databinding.UaFragmentEventDetailsBinding
@@ -18,7 +18,7 @@ import com.urbanairship.debug.extensions.setupToolbarWithNavController
 /**
  * Event detail fragment.
  */
-class EventDetailsFragment : androidx.fragment.app.Fragment() {
+class EventDetailsFragment : Fragment() {
 
     companion object {
         const val ARGUMENT_EVENT_ID = "eventId"
@@ -27,7 +27,7 @@ class EventDetailsFragment : androidx.fragment.app.Fragment() {
     private lateinit var binding: UaFragmentEventDetailsBinding
 
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
-        ViewModelProviders.of(this, ViewModelFactory(context!!, arguments?.getString(ARGUMENT_EVENT_ID)!!)).get(EventDetailsViewModel::class.java)
+        ViewModelProvider(this, ViewModelFactory(requireContext(), arguments?.getString(ARGUMENT_EVENT_ID)!!)).get(EventDetailsViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

@@ -307,7 +307,7 @@ public class AirshipChannel extends AirshipComponent {
     public TagEditor editTags() {
         return new TagEditor() {
             @Override
-            void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
+            protected void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
                 if (isDataCollectionEnabled()) {
                     synchronized (tagLock) {
                         Set<String> tags = clear ? new HashSet<String>() : getTags();
@@ -505,7 +505,9 @@ public class AirshipChannel extends AirshipComponent {
 
         if (isDataCollectionEnabled()) {
             TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-            builder.setCarrier(tm.getNetworkOperatorName());
+            if (tm != null) {
+                builder.setCarrier(tm.getNetworkOperatorName());
+            }
 
             builder.setDeviceModel(Build.MODEL);
 
@@ -697,12 +699,16 @@ public class AirshipChannel extends AirshipComponent {
     @WorkerThread
     @JobInfo.JobResult
     private int onUpdateChannel() {
+        String channelId = getId();
+        if (channelId == null) {
+            return JobInfo.JOB_FINISHED;
+        }
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         ChannelRegistrationPayload minimizedPayload = payload.minimizedPayload(getLastRegistrationPayload());
 
         ChannelResponse<Void> response;
         try {
-            response = channelApiClient.updateChannelWithPayload(getId(), minimizedPayload);
+            response = channelApiClient.updateChannelWithPayload(channelId, minimizedPayload);
         } catch (ChannelRequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
             return JobInfo.JOB_RETRY;

@@ -39,7 +39,7 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
      * Save the display interval in milliseconds
      */
     private fun saveDisplayInterval() {
-        var inAppPreference = preference as InAppAutomationDisplayIntervalPreference?
+        val inAppPreference = preference as InAppAutomationDisplayIntervalPreference?
         inAppPreference?.setValue(numberPicker!!.value.toLong())
     }
 

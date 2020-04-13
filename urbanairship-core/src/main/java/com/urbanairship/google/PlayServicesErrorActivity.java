@@ -2,7 +2,6 @@
 
 package com.urbanairship.google;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -77,7 +76,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
             int error = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(this);
             if (error == ConnectionResult.SUCCESS && UAirship.shared().getPushManager().isPushEnabled()) {
                 // Resolved the error, make sure the service is started
-                UAirship.shared().getPushManager().updateRegistration();
+                UAirship.shared().getChannel().updateRegistration();
             }
         }
     }
@@ -143,9 +142,8 @@ public class PlayServicesErrorActivity extends FragmentActivity {
                     REQUEST_RESOLVE_ERROR);
         }
 
-        @SuppressLint("UnknownNullness")
         @Override
-        public void onCancel(DialogInterface dialog) {
+        public void onCancel(@NonNull DialogInterface dialog) {
             super.onCancel(dialog);
 
             // Finish the activity to return back to the calling activity. This

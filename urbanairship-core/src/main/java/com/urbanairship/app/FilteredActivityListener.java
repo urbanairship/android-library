@@ -8,6 +8,7 @@ import android.os.Bundle;
 import com.urbanairship.Predicate;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Activity listener that filters events with a predicate.
@@ -23,49 +24,49 @@ public class FilteredActivityListener implements ActivityListener {
     }
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
         if (filter.apply(activity)) {
             listener.onActivityCreated(activity, savedInstanceState);
         }
     }
 
     @Override
-    public void onActivityStarted(Activity activity) {
+    public void onActivityStarted(@NonNull Activity activity) {
         if (filter.apply(activity)) {
             listener.onActivityStarted(activity);
         }
     }
 
     @Override
-    public void onActivityResumed(Activity activity) {
+    public void onActivityResumed(@NonNull Activity activity) {
         if (filter.apply(activity)) {
             listener.onActivityResumed(activity);
         }
     }
 
     @Override
-    public void onActivityPaused(Activity activity) {
+    public void onActivityPaused(@NonNull Activity activity) {
         if (filter.apply(activity)) {
             listener.onActivityPaused(activity);
         }
     }
 
     @Override
-    public void onActivityStopped(Activity activity) {
+    public void onActivityStopped(@NonNull Activity activity) {
         if (filter.apply(activity)) {
             listener.onActivityStopped(activity);
         }
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
         if (filter.apply(activity)) {
             listener.onActivitySaveInstanceState(activity, outState);
         }
     }
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
+    public void onActivityDestroyed(@NonNull Activity activity) {
         if (filter.apply(activity)) {
             listener.onActivityDestroyed(activity);
         }

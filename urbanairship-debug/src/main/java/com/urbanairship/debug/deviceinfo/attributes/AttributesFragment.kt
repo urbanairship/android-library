@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoAttributesBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
@@ -20,7 +20,7 @@ class AttributesFragment : Fragment() {
     private lateinit var viewModel: AttributesViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(requireActivity()).get(AttributesViewModel::class.java)
+        viewModel = ViewModelProvider(requireActivity()).get(AttributesViewModel::class.java)
         val binding = UaFragmentDeviceInfoAttributesBinding.inflate(inflater, container, false)
 
         binding.lifecycleOwner = this
@@ -53,12 +53,12 @@ class AttributesFragment : Fragment() {
 
     fun showDatePicker() {
         val fragment = DatePickerFragment()
-        fragment.show(requireFragmentManager(), DATE_PICKER_TAG)
+        fragment.show(parentFragmentManager, DATE_PICKER_TAG)
     }
 
     fun showTimePicker() {
         val fragment = TimePickerFragment()
-        fragment.show(requireFragmentManager(), TIME_PICKER_TAG)
+        fragment.show(parentFragmentManager, TIME_PICKER_TAG)
     }
 
     fun setAttribute() {

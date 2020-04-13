@@ -3,8 +3,6 @@
 package com.urbanairship.analytics;
 
 import android.app.NotificationChannelGroup;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.os.Build;
 
 import com.urbanairship.UAirship;
@@ -16,6 +14,7 @@ import com.urbanairship.util.UAStringUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * Analytics event when a push arrives.
@@ -107,13 +106,13 @@ public class PushArrivedEvent extends Event {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if (groupId != null) {
-                NotificationManager nm = (NotificationManager) UAirship.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                NotificationManagerCompat nm = NotificationManagerCompat.from(UAirship.getApplicationContext());
                 NotificationChannelGroup group = nm.getNotificationChannelGroup(groupId);
-                String blocked = String.valueOf(group.isBlocked());
+                boolean blocked = group != null && group.isBlocked();
 
                 notificationGroupMap = JsonMap.newBuilder()
                                               .put(NOTIFICATION_CHANNEL_GROUP_KEY, JsonMap.newBuilder()
-                                                                                          .putOpt(NOTIFICATION_CHANNEL_GROUP_BLOCKED, blocked)
+                                                                                          .putOpt(NOTIFICATION_CHANNEL_GROUP_BLOCKED, String.valueOf(blocked))
                                                                                           .build())
                                               .build();
             }

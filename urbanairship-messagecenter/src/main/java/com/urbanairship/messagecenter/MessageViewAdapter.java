@@ -65,7 +65,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
     public View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
         View view = convertView;
         if (view == null) {
-            LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater layoutInflater = LayoutInflater.from(context);
             view = layoutInflater.inflate(layout, parent, false);
         }
 

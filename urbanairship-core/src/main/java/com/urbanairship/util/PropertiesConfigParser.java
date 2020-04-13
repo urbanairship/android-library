@@ -55,8 +55,9 @@ public class PropertiesConfigParser implements ConfigParser {
         Resources resources = context.getResources();
         AssetManager assetManager = resources.getAssets();
 
+        String[] assets = assetManager.list("");
         //bail if the properties file can't be found
-        if (!Arrays.asList(assetManager.list("")).contains(propertiesFile)) {
+        if (assets == null || !Arrays.asList(assets).contains(propertiesFile)) {
             throw new FileNotFoundException("Unable to find properties file: " + propertiesFile);
         }
 

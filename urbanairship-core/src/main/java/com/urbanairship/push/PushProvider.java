@@ -22,7 +22,7 @@ public interface PushProvider {
 
     @StringDef({ ADM_DELIVERY_TYPE, FCM_DELIVERY_TYPE, HMS_DELIVERY_TYPE })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface DeliveryType {
+    @interface DeliveryType {
     }
 
     @NonNull

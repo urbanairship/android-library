@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Channel tag editor. See {@link PushManager#editTags()}.
@@ -18,8 +19,11 @@ public abstract class TagEditor {
     private final Set<String> tagsToAdd = new HashSet<>();
     private final Set<String> tagsToRemove = new HashSet<>();
 
-    TagEditor() {
-    }
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected TagEditor() {}
 
     /**
      * Adds a tag.
@@ -104,6 +108,8 @@ public abstract class TagEditor {
      * @param clear {@code true} to clear all tags, otherwise {@code false}.
      * @param tagsToAdd Tags to add.
      * @param tagsToRemove Tags to remove.
+     * @hide
      */
-    abstract void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove);
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected abstract void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove);
 }

@@ -58,15 +58,14 @@ public class AddTagsAction extends BaseTagsAction {
     @Override
     void applyChannelTags(@NonNull Set<String> tags) {
         Logger.info("AddTagsAction - Adding tags: %s", tags);
-        tags.addAll(getPushManager().getTags());
-        getPushManager().setTags(tags);
+        getChannel().editTags().addTags(tags).apply();
     }
 
     @Override
     void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
         Logger.info("AddTagsAction - Adding channel tag groups: %s", tags);
 
-        TagGroupsEditor tagGroupsEditor = getPushManager().editTagGroups();
+        TagGroupsEditor tagGroupsEditor = getChannel().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.addTags(entry.getKey(), entry.getValue());
         }

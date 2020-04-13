@@ -75,7 +75,7 @@ public class LandingPageAction extends Action {
     /**
      * Default border radius.
      */
-    public static float DEFAULT_BORDER_RADIUS = 2;
+    public final static float DEFAULT_BORDER_RADIUS = 2;
 
     private final Callable<InAppMessageManager> inAppCallable;
 

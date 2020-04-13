@@ -45,7 +45,9 @@ public class DeepLinkAction extends Action {
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue().getString());
-
+        if (uri == null) {
+            return ActionResult.newEmptyResult();
+        }
         Logger.info("Deep linking: %s", uri);
 
         DeepLinkListener listener = UAirship.shared().getDeepLinkListener();

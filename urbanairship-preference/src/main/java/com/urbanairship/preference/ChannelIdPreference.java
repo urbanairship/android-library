@@ -21,7 +21,7 @@ import androidx.preference.Preference;
  */
 public class ChannelIdPreference extends Preference {
 
-    private AirshipChannelListener channelListener = new AirshipChannelListener() {
+    private final AirshipChannelListener channelListener = new AirshipChannelListener() {
         @Override
         public void onChannelCreated(@NonNull String channelId) { notifyChangedMainThread(); }
 

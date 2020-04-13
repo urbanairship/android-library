@@ -1,5 +1,6 @@
 package com.urbanairship.debug.utils
 
+import android.annotation.SuppressLint
 import androidx.recyclerview.widget.DiffUtil
 
 /**
@@ -11,6 +12,7 @@ class SimpleDiffItemCallback<T> : DiffUtil.ItemCallback<T>() {
         return t == t1
     }
 
+    @SuppressLint("DiffUtilEquals")
     override fun areContentsTheSame(t: T, t1: T): Boolean {
         return t == t1
     }

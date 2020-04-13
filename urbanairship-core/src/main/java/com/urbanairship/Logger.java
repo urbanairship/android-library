@@ -253,7 +253,7 @@ public class Logger {
         }
 
         try {
-            int intValue = Integer.valueOf(value);
+            int intValue = Integer.parseInt(value);
             if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
                 return intValue;
             }

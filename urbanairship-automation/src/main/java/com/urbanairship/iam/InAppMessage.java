@@ -192,13 +192,13 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      *
      * @return The display content.
      */
+    @SuppressWarnings("unchecked")
     @Nullable
     public <T extends DisplayContent> T getDisplayContent() {
         if (content == null) {
             return null;
         }
         try {
-            //noinspection unchecked
             return (T) content;
         } catch (ClassCastException e) {
             return null;

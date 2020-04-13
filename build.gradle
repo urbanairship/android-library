@@ -22,7 +22,7 @@ buildscript {
         // Dependencies
 
         // Kotlin
-        kotlinVersion = '1.3.61'
+        kotlinVersion = '1.3.71'
         kotlinCoroutinesVersion = '1.0.0'
 
         // Androidx
@@ -50,7 +50,7 @@ buildscript {
         playServicesBaseVersion = '17.2.1'
 
         // Firebase
-        firebaseFcmVersion = '20.0.1'
+        firebaseFcmVersion = '20.1.5'
 
         // Test
         androidxTestTruthVersion = '1.2.0'

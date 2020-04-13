@@ -227,7 +227,7 @@ public abstract class Event {
     @Nullable
     protected String getCarrier() {
         TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        return tm.getNetworkOperatorName();
+        return tm == null ? null : tm.getNetworkOperatorName();
     }
 
     /**

@@ -64,19 +64,18 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
             if (preference is InAppAutomationDisplayIntervalPreference) {
                 val dialogFragment = InAppAutomationDisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
                 dialogFragment.setTargetFragment(this, 0)
-                fragmentManager?.let { dialogFragment.show(it, DISPLAY_INTERVAL_TAG) }
+                dialogFragment.show(parentFragmentManager, DISPLAY_INTERVAL_TAG)
             } else {
                 super.onDisplayPreferenceDialog(preference)
             }
         }
 
         companion object {
-            private val TAGS_KEY = "tags"
-            private val TAG_GROUPS_KEY = "tagGroups"
-            private val ATTRIBUTES_KEY = "attributes"
-            private val ASSOCIATED_IDENTIFIERS_KEY = "associated_identifiers"
-
-            private val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
+            private const val TAGS_KEY = "tags"
+            private const val TAG_GROUPS_KEY = "tagGroups"
+            private const val ATTRIBUTES_KEY = "attributes"
+            private const val ASSOCIATED_IDENTIFIERS_KEY = "associated_identifiers"
+            private const val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
         }
     }
 }

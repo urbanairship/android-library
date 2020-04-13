@@ -6,8 +6,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.HashMap;
@@ -38,13 +38,13 @@ abstract class BaseTagsAction extends Action {
     private static final String DEVICE_KEY = "device";
 
     /**
-     * Gets the push manager
+     * Gets the channel.
      *
-     * @return A push manager instance
+     * @return A channel instance
      */
     @NonNull
-    protected PushManager getPushManager() {
-        return UAirship.shared().getPushManager();
+    protected AirshipChannel getChannel() {
+        return UAirship.shared().getChannel();
     }
 
     @Override

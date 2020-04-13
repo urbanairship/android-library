@@ -96,9 +96,8 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
         if (delegate != null) {
@@ -139,12 +138,13 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+
     @Override
-    public void supportInvalidateOptionsMenu() {
+    public void invalidateOptionsMenu() {
         if (delegate != null) {
             delegate.invalidateOptionsMenu();
         } else {
-            super.supportInvalidateOptionsMenu();
+            super.invalidateOptionsMenu();
         }
     }
 

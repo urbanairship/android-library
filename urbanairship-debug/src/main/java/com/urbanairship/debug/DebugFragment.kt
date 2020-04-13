@@ -28,7 +28,7 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
         val dataBinding = DataBindingUtil.inflate<UaFragmentDebugBinding>(inflater, R.layout.ua_fragment_debug, container, false)
 
         GlobalScope.launch(Dispatchers.IO) {
-            val entries = DebugEntry.parse(context!!, R.xml.ua_debug_entries)
+            val entries = DebugEntry.parse(requireContext(), R.xml.ua_debug_entries)
             withContext(Dispatchers.Main) {
                 debugScreenEntryLiveData.value = entries
             }
@@ -40,7 +40,7 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
             }
         }
 
-        debugScreenEntryLiveData.observe(this, Observer(componentAdapter::submitList))
+        debugScreenEntryLiveData.observe(viewLifecycleOwner, Observer(componentAdapter::submitList))
 
         dataBinding.apply {
             lifecycleOwner = this@DebugFragment

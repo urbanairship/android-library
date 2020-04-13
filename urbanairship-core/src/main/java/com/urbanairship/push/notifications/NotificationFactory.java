@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * Notification factory that provides a pathway for customizing the display of push notifications
@@ -508,7 +509,7 @@ public class NotificationFactory {
             return message.getNotificationChannel() == null ? DEFAULT_NOTIFICATION_CHANNEL : message.getNotificationChannel();
         } else {
 
-            NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
             if (message.getNotificationChannel() != null) {
                 String channel = message.getNotificationChannel();

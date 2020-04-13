@@ -303,7 +303,7 @@ class DisableInfo implements JsonSerializable {
          */
         @NonNull
         public Builder setSDKVersionConstraints(@Nullable Collection<String> sdkVersionConstraints) {
-            this.sdkVersionConstraints = new HashSet<>(sdkVersionConstraints);
+            this.sdkVersionConstraints = sdkVersionConstraints == null ? null : new HashSet<>(sdkVersionConstraints);
             return this;
         }
 

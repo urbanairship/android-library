@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoTagGroupsBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
@@ -15,7 +15,7 @@ class TagGroupFragment : androidx.fragment.app.Fragment() {
     private lateinit var viewModel: TagGroupViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProviders.of(this).get(TagGroupViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(TagGroupViewModel::class.java)
         val binding = UaFragmentDeviceInfoTagGroupsBinding.inflate(inflater, container, false)
 
         binding.lifecycleOwner = this

@@ -54,10 +54,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         try {
 
             FirebaseApp app = FirebaseApp.getInstance();
-            if (app == null) {
-                throw new RegistrationException("FCM registration failed. FirebaseApp not initialized.", false);
-            }
-
             String senderId = getSenderId(app);
             if (senderId == null) {
                 Logger.error("The FCM sender ID is not set. Unable to register with FCM.");
@@ -65,11 +61,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
             }
 
             FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance(app);
-            if (instanceId == null) {
-                Logger.error("The FirebaseInstanceId is null, most likely a proguard issue. Unable to register with FCM.");
-                return null;
-            }
-
             token = instanceId.getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
 
             // Validate the token
@@ -77,7 +68,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
                 instanceId.deleteToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
                 throw new RegistrationException("FCM registration returned an invalid token.", true);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RegistrationException("FCM registration failed.", true, e);
         }
 
@@ -94,17 +85,12 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
             }
 
             FirebaseApp app = FirebaseApp.getInstance();
-            if (app == null) {
-                Logger.error("Firebase not initialized.");
-                return false;
-            }
-
             String senderId = getSenderId(app);
             if (senderId == null) {
                 Logger.error("The FCM sender ID is not set. Unable to register for FCM.");
                 return false;
             }
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             Logger.error(e, "Unable to register with FCM.");
             return false;
         }

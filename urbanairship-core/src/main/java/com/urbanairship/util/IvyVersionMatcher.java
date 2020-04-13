@@ -256,7 +256,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
                 if (components.length <= i) {
                     break;
                 }
-                versionComponent[i] = Integer.valueOf(components[i]);
+                versionComponent[i] = Integer.parseInt(components[i]);
             }
         }
 

@@ -12,9 +12,9 @@ import org.json.JSONObject
 class PropertyViewModel(val initName: String? = null, initValue: JsonValue? = null) : ViewModel() {
     val name = MutableLiveData<String>()
 
-    val propertyType = MutableLiveData<PropertyType>(PropertyType.STRING)
+    val propertyType = MutableLiveData(PropertyType.STRING)
 
-    val booleanValue = MutableLiveData<Boolean>(true)
+    val booleanValue = MutableLiveData(true)
     val stringValue = MutableLiveData<String>()
     val numberValue = MutableLiveData<String>()
     val jsonValue = MutableLiveData<String>()

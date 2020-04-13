@@ -4,20 +4,15 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import android.graphics.Bitmap;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.ImageUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -28,17 +23,12 @@ import androidx.core.app.NotificationCompat;
  */
 public class WearableNotificationExtender implements NotificationCompat.Extender {
 
-    private static final int BACKGROUND_IMAGE_HEIGHT_PX = 480;
-    private static final int BACKGROUND_IMAGE_WIDTH_PX = 480;
-
     static final String TITLE_KEY = "title";
     static final String ALERT_KEY = "alert";
 
     // Wearable
     static final String INTERACTIVE_TYPE_KEY = "interactive_type";
     static final String INTERACTIVE_ACTIONS_KEY = "interactive_actions";
-    static final String BACKGROUND_IMAGE_KEY = "background_image";
-    static final String EXTRA_PAGES_KEY = "extra_pages";
 
     private final Context context;
     private final NotificationArguments arguments;
@@ -101,26 +91,6 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
                 List<NotificationCompat.Action> androidActions = actionGroup.createAndroidActions(context, arguments, actionsPayload);
                 extender.addActions(androidActions);
             }
-        }
-
-        String backgroundUrl = wearableJson.opt(BACKGROUND_IMAGE_KEY).getString();
-        if (!UAStringUtil.isEmpty(backgroundUrl)) {
-            try {
-                Bitmap bitmap = ImageUtils.fetchScaledBitmap(context, new URL(backgroundUrl), BACKGROUND_IMAGE_WIDTH_PX, BACKGROUND_IMAGE_HEIGHT_PX);
-                if (bitmap != null) {
-                    extender.setBackground(bitmap);
-                }
-            } catch (IOException e) {
-                Logger.error(e, "Unable to fetch background image: ");
-            }
-        }
-
-        JsonList pages = wearableJson.opt(EXTRA_PAGES_KEY).optList();
-        for (JsonValue page : pages) {
-            if (!page.isJsonMap()) {
-                continue;
-            }
-            extender.addPage(createWearPage(page.optMap()));
         }
 
         builder.extend(extender);

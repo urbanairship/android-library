@@ -327,10 +327,8 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
             expandedTemplateViews.setTextViewText(R.id.text, Html.fromHtml(bigContent));
         }
 
-        builder.setCustomBigContentView(fillCustomTemplate(builder, expandedTemplateViews));
-
-
-        RemoteViews views = builder.getBigContentView();
+        RemoteViews views = fillCustomTemplate(builder, expandedTemplateViews);
+        builder.setCustomBigContentView(views);
 
         String bigPictureUrl = message.getAccengageBigPictureUrl();
         if (bigPictureUrl != null) {

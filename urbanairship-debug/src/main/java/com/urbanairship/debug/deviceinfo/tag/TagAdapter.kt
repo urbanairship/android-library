@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.debug.databinding.UaItemTagBinding
 
 /**
@@ -22,7 +23,7 @@ class TagAdapter : ListAdapter<String, TagAdapter.ViewHolder>(TagFilterDiff()) {
         viewHolder.bind(getItem(i))
     }
 
-    inner class ViewHolder internal constructor(private val binding: UaItemTagBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.getRoot()) {
+    inner class ViewHolder internal constructor(private val binding: UaItemTagBinding) : RecyclerView.ViewHolder(binding.getRoot()) {
 
         val tag: String?
             get() = binding.tag

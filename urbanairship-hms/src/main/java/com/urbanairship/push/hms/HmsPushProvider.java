@@ -39,8 +39,11 @@ public class HmsPushProvider implements PushProvider {
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         try {
             String appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY);
-            String token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
+            if (appId == null) {
+                return null;
+            }
 
+            String token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
             if (UAStringUtil.isEmpty(token)) {
                 throw new RegistrationException("HMS registration failed", true);
             }

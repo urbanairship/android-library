@@ -1694,7 +1694,7 @@ public class AutomationEngine<T extends Schedule> {
 
     }
 
-    private abstract class ScheduleRunnable<ReturnType> implements Runnable {
+    private static abstract class ScheduleRunnable<ReturnType> implements Runnable {
 
         final String scheduleId;
         final String group;

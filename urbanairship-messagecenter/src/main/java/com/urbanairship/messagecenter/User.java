@@ -13,7 +13,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * The Airship rich push user.
@@ -255,8 +254,6 @@ public class User {
         preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
     }
 
-
-    @VisibleForTesting
     boolean shouldUpdate() {
         return channel.getId() != null && (!this.getRegisteredChannelId().equals(channel.getId()));
     }

@@ -130,9 +130,8 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         cursor.moveToFirst();
 
         NotificationChannelCompat channelCompat = null;
-        while (!cursor.isAfterLast()) {
+        if (!cursor.isAfterLast()) {
             channelCompat = getChannel(cursor);
-            break;
         }
 
         cursor.close();

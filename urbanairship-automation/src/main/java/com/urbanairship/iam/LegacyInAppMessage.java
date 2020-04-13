@@ -120,8 +120,9 @@ public class LegacyInAppMessage {
      */
     @Nullable
     public Map<String, JsonValue> getButtonActionValues(@NonNull String buttonId) {
-        if (buttonActionValues.containsKey(buttonId)) {
-            return Collections.unmodifiableMap(buttonActionValues.get(buttonId));
+        Map<String, JsonValue> buttonActions = buttonActionValues.get(buttonId);
+        if (buttonActions != null) {
+            return Collections.unmodifiableMap(buttonActions);
         } else {
             return null;
         }

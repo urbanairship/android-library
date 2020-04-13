@@ -58,16 +58,13 @@ public class RemoveTagsAction extends BaseTagsAction {
     @Override
     void applyChannelTags(@NonNull Set<String> tags) {
         Logger.info("RemoveTagsAction - Removing tags: %s", tags);
-        Set<String> currentTags = getPushManager().getTags();
-        currentTags.removeAll(tags);
-
-        getPushManager().setTags(currentTags);
+        getChannel().editTags().removeTags(tags).apply();
     }
 
     @Override
     void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
         Logger.info("RemoveTagsAction - Removing channel tag groups: %s", tags);
-        TagGroupsEditor tagGroupsEditor = getPushManager().editTagGroups();
+        TagGroupsEditor tagGroupsEditor = getChannel().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.removeTags(entry.getKey(), entry.getValue());
         }

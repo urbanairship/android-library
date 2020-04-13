@@ -53,10 +53,10 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     private final Assets assets;
 
     @NonNull
-    private BannerDisplayContent displayContent;
+    private final BannerDisplayContent displayContent;
 
     @NonNull
-    private Timer timer;
+    private final Timer timer;
 
     @AnimatorRes
     private int animationIn;
