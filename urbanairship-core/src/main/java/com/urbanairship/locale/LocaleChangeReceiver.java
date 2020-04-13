@@ -3,11 +3,12 @@ package com.urbanairship.locale;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
+import com.urbanairship.Autopilot;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-
-import com.urbanairship.Autopilot;
 
 /**
  * Broadcast receiver that listens for {@link Intent#ACTION_LOCALE_CHANGED}.

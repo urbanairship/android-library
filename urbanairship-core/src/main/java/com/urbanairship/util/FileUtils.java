@@ -2,10 +2,6 @@
 
 package com.urbanairship.util;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
@@ -17,6 +13,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 /**
  * File utility methods.

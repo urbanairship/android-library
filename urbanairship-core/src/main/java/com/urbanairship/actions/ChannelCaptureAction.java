@@ -2,11 +2,11 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 /**
  * Action to temporarily enable channel capture.

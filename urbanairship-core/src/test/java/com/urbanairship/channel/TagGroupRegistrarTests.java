@@ -2,14 +2,9 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.channel.PendingTagGroupMutationStore;
-import com.urbanairship.channel.TagGroupApiClient;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;
@@ -22,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

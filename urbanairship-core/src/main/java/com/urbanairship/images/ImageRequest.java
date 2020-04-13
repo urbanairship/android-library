@@ -6,27 +6,24 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.core.content.ContextCompat;
-
-import android.os.Looper;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
-import com.urbanairship.ResultCallback;
 import com.urbanairship.util.ImageUtils;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import androidx.core.content.ContextCompat;
 
 /**
  * Request to load a bitmap into an ImageView.

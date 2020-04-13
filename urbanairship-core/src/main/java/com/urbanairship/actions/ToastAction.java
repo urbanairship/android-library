@@ -2,10 +2,11 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
 import android.widget.Toast;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
 
 /**
  * An action that displays text in a toast.

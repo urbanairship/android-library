@@ -4,10 +4,6 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -15,6 +11,11 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Notification builder extender to add the public notification defined by a {@link PushMessage}.

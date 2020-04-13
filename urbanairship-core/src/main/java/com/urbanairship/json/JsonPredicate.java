@@ -2,16 +2,16 @@
 
 package com.urbanairship.json;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
-
 import com.urbanairship.Predicate;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 
 /**
  * Class abstracting a JSON predicate. The predicate is contained to the following schema:

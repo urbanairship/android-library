@@ -2,9 +2,9 @@
 
 package com.urbanairship.automation;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
 
 /**
  * Class representing an automation action schedule - wraps {@link ScheduleInfo} with the schedule ID.

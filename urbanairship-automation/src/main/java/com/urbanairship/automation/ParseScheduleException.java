@@ -2,10 +2,10 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.json.JsonMap;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import com.urbanairship.json.JsonMap;
 
 /**
  * Exception thrown when a scheduleInfo fails during {@link AutomationDriver#createSchedule(String, JsonMap, ScheduleInfo)}

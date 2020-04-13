@@ -7,12 +7,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Pass representing either an offer or loyalty wallet object.

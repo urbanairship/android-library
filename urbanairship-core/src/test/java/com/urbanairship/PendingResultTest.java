@@ -3,7 +3,6 @@
 package com.urbanairship;
 
 import android.os.Looper;
-import androidx.annotation.Nullable;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +11,8 @@ import org.robolectric.Shadows;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import androidx.annotation.Nullable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

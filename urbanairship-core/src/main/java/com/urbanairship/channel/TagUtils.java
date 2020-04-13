@@ -2,10 +2,6 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 
@@ -13,6 +9,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * A class containing utility methods related to tags.

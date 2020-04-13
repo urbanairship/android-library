@@ -2,12 +2,13 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.AttributeSet;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
-import android.util.AttributeSet;
 
 /**
  * AttributeSet config parser.

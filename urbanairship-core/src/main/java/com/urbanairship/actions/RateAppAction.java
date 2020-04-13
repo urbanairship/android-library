@@ -5,13 +5,14 @@ package com.urbanairship.actions;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.Checks;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Action to link users to the rating section of their respective app store directly or through a prompt.

@@ -1,6 +1,7 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
+
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 

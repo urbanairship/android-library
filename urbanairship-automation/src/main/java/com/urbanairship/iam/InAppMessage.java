@@ -4,11 +4,6 @@ package com.urbanairship.iam;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.banner.BannerDisplayContent;
@@ -27,6 +22,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
 
 /**
  * Defines an in-app message.

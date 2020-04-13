@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -18,6 +17,8 @@ import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
+
+import androidx.annotation.NonNull;
 
 /**
  * Location adapter for Google's fused location provider.

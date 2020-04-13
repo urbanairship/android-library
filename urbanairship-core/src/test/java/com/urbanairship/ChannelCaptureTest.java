@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.util.Base64;
 
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.push.PushManager;
 
 import org.junit.After;
 import org.junit.Before;

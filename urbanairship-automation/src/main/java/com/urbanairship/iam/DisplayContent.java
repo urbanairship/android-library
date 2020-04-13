@@ -2,13 +2,13 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.StringDef;
-
 import com.urbanairship.json.JsonSerializable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringDef;
 
 /**
  * In-app message display content.

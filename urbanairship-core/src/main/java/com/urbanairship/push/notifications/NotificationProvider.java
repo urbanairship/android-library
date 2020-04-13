@@ -4,10 +4,11 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.push.PushMessage;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 /**
  * Used to provide notifications for Airship push messages.

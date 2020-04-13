@@ -2,14 +2,15 @@
 
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Shared logging wrapper for all Airship log entries.

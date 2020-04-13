@@ -3,10 +3,10 @@
 package com.urbanairship;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
+
+import androidx.annotation.NonNull;
 
 public class TestPushProvider implements PushProvider {
 

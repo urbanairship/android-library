@@ -2,18 +2,13 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.Checks;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import androidx.annotation.NonNull;
 
 /**
  * An action that adds a custom event.

@@ -4,10 +4,10 @@ package com.urbanairship.channel;
 
 import com.urbanairship.push.PushManager;
 
-import androidx.annotation.NonNull;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 /**
  * Channel tag editor. See {@link PushManager#editTags()}.

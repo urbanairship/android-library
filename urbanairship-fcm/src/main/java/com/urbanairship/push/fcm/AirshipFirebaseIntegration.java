@@ -3,7 +3,6 @@
 package com.urbanairship.push.fcm;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import com.google.firebase.messaging.RemoteMessage;
 import com.urbanairship.PendingResult;
@@ -11,6 +10,8 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
 
 import java.util.concurrent.Future;
+
+import androidx.annotation.NonNull;
 
 /**
  * Firebase integration.

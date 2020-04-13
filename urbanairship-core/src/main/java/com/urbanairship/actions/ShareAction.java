@@ -4,16 +4,14 @@ package com.urbanairship.actions;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.LabeledIntent;
-import android.content.pm.ResolveInfo;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Shows a chooser activity to share text.

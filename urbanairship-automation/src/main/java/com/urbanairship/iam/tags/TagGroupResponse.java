@@ -2,10 +2,6 @@
 
 package com.urbanairship.iam.tags;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -14,6 +10,10 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Contains the parsed tag group lookup response.

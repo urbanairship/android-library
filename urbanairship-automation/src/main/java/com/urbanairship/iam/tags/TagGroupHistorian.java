@@ -2,17 +2,15 @@
 
 package com.urbanairship.iam.tags;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;
@@ -22,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 /**
  * Tracks pending and sent mutations.

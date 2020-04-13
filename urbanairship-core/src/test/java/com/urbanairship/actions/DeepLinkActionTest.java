@@ -2,8 +2,6 @@ package com.urbanairship.actions;/* Copyright Airship and Contributors */
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
@@ -13,6 +11,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

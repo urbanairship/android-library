@@ -3,8 +3,6 @@
 package com.urbanairship.iam.assets;
 
 import android.graphics.BitmapFactory;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.InAppMessage;
@@ -20,6 +18,9 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Default {@link PrepareAssetsDelegate} for Airship message types.

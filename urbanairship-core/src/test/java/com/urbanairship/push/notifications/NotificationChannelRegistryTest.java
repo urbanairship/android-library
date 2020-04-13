@@ -5,7 +5,6 @@ package com.urbanairship.push.notifications;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -16,6 +15,8 @@ import org.junit.Test;
 import org.robolectric.annotation.Config;
 
 import java.util.concurrent.Executor;
+
+import androidx.core.app.NotificationManagerCompat;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;

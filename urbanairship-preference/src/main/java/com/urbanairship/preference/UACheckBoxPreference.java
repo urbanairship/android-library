@@ -8,15 +8,16 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.preference.CheckBoxPreference;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleActivityListener;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.preference.CheckBoxPreference;
 
 /**
  * Airship check box preference.

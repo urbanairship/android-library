@@ -6,10 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -18,6 +14,11 @@ import com.urbanairship.util.DataManager;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 /**
  * {@link DataManager} class for NotificationChannelRegistry.

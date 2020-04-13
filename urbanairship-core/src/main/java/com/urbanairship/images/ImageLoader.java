@@ -3,9 +3,10 @@
 package com.urbanairship.images;
 
 import android.content.Context;
+import android.widget.ImageView;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
-import android.widget.ImageView;
 
 /**
  * Image loader.

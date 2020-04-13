@@ -2,9 +2,10 @@ package com.urbanairship;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
+
+import androidx.annotation.NonNull;
 
 /**
  * A database manager to help create, open, and modify the preferences

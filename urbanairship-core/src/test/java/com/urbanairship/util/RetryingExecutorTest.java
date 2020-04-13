@@ -4,7 +4,6 @@ package com.urbanairship.util;
 
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
@@ -14,6 +13,8 @@ import org.robolectric.Shadows;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;

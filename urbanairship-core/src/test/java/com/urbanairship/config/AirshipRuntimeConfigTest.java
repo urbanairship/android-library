@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import androidx.annotation.NonNull;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class AirshipRuntimeConfigTest extends BaseTestCase {
 

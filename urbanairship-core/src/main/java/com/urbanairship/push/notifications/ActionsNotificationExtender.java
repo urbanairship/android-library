@@ -3,11 +3,12 @@
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Notification builder extender to add UA notification action buttons to a

@@ -2,13 +2,13 @@
 
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.http.Request;
 import com.urbanairship.http.Response;
 
 import java.net.URL;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 /**
  * Request class used for testing.

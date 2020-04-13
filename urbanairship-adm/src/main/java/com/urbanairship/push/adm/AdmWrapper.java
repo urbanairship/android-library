@@ -3,12 +3,13 @@
 package com.urbanairship.push.adm;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amazon.device.messaging.ADM;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Wrapper around ADM methods.

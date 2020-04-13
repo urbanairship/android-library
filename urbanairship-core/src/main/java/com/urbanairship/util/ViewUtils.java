@@ -4,10 +4,11 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.os.Build;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StyleRes;
-import android.widget.TextView;
 
 /**
  * View utility methods.

@@ -7,11 +7,10 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
-import android.util.Log;
 
 /**
  * Autopilot allows UAirship.takeOff to be called without overriding the Application class. Typically,

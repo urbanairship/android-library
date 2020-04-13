@@ -5,7 +5,6 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Html;
 
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.push.PushMessage;

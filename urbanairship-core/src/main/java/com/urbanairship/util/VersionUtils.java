@@ -2,15 +2,15 @@
 
 package com.urbanairship.util;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.ValueMatcher;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Utils for automation.

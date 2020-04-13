@@ -2,9 +2,6 @@
 
 package com.urbanairship.json;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.Logger;
 
 import org.json.JSONException;
@@ -16,6 +13,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * An immutable mapping of String keys to JsonValues.

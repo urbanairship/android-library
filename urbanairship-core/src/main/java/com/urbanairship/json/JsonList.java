@@ -2,9 +2,6 @@
 
 package com.urbanairship.json;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.Logger;
 
 import org.json.JSONException;
@@ -13,6 +10,9 @@ import org.json.JSONStringer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * An immutable list of JsonValues.

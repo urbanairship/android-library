@@ -5,9 +5,6 @@ package com.urbanairship.accengage.notifications;
 import android.app.Notification;
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-
 import com.urbanairship.Logger;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -16,6 +13,9 @@ import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Accengage notification provider.

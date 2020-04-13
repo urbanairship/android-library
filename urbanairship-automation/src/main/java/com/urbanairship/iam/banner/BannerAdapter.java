@@ -10,10 +10,10 @@ import android.view.ViewGroup;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
-import com.urbanairship.automation.R;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.FilteredActivityListener;
 import com.urbanairship.app.SimpleActivityListener;
+import com.urbanairship.automation.R;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppActionUtils;

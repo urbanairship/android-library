@@ -1,6 +1,5 @@
 package com.urbanairship.channel;
 
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;

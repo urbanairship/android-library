@@ -3,15 +3,16 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
 import com.urbanairship.iam.assets.Assets;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-app message adapter. An adapter is responsible for displaying a particular type of in-app message.

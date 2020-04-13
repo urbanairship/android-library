@@ -7,9 +7,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
 
 /**
  * An action that adds text to the clipboard.

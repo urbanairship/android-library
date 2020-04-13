@@ -3,15 +3,16 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import androidx.annotation.CallSuper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.Network;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Display adapter that handles caching an in-app message.

@@ -3,9 +3,6 @@
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -15,6 +12,10 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Model object encapsulating the data relevant to a notification action button group.

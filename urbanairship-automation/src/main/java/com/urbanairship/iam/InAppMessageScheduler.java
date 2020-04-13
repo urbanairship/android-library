@@ -2,13 +2,13 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.PendingResult;
 import com.urbanairship.json.JsonMap;
 
 import java.util.Collection;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Interface for scheduling in-app messages.

@@ -2,6 +2,7 @@ package com.urbanairship.util;
 
 import android.net.TrafficStats;
 import android.os.HandlerThread;
+
 import androidx.annotation.RestrictTo;
 
 /**

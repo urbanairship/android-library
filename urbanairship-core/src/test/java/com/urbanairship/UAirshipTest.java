@@ -4,9 +4,7 @@ package com.urbanairship;
 
 import android.app.Application;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,9 +13,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

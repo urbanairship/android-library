@@ -10,11 +10,6 @@ import android.content.res.XmlResourceParser;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.XmlRes;
 import android.util.Xml;
 
 import com.urbanairship.Logger;
@@ -33,6 +28,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.XmlRes;
 
 /**
  * Compatibility class for supporting NotificationChannel functionality across Android OS versions.

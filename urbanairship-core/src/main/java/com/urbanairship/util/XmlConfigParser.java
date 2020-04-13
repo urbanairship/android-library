@@ -4,8 +4,6 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 import android.util.AttributeSet;
 import android.util.Xml;
 
@@ -14,6 +12,9 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.Closeable;
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * XML Config parser.

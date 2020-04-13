@@ -2,11 +2,11 @@
 
 package com.urbanairship.reactive;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Subscription for tracking and cancelling multiple subscriptions.

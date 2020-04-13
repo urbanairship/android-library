@@ -3,7 +3,6 @@
 package com.urbanairship.wallet;
 
 import android.net.Uri;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestRequest;
@@ -21,6 +20,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;

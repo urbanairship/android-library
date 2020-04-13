@@ -5,11 +5,12 @@ package com.urbanairship.preference;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * CheckboxPreference to enable/disable push notifications.

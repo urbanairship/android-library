@@ -2,12 +2,12 @@
 
 package com.urbanairship.analytics.data;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAMathUtil;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Model object containing response information from a request.

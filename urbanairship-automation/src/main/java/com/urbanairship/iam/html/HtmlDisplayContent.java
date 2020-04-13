@@ -3,10 +3,6 @@
 package com.urbanairship.iam.html;
 
 import android.graphics.Color;
-import androidx.annotation.ColorInt;
-import androidx.annotation.Dimension;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;
@@ -14,6 +10,11 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ColorUtils;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.Dimension;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_HTML} in-app message.

@@ -1,14 +1,15 @@
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * A notification provider that allows the use of layout XML. The default binding will

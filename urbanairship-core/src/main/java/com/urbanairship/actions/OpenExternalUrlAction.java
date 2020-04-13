@@ -4,12 +4,13 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 import android.net.Uri;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.UriUtils;
+
+import androidx.annotation.NonNull;
 
 /**
  * Action for opening a URL for viewing.

@@ -7,12 +7,13 @@ import android.graphics.Outline;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Build;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewOutlineProvider;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 /**
  * View delegate that supports clipping a view to a border radius.

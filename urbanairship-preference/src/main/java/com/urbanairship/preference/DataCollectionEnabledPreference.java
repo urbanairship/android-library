@@ -5,9 +5,9 @@ package com.urbanairship.preference;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
 
 /**
  * Preference that can be used to embed a data collection preference in a settings screen.

@@ -5,9 +5,6 @@ package com.urbanairship.push;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -16,6 +13,10 @@ import com.urbanairship.UAirship;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * A broadcast receiver that handles notification intents.

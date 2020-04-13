@@ -3,10 +3,11 @@ package com.urbanairship.job;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.urbanairship.Logger;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 /**
  * Android Job Service.

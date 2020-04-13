@@ -1,9 +1,5 @@
 package com.urbanairship.iam;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.ScheduleInfo;
@@ -11,6 +7,10 @@ import com.urbanairship.json.JsonMap;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Automation driver for in-app messaging.

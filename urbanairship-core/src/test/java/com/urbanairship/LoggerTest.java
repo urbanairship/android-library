@@ -1,12 +1,13 @@
 package com.urbanairship;
 
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+
+import androidx.annotation.Nullable;
 
 public class LoggerTest extends BaseTestCase {
 

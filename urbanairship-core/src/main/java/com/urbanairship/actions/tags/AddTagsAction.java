@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions.tags;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
@@ -13,6 +11,8 @@ import com.urbanairship.channel.TagGroupsEditor;
 
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 /**
  * An action that adds tags.

@@ -4,13 +4,14 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 /**
  * The default notification factory.

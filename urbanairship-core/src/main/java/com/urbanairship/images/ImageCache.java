@@ -3,15 +3,16 @@ package com.urbanairship.images;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.net.http.HttpResponseCache;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 import android.util.LruCache;
 
 import com.urbanairship.Logger;
 
 import java.io.File;
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 class ImageCache {
 

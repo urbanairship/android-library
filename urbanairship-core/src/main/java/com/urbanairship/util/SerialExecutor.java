@@ -1,10 +1,10 @@
 package com.urbanairship.util;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import java.util.ArrayDeque;
 import java.util.concurrent.Executor;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Executor that executes {@link Runnable} serially on another executor.

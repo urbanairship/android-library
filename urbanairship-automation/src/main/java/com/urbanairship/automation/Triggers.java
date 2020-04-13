@@ -2,17 +2,17 @@
 
 package com.urbanairship.automation;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
-import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Class providing factory methods and builder classes for {@link Trigger}.

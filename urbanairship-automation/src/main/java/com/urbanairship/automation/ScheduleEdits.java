@@ -2,11 +2,11 @@
 
 package com.urbanairship.automation;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Available automation schedule edits.

@@ -6,9 +6,10 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
+
+import androidx.annotation.NonNull;
 
 /**
  * A utility class to help verify and resolve Google Play services issues.

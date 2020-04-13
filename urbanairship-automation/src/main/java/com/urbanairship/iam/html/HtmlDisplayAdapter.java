@@ -4,7 +4,6 @@ package com.urbanairship.iam.html;
 
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -15,6 +14,8 @@ import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.Network;
+
+import androidx.annotation.NonNull;
 
 /**
  * Html display adapter.

@@ -3,13 +3,14 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
+
+import com.urbanairship.Logger;
+import com.urbanairship.iam.assets.Assets;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
-
-import com.urbanairship.Logger;
-import com.urbanairship.iam.assets.Assets;
 
 /**
  * Helper class that keeps track of the schedule's adapter, coordinator, and schedule. Provides safe wrapper

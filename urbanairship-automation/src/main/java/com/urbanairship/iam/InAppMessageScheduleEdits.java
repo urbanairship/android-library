@@ -2,11 +2,6 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.automation.ScheduleEdits;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -16,6 +11,11 @@ import com.urbanairship.util.DateUtils;
 
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Edits for an in-app message schedule.

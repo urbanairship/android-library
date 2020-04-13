@@ -2,10 +2,6 @@
 
 package com.urbanairship.push;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -13,6 +9,10 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.Calendar;
 import java.util.Date;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Model object representing a quiet time interval.

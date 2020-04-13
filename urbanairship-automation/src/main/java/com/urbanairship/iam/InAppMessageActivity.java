@@ -3,13 +3,14 @@
 package com.urbanairship.iam;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.activity.ThemedActivity;
+import com.urbanairship.iam.assets.Assets;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * In-app message activity.

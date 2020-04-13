@@ -3,11 +3,12 @@
 package com.urbanairship.actions;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

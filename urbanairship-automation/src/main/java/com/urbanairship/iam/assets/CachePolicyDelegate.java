@@ -2,9 +2,9 @@
 
 package com.urbanairship.iam.assets;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.iam.InAppMessageSchedule;
+
+import androidx.annotation.NonNull;
 
 /**
  * Delegate used to determine the caching for a {@link InAppMessageSchedule}.

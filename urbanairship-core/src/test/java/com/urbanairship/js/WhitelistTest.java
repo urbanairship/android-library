@@ -2,13 +2,13 @@
 
 package com.urbanairship.js;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;

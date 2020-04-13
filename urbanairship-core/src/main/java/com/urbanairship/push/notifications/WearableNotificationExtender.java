@@ -5,8 +5,6 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -21,6 +19,9 @@ import com.urbanairship.util.UAStringUtil;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Notification builder extender to add the wearable overrides defined by a {@link PushMessage}.

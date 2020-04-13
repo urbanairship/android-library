@@ -4,7 +4,6 @@ package com.urbanairship.actions;
 
 import android.os.Bundle;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
@@ -19,6 +18,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

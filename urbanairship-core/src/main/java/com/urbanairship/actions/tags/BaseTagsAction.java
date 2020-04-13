@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions.tags;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -16,6 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 /**
  * Abstract tag action class.

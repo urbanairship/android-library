@@ -3,7 +3,6 @@
 package com.urbanairship;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -15,6 +14,8 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

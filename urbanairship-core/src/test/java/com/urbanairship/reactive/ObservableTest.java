@@ -4,8 +4,6 @@ package com.urbanairship.reactive;
 
 import android.os.HandlerThread;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.core.util.Pair;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Predicate;
@@ -20,6 +18,9 @@ import org.robolectric.Shadows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.core.util.Pair;
 
 public class ObservableTest extends BaseTestCase {
 

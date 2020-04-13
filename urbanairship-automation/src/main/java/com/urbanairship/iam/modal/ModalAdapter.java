@@ -4,11 +4,12 @@ package com.urbanairship.iam.modal;
 
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaDisplayAdapter;
+
+import androidx.annotation.NonNull;
 
 /**
  * Modal adapter.

@@ -2,12 +2,12 @@
 
 package com.urbanairship.analytics.location;
 
+import com.urbanairship.Logger;
+
 import androidx.annotation.FloatRange;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.urbanairship.Logger;
 
 /**
  * A ProximityRegion defines a proximity region with an identifier, major, minor

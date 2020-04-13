@@ -5,9 +5,6 @@ package com.urbanairship.iam.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +17,10 @@ import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 /**
  * In-app button layout. Supports stacked, separated, and joined button layouts.

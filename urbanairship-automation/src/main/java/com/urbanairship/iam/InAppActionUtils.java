@@ -2,13 +2,13 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.Nullable;
-
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
+
+import androidx.annotation.Nullable;
 
 /**
  * Action utils for in-app messaging.

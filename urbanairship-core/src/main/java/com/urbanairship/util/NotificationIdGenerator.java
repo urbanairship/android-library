@@ -4,10 +4,11 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import androidx.annotation.IntRange;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+
+import androidx.annotation.IntRange;
 
 /**
  * An auto-incrementing notification ID generator.

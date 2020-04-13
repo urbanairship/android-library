@@ -5,12 +5,13 @@ package com.urbanairship.iam.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.util.AttributeSet;
+import android.widget.LinearLayout;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import android.util.AttributeSet;
-import android.widget.LinearLayout;
 
 /**
  * LinearLayout that supports max width.

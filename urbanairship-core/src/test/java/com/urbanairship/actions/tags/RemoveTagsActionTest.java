@@ -2,19 +2,17 @@
 
 package com.urbanairship.actions.tags;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.channel.TagGroupsEditor;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;

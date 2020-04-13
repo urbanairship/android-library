@@ -4,6 +4,7 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.ArrayRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

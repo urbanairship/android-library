@@ -7,12 +7,12 @@ import android.os.Looper;
 
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
-import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;

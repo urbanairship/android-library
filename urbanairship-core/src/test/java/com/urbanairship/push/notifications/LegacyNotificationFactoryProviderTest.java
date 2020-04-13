@@ -5,7 +5,6 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.os.Bundle;
-import androidx.core.app.NotificationCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -14,6 +13,8 @@ import com.urbanairship.push.PushMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
+
+import androidx.core.app.NotificationCompat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

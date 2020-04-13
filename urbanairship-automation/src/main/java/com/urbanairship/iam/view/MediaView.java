@@ -5,9 +5,6 @@ package com.urbanairship.iam.view;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -31,6 +28,10 @@ import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 /**
  * Media view.

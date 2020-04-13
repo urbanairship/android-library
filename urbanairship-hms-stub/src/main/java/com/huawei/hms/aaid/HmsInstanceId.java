@@ -1,7 +1,6 @@
 package com.huawei.hms.aaid;
 
 import android.content.Context;
-import android.media.MediaSession2;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

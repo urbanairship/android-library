@@ -1,12 +1,13 @@
 package com.urbanairship.util;
 
 import android.net.TrafficStats;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * ThreadFactory that sets the Airship thread stats tags on each thread.

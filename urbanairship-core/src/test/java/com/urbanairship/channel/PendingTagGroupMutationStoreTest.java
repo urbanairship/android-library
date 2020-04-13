@@ -4,7 +4,6 @@ package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.channel.PendingTagGroupMutationStore;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -2,13 +2,13 @@
 
 package com.urbanairship.iam.tags;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Result returned in the method {@link TagGroupManager#getTags(Map)}}.

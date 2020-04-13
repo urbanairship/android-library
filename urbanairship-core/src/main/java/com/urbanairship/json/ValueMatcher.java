@@ -2,9 +2,6 @@
 
 package com.urbanairship.json;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.Predicate;
 import com.urbanairship.json.matchers.ArrayContainsMatcher;
 import com.urbanairship.json.matchers.ExactValueMatcher;
@@ -12,6 +9,9 @@ import com.urbanairship.json.matchers.NumberRangeMatcher;
 import com.urbanairship.json.matchers.PresenceMatcher;
 import com.urbanairship.json.matchers.VersionMatcher;
 import com.urbanairship.util.IvyVersionMatcher;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Class representing the field matching type and values contained in a JsonMatcher.

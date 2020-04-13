@@ -4,8 +4,6 @@ package com.urbanairship.push.fcm;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.firebase.FirebaseApp;
@@ -15,13 +13,15 @@ import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * FCM push provider.

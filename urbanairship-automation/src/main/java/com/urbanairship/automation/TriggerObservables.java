@@ -2,8 +2,6 @@
 
 package com.urbanairship.automation;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -17,6 +15,8 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.VersionUtils;
+
+import androidx.annotation.NonNull;
 
 /**
  * Factory methods for creating compound trigger observables

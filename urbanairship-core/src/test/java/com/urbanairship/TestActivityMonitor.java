@@ -3,7 +3,6 @@
 package com.urbanairship;
 
 import android.app.Activity;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
@@ -13,6 +12,8 @@ import com.urbanairship.app.ForwardingApplicationListener;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Test Activity Monitor.

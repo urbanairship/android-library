@@ -2,9 +2,9 @@
 
 package com.urbanairship.analytics.location;
 
-import androidx.annotation.FloatRange;
-
 import com.urbanairship.Logger;
+
+import androidx.annotation.FloatRange;
 
 /**
  * A CircularRegion defines a circular region with a radius, latitude and longitude.

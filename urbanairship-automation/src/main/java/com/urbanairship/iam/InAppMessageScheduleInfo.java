@@ -2,11 +2,6 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.automation.ScheduleDelay;
 import com.urbanairship.automation.ScheduleInfo;
 import com.urbanairship.automation.Trigger;
@@ -22,6 +17,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Class encapsulating the implementor-set information for an in-app message schedule.

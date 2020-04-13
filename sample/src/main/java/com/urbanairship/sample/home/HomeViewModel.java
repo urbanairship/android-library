@@ -3,16 +3,16 @@
 package com.urbanairship.sample.home;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannelListener;
-import com.urbanairship.push.RegistrationListener;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 /**
  * View model for the HomeFragment.

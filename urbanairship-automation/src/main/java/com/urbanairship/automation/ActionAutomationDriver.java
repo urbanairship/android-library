@@ -2,9 +2,6 @@ package com.urbanairship.automation;
 
 import android.os.Bundle;
 import android.os.Looper;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -15,6 +12,10 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Action automation driver for {@link AutomationEngine}

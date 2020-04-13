@@ -3,8 +3,6 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
@@ -13,6 +11,8 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

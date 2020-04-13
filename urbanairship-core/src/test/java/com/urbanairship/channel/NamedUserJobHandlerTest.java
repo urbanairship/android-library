@@ -6,13 +6,8 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.NamedUserApiClient;
-import com.urbanairship.channel.NamedUserJobHandler;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.push.PushManager;
 
 import org.junit.Assert;
 import org.junit.Before;

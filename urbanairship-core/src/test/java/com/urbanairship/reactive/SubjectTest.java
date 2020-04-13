@@ -2,8 +2,6 @@
 
 package com.urbanairship.reactive;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 
 import junit.framework.Assert;
@@ -13,6 +11,8 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 public class SubjectTest extends BaseTestCase {
 

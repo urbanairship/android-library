@@ -2,12 +2,6 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
-
 import com.urbanairship.iam.tags.TagGroupUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -26,6 +20,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
 
 /**
  * Tag selector.

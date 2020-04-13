@@ -5,8 +5,6 @@ package com.urbanairship.iam;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
@@ -21,6 +19,9 @@ import com.urbanairship.util.ManifestUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
 
 /**
  * Activity monitor that filters out any activities with {@link #EXCLUDE_FROM_AUTO_SHOW} metadata.

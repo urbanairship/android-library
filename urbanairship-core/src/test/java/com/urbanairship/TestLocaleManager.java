@@ -1,7 +1,5 @@
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
 
@@ -10,6 +8,8 @@ import org.robolectric.RuntimeEnvironment;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.annotation.NonNull;
 
 public class TestLocaleManager extends LocaleManager {
 

@@ -5,12 +5,12 @@ package com.urbanairship.iam;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.util.concurrent.TimeUnit;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Default display coordinator. Only allows a single in-app message to be displayed at

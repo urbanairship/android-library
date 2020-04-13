@@ -8,13 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
 
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.StringRes;
-import androidx.core.app.NotificationCompat;
-
 import com.urbanairship.push.NotificationProxyActivity;
 import com.urbanairship.push.NotificationProxyReceiver;
 import com.urbanairship.push.PushManager;
@@ -22,6 +15,13 @@ import com.urbanairship.push.PushManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringRes;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Model object encapsulating the data relevant to a notification action button.

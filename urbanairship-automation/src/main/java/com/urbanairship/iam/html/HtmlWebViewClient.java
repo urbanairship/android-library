@@ -3,8 +3,6 @@
 package com.urbanairship.iam.html;
 
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 import android.webkit.WebView;
 
 import com.urbanairship.Logger;
@@ -12,6 +10,9 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.webkit.AirshipWebViewClient;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * A version of the {@link AirshipWebViewClient} for HTML in-app messages, which adds a command

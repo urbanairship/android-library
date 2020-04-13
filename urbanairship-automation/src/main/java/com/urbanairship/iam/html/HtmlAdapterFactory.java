@@ -2,10 +2,10 @@
 
 package com.urbanairship.iam.html;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
+
+import androidx.annotation.NonNull;
 
 /**
  * HTML adapter factory.

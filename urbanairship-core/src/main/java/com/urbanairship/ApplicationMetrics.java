@@ -3,11 +3,12 @@
 package com.urbanairship;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.SimpleApplicationListener;
+
+import androidx.annotation.NonNull;
 
 /**
  * ApplicationMetrics stores metric information about the application.

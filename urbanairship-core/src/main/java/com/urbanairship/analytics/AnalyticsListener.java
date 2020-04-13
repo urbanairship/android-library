@@ -1,8 +1,8 @@
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.analytics.location.RegionEvent;
+
+import androidx.annotation.NonNull;
 
 /**
  * An analytics event listener. Used to listen for generated screen tracking, custom, and region events

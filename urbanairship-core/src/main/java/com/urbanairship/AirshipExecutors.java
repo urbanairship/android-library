@@ -1,8 +1,5 @@
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.util.AirshipThreadFactory;
 import com.urbanairship.util.SerialExecutor;
 
@@ -11,6 +8,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Common Executors for Airship.

@@ -2,10 +2,10 @@
 
 package com.urbanairship.util;
 
+import com.urbanairship.UAirship;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import com.urbanairship.UAirship;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 import static com.urbanairship.UAirship.ANDROID_PLATFORM;

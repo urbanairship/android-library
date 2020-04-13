@@ -5,10 +5,10 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.analytics.location.RegionEvent;
 
 import org.junit.Before;
 import org.junit.Test;

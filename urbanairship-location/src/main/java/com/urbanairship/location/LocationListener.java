@@ -3,6 +3,7 @@
 package com.urbanairship.location;
 
 import android.location.Location;
+
 import androidx.annotation.NonNull;
 
 /**

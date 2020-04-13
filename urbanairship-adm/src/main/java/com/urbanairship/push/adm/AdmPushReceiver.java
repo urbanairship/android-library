@@ -6,14 +6,15 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * AdmPushReceiver listens for incoming ADM registration responses and messages.

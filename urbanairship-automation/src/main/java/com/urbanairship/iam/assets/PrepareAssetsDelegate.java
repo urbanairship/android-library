@@ -2,10 +2,10 @@
 
 package com.urbanairship.iam.assets;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageSchedule;
+
+import androidx.annotation.NonNull;
 
 /**
  * Listener used by {@link AssetManager} to populate assets for in-app messages.

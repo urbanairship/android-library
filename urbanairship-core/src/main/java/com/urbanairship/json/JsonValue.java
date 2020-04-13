@@ -4,8 +4,6 @@ package com.urbanairship.json;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
@@ -23,6 +21,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * A JsonValue is a representation of any value that can be described using JSON. It can contain one

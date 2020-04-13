@@ -2,10 +2,10 @@
 
 package com.urbanairship.reactive;
 
+import java.util.ArrayList;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import java.util.ArrayList;
 
 /**
  * Subject implementation. A Subject is both an Observer and an Observable.

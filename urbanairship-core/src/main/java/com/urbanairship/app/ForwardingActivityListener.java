@@ -4,10 +4,11 @@ package com.urbanairship.app;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Activity listener that forwards activity events to a list of listeners.

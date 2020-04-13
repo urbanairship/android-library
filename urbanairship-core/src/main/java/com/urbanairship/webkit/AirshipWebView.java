@@ -8,8 +8,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Base64;
 import android.webkit.WebSettings;
@@ -23,6 +21,9 @@ import com.urbanairship.util.ManifestUtils;
 
 import java.io.File;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * A web view that sets settings appropriate for Airship content.

@@ -2,10 +2,10 @@
 
 package com.urbanairship.http;
 
+import java.net.URL;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import java.net.URL;
 
 /**
  * Class that creates the request.

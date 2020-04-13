@@ -2,10 +2,6 @@ package com.urbanairship.locale;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.core.os.ConfigurationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;
@@ -13,6 +9,11 @@ import com.urbanairship.job.JobDispatcher;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.os.ConfigurationCompat;
 
 /**
  * Locale manager. Handles listening for locale changes.

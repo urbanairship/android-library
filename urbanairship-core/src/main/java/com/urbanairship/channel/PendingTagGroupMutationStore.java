@@ -2,9 +2,6 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonValue;
 
@@ -12,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Helper class to manage pending tag group mutations.

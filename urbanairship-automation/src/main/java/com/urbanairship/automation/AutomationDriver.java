@@ -2,16 +2,16 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.json.JsonMap;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
-
-import com.urbanairship.json.JsonMap;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 /**
  * Driver for AutomationEngine. Handles executing and converting generic ScheduleInfo into the proper

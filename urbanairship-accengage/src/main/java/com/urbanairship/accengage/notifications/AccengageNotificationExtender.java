@@ -18,9 +18,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-
 import com.urbanairship.Logger;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.accengage.AccengagePushButton;
@@ -34,6 +31,9 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Accengage notification extender.

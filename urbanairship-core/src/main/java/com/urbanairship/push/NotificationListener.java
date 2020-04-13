@@ -1,6 +1,7 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;

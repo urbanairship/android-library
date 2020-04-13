@@ -4,9 +4,6 @@ package com.urbanairship.sample.inbox;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +12,9 @@ import com.urbanairship.messagecenter.MessageCenterFragment;
 import com.urbanairship.messagecenter.MessageFragment;
 import com.urbanairship.sample.R;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 

@@ -6,17 +6,18 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+
+import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.push.PushMessage;
+import com.urbanairship.util.NotificationIdGenerator;
+import com.urbanairship.util.UAStringUtil;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
-
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.NotificationIdGenerator;
-import com.urbanairship.util.UAStringUtil;
 
 /**
  * Default notification provider.

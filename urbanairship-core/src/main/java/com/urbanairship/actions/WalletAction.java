@@ -3,9 +3,10 @@
 package com.urbanairship.actions;
 
 import android.os.Build;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.UAirship;
+
+import androidx.annotation.NonNull;
 
 /**
  * Action for opening Android Pay deep links.

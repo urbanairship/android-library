@@ -4,9 +4,10 @@ package com.urbanairship.app;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Predicate;
+
+import androidx.annotation.NonNull;
 
 /**
  * Activity listener that filters events with a predicate.

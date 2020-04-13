@@ -3,9 +3,10 @@
 package com.urbanairship.util;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Interface used to request permissions.

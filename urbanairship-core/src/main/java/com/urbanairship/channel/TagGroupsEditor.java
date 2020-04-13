@@ -2,10 +2,6 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
 
@@ -14,6 +10,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Interface used for modifying tag groups.

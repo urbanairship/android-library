@@ -5,11 +5,12 @@ package com.urbanairship.analytics.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.DataManager;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Database storage for events.

@@ -3,13 +3,14 @@
 package com.urbanairship.images;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 import android.widget.ImageView;
 
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Asynchronous bitmap loader for image views.

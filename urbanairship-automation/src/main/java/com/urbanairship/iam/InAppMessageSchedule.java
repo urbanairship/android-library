@@ -2,10 +2,10 @@
 
 package com.urbanairship.iam;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines an in-app message schedule.

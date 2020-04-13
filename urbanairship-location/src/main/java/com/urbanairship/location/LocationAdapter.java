@@ -5,11 +5,12 @@ package com.urbanairship.location;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.ResultCallback;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * The common interface for communicating with different location sources.

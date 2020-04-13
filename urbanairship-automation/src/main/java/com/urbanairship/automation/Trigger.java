@@ -4,10 +4,6 @@ package com.urbanairship.automation;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -17,6 +13,11 @@ import com.urbanairship.json.JsonValue;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Trigger defines a condition to execute an {@link ScheduleInfo}. Use {@link Triggers} to build

@@ -11,13 +11,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.SystemClock;
+import android.util.SparseArray;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
-import android.util.SparseArray;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Alarm scheduler.

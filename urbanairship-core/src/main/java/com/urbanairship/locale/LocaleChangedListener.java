@@ -1,9 +1,9 @@
 package com.urbanairship.locale;
 
+import java.util.Locale;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import java.util.Locale;
 
 /**
  * Listener for locale changes.

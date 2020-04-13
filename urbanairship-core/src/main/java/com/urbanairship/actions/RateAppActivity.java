@@ -10,8 +10,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.View;
 
 import com.urbanairship.Autopilot;
@@ -19,6 +17,9 @@ import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * An activity that displays a Rate App prompt that links to an app store.

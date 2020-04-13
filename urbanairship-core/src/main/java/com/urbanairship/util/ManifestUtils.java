@@ -3,16 +3,15 @@
 package com.urbanairship.util;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+
+import com.urbanairship.UAirship;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.

@@ -1,9 +1,5 @@
 package com.urbanairship.job;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
@@ -11,6 +7,10 @@ import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Executor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 /**
  * Contains information for a job run.

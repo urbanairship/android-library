@@ -5,7 +5,6 @@ package com.urbanairship.job;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
@@ -16,6 +15,8 @@ import com.urbanairship.push.PushManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.doThrow;

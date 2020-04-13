@@ -1,9 +1,9 @@
 package com.urbanairship.push.notifications;
 
+import com.urbanairship.push.PushMessage;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.urbanairship.push.PushMessage;
 
 /**
  * Arguments used to create a notification in the {@link NotificationProvider}.

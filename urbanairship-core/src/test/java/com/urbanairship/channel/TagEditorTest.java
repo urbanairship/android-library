@@ -2,8 +2,6 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
@@ -11,6 +9,8 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

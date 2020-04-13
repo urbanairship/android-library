@@ -2,8 +2,6 @@
 
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
@@ -11,6 +9,9 @@ import com.urbanairship.util.UAStringUtil;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Shared logging wrapper for all log entries.

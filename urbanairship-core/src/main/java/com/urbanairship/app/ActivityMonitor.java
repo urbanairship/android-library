@@ -3,12 +3,13 @@
 package com.urbanairship.app;
 
 import android.app.Activity;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
 
 import com.urbanairship.Predicate;
 
 import java.util.List;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
 
 /**
  * Activity Monitor.
