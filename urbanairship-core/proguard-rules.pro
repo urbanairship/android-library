@@ -45,5 +45,5 @@
 
 ## Optional
 -dontwarn com.urbanairship.location.FusedLocationAdapter*
--dontwarn com.urbanairship.messagecenter.ThemedActivity*
+-dontwarn com.urbanairship.activity.ThemedActivity*
 -dontnote com.urbanairship.google.PlayServicesUtils

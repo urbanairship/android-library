@@ -10,9 +10,11 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
+import com.urbanairship.modules.debug.DebugModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
@@ -35,6 +37,8 @@ public class Modules {
     private static final String MESSAGE_CENTER_MODULE_FACTORY = "com.urbanairship.messagecenter.MessageCenterModuleFactoryImpl";
     private static final String LOCATION_MODULE_FACTORY = "com.urbanairship.location.LocationModuleFactoryImpl";
     private static final String AUTOMATION_MODULE_FACTORY = "com.urbanairship.automation.AutomationModuleFactoryImpl";
+    private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
+    private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
@@ -43,19 +47,13 @@ public class Modules {
                                             @NonNull PushManager pushManager,
                                             @NonNull Analytics analytics) {
         try {
-            Class clazz = Class.forName(ACCENGAGE_MODULE_FACTORY);
-            Object object = clazz.newInstance();
-
-            if (object instanceof AccengageModuleFactory) {
-                AccengageModuleFactory factory = (AccengageModuleFactory) object;
-                return factory.build(context, preferenceDataStore, channel, pushManager, analytics);
+            AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, preferenceDataStore, channel, pushManager, analytics);
             }
-        } catch (ClassNotFoundException e) {
-            return null;
         } catch (Exception e) {
-            Logger.error(e, "Unable to create module %s", ACCENGAGE_MODULE_FACTORY);
+            Logger.error(e, "Failed to build Accengage module");
         }
-
         return null;
     }
 
@@ -64,20 +62,15 @@ public class Modules {
                                        @NonNull PreferenceDataStore preferenceDataStore,
                                        @NonNull AirshipChannel channel,
                                        @NonNull PushManager pushManager) {
+
         try {
-            Class clazz = Class.forName(MESSAGE_CENTER_MODULE_FACTORY);
-            Object object = clazz.newInstance();
-
-            if (object instanceof MessageCenterModuleFactory) {
-                MessageCenterModuleFactory factory = (MessageCenterModuleFactory) object;
-                return factory.build(context, preferenceDataStore, channel, pushManager);
+            MessageCenterModuleFactory moduleFactory = createFactory(MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, preferenceDataStore, channel, pushManager);
             }
-        } catch (ClassNotFoundException e) {
-            return null;
         } catch (Exception e) {
-            Logger.error(e, "Unable to create module %s", MESSAGE_CENTER_MODULE_FACTORY);
+            Logger.error(e, "Failed to build Message Center module");
         }
-
         return null;
     }
 
@@ -87,19 +80,13 @@ public class Modules {
                                           @NonNull AirshipChannel channel,
                                           @NonNull Analytics analytics) {
         try {
-            Class clazz = Class.forName(LOCATION_MODULE_FACTORY);
-            Object object = clazz.newInstance();
-
-            if (object instanceof LocationModuleFactory) {
-                LocationModuleFactory factory = (LocationModuleFactory) object;
-                return factory.build(context, preferenceDataStore, channel, analytics);
+            LocationModuleFactory moduleFactory = createFactory(LOCATION_MODULE_FACTORY, LocationModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, preferenceDataStore, channel, analytics);
             }
-        } catch (ClassNotFoundException e) {
-            return null;
         } catch (Exception e) {
-            Logger.error(e, "Unable to create module %s", LOCATION_MODULE_FACTORY);
+            Logger.error(e, "Failed to build Location module");
         }
-
         return null;
     }
 
@@ -113,22 +100,63 @@ public class Modules {
                                     @NonNull RemoteData remoteData,
                                     @NonNull TagGroupRegistrar tagGroupRegistrar) {
         try {
-            Class clazz = Class.forName(AUTOMATION_MODULE_FACTORY);
-            Object object = clazz.newInstance();
-
-            if (object instanceof AutomationModuleFactory) {
-                AutomationModuleFactory factory = (AutomationModuleFactory) object;
-                return factory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
+            AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
                         analytics, remoteData, tagGroupRegistrar);
             }
-        } catch (ClassNotFoundException e) {
-            return null;
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Automation module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module debug(@NonNull Context context,
+                               @NonNull PreferenceDataStore dataStore) {
+        try {
+            DebugModuleFactory moduleFactory = createFactory(DEBUG_MODULE_FACTORY, DebugModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Debug module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module adId(@NonNull Context context,
+                              @NonNull PreferenceDataStore dataStore) {
+        try {
+            AdIdModuleFactory moduleFactory = createFactory(AD_ID_FACTORY, AdIdModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Ad Id module");
+        }
+        return null;
+    }
+
+    /**
+     * Creates the factory instance.
+     *
+     * @param className The class name.
+     * @param factoryClass The factory class.
+     * @return The instance or null if not available.
+     */
+    @Nullable
+    private static <T> T createFactory(@NonNull String className, @NonNull Class<T> factoryClass) {
+        try {
+            Class<? extends T> clazz = Class.forName(className).asSubclass(factoryClass);
+            return clazz.newInstance();
+        } catch (ClassNotFoundException ignored) {
         } catch (Exception e) {
             Logger.error(e, "Unable to create module %s", AUTOMATION_MODULE_FACTORY);
         }
 
         return null;
     }
-
 
 }

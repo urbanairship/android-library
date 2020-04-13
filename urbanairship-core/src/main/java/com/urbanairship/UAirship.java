@@ -43,8 +43,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,12 +60,6 @@ import androidx.annotation.RestrictTo;
  * the class on <code>Application.onCreate()</code>.
  */
 public class UAirship {
-
-    private static final String[] OPTIONAL_COMPONENTS = {
-            "com.urbanairship.aaid.AdvertisingIdTracker",
-            "com.urbanairship.debug.DebugManager"
-    };
-
     /**
      * Broadcast that is sent when UAirship is finished taking off.
      */
@@ -739,13 +731,6 @@ public class UAirship {
 
         components.add(this.remoteConfigManager);
 
-        for (String className : OPTIONAL_COMPONENTS) {
-            AirshipComponent component = createOptionalComponent(className, application, preferenceDataStore);
-            if (component != null) {
-                components.add(component);
-            }
-        }
-
         // Accengage
         AccengageModule accengageModule = Modules.accengage(application, preferenceDataStore, channel, pushManager, analytics);
         processModule(accengageModule);
@@ -765,6 +750,13 @@ public class UAirship {
                 channel, pushManager, analytics, remoteData, tagGroupRegistrar);
         processModule(automationModule);
 
+        // Debug
+        Module debugModule = Modules.debug(application, preferenceDataStore);
+        processModule(debugModule);
+
+        // Ad Id
+        Module adIdModule = Modules.adId(application, preferenceDataStore);
+        processModule(adIdModule);
 
         for (AirshipComponent component : components) {
             component.init();
@@ -1120,29 +1112,4 @@ public class UAirship {
         preferenceDataStore.put(PLATFORM_KEY, platform);
         return PlatformUtils.parsePlatform(platform);
     }
-
-    @Nullable
-    private AirshipComponent createOptionalComponent(String className, Context context, PreferenceDataStore dataStore) {
-        try {
-            Class<?> componentClass = Class.forName(className);
-            Constructor<?> cons = componentClass.getConstructor(Context.class, PreferenceDataStore.class);
-            Object component = cons.newInstance(context, dataStore);
-            if (component instanceof AirshipComponent) {
-                return (AirshipComponent) component;
-            }
-        } catch (InstantiationException e) {
-            Logger.error(e, "Unable to create component %s", className);
-        } catch (IllegalAccessException e) {
-            Logger.error(e, "Unable to create component %s", className);
-        } catch (NoSuchMethodException e) {
-            Logger.error(e, "Unable to create component %s", className);
-        } catch (InvocationTargetException e) {
-            Logger.error(e, "Unable to create component %s", className);
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-
-        return null;
-    }
-
 }
