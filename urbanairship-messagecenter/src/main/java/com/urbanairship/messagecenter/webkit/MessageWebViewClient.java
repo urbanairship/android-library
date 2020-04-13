@@ -8,6 +8,8 @@ import android.webkit.WebView;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.javascript.JavaScriptEnvironment;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.webkit.AirshipWebViewClient;
@@ -66,12 +68,20 @@ public class MessageWebViewClient extends AirshipWebViewClient {
     protected JavaScriptEnvironment.Builder extendJavascriptEnvironment(@NonNull JavaScriptEnvironment.Builder builder, @NonNull WebView webView) {
         final Message message = getMessage(webView);
 
+        JsonMap extras = JsonMap.EMPTY_MAP;
+        if (message != null) {
+            extras = JsonValue.wrapOpt(message.getExtrasMap()).optMap();
+        }
+
         return super.extendJavascriptEnvironment(builder,webView)
                     .addGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1)
                     .addGetter("getMessageId", (message != null) ? message.getMessageId() : null)
                     .addGetter("getMessageTitle", (message != null) ? message.getTitle() : null)
                     .addGetter("getMessageSentDate", (message != null) ? DATE_FORMATTER.format(message.getSentDate()) : null)
-                    .addGetter("getUserId", MessageCenter.shared().getUser().getId());
+                    .addGetter("getUserId", MessageCenter.shared().getUser().getId())
+                    .addGetter("getMessageExtras", extras);
+
+
     }
 
     /**

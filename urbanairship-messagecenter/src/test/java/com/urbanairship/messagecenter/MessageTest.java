@@ -47,6 +47,7 @@ public class MessageTest {
         // Extras
         assertEquals(1, message.getExtras().size());
         assertEquals("some_value", message.getExtras().getString("some_key"));
+        assertEquals("some_value", message.getExtrasMap().get("some_key"));
 
         // Expiry
         assertNull(message.getExpirationDate());

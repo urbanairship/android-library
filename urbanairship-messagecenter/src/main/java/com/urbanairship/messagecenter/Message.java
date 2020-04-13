@@ -10,6 +10,7 @@ import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -33,7 +34,8 @@ public class Message implements Comparable<Message> {
     final static String UNREAD_KEY = "unread";
 
     private boolean unreadOrigin;
-    private Bundle extras;
+    private Map<String, String> extrasMap;
+
     private long sentMS;
     private Long expirationMS;
     private String messageId;
@@ -108,17 +110,16 @@ public class Message implements Comparable<Message> {
         }
 
         // Extras
-        message.extras = new Bundle();
-        JsonMap extrasMap = messageMap.opt(EXTRA_KEY).getMap();
-        if (extrasMap != null) {
-            for (Map.Entry<String, JsonValue> entry : extrasMap) {
-                if (entry.getValue().isString()) {
-                    message.extras.putString(entry.getKey(), entry.getValue().getString());
-                } else {
-                    message.extras.putString(entry.getKey(), entry.getValue().toString());
-                }
+        Map<String, String> extrasMap = new HashMap<>();
+        for (Map.Entry<String, JsonValue> entry : messageMap.opt(EXTRA_KEY).optMap()) {
+            if (entry.getValue().isString()) {
+                extrasMap.put(entry.getKey(), entry.getValue().getString());
+            } else {
+                extrasMap.put(entry.getKey(), entry.getValue().toString());
             }
         }
+
+        message.extrasMap = extrasMap;
 
         message.deleted = deleted;
         message.unreadClient = unreadClient;
@@ -241,11 +242,25 @@ public class Message implements Comparable<Message> {
     /**
      * Get the message's extras.
      *
-     * @return The message's extras in a {@link Bundle}.
+     * @return The message's extras as a bundle.
      */
     @NonNull
     public Bundle getExtras() {
-        return this.extras;
+        Bundle bundle = new Bundle();
+        for (Map.Entry<String, String> entry : extrasMap.entrySet()) {
+            bundle.putString(entry.getKey(), entry.getValue());
+        }
+        return bundle;
+    }
+
+    /**
+     * Get the message's extras.
+     *
+     * @return The message's extras as a map.
+     */
+    @NonNull
+    public Map<String, String> getExtrasMap() {
+        return this.extrasMap;
     }
 
     // actions
@@ -341,7 +356,7 @@ public class Message implements Comparable<Message> {
                 (messageBodyUrl == null ? that.messageBodyUrl == null : messageBodyUrl.equals(that.messageBodyUrl)) &&
                 (messageReadUrl == null ? that.messageReadUrl == null : messageReadUrl.equals(that.messageReadUrl)) &&
                 (messageUrl == null ? that.messageUrl == null : messageUrl.equals(that.messageUrl)) &&
-                (extras == null ? that.extras == null : extras.equals(that.extras)) &&
+                (extrasMap == null ? that.extrasMap == null : extrasMap.equals(that.extrasMap)) &&
                 (unreadClient == that.unreadClient) &&
                 (unreadOrigin == that.unreadOrigin) &&
                 (deleted == that.deleted) &&
@@ -356,7 +371,7 @@ public class Message implements Comparable<Message> {
         result = 37 * result + (messageBodyUrl == null ? 0 : messageBodyUrl.hashCode());
         result = 37 * result + (messageReadUrl == null ? 0 : messageReadUrl.hashCode());
         result = 37 * result + (messageUrl == null ? 0 : messageUrl.hashCode());
-        result = 37 * result + (extras == null ? 0 : extras.hashCode());
+        result = 37 * result + (extrasMap == null ? 0 : extrasMap.hashCode());
         result = 37 * result + (unreadClient ? 0 : 1);
         result = 37 * result + (unreadOrigin ? 0 : 1);
         result = 37 * result + (deleted ? 0 : 1);

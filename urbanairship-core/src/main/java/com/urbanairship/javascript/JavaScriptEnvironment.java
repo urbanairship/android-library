@@ -6,8 +6,8 @@ import android.content.Context;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-
-import org.json.JSONObject;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -99,14 +99,16 @@ public class JavaScriptEnvironment {
         private Builder() {}
 
         public Builder addGetter(@NonNull String functionName, @Nullable String value) {
-            value = (value == null) ? "null" : JSONObject.quote(value);
-            String getter = String.format(Locale.ROOT, "_UAirship.%s = function(){return %s;};", functionName, value);
-            getters.add(getter);
-            return this;
+            return addGetter(functionName, JsonValue.wrapOpt(value));
         }
 
         public Builder addGetter(@NonNull String functionName, long value) {
-            String getter = String.format(Locale.ROOT, "_UAirship.%s = function(){return %d;};", functionName, value);
+            return addGetter(functionName, JsonValue.wrapOpt(value));
+        }
+
+        public Builder addGetter(@NonNull String functionName, @Nullable JsonSerializable value) {
+            JsonValue json = value == null ? JsonValue.NULL : value.toJsonValue();
+            String getter = String.format(Locale.ROOT, "_UAirship.%s = function(){return %s;};", functionName, json.toString());
             getters.add(getter);
             return this;
         }
