@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
     private PreferenceDataStore dataStore;
@@ -30,6 +31,20 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals(configOptions.remoteDataUrl, urlConfig.remoteDataUrl().build().toString());
         assertEquals(configOptions.analyticsUrl, urlConfig.analyticsUrl().build().toString());
         assertEquals(configOptions.walletUrl, urlConfig.walletUrl().build().toString());
+    }
+
+    @Test
+    public void tesDefaultUrlsDisableFallback() {
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
+        RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
+        provider.disableFallbackUrls();
+
+        AirshipUrlConfig urlConfig = provider.getConfig();
+
+        assertNull(urlConfig.deviceUrl().build());
+        assertNull(urlConfig.remoteDataUrl().build());
+        assertNull(urlConfig.analyticsUrl().build());
+        assertNull(urlConfig.walletUrl().build());
     }
 
     @Test
