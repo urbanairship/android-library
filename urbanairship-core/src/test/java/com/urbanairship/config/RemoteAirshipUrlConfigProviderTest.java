@@ -42,9 +42,11 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         AirshipUrlConfig urlConfig = provider.getConfig();
 
         assertNull(urlConfig.deviceUrl().build());
-        assertNull(urlConfig.remoteDataUrl().build());
         assertNull(urlConfig.analyticsUrl().build());
         assertNull(urlConfig.walletUrl().build());
+
+        // Remote-data should fallback so we can retrieve the other URLs
+        assertEquals(configOptions.remoteDataUrl, urlConfig.remoteDataUrl().build().toString());
     }
 
     @Test
