@@ -133,8 +133,6 @@ public class JobDispatcherTest extends BaseTestCase {
         verify(mockFallbackScheduler).cancel(context, 3000007);
     }
 
-}
-
     @Test
     public void testCatchesTransactionTooLargeException() throws Exception {
         Context context = mock(Context.class);
