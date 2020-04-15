@@ -18,8 +18,8 @@ public class RemoteAirshipConfigTest extends BaseTestCase {
         JsonValue json = JsonMap.newBuilder()
                                 .putOpt("device_api_url", "https://deivce-api.examaple.com")
                                 .putOpt("remote_data_url", "https://remote-data.examaple.com")
-                                .putOpt("wallet_api_url", "https://wallet-api.examaple.com")
-                                .putOpt("analytics_api_url", "https://analytics-api.examaple.com")
+                                .putOpt("wallet_url", "https://wallet-api.examaple.com")
+                                .putOpt("analytics_url", "https://analytics-api.examaple.com")
                                 .build()
                                 .toJsonValue();
 

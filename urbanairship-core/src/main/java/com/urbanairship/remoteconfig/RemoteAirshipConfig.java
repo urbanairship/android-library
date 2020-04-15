@@ -21,8 +21,8 @@ public class RemoteAirshipConfig implements JsonSerializable {
 
     private static final String REMOTE_DATA_URL_KEY = "remote_data_url";
     private static final String DEVICE_API_URL_KEY = "device_api_url";
-    private static final String WALLET_URL_KEY = "wallet_api_url";
-    private static final String ANALYTICS_URL_KEY = "analytics_api_url";
+    private static final String WALLET_URL_KEY = "wallet_url";
+    private static final String ANALYTICS_URL_KEY = "analytics_url";
 
     private final String remoteDataUrl;
     private final String deviceApiUrl;
