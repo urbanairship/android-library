@@ -61,7 +61,7 @@ dependencies {
     implementation project(':urbanairship-preference')
 
     // Airship Message Center
-    implementation project(':urbanairship-messagecenter')
+    implementation project(':urbanairship-message-center')
 
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')

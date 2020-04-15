@@ -42,7 +42,7 @@ android {
 dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-location')
-    implementation project(':urbanairship-messagecenter')
+    implementation project(':urbanairship-message-center')
     implementation project(':urbanairship-automation')
 
     // Kotlin

@@ -6,7 +6,7 @@
 
 `urbanairship-core` has been broken into separate feature modules:
 - `urbanairship-automation`: Contains In-App Automation (InAppMessageManager, LegacyInAppMessageManager), Landing Pages, and Action Automation.
-- `urbanairship-messagecenter`: Contains all Message Center and Inbox APIs
+- `urbanairship-message-center`: Contains all Message Center and Inbox APIs
 - `urbanairship-location` Contains location APIs.
 
 In order to continue using Message Center, In-app Automation, or location, you will need to include the dependencies in the app's build.gradle file:
@@ -14,7 +14,7 @@ In order to continue using Message Center, In-app Automation, or location, you w
 ```
 implementation "com.urbanairship.android:urbanairship-fcm:$airshipVersion"
 
-implementation "com.urbanairship.android:urbanairship-messagecenter:$airshipVersion"
+implementation "com.urbanairship.android:urbanairship-message-center:$airshipVersion"
 implementation "com.urbanairship.android:urbanairship-automation:$airshipVersion"
 ```
 

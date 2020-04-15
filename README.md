@@ -18,10 +18,16 @@ Airship SDK for Android.
 
 ```
    dependencies {
-     ...
+     def airshipVersion = "13.0.0"
 
-     // Airship SDK - FCM
-     implementation 'com.urbanairship.android:urbanairship-fcm:12.2.1'
+     // FCM push provider
+     implementation "com.urbanairship.android:urbanairship-fcm:$airshipVersion"
+
+     // Message Center
+     implementation "com.urbanairship.android:urbanairship-message-center:$airshipVersion"
+
+     // In-App Automation
+     implementation "com.urbanairship.android:urbanairship-automation:$airshipVersion"
    }
 ```
 
@@ -36,9 +42,6 @@ Airship SDK for Android.
    productionAppKey = Your Production App Key
    productionAppSecret = Your Production Secret
 
-   # Toggles between the development and production app credentials
-   # Before submitting your application to an app store set to true
-   inProduction = false
 
    # LogLevel is "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR" or "ASSERT"
    developmentLogLevel = DEBUG
