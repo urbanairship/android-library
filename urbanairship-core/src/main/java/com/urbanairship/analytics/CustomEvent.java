@@ -555,12 +555,11 @@ public class CustomEvent extends Event implements JsonSerializable {
          *
          * @param name The property name.
          * @param value A property value.
-         *
          * @return The custom event builder.
          */
         public Builder addProperty(@NonNull @Size(min = 1) String name,
-                                   @NonNull JsonValue value) {
-            properties.put(name, JsonValue.wrap(value));
+                                   @NonNull JsonSerializable value) {
+            properties.put(name, value.toJsonValue());
             return this;
         }
 
@@ -658,8 +657,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param name The property name.
          * @param value The property value.
          * @return The custom event builder.
-         *
-         * @deprecated Use {@link #addProperty(String name, JsonValue value)} instead.
+         * @deprecated Use {@link #addProperty(String, JsonSerializable)}
          */
         @NonNull
         @Deprecated
@@ -678,5 +676,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         public CustomEvent build() {
             return new CustomEvent(this);
         }
+
     }
+
 }
