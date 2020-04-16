@@ -1,10 +1,8 @@
 package com.urbanairship.messagecenter.webkit;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.urbanairship.Logger;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.messagecenter.User;
@@ -19,8 +17,6 @@ import androidx.annotation.Nullable;
  * A web view that sets settings appropriate for Airship message center content.
  */
 public class MessageWebView extends AirshipWebView {
-
-    private Message currentMessage;
 
     /**
      * MessageWebView Constructor
@@ -67,17 +63,11 @@ public class MessageWebView extends AirshipWebView {
     }
 
     /**
-     * Loads the web view with the rich push message.
+     * Loads the web view with the {@link Message}.
      *
-     * @param message The RichPushMessage that will be displayed.
+     * @param message The message that will be displayed.
      */
-    @SuppressLint("NewApi")
-    public void loadRichPushMessage(@Nullable Message message) {
-        if (message == null) {
-            Logger.error("Unable to load null message into MessageWebView");
-            return;
-        }
-
+    public void loadMessage(@NonNull Message message) {
         User user = MessageCenter.shared().getUser();
 
         // Send authorization in the headers if the web view supports it
@@ -90,30 +80,5 @@ public class MessageWebView extends AirshipWebView {
         }
 
         loadUrl(message.getMessageBodyUrl(), headers);
-
-        // loadUrl clears currentMessage, so set it after load starts
-        currentMessage = message;
     }
-
-    /**
-     * The current loaded RichPushMessage.
-     *
-     * @return The current RichPushMessage that was loaded.
-     */
-    @Nullable
-    public Message getCurrentMessage() {
-        return currentMessage;
-    }
-
-    /**
-     * Called right before data or a URL is passed to the web view to be loaded.
-     */
-    @SuppressLint("NewApi")
-    protected void onPreLoad() {
-        currentMessage = null;
-
-        super.onPreLoad();
-    }
-
-
 }

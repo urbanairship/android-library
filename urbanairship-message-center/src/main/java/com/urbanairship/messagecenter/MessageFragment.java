@@ -367,7 +367,7 @@ public class MessageFragment extends Fragment {
                     }
 
                     Logger.info("Loading message: " + message.getMessageId());
-                    webView.loadRichPushMessage(message);
+                    webView.loadMessage(message);
                 }
             });
         } else {
@@ -377,7 +377,7 @@ public class MessageFragment extends Fragment {
             }
 
             Logger.info("Loading message: %s", message.getMessageId());
-            webView.loadRichPushMessage(message);
+            webView.loadMessage(message);
         }
     }
 

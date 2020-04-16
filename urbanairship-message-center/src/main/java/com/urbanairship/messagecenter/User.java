@@ -99,7 +99,7 @@ public class User {
      * @param userToken The user's token
      * @param channelId The channel Id that will be registered
      */
-     void onCreated(@NonNull String userId, @NonNull String userToken, @NonNull String channelId) {
+    void onCreated(@NonNull String userId, @NonNull String userToken, @NonNull String channelId) {
         this.setRegisteredChannelId(channelId);
         this.setUser(userId, userToken);
     }
@@ -113,7 +113,12 @@ public class User {
         return MessageCenter.shared().getUser().isUserCreated();
     }
 
-    boolean isUserCreated() {
+    /**
+     * Checks if the user credentials are available.
+     *
+     * @return {@code true} if the credentials are available, otherwise {@code false}.
+     */
+    public boolean isUserCreated() {
         return (!UAStringUtil.isEmpty(getId()) && !UAStringUtil.isEmpty(getPassword()));
     }
 
@@ -257,4 +262,5 @@ public class User {
     boolean shouldUpdate() {
         return channel.getId() != null && (!this.getRegisteredChannelId().equals(channel.getId()));
     }
+
 }
