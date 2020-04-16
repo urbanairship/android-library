@@ -13,8 +13,6 @@ dependencies {
     api "androidx.core:core:$rootProject.androidxCoreVersion"
     api "androidx.fragment:fragment:$rootProject.androidxFragmentVersion"
     api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
-    api "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
-    api "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
 
     compileOnly "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"

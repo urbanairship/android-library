@@ -4,6 +4,7 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
 
     // Tests
     testImplementation "junit:junit:$rootProject.junitVersion"

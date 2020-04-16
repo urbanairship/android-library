@@ -4,6 +4,7 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
+    implementation "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
 
     // Tests
     testImplementation "junit:junit:$rootProject.junitVersion"
