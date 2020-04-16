@@ -5,6 +5,8 @@ package com.ad4screen.sdk.service.modules.profile;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AttributeEditor;
 
+import java.util.Date;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -78,6 +80,18 @@ public class DeviceInformation {
      * @param value The value.
      */
     public void set(@Nullable String key, @Nullable Double value) {
+        if (key != null && !key.isEmpty()) {
+            editor.setAttribute(key, value);
+        }
+    }
+
+    /**
+     * Sets an attribute.
+     *
+     * @param key The key.
+     * @param value The value.
+     */
+    public void set(@Nullable String key, @Nullable Date value) {
         if (key != null && !key.isEmpty()) {
             editor.setAttribute(key, value);
         }
