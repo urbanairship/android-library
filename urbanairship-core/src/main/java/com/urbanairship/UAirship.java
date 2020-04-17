@@ -57,9 +57,11 @@ import androidx.annotation.RestrictTo;
 /**
  * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
- * the class on <code>Application.onCreate()</code>.
+ * the class during <code>Application.onCreate()</code> or
+ * by using {@link Autopilot}.
  */
 public class UAirship {
+
     /**
      * Broadcast that is sent when UAirship is finished taking off.
      */
@@ -114,6 +116,11 @@ public class UAirship {
 
     private static boolean queuePendingAirshipRequests = true;
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
 
     private DeepLinkListener deepLinkListener;
@@ -844,6 +851,7 @@ public class UAirship {
      * Returns the {@link AirshipLocationClient} instance.
      *
      * @return The {@link AirshipLocationClient} instance.
+     * @hide
      */
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -1112,4 +1120,5 @@ public class UAirship {
         preferenceDataStore.put(PLATFORM_KEY, platform);
         return PlatformUtils.parsePlatform(platform);
     }
+
 }

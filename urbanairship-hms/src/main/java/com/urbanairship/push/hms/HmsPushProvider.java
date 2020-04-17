@@ -14,10 +14,14 @@ import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * HMS push provider.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider implements PushProvider {
 
     private static final String HCM_SCOPE = "HCM";
@@ -60,7 +64,7 @@ public class HmsPushProvider implements PushProvider {
             String appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY);
             return !UAStringUtil.isEmpty(appId);
         } catch (Exception e) {
-            Logger.error(e,"HmsPushProvider - HMS availability check failed.");
+            Logger.error(e, "HmsPushProvider - HMS availability check failed.");
             return false;
         }
     }
@@ -70,8 +74,9 @@ public class HmsPushProvider implements PushProvider {
         try {
             return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0;
         } catch (Exception e) {
-            Logger.error(e,"HmsPushProvider - HMS is supported check failed.");
+            Logger.error(e, "HmsPushProvider - HMS is supported check failed.");
             return false;
         }
     }
+
 }

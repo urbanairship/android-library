@@ -2,7 +2,7 @@
 
 /**
  * Contains classes for examining the SDK during debugging.
- * Requires `urbanairship-debug` module.
+ * Requires {@code urbanairship-debug} module.
  */
 
 package com.urbanairship.debug;

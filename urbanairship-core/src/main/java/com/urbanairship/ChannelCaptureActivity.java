@@ -30,9 +30,11 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+/**
+ * Displays the Channel data for the {@link ChannelCapture} tool.
+ */
 public class ChannelCaptureActivity extends ThemedActivity {
 
-    private static final String ALIAS_HEADER = "Alias";
     private static final String USER_NOTIFICATION_ENABLED_HEADER = "User Notifications Enabled";
     private static final String NAMED_USER_HEADER = "Named User";
 

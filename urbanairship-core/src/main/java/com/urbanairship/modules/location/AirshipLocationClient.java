@@ -2,9 +2,13 @@
 
 package com.urbanairship.modules.location;
 
+import androidx.annotation.RestrictTo;
+
 /**
  * Airship Location interface.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AirshipLocationClient {
 
     /**

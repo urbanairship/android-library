@@ -2,7 +2,7 @@
 
 /**
  * Contains the ADM push provider.
- * Requires `urbanairship-adm` module.
+ * Requires {@code urbanairship-adm} module.
  */
 
 package com.urbanairship.push.adm;

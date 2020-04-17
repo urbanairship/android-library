@@ -2,7 +2,7 @@
 
 /**
  * Contains classes for interacting with the Airship Preferences.
- * Requires `urbanairship-preference` module.
+ * Requires {@code urbanairship-preference} module.
  */
 
 package com.urbanairship.preference;

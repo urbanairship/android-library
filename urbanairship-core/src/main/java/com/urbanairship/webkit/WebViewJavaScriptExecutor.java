@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.webkit;
 
 import android.os.Build;
@@ -8,7 +10,12 @@ import com.urbanairship.javascript.JavaScriptExecutor;
 import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class WebViewJavaScriptExecutor implements JavaScriptExecutor {
 
     private WeakReference<WebView> weakReference;

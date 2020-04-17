@@ -16,18 +16,19 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * FCM push provider.
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static final List<String> INVALID_TOKENS = Arrays.asList("MESSENGER", "AP", "null");

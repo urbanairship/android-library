@@ -15,8 +15,6 @@ import androidx.annotation.StringDef;
 
 /**
  * Defines a push provider.
- *
- * @hide
  */
 public interface PushProvider {
 

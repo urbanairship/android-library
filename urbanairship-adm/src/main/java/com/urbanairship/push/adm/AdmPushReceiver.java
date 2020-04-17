@@ -15,10 +15,13 @@ import com.urbanairship.push.PushProviderBridge;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * AdmPushReceiver listens for incoming ADM registration responses and messages.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AdmPushReceiver extends BroadcastReceiver {
 
     /**

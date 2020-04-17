@@ -1295,7 +1295,7 @@ public class AirshipConfigOptions {
          * Set the flag indicating whether data collection needs to be opted in with
          * {@link UAirship#setDataCollectionEnabled(boolean)}.
          *
-         * @note This flag will only take affect on first run. If previously not enabled, the device
+         * This flag will only take affect on first run. If previously not enabled, the device
          * will still have data collection enabled until disabled with {@link UAirship#setDataCollectionEnabled(boolean)}.
          *
          * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
