@@ -25,4 +25,16 @@ public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactor
         return Module.singleComponent(messageCenter, R.xml.ua_message_center_actions);
     }
 
+    @NonNull
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.AIRSHIP_VERSION;
+    }
+
+    @NonNull
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
+    }
+
 }

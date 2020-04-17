@@ -4,6 +4,7 @@ package com.urbanairship.modules.aaid;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.modules.Module;
 
@@ -16,7 +17,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AdIdModuleFactory {
+public interface AdIdModuleFactory extends AirshipVersionInfo {
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore);
 }

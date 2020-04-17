@@ -4,6 +4,7 @@ package com.urbanairship.modules.automation;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -22,7 +23,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationModuleFactory {
+public interface AutomationModuleFactory extends AirshipVersionInfo {
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipRuntimeConfig runtimeConfig,

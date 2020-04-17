@@ -4,8 +4,10 @@ package com.urbanairship.modules;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.TagGroupRegistrar;
@@ -147,13 +149,18 @@ public class Modules {
      * @return The instance or null if not available.
      */
     @Nullable
-    private static <T> T createFactory(@NonNull String className, @NonNull Class<T> factoryClass) {
+    private static <T extends AirshipVersionInfo> T createFactory(@NonNull String className, @NonNull Class<T> factoryClass) {
         try {
             Class<? extends T> clazz = Class.forName(className).asSubclass(factoryClass);
-            return clazz.newInstance();
+            T instance = clazz.newInstance();
+            if (!UAirship.getVersion().equals(instance.getAirshipVersion())) {
+                Logger.error("Unable to load module with factory %s, versions do not match. Core Version: %s, Module Version: %s.", factoryClass, UAirship.getVersion(), instance.getAirshipVersion());
+                return null;
+            }
+            return instance;
         } catch (ClassNotFoundException ignored) {
         } catch (Exception e) {
-            Logger.error(e, "Unable to create module %s", AUTOMATION_MODULE_FACTORY);
+            Logger.error(e, "Unable to create module factory %s", factoryClass);
         }
 
         return null;

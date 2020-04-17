@@ -22,4 +22,17 @@ public class AdIdModuleFactoryImpl implements AdIdModuleFactory {
         return Module.singleComponent(new AdvertisingIdTracker(context, dataStore), 0);
     }
 
+    @NonNull
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.AIRSHIP_VERSION;
+    }
+
+    @NonNull
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
+    }
+
+
 }

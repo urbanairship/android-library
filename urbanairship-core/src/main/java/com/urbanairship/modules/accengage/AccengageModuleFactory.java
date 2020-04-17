@@ -4,6 +4,7 @@ package com.urbanairship.modules.accengage;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -18,7 +19,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AccengageModuleFactory {
+public interface AccengageModuleFactory extends AirshipVersionInfo {
 
     AccengageModule build(@NonNull Context context,
                           @NonNull PreferenceDataStore dataStore,

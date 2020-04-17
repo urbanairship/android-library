@@ -27,4 +27,15 @@ public class LocationModuleFactoryImpl implements LocationModuleFactory {
         return new LocationModule(locationManager, locationManager);
     }
 
+    @NonNull
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.AIRSHIP_VERSION;
+    }
+
+    @NonNull
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
+    }
 }
