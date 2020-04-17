@@ -5,7 +5,7 @@ buildscript {
         airshipVersion = '13.0.0'
 
         // Airship Version Qualifier beta, release, etc...
-        airshipVersionQualifier = "beta"
+        // airshipVersionQualifier = "beta"
 
         // Android SDK Versions
         compileSdkVersion = 29
@@ -13,7 +13,7 @@ buildscript {
         minSdkVersion = 16
 
         // Gradle plugins
-        gradlePluginVersion = '3.6.2'
+        gradlePluginVersion = '3.6.3'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
         spotlessPluginVersion = '3.27.1'
@@ -31,7 +31,7 @@ buildscript {
         androidxAnnotationVersion = '1.0.0'
         androidxCustomViewVersion = '1.0.0'
         androidxAppCompatVersion = '1.1.0'
-        androidxPreferenceVersion = '1.1.0'
+        androidxPreferenceVersion = '1.1.1'
         androidxVectorDrawableVersion = '1.1.0'
         androidxRoomVersion = '2.2.5'
         androidxConstraintLayoutVersion = '1.1.3'

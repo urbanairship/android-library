@@ -4,9 +4,10 @@
 
 ## Version 13.0.0 - April 20, 2020
 
-Release for SDK 13. This release adds support for enhanced custom events, date attributes, HMS push provider, and breaks
+Major release that adds support for enhanced custom events, date attributes, HMS push provider, and breaks
 the `urbanairship-core` module into several modules: `urbanairship-core`, `urbanairship-message-center`, `urbanairship-automation`, and
-`urbananairship-location`. This allows apps to pull in only the feature modules they use. Most of the changes in this release reflect the restructuring that makes this possible.
+`urbananairship-location`. This allows apps to pull in only the feature modules they use. Most of the changes in
+this release reflect the restructuring that makes this possible.
 
 Changes
 -------

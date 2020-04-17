@@ -70,8 +70,12 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: |
           ./gradlew urbanairship-core:bintrayUpload --stacktrace
+          ./gradlew urbanairship-automation:bintrayUpload --stacktrace
+          ./gradlew urbanairship-message-center:bintrayUpload --stacktrace
+          ./gradlew urbanairship-location:bintrayUpload --stacktrace
+          ./gradlew urbanairship-ads-identifier:bintrayUpload --stacktrace
+          ./gradlew urbanairship-preference:bintrayUpload --stacktrace
+          ./gradlew urbanairship-accengage:bintrayUpload --stacktrace
           ./gradlew urbanairship-fcm:bintrayUpload --stacktrace
           ./gradlew urbanairship-adm:bintrayUpload --stacktrace
-          ./gradlew urbanairship-accengage:bintrayUpload --stacktrace
-          ./gradlew urbanairship-preference:bintrayUpload --stacktrace
-          ./gradlew urbanairship-ads-identifier:bintrayUpload --stacktrace
+          ./gradlew urbanairship-hms:bintrayUpload --stacktrace
