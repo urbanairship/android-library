@@ -19,6 +19,11 @@ Changes
 - Added date attribute support.
 - Removed usage of deprecated AsyncTask.
 
+## Version 12.2.4 - April 14, 2020
+Patch release to fix a `TransactionTooLargeException` inside the Airship Job manager.
+
+### Changes
+- Fixed `TransactionTooLargeException` exception.
 
 ## Version 12.2.3 - March 30, 2020
 Patch release to fix missing whitelist entries for EUCS cloud site and to fix a crash in event manager.
