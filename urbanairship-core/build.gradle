@@ -2,10 +2,6 @@ description = "Airship Android Core SDK"
 
 apply from: "../common-build.gradle"
 
-configurations {
-    doclava
-}
-
 android.testOptions.unitTests.includeAndroidResources = true
 
 dependencies {
@@ -23,37 +19,4 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-
-    // Docs
-    doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")
 }
-
-android.libraryVariants.all { variant ->
-    // Add a javadoc task for each variant
-    task("javadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        title = null
-        source = android.sourceSets.main.java.sourceFiles
-
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
-
-        doFirst {
-            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-            classpath += variant.javaCompiler.classpath
-
-            options {
-                docletpath = configurations.doclava.files as List
-                doclet "com.google.doclava.Doclava"
-                bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
-                addStringOption "hdf project.name", "Airship Android Library"
-                addStringOption "hdf project.version", project.version
-                addStringOption "apiversion", "v2"
-                addStringOption "federate android", "http://developer.android.com/reference"
-                addStringOption "federationxml android", "docs/android-22.xml"
-                addStringOption "templatedir", "docs/template"
-            }
-        }
-    }
-}
-
-task javadoc(dependsOn: 'javadocRelease')

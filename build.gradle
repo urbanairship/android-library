@@ -89,13 +89,60 @@ allprojects {
     }
 }
 
+configurations {
+    doclava
+}
 
-task packageDocs(type: Tar, dependsOn: 'urbanairship-core:javadocRelease') {
-    into ('./') {
-        from 'urbanairship-core/build/docs/javadoc'
+dependencies {
+    // Docs
+    doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")
+}
+
+
+task javadoc(type: Javadoc) {
+    destinationDir = file("$buildDir/docs/javadoc")
+    title = null
+    failOnError false
+
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+    exclude '**/com/ad4screen/**'
+
+    options {
+        docletpath = configurations.doclava.files as List
+        doclet "com.google.doclava.Doclava"
+        bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+        addStringOption "hdf project.name", "Airship Android SDK"
+        addStringOption "hdf project.version", project.version
+        addStringOption "apiversion", "v2"
+        addStringOption "federate android", "http://developer.android.com/reference"
+        addStringOption "federationxml android", "docs/android-22.xml"
+        addStringOption "templatedir", "docs/template"
     }
 
-    archiveName = "${rootProject.airshipVersion}.tar.gz"
+    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") }.each { proj ->
+        proj.afterEvaluate { evaluated ->
+            source += evaluated.android.sourceSets.main.java.sourceFiles
+            if (proj.name != 'urbanairship-fcm') {
+                classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
+
+                evaluated.android.libraryVariants.all { variant ->
+                    if (variant.name == 'release') {
+                        classpath += variant.javaCompiler.classpath
+                        classpath += project.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
+                    }
+                }
+            }
+        }
+    }
+}
+
+task packageDocs(type: Tar, dependsOn: 'javadoc') {
+    into('./') {
+        from 'build/docs/javadoc'
+    }
+
+    archiveFileName = "${rootProject.airshipVersion}.tar.gz"
     compression = Compression.GZIP
 
     destinationDir file('build/docs')
@@ -128,7 +175,7 @@ spotless {
         target '**/*.kt'
         targetExclude '.idea/**'
 
-        ktlint().userData(['max_line_length':'off'])
+        ktlint().userData(['max_line_length': 'off'])
 
         trimTrailingWhitespace()
         indentWithSpaces()

@@ -14,4 +14,4 @@ jobs:
       - name: Build and Test SDK
         run: bash ./gradlew build
       - name: Build Docs
-        run: bash ./gradlew javadocDebug
+        run: bash ./gradlew javadoc
