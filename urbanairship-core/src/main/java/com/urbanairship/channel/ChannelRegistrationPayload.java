@@ -116,7 +116,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
          *
          * @param payload The payload.
          */
-        public Builder(ChannelRegistrationPayload payload) {
+        public Builder(@NonNull ChannelRegistrationPayload payload) {
             this.optIn = payload.optIn;
             this.backgroundEnabled = payload.backgroundEnabled;
             this.deviceType = payload.deviceType;
@@ -267,7 +267,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setLocationSettings(Boolean locationSettings) {
+        public Builder setLocationSettings(@Nullable Boolean locationSettings) {
             this.locationSettings = locationSettings;
             return this;
         }
@@ -315,7 +315,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setApiVersion(Integer apiVersion) {
+        public Builder setApiVersion(@Nullable Integer apiVersion) {
             this.apiVersion = apiVersion;
             return this;
         }
@@ -385,6 +385,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.deliveryType = builder.deliveryType;
     }
 
+    @NonNull
     public ChannelRegistrationPayload minimizedPayload(@Nullable ChannelRegistrationPayload last) {
         if (last == null) {
             return this;

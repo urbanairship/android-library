@@ -3,6 +3,7 @@ package com.urbanairship.util;
 import java.util.ArrayDeque;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
@@ -23,7 +24,7 @@ public class SerialExecutor implements Executor {
      *
      * @param executor The executor that performs the runnables.
      */
-    public SerialExecutor(Executor executor) {
+    public SerialExecutor(@NonNull Executor executor) {
         this.executor = executor;
     }
 

@@ -133,6 +133,7 @@ public class AccengageMessage {
      * @return The Accengage message.
      * @throws IllegalArgumentException if the push message is not an Accengage push.
      */
+    @NonNull
     public static AccengageMessage fromAirshipPushMessage(@NonNull PushMessage message) {
         if (!message.isAccengagePush()) {
             throw new IllegalArgumentException("PushMessage is not an Accengage push.");
@@ -198,6 +199,7 @@ public class AccengageMessage {
      *
      * @return Accengage push category or default value NotificationCompat.CATEGORY_PROMO
      */
+    @NonNull
     public String getAccengageCategory() {
         return getExtra(EXTRA_A4S_CATEGORY, NotificationCompat.CATEGORY_PROMO);
     }
@@ -223,7 +225,7 @@ public class AccengageMessage {
      * @param context A context
      * @return Accengage push small icon or default application icon
      */
-    public int getAccengageSmallIcon(Context context) {
+    public int getAccengageSmallIcon(@NonNull Context context) {
         int smallIconId = 0;
 
         String smallIconName = getExtra(EXTRA_A4S_SMALL_ICON_NAME);

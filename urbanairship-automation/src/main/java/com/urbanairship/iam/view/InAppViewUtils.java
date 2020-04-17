@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -119,7 +120,7 @@ public class InAppViewUtils {
             try {
                 Drawable wrappedDrawable = DrawableCompat.wrap(drawable).mutate();
                 wrappedDrawable.setBounds(0, 0, size, size);
-                wrappedDrawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+                wrappedDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 
                 CenteredImageSpan imageSpan = new CenteredImageSpan(wrappedDrawable);
                 SpannableString text;

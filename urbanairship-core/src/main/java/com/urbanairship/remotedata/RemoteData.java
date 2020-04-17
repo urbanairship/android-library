@@ -45,6 +45,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * RemoteData top-level class.
@@ -353,9 +354,9 @@ public class RemoteData extends AirshipComponent {
             return true;
         }
 
-        int appVersion = preferenceDataStore.getInt(LAST_REFRESH_APP_VERSION_KEY, 0);
+        long appVersion = preferenceDataStore.getLong(LAST_REFRESH_APP_VERSION_KEY, 0);
         PackageInfo packageInfo = UAirship.getPackageInfo();
-        if (packageInfo != null && packageInfo.versionCode != appVersion) {
+        if (packageInfo != null && PackageInfoCompat.getLongVersionCode(packageInfo) != appVersion) {
             return true;
         }
 
@@ -398,7 +399,7 @@ public class RemoteData extends AirshipComponent {
 
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
-            preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
+            preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, PackageInfoCompat.getLongVersionCode(packageInfo));
         }
     }
 
@@ -458,6 +459,7 @@ public class RemoteData extends AirshipComponent {
      *
      * @return The last used metadata.
      */
+    @NonNull
     public JsonMap getLastMetadata() {
         return preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap();
     }

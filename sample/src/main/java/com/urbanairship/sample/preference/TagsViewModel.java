@@ -7,6 +7,7 @@ import com.urbanairship.UAirship;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -20,7 +21,7 @@ public class TagsViewModel extends ViewModel {
      * Default constructor.
      */
     public TagsViewModel() {
-        this.tags = new ArrayList<>(UAirship.shared().getPushManager().getTags());
+        this.tags = new ArrayList<>(UAirship.shared().getChannel().getTags());
         updateList();
     }
 
@@ -38,8 +39,8 @@ public class TagsViewModel extends ViewModel {
      *
      * @param tag The tag.
      */
-    public void addTag(String tag) {
-        UAirship.shared().getPushManager().editTags().addTag(tag).apply();
+    public void addTag(@NonNull String tag) {
+        UAirship.shared().getChannel().editTags().addTag(tag).apply();
         tags.add(tag);
         updateList();
     }
@@ -49,8 +50,8 @@ public class TagsViewModel extends ViewModel {
      *
      * @param tag The tag.
      */
-    public void removeTag(String tag) {
-        UAirship.shared().getPushManager().editTags().removeTag(tag).apply();
+    public void removeTag(@NonNull String tag) {
+        UAirship.shared().getChannel().editTags().removeTag(tag).apply();
         tags.remove(tag);
         updateList();
     }

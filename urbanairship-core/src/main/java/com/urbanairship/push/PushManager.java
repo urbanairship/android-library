@@ -15,7 +15,6 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.channel.TagEditor;
 import com.urbanairship.channel.TagGroupsEditor;
@@ -25,10 +24,8 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
-import com.urbanairship.push.notifications.LegacyNotificationFactoryProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
-import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.util.UAStringUtil;
 
@@ -38,7 +35,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
@@ -225,7 +221,6 @@ public class PushManager extends AirshipComponent {
     private NotificationChannelRegistry notificationChannelRegistry;
 
     private NotificationListener notificationListener;
-    private List<RegistrationListener> registrationListeners = new CopyOnWriteArrayList<>();
     private List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
 
     private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
@@ -284,22 +279,6 @@ public class PushManager extends AirshipComponent {
     protected void init() {
         super.init();
         this.migratePushEnabledSettings();
-
-        airshipChannel.addChannelListener(new AirshipChannelListener() {
-            @Override
-            public void onChannelCreated(@NonNull String channelId) {
-                for (RegistrationListener listener : registrationListeners) {
-                    listener.onChannelCreated(channelId);
-                }
-            }
-
-            @Override
-            public void onChannelUpdated(@NonNull String channelId) {
-                for (RegistrationListener listener : registrationListeners) {
-                    listener.onChannelUpdated(channelId);
-                }
-            }
-        });
 
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
             @NonNull
@@ -404,20 +383,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Enables channel creation if channel creation has been delayed.
-     * <p>
-     * This setting is persisted between application starts, so there is no need to call this
-     * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
-     * set to <code>true</code> in the airship config.
-     *
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#enableChannelCreation()} instead.
-     */
-    @Deprecated
-    public void enableChannelCreation() {
-        airshipChannel.enableChannelCreation();
-    }
-
-    /**
      * Enables or disables push notifications.
      * <p>
      * This setting is persisted between application starts, so there is no need to call this
@@ -438,16 +403,6 @@ public class PushManager extends AirshipComponent {
      */
     public boolean isPushEnabled() {
         return preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, true);
-    }
-
-    /**
-     * Update registration.
-     *
-     * @deprecated Will be removed in SDk 13. There is no reason to ever use this method. It now no-ops.
-     */
-    @Deprecated
-    public void updateRegistration() {
-        //no-op
     }
 
     /**
@@ -473,31 +428,6 @@ public class PushManager extends AirshipComponent {
      */
     public boolean getUserNotificationsEnabled() {
         return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false);
-    }
-
-    /**
-     * Sets the notification factory used when push notifications are received.
-     * <p>
-     * Specify a notification factory here to customize the display
-     * of a push notification's Custom Expanded Views in the
-     * Android Notification Manager.
-     * <p>
-     * If <code>null</code>, push notifications will not be displayed by the
-     * library.
-     *
-     * @param factory The notification factory
-     * @see com.urbanairship.push.notifications.NotificationFactory
-     * @see com.urbanairship.push.notifications.DefaultNotificationFactory
-     * @see com.urbanairship.push.notifications.CustomLayoutNotificationFactory
-     * @deprecated Use {@link com.urbanairship.push.notifications.NotificationProvider} and {@link #setNotificationProvider(NotificationProvider)}
-     * instead. To be removed in SDK 11.
-     */
-    public void setNotificationFactory(@Nullable NotificationFactory factory) {
-        if (factory == null) {
-            this.notificationProvider = null;
-        } else {
-            this.notificationProvider = new LegacyNotificationFactoryProvider(factory);
-        }
     }
 
     /**
@@ -538,9 +468,8 @@ public class PushManager extends AirshipComponent {
      * Determines whether sound is enabled.
      *
      * @return A boolean indicated whether sound is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public boolean isSoundEnabled() {
@@ -551,9 +480,8 @@ public class PushManager extends AirshipComponent {
      * Enables or disables sound.
      *
      * @param enabled A boolean indicating whether sound is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public void setSoundEnabled(boolean enabled) {
@@ -564,9 +492,8 @@ public class PushManager extends AirshipComponent {
      * Determines whether vibration is enabled.
      *
      * @return A boolean indicating whether vibration is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public boolean isVibrateEnabled() {
@@ -577,9 +504,8 @@ public class PushManager extends AirshipComponent {
      * Enables or disables vibration.
      *
      * @param enabled A boolean indicating whether vibration is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public void setVibrateEnabled(boolean enabled) {
@@ -590,9 +516,8 @@ public class PushManager extends AirshipComponent {
      * Determines whether "Quiet Time" is enabled.
      *
      * @return A boolean indicating whether Quiet Time is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public boolean isQuietTimeEnabled() {
@@ -603,9 +528,8 @@ public class PushManager extends AirshipComponent {
      * Enables or disables quiet time.
      *
      * @param enabled A boolean indicating whether quiet time is enabled.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public void setQuietTimeEnabled(boolean enabled) {
@@ -617,9 +541,8 @@ public class PushManager extends AirshipComponent {
      * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
      *
      * @return A boolean indicating whether it is currently "Quiet Time".
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public boolean isInQuietTime() {
@@ -643,9 +566,8 @@ public class PushManager extends AirshipComponent {
      * Returns the Quiet Time interval currently set by the user.
      *
      * @return An array of two Date instances, representing the start and end of Quiet Time.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     @Nullable
@@ -667,9 +589,8 @@ public class PushManager extends AirshipComponent {
      *
      * @param startTime A Date instance indicating when Quiet Time should start.
      * @param endTime A Date instance indicating when Quiet Time should end.
-     * @deprecated Will be removed in SDK 13. This setting does not work on Android O+. Applications
-     * are encouraged to use {@link com.urbanairship.push.notifications.NotificationChannelCompat}
-     * instead.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to
+     * use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead.
      */
     @Deprecated
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
@@ -708,36 +629,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Set tags for the channel and update the server.
-     * <p>
-     * Tags should be URL-safe with a length greater than 0 and less than 127 characters. If your
-     * tag includes whitespace or special characters, we recommend URL encoding the string.
-     * <p>
-     * To clear the current set of tags, pass an empty set to this method.
-     *
-     * @param tags A set of tag strings.
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#setTags(Set)} instead.
-     */
-    @Deprecated
-    public void setTags(@NonNull Set<String> tags) {
-        airshipChannel.setTags(tags);
-    }
-
-    /**
-     * Returns the current set of tags.
-     * <p>
-     * An empty set indicates that no tags are set on this channel.
-     *
-     * @return The current set of tags.
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getTags()} instead.
-     */
-    @Deprecated
-    @NonNull
-    public Set<String> getTags() {
-        return airshipChannel.getTags();
-    }
-
-    /**
      * Determines whether tags are enabled on the device.
      * If <code>false</code>, no locally specified tags will be sent to the server during registration.
      * The default value is <code>true</code>.
@@ -748,28 +639,6 @@ public class PushManager extends AirshipComponent {
     @Deprecated
     public boolean getChannelTagRegistrationEnabled() {
         return airshipChannel.getChannelTagRegistrationEnabled();
-    }
-
-    /**
-     * Sets whether tags are enabled on the device. The default value is <code>true</code>.
-     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
-     *
-     * @param enabled A boolean indicating whether tags are enabled on the device.
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#setChannelTagRegistrationEnabled(boolean)} instead.
-     */
-    @Deprecated
-    public void setChannelTagRegistrationEnabled(boolean enabled) {
-        airshipChannel.setChannelTagRegistrationEnabled(enabled);
-    }
-
-    /**
-     * {@see #isPushTokenRegistrationEnabled()}
-     *
-     * @deprecated Use {@link #isPushTokenRegistrationEnabled()} instead.
-     */
-    @Deprecated
-    public boolean getPushTokenRegistrationEnabled() {
-        return isPushTokenRegistrationEnabled();
     }
 
     /**
@@ -872,36 +741,12 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Adds a registration listener.
-     *
-     * @param listener The listener.
-     * @deprecated Use {@link AirshipChannel#addChannelListener(AirshipChannelListener)} and/or
-     * {@link #addPushTokenListener(PushTokenListener)} instead. Will be removed in SDK 13.
-     */
-    @Deprecated
-    public void addRegistrationListener(@NonNull RegistrationListener listener) {
-        registrationListeners.add(listener);
-    }
-
-    /**
-     * Removes a registration listener.
-     *
-     * @param listener The listener.
-     */
-    @Deprecated
-    public void removeRegistrationListener(@NonNull RegistrationListener listener) {
-        registrationListeners.remove(listener);
-    }
-
-    /**
      * Gets the notification listener.
      *
      * @return The notification listener.
-     * @hide
      */
     @Nullable
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    NotificationListener getNotificationListener() {
+    public NotificationListener getNotificationListener() {
         return notificationListener;
     }
 
@@ -1179,10 +1024,6 @@ public class PushManager extends AirshipComponent {
                 Logger.info("PushManagerJobHandler - Push registration updated.");
 
                 preferenceDataStore.put(PUSH_TOKEN_KEY, token);
-
-                for (RegistrationListener listener : registrationListeners) {
-                    listener.onPushTokenUpdated(token);
-                }
 
                 for (PushTokenListener listener : pushTokenListeners) {
                     listener.onPushTokenUpdated(token);

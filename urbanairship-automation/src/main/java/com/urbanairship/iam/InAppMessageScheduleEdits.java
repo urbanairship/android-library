@@ -142,6 +142,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
      * @throws JsonException If the json is invalid.
      * @hide
      */
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static InAppMessageScheduleEdits fromJson(@NonNull JsonValue value, @Nullable @InAppMessage.Source String defaultSource) throws JsonException {
         JsonMap jsonMap = value.optMap();

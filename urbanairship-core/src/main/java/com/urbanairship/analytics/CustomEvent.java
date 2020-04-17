@@ -396,6 +396,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param properties A JsonMap of the event's properties.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder setProperties(@Nullable JsonMap properties) {
             if (properties == null) {
                 this.properties.clear();
@@ -557,6 +558,7 @@ public class CustomEvent extends Event implements JsonSerializable {
          * @param value A property value.
          * @return The custom event builder.
          */
+        @NonNull
         public Builder addProperty(@NonNull @Size(min = 1) String name,
                                    @NonNull JsonSerializable value) {
             properties.put(name, value.toJsonValue());

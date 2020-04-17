@@ -269,7 +269,7 @@ public class HtmlActivity extends InAppMessageActivity {
         webView.loadUrl(url);
     }
 
-    public void applySizeConstraints(HtmlDisplayContent displayContent) {
+    public void applySizeConstraints(@NonNull HtmlDisplayContent displayContent) {
         if (displayContent.getWidth() == 0 && displayContent.getHeight() == 0) {
             return;
         }

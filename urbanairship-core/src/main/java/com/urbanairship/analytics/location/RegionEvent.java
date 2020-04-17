@@ -119,25 +119,6 @@ public class RegionEvent extends Event implements JsonSerializable {
     private ProximityRegion proximityRegion;
 
 
-    /**
-     * Constructor for creating a region event.
-     *
-     * @param regionId The ID of the region object.
-     * @param source The source of the region definition.
-     * @param boundaryEvent The type of boundary crossing event.
-     * @deprecated To be removed SDK 12. Use the region event builder instead.
-     */
-    @Deprecated
-    public RegionEvent(@NonNull @Size(max = MAX_CHARACTER_LENGTH) String regionId,
-                       @NonNull @Size(max = MAX_CHARACTER_LENGTH) String source,
-                       @Boundary int boundaryEvent) {
-
-        this.regionId = regionId;
-        this.source = source;
-        this.boundaryEvent = boundaryEvent;
-    }
-
-
     private RegionEvent(@NonNull RegionEvent.Builder builder) {
         this.regionId = builder.regionId;
         this.source = builder.source;
@@ -151,6 +132,7 @@ public class RegionEvent extends Event implements JsonSerializable {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -291,7 +273,6 @@ public class RegionEvent extends Event implements JsonSerializable {
 
     @Override
     public boolean isValid() {
-        //noinspection ConstantConditions
         if (regionId == null || source == null) {
             Logger.error("The region ID and source must not be null.");
             return false;
@@ -366,6 +347,7 @@ public class RegionEvent extends Event implements JsonSerializable {
          *
          * @param regionId The region identifier.
          */
+        @NonNull
         public Builder setRegionId(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String regionId) {
             this.regionId = regionId;
             return this;
@@ -376,6 +358,7 @@ public class RegionEvent extends Event implements JsonSerializable {
          *
          * @param source The region event source.
          */
+        @NonNull
         public Builder setSource(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String source) {
             this.source = source;
             return this;
@@ -386,6 +369,7 @@ public class RegionEvent extends Event implements JsonSerializable {
          *
          * @param boundaryEvent The region boundary event.
          */
+        @NonNull
         public Builder setBoundaryEvent(int boundaryEvent) {
             this.boundaryEvent = boundaryEvent;
             return this;
@@ -396,6 +380,7 @@ public class RegionEvent extends Event implements JsonSerializable {
          *
          * @param circularRegion The optional circular region.
          */
+        @NonNull
         public Builder setCircularRegion(@Nullable CircularRegion circularRegion) {
             this.circularRegion = circularRegion;
             return this;
@@ -406,6 +391,7 @@ public class RegionEvent extends Event implements JsonSerializable {
          *
          * @param proximityRegion The optional proximity region.
          */
+        @NonNull
         public Builder setProximityRegion(@Nullable ProximityRegion proximityRegion) {
             this.proximityRegion = proximityRegion;
             return this;

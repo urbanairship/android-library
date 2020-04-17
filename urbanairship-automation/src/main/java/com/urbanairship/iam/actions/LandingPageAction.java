@@ -189,7 +189,7 @@ public class LandingPageAction extends Action {
      * @return The builder.
      */
     @NonNull
-    protected InAppMessage.Builder extendMessage(InAppMessage.Builder builder) {
+    protected InAppMessage.Builder extendMessage(@NonNull InAppMessage.Builder builder) {
         return builder;
     }
 
@@ -200,7 +200,7 @@ public class LandingPageAction extends Action {
      * @return The builder.
      */
     @NonNull
-    protected InAppMessageScheduleInfo.Builder extendSchedule(InAppMessageScheduleInfo.Builder builder) {
+    protected InAppMessageScheduleInfo.Builder extendSchedule(@NonNull InAppMessageScheduleInfo.Builder builder) {
         return builder;
     }
 

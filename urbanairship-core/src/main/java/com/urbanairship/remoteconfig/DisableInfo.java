@@ -61,7 +61,7 @@ class DisableInfo implements JsonSerializable {
      * @return A list of matching disable infos.
      */
     @NonNull
-    public static List<DisableInfo> filter(@NonNull Collection<DisableInfo> disableInfos, @NonNull String sdkVersion, int appVersion) {
+    public static List<DisableInfo> filter(@NonNull Collection<DisableInfo> disableInfos, @NonNull String sdkVersion, long appVersion) {
         JsonSerializable versionObject = VersionUtils.createVersionObject(appVersion);
         List<DisableInfo> filtered = new ArrayList<>();
 

@@ -53,6 +53,7 @@ public class NotificationChannelUtils {
      * @param notification The notification.
      * @param channelCompat The notification channel compat.
      */
+    @SuppressWarnings("deprecation")
     public static void applyLegacySettings(@NonNull Notification notification, @NonNull NotificationChannelCompat channelCompat) {
         notification.priority = priorityForImportance(channelCompat.getImportance());
 
@@ -104,6 +105,7 @@ public class NotificationChannelUtils {
      * @param importance The importance.
      * @return The priority.
      */
+    @SuppressWarnings("deprecation")
     static int priorityForImportance(int importance) {
         switch (importance) {
             case NotificationManagerCompat.IMPORTANCE_DEFAULT:

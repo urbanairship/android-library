@@ -79,12 +79,12 @@ public class ApplicationMetrics extends AirshipComponent {
      *
      * @return The current app version.
      */
-    public int getCurrentAppVersion() {
+    public long getCurrentAppVersion() {
         return UAirship.getAppVersion();
     }
 
-    private int getLastAppVersion() {
-        return preferenceDataStore.getInt(LAST_APP_VERSION_KEY, -1);
+    private long getLastAppVersion() {
+        return preferenceDataStore.getLong(LAST_APP_VERSION_KEY, -1);
     }
 
     private void checkAppVersion() {

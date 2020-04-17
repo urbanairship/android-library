@@ -33,25 +33,25 @@ public class AirshipRuntimeConfigTest extends BaseTestCase {
 
     @Test
     public void testAndroidPlatform() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(configProvider, configOptions, UAirship.ANDROID_PLATFORM);
+        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.ANDROID_PLATFORM, configOptions, configProvider);
         assertEquals(UAirship.ANDROID_PLATFORM, runtimeConfig.getPlatform());
     }
 
     @Test
     public void testAmazonPlatform() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(configProvider, configOptions, UAirship.AMAZON_PLATFORM);
+        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
         assertEquals(UAirship.AMAZON_PLATFORM, runtimeConfig.getPlatform());
     }
 
     @Test
     public void testGetUrlConfig() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(configProvider, configOptions, UAirship.AMAZON_PLATFORM);
+        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
         assertEquals(urlConfig, runtimeConfig.getUrlConfig());
     }
 
     @Test
     public void testGetConfigOptions() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(configProvider, configOptions, UAirship.AMAZON_PLATFORM);
+        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
         assertEquals(configOptions, runtimeConfig.getConfigOptions());
     }
 

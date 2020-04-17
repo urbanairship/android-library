@@ -45,19 +45,6 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
     }
 
     /**
-     * Default constructor.
-     *
-     * @param context The application context.
-     * @param message The push message.
-     * @deprecated Use {{@link #PublicNotificationExtender(Context, NotificationArguments)} instead. To be removed
-     * in SDK 11.
-     */
-    @Deprecated
-    public PublicNotificationExtender(@NonNull Context context, @NonNull PushMessage message) {
-        this(context, NotificationArguments.newBuilder(message).build());
-    }
-
-    /**
      * Sets the accent color.
      *
      * @param accentColor The notification's accent color.

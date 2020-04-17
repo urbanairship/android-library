@@ -214,13 +214,13 @@ public class AudienceChecksTest {
                                     .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
                                     .build();
 
-        when(applicationMetrics.getCurrentAppVersion()).thenReturn(1);
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(1l);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
-        when(applicationMetrics.getCurrentAppVersion()).thenReturn(2);
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(2l);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
-        when(applicationMetrics.getCurrentAppVersion()).thenReturn(3);
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(3l);
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
 

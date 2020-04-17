@@ -22,6 +22,7 @@ import androidx.annotation.RestrictTo;
 public class LocationModuleFactoryImpl implements LocationModuleFactory {
 
     @Override
+    @NonNull
     public LocationModule build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull Analytics analytics) {
         AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, airshipChannel, analytics);
         return new LocationModule(locationManager, locationManager);

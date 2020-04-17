@@ -19,6 +19,7 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactory {
 
+    @NonNull
     @Override
     public Module build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager) {
         MessageCenter messageCenter = new MessageCenter(context, dataStore, airshipChannel, pushManager);

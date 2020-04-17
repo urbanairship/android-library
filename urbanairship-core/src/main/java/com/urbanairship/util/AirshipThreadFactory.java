@@ -35,7 +35,7 @@ public class AirshipThreadFactory implements ThreadFactory {
      *
      * @param threadNamePrefix Thread name prefix. #COUNT will be appended to the name.
      */
-    public AirshipThreadFactory(String threadNamePrefix) {
+    public AirshipThreadFactory(@NonNull String threadNamePrefix) {
         this.threadNamePrefix = threadNamePrefix;
     }
 

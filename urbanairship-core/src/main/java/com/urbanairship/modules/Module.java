@@ -46,6 +46,7 @@ public class Module {
      * @param actionsXmlId The actions XML resource ID, or 0 if not available.
      * @return The module.
      */
+    @NonNull
     public static Module singleComponent(@NonNull AirshipComponent component, @XmlRes int actionsXmlId) {
         return new Module(Collections.singleton(component), actionsXmlId);
     }
@@ -57,6 +58,7 @@ public class Module {
      * @param actionsXmlId The actions XML resource ID, or 0 if not available.
      * @return The module.
      */
+    @NonNull
     public static Module multipleComponents(@NonNull Collection<AirshipComponent> components, @XmlRes int actionsXmlId) {
         return new Module(new HashSet<>(components), actionsXmlId);
     }

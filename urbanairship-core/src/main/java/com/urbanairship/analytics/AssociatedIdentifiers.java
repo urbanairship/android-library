@@ -92,19 +92,6 @@ public class AssociatedIdentifiers implements JsonSerializable {
         return JsonValue.wrapOpt(ids);
     }
 
-    /**
-     * See {@link #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed AssociatedIdentifiers.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static AssociatedIdentifiers fromJson(@Nullable String json) throws JsonException {
-        return fromJson(JsonValue.parseString(json));
-    }
 
     /**
      * Parses associated identifiers from JSON.

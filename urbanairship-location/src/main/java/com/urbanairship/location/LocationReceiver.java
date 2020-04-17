@@ -17,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
@@ -55,7 +56,7 @@ public class LocationReceiver extends BroadcastReceiver {
     }
 
     @Override
-    public void onReceive(@NonNull Context context, final Intent intent) {
+    public void onReceive(@NonNull Context context, @Nullable final Intent intent) {
         if (intent == null || intent.getAction() == null) {
             return;
         }

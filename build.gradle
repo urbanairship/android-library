@@ -22,7 +22,7 @@ buildscript {
         // Dependencies
 
         // Kotlin
-        kotlinVersion = '1.3.71'
+        kotlinVersion = '1.3.72'
         kotlinCoroutinesVersion = '1.0.0'
 
         // Androidx
@@ -79,6 +79,7 @@ buildscript {
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
         classpath "com.pinterest:ktlint:$ktlintPluginVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
 
@@ -128,7 +129,7 @@ task javadoc(type: Javadoc) {
 
                 evaluated.android.libraryVariants.all { variant ->
                     if (variant.name == 'release') {
-                        classpath += variant.javaCompiler.classpath
+                        classpath += variant.getJavaCompileProvider().get().classpath
                         classpath += project.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
                     }
                 }

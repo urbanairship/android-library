@@ -247,7 +247,7 @@ public class AutomationEngineTest {
     @Test
     public void testVersion() throws Exception {
         when(mockMetrics.getAppVersionUpdated()).thenReturn(true);
-        when(mockMetrics.getCurrentAppVersion()).thenReturn(2);
+        when(mockMetrics.getCurrentAppVersion()).thenReturn(2l);
 
         Trigger trigger = Triggers.newVersionTriggerBuilder(ValueMatcher.newNumberRangeMatcher(2.0, 4.0))
                                   .setGoal(1)

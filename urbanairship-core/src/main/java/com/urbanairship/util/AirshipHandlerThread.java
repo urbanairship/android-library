@@ -3,6 +3,7 @@ package com.urbanairship.util;
 import android.net.TrafficStats;
 import android.os.HandlerThread;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -18,7 +19,7 @@ public class AirshipHandlerThread extends HandlerThread {
      *
      * @param name The thread name.
      */
-    public AirshipHandlerThread(String name) {
+    public AirshipHandlerThread(@NonNull String name) {
         super(name);
     }
 

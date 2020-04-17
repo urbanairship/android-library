@@ -19,8 +19,11 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface LocationModuleFactory extends AirshipVersionInfo {
+
+    @NonNull
     LocationModule build(@NonNull Context context,
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull AirshipChannel airshipChannel,
                          @NonNull Analytics analytics);
+
 }

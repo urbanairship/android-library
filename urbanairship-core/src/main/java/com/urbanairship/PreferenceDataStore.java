@@ -135,7 +135,7 @@ public final class PreferenceDataStore {
      * @param key The key.
      * @return {@code true} if the value is set, otherwise {@code false}.
      */
-    public boolean isSet(String key) {
+    public boolean isSet(@NonNull String key) {
         return getPreference(key).get() != null;
     }
 

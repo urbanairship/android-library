@@ -140,6 +140,7 @@ public class PushProviders {
         return providers;
     }
 
+    @NonNull
     public List<PushProvider> getAvailableProviders() {
         return Collections.unmodifiableList(availableProviders);
     }

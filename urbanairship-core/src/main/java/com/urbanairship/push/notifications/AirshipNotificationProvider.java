@@ -204,18 +204,23 @@ public class AirshipNotificationProvider implements NotificationProvider {
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            int defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE;
-            if (message.getSound(context) != null) {
-                builder.setSound(message.getSound(context));
-
-                // Remove the Notification.DEFAULT_SOUND flag
-                defaults &= ~Notification.DEFAULT_SOUND;
-            }
-            builder.setDefaults(defaults);
+          applyDeprecatedSettings(context, message, builder);
         }
 
         Notification notification = onExtendBuilder(context, builder, arguments).build();
         return NotificationResult.notification(notification);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void applyDeprecatedSettings(@NonNull Context context, @NonNull PushMessage message, @NonNull NotificationCompat.Builder builder) {
+        int defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE;
+        if (message.getSound(context) != null) {
+            builder.setSound(message.getSound(context));
+
+            // Remove the Notification.DEFAULT_SOUND flag
+            defaults &= ~Notification.DEFAULT_SOUND;
+        }
+        builder.setDefaults(defaults);
     }
 
     @Override

@@ -47,6 +47,7 @@ public class ConnectionUtils {
      * @throws IOException
      */
     @WorkerThread
+    @NonNull
     public static URLConnection openSecureConnection(@NonNull Context context, @NonNull URL url) throws IOException {
         boolean providerInstalled = installProvider(context);
         URLConnection connection = url.openConnection();

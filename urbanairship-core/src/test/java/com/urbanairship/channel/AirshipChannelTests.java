@@ -559,7 +559,8 @@ public class AirshipChannelTests extends BaseTestCase {
 
         // Setup response to return some mutations then null
         when(mockPendingAttributeStore.peek())
-                .thenReturn(expectedMutations, null);
+                .thenReturn(expectedMutations)
+                .thenReturn(null);
 
         airshipChannel.editAttributes()
                       .setAttribute("expected_key", "expected_value")

@@ -347,6 +347,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }

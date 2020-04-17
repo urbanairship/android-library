@@ -199,6 +199,7 @@ public class MediaView extends FrameLayout {
             if (Build.VERSION.SDK_INT < 19) {
                 String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
                 String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
+                //noinspection deprecation
                 settings.setDatabasePath(path);
             }
         }

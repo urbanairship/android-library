@@ -41,7 +41,7 @@ public class VersionUtils {
      * @return The version object.
      */
     @NonNull
-    public static JsonSerializable createVersionObject(int appVersion) {
+    public static JsonSerializable createVersionObject(long appVersion) {
         // Get the version code
         String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 

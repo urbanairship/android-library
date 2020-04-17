@@ -213,20 +213,6 @@ public class ScheduleDelay implements Parcelable {
     }
 
     /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed ScheduleDelay.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static ScheduleDelay parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
-    }
-
-    /**
      * Parses a ScheduleDelay from JSON.
      * <p>
      * <pre>

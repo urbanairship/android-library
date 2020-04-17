@@ -43,7 +43,8 @@ public class AccengagePushButton {
     private AccengagePushButton() {
     }
 
-    static AccengagePushButton fromJson(JsonValue jsonValue) throws JsonException {
+    @NonNull
+    static AccengagePushButton fromJson(@NonNull JsonValue jsonValue) throws JsonException {
         JsonMap jsonMap = jsonValue.optMap();
         AccengagePushButton button = new AccengagePushButton();
 
@@ -58,7 +59,7 @@ public class AccengagePushButton {
     }
 
     @NonNull
-    private static Map<String, String> parseCustomParams(JsonMap jsonMap) {
+    private static Map<String, String> parseCustomParams(@NonNull JsonMap jsonMap) {
         Map<String, String> params = new HashMap<>();
 
         for (Map.Entry<String, JsonValue> entry : jsonMap.opt(KEY_BUTTON_CUSTOM_PARAMS).optMap()) {
@@ -69,7 +70,7 @@ public class AccengagePushButton {
     }
 
     @Nullable
-    private static String parseUrl(JsonMap jsonMap) {
+    private static String parseUrl(@NonNull JsonMap jsonMap) {
         String url = null;
 
         if (jsonMap.containsKey(KEY_BUTTON_URL)) {
@@ -82,7 +83,7 @@ public class AccengagePushButton {
     }
 
     @NonNull
-    private static String parseId(JsonMap jsonMap) {
+    private static String parseId(@NonNull JsonMap jsonMap) {
         String id = jsonMap.opt(KEY_BUTTON_ID).getString();
         if (id == null) {
             id = String.valueOf(jsonMap.opt(KEY_BUTTON_ID).getInt(0));
@@ -93,7 +94,7 @@ public class AccengagePushButton {
 
     @AccengageMessage.Action
     @NonNull
-    private static String parseAction(JsonMap jsonMap) {
+    private static String parseAction(@NonNull JsonMap jsonMap) {
         String action = null;
         if (jsonMap.containsKey(KEY_BUTTON_ACTION)) {
             action = jsonMap.opt(KEY_BUTTON_ACTION).getString();
@@ -148,7 +149,7 @@ public class AccengagePushButton {
      * @return The button's resource Id, or 0 if not set.
      */
     @DrawableRes
-    public int getIcon(Context context) {
+    public int getIcon(@NonNull Context context) {
         if (TextUtils.isEmpty(iconName)) {
             return 0;
         }

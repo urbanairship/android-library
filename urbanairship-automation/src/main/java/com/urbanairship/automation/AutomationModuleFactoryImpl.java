@@ -33,6 +33,7 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
 
+    @NonNull
     @Override
     public Module build(@NonNull Context context,
                         @NonNull PreferenceDataStore dataStore,

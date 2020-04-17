@@ -193,7 +193,7 @@ public abstract class UAStringUtil {
     }
 
     @NonNull
-    public static String namedStringResource(Context context, String name, String defaultValue) {
+    public static String namedStringResource(@NonNull Context context, @NonNull String name, @NonNull String defaultValue) {
         int resourceId = context.getResources().getIdentifier(name, "string", context.getApplicationInfo().packageName);
         if (resourceId == 0) {
             return defaultValue;

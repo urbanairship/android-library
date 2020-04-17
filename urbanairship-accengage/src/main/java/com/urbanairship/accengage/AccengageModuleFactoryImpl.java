@@ -24,6 +24,7 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AccengageModuleFactoryImpl implements AccengageModuleFactory {
 
+    @NonNull
     @Override
     public AccengageModule build(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
                                  @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,

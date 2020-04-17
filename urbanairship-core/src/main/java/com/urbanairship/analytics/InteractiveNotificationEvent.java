@@ -46,7 +46,7 @@ public class InteractiveNotificationEvent extends Event {
      * @param notificationInfo The notification info.
      * @param buttonInfo The action button info.
      */
-    public InteractiveNotificationEvent(NotificationInfo notificationInfo, NotificationActionButtonInfo buttonInfo) {
+    public InteractiveNotificationEvent(@NonNull NotificationInfo notificationInfo, @NonNull NotificationActionButtonInfo buttonInfo) {
         this.sendId = notificationInfo.getMessage().getSendId();
         this.buttonGroupId = notificationInfo.getMessage().getInteractiveNotificationType();
         this.buttonId = buttonInfo.getButtonId();

@@ -38,7 +38,7 @@ public class Response {
         this.lastModified = builder.lastModified;
     }
 
-    protected Response(Response response) {
+    protected Response(@NonNull Response response) {
         this.status = response.status;
         this.responseBody = response.responseBody;
         this.responseHeaders = response.responseHeaders;
@@ -111,6 +111,7 @@ public class Response {
      * @param status The status.
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder(int status) {
         return new Builder(status);
     }

@@ -73,7 +73,6 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param request The request
      * @param webView The web view.
      * @return The action run request.
-     *
      * @hide
      */
     @NonNull
@@ -88,7 +87,6 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param builder The environment builder.
      * @param webView The web view.
      * @return The builder.
-     *
      * @hide
      */
     @CallSuper
@@ -107,7 +105,6 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param webView The web view.
      * @param command The command (or host).
      * @param uri The full uri in the shape of `uairship://<COMMAND>*`.
-     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -166,7 +163,8 @@ public class AirshipWebViewClient extends WebViewClient {
      */
     @CallSuper
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView webView, String url) {
+    @Nullable
+    public WebResourceResponse shouldInterceptRequest(@NonNull WebView webView, @NonNull String url) {
         if (faviconEnabled) {
             return null;
         }
@@ -188,7 +186,8 @@ public class AirshipWebViewClient extends WebViewClient {
     @CallSuper
     @Override
     @SuppressLint("NewApi")
-    public WebResourceResponse shouldInterceptRequest(WebView webView, WebResourceRequest request) {
+    @Nullable
+    public WebResourceResponse shouldInterceptRequest(@NonNull WebView webView, @NonNull WebResourceRequest request) {
         if (faviconEnabled) {
             return super.shouldInterceptRequest(webView, request);
         }

@@ -64,7 +64,7 @@ public class InAppActivityMonitor implements ActivityMonitor {
     private final ForwardingActivityListener forwardingActivityListener;
     private final FilteredActivityListener filteredActivityListener;
 
-    private InAppActivityMonitor(ActivityMonitor globalActivityMonitor) {
+    private InAppActivityMonitor(@NonNull ActivityMonitor globalActivityMonitor) {
         this.globalActivityMonitor = globalActivityMonitor;
         this.forwardingActivityListener = new ForwardingActivityListener();
         this.filteredActivityListener = new FilteredActivityListener(forwardingActivityListener, activityPredicate);
@@ -76,6 +76,7 @@ public class InAppActivityMonitor implements ActivityMonitor {
      * @param context The application context.
      * @return The shared in-app activity monitor instance.
      */
+    @NonNull
     public static InAppActivityMonitor shared(@NonNull Context context) {
         if (shared == null) {
             synchronized (InAppActivityMonitor.class) {

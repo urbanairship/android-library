@@ -80,7 +80,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      * @param notificationChannel A NotificationChannel instance.
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public NotificationChannelCompat(NotificationChannel notificationChannel) {
+    public NotificationChannelCompat(@NonNull NotificationChannel notificationChannel) {
         this.bypassDnd = notificationChannel.canBypassDnd();
         this.showBadge = notificationChannel.canShowBadge();
         this.showLights = notificationChannel.shouldShowLights();
@@ -115,6 +115,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      * @return A NotificationChannel.
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
+    @NonNull
     public NotificationChannel toNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(identifier, name, importance);
         channel.setBypassDnd(bypassDnd);
@@ -134,8 +135,19 @@ public class NotificationChannelCompat implements JsonSerializable {
      * Indicates whether the channel can bypass do-not-disturb.
      *
      * @return <code>true</code> if the channel can bypass do-not-distrub, <code>false</code> otherwise.
+     * @deprecated Use {@link #getBypassDnd()} instead. Will be removed in SDK 14.
      */
+    @Deprecated
     public boolean canBypassDnd() {
+        return this.bypassDnd;
+    }
+
+    /**
+     * Indicates whether the channel can bypass do-not-disturb.
+     *
+     * @return <code>true</code> if the channel can bypass do-not-distrub, <code>false</code> otherwise.
+     */
+    public boolean getBypassDnd() {
         return this.bypassDnd;
     }
 
@@ -152,10 +164,22 @@ public class NotificationChannelCompat implements JsonSerializable {
      * Indicates whether the channel can show badges
      *
      * @return <code>true</code> if the channel can show badges, <code>false</code> otherwise.
+     * @deprecated Use {@link #getShowBadge()} instead. Will be removed in SDK 14.
      */
+    @Deprecated
     public boolean canShowBadge() {
         return this.showBadge;
     }
+
+    /**
+     * Indicates whether the channel can show badges
+     *
+     * @return <code>true</code> if the channel can show badges, <code>false</code> otherwise.
+     */
+    public boolean getShowBadge() {
+        return this.showBadge;
+    }
+
 
     /**
      * Sets whether the channel can show badges.
@@ -207,6 +231,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The description.
      */
+    @Nullable
     public String getDescription() {
         return this.description;
     }
@@ -216,7 +241,8 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param description The description.
      */
-    public void setDescription(String description) {
+
+    public void setDescription(@Nullable String description) {
         this.description = description;
     }
 
@@ -225,6 +251,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The group.
      */
+    @Nullable
     public String getGroup() {
         return this.group;
     }
@@ -234,7 +261,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param group The group.
      */
-    public void setGroup(String group) {
+    public void setGroup(@Nullable String group) {
         this.group = group;
     }
 
@@ -243,6 +270,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The identifier.
      */
+    @NonNull
     public String getId() {
         return this.identifier;
     }
@@ -306,6 +334,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The name.
      */
+    @NonNull
     public CharSequence getName() {
         return this.name;
     }
@@ -315,7 +344,8 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param name The name.
      */
-    public void setName(CharSequence name) {
+    @NonNull
+    public void setName(@NonNull CharSequence name) {
         this.name = name;
     }
 
@@ -324,6 +354,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The sound.
      */
+    @Nullable
     public Uri getSound() {
         return this.sound;
     }
@@ -333,7 +364,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param sound The sound.
      */
-    public void setSound(Uri sound) {
+    public void setSound(@Nullable Uri sound) {
         this.sound = sound;
     }
 
@@ -342,6 +373,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @return The vibration pattern.
      */
+    @Nullable
     public long[] getVibrationPattern() {
         return this.vibrationPattern;
     }
@@ -351,7 +383,7 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param vibrationPattern The vibration pattern.
      */
-    public void setVibrationPattern(long[] vibrationPattern) {
+    public void setVibrationPattern(@Nullable long[] vibrationPattern) {
         this.vibrationPattern = vibrationPattern;
     }
 
@@ -359,8 +391,8 @@ public class NotificationChannelCompat implements JsonSerializable {
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                      .putOpt(CAN_BYPASS_DND_KEY, canBypassDnd())
-                      .putOpt(CAN_SHOW_BADGE_KEY, canShowBadge())
+                      .putOpt(CAN_BYPASS_DND_KEY, getBypassDnd())
+                      .putOpt(CAN_SHOW_BADGE_KEY, getShowBadge())
                       .putOpt(SHOULD_SHOW_LIGHTS_KEY, shouldShowLights())
                       .putOpt(SHOULD_VIBRATE_KEY, shouldVibrate())
                       .putOpt(DESCRIPTION_KEY, getDescription())
@@ -464,7 +496,7 @@ public class NotificationChannelCompat implements JsonSerializable {
                 channelCompat.setGroup(map.opt(GROUP_KEY).getString());
                 channelCompat.setLightColor(map.opt(LIGHT_COLOR_KEY).getInt(0));
                 channelCompat.setLockscreenVisibility(map.opt(LOCKSCREEN_VISIBILITY_KEY).getInt(LOCKSCREEN_VISIBILITY_DEFAULT_VALUE));
-                channelCompat.setName(map.opt(NAME_KEY).getString());
+                channelCompat.setName(map.opt(NAME_KEY).optString());
 
                 String sound = map.opt(SOUND_KEY).getString();
                 if (!UAStringUtil.isEmpty(sound)) {
@@ -501,11 +533,11 @@ public class NotificationChannelCompat implements JsonSerializable {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static List<NotificationChannelCompat> fromXml(Context context, @XmlRes int resource) {
+    @NonNull
+    public static List<NotificationChannelCompat> fromXml(@NonNull Context context, @XmlRes int resource) {
         XmlResourceParser parser = context.getResources().getXml(resource);
         try {
-            List<NotificationChannelCompat> channels = parseChannels(context, parser);
-            return channels;
+            return parseChannels(context, parser);
         } catch (Exception e) {
             Logger.error(e, "Failed to parse channels");
         } finally {

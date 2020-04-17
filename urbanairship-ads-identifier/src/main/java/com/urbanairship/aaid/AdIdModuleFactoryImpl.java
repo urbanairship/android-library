@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
  */
 public class AdIdModuleFactoryImpl implements AdIdModuleFactory {
 
+    @NonNull
     @Override
     public Module build(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
         return Module.singleComponent(new AdvertisingIdTracker(context, dataStore), 0);

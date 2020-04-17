@@ -5,6 +5,7 @@ import com.urbanairship.UAirship;
 
 import java.util.concurrent.Callable;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -21,7 +22,8 @@ public class AirshipComponentUtils {
      * @param clazz The component's class.
      * @return A callable that returns the Airship Component when called.
      */
-    public static <T extends AirshipComponent> Callable<T> callableForComponent(final Class<T> clazz) {
+    @NonNull
+    public static <T extends AirshipComponent> Callable<T> callableForComponent(@NonNull final Class<T> clazz) {
         return new Callable<T>() {
             @Override
             public T call() throws Exception {

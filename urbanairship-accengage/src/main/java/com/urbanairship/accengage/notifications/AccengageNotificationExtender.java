@@ -12,7 +12,6 @@ import android.graphics.PorterDuff;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
-import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
@@ -34,6 +33,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.text.HtmlCompat;
 
 /**
  * Accengage notification extender.
@@ -75,16 +75,15 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         return builder;
     }
 
-
     private void setCommonFields(@NonNull NotificationCompat.Builder builder) {
         Logger.debug("AccengageNotificationExtender - Setting Accengage push common fields");
 
         builder.setCategory(message.getAccengageCategory())
-                .setGroup(message.getAccengageGroup())
-                .setGroupSummary(message.getAccengageGroupSummary())
-                .setPriority(message.getAccengagePriority())
-                .setLights(0xFFFFFFFF, 1000, 3000)
-                .setAutoCancel(true);
+               .setGroup(message.getAccengageGroup())
+               .setGroupSummary(message.getAccengageGroupSummary())
+               .setPriority(message.getAccengagePriority())
+               .setLights(0xFFFFFFFF, 1000, 3000)
+               .setAutoCancel(true);
 
         int defaults = 0;
         if (context.getPackageManager().checkPermission(Manifest.permission.VIBRATE, context.getPackageName()) == PackageManager.PERMISSION_GRANTED) {
@@ -118,23 +117,26 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
     private void setCollapsedFields(@NonNull NotificationCompat.Builder builder) {
         Logger.debug("AccengageNotificationExtender - Setting Accengage push collapsed fields");
 
-        builder.setContentTitle(Html.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context)))
-                .setContentText(Html.fromHtml(message.getAccengageContent()))
-                .setTicker(Html.fromHtml(message.getAccengageContent()))
-                .setColor(message.getAccengageAccentColor())
-                .setSmallIcon(message.getAccengageSmallIcon(context));
+        builder.setContentTitle(HtmlCompat.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context), HtmlCompat.FROM_HTML_MODE_LEGACY))
+               .setColor(message.getAccengageAccentColor())
+               .setSmallIcon(message.getAccengageSmallIcon(context));
+
+        if (message.getAccengageContent() != null) {
+            builder.setContentText(HtmlCompat.fromHtml(message.getAccengageContent(), HtmlCompat.FROM_HTML_MODE_LEGACY))
+                   .setTicker(HtmlCompat.fromHtml(message.getAccengageContent(), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        }
 
         String contentInfo = message.getAccengageContentInfo();
         if (!TextUtils.isEmpty(contentInfo)) {
             try {
                 builder.setNumber(Integer.parseInt(contentInfo));
             } catch (NumberFormatException e) {
-                builder.setContentInfo(Html.fromHtml(contentInfo));
+                builder.setContentInfo(HtmlCompat.fromHtml(contentInfo, HtmlCompat.FROM_HTML_MODE_LEGACY));
             }
         }
 
         if (message.getAccengageSubtext() != null) {
-            builder.setSubText(Html.fromHtml(message.getAccengageSubtext()));
+            builder.setSubText(HtmlCompat.fromHtml(message.getAccengageSubtext(), HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
 
         String largeIconUrl = message.getAccengageLargeIcon();
@@ -155,28 +157,30 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         Logger.debug("AccengageNotificationExtender - Using collapsed custom template: " + message.getAccengageTemplate());
 
         RemoteViews collapsedTemplateViews = new RemoteViews(context.getPackageName(), resId);
-        collapsedTemplateViews.setTextViewText(R.id.text, Html.fromHtml(message.getAccengageContent()));
+
+        if (message.getAccengageContent() != null) {
+            collapsedTemplateViews.setTextViewText(R.id.text, HtmlCompat.fromHtml(message.getAccengageContent(), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        }
 
         builder.setCustomContentView(fillCustomTemplate(builder, collapsedTemplateViews));
 
         if (shouldApplyDecoratedCustomViewStyle()) {
-            Logger.verbose( "AccengageNotificationExtender - apply decoration for collapsed template: " + message.getAccengageTemplate());
+            Logger.verbose("AccengageNotificationExtender - apply decoration for collapsed template: " + message.getAccengageTemplate());
             builder.setStyle(new NotificationCompat.DecoratedCustomViewStyle());
         }
     }
 
     private RemoteViews fillCustomTemplate(@NonNull NotificationCompat.Builder builder, @NonNull RemoteViews views) {
         builder.setSmallIcon(message.getAccengageSmallIcon(context));
-        Spanned title = Html.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context));
+        Spanned title = HtmlCompat.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context), HtmlCompat.FROM_HTML_MODE_LEGACY);
         views.setTextViewText(R.id.title, title);
-
 
         views.setViewVisibility(R.id.time, View.VISIBLE);
         views.setLong(R.id.time, "setTime", System.currentTimeMillis());
 
         String contentInfo = message.getAccengageContentInfo();
         if (!TextUtils.isEmpty(contentInfo)) {
-            views.setTextViewText(R.id.info, Html.fromHtml(contentInfo));
+            views.setTextViewText(R.id.info, HtmlCompat.fromHtml(contentInfo, HtmlCompat.FROM_HTML_MODE_LEGACY));
             views.setViewVisibility(R.id.info, View.VISIBLE);
         }
 
@@ -184,7 +188,7 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
             fillCustomTemplateAndroidN(views);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             fillCustomTemplateAndroidL(views);
-        } else  {
+        } else {
             fillCustomTemplateAndroidJB(views);
         }
 
@@ -237,12 +241,12 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         String headerText = message.getAccengageHeaderText();
         if (!TextUtils.isEmpty(headerText)) {
             views.setViewVisibility(R.id.header_text, View.VISIBLE);
-            views.setTextViewText(R.id.header_text, Html.fromHtml(headerText));
+            views.setTextViewText(R.id.header_text, HtmlCompat.fromHtml(headerText, HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
 
         String contentInfo = message.getAccengageContentInfo();
         if (!TextUtils.isEmpty(contentInfo)) {
-            views.setTextViewText(R.id.text_line_1, Html.fromHtml(contentInfo));
+            views.setTextViewText(R.id.text_line_1, HtmlCompat.fromHtml(contentInfo, HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
 
         String largeIconUrl = message.getAccengageLargeIcon();
@@ -287,11 +291,11 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         for (final AccengagePushButton button : buttons) {
 
             NotificationActionButton actionButton = NotificationActionButton.newBuilder(button.getId())
-                    .setDescription("Accengage: " + button.getId())
-                    .setIcon(button.getIcon(context))
-                    .setLabel(button.getTitle())
-                    .setPerformsInForeground(button.getOpenApp())
-                    .build();
+                                                                            .setDescription("Accengage: " + button.getId())
+                                                                            .setIcon(button.getIcon(context))
+                                                                            .setLabel(button.getTitle())
+                                                                            .setPerformsInForeground(button.getOpenApp())
+                                                                            .build();
 
             builder.addAction(actionButton.createAndroidNotificationAction(context, null, arguments));
         }
@@ -324,7 +328,7 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         RemoteViews expandedTemplateViews = new RemoteViews(context.getPackageName(), resId);
         String bigContent = message.getAccengageBigContent();
         if (bigContent != null) {
-            expandedTemplateViews.setTextViewText(R.id.text, Html.fromHtml(bigContent));
+            expandedTemplateViews.setTextViewText(R.id.text, HtmlCompat.fromHtml(bigContent, HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
 
         RemoteViews views = fillCustomTemplate(builder, expandedTemplateViews);
@@ -383,11 +387,11 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
         String bigContent = message.getAccengageBigContent();
         if (bigContent != null) {
-            bigTextStyle.bigText(Html.fromHtml(bigContent));
+            bigTextStyle.bigText(HtmlCompat.fromHtml(bigContent, HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
         String summaryText = message.getAccengageSummaryText();
         if (!TextUtils.isEmpty(summaryText)) {
-            bigTextStyle.setSummaryText(Html.fromHtml(summaryText));
+            bigTextStyle.setSummaryText(HtmlCompat.fromHtml(summaryText, HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
         builder.setStyle(bigTextStyle);
     }
@@ -421,9 +425,9 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
 
         String bigContent = message.getAccengageBigContent();
         if (!TextUtils.isEmpty(bigContent)) {
-            bigPictureStyle.setSummaryText(Html.fromHtml(bigContent));
+            bigPictureStyle.setSummaryText(HtmlCompat.fromHtml(bigContent, HtmlCompat.FROM_HTML_MODE_LEGACY));
         } else if (!TextUtils.isEmpty(message.getAccengageContent())) {
-            bigPictureStyle.setSummaryText(Html.fromHtml(message.getAccengageContent()));
+            bigPictureStyle.setSummaryText(HtmlCompat.fromHtml(message.getAccengageContent(), HtmlCompat.FROM_HTML_MODE_LEGACY));
         }
 
         builder.setStyle(bigPictureStyle);
@@ -442,4 +446,5 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
 
         return message.getAccengageIsDecorated();
     }
+
 }

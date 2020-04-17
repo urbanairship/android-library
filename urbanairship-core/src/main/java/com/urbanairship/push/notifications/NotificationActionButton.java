@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Html;
 
 import com.urbanairship.push.NotificationProxyActivity;
 import com.urbanairship.push.NotificationProxyReceiver;
@@ -22,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
+import androidx.core.text.HtmlCompat;
 
 /**
  * Model object encapsulating the data relevant to a notification action button.
@@ -166,7 +166,7 @@ public class NotificationActionButton {
             actionPendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         }
 
-        NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(iconId, Html.fromHtml(label), actionPendingIntent)
+        NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(iconId, HtmlCompat.fromHtml(label, HtmlCompat.FROM_HTML_MODE_LEGACY), actionPendingIntent)
                 .addExtras(extras);
 
         if (remoteInputs != null) {

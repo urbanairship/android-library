@@ -99,20 +99,6 @@ public class Audience implements JsonSerializable {
     }
 
     /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed Audience.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static Audience parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
-    }
-
-    /**
      * Parses the json value.
      *
      * @param value The json value.

@@ -75,6 +75,7 @@ public class NotificationActionButtonGroup {
      *
      * @return A new builder instance.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }

@@ -49,7 +49,7 @@ public class LocaleManager {
     }
 
     @VisibleForTesting
-    protected LocaleManager(Context context) {
+    protected LocaleManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
     }
 

@@ -53,6 +53,7 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -575,11 +576,11 @@ public class UAirship {
      *
      * @return The version, or -1 if the package cannot be read.
      */
-    public static int getAppVersion() {
+    public static long getAppVersion() {
         PackageInfo packageInfo = UAirship.getPackageInfo();
 
         if (packageInfo != null) {
-            return packageInfo.versionCode;
+            return PackageInfoCompat.getLongVersionCode(packageInfo);
         } else {
             return -1;
         }
@@ -634,6 +635,7 @@ public class UAirship {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public ImageLoader getImageLoader() {
         if (imageLoader == null) {
             imageLoader = new DefaultImageLoader(getApplicationContext());
@@ -648,6 +650,7 @@ public class UAirship {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
     public AirshipRuntimeConfig getRuntimeConfig() {
         return runtimeConfig;
     }
@@ -689,7 +692,7 @@ public class UAirship {
         }
 
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
-        this.runtimeConfig = new AirshipRuntimeConfig(remoteAirshipUrlConfigProvider, airshipConfigOptions, platform);
+        this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(runtimeConfig, preferenceDataStore);
         tagGroupRegistrar.migrateKeys();
@@ -965,7 +968,7 @@ public class UAirship {
     @SuppressWarnings("unchecked")
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public <T extends AirshipComponent> T getComponent(Class<T> clazz) {
+    public <T extends AirshipComponent> T getComponent(@NonNull Class<T> clazz) {
         AirshipComponent found = null;
 
         AirshipComponent cached = componentClassMap.get(clazz);
@@ -997,7 +1000,7 @@ public class UAirship {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public <T extends AirshipComponent> T requireComponent(Class<T> clazz) {
+    public <T extends AirshipComponent> T requireComponent(@NonNull Class<T> clazz) {
         T component = getComponent(clazz);
         if (component == null) {
             throw new IllegalArgumentException("Unable to find component " + clazz);

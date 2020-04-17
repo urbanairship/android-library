@@ -27,14 +27,14 @@ public class NotificationInfo {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @VisibleForTesting
-    public NotificationInfo(PushMessage message, int notificationId, String notificationTag) {
+    public NotificationInfo(@NonNull PushMessage message, int notificationId, @Nullable String notificationTag) {
         this.message = message;
         this.notificationTag = notificationTag;
         this.notificationId = notificationId;
     }
 
     @Nullable
-    static NotificationInfo fromIntent(Intent intent) {
+    static NotificationInfo fromIntent(@Nullable Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             return null;

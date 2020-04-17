@@ -8,9 +8,6 @@ import android.content.Intent;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 
 /**
@@ -38,12 +35,6 @@ public class ShareAction extends Action {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^s";
-
-    private static final List<String> IGNORED_PACKAGES = new ArrayList<String>() {{
-        add("com.android.bluetooth");
-        add("com.android.nfc");
-        add("com.google.android.apps.docs");
-    }};
 
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
@@ -77,18 +68,6 @@ public class ShareAction extends Action {
         context.startActivity(chooserIntent);
 
         return ActionResult.newEmptyResult();
-    }
-
-    /**
-     * Used to filter out the list of packages in the chooser dialog.
-     *
-     * @param packageName The package name.
-     * @return <code>true</code> to exclude the package from the chooser dialog, <code>false</code> to include the package.
-     *
-     * @deprecated To be removed in SDK 13. This functionality no longer works correctly.
-     */
-    protected boolean excludePackage(@NonNull String packageName) {
-        return IGNORED_PACKAGES.contains(packageName);
     }
 
     @Override

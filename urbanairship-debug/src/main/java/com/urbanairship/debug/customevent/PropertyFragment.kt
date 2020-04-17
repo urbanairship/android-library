@@ -1,6 +1,5 @@
 package com.urbanairship.debug.customevent
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,7 +24,7 @@ class PropertyFragment : Fragment() {
     private val propertyViewModel by lazy(LazyThreadSafetyMode.NONE) {
         val name = arguments?.getString(ARGUMENT_PROPERTY_NAME)
         val value = name?.let { customEventViewModel.getProperty(it) }
-        ViewModelProvider(this, ViewModelFactory(requireContext(), name, value)).get(PropertyViewModel::class.java)
+        ViewModelProvider(this, ViewModelFactory(name, value)).get(PropertyViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -75,7 +74,7 @@ class PropertyFragment : Fragment() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    internal class ViewModelFactory(context: Context, private val name: String?, private val value: JsonValue?) : ViewModelProvider.Factory {
+    internal class ViewModelFactory(private val name: String?, private val value: JsonValue?) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return PropertyViewModel(name, value) as T
         }

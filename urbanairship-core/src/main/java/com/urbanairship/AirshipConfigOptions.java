@@ -222,17 +222,6 @@ public class AirshipConfigOptions {
     public final long backgroundReportingIntervalMS;
 
     /**
-     * Flag indicating whether to clear an existing named user during a re-install.
-     * <p>
-     * Defaults to <code>false</code>.
-     *
-     * @deprecated Will be removed in SDK 12.0. It's not possible to restore a channel/named user
-     * on Android so this option has no impact on the device.
-     */
-    @Deprecated
-    public final boolean clearNamedUser;
-
-    /**
      * Logger level when the application is in debug mode. Possible values are:
      * <br><ul>
      * <li>ASSERT
@@ -342,7 +331,6 @@ public class AirshipConfigOptions {
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
-        this.clearNamedUser = builder.clearNamedUser;
         this.autoLaunchApplication = builder.autoLaunchApplication;
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled;
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
@@ -384,6 +372,7 @@ public class AirshipConfigOptions {
      *
      * @return A new builder.
      */
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -486,7 +475,6 @@ public class AirshipConfigOptions {
         private static final String FIELD_IN_PRODUCTION = "inProduction";
         private static final String FIELD_ANALYTICS_ENABLED = "analyticsEnabled";
         private static final String FIELD_BACKGROUND_REPORTING_INTERVAL_MS = "backgroundReportingIntervalMS";
-        private static final String FIELD_CLEAR_NAMED_USER = "clearNamedUser";
         private static final String FIELD_DEVELOPMENT_LOG_LEVEL = "developmentLogLevel";
         private static final String FIELD_PRODUCTION_LOG_LEVEL = "productionLogLevel";
         private static final String FIELD_LOG_LEVEL = "logLevel";
@@ -524,7 +512,6 @@ public class AirshipConfigOptions {
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
-        private boolean clearNamedUser = false;
         private Integer developmentLogLevel;
         private Integer productionLogLevel;
         private Integer logLevel;
@@ -731,10 +718,6 @@ public class AirshipConfigOptions {
 
                         case FIELD_BACKGROUND_REPORTING_INTERVAL_MS:
                             this.setBackgroundReportingIntervalMS(configParser.getLong(name, backgroundReportingIntervalMS));
-                            break;
-
-                        case FIELD_CLEAR_NAMED_USER:
-                            this.setClearNamedUser(configParser.getBoolean(name, clearNamedUser));
                             break;
 
                         case FIELD_DEVELOPMENT_LOG_LEVEL:
@@ -968,6 +951,7 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setDeviceUrl(@NonNull String deviceUrl) {
             this.deviceUrl = deviceUrl;
@@ -981,6 +965,7 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setAnalyticsUrl(@NonNull String analyticsUrl) {
             this.analyticsUrl = analyticsUrl;
@@ -994,6 +979,7 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setRemoteDataUrl(@Nullable String remoteDataUrl) {
             this.remoteDataUrl = remoteDataUrl;
@@ -1129,21 +1115,6 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setBackgroundReportingIntervalMS(long backgroundReportingIntervalMS) {
             this.backgroundReportingIntervalMS = backgroundReportingIntervalMS;
-            return this;
-        }
-
-        /**
-         * Set the flag whether to clear an existing named user during a re-install.
-         *
-         * @param clearNamedUser The flag whether to clear an existing named user during a re-install.
-         * @return The config options builder.
-         * @deprecated Will be removed in SDK 12.0. It's not possible to restore a channel/named user
-         * on Android so this option has no impact on the device.
-         */
-        @Deprecated
-        @NonNull
-        public Builder setClearNamedUser(boolean clearNamedUser) {
-            this.clearNamedUser = clearNamedUser;
             return this;
         }
 

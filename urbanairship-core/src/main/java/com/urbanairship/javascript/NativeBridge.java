@@ -1,5 +1,6 @@
 package com.urbanairship.javascript;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
@@ -102,6 +103,7 @@ public class NativeBridge {
      * @param url The url being loaded.
      * @return <code>true</code> if the url was loaded, otherwise <code>false</code>.
      */
+    @SuppressLint("LambdaLast")
     public boolean onHandleCommand(@Nullable String url,
                                    @NonNull JavaScriptExecutor javaScriptExecutor,
                                    @NonNull ActionRunRequestExtender actionRunRequestExtender,

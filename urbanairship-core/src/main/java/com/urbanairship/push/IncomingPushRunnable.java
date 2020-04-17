@@ -251,6 +251,7 @@ class IncomingPushRunnable implements Runnable {
      * @param airship The airship instance.
      * @param notification The notification.
      */
+    @SuppressWarnings("deprecation")
     private void applyDeprecatedSettings(@NonNull UAirship airship, @NonNull Notification notification) {
         if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
             // Remove both the vibrate and the DEFAULT_VIBRATE flag

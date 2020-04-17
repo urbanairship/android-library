@@ -52,7 +52,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertTrue(production.inProduction);
         assertFalse(production.analyticsEnabled);
         assertEquals(2700, production.backgroundReportingIntervalMS);
-        assertTrue(production.clearNamedUser);
         assertFalse(production.autoLaunchApplication);
         assertTrue(production.channelCreationDelayEnabled);
         assertFalse(production.channelCaptureEnabled);

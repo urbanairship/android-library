@@ -141,7 +141,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
     /**
      * The extra key for the sound of the notification.
      *
-     * @deprecated To be removed in SDK 11.0.
+     * @deprecated This setting does not work on Android O+.
      */
     @Deprecated
     @NonNull
@@ -602,7 +602,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      *
      * @param context The application context.
      * @return The sound of the notification.
-     * @deprecated To be removed in SDK 11.0. Instead, use {@link NotificationChannelRegistry}.
+     * @deprecated This setting does not work on Android O+. Applications are encouraged to use {@link NotificationChannelRegistry} instead.
      */
     @Deprecated
     @Nullable

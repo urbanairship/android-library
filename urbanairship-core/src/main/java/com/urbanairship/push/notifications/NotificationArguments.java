@@ -105,6 +105,7 @@ public class NotificationArguments {
          * @param notificationId The notification Id.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setNotificationId(@Nullable String notificationTag, int notificationId) {
             this.notificationTag = notificationTag;
             this.notificationId = notificationId;
@@ -117,6 +118,7 @@ public class NotificationArguments {
          * @param notificationChannelId The notification channel Id.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setNotificationChannelId(@NonNull String notificationChannelId) {
             this.notificationChannelId = notificationChannelId;
             return this;
@@ -135,6 +137,7 @@ public class NotificationArguments {
          * @param longRunningTask {@code true} to require a long running task, otherwise {@code false}.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setRequiresLongRunningTask(boolean longRunningTask) {
             this.longRunningTask = longRunningTask;
             return this;
@@ -145,6 +148,7 @@ public class NotificationArguments {
          *
          * @return The notification arguments.
          */
+        @NonNull
         public NotificationArguments build() {
             return new NotificationArguments(this);
         }

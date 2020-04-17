@@ -132,6 +132,7 @@ public class AirshipWebView extends WebView {
             if (Build.VERSION.SDK_INT < 19) {
                 String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
                 String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
+                //noinspection deprecation
                 settings.setDatabasePath(path);
             }
         }
@@ -275,6 +276,7 @@ public class AirshipWebView extends WebView {
      * @param password The password.
      * @return The basic auth string.
      */
+    @NonNull
     protected String createBasicAuth(@NonNull String userName, @NonNull String password) {
         String credentials = userName + ":" + password;
         return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);

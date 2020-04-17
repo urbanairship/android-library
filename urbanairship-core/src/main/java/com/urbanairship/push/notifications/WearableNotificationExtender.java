@@ -44,22 +44,6 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         this.arguments = arguments;
     }
 
-    /**
-     * Default constructor.
-     *
-     * @param context The application context.
-     * @param message The push message.
-     * @param notificationId The notification ID.
-     * @deprecated Use {{@link #WearableNotificationExtender(Context, NotificationArguments)} instead. To be removed
-     * in SDK 11.
-     */
-    @Deprecated
-    public WearableNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
-        this(context, NotificationArguments.newBuilder(message)
-                                           .setNotificationId(message.getNotificationTag(), notificationId)
-                                           .build());
-    }
-
     @NonNull
     @Override
     public NotificationCompat.Builder extend(@NonNull NotificationCompat.Builder builder) {

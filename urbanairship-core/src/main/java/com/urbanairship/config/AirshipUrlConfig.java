@@ -41,6 +41,7 @@ public class AirshipUrlConfig {
      *
      * @return A URL builder.
      */
+    @NonNull
     public UrlBuilder deviceUrl() {
         return new UrlBuilder(deviceUrl);
     }
@@ -50,6 +51,7 @@ public class AirshipUrlConfig {
      *
      * @return A URL builder.
      */
+    @NonNull
     public UrlBuilder walletUrl() {
         return new UrlBuilder(walletUrl);
     }
@@ -59,6 +61,7 @@ public class AirshipUrlConfig {
      *
      * @return A URL builder.
      */
+    @NonNull
     public UrlBuilder analyticsUrl() {
         return new UrlBuilder(analyticsUrl);
     }
@@ -68,6 +71,7 @@ public class AirshipUrlConfig {
      *
      * @return A URL builder.
      */
+    @NonNull
     public UrlBuilder remoteDataUrl() {
         return new UrlBuilder(remoteDataUrl);
     }

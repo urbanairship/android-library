@@ -23,6 +23,7 @@ import androidx.annotation.WorkerThread;
 
 /**
  * The Airship JavaScript Environment.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -34,6 +35,7 @@ public class JavaScriptEnvironment {
         this.getters = new ArrayList<>(builder.getters);
     }
 
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -98,14 +100,17 @@ public class JavaScriptEnvironment {
 
         private Builder() {}
 
+        @NonNull
         public Builder addGetter(@NonNull String functionName, @Nullable String value) {
             return addGetter(functionName, JsonValue.wrapOpt(value));
         }
 
+        @NonNull
         public Builder addGetter(@NonNull String functionName, long value) {
             return addGetter(functionName, JsonValue.wrapOpt(value));
         }
 
+        @NonNull
         public Builder addGetter(@NonNull String functionName, @Nullable JsonSerializable value) {
             JsonValue json = value == null ? JsonValue.NULL : value.toJsonValue();
             String getter = String.format(Locale.ROOT, "_UAirship.%s = function(){return %s;};", functionName, json.toString());
@@ -113,7 +118,7 @@ public class JavaScriptEnvironment {
             return this;
         }
 
-        @WorkerThread
+        @NonNull
         public JavaScriptEnvironment build() {
             return new JavaScriptEnvironment(this);
         }

@@ -74,6 +74,7 @@ public class NotificationChannelRegistry {
      * @param id The notification channel identifier.
      * @return A PendingResult of NotificationChannelCompat.
      */
+    @NonNull
     public PendingResult<NotificationChannelCompat> getNotificationChannel(@NonNull final String id) {
         final PendingResult<NotificationChannelCompat> pendingResult = new PendingResult<>();
         executor.execute(new Runnable() {

@@ -847,6 +847,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param isReportingEnabled {@code true} to generate reporting events, otherwise {@code false}.
          * @return The builder.
          */
+        @NonNull
         public Builder setReportingEnabled(boolean isReportingEnabled) {
             this.isReportingEnabled = isReportingEnabled;
             return this;
@@ -859,6 +860,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setRenderedLocale(@Nullable Map<String, JsonValue> renderedLocale) {
             this.renderedLocale = renderedLocale;

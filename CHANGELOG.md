@@ -18,6 +18,7 @@ Changes
 - Added module `urbanairship-hms` that adds support for Huawei Mobile Services (HMS).
 - Added date attribute support.
 - Removed usage of deprecated AsyncTask.
+- Removed deprecated APIs.
 
 ## Version 12.2.4 - April 14, 2020
 Patch release to fix a `TransactionTooLargeException` inside the Airship Job manager.

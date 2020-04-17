@@ -38,7 +38,7 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
      *
      * @param actionRunRequestFactory The action run request factory.
      */
-    protected HtmlWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
+    protected HtmlWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
         super(actionRunRequestFactory);
     }
 

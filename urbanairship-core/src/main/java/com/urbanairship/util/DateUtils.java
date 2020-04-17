@@ -36,7 +36,6 @@ public class DateUtils {
      * @throws java.text.ParseException if the timestamp was unable to be parsed.
      */
     public static long parseIso8601(@Nullable String timeStamp) throws ParseException {
-        //noinspection ConstantConditions
         if (timeStamp == null) {
             throw new ParseException("Unable to parse null timestamp", -1);
         }

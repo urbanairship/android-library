@@ -5,7 +5,6 @@ package com.urbanairship.push.notifications;
 import android.content.Context;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.push.PushMessage;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -28,22 +27,6 @@ public class ActionsNotificationExtender implements NotificationCompat.Extender 
     public ActionsNotificationExtender(@NonNull Context context, @NonNull NotificationArguments arguments) {
         this.context = context.getApplicationContext();
         this.arguments = arguments;
-    }
-
-    /**
-     * ActionsNotificationExtender default constructor.
-     *
-     * @param context The application context.
-     * @param message The push message.
-     * @param notificationId The notification ID.
-     * @deprecated Use {{@link #ActionsNotificationExtender(Context, NotificationArguments)} instead. To be removed
-     * in SDK 11.
-     */
-    @Deprecated
-    public ActionsNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
-        this(context, NotificationArguments.newBuilder(message)
-                                           .setNotificationId(message.getNotificationTag(), notificationId)
-                                           .build());
     }
 
     @NonNull

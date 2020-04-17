@@ -35,7 +35,7 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
     }
 
     private TestAirshipRuntimeConfig(@NonNull SettableConfigProvider configProvider, @NonNull AirshipConfigOptions configOptions, int platform) {
-        super(configProvider, configOptions, platform);
+        super(platform, configOptions, configProvider);
 
         this.platform = platform;
         this.configOptions = configOptions;

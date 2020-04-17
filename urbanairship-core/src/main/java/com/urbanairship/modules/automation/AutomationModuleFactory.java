@@ -24,6 +24,8 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AutomationModuleFactory extends AirshipVersionInfo {
+
+    @NonNull
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipRuntimeConfig runtimeConfig,
@@ -32,4 +34,5 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull Analytics analytics,
                  @NonNull RemoteData remoteData,
                  @NonNull TagGroupRegistrar tagGroupRegistrar);
+
 }

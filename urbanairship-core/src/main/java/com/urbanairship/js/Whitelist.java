@@ -334,7 +334,7 @@ public class Whitelist {
     /**
      * Helper class that does the actual matching using the scheme and host patterns.
      */
-    private class UriPattern {
+    private static class UriPattern {
 
         private final Pattern scheme;
         private final Pattern host;

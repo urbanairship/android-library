@@ -4,6 +4,8 @@ import android.os.Looper;
 
 import com.urbanairship.util.AirshipHandlerThread;
 
+import androidx.annotation.NonNull;
+
 /**
  * Shared SDK looopers.
  */
@@ -16,6 +18,7 @@ public class AirshipLoopers {
      *
      * @return The background looper.
      */
+    @NonNull
     public static Looper getBackgroundLooper() {
         if (backgroundLooper == null) {
             synchronized (AirshipLoopers.class) {

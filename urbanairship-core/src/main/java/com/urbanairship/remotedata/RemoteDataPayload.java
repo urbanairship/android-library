@@ -227,7 +227,7 @@ public class RemoteDataPayload {
          * @return The builder.
          */
         @NonNull
-        public Builder setType(String type) {
+        public Builder setType(@Nullable String type) {
             this.type = type;
             return this;
         }
@@ -251,7 +251,7 @@ public class RemoteDataPayload {
          * @return The builder.
          */
         @NonNull
-        public Builder setData(JsonMap data) {
+        public Builder setData(@Nullable JsonMap data) {
             this.data = data;
             return this;
         }
@@ -263,7 +263,7 @@ public class RemoteDataPayload {
          * @return The builder.
          */
         @NonNull
-        public Builder setMetadata(JsonMap metadata) {
+        public Builder setMetadata(@Nullable JsonMap metadata) {
             this.metadata = metadata;
             return this;
         }
@@ -274,6 +274,7 @@ public class RemoteDataPayload {
          * @return The payload instance.
          * @throws IllegalArgumentException If the type or data is null.
          */
+        @NonNull
         public RemoteDataPayload build() {
             Checks.checkNotNull(type, "Missing type");
             Checks.checkNotNull(data, "Missing data");

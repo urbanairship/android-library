@@ -20,8 +20,11 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface MessageCenterModuleFactory extends AirshipVersionInfo {
+
+    @NonNull
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipChannel airshipChannel,
                  @NonNull PushManager pushManager);
+
 }

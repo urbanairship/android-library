@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class JavaScriptEnvironmentTest extends BaseTestCase {
 
