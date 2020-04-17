@@ -16,6 +16,7 @@ import androidx.annotation.RestrictTo;
 
 /**
  * Loads push providers.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -52,9 +53,6 @@ public class PushProviders {
      */
     private void init(@NonNull Context context) {
         List<PushProvider> providers = createProviders();
-        if (airshipConfigOptions.customPushProvider != null) {
-            providers.add(0, airshipConfigOptions.customPushProvider);
-        }
 
         if (providers.isEmpty()) {
             Logger.warn("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
@@ -62,6 +60,10 @@ public class PushProviders {
         }
 
         for (PushProvider provider : providers) {
+            if (!isValid(provider)) {
+                continue;
+            }
+
             if (!provider.isSupported(context)) {
                 continue;
             }
@@ -73,6 +75,34 @@ public class PushProviders {
         }
     }
 
+    private boolean isValid(PushProvider provider) {
+        if (provider instanceof AirshipVersionInfo) {
+            AirshipVersionInfo versionInfo = (AirshipVersionInfo) provider;
+            if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
+                Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.", provider, versionInfo.getAirshipVersion(), UAirship.getVersion());
+                return false;
+            }
+        }
+
+        switch (provider.getDeliveryType()) {
+            case PushProvider.ADM_DELIVERY_TYPE:
+                if (provider.getPlatform() != UAirship.AMAZON_PLATFORM) {
+                    Logger.error("Invalid Provider: %s. ADM delivery is only available for Amazon platforms.", provider);
+                    return false;
+                }
+                break;
+            case PushProvider.FCM_DELIVERY_TYPE:
+            case PushProvider.HMS_DELIVERY_TYPE:
+                if (provider.getPlatform() != UAirship.ANDROID_PLATFORM) {
+                    Logger.error("Invalid Provider: %s. %s delivery is only available for Android platforms.", provider.getDeliveryType(), provider);
+                    return false;
+                }
+                break;
+        }
+
+        return true;
+    }
+
     /**
      * Creates the list of push providers.
      *
@@ -82,11 +112,16 @@ public class PushProviders {
     private List<PushProvider> createProviders() {
         List<PushProvider> providers = new ArrayList<>();
 
+        if (airshipConfigOptions.customPushProvider != null) {
+            providers.add(airshipConfigOptions.customPushProvider);
+        }
+
         for (String className : createAllowedProviderClassList()) {
             PushProvider pushProvider = null;
             try {
                 Class providerClass = Class.forName(className);
                 pushProvider = (PushProvider) providerClass.newInstance();
+                Logger.verbose("Found provider: %s", pushProvider);
             } catch (InstantiationException e) {
                 Logger.error(e, "Unable to create provider %s", className);
             } catch (IllegalAccessException e) {
@@ -97,16 +132,6 @@ public class PushProviders {
 
             if (pushProvider == null) {
                 continue;
-            }
-
-            if (pushProvider instanceof AirshipVersionInfo) {
-                AirshipVersionInfo versionInfo = (AirshipVersionInfo) pushProvider;
-                Logger.verbose("Found provider: %s version: %s", pushProvider, versionInfo.getPackageVersion());
-
-                if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
-                    Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the exact same version.", pushProvider, versionInfo.getAirshipVersion(), UAirship.getVersion());
-                    continue;
-                }
             }
 
             providers.add(pushProvider);

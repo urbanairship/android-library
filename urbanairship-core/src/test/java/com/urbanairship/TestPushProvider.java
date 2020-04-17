@@ -10,17 +10,28 @@ import androidx.annotation.NonNull;
 
 public class TestPushProvider implements PushProvider {
 
+    private final int platform;
+    private final String deliveryType;
     public String registrationToken;
+
+    public TestPushProvider() {
+        this(UAirship.ANDROID_PLATFORM, PushProvider.FCM_DELIVERY_TYPE);
+    }
+
+    public TestPushProvider(@UAirship.Platform int platform, @NonNull @DeliveryType String deliveryType) {
+        this.platform = platform;
+        this.deliveryType = deliveryType;
+    }
 
     @Override
     public int getPlatform() {
-        return UAirship.ANDROID_PLATFORM;
+        return platform;
     }
 
     @NonNull
     @Override
     public String getDeliveryType() {
-        return PushProvider.FCM_DELIVERY_TYPE;
+        return deliveryType;
     }
 
     @Override
@@ -37,6 +48,5 @@ public class TestPushProvider implements PushProvider {
     public boolean isSupported(@NonNull Context context) {
         return true;
     }
-
 
 }

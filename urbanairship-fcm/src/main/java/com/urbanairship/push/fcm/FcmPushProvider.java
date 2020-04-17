@@ -116,7 +116,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @NonNull
     @Override
     public String toString() {
-        return "FCM Push Provider";
+        return "FCM Push Provider " + getAirshipVersion();
     }
 
     @NonNull

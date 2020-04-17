@@ -7,6 +7,7 @@ import android.content.Context;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.api.HuaweiApiAvailability;
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushProvider;
@@ -22,7 +23,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class HmsPushProvider implements PushProvider {
+public class HmsPushProvider implements PushProvider, AirshipVersionInfo  {
 
     private static final String HCM_SCOPE = "HCM";
     private static final String APP_ID_KEY = "client/app_id";
@@ -77,6 +78,24 @@ public class HmsPushProvider implements PushProvider {
             Logger.error(e, "HmsPushProvider - HMS is supported check failed.");
             return false;
         }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "HMS Push Provider " + getAirshipVersion();
+    }
+
+    @NonNull
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.AIRSHIP_VERSION;
+    }
+
+    @NonNull
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
     }
 
 }
