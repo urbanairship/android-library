@@ -142,6 +142,26 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     /**
+     * Test set empty ID (disassociate).
+     */
+    @Test
+    public void testSetIDEmpty() {
+        namedUser.setId("");
+
+        // Pending tag group changes should be cleared
+        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+
+        assertNull("Named user ID should be null", namedUser.getId());
+    }
+
+    /**
      * Test init dispatches a job to update tag groups and the named user.
      */
     @Test

@@ -19,6 +19,7 @@ import java.util.UUID;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
@@ -150,21 +151,26 @@ public class NamedUser extends AirshipComponent {
      * Sets the named user ID.
      * <p>
      * To associate the named user ID, its length must be greater than 0 and less than 129 characters.
-     * To disassociate the named user ID, its value must be null.
+     * To disassociate the named user ID, its value must be empty or null.
      *
      * @param namedUserId The named user ID string.
      */
-    public void setId(@Nullable String namedUserId) {
+    public void setId(@Nullable @Size(max = MAX_NAMED_USER_ID_LENGTH) String namedUserId) {
         if (namedUserId != null && !isDataCollectionEnabled()) {
             Logger.debug("NamedUser - Data collection is disabled, ignoring named user association.");
             return;
         }
 
         String id = null;
-        if (namedUserId != null) {
+
+        // Treat empty namedUserId as a command to dissociate
+        if (!UAStringUtil.isEmpty(namedUserId)) {
             id = namedUserId.trim();
+
+            // Treat namedUserId trimmed to empty as invalid
             if (UAStringUtil.isEmpty(id) || id.length() > MAX_NAMED_USER_ID_LENGTH) {
-                Logger.error("Failed to set named user ID. The named user ID must be greater than 0 and less than 129 characters.");
+                Logger.error("Failed to set named user ID. The named user ID must be composed" +
+                        "of non-whitespace characters and be less than 129 characters in length.");
                 return;
             }
         }
