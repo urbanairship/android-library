@@ -719,7 +719,7 @@ public class UAirship {
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar, channel);
+        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar, channel);
         components.add(this.namedUser);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));

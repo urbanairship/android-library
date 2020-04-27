@@ -71,7 +71,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, tagGroupRegistrar, UAirship.sharedAirship.channel);
+        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, tagGroupRegistrar, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor(), UAirship.sharedAirship.pushManager);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 

@@ -9,10 +9,14 @@ import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,28 +45,48 @@ public class NamedUser extends AirshipComponent {
     private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
+     * Action to perform update request for pending named user tag group changes.
+     */
+    static final String ACTION_UPDATE_TAG_GROUPS = "ACTION_UPDATE_TAG_GROUPS";
+
+    /**
+     * Action to update named user association or disassociation.
+     */
+    static final String ACTION_UPDATE_NAMED_USER = "ACTION_UPDATE_NAMED_USER";
+
+    /**
+     * Key for storing the {@link NamedUser#getChangeToken()} in the {@link PreferenceDataStore} from the
+     * last time the named user was updated.
+     */
+    private static final String LAST_UPDATED_TOKEN_KEY = "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY";
+
+    /**
      * The maximum length of the named user ID string.
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
 
     private final PreferenceDataStore preferenceDataStore;
-    private final Object lock = new Object();
+    private final Object idLock = new Object();
     private final JobDispatcher jobDispatcher;
     private final TagGroupRegistrar tagGroupRegistrar;
-    private NamedUserJobHandler namedUserJobHandler;
-    private AirshipChannel airshipChannel;
+
+    private final AirshipChannel airshipChannel;
+    private final NamedUserApiClient namedUserApiClient;
 
     /**
      * Creates a NamedUser.
      *
      * @param context The application context.
      * @param preferenceDataStore The preferences data store.
+     * @param runtimeConfig The airship runtime config.
      * @param tagGroupRegistrar The tag group registrar.
      * @param airshipChannel The airship channel.
      */
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                     @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull AirshipChannel airshipChannel) {
-        this(context, preferenceDataStore, tagGroupRegistrar, airshipChannel, JobDispatcher.shared(context));
+                     @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull TagGroupRegistrar tagGroupRegistrar,
+                     @NonNull AirshipChannel airshipChannel) {
+        this(context, preferenceDataStore, tagGroupRegistrar, airshipChannel, JobDispatcher.shared(context),
+                new NamedUserApiClient(runtimeConfig));
     }
 
     /**
@@ -71,12 +95,14 @@ public class NamedUser extends AirshipComponent {
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
               @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull AirshipChannel airshipChannel,
-              @NonNull JobDispatcher dispatcher) {
+              @NonNull JobDispatcher dispatcher, @NonNull NamedUserApiClient namedUserApiClient) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.tagGroupRegistrar = tagGroupRegistrar;
         this.airshipChannel = airshipChannel;
         this.jobDispatcher = dispatcher;
+        this.namedUserApiClient = namedUserApiClient;
+
     }
 
     @Override
@@ -95,11 +121,9 @@ public class NamedUser extends AirshipComponent {
             }
         });
 
-        // Start named user update
-        dispatchNamedUserUpdateJob();
-
-        // Update named user tags if we have a named user
-        if (getId() != null) {
+        if (!isIdUpToDate()) {
+            dispatchNamedUserUpdateJob();
+        } else if (getId() != null) {
             dispatchUpdateTagGroupsJob();
         }
     }
@@ -113,6 +137,7 @@ public class NamedUser extends AirshipComponent {
     public int getComponentGroup() {
         return AirshipComponentGroups.NAMED_USER;
     }
+
     /**
      * @hide
      */
@@ -121,11 +146,15 @@ public class NamedUser extends AirshipComponent {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (namedUserJobHandler == null) {
-            namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore, tagGroupRegistrar);
+        switch (jobInfo.getAction()) {
+            case ACTION_UPDATE_NAMED_USER:
+                return onUpdateNamedUser();
+
+            case ACTION_UPDATE_TAG_GROUPS:
+                return onUpdateTagGroup();
         }
 
-        return namedUserJobHandler.performJob(jobInfo);
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -175,26 +204,18 @@ public class NamedUser extends AirshipComponent {
             }
         }
 
-        synchronized (lock) {
-            // check if the newly trimmed ID matches with currently stored ID
-            boolean isEqual = getId() == null ? id == null : getId().equals(id);
-
-            // if the IDs don't match or ID is set to null and current token is null (re-install case), then update.
-            if (!isEqual || (getId() == null && getChangeToken() == null)) {
+        synchronized (idLock) {
+            if (!UAStringUtil.equals(getId(), id)) {
+                // New/Cleared Named User, clear pending updates and update the token and ID
                 preferenceDataStore.put(NAMED_USER_ID_KEY, id);
-
-                // Update the change token.
                 updateChangeToken();
-
-                // When named user ID change, clear pending named user tags.
-                tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
+                clearPendingNamedUserUpdates();
 
                 dispatchNamedUserUpdateJob();
             } else {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }
         }
-
     }
 
     /**
@@ -220,13 +241,29 @@ public class NamedUser extends AirshipComponent {
         };
     }
 
+
+    @VisibleForTesting
+    boolean isIdUpToDate() {
+        synchronized (idLock) {
+            String changeToken = getChangeToken();
+            String lastUpdatedToken = preferenceDataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
+            String currentId = getId();
+
+            if (currentId == null && changeToken == null) {
+                return true;
+            }
+
+            return lastUpdatedToken != null && lastUpdatedToken.equals(changeToken);
+        }
+    }
+
     /**
      * Gets the named user ID change token.
      *
      * @return The named user ID change token.
      */
     @Nullable
-    String getChangeToken() {
+    private String getChangeToken() {
         return preferenceDataStore.getString(CHANGE_TOKEN_KEY, null);
     }
 
@@ -242,7 +279,7 @@ public class NamedUser extends AirshipComponent {
      */
     void dispatchNamedUserUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                                 .setAction(ACTION_UPDATE_NAMED_USER)
                                  .setId(JobInfo.NAMED_USER_UPDATE_ID)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(NamedUser.class)
@@ -256,7 +293,7 @@ public class NamedUser extends AirshipComponent {
      */
     void dispatchUpdateTagGroupsJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setAction(ACTION_UPDATE_TAG_GROUPS)
                                  .setId(JobInfo.NAMED_USER_UPDATE_TAG_GROUPS)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(NamedUser.class)
@@ -265,9 +302,23 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
+    /**
+     * Dispatches a job to update the named user attributes.
+     */
+    void dispatchUpdateAttributesJob() {
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_UPDATE_NAMED_USER)
+                                 .setId(JobInfo.NAMED_USER_UPDATE_ID)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(NamedUser.class)
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
+    }
+
     private void clearPendingNamedUserUpdates() {
+        Logger.verbose("Clearing pending Named Users tag updates.");
         tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
-        Logger.debug("Pending Named Users updates are now cleared.");
     }
 
     @Override
@@ -277,4 +328,97 @@ public class NamedUser extends AirshipComponent {
             setId(null);
         }
     }
+
+    /**
+     * Handles associate/disassociate updates.
+     *
+     * @return The job result.
+     */
+    @JobInfo.JobResult
+    @WorkerThread
+    private int onUpdateNamedUser() {
+        String changeToken;
+        String currentId;
+
+        synchronized (idLock) {
+            if (isIdUpToDate()) {
+                Logger.verbose("NamedUserJobHandler - Named user already updated. Skipping.");
+                return JobInfo.JOB_FINISHED;
+            }
+
+            changeToken = getChangeToken();
+            currentId = getId();
+        }
+
+        String channelId = airshipChannel.getId();
+        if (UAStringUtil.isEmpty(channelId)) {
+            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
+            return JobInfo.JOB_FINISHED;
+        }
+
+        Response response;
+
+        if (currentId == null) {
+            // When currentId is null, disassociate the current named user ID.
+            response = namedUserApiClient.disassociate(channelId);
+        } else {
+            // When currentId is non-null, associate the currentId.
+            response = namedUserApiClient.associate(currentId, channelId);
+        }
+
+        // 5xx
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // Server error occurred, so retry later.
+            Logger.debug("Update named user failed, will retry.");
+            return JobInfo.JOB_RETRY;
+        }
+
+        // 429
+        if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
+            Logger.debug("Update named user failed. Too many requests. Will retry.");
+            return JobInfo.JOB_RETRY;
+        }
+
+        // 2xx
+        if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+            Logger.debug("Update named user succeeded with status: %s", response.getStatus());
+            preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
+            dispatchUpdateTagGroupsJob();
+            dispatchUpdateAttributesJob();
+            return JobInfo.JOB_FINISHED;
+        }
+
+        // 403
+        if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+            Logger.debug("Update named user failed with response: %s." +
+                    "This action is not allowed when the app is in server-only mode.", response);
+            return JobInfo.JOB_FINISHED;
+        }
+
+        // 4xx
+        Logger.debug("Update named user failed with response: %s", response);
+        return JobInfo.JOB_FINISHED;
+    }
+
+    /**
+     * Handles performing any tag group requests if any pending tag group changes are available.
+     *
+     * @return The job result.
+     */
+    @JobInfo.JobResult
+    @WorkerThread
+    private int onUpdateTagGroup() {
+        String namedUserId = getId();
+        if (namedUserId == null) {
+            Logger.verbose("Failed to update named user tags due to null named user ID.");
+            return JobInfo.JOB_FINISHED;
+        }
+
+        if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, namedUserId)) {
+            return JobInfo.JOB_FINISHED;
+        }
+
+        return JobInfo.JOB_RETRY;
+    }
+
 }

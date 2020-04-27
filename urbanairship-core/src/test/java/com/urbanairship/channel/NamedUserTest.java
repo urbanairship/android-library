@@ -2,13 +2,13 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.AirshipConfigOptions;
+import android.app.Application;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -17,19 +17,20 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
 
-import java.net.URL;
+import java.net.HttpURLConnection;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.any;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -40,34 +41,28 @@ public class NamedUserTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
 
-    private AirshipConfigOptions airshipConfigOptions;
     private NamedUser namedUser;
-    private TestRequest testRequest;
     private JobDispatcher mockDispatcher;
     private TagGroupRegistrar mockTagGroupRegistrar;
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
+    private NamedUserApiClient mockNamedUserClient;
+    private Application application;
 
     @Before
     public void setUp() {
+        application = ApplicationProvider.getApplicationContext();
         mockDispatcher = mock(JobDispatcher.class);
+        mockNamedUserClient = Mockito.mock(NamedUserApiClient.class);
 
-        airshipConfigOptions = AirshipConfigOptions.newBuilder().build();
-        airshipConfigOptions = mock(AirshipConfigOptions.class);
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
         mockChannel = mock(AirshipChannel.class);
-
-        testRequest = new TestRequest();
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        RequestFactory mockRequestFactory = mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
-
-        TestApplication.getApplication().setOptions(airshipConfigOptions);
-
-        namedUser = new NamedUser(TestApplication.getApplication(), dataStore, mockTagGroupRegistrar, mockChannel, mockDispatcher);
+        namedUser = new NamedUser(TestApplication.getApplication(), dataStore, mockTagGroupRegistrar,
+                mockChannel, mockDispatcher, mockNamedUserClient);
     }
 
     /**
@@ -87,7 +82,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -103,7 +98,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -126,6 +121,11 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDNull() {
+        // Set an initial id
+        namedUser.setId("neat");
+        clearInvocations(mockDispatcher, mockTagGroupRegistrar);
+
+        // Clear it
         namedUser.setId(null);
 
         // Pending tag group changes should be cleared
@@ -134,7 +134,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -146,6 +146,10 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDEmpty() {
+        // Set an initial id
+        namedUser.setId("neat");
+        clearInvocations(mockDispatcher, mockTagGroupRegistrar);
+
         namedUser.setId("");
 
         // Pending tag group changes should be cleared
@@ -154,7 +158,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -167,23 +171,18 @@ public class NamedUserTest extends BaseTestCase {
     @Test
     public void testInit() {
         namedUser.setId("test");
-        shadowOf(RuntimeEnvironment.application).clearStartedServices();
+        shadowOf(application).clearStartedServices();
 
         namedUser.init();
 
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
-        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
-            }
-        }));
+
     }
 
     /**
@@ -192,11 +191,10 @@ public class NamedUserTest extends BaseTestCase {
     @Test
     public void testIdsMatchNoUpdate() {
         namedUser.setId(fakeNamedUserId);
-        String changeToken = namedUser.getChangeToken();
-        assertEquals("Named user ID should match", fakeNamedUserId, namedUser.getId());
+        clearInvocations(mockDispatcher);
 
         namedUser.setId(fakeNamedUserId);
-        assertEquals("Change token should not change", changeToken, namedUser.getChangeToken());
+        verifyZeroInteractions(mockDispatcher);
     }
 
     /**
@@ -204,18 +202,14 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testForceUpdate() {
-        String changeToken = namedUser.getChangeToken();
-
         namedUser.forceUpdate();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
-
-        assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
     }
 
     /**
@@ -231,7 +225,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -251,7 +245,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -275,7 +269,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -290,7 +284,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -316,10 +310,308 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
+    }
 
+    /**
+     * Test associate named user succeeds if the status is 2xx.
+     */
+    @Test
+    public void testAssociateNamedUserSucceed() {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        for (int statusCode = 200; statusCode < 300; statusCode++) {
+            // Force an update
+            namedUser.forceUpdate();
+            assertFalse(namedUser.isIdUpToDate());
+
+            // Set up a 2xx response
+            Response response = Mockito.mock(Response.class);
+            when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+            when(response.getStatus()).thenReturn(statusCode);
+
+            // Perform the update
+            JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+            assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+            // Verify the update was performed
+            verify(mockNamedUserClient).associate("namedUserID", "channelID");
+
+            assertTrue(namedUser.isIdUpToDate());
+
+            reset(mockNamedUserClient);
+        }
+    }
+
+    /**
+     * Test associate named user fails if the status is 403
+     */
+    @Test
+    public void testAssociateNamedUserFailed() {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        assertFalse(namedUser.isIdUpToDate());
+
+        // Set up a 403 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_FORBIDDEN);
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).associate("namedUserID", "channelID");
+
+        // Verify its still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test associate named user fails if the status is 500
+     */
+    @Test
+    public void testAssociateNamedUserFailedRetry() {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+        assertFalse(namedUser.isIdUpToDate());
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).associate("namedUserID", "channelID");
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test associate named user retries if the status is 429
+     */
+    @Test
+    public void testAssociateNamedUserTooManyRequests() {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId("namedUserID");
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).associate("namedUserID", "channelID");
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test disassociate named user succeeds if the status is 2xx.
+     */
+    @Test
+    public void testDisassociateNamedUserSucceed() {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId(null);
+
+        for (int statusCode = 200; statusCode < 300; statusCode++) {
+            // Force an update
+            namedUser.forceUpdate();
+            assertFalse(namedUser.isIdUpToDate());
+
+            // Set up a 2xx response
+            Response response = Mockito.mock(Response.class);
+            when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
+            when(response.getStatus()).thenReturn(statusCode);
+
+            // Perform the update
+            JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+            assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+            // Verify the update was performed
+            verify(mockNamedUserClient).disassociate("channelID");
+
+            // Verify the ID is up to date
+            assertTrue(namedUser.isIdUpToDate());
+
+            // Reset the mocks so we can verify again
+            reset(mockNamedUserClient);
+        }
+    }
+
+    /**
+     * Test disassociate named user fails if status is not 200.
+     */
+    @Test
+    public void testDisassociateNamedUserFailed() {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId(null);
+        namedUser.forceUpdate();
+
+        // Set up a 404 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_NOT_FOUND);
+        when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).disassociate("channelID");
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test disassociate named user fails if the status is 500
+     */
+    @Test
+    public void testDisassociateNamedUserFailedRetry() {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId(null);
+        namedUser.forceUpdate();
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).disassociate("channelID");
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test disassociate named user retries if the status is 429
+     */
+    @Test
+    public void testDisassociateNamedUserTooManyRequests() {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId(null);
+        namedUser.forceUpdate();
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+        when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify the update was performed
+        verify(mockNamedUserClient).disassociate("channelID");
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test associate without channel fails.
+     */
+    @Test
+    public void testAssociateNamedUserFailedNoChannel() {
+        when(mockChannel.getId()).thenReturn(null);
+        namedUser.setId("namedUserId");
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify associate not called when channel ID doesn't exist
+        verifyZeroInteractions(mockNamedUserClient);
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test disassociate without channel fails.
+     */
+    @Test
+    public void testDisassociateNamedUserFailedNoChannel() {
+        when(mockChannel.getId()).thenReturn(null);
+        namedUser.setId(null);
+        namedUser.forceUpdate();
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify associate not called when channel ID doesn't exist
+        verifyZeroInteractions(mockNamedUserClient);
+
+        // Verify still not up to date
+        assertFalse(namedUser.isIdUpToDate());
+    }
+
+    /**
+     * Test update named user tags succeeds when the registrar returns true.
+     */
+    @Test
+    public void testUpdateNamedUserTagsSucceed() {
+        // Return a named user ID
+        namedUser.setId("namedUserId");
+        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(true);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test update named user tags without named user ID fails.
+     */
+    @Test
+    public void testUpdateNamedUserTagsNoNamedUser() {
+        // Return a null named user ID
+        namedUser.setId(null);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        // Verify updateNamedUserTags not called when channel ID doesn't exist
+        verifyZeroInteractions(mockTagGroupRegistrar);
+    }
+
+    /**
+     * Test update named user retries when the upload fails.
+     */
+    @Test
+    public void testUpdateNamedUserTagsRetry() {
+        // Return a named user ID
+        namedUser.setId("namedUserId");
+
+        // Provide pending changes
+        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(false);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
     }
 
 }
