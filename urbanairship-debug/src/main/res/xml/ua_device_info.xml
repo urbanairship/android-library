@@ -18,9 +18,15 @@
 
         <androidx.preference.Preference
             app:dependency="data_enabled"
-            app:key="attributes"
+            app:key="channel_attributes"
             app:persistent="false"
             app:title="@string/ua_channel_attributes_settings_title" />
+
+        <androidx.preference.Preference
+            app:dependency="data_enabled"
+            app:key="named_user_attributes"
+            app:persistent="false"
+            app:title="@string/ua_named_user_attributes_settings_title" />
 
         <androidx.preference.Preference
             app:dependency="data_enabled"

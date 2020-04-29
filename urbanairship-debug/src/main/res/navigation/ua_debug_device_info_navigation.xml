@@ -13,13 +13,16 @@
             app:destination="@id/deviceInfoTagsFragment" />
         <action
             android:id="@+id/action_deviceInfoFragment_to_deviceInfoAttributesFragment"
-            app:destination="@id/deviceInfoAttributesFragment" />
+            app:destination="@id/deviceChannelAttributesFragment" />
         <action
             android:id="@+id/action_deviceInfoFragment_to_deviceInfoTagGroupsFragment2"
             app:destination="@id/deviceInfoTagGroupsFragment" />
         <action
             android:id="@+id/action_deviceInfoFragment_to_deviceInfoAssociatedIdentifiersFragment"
             app:destination="@id/deviceInfoAssociatedIdentifiersFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_deviceNamedUserAttributesFragment"
+            app:destination="@id/deviceNamedUserAttributesFragment" />
     </fragment>
 
     <fragment
@@ -28,10 +31,24 @@
         android:label="@string/ua_tags_settings_title" />
 
     <fragment
-        android:id="@+id/deviceInfoAttributesFragment"
+        android:id="@+id/deviceChannelAttributesFragment"
         android:name="com.urbanairship.debug.deviceinfo.attributes.AttributesFragment"
-        android:label="@string/ua_channel_attributes_settings_title" />
+        android:label="@string/ua_channel_attributes_settings_title" >
+        <argument
+            android:name="type"
+            app:argType="string"
+            android:defaultValue="channel" />
+    </fragment>
 
+    <fragment
+        android:id="@+id/deviceNamedUserAttributesFragment"
+        android:name="com.urbanairship.debug.deviceinfo.attributes.AttributesFragment"
+        android:label="@string/ua_named_user_attributes_settings_title">
+        <argument
+            android:name="type"
+            android:defaultValue="named_user"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/deviceInfoAssociatedIdentifiersFragment"

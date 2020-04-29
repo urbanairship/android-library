@@ -8,7 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.urbanairship.UAirship
+import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDeviceInfoAttributesBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
@@ -17,10 +20,26 @@ private const val DATE_PICKER_TAG = "datePicker"
 private const val TIME_PICKER_TAG = "timePicker"
 
 class AttributesFragment : Fragment() {
-    private lateinit var viewModel: AttributesViewModel
+
+    companion object {
+        const val TYPE_ARGUMENT_KEY = "type"
+        const val NAMED_USER_TYPE = "named_user"
+        const val CHANNEL_TYPE = "channel"
+    }
+
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+        val editor: () -> AttributeEditor = { ->
+            when (val type = requireArguments().getString(TYPE_ARGUMENT_KEY)) {
+                NAMED_USER_TYPE -> UAirship.shared().namedUser.editAttributes()
+                CHANNEL_TYPE -> UAirship.shared().channel.editAttributes()
+                else -> throw IllegalArgumentException("Invalid type: $type")
+            }
+        }
+
+        ViewModelProvider(this, ViewModelFactory(editor)).get(AttributesViewModel::class.java)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProvider(requireActivity()).get(AttributesViewModel::class.java)
         val binding = UaFragmentDeviceInfoAttributesBinding.inflate(inflater, container, false)
 
         binding.lifecycleOwner = this
@@ -69,5 +88,12 @@ class AttributesFragment : Fragment() {
     fun removeAttribute() {
         viewModel.removeAttribute()
         Toast.makeText(requireContext(), requireContext().getString(R.string.ua_attribute_removed), Toast.LENGTH_SHORT).show()
+    }
+
+    internal class ViewModelFactory(private val editAttributes: () -> AttributeEditor) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return AttributesViewModel(editAttributes) as T
+        }
     }
 }

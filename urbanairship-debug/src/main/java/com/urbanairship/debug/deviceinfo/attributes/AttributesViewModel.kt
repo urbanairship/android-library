@@ -5,10 +5,10 @@ package com.urbanairship.debug.deviceinfo.attributes
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.urbanairship.UAirship
+import com.urbanairship.channel.AttributeEditor
 import java.util.Date
 
-class AttributesViewModel : ViewModel() {
+class AttributesViewModel(private val editAttributes: () -> AttributeEditor) : ViewModel() {
 
     val key = MutableLiveData<String>()
     val stringValue = MutableLiveData<String>()
@@ -49,13 +49,13 @@ class AttributesViewModel : ViewModel() {
 
         when (attributeType.value) {
             AttributeType.STRING -> {
-                UAirship.shared().channel.editAttributes().setAttribute(key.value!!, stringValue.value!!).apply()
+                editAttributes().setAttribute(key.value!!, stringValue.value!!).apply()
             }
             AttributeType.NUMBER -> {
-                UAirship.shared().channel.editAttributes().setAttribute(key.value!!, numberValue.value!!.toDouble()).apply()
+                editAttributes().setAttribute(key.value!!, numberValue.value!!.toDouble()).apply()
             }
             AttributeType.DATE -> {
-                UAirship.shared().channel.editAttributes().setAttribute(key.value!!, dateValue.value!!).apply()
+                editAttributes().setAttribute(key.value!!, dateValue.value!!).apply()
             }
         }
     }
@@ -71,6 +71,6 @@ class AttributesViewModel : ViewModel() {
 
     fun removeAttribute() {
         assert(keyValidator.value!!)
-        UAirship.shared().channel.editAttributes().removeAttribute(key.value!!).apply()
+        editAttributes().removeAttribute(key.value!!).apply()
     }
 }

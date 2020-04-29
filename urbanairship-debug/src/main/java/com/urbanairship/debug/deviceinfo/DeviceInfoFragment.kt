@@ -52,7 +52,8 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
                 when (preference.key) {
                     TAGS_KEY -> Navigation.findNavController(it).navigate(R.id.deviceInfoTagsFragment)
                     TAG_GROUPS_KEY -> Navigation.findNavController(it).navigate(R.id.deviceInfoTagGroupsFragment)
-                    ATTRIBUTES_KEY -> Navigation.findNavController(it).navigate(R.id.deviceInfoAttributesFragment)
+                    CHANNEL_ATTRIBUTES_KEY -> Navigation.findNavController(it).navigate(R.id.deviceChannelAttributesFragment)
+                    NAMED_USER_ATTRIBUTES_KEY -> Navigation.findNavController(it).navigate(R.id.deviceNamedUserAttributesFragment)
                     ASSOCIATED_IDENTIFIERS_KEY -> Navigation.findNavController(it).navigate(R.id.deviceInfoAssociatedIdentifiersFragment)
                 }
             }
@@ -73,7 +74,8 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
         companion object {
             private const val TAGS_KEY = "tags"
             private const val TAG_GROUPS_KEY = "tagGroups"
-            private const val ATTRIBUTES_KEY = "attributes"
+            private const val CHANNEL_ATTRIBUTES_KEY = "channel_attributes"
+            private const val NAMED_USER_ATTRIBUTES_KEY = "named_user_attributes"
             private const val ASSOCIATED_IDENTIFIERS_KEY = "associated_identifiers"
             private const val DISPLAY_INTERVAL_TAG = "DISPLAY_INTERVAL_TAG"
         }
