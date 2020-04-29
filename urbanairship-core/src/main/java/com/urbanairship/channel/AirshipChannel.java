@@ -84,7 +84,6 @@ public class AirshipChannel extends AirshipComponent {
     private final List<AirshipChannelListener> airshipChannelListeners = new CopyOnWriteArrayList<>();
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
     private final Object tagLock = new Object();
-    private final Object attributeLock = new Object();
 
     private final PendingAttributeMutationStore attributeMutationStore;
     private final AirshipRuntimeConfig runtimeConfig;
@@ -372,13 +371,11 @@ public class AirshipChannel extends AirshipComponent {
                     return;
                 }
 
-                synchronized (attributeLock) {
-                    List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
+                List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
 
-                    // Add mutations to store
-                    attributeMutationStore.add(pendingMutations);
-                    dispatchUpdateAttributesJob();
-                }
+                // Add mutations to store
+                attributeMutationStore.add(pendingMutations);
+                dispatchUpdateAttributesJob();
             }
         };
     }
@@ -771,7 +768,6 @@ public class AirshipChannel extends AirshipComponent {
      * @return {@code true} if uploads are completed, otherwise {@code false}.
      */
     private boolean uploadAttributeMutations(@NonNull String channelId) {
-
         while (true) {
             // Collapse mutations before we try to send any updates
             attributeMutationStore.collapseAndSaveMutations();
@@ -781,9 +777,9 @@ public class AirshipChannel extends AirshipComponent {
                 break;
             }
 
-            Response response;
+            Response<Void> response;
             try {
-                response = attributeApiClient.updateAttributes(channelId, mutations);
+                response = attributeApiClient.updateChannelAttributes(channelId, mutations);
             } catch (RequestException e) {
                 Logger.debug(e, "AirshipChannel - Failed to update attributes, retrying.");
                 return false;
@@ -796,7 +792,7 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             if (response.isClientError()) {
-                Logger.error("Failed to update attributes with unrecoverable status %s.", response.getStatus());
+                Logger.error("AirshipChannel - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
             }
 
             attributeMutationStore.pop();
@@ -806,10 +802,8 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     private void clearPendingAttributes() {
-        synchronized (attributeLock) {
-            Logger.debug("Deleting pending attributes.");
-            attributeMutationStore.clear();
-        }
+        Logger.debug("Deleting pending attributes.");
+        attributeMutationStore.clear();
     }
 
     private void clearTags() {

@@ -568,7 +568,7 @@ public class AirshipChannelTests extends BaseTestCase {
                       .apply();
 
         // Setup response
-        when(mockAttributeClient.updateAttributes(eq("channel"), eq(expectedMutations)))
+        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 200));
 
         // Update the registration
@@ -601,7 +601,7 @@ public class AirshipChannelTests extends BaseTestCase {
                       .apply();
 
         // Setup response
-        when(mockAttributeClient.updateAttributes(eq("channel"), eq(expectedMutations)))
+        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 429));
 
         // Update the registration
@@ -633,7 +633,7 @@ public class AirshipChannelTests extends BaseTestCase {
                       .apply();
 
         // Setup response
-        when(mockAttributeClient.updateAttributes(eq("channel"), eq(expectedMutations)))
+        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 500));
 
         // Update the registration

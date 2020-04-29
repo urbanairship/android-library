@@ -13,7 +13,6 @@ import java.net.URL;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
@@ -24,6 +23,8 @@ import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 class AttributeApiClient {
 
     private static final String CHANNEL_API_PATH = "api/channels/";
+    private static final String NAMED_USER_API_PATH = "api/named_users/";
+
     private static final String ATTRIBUTE_PARAM = "attributes";
 
     private static final String ATTRIBUTE_PLATFORM_QUERY_PARAM = "platform";
@@ -52,15 +53,21 @@ class AttributeApiClient {
      *
      * @param channelId The channel Id.
      * @param mutations The attribute mutations.
-     * @return The response or null if an error occurred.
+     * @return The response.
      */
     @NonNull
-    Response<Void> updateAttributes(@NonNull String channelId, @NonNull List<PendingAttributeMutation> mutations) throws RequestException {
-        URL url = getAttributeUrl(channelId);
+    Response<Void> updateChannelAttributes(@NonNull String channelId, @NonNull List<PendingAttributeMutation> mutations) throws RequestException {
+        URL url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(CHANNEL_API_PATH)
+                               .appendPath(channelId)
+                               .appendPath(ATTRIBUTE_PARAM)
+                               .appendQueryParameter(ATTRIBUTE_PLATFORM_QUERY_PARAM, getPlatform())
+                               .build();
 
         JsonMap attributePayload = JsonMap.newBuilder()
-                                         .putOpt(ATTRIBUTE_PAYLOAD_KEY, mutations)
-                                         .build();
+                                          .putOpt(ATTRIBUTE_PAYLOAD_KEY, mutations)
+                                          .build();
 
         Logger.verbose("Updating channel Id:%s with payload: %s", channelId, attributePayload);
 
@@ -73,19 +80,33 @@ class AttributeApiClient {
     }
 
     /**
-     * Gets a device url for a given path.
+     * Update the attributes for the given named user.
      *
-     * @return The device URL or {@code null} if the URL is invalid.
+     * @param namedUserId The named user Id.
+     * @param mutations The attribute mutations.
+     * @return The response.
      */
-    @Nullable
-    private URL getAttributeUrl(@NonNull String channelId) {
-        return runtimeConfig.getUrlConfig()
-                            .deviceUrl()
-                            .appendEncodedPath(CHANNEL_API_PATH)
-                            .appendPath(channelId)
-                            .appendPath(ATTRIBUTE_PARAM)
-                            .appendQueryParameter(ATTRIBUTE_PLATFORM_QUERY_PARAM, getPlatform())
-                            .build();
+    @NonNull
+    Response<Void> updateNamedUserAttributes(@NonNull String namedUserId, @NonNull List<PendingAttributeMutation> mutations) throws RequestException {
+        URL url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(NAMED_USER_API_PATH)
+                               .appendPath(namedUserId)
+                               .appendPath(ATTRIBUTE_PARAM)
+                               .build();
+
+        JsonMap attributePayload = JsonMap.newBuilder()
+                                          .putOpt(ATTRIBUTE_PAYLOAD_KEY, mutations)
+                                          .build();
+
+        Logger.verbose("Updating named user:%s attributes with payload: %s", namedUserId, attributePayload);
+
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(attributePayload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute();
     }
 
     @NonNull
@@ -93,7 +114,6 @@ class AttributeApiClient {
         if (runtimeConfig.getPlatform() == AMAZON_PLATFORM) {
             return ATTRIBUTE_PLATFORM_AMAZON;
         }
-
         return ATTRIBUTE_PLATFORM_ANDROID;
     }
 

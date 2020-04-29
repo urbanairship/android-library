@@ -17,9 +17,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
+import java.util.List;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -28,6 +30,10 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
@@ -48,6 +54,7 @@ public class NamedUserTest extends BaseTestCase {
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
     private NamedUserApiClient mockNamedUserClient;
+    private AttributeApiClient mockAttributesClient;
     private Application application;
 
     @Before
@@ -55,6 +62,7 @@ public class NamedUserTest extends BaseTestCase {
         application = ApplicationProvider.getApplicationContext();
         mockDispatcher = mock(JobDispatcher.class);
         mockNamedUserClient = Mockito.mock(NamedUserApiClient.class);
+        mockAttributesClient = Mockito.mock(AttributeApiClient.class);
 
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
         mockChannel = mock(AirshipChannel.class);
@@ -62,8 +70,49 @@ public class NamedUserTest extends BaseTestCase {
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        namedUser = new NamedUser(TestApplication.getApplication(), dataStore, mockTagGroupRegistrar,
-                mockChannel, mockDispatcher, mockNamedUserClient);
+        namedUser = new NamedUser(application, dataStore, mockTagGroupRegistrar,
+                mockChannel, mockDispatcher, mockNamedUserClient, mockAttributesClient);
+    }
+
+    @Test
+    public void testInitUpdatesIdOutOfDate() {
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        namedUser.forceUpdate();
+        clearInvocations(mockDispatcher);
+
+        namedUser.init();
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+    }
+
+    @Test
+    public void testInitUpdatesIfIdSet() throws RequestException {
+        when(mockChannel.getId()).thenReturn("channelID");
+        namedUser.setId("namedUserID");
+
+        // Set up a 2xx response to associate the named user
+        Response associateResponse = new Response.Builder<Void>(200).build();
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(associateResponse);
+
+        // Update ID
+        namedUser.onPerformJob(UAirship.shared(), JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build());
+
+        assertTrue(namedUser.isIdUpToDate());
+
+        clearInvocations(mockDispatcher);
+
+        namedUser.init();
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
     }
 
     /**
@@ -226,7 +275,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -246,7 +295,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -271,21 +320,6 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
-            }
-        }));
-    }
-
-    /**
-     * Test dispatchUpdateTagGroupsJob dispatches a job to update the tag groups.
-     */
-    @Test
-    public void testStartUpdateTagsService() {
-        namedUser.dispatchUpdateTagGroupsJob();
-
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -323,6 +357,8 @@ public class NamedUserTest extends BaseTestCase {
     public void testAssociateNamedUserSucceed() throws RequestException {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
+
+        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
 
         for (int statusCode = 200; statusCode < 300; statusCode++) {
             // Force an update
@@ -573,7 +609,7 @@ public class NamedUserTest extends BaseTestCase {
         when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(true);
 
         // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
     }
 
@@ -586,7 +622,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId(null);
 
         // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
@@ -597,16 +633,117 @@ public class NamedUserTest extends BaseTestCase {
      * Test update named user retries when the upload fails.
      */
     @Test
-    public void testUpdateNamedUserTagsRetry() {
-        // Return a named user ID
-        namedUser.setId("namedUserId");
+    public void testUpdateNamedUserTagsRetry() throws RequestException {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        // Set up a 2xx response when associating the named user
+        Response<Void> response = new Response.Builder<Void>(200).build();
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Provide pending changes
         when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(false);
 
         // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
     }
 
+    /**
+     * Test empty editAttribute's apply function doesn't generate a call to update the attributes.
+     */
+    @Test
+    public void testEmptyAttributeUpdates() {
+        namedUser.editAttributes().apply();
+        verifyZeroInteractions(mockDispatcher);
+    }
+
+    /**
+     * Test editAttribute's apply function dispatches a job to update the attributes.
+     */
+    @Test
+    public void testAttributesUpdates() {
+        namedUser.editAttributes()
+                 .setAttribute("expected_key", "expected_value")
+                 .apply();
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+    }
+
+    /**
+     * Test editAttribute's apply function dispatches a job to update the attributes.
+     */
+    @Test
+    public void testUploadAttributes() throws RequestException {
+        namedUser.editAttributes()
+                 .setAttribute("expected_key", "expected_value")
+                 .apply();
+
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+
+        // Set up a 2xx response to associate the named user
+        Response associateResponse = new Response.Builder<Void>(200).build();
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(associateResponse);
+
+        Response<Void> attributeResponse = new Response.Builder<Void>(500).build();
+        when(mockAttributesClient.updateNamedUserAttributes(anyString(), ArgumentMatchers.<PendingAttributeMutation>anyList()))
+                .thenReturn(attributeResponse);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        verify(mockAttributesClient).updateNamedUserAttributes(eq("namedUserID"), argThat(new ArgumentMatcher<List<PendingAttributeMutation>>() {
+            @Override
+            public boolean matches(List<PendingAttributeMutation> mutations) {
+                if (mutations.size() != 1) {
+                    return false;
+                }
+                return mutations.get(0).getMutationName().equals("expected_key");
+            }
+        }));
+    }
+
+    /**
+     * Test editAttribute's apply function dispatches a job to update the attributes.
+     */
+    @Test
+    public void testUploadAttributesRetry() throws RequestException {
+        namedUser.editAttributes()
+                 .setAttribute("expected_key", "expected_value")
+                 .apply();
+
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+
+        // Set up a 2xx response to associate the named user
+        Response associateResponse = new Response.Builder<Void>(200).build();
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(associateResponse);
+
+        Response<Void> attributeResponse = new Response.Builder<Void>(500).build();
+        when(mockAttributesClient.updateNamedUserAttributes(anyString(), ArgumentMatchers.<PendingAttributeMutation>anyList()))
+                .thenReturn(attributeResponse);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        verify(mockAttributesClient).updateNamedUserAttributes(eq("namedUserID"), argThat(new ArgumentMatcher<List<PendingAttributeMutation>>() {
+            @Override
+            public boolean matches(List<PendingAttributeMutation> mutations) {
+                if (mutations.size() != 1) {
+                    return false;
+                }
+                return mutations.get(0).getMutationName().equals("expected_key");
+            }
+        }));
+    }
 }

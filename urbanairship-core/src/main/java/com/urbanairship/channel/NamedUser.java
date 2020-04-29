@@ -45,9 +45,9 @@ public class NamedUser extends AirshipComponent {
     private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
-     * Action to perform update request for pending named user tag group changes.
+     * Attribute storage key.
      */
-    static final String ACTION_UPDATE_TAG_GROUPS = "ACTION_UPDATE_TAG_GROUPS";
+    private static final String ATTRIBUTE_MUTATION_STORE_KEY = "com.urbanairship.nameduser.ATTRIBUTE_MUTATION_STORE_KEY";
 
     /**
      * Action to update named user association or disassociation.
@@ -71,7 +71,10 @@ public class NamedUser extends AirshipComponent {
     private final TagGroupRegistrar tagGroupRegistrar;
 
     private final AirshipChannel airshipChannel;
+    private final PendingAttributeMutationStore attributeMutationStore;
+
     private final NamedUserApiClient namedUserApiClient;
+    private final AttributeApiClient attributeApiClient;
 
     /**
      * Creates a NamedUser.
@@ -86,7 +89,7 @@ public class NamedUser extends AirshipComponent {
                      @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull TagGroupRegistrar tagGroupRegistrar,
                      @NonNull AirshipChannel airshipChannel) {
         this(context, preferenceDataStore, tagGroupRegistrar, airshipChannel, JobDispatcher.shared(context),
-                new NamedUserApiClient(runtimeConfig));
+                new NamedUserApiClient(runtimeConfig), new AttributeApiClient(runtimeConfig));
     }
 
     /**
@@ -95,14 +98,16 @@ public class NamedUser extends AirshipComponent {
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
               @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull AirshipChannel airshipChannel,
-              @NonNull JobDispatcher dispatcher, @NonNull NamedUserApiClient namedUserApiClient) {
+              @NonNull JobDispatcher dispatcher, @NonNull NamedUserApiClient namedUserApiClient,
+              @NonNull AttributeApiClient attributeApiClient) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.tagGroupRegistrar = tagGroupRegistrar;
         this.airshipChannel = airshipChannel;
         this.jobDispatcher = dispatcher;
         this.namedUserApiClient = namedUserApiClient;
-
+        this.attributeApiClient = attributeApiClient;
+        this.attributeMutationStore = new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY);
     }
 
     @Override
@@ -121,10 +126,8 @@ public class NamedUser extends AirshipComponent {
             }
         });
 
-        if (!isIdUpToDate()) {
+        if (airshipChannel.getId() != null && (!isIdUpToDate() || getId() != null)) {
             dispatchNamedUserUpdateJob();
-        } else if (getId() != null) {
-            dispatchUpdateTagGroupsJob();
         }
     }
 
@@ -146,12 +149,8 @@ public class NamedUser extends AirshipComponent {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        switch (jobInfo.getAction()) {
-            case ACTION_UPDATE_NAMED_USER:
-                return onUpdateNamedUser();
-
-            case ACTION_UPDATE_TAG_GROUPS:
-                return onUpdateTagGroup();
+        if (ACTION_UPDATE_NAMED_USER.equals(jobInfo.getAction())) {
+            return onUpdateNamedUser();
         }
 
         return JobInfo.JOB_FINISHED;
@@ -210,7 +209,6 @@ public class NamedUser extends AirshipComponent {
                 preferenceDataStore.put(NAMED_USER_ID_KEY, id);
                 updateChangeToken();
                 clearPendingNamedUserUpdates();
-
                 dispatchNamedUserUpdateJob();
             } else {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
@@ -235,11 +233,36 @@ public class NamedUser extends AirshipComponent {
 
                 if (!collapsedMutations.isEmpty()) {
                     tagGroupRegistrar.addMutations(TagGroupRegistrar.NAMED_USER, collapsedMutations);
-                    dispatchUpdateTagGroupsJob();
+                    dispatchNamedUserUpdateJob();
                 }
             }
         };
     }
+
+    /**
+     * Edit the attributes associated with the named user.
+     *
+     * @return An {@link AttributeEditor}.
+     */
+    @NonNull
+    public AttributeEditor editAttributes() {
+        return new AttributeEditor() {
+            @Override
+            protected void onApply(@NonNull List<AttributeMutation> mutations) {
+                if (!isDataCollectionEnabled()) {
+                    Logger.info("Ignore attributes, data opted out.");
+                    return;
+                }
+
+                List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
+
+                // Add mutations to store
+                attributeMutationStore.add(pendingMutations);
+                dispatchNamedUserUpdateJob();
+            }
+        };
+    }
+
 
     @VisibleForTesting
     boolean isIdUpToDate() {
@@ -287,20 +310,6 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-    /**
-     * Dispatches a job to update the named user tag groups.
-     */
-    void dispatchUpdateTagGroupsJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_TAG_GROUPS)
-                                 .setId(JobInfo.NAMED_USER_UPDATE_TAG_GROUPS)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(NamedUser.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
     private void clearPendingNamedUserUpdates() {
         Logger.verbose("Clearing pending Named Users tag updates.");
         tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
@@ -315,36 +324,61 @@ public class NamedUser extends AirshipComponent {
     }
 
     /**
-     * Handles associate/disassociate updates.
+     * Handles named user update job.
      *
      * @return The job result.
      */
     @JobInfo.JobResult
     @WorkerThread
     private int onUpdateNamedUser() {
-        String changeToken;
-        String currentId;
-
-        synchronized (idLock) {
-            if (isIdUpToDate()) {
-                Logger.verbose("NamedUserJobHandler - Named user already updated. Skipping.");
-                return JobInfo.JOB_FINISHED;
-            }
-
-            changeToken = getChangeToken();
-            currentId = getId();
-        }
-
         String channelId = airshipChannel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
+            Logger.verbose("NamedUser - The channel ID does not exist. Will retry when channel ID is available.");
             return JobInfo.JOB_FINISHED;
+        }
+
+        // Update ID
+        if (!isIdUpToDate()) {
+            int result = updateNamedUserId(channelId);
+            if (result != JobInfo.JOB_FINISHED) {
+                return result;
+            }
+        }
+
+        // Update tag groups and attributes
+        String currentId = getId();
+        if (isIdUpToDate() && currentId != null) {
+            int tagResult = updateTagGroups(currentId);
+            int attributeResult = updateAttributes(currentId);
+
+            if (tagResult == JobInfo.JOB_RETRY || attributeResult == JobInfo.JOB_RETRY) {
+                return JobInfo.JOB_RETRY;
+            }
+        }
+
+        return JobInfo.JOB_FINISHED;
+    }
+
+    /**
+     * Handles associate/disassociate updates.
+     *
+     * @return The job result.
+     */
+    @JobInfo.JobResult
+    @WorkerThread
+    private int updateNamedUserId(@NonNull String channelId) {
+        String changeToken;
+        String namedUserId;
+
+        synchronized (idLock) {
+            changeToken = getChangeToken();
+            namedUserId = getId();
         }
 
         Response<Void> response;
         try {
-            response = currentId == null ? namedUserApiClient.disassociate(channelId)
-                    : namedUserApiClient.associate(currentId, channelId);
+            response = namedUserId == null ? namedUserApiClient.disassociate(channelId)
+                    : namedUserApiClient.associate(namedUserId, channelId);
         } catch (RequestException e) {
             // Server error occurred, so retry later.
             Logger.debug(e, "NamedUser - Update named user failed, will retry.");
@@ -357,18 +391,17 @@ public class NamedUser extends AirshipComponent {
             return JobInfo.JOB_RETRY;
         }
 
-        // 2xx
-        if (response.isSuccessful()) {
-            Logger.debug("Update named user succeeded with status: %s", response.getStatus());
-            preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
-            dispatchUpdateTagGroupsJob();
-            return JobInfo.JOB_FINISHED;
-        }
-
         // 403
         if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
             Logger.debug("Update named user failed with response: %s." +
                     "This action is not allowed when the app is in server-only mode.", response);
+            return JobInfo.JOB_FINISHED;
+        }
+
+        // 2xx
+        if (response.isSuccessful()) {
+            Logger.debug("Update named user succeeded with status: %s", response.getStatus());
+            preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
             return JobInfo.JOB_FINISHED;
         }
 
@@ -378,24 +411,56 @@ public class NamedUser extends AirshipComponent {
     }
 
     /**
-     * Handles performing any tag group requests if any pending tag group changes are available.
+     * Sends any pending tag groups.
+     *
+     * @return The job result.
+     */
+    @WorkerThread
+    @JobInfo.JobResult
+    private int updateTagGroups(@NonNull String namedUserId) {
+        if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, namedUserId)) {
+            return JobInfo.JOB_FINISHED;
+        }
+        return JobInfo.JOB_RETRY;
+    }
+
+    /**
+     * Sends any pending attribute changes.
      *
      * @return The job result.
      */
     @JobInfo.JobResult
     @WorkerThread
-    private int onUpdateTagGroup() {
-        String namedUserId = getId();
-        if (namedUserId == null) {
-            Logger.verbose("Failed to update named user tags due to null named user ID.");
-            return JobInfo.JOB_FINISHED;
+    private int updateAttributes(@NonNull String namedUserId) {
+        while (isIdUpToDate()) {
+            // Collapse mutations before we try to send any updates
+            attributeMutationStore.collapseAndSaveMutations();
+
+            List<PendingAttributeMutation> mutations = attributeMutationStore.peek();
+            if (mutations == null) {
+                break;
+            }
+
+            Response<Void> response;
+            try {
+                response = attributeApiClient.updateNamedUserAttributes(namedUserId, mutations);
+            } catch (RequestException e) {
+                Logger.debug(e, "NamedUser - Failed to update attributes");
+                return JobInfo.JOB_RETRY;
+            }
+
+            Logger.debug("NamedUser - Updated attributes response: %s", response);
+            if (response.isServerError() || response.isTooManyRequestsError()) {
+                return JobInfo.JOB_RETRY;
+            }
+
+            if (response.isClientError()) {
+                Logger.error("NamedUser - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
+            }
+
+            attributeMutationStore.pop();
         }
 
-        if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, namedUserId)) {
-            return JobInfo.JOB_FINISHED;
-        }
-
-        return JobInfo.JOB_RETRY;
+        return JobInfo.JOB_FINISHED;
     }
-
 }

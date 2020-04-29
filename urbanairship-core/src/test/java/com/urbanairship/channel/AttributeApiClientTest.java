@@ -60,11 +60,11 @@ public class AttributeApiClientTest extends BaseTestCase {
      * Test android channel update.
      */
     @Test
-    public void testAttributeUpdateAndroid() throws JsonException, RequestException {
+    public void testAttributeUpdateAndroidChannel() throws JsonException, RequestException {
         testRequest.responseStatus = 200;
 
         List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateChannelAttributes("expected_identifier", attributes);
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .putOpt("attributes", attributes)
@@ -80,13 +80,13 @@ public class AttributeApiClientTest extends BaseTestCase {
      * Test amazon channel update.
      */
     @Test
-    public void testAttributeUpdateAmazon() throws JsonException, RequestException {
+    public void testAttributeUpdateAmazonChannel() throws JsonException, RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         testRequest.responseStatus = 200;
 
         List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateChannelAttributes("expected_identifier", attributes);
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .putOpt("attributes", attributes)
@@ -96,8 +96,25 @@ public class AttributeApiClientTest extends BaseTestCase {
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals(expectedBody, JsonValue.parseString(testRequest.getRequestBody()));
         assertEquals(200, response.getStatus());
+    }
 
+    /**
+     * Test named user attributes
+     */
+    @Test
+    public void testAttributeUpdateNamedUser() throws JsonException, RequestException {
+        testRequest.responseStatus = 200;
 
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
+        List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
+        Response<Void> response = client.updateNamedUserAttributes("expected_identifier", attributes);
+
+        JsonMap expectedBody = JsonMap.newBuilder()
+                                      .putOpt("attributes", attributes)
+                                      .build();
+
+        assertEquals("https://example.com/api/named_users/expected_identifier/attributes", testRequest.getUrl().toString());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals(expectedBody,  JsonValue.parseString(testRequest.getRequestBody()));
+        assertEquals(200,  response.getStatus());
     }
 }

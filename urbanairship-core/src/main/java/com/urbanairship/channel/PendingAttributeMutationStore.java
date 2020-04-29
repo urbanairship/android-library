@@ -15,6 +15,8 @@ import androidx.annotation.Nullable;
 class PendingAttributeMutationStore {
     private final PreferenceDataStore dataStore;
     private final String storeKey;
+    private final Object attributeLock = new Object();
+
 
     /**
      * Default constructor.
@@ -31,7 +33,7 @@ class PendingAttributeMutationStore {
      * Clears all the mutations.
      */
     void clear() {
-        synchronized (this) {
+        synchronized (attributeLock) {
             dataStore.remove(storeKey);
         }
     }
@@ -42,7 +44,7 @@ class PendingAttributeMutationStore {
      * @param pendingAttributeMutations A list of pending attribute mutations.
      */
     void add(List<PendingAttributeMutation> pendingAttributeMutations) {
-        synchronized (this) {
+        synchronized (attributeLock) {
             List<List<PendingAttributeMutation>> allMutations = getMutations();
             allMutations.add(pendingAttributeMutations);
             dataStore.put(storeKey, JsonValue.wrapOpt(allMutations));
@@ -56,7 +58,7 @@ class PendingAttributeMutationStore {
      */
     @Nullable
     List<PendingAttributeMutation> pop() {
-        synchronized (this) {
+        synchronized (attributeLock) {
             List<List<PendingAttributeMutation>> allMutations = getMutations();
 
             if (peek() == null) {
@@ -77,7 +79,7 @@ class PendingAttributeMutationStore {
      */
     @Nullable
     List<PendingAttributeMutation> peek() {
-        synchronized (this) {
+        synchronized (attributeLock) {
             List<List<PendingAttributeMutation>> allMutations = getMutations();
 
             if (allMutations.isEmpty()) {
@@ -96,7 +98,7 @@ class PendingAttributeMutationStore {
      * Collapses a list of mutations down to a single collection of mutations.
      */
     void collapseAndSaveMutations() {
-        synchronized (this) {
+        synchronized (attributeLock) {
             List<List<PendingAttributeMutation>> allMutations = getMutations();
 
             List<PendingAttributeMutation> combined = new ArrayList<>();
