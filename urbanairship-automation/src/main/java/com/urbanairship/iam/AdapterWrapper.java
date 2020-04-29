@@ -3,6 +3,8 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.assets.Assets;
@@ -56,7 +58,7 @@ final class AdapterWrapper {
      * @return The prepare result.
      */
     @InAppMessageAdapter.PrepareResult
-    int prepare(Context context, Assets assets) {
+    int prepare(@NonNull Context context, @NonNull Assets assets) {
         try {
             Logger.debug("AdapterWrapper - Preparing schedule: %s message: %s", schedule.getId(), message.getId());
             return adapter.onPrepare(context, assets);
@@ -105,11 +107,16 @@ final class AdapterWrapper {
     @MainThread
     void displayFinished() {
         Logger.debug("AdapterWrapper - Display finished: %s message: %s", schedule.getId(), message.getId());
-        try {
-            coordinator.onDisplayFinished(message);
-        } catch (Exception e) {
-            Logger.error(e, "AdapterWrapper - Exception during onDisplayFinished().");
-        }
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    coordinator.onDisplayFinished(message);
+                } catch (Exception e) {
+                    Logger.error(e, "AdapterWrapper - Exception during onDisplayFinished().");
+                }
+            }
+        });
     }
 
     /**
