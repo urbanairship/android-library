@@ -7,6 +7,7 @@ import android.util.Base64;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.ConnectionUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -21,6 +22,7 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -39,7 +41,14 @@ public class Request {
 
     private static final int NETWORK_TIMEOUT_MS = 60000;
 
-    @NonNull
+    private static final ResponseParser<Void> EMPTY_RESPONSE_PARSER = new ResponseParser<Void>() {
+        @Override
+        public Void parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) {
+            return null;
+        }
+    };
+
+    @Nullable
     protected URL url;
 
     @Nullable
@@ -48,7 +57,7 @@ public class Request {
     @Nullable
     protected String password;
 
-    @NonNull
+    @Nullable
     protected String requestMethod;
 
     @Nullable
@@ -57,11 +66,14 @@ public class Request {
     @Nullable
     protected String contentType;
 
+    protected long ifModifiedSince = 0;
+
+    protected boolean compressRequestBody = false;
+
     @NonNull
     protected final Map<String, String> responseProperties;
+
     private static final String USER_AGENT_FORMAT = "%s (%s; %s; UrbanAirshipLib-%s/%s; %s; %s)";
-    private long ifModifiedSince = 0;
-    private boolean compressRequestBody = false;
 
     /**
      * Request constructor.
@@ -69,14 +81,22 @@ public class Request {
      * @param requestMethod The string request method.
      * @param url The request URL.
      */
-    public Request(@NonNull String requestMethod, @NonNull URL url) {
+    public Request(@Nullable String requestMethod, @Nullable URL url) {
+        this();
         this.requestMethod = requestMethod;
         this.url = url;
+    }
 
+    public Request() {
         responseProperties = new HashMap<>();
         responseProperties.put("User-Agent", getUrbanAirshipUserAgent());
     }
 
+    public Request setOperation(@Nullable String requestMethod, @Nullable URL url) {
+        this.requestMethod = requestMethod;
+        this.url = url;
+        return this;
+    }
     /**
      * Sets the credentials.
      *
@@ -90,6 +110,17 @@ public class Request {
         this.password = password;
 
         return this;
+    }
+
+    /**
+     * Sets the JSON request body.
+     *
+     * @param json The JSON.
+     * @return The request.
+     */
+    @NonNull
+    public Request setRequestBody(@NonNull JsonSerializable json) {
+        return setRequestBody(json.toJsonValue().toString(), "application/json");
     }
 
     /**
@@ -153,6 +184,16 @@ public class Request {
     }
 
     /**
+     * Set the `application/vnd.urbanairship+json; version=3;` as the `Accept` header.
+     *
+     * @return The request.
+     */
+    @NonNull
+    public Request setAirshipJsonAcceptsHeader() {
+        return setHeader("Accept", "application/vnd.urbanairship+json; version=3;");
+    }
+
+    /**
      * Sets whether the request body is compressed with gzip.
      *
      * @param compressRequestBody A boolean to compress the request body.
@@ -170,7 +211,34 @@ public class Request {
      * @return The request response.
      */
     @Nullable
-    public Response execute() {
+    public Response<Void> safeExecute() {
+        try {
+            return execute(EMPTY_RESPONSE_PARSER);
+        } catch (RequestException e) {
+            Logger.debug(e, "Request failed.");
+            return null;
+        }
+    }
+
+    public Response<Void> execute() throws RequestException {
+        return execute(EMPTY_RESPONSE_PARSER);
+    }
+
+    /**
+     * Executes the request.
+     *
+     * @return The request response.
+     */
+    @NonNull
+    public <T> Response<T> execute(@NonNull ResponseParser<T> parser) throws RequestException {
+        if (url == null) {
+            throw new RequestException("Unable to perform request: missing URL");
+        }
+
+        if (requestMethod == null) {
+            throw new RequestException("Unable to perform request: missing request method");
+        }
+
         HttpURLConnection conn = null;
 
         try {
@@ -221,22 +289,22 @@ public class Request {
                 }
             }
 
-            Response.Builder responseBuilder = Response.newBuilder(conn.getResponseCode())
-                                                       .setResponseMessage(conn.getResponseMessage())
-                                                       .setResponseHeaders(conn.getHeaderFields())
-                                                       .setLastModified(conn.getLastModified());
+            Response.Builder<T> responseBuilder = new Response.Builder<T>(conn.getResponseCode())
+                    .setResponseHeaders(conn.getHeaderFields())
+                    .setLastModified(conn.getLastModified());
 
+            String messageBody;
             try {
-                responseBuilder.setResponseBody(readEntireStream(conn.getInputStream()));
+                messageBody = readEntireStream(conn.getInputStream());
             } catch (IOException ex) {
-                responseBuilder.setResponseBody(readEntireStream(conn.getErrorStream()));
+                messageBody = readEntireStream(conn.getErrorStream());
             }
 
-            return responseBuilder.build();
-
-        } catch (Exception ex) {
-            Logger.debug(ex, "Request - Request failed URL: %s method: %s", url, requestMethod);
-            return null;
+            return responseBuilder.setResult(parser.parseResponse(conn.getResponseCode(), conn.getHeaderFields(), messageBody))
+                                  .setResponseBody(messageBody)
+                                  .build();
+        } catch (Exception e) {
+            throw new RequestException(String.format(Locale.ROOT, "Request failed URL: %s method: %s", url, requestMethod), e);
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -285,5 +353,7 @@ public class Request {
 
         return sb.toString();
     }
+
+
 
 }

@@ -98,7 +98,7 @@ public class EventApiClient {
                                         .addHeaders(headers);
 
         Logger.debug("EventApiClient - Sending analytics events. Request: %s Events: %s", request, events);
-        Response response = request.execute();
+        Response<Void> response = request.safeExecute();
 
         Logger.debug("EventApiClient - Analytics event response: %s", response);
         return response == null ? null : new EventResponse(response);

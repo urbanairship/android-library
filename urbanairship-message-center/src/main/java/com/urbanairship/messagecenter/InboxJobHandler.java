@@ -208,7 +208,7 @@ class InboxJobHandler {
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setIfModifiedSince(dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0))
-                                          .execute();
+                                          .safeExecute();
 
         Logger.verbose("InboxJobHandler - Fetch inbox messages response: %s", response);
 
@@ -320,7 +320,7 @@ class InboxJobHandler {
                                           .setRequestBody(payload.toString(), "application/json")
                                           .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
+                                          .safeExecute();
 
         Logger.verbose("InboxJobHandler - Delete inbox messages response: %s", response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
@@ -360,7 +360,7 @@ class InboxJobHandler {
                                           .setRequestBody(payload.toString(), "application/json")
                                           .setHeader(CHANNEL_ID_HEADER, channel.getId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
+                                          .safeExecute();
 
         Logger.verbose("InboxJobHandler - Mark inbox messages read response: %s", response);
 
@@ -421,7 +421,7 @@ class InboxJobHandler {
                                           .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
+                                          .safeExecute();
 
         // Check for failure
         if (response == null || response.getStatus() != HttpURLConnection.HTTP_CREATED) {
@@ -480,7 +480,7 @@ class InboxJobHandler {
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
+                                          .safeExecute();
 
         Logger.verbose("InboxJobHandler - Update Rich Push user response: %s", response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {

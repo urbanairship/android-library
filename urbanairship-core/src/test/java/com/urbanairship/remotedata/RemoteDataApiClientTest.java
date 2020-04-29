@@ -8,7 +8,7 @@ import android.net.Uri;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PushProviders;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 
 public class RemoteDataApiClientTest extends BaseTestCase {
 
-    private TestRequest testRequest;
+    private LegacyTestRequest testRequest;
     private RemoteDataApiClient client;
     private PushProviders pushProviders;
 
@@ -53,7 +53,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void setUp() {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        testRequest = new TestRequest();
+        testRequest = new LegacyTestRequest();
         RequestFactory requestFactory = new RequestFactory() {
             @NonNull
             @Override
@@ -85,9 +85,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseHeaders(headers)
-                                       .setResponseMessage("OK")
                                        .setResponseBody(list.toString())
                                        .build();
 
@@ -211,9 +210,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseHeaders(headers)
-                                       .setResponseMessage("OK")
                                        .setResponseBody(list.toString())
                                        .build();
 
@@ -233,9 +231,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testFetchRemoteDataRequestFailure() {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                                        .setResponseHeaders(headers)
-                                       .setResponseMessage("Not Implemented")
                                        .build();
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);

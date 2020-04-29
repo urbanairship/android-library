@@ -163,7 +163,7 @@ public class InboxJobHandlerTest {
 
         // Return a 304 response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                Response.newBuilder(HttpURLConnection.HTTP_NOT_MODIFIED).build());
+                new Response.Builder<Void>(HttpURLConnection.HTTP_NOT_MODIFIED).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
@@ -200,8 +200,7 @@ public class InboxJobHandlerTest {
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                Response.newBuilder(HttpURLConnection.HTTP_OK)
-                        .setResponseMessage("OK")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setLastModified(600L)
                         .setResponseBody("{ \"messages\": []}")
                         .build());
@@ -245,8 +244,7 @@ public class InboxJobHandlerTest {
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                Response.newBuilder(HttpURLConnection.HTTP_OK)
-                        .setResponseMessage("OK")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setLastModified(600L)
                         .setResponseBody("{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
                                 "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
@@ -293,7 +291,7 @@ public class InboxJobHandlerTest {
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
                         .build());
 
@@ -329,7 +327,7 @@ public class InboxJobHandlerTest {
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
-                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
                         .build());
 
@@ -361,8 +359,7 @@ public class InboxJobHandlerTest {
         when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
-                        .setResponseMessage("Created")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_CREATED)
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
 
@@ -394,8 +391,7 @@ public class InboxJobHandlerTest {
         when(mockChannel.getId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
-                        .setResponseMessage("Created")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_CREATED)
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
 
@@ -426,8 +422,7 @@ public class InboxJobHandlerTest {
         when(mockChannel.getId()).thenReturn(null);
 
         responses.put("https://device-api.urbanairship.com/api/user/",
-                Response.newBuilder(HttpURLConnection.HTTP_CREATED)
-                        .setResponseMessage("Created")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_CREATED)
                         .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
                         .build());
 
@@ -452,7 +447,7 @@ public class InboxJobHandlerTest {
 
         // Set a error response
         responses.put("https://device-api.urbanairship.com/api/user/",
-                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
+                new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
@@ -479,8 +474,7 @@ public class InboxJobHandlerTest {
 
         // Set a successful response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                Response.newBuilder(HttpURLConnection.HTTP_OK)
-                        .setResponseMessage("OK")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setResponseBody("{ \"ok\" }")
                         .build());
 
@@ -512,8 +506,7 @@ public class InboxJobHandlerTest {
 
         // Set a successful response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                Response.newBuilder(HttpURLConnection.HTTP_OK)
-                        .setResponseMessage("OK")
+                new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setResponseBody("{ \"ok\" }")
                         .build());
 
@@ -561,7 +554,7 @@ public class InboxJobHandlerTest {
 
         // Set a error response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
-                Response.newBuilder(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
+                new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR).build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)

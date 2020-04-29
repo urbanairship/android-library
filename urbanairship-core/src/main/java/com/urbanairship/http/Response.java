@@ -17,7 +17,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class Response {
+public class Response<T> {
 
     /**
      * Status code for 429 - too many requests.
@@ -27,23 +27,50 @@ public class Response {
     private final String responseBody;
     private final Map<String, List<String>> responseHeaders;
     private final int status;
-    private final String responseMessage;
     private final long lastModified;
+    private final T result;
 
-    private Response(Builder builder) {
+    private Response(Builder<T> builder) {
         this.status = builder.status;
         this.responseBody = builder.responseBody;
         this.responseHeaders = builder.responseHeaders;
-        this.responseMessage = builder.responseMessage;
         this.lastModified = builder.lastModified;
+        this.result = builder.result;
     }
 
-    protected Response(@NonNull Response response) {
+    protected Response(@NonNull Response<T> response) {
         this.status = response.status;
         this.responseBody = response.responseBody;
         this.responseHeaders = response.responseHeaders;
-        this.responseMessage = response.responseMessage;
         this.lastModified = response.lastModified;
+        this.result = response.result;
+    }
+
+    /**
+     * Gets the result.
+     *
+     * @return The channel result.
+     */
+    public T getResult() {
+        return result;
+    }
+
+    /**
+     * Retrieves the first header value for a given key.
+     *
+     * @param key The key.
+     * @return The first header value.
+     */
+    @Nullable
+    public String getResponseHeader(@NonNull String key) {
+        if (responseHeaders != null) {
+            List<String> headersList = responseHeaders.get(key);
+            if (headersList != null && headersList.size() > 0) {
+                return headersList.get(0);
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -53,7 +80,6 @@ public class Response {
                 "responseBody='" + responseBody + '\'' +
                 ", responseHeaders=" + responseHeaders +
                 ", status=" + status +
-                ", responseMessage='" + responseMessage + '\'' +
                 ", lastModified=" + lastModified +
                 '}';
     }
@@ -96,6 +122,24 @@ public class Response {
     }
 
     /**
+     * True if the status is 500-599, otherwise false.
+     *
+     * @return {@code true} if the status is 500-599, otherwise {@code false}.
+     */
+    public boolean isServerError() {
+        return UAHttpStatusUtil.inServerErrorRange(status);
+    }
+
+    /**
+     * True if the status is 400-499, otherwise false.
+     *
+     * @return {@code true} if the status is 400-499, otherwise {@code false}.
+     */
+    public boolean isClientError() {
+        return UAHttpStatusUtil.inClientErrorRange(status);
+    }
+
+    /**
      * Returns the response headers.
      *
      * @return The response headers as a map.
@@ -106,26 +150,24 @@ public class Response {
     }
 
     /**
-     * Builder factory method.
+     * True if the status is 429, otherwise false.
      *
-     * @param status The status.
-     * @return A new builder instance.
+     * @return {@code true} if the status is 429, otherwise {@code false}.
      */
-    @NonNull
-    public static Builder newBuilder(int status) {
-        return new Builder(status);
+    public boolean isTooManyRequestsError() {
+        return status == HTTP_TOO_MANY_REQUESTS;
     }
 
     /**
      * Builds a Request Response.
      */
-    public static class Builder {
+    public static class Builder<T> {
 
         private String responseBody;
         private Map<String, List<String>> responseHeaders;
         private final int status;
-        private String responseMessage;
         private long lastModified = 0;
+        private T result;
 
         /**
          * Creates a new response builder.
@@ -137,25 +179,13 @@ public class Response {
         }
 
         /**
-         * Set the response message.
-         *
-         * @param responseMessage The response message string.
-         * @return The builder with the response message set.
-         */
-        @NonNull
-        public Builder setResponseMessage(@Nullable String responseMessage) {
-            this.responseMessage = responseMessage;
-            return this;
-        }
-
-        /**
          * Set the response body.
          *
          * @param responseBody The response body string.
          * @return The builder with the response body set.
          */
         @NonNull
-        public Builder setResponseBody(@Nullable String responseBody) {
+        public Builder<T> setResponseBody(@Nullable String responseBody) {
             this.responseBody = responseBody;
             return this;
         }
@@ -167,7 +197,7 @@ public class Response {
          * @return The builder with the response headers set.
          */
         @NonNull
-        public Builder setResponseHeaders(@Nullable Map<String, List<String>> responseHeaders) {
+        public Builder<T> setResponseHeaders(@Nullable Map<String, List<String>> responseHeaders) {
             this.responseHeaders = responseHeaders;
             return this;
         }
@@ -179,8 +209,20 @@ public class Response {
          * @return The builder with the last modified time.
          */
         @NonNull
-        public Builder setLastModified(long lastModified) {
+        public Builder<T> setLastModified(long lastModified) {
             this.lastModified = lastModified;
+            return this;
+        }
+
+        /**
+         * Sets the parsed result
+         *
+         * @param result The parsed result.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder<T> setResult(T result) {
+            this.result = result;
             return this;
         }
 
@@ -190,28 +232,10 @@ public class Response {
          * @return The response.
          */
         @NonNull
-        public Response build() {
-            return new Response(this);
+        public Response<T> build() {
+            return new Response<>(this);
         }
 
-    }
-
-    /**
-     * Retrieves the first header value for a given key.
-     *
-     * @param key The key.
-     * @return The first header value.
-     */
-    @Nullable
-    public String getResponseHeader(@NonNull String key) {
-        if (responseHeaders != null) {
-            List<String> headersList = responseHeaders.get(key);
-            if (headersList != null && headersList.size() > 0) {
-                return headersList.get(0);
-            }
-        }
-
-        return null;
     }
 
 }

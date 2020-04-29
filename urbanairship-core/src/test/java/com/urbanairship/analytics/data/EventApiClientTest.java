@@ -4,7 +4,7 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 
@@ -32,7 +32,7 @@ public class EventApiClientTest extends BaseTestCase {
 
     private List<String> events;
     private EventApiClient client;
-    private TestRequest testRequest;
+    private LegacyTestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
 
     @Before
@@ -42,7 +42,7 @@ public class EventApiClientTest extends BaseTestCase {
         events = new ArrayList<>();
         events.add("{\"some\":\"json\"}");
 
-        testRequest = new TestRequest();
+        testRequest = new LegacyTestRequest();
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
@@ -62,8 +62,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSendBody() throws IOException {
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(events.toString())
                                        .build();
 
@@ -80,8 +79,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaders() {
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(events.toString())
                                        .build();
 

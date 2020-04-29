@@ -100,7 +100,7 @@ class TagGroupLookupApiClient {
                                           .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                           .setRequestBody(tagPayload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
+                                          .safeExecute();
 
         if (response == null) {
             Logger.error("Failed to refresh the cache.");

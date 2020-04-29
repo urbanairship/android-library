@@ -13,17 +13,22 @@ import androidx.annotation.NonNull;
 /**
  * Request class used for testing.
  */
-public class TestRequest extends Request {
+public class LegacyTestRequest extends Request {
 
     public Response response;
     private long ifModifiedSince;
 
-    public TestRequest() {
+    public LegacyTestRequest() {
         super(null, null);
     }
 
     @Override
     public Response safeExecute() {
+        return response;
+    }
+
+    @Override
+    public Response execute() {
         return response;
     }
 

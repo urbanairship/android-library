@@ -5,12 +5,16 @@ package com.urbanairship.channel;
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonException;
+import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,7 +23,7 @@ import androidx.annotation.VisibleForTesting;
 /**
  * A high level abstraction for performing Channel requests.
  */
-class ChannelApiClient extends BaseApiClient {
+class ChannelApiClient {
 
     private static final String CHANNEL_API_PATH = "api/channels/";
 
@@ -28,7 +32,8 @@ class ChannelApiClient extends BaseApiClient {
      */
     private static final String CHANNEL_ID_KEY = "channel_id";
 
-    private AirshipRuntimeConfig runtimeConfig;
+    private final RequestFactory requestFactory;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     /**
      * Default constructor.
@@ -42,8 +47,8 @@ class ChannelApiClient extends BaseApiClient {
     @VisibleForTesting
     ChannelApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
                      @NonNull RequestFactory requestFactory) {
-        super(runtimeConfig, requestFactory);
         this.runtimeConfig = runtimeConfig;
+        this.requestFactory = requestFactory;
     }
 
     /**
@@ -53,32 +58,22 @@ class ChannelApiClient extends BaseApiClient {
      * @return The channel ID.
      */
     @NonNull
-    ChannelResponse<String> createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) throws ChannelRequestException {
-        URL url = getDeviceUrl(null);
-        if (url == null) {
-            Logger.debug("CRA URL is null, unable to create channel.");
-            throw new ChannelRequestException("Missing URL");
-        }
-
-        String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelApiClient - Creating channel with payload: %s", payload);
-
-        Response response = performRequest(url, "POST", payload);
-        if (response == null) {
-            throw new ChannelRequestException("Failed to get a response");
-        }
-
-        if (response.isSuccessful()) {
-            String channelId;
-            try {
-                channelId = JsonValue.parseString(response.getResponseBody()).optMap().opt(CHANNEL_ID_KEY).getString();
-            } catch (JsonException e) {
-                throw new ChannelRequestException("Failed to parse response", e);
-            }
-            return new ChannelResponse<>(channelId, response);
-        }
-
-        return new ChannelResponse<>(null, response);
+    Response<String> createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
+        Logger.verbose("ChannelApiClient - Creating channel with payload: %s", channelPayload);
+        return requestFactory.createRequest()
+                             .setOperation("POST", getDeviceUrl(null))
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(channelPayload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute(new ResponseParser<String>() {
+                                 @Override
+                                 public String parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                                     if (UAHttpStatusUtil.inSuccessRange(status)) {
+                                         return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID_KEY).getString();
+                                     }
+                                     return null;
+                                 }
+                             });
     }
 
     /**
@@ -87,22 +82,16 @@ class ChannelApiClient extends BaseApiClient {
      * @param channelId The channel identifier
      * @param channelPayload An instance of ChannelRegistrationPayload
      */
-    ChannelResponse<Void> updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) throws ChannelRequestException {
-        URL url = getDeviceUrl(channelId);
-        if (url == null) {
-            Logger.debug("CRA URL is null, unable to update channel.");
-            return null;
-        }
+    @NonNull
+    Response<Void> updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
+        Logger.verbose("ChannelApiClient - Updating channel with payload: %s", channelPayload);
 
-        String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelApiClient - Updating channel with payload: %s", payload);
-
-        Response response = performRequest(url, "PUT", payload);
-        if (response == null) {
-            throw new ChannelRequestException("Failed to get a response");
-        }
-
-        return new ChannelResponse<>(null, response);
+        return requestFactory.createRequest()
+                             .setOperation("PUT", getDeviceUrl(channelId))
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(channelPayload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute();
     }
 
     @Nullable

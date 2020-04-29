@@ -104,7 +104,7 @@ public class RemoteDataApiClient {
             request.setHeader("If-Modified-Since", lastModified);
         }
 
-        return request.execute();
+        return request.safeExecute();
     }
 
     /**

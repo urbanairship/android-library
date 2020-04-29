@@ -10,10 +10,10 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
@@ -241,7 +241,6 @@ public class NamedUser extends AirshipComponent {
         };
     }
 
-
     @VisibleForTesting
     boolean isIdUpToDate() {
         synchronized (idLock) {
@@ -302,20 +301,6 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-    /**
-     * Dispatches a job to update the named user attributes.
-     */
-    void dispatchUpdateAttributesJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_NAMED_USER)
-                                 .setId(JobInfo.NAMED_USER_UPDATE_ID)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(NamedUser.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
     private void clearPendingNamedUserUpdates() {
         Logger.verbose("Clearing pending Named Users tag updates.");
         tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
@@ -356,35 +341,27 @@ public class NamedUser extends AirshipComponent {
             return JobInfo.JOB_FINISHED;
         }
 
-        Response response;
-
-        if (currentId == null) {
-            // When currentId is null, disassociate the current named user ID.
-            response = namedUserApiClient.disassociate(channelId);
-        } else {
-            // When currentId is non-null, associate the currentId.
-            response = namedUserApiClient.associate(currentId, channelId);
-        }
-
-        // 5xx
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+        Response<Void> response;
+        try {
+            response = currentId == null ? namedUserApiClient.disassociate(channelId)
+                    : namedUserApiClient.associate(currentId, channelId);
+        } catch (RequestException e) {
             // Server error occurred, so retry later.
-            Logger.debug("Update named user failed, will retry.");
+            Logger.debug(e, "NamedUser - Update named user failed, will retry.");
             return JobInfo.JOB_RETRY;
         }
 
-        // 429
-        if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
+        // 500 | 429
+        if (response.isServerError() || response.isTooManyRequestsError()) {
             Logger.debug("Update named user failed. Too many requests. Will retry.");
             return JobInfo.JOB_RETRY;
         }
 
         // 2xx
-        if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+        if (response.isSuccessful()) {
             Logger.debug("Update named user succeeded with status: %s", response.getStatus());
             preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
             dispatchUpdateTagGroupsJob();
-            dispatchUpdateAttributesJob();
             return JobInfo.JOB_FINISHED;
         }
 

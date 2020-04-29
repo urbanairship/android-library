@@ -13,6 +13,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -20,7 +21,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
-import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
@@ -658,10 +658,10 @@ public class AirshipChannel extends AirshipComponent {
     @JobInfo.JobResult
     private int onCreateChannel() {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
-        ChannelResponse<String> response;
+        Response<String> response;
         try {
             response = channelApiClient.createChannelWithPayload(payload);
-        } catch (ChannelRequestException e) {
+        } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
             return JobInfo.JOB_RETRY;
         }
@@ -682,7 +682,7 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         // 429 || 5xx
-        if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+        if (response.isServerError() || response.isTooManyRequestsError()) {
             Logger.debug("Channel registration failed with status: %s, will retry", response.getStatus());
             return JobInfo.JOB_RETRY;
         }
@@ -706,10 +706,10 @@ public class AirshipChannel extends AirshipComponent {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         ChannelRegistrationPayload minimizedPayload = payload.minimizedPayload(getLastRegistrationPayload());
 
-        ChannelResponse<Void> response;
+        Response<Void> response;
         try {
             response = channelApiClient.updateChannelWithPayload(channelId, minimizedPayload);
-        } catch (ChannelRequestException e) {
+        } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
             return JobInfo.JOB_RETRY;
         }
@@ -726,7 +726,7 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         // 429 || 5xx
-        if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+        if (response.isServerError() || response.isTooManyRequestsError()) {
             Logger.debug("Channel registration failed with status: %s, will retry", response.getStatus());
             return JobInfo.JOB_RETRY;
         }
@@ -771,35 +771,35 @@ public class AirshipChannel extends AirshipComponent {
      * @return {@code true} if uploads are completed, otherwise {@code false}.
      */
     private boolean uploadAttributeMutations(@NonNull String channelId) {
-        PendingAttributeMutationStore mutationStore = attributeMutationStore;
 
         while (true) {
             // Collapse mutations before we try to send any updates
-            mutationStore.collapseAndSaveMutations();
+            attributeMutationStore.collapseAndSaveMutations();
 
-            List<PendingAttributeMutation> mutations = mutationStore.peek();
+            List<PendingAttributeMutation> mutations = attributeMutationStore.peek();
             if (mutations == null) {
                 break;
             }
 
-            Response response = attributeApiClient.updateAttributes(channelId, mutations);
-
-            // No response, 5xx, or 429
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) ||
-                    response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-                Logger.debug("Failed to update attributes, retrying.");
+            Response response;
+            try {
+                response = attributeApiClient.updateAttributes(channelId, mutations);
+            } catch (RequestException e) {
+                Logger.debug(e, "AirshipChannel - Failed to update attributes, retrying.");
                 return false;
             }
 
-            // Log 4XX responses (excluding 429)
-            if (UAHttpStatusUtil.inClientErrorRange(response.getStatus())) {
+            Logger.debug("AirshipChannel - Updated attributes response: %s", response);
+
+            if (response.isServerError() || response.isTooManyRequestsError()) {
+                return false;
+            }
+
+            if (response.isClientError()) {
                 Logger.error("Failed to update attributes with unrecoverable status %s.", response.getStatus());
             }
 
-            mutationStore.pop();
-
-            int status = response.getStatus();
-            Logger.debug("Update attributes finished with status: %s", status);
+            attributeMutationStore.pop();
         }
 
         return true;

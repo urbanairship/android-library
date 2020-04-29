@@ -2,9 +2,9 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
@@ -12,13 +12,12 @@ import com.urbanairship.json.JsonMap;
 import java.net.URL;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
  * A high level abstraction for performing Named User API requests.
  */
-class NamedUserApiClient extends BaseApiClient {
+class NamedUserApiClient {
 
     private static final String ASSOCIATE_PATH = "api/named_users/associate/";
     private static final String DISASSOCIATE_PATH = "api/named_users/disassociate/";
@@ -27,7 +26,8 @@ class NamedUserApiClient extends BaseApiClient {
     private static final String DEVICE_TYPE_KEY = "device_type";
     private static final String NAMED_USER_ID_KEY = "named_user_id";
 
-    private AirshipRuntimeConfig runtimeConfig;
+    private final RequestFactory requestFactory;
+    private final AirshipRuntimeConfig runtimeConfig;
 
     NamedUserApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
         this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
@@ -35,8 +35,8 @@ class NamedUserApiClient extends BaseApiClient {
 
     @VisibleForTesting
     NamedUserApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull RequestFactory requestFactory) {
-        super(runtimeConfig, requestFactory);
         this.runtimeConfig = runtimeConfig;
+        this.requestFactory = requestFactory;
     }
 
     /**
@@ -46,17 +46,12 @@ class NamedUserApiClient extends BaseApiClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
-    @Nullable
-    Response associate(@NonNull String id, @NonNull String channelId) {
-        URL associateUrl = runtimeConfig.getUrlConfig()
-                                            .deviceUrl()
-                                            .appendEncodedPath(ASSOCIATE_PATH)
-                                            .build();
-
-        if (associateUrl == null) {
-            Logger.debug("Named User URL null. Unable to associate named user.");
-            return null;
-        }
+    @NonNull
+    Response<Void> associate(@NonNull String id, @NonNull String channelId) throws RequestException {
+        URL url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(ASSOCIATE_PATH)
+                               .build();
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, channelId)
@@ -64,7 +59,12 @@ class NamedUserApiClient extends BaseApiClient {
                                  .put(NAMED_USER_ID_KEY, id)
                                  .build();
 
-        return performRequest(associateUrl, "POST", payload.toString());
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute();
     }
 
     /**
@@ -73,24 +73,24 @@ class NamedUserApiClient extends BaseApiClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
-    @Nullable
-    Response disassociate(@NonNull String channelId) {
-        URL disassociateUrl = runtimeConfig.getUrlConfig()
-                                               .deviceUrl()
-                                               .appendEncodedPath(DISASSOCIATE_PATH)
-                                               .build();
-
-        if (disassociateUrl == null) {
-            Logger.debug("Named User URL null. Unable to disassociate named user.");
-            return null;
-        }
+    @NonNull
+    Response<Void> disassociate(@NonNull String channelId) throws RequestException {
+        URL url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(DISASSOCIATE_PATH)
+                               .build();
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, channelId)
                                  .put(DEVICE_TYPE_KEY, getDeviceType())
                                  .build();
 
-        return performRequest(disassociateUrl, "POST", payload.toString());
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute();
     }
 
     /**

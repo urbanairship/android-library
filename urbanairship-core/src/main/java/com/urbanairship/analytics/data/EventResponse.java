@@ -24,9 +24,9 @@ class EventResponse {
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
 
     @NonNull
-    private final Response response;
+    private final Response<Void> response;
 
-    public EventResponse(@NonNull Response response) {
+    public EventResponse(@NonNull Response<Void> response) {
         this.response = response;
     }
 

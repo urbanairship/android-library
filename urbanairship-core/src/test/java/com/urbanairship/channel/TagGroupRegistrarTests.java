@@ -99,8 +99,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate200Response() {
         // Set up a 200 response
-        Response response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                    .setResponseMessage("OK")
+        Response response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                     .setResponseBody("{ \"ok\": true}")
                                     .build();
 
@@ -114,7 +113,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate500Response() {
         // Set up a 500 response
-        Response response = Response.newBuilder(500)
+        Response response = new Response.Builder<Void>(500)
                                     .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
@@ -127,7 +126,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate429Response() {
         // Set up a 429 response
-        Response response = Response.newBuilder(429)
+        Response response = new Response.Builder<Void>(429)
                                     .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
@@ -140,7 +139,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     @Test
     public void testUpdate400Response() {
         // Set up a 400 response
-        Response response = Response.newBuilder(400)
+        Response response = new Response.Builder<Void>(400)
                                     .build();
 
         verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);

@@ -167,7 +167,7 @@ public class PassRequest {
                 }
 
                 Logger.debug("PassRequest - Requesting pass %s with payload: %s", url, body);
-                Response response = httpRequest.execute();
+                Response response = httpRequest.safeExecute();
 
                 if (response == null) {
                     Logger.error("PassRequest - Failed to get a response.");

@@ -6,21 +6,18 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class NamedUserApiClientTest extends BaseTestCase {
@@ -30,15 +27,19 @@ public class NamedUserApiClientTest extends BaseTestCase {
     private NamedUserApiClient client;
     private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
+    private RequestFactory mockRequestFactory;
 
     @Before
     public void setUp() {
         testRequest = new TestRequest();
 
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
+        mockRequestFactory = Mockito.mock(RequestFactory.class);
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
 
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setDeviceUrl("https://example.com")
+                                                   .build());
 
         client = new NamedUserApiClient(runtimeConfig, mockRequestFactory);
     }
@@ -47,47 +48,57 @@ public class NamedUserApiClientTest extends BaseTestCase {
      * Test associate named user to channel request succeeds if status is 200.
      */
     @Test
-    public void testAssociateSucceeds() {
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
-                                       .setResponseBody("{ \"ok\": true}")
-                                       .build();
+    public void testAssociateSucceeds() throws RequestException, JsonException {
+        testRequest.responseStatus = 200;
+        Response<Void> response = client.associate(fakeNamedUserId, fakeChannelId);
 
-        Response response = client.associate(fakeNamedUserId, fakeChannelId);
+        JsonMap expected = JsonMap.newBuilder()
+               .put("device_type", "android")
+               .put("named_user_id", fakeNamedUserId)
+               .put("channel_id", fakeChannelId)
+               .build();
 
-        assertNotNull("Response should not be null", response);
-        assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/named_users/associate/", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()));
     }
 
     /**
      * Test disassociate named user from channel request succeeds if status is 200.
      */
     @Test
-    public void testDisassociateSucceeds() {
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
-                                       .setResponseBody("{ \"ok\": true}")
-                                       .build();
+    public void testDisassociateSucceeds() throws RequestException, JsonException {
+        testRequest.responseStatus = 200;
+        Response<Void> response = client.disassociate(fakeChannelId);
 
-        Response response = client.disassociate(fakeChannelId);
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("device_type", "android")
+                                  .put("channel_id", fakeChannelId)
+                                  .build();
 
-        assertNotNull("Response should not be null", response);
-        assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/named_users/disassociate/", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()));
     }
 
     /**
-     * Test associate and disassociate with malformed host URL returns null.
+     * Test associate with null URL.
      */
-    @Test
-    public void testNullUrl() {
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-
+    @Test(expected = RequestException.class)
+    public void testNullUrlAssociate() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-
-        Response response = client.associate(fakeNamedUserId, fakeChannelId);
-        assertNull("Response should be null", response);
-
-        response = client.disassociate(fakeChannelId);
-        assertNull("Response should be null", response);
+        client.associate(fakeNamedUserId, fakeChannelId);
     }
+
+    /**
+     * Test disassociate with null URL.
+     */
+    @Test(expected = RequestException.class)
+    public void testNullUrlDisassociate() throws RequestException {
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        client.disassociate(fakeChannelId);
+    }
+
 }

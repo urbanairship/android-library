@@ -56,8 +56,7 @@ public class TagGroupLookupApiClientTest {
                                                    .build());
 
         testRequest = new TestRequest();
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(JsonMap.newBuilder()
                                                                .putOpt("tag_groups", responseTags)
                                                                .put("last_modified", "lastModifiedTime")
@@ -112,7 +111,7 @@ public class TagGroupLookupApiClientTest {
      */
     @Test
     public void testFailedResponse() {
-        testRequest.response = Response.newBuilder(400)
+        testRequest.response = new Response.Builder<Void>(400)
                                        .build();
 
         TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
@@ -135,8 +134,7 @@ public class TagGroupLookupApiClientTest {
         // Update the response to return a 200 with the same lastModified time as the
         // response, but no tags. This indicates a 304, but since its a POST we do not
         // get a 304.
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(JsonMap.newBuilder()
                                                                .put("last_modified", "lastModifiedTime")
                                                                .build().toString())
@@ -158,8 +156,7 @@ public class TagGroupLookupApiClientTest {
         TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         // Update the response to return new data
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(JsonMap.newBuilder()
                                                                .putOpt("tag_groups", responseTags)
                                                                .put("last_modified", "newDate")

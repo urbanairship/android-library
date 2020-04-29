@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TagGroupApiClientTest extends BaseTestCase {
 
-    private TestRequest testRequest;
+    private LegacyTestRequest testRequest;
     private AirshipConfigOptions configOptions;
     private RequestFactory requestFactory;
     private TagGroupsMutation mutation;
@@ -43,9 +43,8 @@ public class TagGroupApiClientTest extends BaseTestCase {
                                                    .setDeviceUrl("https://test.urbanairship.com")
                                                    .build());
 
-        testRequest = new TestRequest();
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest = new LegacyTestRequest();
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody("{ \"ok\": true}")
                                        .build();
 

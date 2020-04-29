@@ -23,7 +23,7 @@ public class TestRequest extends Request {
     }
 
     @Override
-    public Response execute() {
+    public Response safeExecute() {
         return response;
     }
 

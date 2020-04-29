@@ -4,11 +4,10 @@ package com.urbanairship.channel;
 
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 
 import java.net.URL;
 import java.util.List;
@@ -22,7 +21,7 @@ import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 /**
  * A high level abstraction for performing attribute requests.
  */
-class AttributeApiClient extends BaseApiClient {
+class AttributeApiClient {
 
     private static final String CHANNEL_API_PATH = "api/channels/";
     private static final String ATTRIBUTE_PARAM = "attributes";
@@ -35,6 +34,7 @@ class AttributeApiClient extends BaseApiClient {
     private static final String ATTRIBUTE_PLATFORM_AMAZON = "amazon";
 
     private final AirshipRuntimeConfig runtimeConfig;
+    private final RequestFactory requestFactory;
 
     AttributeApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
         this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
@@ -43,8 +43,8 @@ class AttributeApiClient extends BaseApiClient {
     @VisibleForTesting
     AttributeApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
                        @NonNull RequestFactory requestFactory) {
-        super(runtimeConfig, requestFactory);
         this.runtimeConfig = runtimeConfig;
+        this.requestFactory = requestFactory;
     }
 
     /**
@@ -54,26 +54,22 @@ class AttributeApiClient extends BaseApiClient {
      * @param mutations The attribute mutations.
      * @return The response or null if an error occurred.
      */
-    @Nullable
-    Response updateAttributes(@NonNull String channelId, @NonNull List<PendingAttributeMutation> mutations) {
-        URL attributeUrl = getAttributeUrl(channelId);
+    @NonNull
+    Response<Void> updateAttributes(@NonNull String channelId, @NonNull List<PendingAttributeMutation> mutations) throws RequestException {
+        URL url = getAttributeUrl(channelId);
 
-        if (attributeUrl == null) {
-            Logger.error("Invalid attribute URL. Unable to update attributes.");
-            return null;
-        }
-
-        JsonList attributes = JsonValue.wrapOpt(mutations).optList();
-
-        String attributePayload = JsonMap.newBuilder()
-                                         .putOpt(ATTRIBUTE_PAYLOAD_KEY, attributes)
-                                         .build().toString();
+        JsonMap attributePayload = JsonMap.newBuilder()
+                                         .putOpt(ATTRIBUTE_PAYLOAD_KEY, mutations)
+                                         .build();
 
         Logger.verbose("Updating channel Id:%s with payload: %s", channelId, attributePayload);
 
-        Response response = performRequest(attributeUrl, "POST", attributePayload);
-
-        return response;
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(attributePayload)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute();
     }
 
     /**

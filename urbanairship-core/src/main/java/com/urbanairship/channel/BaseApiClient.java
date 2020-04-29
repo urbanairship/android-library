@@ -43,7 +43,7 @@ abstract class BaseApiClient {
         return requestFactory.createRequest(requestMethod, url)
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(jsonPayload, "application/json")
-                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                             .execute();
+                             .setAirshipJsonAcceptsHeader()
+                             .safeExecute();
     }
 }

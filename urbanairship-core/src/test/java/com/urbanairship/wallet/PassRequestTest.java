@@ -5,7 +5,7 @@ package com.urbanairship.wallet;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestRequest;
+import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonValue;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 public class PassRequestTest extends BaseTestCase {
 
-    private class TestPassRequest extends TestRequest {
+    private class TestPassRequest extends LegacyTestRequest {
 
         private final String expectedJson;
 
@@ -39,7 +39,7 @@ public class PassRequestTest extends BaseTestCase {
         }
 
         @Override
-        public Response execute() {
+        public Response safeExecute() {
             try {
                 assertEquals(JsonValue.parseString(expectedJson), JsonValue.parseString(this.getRequestBody()));
             } catch (Exception e) {
@@ -101,8 +101,7 @@ public class PassRequestTest extends BaseTestCase {
                 "}";
 
         final TestPassRequest testRequest = new TestPassRequest(requestJson);
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(responseJson)
                                        .build();
 
@@ -154,8 +153,8 @@ public class PassRequestTest extends BaseTestCase {
 
     @Test
     public void testExecuteFail() throws Exception {
-        TestRequest testRequest = new TestRequest();
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_BAD_REQUEST)
+        LegacyTestRequest testRequest = new LegacyTestRequest();
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_BAD_REQUEST)
                                        .build();
 
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
@@ -203,9 +202,8 @@ public class PassRequestTest extends BaseTestCase {
                 "   \"status\":\"not_been_installed\"\n" +
                 "}";
 
-        final TestRequest testRequest = new TestRequest();
-        testRequest.response = Response.newBuilder(HttpURLConnection.HTTP_OK)
-                                       .setResponseMessage("OK")
+        final LegacyTestRequest testRequest = new LegacyTestRequest();
+        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                                        .setResponseBody(responseJson)
                                        .build();
 

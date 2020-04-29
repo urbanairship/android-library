@@ -12,6 +12,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -126,7 +127,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test create channel.
      */
     @Test
-    public void testCreateChannel() throws ChannelRequestException {
+    public void testCreateChannel() throws RequestException {
         assertNull(airshipChannel.getId());
 
         TestListener listener = new TestListener() {
@@ -155,7 +156,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test update channel.
      */
     @Test
-    public void testUpdateChannel() throws ChannelRequestException {
+    public void testUpdateChannel() throws RequestException {
         testCreateChannel();
         assertNotNull(airshipChannel.getId());
 
@@ -189,8 +190,8 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when an exception is thrown.
      */
     @Test
-    public void testChannelCreateRetriesOnException() throws ChannelRequestException {
-        ChannelRequestException exception = new ChannelRequestException("error");
+    public void testChannelCreateRetriesOnException() throws RequestException {
+        RequestException exception = new RequestException("error");
 
         // Setup response
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class))).thenThrow(exception);
@@ -206,13 +207,13 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when a recoverable exception is thrown.
      */
     @Test
-    public void testChannelUpdateRetriesOnException() throws ChannelRequestException {
+    public void testChannelUpdateRetriesOnException() throws RequestException {
         testCreateChannel();
 
         // Modify the payload so it actually updates the registration
         airshipChannel.editTags().addTag("cool").apply();
 
-        ChannelRequestException exception = new ChannelRequestException("error");
+        RequestException exception = new RequestException("error");
 
         // Setup response
         doThrow(exception).when(mockClient).updateChannelWithPayload(eq("channel"), any(ChannelRegistrationPayload.class));
@@ -228,7 +229,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when a 5xx is returned.
      */
     @Test
-    public void testChannelCreateRetriesOnServerError() throws ChannelRequestException {
+    public void testChannelCreateRetriesOnServerError() throws RequestException {
         // Setup response
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 500));
@@ -244,7 +245,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when a 5xx is returned.
      */
     @Test
-    public void testChannelUpdateRetriesOnServerError() throws ChannelRequestException {
+    public void testChannelUpdateRetriesOnServerError() throws RequestException {
         testCreateChannel();
 
         // Modify the payload so it actually updates the registration
@@ -265,7 +266,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when a 429 is returned.
      */
     @Test
-    public void testChannelCreateRetriesOn429() throws ChannelRequestException {
+    public void testChannelCreateRetriesOn429() throws RequestException {
         // Setup response
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 429));
@@ -281,7 +282,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel create retries when a 429 is returned.
      */
     @Test
-    public void testChannelUpdateRetriesOn429() throws ChannelRequestException {
+    public void testChannelUpdateRetriesOn429() throws RequestException {
         testCreateChannel();
 
         // Modify the payload so it actually updates the registration
@@ -302,7 +303,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel update recreates the channel on update.
      */
     @Test
-    public void testChannelUpdateRecreatesOn409() throws ChannelRequestException {
+    public void testChannelUpdateRecreatesOn409() throws RequestException {
         testCreateChannel();
 
         // Modify the payload so it actually updates the registration
@@ -334,7 +335,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test update named user tags succeeds when the registrar returns true.
      */
     @Test
-    public void testUpdateNamedUserTagsSucceed() throws ChannelRequestException {
+    public void testUpdateNamedUserTagsSucceed() throws RequestException {
         testCreateChannel();
 
         when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, "channel")).thenReturn(true);
@@ -361,7 +362,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test update named user retries when the upload fails.
      */
     @Test
-    public void testUpdateTagsRetry() throws ChannelRequestException {
+    public void testUpdateTagsRetry() throws RequestException {
         testCreateChannel();
 
         when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, "channel")).thenReturn(false);
@@ -375,7 +376,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel registration payload
      */
     @Test
-    public void testChannelRegistrationPayload() throws ChannelRequestException {
+    public void testChannelRegistrationPayload() throws RequestException {
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
 
@@ -419,7 +420,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel registration payload when isDataCollectionEnabled is disabled
      */
     @Test
-    public void testChannelRegistrationPayloadDataCollectionDisabled() throws ChannelRequestException {
+    public void testChannelRegistrationPayloadDataCollectionDisabled() throws RequestException {
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
 
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
@@ -462,7 +463,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test channel registration payload for amazon devices
      */
     @Test
-    public void testAmazonChannelRegistrationPayload() throws ChannelRequestException {
+    public void testAmazonChannelRegistrationPayload() throws RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
@@ -547,7 +548,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test attributes update finish on 200.
      */
     @Test
-    public void testAttributesUpdate200() throws ChannelRequestException {
+    public void testAttributesUpdate200() throws RequestException {
         testCreateChannel();
 
         AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
@@ -581,7 +582,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test attributes update retries when a 429 is returned.
      */
     @Test
-    public void testAttributesUpdateRetriesOn429() throws ChannelRequestException {
+    public void testAttributesUpdateRetriesOn429() throws RequestException {
         testCreateChannel();
 
         AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
@@ -613,7 +614,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test attributes update retries when a 5xx is returned.
      */
     @Test
-    public void testAttributesUpdateRetriesOnServerError() throws ChannelRequestException {
+    public void testAttributesUpdateRetriesOnServerError() throws RequestException {
         testCreateChannel();
 
         AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
@@ -923,9 +924,11 @@ public class AirshipChannelTests extends BaseTestCase {
         }));
     }
 
-    private static <T> ChannelResponse<T> createResponse(T result, int status) {
-        Response response = Response.newBuilder(status).setResponseBody("test").build();
-        return new ChannelResponse<>(result, response);
+    private static <T> Response<T> createResponse(T result, int status) {
+        return new Response.Builder<T>(status)
+                .setResponseBody("test")
+                .setResult(result)
+                .build();
     }
 
     private static class TestListener implements AirshipChannelListener {

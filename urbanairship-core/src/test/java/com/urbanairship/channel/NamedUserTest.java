@@ -8,6 +8,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -319,7 +320,7 @@ public class NamedUserTest extends BaseTestCase {
      * Test associate named user succeeds if the status is 2xx.
      */
     @Test
-    public void testAssociateNamedUserSucceed() {
+    public void testAssociateNamedUserSucceed() throws RequestException {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
 
@@ -329,9 +330,8 @@ public class NamedUserTest extends BaseTestCase {
             assertFalse(namedUser.isIdUpToDate());
 
             // Set up a 2xx response
-            Response response = Mockito.mock(Response.class);
+            Response response = new Response.Builder<Void>(statusCode).build();
             when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
-            when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
             JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
@@ -350,7 +350,7 @@ public class NamedUserTest extends BaseTestCase {
      * Test associate named user fails if the status is 403
      */
     @Test
-    public void testAssociateNamedUserFailed() {
+    public void testAssociateNamedUserFailed() throws RequestException {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
 
@@ -376,14 +376,13 @@ public class NamedUserTest extends BaseTestCase {
      * Test associate named user fails if the status is 500
      */
     @Test
-    public void testAssociateNamedUserFailedRetry() {
+    public void testAssociateNamedUserFailedRetry() throws RequestException {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
         assertFalse(namedUser.isIdUpToDate());
 
         // Set up a 500 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        Response response = new Response.Builder<Void>(500).build();
         when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
@@ -401,13 +400,12 @@ public class NamedUserTest extends BaseTestCase {
      * Test associate named user retries if the status is 429
      */
     @Test
-    public void testAssociateNamedUserTooManyRequests() {
+    public void testAssociateNamedUserTooManyRequests() throws RequestException {
         when(mockChannel.getId()).thenReturn("channelID");
         namedUser.setId("namedUserID");
 
         // Set up a 429 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+        Response response = new Response.Builder<Void>(429).build();
         when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
@@ -425,7 +423,7 @@ public class NamedUserTest extends BaseTestCase {
      * Test disassociate named user succeeds if the status is 2xx.
      */
     @Test
-    public void testDisassociateNamedUserSucceed() {
+    public void testDisassociateNamedUserSucceed() throws RequestException {
         when(mockChannel.getId()).thenReturn("channelID");
         namedUser.setId(null);
 
@@ -435,9 +433,8 @@ public class NamedUserTest extends BaseTestCase {
             assertFalse(namedUser.isIdUpToDate());
 
             // Set up a 2xx response
-            Response response = Mockito.mock(Response.class);
+            Response response = new Response.Builder<Void>(statusCode).build();
             when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
-            when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
             JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
@@ -458,7 +455,7 @@ public class NamedUserTest extends BaseTestCase {
      * Test disassociate named user fails if status is not 200.
      */
     @Test
-    public void testDisassociateNamedUserFailed() {
+    public void testDisassociateNamedUserFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn("channelID");
         namedUser.setId(null);
         namedUser.forceUpdate();
@@ -483,14 +480,13 @@ public class NamedUserTest extends BaseTestCase {
      * Test disassociate named user fails if the status is 500
      */
     @Test
-    public void testDisassociateNamedUserFailedRetry() {
+    public void testDisassociateNamedUserFailedRetry() throws RequestException {
         when(mockChannel.getId()).thenReturn("channelID");
         namedUser.setId(null);
         namedUser.forceUpdate();
 
         // Set up a 500 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        Response response = new Response.Builder<Void>(500).build();
         when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
@@ -508,14 +504,13 @@ public class NamedUserTest extends BaseTestCase {
      * Test disassociate named user retries if the status is 429
      */
     @Test
-    public void testDisassociateNamedUserTooManyRequests() {
+    public void testDisassociateNamedUserTooManyRequests() throws RequestException {
         when(mockChannel.getId()).thenReturn("channelID");
         namedUser.setId(null);
         namedUser.forceUpdate();
 
         // Set up a 429 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+        Response response = new Response.Builder<Void>(429).build();
         when(mockNamedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update

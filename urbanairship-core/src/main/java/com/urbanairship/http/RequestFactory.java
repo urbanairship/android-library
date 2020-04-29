@@ -5,6 +5,7 @@ package com.urbanairship.http;
 import java.net.URL;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -29,8 +30,18 @@ public class RequestFactory {
      * @return The request.
      */
     @NonNull
-    public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
+    public Request createRequest(@NonNull String requestMethod, @Nullable URL url) {
         return new Request(requestMethod, url);
+    }
+
+    /**
+     * Creates the request.
+     *
+     * @return The request.
+     */
+    @NonNull
+    public Request createRequest() {
+        return new Request();
     }
 
 }
