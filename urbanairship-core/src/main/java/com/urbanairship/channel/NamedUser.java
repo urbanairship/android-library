@@ -126,6 +126,14 @@ public class NamedUser extends AirshipComponent {
             }
         });
 
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setNamedUserId(getId());
+            }
+        });
+
         if (airshipChannel.getId() != null && (!isIdUpToDate() || getId() != null)) {
             dispatchNamedUserUpdateJob();
         }
@@ -210,6 +218,12 @@ public class NamedUser extends AirshipComponent {
                 updateChangeToken();
                 clearPendingNamedUserUpdates();
                 dispatchNamedUserUpdateJob();
+
+                // ID changed, update CRA
+                if (id != null) {
+                    airshipChannel.updateRegistration();
+                }
+
             } else {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }

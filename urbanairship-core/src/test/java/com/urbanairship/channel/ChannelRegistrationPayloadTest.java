@@ -604,4 +604,86 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertEquals(expected, payload.toJsonValue());
     }
 
+    /**
+     * Test that the minimized payload includes all attribute fields if named user changes.
+     */
+    @Test
+    public void testMinimizedPayloadNamedUserChanges() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setTags(true, testTags)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .setNamedUserId("named user")
+                .setAccengageDeviceId("accengage ID")
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .setNamedUserId("different named user")
+                .build();
+
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        ChannelRegistrationPayload expected =  new ChannelRegistrationPayload.Builder(payload)
+                .setTags(false, null)
+                .setAccengageDeviceId(null)
+                .setNamedUserId("different named user")
+                .build();
+
+        assertEquals(expected, minPayload);
+    }
+
+    /**
+     * Test that the minimized payload removes attribute fields if named user changes but is null.
+     */
+    @Test
+    public void testMinimizePayloadIfNamedUserIsNull() {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setTags(true, testTags)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .setNamedUserId("named user")
+                .setApid("some-apid")
+                .setUserId("some-user")
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .setNamedUserId(null)
+                .build();
+
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        ChannelRegistrationPayload expected =  new ChannelRegistrationPayload.Builder(payload)
+                .setTags(false, null)
+                .setAccengageDeviceId(null)
+                .setNamedUserId(null)
+                .setDeviceType(null)
+                .setLanguage(null)
+                .setTimezone(null)
+                .setCountry(null)
+                .setLocationSettings(null)
+                .setAppVersion(null)
+                .setApiVersion(null)
+                .setSdkVersion(null)
+                .setDeviceModel(null)
+                .setCarrier(null)
+                .setUserId(null)
+                .setApid(null)
+                .build();
+
+        assertEquals(expected, minPayload);
+    }
 }

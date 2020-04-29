@@ -232,7 +232,6 @@ public class NamedUserTest extends BaseTestCase {
             }
         }));
 
-
     }
 
     /**
@@ -709,6 +708,31 @@ public class NamedUserTest extends BaseTestCase {
                 return mutations.get(0).getMutationName().equals("expected_key");
             }
         }));
+    }
+
+    @Test
+    public void testChannelRegistrationExtender() {
+        namedUser.init();
+
+        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
+
+        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        assertNotNull(extender);
+
+        namedUser.setId("namedUserId");
+        ChannelRegistrationPayload payload = extender.extend(new ChannelRegistrationPayload.Builder()).build();
+
+        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
+                .setNamedUserId("namedUserId")
+                .build();
+        assertEquals(expected, payload);
+    }
+
+    @Test
+    public void testChangingIdUpdatesChannelRegistration() {
+        namedUser.setId("namedUserId");
+        verify(mockChannel).updateRegistration();
     }
 
     /**

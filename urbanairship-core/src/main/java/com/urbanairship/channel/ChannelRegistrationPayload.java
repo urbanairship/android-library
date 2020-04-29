@@ -57,6 +57,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String API_VERSION_KEY = "android_api_version";
     static final String CARRIER_KEY = "carrier";
     static final String ACCENGAGE_DEVICE_ID = "accengage_device_id";
+    static final String NAMED_USER_ID_KEY = "named_user_id";
 
     static final String ANDROID_EXTRAS_KEY = "android";
     static final String ANDROID_DELIVERY_TYPE = "delivery_type";
@@ -80,6 +81,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String carrier;
     public final String accengageDeviceId;
     public final String deliveryType;
+    public final String namedUserId;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -105,6 +107,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String carrier;
         private String accengageDeviceId;
         private String deliveryType;
+        private String namedUserId;
 
         /**
          * Default ChannelRegistrationPayload.Builder constructor
@@ -136,6 +139,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.carrier = payload.carrier;
             this.accengageDeviceId = payload.accengageDeviceId;
             this.deliveryType = payload.deliveryType;
+            this.namedUserId = payload.namedUserId;
         }
 
         /**
@@ -171,6 +175,18 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         @NonNull
         public Builder setDeviceType(@Nullable @DeviceType String deviceType) {
             this.deviceType = deviceType;
+            return this;
+        }
+
+        /**
+         * Set the named user ID.
+         *
+         * @param namedUserId A named user ID.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setNamedUserId(@Nullable String namedUserId) {
+            this.namedUserId = namedUserId;
             return this;
         }
 
@@ -383,6 +399,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.carrier = builder.carrier;
         this.accengageDeviceId = builder.accengageDeviceId;
         this.deliveryType = builder.deliveryType;
+        this.namedUserId = builder.namedUserId;
     }
 
     @NonNull
@@ -392,22 +409,9 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         Builder builder = new Builder(this);
-
         builder.setApid(null);
         builder.setUserId(null);
         builder.setAccengageDeviceId(null);
-
-        if (UAStringUtil.equals(last.country, country)) {
-            builder.setCountry(null);
-        }
-
-        if (UAStringUtil.equals(last.language, language)) {
-            builder.setLanguage(null);
-        }
-
-        if (UAStringUtil.equals(last.timezone, timezone)) {
-            builder.setTimezone(null);
-        }
 
         if (last.setTags && setTags) {
             if (last.tags != null && last.tags.equals(tags)) {
@@ -415,28 +419,43 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             }
         }
 
-        if (last.locationSettings != null && last.locationSettings.equals(locationSettings)) {
-            builder.setLocationSettings(null);
-        }
+        // Only remove attributes if named user Id is null or is the same as the last payload
+        if (namedUserId == null || UAStringUtil.equals(last.namedUserId, namedUserId)) {
+            if (UAStringUtil.equals(last.country, country)) {
+                builder.setCountry(null);
+            }
 
-        if (UAStringUtil.equals(last.appVersion, appVersion)) {
-            builder.setAppVersion(null);
-        }
+            if (UAStringUtil.equals(last.language, language)) {
+                builder.setLanguage(null);
+            }
 
-        if (UAStringUtil.equals(last.sdkVersion, sdkVersion)) {
-            builder.setSdkVersion(null);
-        }
+            if (UAStringUtil.equals(last.timezone, timezone)) {
+                builder.setTimezone(null);
+            }
 
-        if (UAStringUtil.equals(last.deviceModel, deviceModel)) {
-            builder.setDeviceModel(null);
-        }
+            if (last.locationSettings != null && last.locationSettings.equals(locationSettings)) {
+                builder.setLocationSettings(null);
+            }
 
-        if (UAStringUtil.equals(last.carrier, carrier)) {
-            builder.setCarrier(null);
-        }
+            if (UAStringUtil.equals(last.appVersion, appVersion)) {
+                builder.setAppVersion(null);
+            }
 
-        if (last.apiVersion != null && last.apiVersion.equals(apiVersion)) {
-            builder.setApiVersion(null);
+            if (UAStringUtil.equals(last.sdkVersion, sdkVersion)) {
+                builder.setSdkVersion(null);
+            }
+
+            if (UAStringUtil.equals(last.deviceModel, deviceModel)) {
+                builder.setDeviceModel(null);
+            }
+
+            if (UAStringUtil.equals(last.carrier, carrier)) {
+                builder.setCarrier(null);
+            }
+
+            if (last.apiVersion != null && last.apiVersion.equals(apiVersion)) {
+                builder.setApiVersion(null);
+            }
         }
 
         return builder.build();
@@ -458,7 +477,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                                          .put(APP_VERSION_KEY, appVersion)
                                          .put(SDK_VERSION_KEY, sdkVersion)
                                          .put(DEVICE_MODEL_KEY, deviceModel)
-                                         .put(CARRIER_KEY, carrier);
+                                         .put(CARRIER_KEY, carrier)
+                                         .put(NAMED_USER_ID_KEY, namedUserId);
 
         if (ANDROID_DEVICE_TYPE.equals(deviceType) && deliveryType != null) {
             channel.put(ANDROID_EXTRAS_KEY, JsonMap.newBuilder()
@@ -543,6 +563,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         if (carrier != null ? !carrier.equals(that.carrier) : that.carrier != null) return false;
         if (accengageDeviceId != null ? !accengageDeviceId.equals(that.accengageDeviceId) : that.accengageDeviceId != null)
             return false;
+        if (namedUserId != null ? !namedUserId.equals(that.namedUserId) : that.namedUserId != null)
+            return false;
         return deliveryType != null ? deliveryType.equals(that.deliveryType) : that.deliveryType == null;
     }
 
@@ -566,6 +588,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (apiVersion != null ? apiVersion.hashCode() : 0);
         result = 31 * result + (carrier != null ? carrier.hashCode() : 0);
         result = 31 * result + (accengageDeviceId != null ? accengageDeviceId.hashCode() : 0);
+        result = 31 * result + (namedUserId != null ? namedUserId.hashCode() : 0);
         result = 31 * result + (deliveryType != null ? deliveryType.hashCode() : 0);
         return result;
     }
@@ -625,6 +648,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setApiVersion(apiVersion)
                             .setCarrier(channelJson.opt(CARRIER_KEY).getString())
                             .setDeliveryType(deliveryType)
+                            .setNamedUserId(channelJson.opt(NAMED_USER_ID_KEY).getString())
                             .build();
     }
 
