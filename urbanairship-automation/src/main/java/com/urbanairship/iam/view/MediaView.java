@@ -259,7 +259,7 @@ public class MediaView extends FrameLayout {
         public void onPageFinished(@NonNull WebView view, final String url) {
             super.onPageFinished(view, url);
             if (error) {
-                view.getHandler().postDelayed(onRetry, retryDelay);
+                view.postDelayed(onRetry, retryDelay);
                 retryDelay = retryDelay * 2;
             } else {
                 onPageFinished(view);
