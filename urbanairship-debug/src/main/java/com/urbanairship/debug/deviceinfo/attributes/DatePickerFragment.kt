@@ -6,15 +6,14 @@ import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.navGraphViewModels
+import com.urbanairship.debug.R
 import java.util.Calendar
 
 class DatePickerFragment : DialogFragment() {
-    private lateinit var viewModel: AttributesViewModel
+    val viewModel: AttributesViewModel by navGraphViewModels(R.id.ua_debug_device_info_navigation)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        viewModel = ViewModelProvider(requireActivity()).get(AttributesViewModel::class.java)
-
         val calendar = Calendar.getInstance()
         calendar.time = viewModel.dateValue.value!!
 

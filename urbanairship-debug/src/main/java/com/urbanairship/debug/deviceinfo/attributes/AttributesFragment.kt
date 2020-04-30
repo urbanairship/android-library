@@ -8,8 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.navGraphViewModels
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.debug.R
@@ -27,17 +26,7 @@ class AttributesFragment : Fragment() {
         const val CHANNEL_TYPE = "channel"
     }
 
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
-        val editor: () -> AttributeEditor = { ->
-            when (val type = requireArguments().getString(TYPE_ARGUMENT_KEY)) {
-                NAMED_USER_TYPE -> UAirship.shared().namedUser.editAttributes()
-                CHANNEL_TYPE -> UAirship.shared().channel.editAttributes()
-                else -> throw IllegalArgumentException("Invalid type: $type")
-            }
-        }
-
-        ViewModelProvider(this, ViewModelFactory(editor)).get(AttributesViewModel::class.java)
-    }
+    val viewModel: AttributesViewModel by navGraphViewModels(R.id.ua_debug_device_info_navigation)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val binding = UaFragmentDeviceInfoAttributesBinding.inflate(inflater, container, false)
@@ -81,19 +70,20 @@ class AttributesFragment : Fragment() {
     }
 
     fun setAttribute() {
-        viewModel.setAttribute()
+        viewModel.setAttribute(::createEditor)
         Toast.makeText(requireContext(), requireContext().getString(R.string.ua_attribute_set), Toast.LENGTH_SHORT).show()
     }
 
     fun removeAttribute() {
-        viewModel.removeAttribute()
+        viewModel.removeAttribute(::createEditor)
         Toast.makeText(requireContext(), requireContext().getString(R.string.ua_attribute_removed), Toast.LENGTH_SHORT).show()
     }
 
-    internal class ViewModelFactory(private val editAttributes: () -> AttributeEditor) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return AttributesViewModel(editAttributes) as T
+    private fun createEditor(): AttributeEditor {
+        return when (val type = requireArguments().getString(TYPE_ARGUMENT_KEY)) {
+            NAMED_USER_TYPE -> UAirship.shared().namedUser.editAttributes()
+            CHANNEL_TYPE -> UAirship.shared().channel.editAttributes()
+            else -> throw IllegalArgumentException("Invalid type: $type")
         }
     }
 }

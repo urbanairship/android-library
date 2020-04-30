@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.urbanairship.channel.AttributeEditor
 import java.util.Date
 
-class AttributesViewModel(private val editAttributes: () -> AttributeEditor) : ViewModel() {
+class AttributesViewModel() : ViewModel() {
 
     val key = MutableLiveData<String>()
     val stringValue = MutableLiveData<String>()
@@ -43,7 +43,7 @@ class AttributesViewModel(private val editAttributes: () -> AttributeEditor) : V
         keyValidator.removeSource(key)
     }
 
-    fun setAttribute() {
+    fun setAttribute(editAttributes: () -> AttributeEditor) {
         assert(keyValidator.value!!)
         assert(valueValidator.value!!)
 
@@ -69,7 +69,7 @@ class AttributesViewModel(private val editAttributes: () -> AttributeEditor) : V
         }
     }
 
-    fun removeAttribute() {
+    fun removeAttribute(editAttributes: () -> AttributeEditor) {
         assert(keyValidator.value!!)
         editAttributes().removeAttribute(key.value!!).apply()
     }
