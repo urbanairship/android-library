@@ -998,13 +998,13 @@ public class PushManager extends AirshipComponent {
         String currentToken = getPushToken();
 
         if (pushProvider == null) {
-            Logger.error("Registration failed. Missing push provider.");
+            Logger.info("PushManager - Push registration failed. Missing push provider.");
             return JobInfo.JOB_FINISHED;
         }
 
         synchronized (pushProvider) {
             if (!pushProvider.isAvailable(context)) {
-                Logger.error("Registration failed. Push provider unavailable: %s", pushProvider);
+                Logger.warn("PushManager - Push registration failed. Push provider unavailable: %s", pushProvider);
                 return JobInfo.JOB_RETRY;
             }
 
@@ -1012,16 +1012,18 @@ public class PushManager extends AirshipComponent {
             try {
                 token = pushProvider.getRegistrationToken(context);
             } catch (PushProvider.RegistrationException e) {
-                Logger.error(e, "Push registration failed.");
                 if (e.isRecoverable()) {
+                    Logger.debug("PushManager - Push registration failed with error: %s. Will retry.", e.getMessage());
+                    Logger.verbose(e);
                     return JobInfo.JOB_RETRY;
                 } else {
+                    Logger.error(e, "PushManager - Push registration failed.");
                     return JobInfo.JOB_FINISHED;
                 }
             }
 
             if (token != null && !UAStringUtil.equals(token, currentToken)) {
-                Logger.info("PushManagerJobHandler - Push registration updated.");
+                Logger.info("PushManager - Push registration updated.");
 
                 preferenceDataStore.put(PUSH_TOKEN_KEY, token);
 

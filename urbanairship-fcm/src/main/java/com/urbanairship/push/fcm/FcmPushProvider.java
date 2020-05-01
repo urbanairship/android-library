@@ -67,10 +67,10 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
             // Validate the token
             if (token != null && (INVALID_TOKENS.contains(token) || UAirship.getPackageName().equals(token))) {
                 instanceId.deleteToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
-                throw new RegistrationException("FCM registration returned an invalid token.", true);
+                throw new RegistrationException("Invalid FCM token", true);
             }
         } catch (Exception e) {
-            throw new RegistrationException("FCM registration failed.", true, e);
+            throw new RegistrationException("FCM error " + e.getMessage(), true, e);
         }
 
         return token;

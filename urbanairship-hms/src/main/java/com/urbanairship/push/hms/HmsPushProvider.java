@@ -50,12 +50,11 @@ public class HmsPushProvider implements PushProvider, AirshipVersionInfo  {
 
             String token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
             if (UAStringUtil.isEmpty(token)) {
-                throw new RegistrationException("HMS registration failed", true);
+                throw new RegistrationException("Empty HMS registration token", true);
             }
-
             return token;
         } catch (Exception e) {
-            throw new RegistrationException("HMS registration failed", true, e);
+            throw new RegistrationException("HMS error " + e.getMessage(), true, e);
         }
     }
 

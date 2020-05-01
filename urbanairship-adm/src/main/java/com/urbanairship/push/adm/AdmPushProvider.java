@@ -64,8 +64,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
             try {
                 registerReceiver.wait(REGISTRATION_TIMEOUT_MS);
             } catch (InterruptedException e) {
-                Logger.debug(e, "Interrupted while waiting for adm registration");
-                throw new RegistrationException("Failed to register with ADM.", true, e);
+                throw new RegistrationException("ADM registration interrupted", true, e);
             }
         }
 

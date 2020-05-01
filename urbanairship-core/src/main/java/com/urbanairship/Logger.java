@@ -127,6 +127,17 @@ public class Logger {
     /**
      * Send a verbose log message.
      *
+     * @param t An exception to log
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void verbose(@NonNull Throwable t) {
+        logger.log(Log.VERBOSE, t, null, (Object[]) null);
+    }
+
+    /**
+     * Send a verbose log message.
+     *
      * @param message The message you would like logged.
      * @param args The message args.
      * @hide
