@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.1.0 - May 4, 2020
+Minor release that adds Named User attributes.
+
+### Changes
+- Added Named User attributes.
+- Fixed NPE when retrying a failed video URL in IAA after the view has been detached from the window.
+- Fixed logging an error message on registration failure due to using Huawei PushKit auto init feature on first run. The error was misleading as the registration will retry immediately after Push Kit is initialized.
+
 ## Version 13.0.0 - April 20, 2020
 
 Major release that adds support for enhanced custom events, date attributes, HMS push provider, and breaks
@@ -9,8 +17,7 @@ the `urbanairship-core` module into several modules: `urbanairship-core`, `urban
 `urbananairship-location`. This allows apps to pull in only the feature modules they use. Most of the changes in
 this release reflect the restructuring that makes this possible.
 
-Changes
--------
+### Changes
 - Break out feature modules from `urbanairship-core`:
   - `urbanairship-message-center`: Message Center
   - `urbanairship-automation`: InApp Automation/Messaging, Landing Page Action, and Action Automation
