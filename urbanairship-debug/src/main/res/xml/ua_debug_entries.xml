@@ -17,6 +17,11 @@
         title="@string/ua_custom_event_view_title" />
 
     <entry
+        description="@string/ua_debug_iaa_description"
+        navigationId="@id/ua_debug_automation_navigation"
+        title="@string/ua_debug_iaa" />
+
+    <entry
         description="@string/ua_push_view_description"
         navigationId="@id/pushListFragment"
         title="@string/ua_push_view_title" />

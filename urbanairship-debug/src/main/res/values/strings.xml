@@ -95,6 +95,8 @@
     <string name="ua_push_settings_category">Push Settings</string>
     <string name="ua_notifications_enabled_settings_title">Notifications Enabled</string>
 
+
+
     <string name="ua_iaa_setting_category">In-App Automation Settings</string>
     <string name="ua_iaa_enabled_settings_title">In-App Automation Enabled</string>
     <string name="ua_iaa_display_interval_settings_title">In-App Automation Display Interval</string>
@@ -156,5 +158,83 @@
     <string name="ua_message">Message</string>
 
     <string name="ua_iaa_display_interval_unit_time">Seconds</string>
+
+    <string name="ua_debug_iaa_description">View scheduled messages</string>
+    <string name="ua_debug_iaa">In-App Automation</string>
+    <string name="ua_debug_iaa_schedule_details">Schedule Details</string>
+    <string name="ua_debug_iaa_display_details">Display Details</string>
+    <string name="ua_debug_iaa_text_details">Text Details</string>
+    <string name="ua_debug_iaa_media_details">Media Details</string>
+    <string name="ua_debug_iaa_button_details">Button Details</string>
+    <string name="ua_debug_iaa_trigger_details">Trigger Details</string>
+
+    <string name="ua_schedule_category">Schedule</string>
+    <string name="ua_iaa_debug_buttons_separated">Separated</string>
+    <string name="ua_iaa_debug_buttons_joined">Joined</string>
+    <string name="ua_iaa_debug_buttons_stacked">Stacked</string>
+    <string name="ua_iaa_debug_fullscreen_key">Allow Full Screen Display</string>
+    <string name="ua_iaa_debug_dismiss_button_color_key">Dismiss Button Color</string>
+    <string name="ua_iaa_debug_width_key">Width</string>
+    <string name="ua_iaa_debug_height_key">Height</string>
+    <string name="ua_iaa_debug_keep_aspect_ratio_key">Keep Aspect Ratio</string>
+    <string name="ua_iaa_debug_requires_connectivity_key">Requires Connectivity</string>
+    <string name="ua_iaa_debug_bg_color_key">Background Color</string>
+    <string name="ua_iaa_debug_border_radius_key">Border Radius</string>
+
+    <string name="ua_debug_type">Type</string>
+    <string name="ua_debug_description">Description</string>
+    <string name="ua_debug_url">URL</string>
+    <string name="ua_debug_label">Label</string>
+    <string name="ua_debug_id">ID</string>
+    <string name="ua_debug_behavior">Behavior</string>
+    <string name="ua_debug_border_color">Border Color</string>
+    <string name="ua_debug_actions">Actions</string>
+    <string name="ua_debug_value">Value</string>
+    <string name="ua_debug_button">Button</string>
+    <string name="ua_debug_text">Text</string>
+    <string name="ua_debug_alignment">Alignment</string>
+    <string name="ua_debug_styles">Styles</string>
+    <string name="ua_debug_font_size">Font Size</string>
+    <string name="ua_debug_font_family">Font Family</string>
+    <string name="ua_debug_color">Color</string>
+    <string name="ua_debug_predicate">Predicate</string>
+    <string name="ua_debug_trigger_goal_format">Goal %f</string>
+    <string name="ua_debug_click_actions">Click Actions</string>
+
+    <string name="ua_iaa_debug_template_key">Template</string>
+    <string name="ua_iaa_debug_heading_key">Heading</string>
+    <string name="ua_iaa_debug_body_key">Body</string>
+    <string name="ua_iaa_debug_footer_key">Footer</string>
+
+    <string name="ua_iaa_debug_media_key">Media</string>
+    <string name="ua_iaa_debug_button_layout_key">Button Layout</string>
+    <string name="ua_iaa_debug_placement_key">Placement</string>
+    <string name="ua_iaa_debug_actions_key">Actions</string>
+    <string name="ua_iaa_debug_duration_key">Duration</string>
+    <string name="ua_iaa_debug_schedule_id_key">Schedule Identifier</string>
+    <string name="ua_iaa_debug_schedule_start_key">Schedule Start</string>
+    <string name="ua_iaa_debug_schedule_end_key">Schedule End</string>
+    <string name="ua_iaa_debug_priority_key">Schedule Priority</string>
+    <string name="ua_iaa_debug_limit_key">Schedule Limit</string>
+    <string name="ua_iaa_debug_edit_grace_period_key">Schedule Edit Grace Period</string>
+    <string name="ua_iaa_debug_interval_key">Schedule Interval</string>
+    <string name="ua_iaa_debug_message_id_key">Message Identifier</string>
+    <string name="ua_iaa_debug_message_name_key">Message Name</string>
+    <string name="ua_iaa_debug_message_display_type_key">Message Display Type</string>
+    <string name="ua_iaa_debug_audience_key">Message Audience</string>
+    <string name="ua_triggers_details_view_title">Triggers Details</string>
+    <string name="ua_display_details_view_title">Display Details</string>
+    <string name="ua_audience_details_view_title">Audience Details</string>
+    <string name="ua_iaa_trigger_lifecycle_foreground">Life Cycle Foreground Trigger</string>
+    <string name="ua_iaa_trigger_lifecycle_background">Life Cycle Background Trigger</string>
+    <string name="ua_iaa_trigger_region_enter">Region Enter Trigger</string>
+    <string name="ua_iaa_trigger_region_exit">Region Exit Trigger</string>
+    <string name="ua_iaa_trigger_custom_event_count">Custom Event Count Trigger</string>
+    <string name="ua_iaa_trigger_custom_event_value">Custom Event Value Trigger</string>
+    <string name="ua_iaa_trigger_screen_view">Screen View Trigger</string>
+    <string name="ua_iaa_trigger_lifecycle_app_init">Lifecycle App Init Trigger</string>
+    <string name="ua_iaa_trigger_active_session">Active Session Trigger</string>
+    <string name="ua_iaa_trigger_version">Version Trigger</string>
+    <string name="ua_iaa_trigger_unknown">Unknown Trigger</string>
 
 </resources>

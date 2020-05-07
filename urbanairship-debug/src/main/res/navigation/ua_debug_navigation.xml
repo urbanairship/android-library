@@ -5,6 +5,7 @@
     app:startDestination="@id/debugFragment">
 
     <include app:graph="@navigation/ua_debug_device_info_navigation" />
+    <include app:graph="@navigation/ua_debug_automation_navigation" />
     <include app:graph="@navigation/ua_debug_custom_event_navigation" />
 
     <fragment
@@ -20,6 +21,9 @@
         <action
             android:id="@+id/action_debugFragment_to_ua_debug"
             app:destination="@id/ua_debug_device_info_navigation" />
+        <action
+            android:id="@+id/action_debugFragment_to_automation"
+            app:destination="@id/ua_debug_automation_navigation" />
         <action
             android:id="@+id/action_debugFragment_to_ua_custom_event"
             app:destination="@id/ua_debug_custom_event_navigation" />

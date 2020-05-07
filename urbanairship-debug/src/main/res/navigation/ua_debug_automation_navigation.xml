@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ua_debug_automation_navigation"
+    app:startDestination="@id/inAppListFragment">
+
+    <fragment
+        android:id="@+id/inAppListFragment"
+        android:name="com.urbanairship.debug.automation.ScheduleListFragment"
+        android:label="@string/ua_debug_iaa">
+        <action
+            android:id="@+id/action_inAppListFragment_to_inAppMessageDetailsFragment"
+            app:destination="@id/inAppScheduleDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/inAppScheduleDetailsFragment"
+        android:name="com.urbanairship.debug.automation.ScheduleDetailsFragment"
+        android:label="@string/ua_debug_iaa_schedule_details">
+        <argument
+            android:name="messageId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_inAppMessageDetailsFragment_to_inAppTriggersDetailsFragment"
+            app:destination="@id/inAppTriggersDetailsFragment" />
+        <action
+            android:id="@+id/action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment"
+            app:destination="@id/inAppDisplayContentDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/inAppTriggersDetailsFragment"
+        android:name="com.urbanairship.debug.automation.TriggersDetailsFragment"
+        android:label="@string/ua_debug_iaa_trigger_details">
+        <argument
+            android:name="trigger"
+            app:argType="com.urbanairship.automation.Trigger" />
+    </fragment>
+    <fragment
+        android:id="@+id/inAppDisplayContentDetailsFragment"
+        android:name="com.urbanairship.debug.automation.DisplayContentDetailsFragment"
+        android:label="@string/ua_debug_iaa_display_details">
+        <argument
+            android:name="message"
+            app:argType="com.urbanairship.iam.InAppMessage" />
+        <action
+            android:id="@+id/action_inAppDisplayContentDetailsFragment_to_buttonDetailsFragment"
+            app:destination="@id/inAppButtonDetailsFragment" />
+        <action
+            android:id="@+id/action_inAppDisplayContentDetailsFragment_to_textInfoDetailsFragment"
+            app:destination="@id/inAppTextInfoDetailsFragment" />
+        <action
+            android:id="@+id/action_inAppDisplayContentDetailsFragment_to_mediaInfoDetailsFragment"
+            app:destination="@id/inAppMediaInfoDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/inAppButtonDetailsFragment"
+        android:name="com.urbanairship.debug.automation.ButtonInfoDetailsFragment"
+        android:label="@string/ua_debug_iaa_button_details">
+        <argument
+            android:name="buttonInfo"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_buttonDetailsFragment_to_textInfoDetailsFragment"
+            app:destination="@id/inAppTextInfoDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/inAppTextInfoDetailsFragment"
+        android:name="com.urbanairship.debug.automation.TextInfoDetailsFragment"
+        android:label="@string/ua_debug_iaa_text_details">
+        <argument
+            android:name="textInfo"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/inAppMediaInfoDetailsFragment"
+        android:name="com.urbanairship.debug.automation.MediaInfoDetailsFragment"
+        android:label="@string/ua_debug_iaa_media_details">
+        <argument
+            android:name="mediaInfo"
+            app:argType="string" />
+    </fragment>
+
+</navigation>
