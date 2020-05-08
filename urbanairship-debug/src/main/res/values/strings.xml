@@ -181,6 +181,26 @@
     <string name="ua_iaa_debug_bg_color_key">Background Color</string>
     <string name="ua_iaa_debug_border_radius_key">Border Radius</string>
 
+    <plurals name="ua_debug_days_quantity">
+        <item quantity="one">%s day</item>
+        <item quantity="other">%s days</item>
+    </plurals>
+
+    <plurals name="ua_debug_hours_quantity">
+        <item quantity="one">%s hour</item>
+        <item quantity="other">%s hours</item>
+    </plurals>
+
+    <plurals name="ua_debug_minutes_quantity">
+        <item quantity="one">%s minute</item>
+        <item quantity="other">%s minutes</item>
+    </plurals>
+
+    <plurals name="ua_debug_seconds_quantity">
+        <item quantity="one">%s second</item>
+        <item quantity="other">%s seconds</item>
+    </plurals>
+
     <string name="ua_debug_type">Type</string>
     <string name="ua_debug_description">Description</string>
     <string name="ua_debug_url">URL</string>

@@ -13,6 +13,8 @@ import com.urbanairship.debug.utils.PendingResultLiveData
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.InAppMessageManager
 import com.urbanairship.iam.InAppMessageSchedule
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 class ScheduleDetailsFragment : AutomationDetailsFragment() {
 
@@ -45,7 +47,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
     private fun detailsForSchedule(schedule: InAppMessageSchedule): List<AutomationDetail> {
         val scheduleInfo = schedule.info
         val message = scheduleInfo.inAppMessage
-        val dateFormat = DateFormat.getDateFormat(requireContext())
+        val dateFormat = DateFormat.getLongDateFormat(requireContext())
 
         return mutableListOf<AutomationDetail>().apply {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_message_name_key), message.name.orEmpty()))
@@ -55,12 +57,20 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
             })
 
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_start_key), dateFormat.format(schedule.info.start)))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_end_key), dateFormat.format(schedule.info.end)))
+
+            if (schedule.info.start >= 0) {
+                add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_start_key), dateFormat.format(Date(schedule.info.start))))
+            }
+
+            if (schedule.info.end >= 0) {
+                add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_end_key), dateFormat.format(Date(schedule.info.end))))
+            }
+
             add(AutomationDetail(getString(R.string.ua_iaa_debug_priority_key), scheduleInfo.priority.toString()))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_limit_key), scheduleInfo.limit.toString()))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_edit_grace_period_key), scheduleInfo.editGracePeriod.toString()))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_interval_key), scheduleInfo.interval.toString()))
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_edit_grace_period_key), scheduleInfo.editGracePeriod.formatDuration(requireContext(), TimeUnit.MILLISECONDS)))
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_interval_key), scheduleInfo.interval.formatDuration(requireContext(), TimeUnit.MILLISECONDS)))
+
             scheduleInfo.triggers.forEach {
                 add(AutomationDetail(it.triggerTitle(requireContext())) {
                     navigateToTrigger(it)

@@ -59,6 +59,8 @@
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
                 android:text="@{viewModel.message.name}"
                 android:textAppearance="@style/AirshipDebug.ItemTitle"
                 tools:text="@tools:sample/lorem[3]" />

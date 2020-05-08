@@ -19,6 +19,7 @@ import com.urbanairship.iam.fullscreen.FullScreenDisplayContent
 import com.urbanairship.iam.html.HtmlDisplayContent
 import com.urbanairship.iam.modal.ModalDisplayContent
 import com.urbanairship.json.JsonMap
+import java.util.concurrent.TimeUnit
 
 class DisplayContentDetailsFragment : AutomationDetailsFragment() {
 
@@ -92,7 +93,7 @@ class DisplayContentDetailsFragment : AutomationDetailsFragment() {
                 add(AutomationDetail(getString(R.string.ua_debug_click_actions), JsonMap(displayContent.actions).toFormattedJsonString()))
             }
 
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_duration_key), displayContent.duration.toString()))
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_duration_key), displayContent.duration.formatDuration(requireContext(), TimeUnit.MILLISECONDS)))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_border_radius_key), displayContent.borderRadius.toString()))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_bg_color_key), String.format("#%06X", 0xFFFFFF and displayContent.backgroundColor)))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_dismiss_button_color_key), String.format("#%06X", 0xFFFFFF and displayContent.dismissButtonColor)))

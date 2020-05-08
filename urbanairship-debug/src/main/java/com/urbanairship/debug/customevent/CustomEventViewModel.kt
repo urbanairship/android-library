@@ -67,7 +67,7 @@ class CustomEventViewModel : ViewModel() {
     private fun validate(): Boolean {
         if (!interactionId.value.isNullOrEmpty() || !interactionType.value.isNullOrEmpty()) {
             interactionIdValidator.value = !interactionId.value.isNullOrEmpty()
-            interactionTypeValidator.value = !interactionId.value.isNullOrEmpty()
+            interactionTypeValidator.value = !interactionType.value.isNullOrEmpty()
         }
         nameValidator.value = !name.value.isNullOrBlank()
         valueValidator.value = !value.value.isNullOrBlank()
