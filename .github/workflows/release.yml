@@ -79,3 +79,21 @@ jobs:
           ./gradlew urbanairship-fcm:bintrayUpload --stacktrace
           ./gradlew urbanairship-adm:bintrayUpload --stacktrace
           ./gradlew urbanairship-hms:bintrayUpload --stacktrace
+
+      - name: Sync to maven central
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: |
+          ./gradlew urbanairship-core:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-automation:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-message-center:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-location:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-ads-identifier:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-preference:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-accengage:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-fcm:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-adm:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-hms:syncToMavenCentral --stacktrace
