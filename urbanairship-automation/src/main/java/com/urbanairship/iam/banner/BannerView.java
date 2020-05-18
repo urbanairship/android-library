@@ -227,6 +227,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
                 if (applyRootWindowInsets) {
                     applyRootWindowInsets(view);
                 }
+                ViewCompat.requestApplyInsets(view);
             }
 
             @Override
@@ -234,6 +235,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
                 view.removeOnAttachStateChangeListener(this);
             }
         });
+
 
         ViewCompat.setOnApplyWindowInsetsListener(view, new androidx.core.view.OnApplyWindowInsetsListener() {
             @NonNull
@@ -417,62 +419,35 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      * @param view The view.
      */
     private void applyRootWindowInsets(@NonNull View view) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return;
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            WindowInsets insets = view.getRootWindowInsets();
+            if (insets != null) {
+                ViewCompat.dispatchApplyWindowInsets(view, WindowInsetsCompat.toWindowInsetsCompat(new WindowInsets(insets)));
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            boolean isNavigationTranslucent, isStatusTranslucent;
+            TypedArray a = getRootView().getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
+            isNavigationTranslucent = a.getBoolean(0, false);
+            isStatusTranslucent = a.getBoolean(1, false);
+            a.recycle();
 
-        boolean isNavigationTranslucent, isStatusTranslucent;
-        TypedArray a = view.getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
-        isNavigationTranslucent = a.getBoolean(0, false);
-        isStatusTranslucent = a.getBoolean(1, false);
-        a.recycle();
-
-        if (BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement())) {
+            int top = 0;
             if (isStatusTranslucent) {
-                applyTopInsets(view);
+                int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                if (resourceId > 0) {
+                    top = getResources().getDimensionPixelSize(resourceId);
+                }
             }
-        } else {
+
+            int bottom = 0;
             if (isNavigationTranslucent) {
-                applyBottomInsets(view);
+                int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+                if (resourceId > 0) {
+                    bottom = getResources().getDimensionPixelSize(resourceId);
+                }
             }
-        }
-    }
 
-    private void applyTopInsets(@NonNull View view) {
-        int top = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WindowInsets insets = view.getRootWindowInsets();
-            if (insets != null) {
-                top = insets.getSystemWindowInsetTop();
-            }
-        } else {
-            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                top = getResources().getDimensionPixelSize(resourceId);
-            }
-        }
-
-        if (top > 0) {
-            ViewCompat.setPaddingRelative(view, 0, top, 0, 0);
-        }
-    }
-
-    private void applyBottomInsets(@NonNull View view) {
-        int bottom = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WindowInsets insets = view.getRootWindowInsets();
-            if (insets != null) {
-                bottom = insets.getSystemWindowInsetBottom();
-            }
-        } else {
-            int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                bottom = getResources().getDimensionPixelSize(resourceId);
-            }
-        }
-
-        if (bottom > 0) {
-            ViewCompat.setPaddingRelative(view, 0, 0, 0, bottom);
+            ViewCompat.setPaddingRelative(view, 0, top, 0, bottom);
         }
     }
 
