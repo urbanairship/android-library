@@ -236,5 +236,13 @@
     <string name="ua_iaa_trigger_active_session">Active Session Trigger</string>
     <string name="ua_iaa_trigger_version">Version Trigger</string>
     <string name="ua_iaa_trigger_unknown">Unknown Trigger</string>
+    <string name="ua_debug_audience_new_user">Require New User</string>
+    <string name="ua_debug_audience_notifications_optin">Notifications</string>
+    <string name="ua_debug_audience_location_optin">Location</string>
+    <string name="ua_debug_audience_language_tags">Language Tags</string>
+    <string name="ua_debug_audience_tag_selector">Tag Selector</string>
+    <string name="ua_debug_audience_version_predicate">Version Predicate</string>
+    <string name="ua_debug_audience_miss_behavior">Miss Behavior</string>
+    <string name="ua_debug_audience_test_devices">Test Devices</string>
 
 </resources>

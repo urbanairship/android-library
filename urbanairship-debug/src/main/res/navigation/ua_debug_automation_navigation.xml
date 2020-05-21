@@ -25,10 +25,21 @@
             android:id="@+id/action_inAppMessageDetailsFragment_to_inAppTriggersDetailsFragment"
             app:destination="@id/inAppTriggersDetailsFragment" />
         <action
+            android:id="@+id/action_inAppMessageDetailsFragment_to_inAppAudienceDetailsFragment"
+            app:destination="@id/inAppAudienceDetailsFragment" />
+        <action
             android:id="@+id/action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment"
             app:destination="@id/inAppDisplayContentDetailsFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/inAppAudienceDetailsFragment"
+        android:name="com.urbanairship.debug.automation.AudienceDetailsFragment"
+        android:label="@string/ua_audience_details_view_title">
+        <argument
+            android:name="message"
+            app:argType="com.urbanairship.iam.InAppMessage" />
+    </fragment>
     <fragment
         android:id="@+id/inAppTriggersDetailsFragment"
         android:name="com.urbanairship.debug.automation.TriggersDetailsFragment"

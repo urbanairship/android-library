@@ -34,6 +34,13 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
     }
 
+    private fun navigateToAudience(message: InAppMessage) {
+        val args = Bundle()
+        args.putParcelable(AudienceDetailsFragment.ARGUMENT_MESSAGE, message)
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppAudienceDetailsFragment, args)
+    }
+
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
         val scheduleLiveData = PendingResultLiveData<InAppMessageSchedule>(InAppMessageManager.shared().getSchedule(scheduleId))
@@ -53,7 +60,9 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()) {
                 navigateToDisplayContent(message)
             })
-
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_audience_key)) {
+                navigateToAudience(message)
+            })
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_start_key), dateFormat.format(schedule.info.start)))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_end_key), dateFormat.format(schedule.info.end)))

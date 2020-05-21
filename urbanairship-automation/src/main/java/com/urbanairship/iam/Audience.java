@@ -209,7 +209,7 @@ public class Audience implements JsonSerializable {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    List<String> getLanguageTags() {
+    public List<String> getLanguageTags() {
         return languageTags;
     }
 
@@ -221,7 +221,7 @@ public class Audience implements JsonSerializable {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    List<String> getTestDevices() {
+    public List<String> getTestDevices() {
         return testDevices;
     }
 
@@ -231,7 +231,7 @@ public class Audience implements JsonSerializable {
      * @return The notification opt-in status.
      */
     @Nullable
-    Boolean getNotificationsOptIn() {
+    public Boolean getNotificationsOptIn() {
         return notificationsOptIn;
     }
 
@@ -241,7 +241,7 @@ public class Audience implements JsonSerializable {
      * @return The location opt-in status.
      */
     @Nullable
-    Boolean getLocationOptIn() {
+    public Boolean getLocationOptIn() {
         return locationOptIn;
     }
 
@@ -251,7 +251,7 @@ public class Audience implements JsonSerializable {
      * @return The new user status.
      */
     @Nullable
-    Boolean getNewUser() {
+    public Boolean getNewUser() {
         return newUser;
     }
 
@@ -261,7 +261,7 @@ public class Audience implements JsonSerializable {
      * @return The tag selector.
      */
     @Nullable
-    TagSelector getTagSelector() {
+    public TagSelector getTagSelector() {
         return tagSelector;
     }
 
@@ -271,7 +271,7 @@ public class Audience implements JsonSerializable {
      * @return The app version predicate.
      */
     @Nullable
-    JsonPredicate getVersionPredicate() {
+    public JsonPredicate getVersionPredicate() {
         return versionPredicate;
     }
 
@@ -281,7 +281,7 @@ public class Audience implements JsonSerializable {
      * @return The audience miss behavior.
      */
     @NonNull
-    String getMissBehavior() {
+    public String getMissBehavior() {
         return missBehavior;
     }
 
@@ -482,7 +482,6 @@ public class Audience implements JsonSerializable {
         public Audience build() {
             return new Audience(this);
         }
-
     }
 
 }
