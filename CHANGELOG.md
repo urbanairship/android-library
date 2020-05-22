@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.1.1 - May 21, 2020
+Patch release to fix banner In-App messages displaying behind translucent navigation and status
+bars.
+
+### Changes
+- Fixed window insets on banners
+
 ## Version 13.1.0 - May 4, 2020
 Minor release that adds Named User attributes.
 

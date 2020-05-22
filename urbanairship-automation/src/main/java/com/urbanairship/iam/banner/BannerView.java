@@ -426,7 +426,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             boolean isNavigationTranslucent, isStatusTranslucent;
-            TypedArray a = getRootView().getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
+            TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
             isNavigationTranslucent = a.getBoolean(0, false);
             isStatusTranslucent = a.getBoolean(1, false);
             a.recycle();

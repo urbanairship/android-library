@@ -155,7 +155,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
      */
     @NonNull
     protected BannerView onCreateView(@NonNull Activity activity, @NonNull ViewGroup viewGroup) {
-        return new BannerView(activity.getApplicationContext(), displayContent, getAssets());
+        return new BannerView(activity, displayContent, getAssets());
     }
 
     /**
