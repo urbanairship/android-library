@@ -1,5 +1,9 @@
 package com.urbanairship.iam;
 
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.ScheduleInfo;
@@ -7,10 +11,7 @@ import com.urbanairship.json.JsonMap;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Automation driver for in-app messaging.
@@ -108,6 +109,9 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
                                                                             .setEnd(info.getEnd())
                                                                             .setStart(info.getStart())
                                                                             .setLimit(info.getLimit())
+                                                                            .setPriority(info.getPriority())
+                                                                            .setInterval(info.getInterval(), TimeUnit.MILLISECONDS)
+                                                                            .setEditGracePeriod(info.getEditGracePeriod(), TimeUnit.MILLISECONDS)
                                                                             .setMessage(InAppMessage.fromJson(info.getData().toJsonValue()))
                                                                             .build();
 

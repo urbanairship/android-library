@@ -47,6 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight=".10"
+            android:tint="?colorOnBackground"
             android:src="@drawable/ua_ic_chevron_right" />
     </LinearLayout>
 </layout>
