@@ -8,6 +8,7 @@ apply plugin: 'com.jfrog.bintray'
 // For test coverage reports
 apply plugin: 'jacoco'
 
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 android {
@@ -239,9 +240,11 @@ boolean verifyArtifactAvailableOnBintray(userOrg, repo, packageName, version, us
     return true
 }
 
-boolean syncFromBintrayToMavenCentral(userOrg, repo, packageName, version, user, key) {
+boolean syncFromBintrayToMavenCentral() {
     def mavenCentralUserToken = "$System.env.MAVEN_USER"
     def mavenCentralPasswordToken = "$System.env.MAVEN_PASSWORD"
+    def packageName = project.name
+    def version = project.version
 
     if (project.hasProperty('mavenUser') && project.hasProperty('mavenPassword')) {
         // Credentials should be stored in ~/.gradle/gradle.properties
@@ -257,11 +260,28 @@ boolean syncFromBintrayToMavenCentral(userOrg, repo, packageName, version, user,
         throw new GradleException("No maven-central password token is set. Either set MAVEN_PASSWORD in your environment or mavenPassword in gradle.properties")
     }
 
+    def user = "$System.env.BINTRAY_USER"
+    def key = "$System.env.BINTRAY_API_KEY"
+
+    if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayApiKey')) {
+        // Credentials should be stored in ~/.gradle/gradle.properties
+        user = bintrayUser
+        key = bintrayApiKey
+    }
+
+    if (user == null || user.isEmpty()) {
+        throw new GradleException("No Bintray user is set. Either set BINTRAY_USER in your environment or bintrayUser in gradle.properties")
+    }
+
+    if (key == null || key.isEmpty()) {
+        throw new GradleException("No Bintray API token is set. Either set BINTRAY_API_KEY in your environment or bintrayApiKey in gradle.properties")
+    }
+
     // Bintray maven central sync API
-    def url = "https://api.bintray.com/maven_central_sync/${userOrg}/${repo}/${packageName}/versions/${version}"
+    def url = "https://api.bintray.com/maven_central_sync/urbanairship/android/${packageName}/versions/${version}"
     def connection = new URL(url).openConnection()
     connection.setDoInput(true)
-    connection.setDoOutput(true) // Triggers POST
+    connection.setDoOutput(true)
     connection.setRequestMethod('POST')
     connection.setRequestProperty("Content-Type", "application/json");
     connection.setRequestProperty("Accept", "application/json");
@@ -271,27 +291,28 @@ boolean syncFromBintrayToMavenCentral(userOrg, repo, packageName, version, user,
     String authHeaderValue = "Basic " + new String(encodedAuth)
     connection.setRequestProperty("Authorization", authHeaderValue)
 
-    String parameters = "{\"username\": \"${mavenCentralUserToken}\",\"password\": \"${mavenCentralPasswordToken}\", \"close\": 1}"
-
+    def parameters = new JsonOutput().toJson([username: mavenCentralUserToken, password: mavenCentralPasswordToken])
     OutputStreamWriter writer = new OutputStreamWriter(
             connection.getOutputStream())
     writer.write(parameters)
     writer.flush()
 
-    def responseCode = connection.responseCode
-
-    // Success: 200
-    // Package doesn't exist: 404
-    // Version doesn't exist: 404
-    // Intermittent failure?: 400
-
-    if (responseCode != 200) {
-        println("Bintray response = ${responseCode}")
-        return false
-    }
-
     try {
+        def responseCode = connection.responseCode
+
+        // Success: 200
+        // Package doesn't exist: 404
+        // Version doesn't exist: 404
+        // Intermittent failure?: 400
+    
+        if (responseCode != 200) {
+            println("Bintray response = ${responseCode}")
+            return false
+        }
         InputStream response = connection.getInputStream()
+        response.readLines().forEach { line ->
+            println(line)
+        }
     } catch (Throwable e) {
         println("Exception while using Bintray API (${connection.getURL()}): ${e}")
         return false
@@ -302,77 +323,26 @@ boolean syncFromBintrayToMavenCentral(userOrg, repo, packageName, version, user,
 
 task syncToMavenCentral {
     doLast {
-        def userOrg = 'urbanairship'
-        def repo = 'android'
-        def packageName = project.name
-        def version = project.version
+        def retries = 3
+        def millisecondsToWaitForRetry = 2000
 
-        boolean availableOnMavenCentral = verifyArtifactAvailableOnMavenCentral(packageName, version)
+        def synced = false
 
-        if (availableOnMavenCentral) {
-            println("\n${packageName} version ${version} was already available on Maven Central.")
-        } else {
-            // synchronize from bintray
-            def user = "$System.env.BINTRAY_USER"
-            def key = "$System.env.BINTRAY_API_KEY"
-
-            if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayApiKey')) {
-                // Credentials should be stored in ~/.gradle/gradle.properties
-                user = bintrayUser
-                key = bintrayApiKey
-            }
-
-            if (user == null || user.isEmpty()) {
-                throw new GradleException("No Bintray user is set. Either set BINTRAY_USER in your environment or bintrayUser in gradle.properties")
-            }
-
-            if (key == null || key.isEmpty()) {
-                throw new GradleException("No Bintray API token is set. Either set BINTRAY_API_KEY in your environment or bintrayApiKey in gradle.properties")
-            }
-
-            boolean availableOnBintray = verifyArtifactAvailableOnBintray(userOrg, repo, packageName, version, user, key)
-            boolean successfullySyncd = false
-
-            long retries = 3
-            long millisecondsToWaitForRetry = 2000
-
-            for (int i = 0; i < retries; i++) {
-                println("${packageName} version ${version} is not available on Maven Central. Will try to synchronize from Bintray.")
-                if (!availableOnBintray) {
-                    // retry in case there was a transient issue with Bintray
-                    availableOnBintray = verifyArtifactAvailableOnBintray(userOrg, repo, packageName, version, user, key)
-                }
-                // Try to sync even if unable to verify availability on Bintray
-                successfullySyncd = syncFromBintrayToMavenCentral(userOrg, repo, packageName, version, user, key)
-                if (successfullySyncd) {
-                    println("${packageName} version ${version} sync'd successfully to Maven Central. Will verify it is available.")
-                    sleep(1000)
-                    availableOnMavenCentral = verifyArtifactAvailableOnMavenCentral(packageName, version)
-                    if (availableOnMavenCentral) {
-                        break
-                    } else {
-                        println("${packageName} version ${version} is still not available on Maven Central.")
-                    }
-                } else {
-                    println("Unable to sync from Bintray.")
-                }
-
-                if (i < retries - 1) {
-                    println("\nWaiting ${millisecondsToWaitForRetry} milliseconds before retrying")
-                    sleep(millisecondsToWaitForRetry)
-                    millisecondsToWaitForRetry *= 2
-                }
-            }
-
-            if (availableOnMavenCentral) {
-                println("\n${packageName} version ${version} is now available on Maven Central.")
-            } else if (successfullySyncd) {
-                throw new GradleException("\n${packageName} version ${version} was successfully sync'd to Maven Central, but appears to be unavailable.")
-            } else if (availableOnBintray) {
-                throw new GradleException("\n${packageName} version ${version} is available on Bintray, but was not successfully sync'd to Maven Central.")
+        for (int i = 0; i < retries; i++) {
+            synced = syncFromBintrayToMavenCentral()
+            if (synced) {
+                println("Package synced to maven central.")
+                break
             } else {
-                throw new GradleException("\n${packageName} version ${version} is not available on Bintray and was not successfully sync'd to Maven Central.")
+                println("Unable to sync to maven central.")
+                if (i < retries - 1) {
+                    sleep(millisecondsToWaitForRetry)
+                }
             }
+        }
+
+        if (!synced) {
+            throw new GradleException("Unable to sync to maven central")
         }
     }
 }
