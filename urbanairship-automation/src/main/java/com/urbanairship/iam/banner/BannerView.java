@@ -14,10 +14,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.AnimatorRes;
+import androidx.annotation.CallSuper;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.customview.widget.ViewDragHelper;
 
 import com.urbanairship.automation.R;
 import com.urbanairship.iam.ButtonInfo;
@@ -27,18 +40,6 @@ import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.iam.view.MediaView;
-
-import androidx.annotation.AnimatorRes;
-import androidx.annotation.CallSuper;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.graphics.ColorUtils;
-import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.customview.widget.ViewDragHelper;
 
 /**
  * Banner view.
@@ -66,7 +67,7 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
 
     private boolean isDismissed = false;
     private boolean isResumed = false;
-    private boolean applyRootWindowInsets = false;
+    private boolean applyLegacyWindowInsetFix = false;
 
     @Nullable
     private View subView;
@@ -137,6 +138,16 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
                 }
             }
         };
+
+        ViewCompat.setOnApplyWindowInsetsListener(this, new androidx.core.view.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                for (int i = 0; i < getChildCount(); i++) {
+                    ViewCompat.dispatchApplyWindowInsets(getChildAt(i), new WindowInsetsCompat(insets));
+                }
+                return insets;
+            }
+        });
     }
 
     /**
@@ -146,6 +157,12 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
      */
     public void setListener(@Nullable Listener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        ViewCompat.requestApplyInsets(this);
     }
 
     /**
@@ -220,33 +237,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         Drawable drawable = DrawableCompat.wrap(bannerPull.getBackground()).mutate();
         DrawableCompat.setTint(drawable, displayContent.getDismissButtonColor());
         ViewCompat.setBackground(bannerPull, drawable);
-
-        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(@NonNull View view) {
-                if (applyRootWindowInsets) {
-                    applyRootWindowInsets(view);
-                }
-                ViewCompat.requestApplyInsets(view);
-            }
-
-            @Override
-            public void onViewDetachedFromWindow(@NonNull View view) {
-                view.removeOnAttachStateChangeListener(this);
-            }
-        });
-
-
-        ViewCompat.setOnApplyWindowInsetsListener(view, new androidx.core.view.OnApplyWindowInsetsListener() {
-            @NonNull
-            @Override
-            public WindowInsetsCompat onApplyWindowInsets(@NonNull View view, @NonNull WindowInsetsCompat src) {
-                WindowInsetsCompat copy = new WindowInsetsCompat(src);
-                ViewCompat.onApplyWindowInsets(view, copy);
-                return src;
-            }
-        });
-
         return view;
     }
 
@@ -271,18 +261,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     protected void onPause() {
         isResumed = false;
         getTimer().stop();
-    }
-
-    /**
-     * Applies window insets from the root view.
-     */
-    void applyRootWindowInsets() {
-        if (!applyRootWindowInsets) {
-            this.applyRootWindowInsets = true;
-            if (subView != null && ViewCompat.isAttachedToWindow(subView)) {
-                applyRootWindowInsets(subView);
-            }
-        }
     }
 
     /**
@@ -329,6 +307,9 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         if (visibility == VISIBLE && !isDismissed) {
             if (subView == null) {
                 subView = onCreateView(LayoutInflater.from(getContext()), this);
+                if (applyLegacyWindowInsetFix) {
+                    applyLegacyWindowInsetFix(subView);
+                }
                 addView(subView);
                 if (animationIn != 0) {
                     Animator animator = AnimatorInflater.loadAnimator(getContext(), animationIn);
@@ -414,44 +395,6 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
     }
 
     /**
-     * Applies the window insets to the view.
-     *
-     * @param view The view.
-     */
-    private void applyRootWindowInsets(@NonNull View view) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WindowInsets insets = view.getRootWindowInsets();
-            if (insets != null) {
-                ViewCompat.dispatchApplyWindowInsets(view, WindowInsetsCompat.toWindowInsetsCompat(new WindowInsets(insets)));
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            boolean isNavigationTranslucent, isStatusTranslucent;
-            TypedArray a = getContext().obtainStyledAttributes(new int[] { android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus });
-            isNavigationTranslucent = a.getBoolean(0, false);
-            isStatusTranslucent = a.getBoolean(1, false);
-            a.recycle();
-
-            int top = 0;
-            if (isStatusTranslucent) {
-                int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-                if (resourceId > 0) {
-                    top = getResources().getDimensionPixelSize(resourceId);
-                }
-            }
-
-            int bottom = 0;
-            if (isNavigationTranslucent) {
-                int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-                if (resourceId > 0) {
-                    bottom = getResources().getDimensionPixelSize(resourceId);
-                }
-            }
-
-            ViewCompat.setPaddingRelative(view, 0, top, 0, bottom);
-        }
-    }
-
-    /**
      * Gets the banner layout for the banner's placement.
      *
      * @return The banner layout.
@@ -480,10 +423,10 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         int borderRadiusFlag = BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement()) ? BorderRadius.BOTTOM : BorderRadius.TOP;
 
         return BackgroundDrawableBuilder.newBuilder(getContext())
-                                        .setBackgroundColor(displayContent.getBackgroundColor())
-                                        .setPressedColor(pressedColor)
-                                        .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
-                                        .build();
+                .setBackgroundColor(displayContent.getBackgroundColor())
+                .setPressedColor(pressedColor)
+                .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
+                .build();
     }
 
     /**
@@ -502,4 +445,46 @@ public class BannerView extends FrameLayout implements InAppButtonLayout.ButtonC
         }
     }
 
+    /**
+     * Applies the window insets to the view for kitkat devices.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void applyLegacyWindowInsetFix() {
+        applyLegacyWindowInsetFix = true;
+        if (subView != null) {
+            applyLegacyWindowInsetFix(subView);
+        }
+    }
+
+    private void applyLegacyWindowInsetFix(@NonNull View View) {
+        // Avoid double insets if no other view is consuming the insets
+        subView.setFitsSystemWindows(false);
+
+        boolean isNavigationTranslucent, isStatusTranslucent;
+        TypedArray a = getContext().obtainStyledAttributes(new int[]{android.R.attr.windowTranslucentNavigation, android.R.attr.windowTranslucentStatus});
+        isNavigationTranslucent = a.getBoolean(0, false);
+        isStatusTranslucent = a.getBoolean(1, false);
+        a.recycle();
+
+        int top = 0;
+        if (isStatusTranslucent) {
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                top = getResources().getDimensionPixelSize(resourceId);
+            }
+        }
+
+        int bottom = 0;
+        if (isNavigationTranslucent) {
+            int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                bottom = getResources().getDimensionPixelSize(resourceId);
+            }
+        }
+
+        ViewCompat.setPaddingRelative(subView, 0, top, 0, bottom);
+    }
 }

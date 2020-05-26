@@ -4,6 +4,7 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -24,6 +25,16 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.core.view.ViewCompat;
+
 import com.urbanairship.Fonts;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
@@ -37,15 +48,6 @@ import com.urbanairship.util.UAStringUtil;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.List;
-
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.ColorUtils;
-import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.core.view.ViewCompat;
 
 /**
  * In-app view utils.
@@ -77,12 +79,12 @@ public class InAppViewUtils {
         float borderRadius = buttonInfo.getBorderRadius() == null ? DEFAULT_BORDER_RADIUS : buttonInfo.getBorderRadius();
 
         Drawable background = BackgroundDrawableBuilder.newBuilder(button.getContext())
-                                                       .setBackgroundColor(backgroundColor)
-                                                       .setBorderRadius(borderRadius, borderRadiusFlag)
-                                                       .setPressedColor(pressedColor)
-                                                       .setStrokeColor(strokeColor)
-                                                       .setStrokeWidth(DEFAULT_STROKE_WIDTH_DPS)
-                                                       .build();
+                .setBackgroundColor(backgroundColor)
+                .setBorderRadius(borderRadius, borderRadiusFlag)
+                .setPressedColor(pressedColor)
+                .setStrokeColor(strokeColor)
+                .setStrokeWidth(DEFAULT_STROKE_WIDTH_DPS)
+                .build();
 
         ViewCompat.setBackground(button, background);
     }
@@ -308,6 +310,22 @@ public class InAppViewUtils {
 
         mediaView.setLayoutParams(params);
         mediaView.setMediaInfo(mediaInfo, cachedLocation);
+    }
+
+    /**
+     * Returns the largest child Z value in the view group.
+     *
+     * @param group The view group.
+     * @return The largest child Z value in the view group.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public static float getLargestChildZValue(@NonNull ViewGroup group) {
+        float z = 0;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            z = Math.max(group.getChildAt(0).getZ(), z);
+        }
+        return z;
     }
 
 }

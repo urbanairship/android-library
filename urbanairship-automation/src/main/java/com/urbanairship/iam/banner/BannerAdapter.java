@@ -5,6 +5,7 @@ package com.urbanairship.iam.banner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -21,6 +22,7 @@ import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaDisplayAdapter;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
@@ -32,7 +34,9 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 /**
  * Banner display adapter.
@@ -204,11 +208,6 @@ public class BannerAdapter extends MediaDisplayAdapter {
                 onDisplayFinished(view.getContext());
             }
         });
-
-        if (viewGroup.getId() == android.R.id.content) {
-            view.applyRootWindowInsets();
-        }
-
     }
 
     /**
@@ -254,11 +253,28 @@ public class BannerAdapter extends MediaDisplayAdapter {
             return;
         }
 
-        BannerView view = onCreateView(activity, container);
+        final BannerView view = onCreateView(activity, container);
         onViewCreated(view, activity, container);
 
         if (view.getParent() == null) {
-            container.addView(view);
+            if (container.getId() == android.R.id.content) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    // Android stops dispatching insets to the remaining children if a child
+                    // consumes the insets. To work around this, we are inserting the view
+                    // at index 0, but setting the Z value larger than the other children
+                    // so it's drawn on top.
+                    view.setZ(InAppViewUtils.getLargestChildZValue(container) + 1);
+                    container.addView(view, 0);
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        // Kitkat we add padding to view to fix any inset issues
+                        view.applyLegacyWindowInsetFix();
+                    }
+                    container.addView(view);
+                }
+            } else {
+                container.addView(view);
+            }
         }
 
         lastActivity = new WeakReference<>(activity);
