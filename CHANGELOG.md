@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.1.2 - May 26, 2020
+Patch release to improve window inset handling for In-App message banners.
+
+### Changes
+- Use standard window insets for banners instead of root insets.
+
 ## Version 13.1.1 - May 21, 2020
 Patch release to fix banner In-App messages displaying behind translucent navigation and status
 bars.
