@@ -160,6 +160,7 @@ public class MessageFragment extends Fragment {
             }
         });
 
+        webView.getSettings().setSupportMultipleWindows(true);
         webView.setWebChromeClient(new AirshipWebChromeClient(getActivity()) {
             @Override
             public Bitmap getDefaultVideoPoster() {

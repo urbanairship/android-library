@@ -29,6 +29,7 @@ import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.webkit.AirshipWebChromeClient;
 import com.urbanairship.webkit.AirshipWebView;
 
 import java.lang.ref.WeakReference;
@@ -153,7 +154,8 @@ public class HtmlActivity extends InAppMessageActivity {
         });
 
         webView.setAlpha(0);
-        webView.setWebChromeClient(new WebChromeClient() {
+        webView.getSettings().setSupportMultipleWindows(true);
+        webView.setWebChromeClient(new AirshipWebChromeClient(this) {
             @Override
             public Bitmap getDefaultVideoPoster() {
 

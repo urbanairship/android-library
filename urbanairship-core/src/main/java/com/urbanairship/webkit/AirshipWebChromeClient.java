@@ -3,14 +3,20 @@
 package com.urbanairship.webkit;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Message;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+
+import com.urbanairship.util.UriUtils;
 
 import java.lang.ref.WeakReference;
 
@@ -78,6 +84,33 @@ public class AirshipWebChromeClient extends WebChromeClient {
         ViewGroup parent = (ViewGroup) customView.getParent();
         parent.removeView(customView);
         this.customView = null;
+    }
+
+    @Override
+    public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+        if (isUserGesture && resultMsg != null && resultMsg.obj instanceof WebView.WebViewTransport) {
+            WebView tempWebView = new WebView(view.getContext());
+
+            tempWebView.setWebViewClient(new WebViewClient(){
+                @Override
+                public boolean shouldOverrideUrlLoading (WebView view, String url) {
+                    if (url != null) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, UriUtils.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        view.getContext().startActivity(intent);
+                    }
+                    return true;
+                }
+            });
+
+            WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+            transport.setWebView(tempWebView);
+            resultMsg.sendToTarget();
+
+            return true;
+        }
+
+        return false;
     }
 
 }
