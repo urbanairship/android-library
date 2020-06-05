@@ -3,6 +3,7 @@
 package com.urbanairship.channel;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
@@ -21,6 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -150,6 +153,53 @@ public class AirshipChannelTests extends BaseTestCase {
         assertEquals(JobInfo.JOB_FINISHED, result);
         assertEquals("channel", airshipChannel.getId());
         assertTrue(listener.onChannelCreatedCalled);
+
+        // Verify the channel created intent was fired
+        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
+        assertEquals(intents.size(), 0);
+    }
+
+    /**
+     * Test create channel. Also tests the CHANNEL_CREATED broadcast.
+     */
+    @Test
+    public void testCreateChannelWithExtendedBroadcasts() throws RequestException {
+        AirshipConfigOptions configOptions =  new AirshipConfigOptions.Builder()
+                .setAppKey("appKey")
+                .setAppSecret("appSecret")
+                .setExtendedBroadcastsEnabled(true)
+                .build();
+        runtimeConfig.setConfigOptions(configOptions);
+
+        assertNull(airshipChannel.getId());
+
+        TestListener listener = new TestListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                super.onChannelCreated(channelId);
+                assertEquals("channel", channelId);
+            }
+        };
+
+        airshipChannel.addChannelListener(listener);
+
+        // Setup response
+        when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
+                .thenReturn(createResponse("channel", 200));
+
+        // Kickoff the update request
+        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_REGISTRATION_JOB);
+
+        assertEquals(JobInfo.JOB_FINISHED, result);
+        assertEquals("channel", airshipChannel.getId());
+        assertTrue(listener.onChannelCreatedCalled);
+
+        // Verify the airship ready intent was fired
+        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
+        assertEquals(intents.size(), 1);
+        assertEquals(intents.get(0).getAction(), AirshipChannel.ACTION_CHANNEL_CREATED);
+        assertNotNull(intents.get(0).getExtras());
+        assertEquals(intents.get(0).getExtras().getString("channel_id"), "channel");
     }
 
     /**

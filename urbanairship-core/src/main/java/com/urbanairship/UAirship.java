@@ -69,6 +69,15 @@ public class UAirship {
     @NonNull
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
+    @NonNull
+    public static final String EXTRA_CHANNEL_ID_KEY = "channel_id";
+
+    @NonNull
+    public static final String EXTRA_PAYLOAD_VERSION_KEY = "payload_version";
+
+    @NonNull
+    public static final String EXTRA_APP_KEY_KEY = "app_key";
+
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Platform {
@@ -431,10 +440,16 @@ public class UAirship {
                 pendingAirshipRequests.clear();
             }
 
-            // Send AirshipReady intent for other plugins that depend on UA
+            // Send AirshipReady intent for other plugins that depend on Airship
             Intent readyIntent = new Intent(ACTION_AIRSHIP_READY)
                     .setPackage(UAirship.getPackageName())
                     .addCategory(UAirship.getPackageName());
+
+            if (sharedAirship.runtimeConfig.getConfigOptions().extendedBroadcastsEnabled) {
+                readyIntent.putExtra(EXTRA_CHANNEL_ID_KEY, sharedAirship.channel.getId());
+                readyIntent.putExtra(EXTRA_APP_KEY_KEY, sharedAirship.runtimeConfig.getConfigOptions().appKey);
+                readyIntent.putExtra(EXTRA_PAYLOAD_VERSION_KEY, 1);
+            }
 
             application.sendBroadcast(readyIntent);
 

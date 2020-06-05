@@ -266,6 +266,17 @@ public class AirshipConfigOptions {
     public final boolean dataCollectionOptInEnabled;
 
     /**
+     * Flag indicating whether or not to perform extended broadcasts.
+     *
+     * When extended broadcasts are enabled, the channel identifier and app key are
+     * added to the AIRSHIP_READY broadcast and the channel identifier is included in
+     * a new CHANNEL_CREATED broadcast.
+     * <p>
+     * Defaults to <code>false</code>.
+     */
+    public final boolean extendedBroadcastsEnabled;
+
+    /**
      * Notification icon.
      */
     @DrawableRes
@@ -342,6 +353,7 @@ public class AirshipConfigOptions {
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
+        this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
     }
 
     /**
@@ -494,6 +506,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
         private static final String FIELD_SITE = "site";
         private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
+        private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
 
         private String appKey;
         private String appSecret;
@@ -527,6 +540,7 @@ public class AirshipConfigOptions {
         private PushProvider customPushProvider;
         private Uri appStoreUri;
         private boolean dataCollectionOptInEnabled;
+        private boolean extendedBroadcastsEnabled;
         private @Site
         String site = SITE_US;
 
@@ -797,6 +811,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_DATA_COLLECTION_OPT_IN_ENABLED:
                             this.setDataCollectionOptInEnabled(configParser.getBoolean(name, false));
+                            break;
+
+                        case FIELD_EXTENDED_BROADCASTS_ENABLED:
+                            this.setExtendedBroadcastsEnabled(configParser.getBoolean(name, false));
                             break;
                     }
                 } catch (Exception e) {
@@ -1277,6 +1295,23 @@ public class AirshipConfigOptions {
             this.dataCollectionOptInEnabled = dataCollectionOptInEnabled;
             return this;
         }
+
+        /**
+         * Set the flag indicating whether extended broadcasts are enabled or disabled.
+         *
+         * When extended broadcasts are enabled, the channel identifier and app key are
+         * added to the AIRSHIP_READY broadcast and the channel identifier is included in
+         * a new CHANNEL_CREATED broadcast.
+         *
+         * @param extendedBroadcastsEnabled The flag indicating whether extended broadcasts are enabled or disabled.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setExtendedBroadcastsEnabled(boolean extendedBroadcastsEnabled) {
+            this.extendedBroadcastsEnabled = extendedBroadcastsEnabled;
+            return this;
+        }
+
 
         /**
          * Builds the config options.

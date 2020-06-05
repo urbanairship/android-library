@@ -4,6 +4,7 @@ package com.urbanairship;
 
 import android.app.Application;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Looper;
 
 import org.junit.After;
@@ -20,16 +21,18 @@ import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertNotNull;
 
 public class UAirshipTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    AirshipConfigOptions configOptions;
-    Looper looper;
-    Application application;
+    private AirshipConfigOptions configOptions;
+    private Looper looper;
+    private Application application;
 
     @Before
     public void setup() {
@@ -86,6 +89,57 @@ public class UAirshipTest extends BaseTestCase {
         List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
         assertEquals(intents.size(), 1);
         assertEquals(intents.get(0).getAction(), UAirship.ACTION_AIRSHIP_READY);
+        assertNull(intents.get(0).getExtras());
+    }
+
+    /**
+     * Test takeOff with valid application and config options calls the correct callbacks.
+     * Also tests the AIRSHIP_READY broadcast is extended.
+     */
+    @Test
+    public void testAsyncTakeOffWithExtendedBroadcasts() {
+        final TestCallback testCallback = new TestCallback();
+        UAirship.shared(testCallback);
+
+        TestCallback cancelCallback = new TestCallback();
+        Cancelable cancelable = UAirship.shared(cancelCallback);
+        cancelable.cancel();
+
+        TestCallback takeOffCallback = new TestCallback() {
+            @Override
+            public void onAirshipReady(@NonNull UAirship airship) {
+                super.onAirshipReady(airship);
+                assertFalse("Take off callback should be called first", testCallback.onReadyCalled);
+            }
+        };
+
+        configOptions = new AirshipConfigOptions.Builder()
+                .setProductionAppKey("0000000000000000000000")
+                .setProductionAppSecret("0000000000000000000000")
+                .setInProduction(true)
+                .setExtendedBroadcastsEnabled(true)
+                .build();
+
+        UAirship.takeOff(application, configOptions, takeOffCallback);
+
+        // Block until its ready
+        UAirship.shared();
+        Shadows.shadowOf(looper).runToEndOfTasks();
+
+        assertTrue(testCallback.onReadyCalled);
+        assertTrue(takeOffCallback.onReadyCalled);
+        assertFalse(cancelCallback.onReadyCalled);
+
+        // Verify the airship ready intent was fired
+        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
+        assertEquals(intents.size(), 1);
+        assertEquals(intents.get(0).getAction(), UAirship.ACTION_AIRSHIP_READY);
+        Bundle extras = intents.get(0).getExtras();
+        assertNotNull(extras);
+        assertEquals(extras.getInt("payload_version"),1);
+        assertEquals(extras.getString("app_key"),"0000000000000000000000");
+        assertTrue(extras.containsKey("channel_id"));
+        assertEquals(extras.getString("channel_id"), null);
     }
 
     /**

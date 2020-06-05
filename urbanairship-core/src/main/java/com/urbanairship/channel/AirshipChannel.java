@@ -3,6 +3,7 @@
 package com.urbanairship.channel;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -41,6 +42,11 @@ import androidx.annotation.WorkerThread;
  * Airship channel access.
  */
 public class AirshipChannel extends AirshipComponent {
+    /**
+     * Broadcast that is sent when a channel has been created.
+     */
+    @NonNull
+    public static final String ACTION_CHANNEL_CREATED = "com.urbanairship.CHANNEL_CREATED";
 
     /**
      * Action to perform update request for pending tag group changes.
@@ -672,6 +678,18 @@ public class AirshipChannel extends AirshipComponent {
             for (AirshipChannelListener listener : airshipChannelListeners) {
                 listener.onChannelCreated(channelId);
             }
+
+            if (runtimeConfig.getConfigOptions().extendedBroadcastsEnabled) {
+                // Send ChannelCreated intent for other plugins that depend on Airship
+                Intent channelCreatedIntent = new Intent(ACTION_CHANNEL_CREATED)
+                        .setPackage(UAirship.getPackageName())
+                        .addCategory(UAirship.getPackageName());
+
+                channelCreatedIntent.putExtra(UAirship.EXTRA_CHANNEL_ID_KEY, channelId);
+
+                getContext().sendBroadcast(channelCreatedIntent);
+            }
+
             dispatchUpdateTagGroupsJob();
             dispatchUpdateAttributesJob();
 
