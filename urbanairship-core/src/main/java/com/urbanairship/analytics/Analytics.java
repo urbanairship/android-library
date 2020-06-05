@@ -80,7 +80,7 @@ public class Analytics extends AirshipComponent {
      *
      * @hide
      */
-    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN })
+    @StringDef({ EXTENSION_CORDOVA, EXTENSION_FLUTTER, EXTENSION_REACT_NATIVE, EXTENSION_UNITY, EXTENSION_XAMARIN, EXTENSION_TITANIUM })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ExtensionName {}
 
@@ -123,6 +123,15 @@ public class Analytics extends AirshipComponent {
      */
     @NonNull
     public static final String EXTENSION_XAMARIN = "xamarin";
+
+    /**
+     * SDK Extension = Titanium
+     *
+     * @hide
+     */
+    @NonNull
+    public static final String EXTENSION_TITANIUM = "titanum";
+
 
     /**
      * Minimum amount of delay when {@link #uploadEvents()} is called.
