@@ -18,9 +18,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-android.dataBinding.enabled = true
 
 android {
+    buildFeatures{
+        dataBinding = true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -36,10 +39,6 @@ android {
                 arguments = [ "room.incremental":"true" ]
             }
         }
-    }
-
-    dataBinding {
-        enabled = true
     }
 }
 
