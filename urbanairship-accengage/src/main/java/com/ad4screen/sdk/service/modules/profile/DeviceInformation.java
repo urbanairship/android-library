@@ -109,7 +109,7 @@ public class DeviceInformation {
     /**
      * @hide
      */
-    @Nullable
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AttributeEditor getEditor() {
         return this.editor;

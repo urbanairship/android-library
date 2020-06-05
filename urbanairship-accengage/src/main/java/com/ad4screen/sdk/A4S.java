@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
  */
 public class A4S {
 
-    private static A4S instance;
+    private final static A4S INSTANCE = new A4S();
 
     private A4S() {}
 
@@ -25,10 +25,7 @@ public class A4S {
      */
     @NonNull
     public static A4S get(@NonNull final Context context) {
-        if (instance != null) {
-            instance = new A4S();
-        }
-        return instance;
+        return INSTANCE;
     }
 
     /**
