@@ -563,8 +563,12 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testSDKExtensions() {
-        analytics.registerSDKExtension("cordova", "1.2.3");
-        analytics.registerSDKExtension("unity", "5,.6,.7,,,");
+        analytics.registerSDKExtension(Analytics.EXTENSION_CORDOVA, "1.0.0");
+        analytics.registerSDKExtension(Analytics.EXTENSION_UNITY, "2.0.0");
+        analytics.registerSDKExtension(Analytics.EXTENSION_FLUTTER, "3.0.0");
+        analytics.registerSDKExtension(Analytics.EXTENSION_REACT_NATIVE, "4.0.0");
+        analytics.registerSDKExtension(Analytics.EXTENSION_XAMARIN, "5.0.0");
+        analytics.registerSDKExtension(Analytics.EXTENSION_TITANIUM, "6.0.0");
 
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn("channel");
@@ -579,7 +583,8 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager).uploadEvents(argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
-        assertEquals("cordova:1.2.3,unity:5.6.7", headers.get("X-UA-Frameworks"));
+        String expected = "cordova:1.0.0,unity:2.0.0,flutter:3.0.0,react-native:4.0.0,xamarin:5.0.0,titanum:6.0.0";
+        assertEquals(expected, headers.get("X-UA-Frameworks"));
     }
 
     /**
