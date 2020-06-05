@@ -13,7 +13,7 @@ buildscript {
         minSdkVersion = 16
 
         // Gradle plugins
-        gradlePluginVersion = '3.6.3'
+        gradlePluginVersion = '4.0.0'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
         spotlessPluginVersion = '3.27.1'
@@ -26,7 +26,7 @@ buildscript {
         kotlinCoroutinesVersion = '1.3.0'
 
         // Androidx
-        androidxCoreVersion = '1.2.0'
+        androidxCoreVersion = '1.3.0'
         androidxFragmentVersion = '1.2.4'
         androidxAnnotationVersion = '1.1.0'
         androidxCustomViewVersion = '1.0.0'
@@ -47,10 +47,10 @@ buildscript {
         // Google Play Services
         playServicesAdsIdentifierVersion = '17.0.0'
         playServicesLocationVersion = '17.0.0'
-        playServicesBaseVersion = '17.2.1'
+        playServicesBaseVersion = '17.3.0'
 
         // Firebase
-        firebaseFcmVersion = '20.1.5'
+        firebaseFcmVersion = '20.2.0'
 
         // Test
         androidxTestTruthVersion = '1.2.0'
