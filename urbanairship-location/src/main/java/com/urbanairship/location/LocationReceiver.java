@@ -14,11 +14,16 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * A receiver that handles requesting location from either the Fused Location
@@ -26,10 +31,12 @@ import androidx.annotation.VisibleForTesting;
  */
 public class LocationReceiver extends BroadcastReceiver {
 
+    private static final long BROADCAST_INTENT_TIME_MS = 9000;
+
     /**
      * Time to wait for UAirship when processing messages.
      */
-    private static final long AIRSHIP_WAIT_TIME_MS = 9000; // 9 seconds
+    private static final long AIRSHIP_WAIT_TIME_MS = 5000;
 
     /**
      * Action used for location updates.
@@ -46,7 +53,7 @@ public class LocationReceiver extends BroadcastReceiver {
     }
 
     public LocationReceiver() {
-        this(AirshipExecutors.THREAD_POOL_EXECUTOR, new Callable<AirshipLocationManager>() {
+        this(AirshipExecutors.newSerialExecutor(), new Callable<AirshipLocationManager>() {
             @Override
             public AirshipLocationManager call() {
                 UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
@@ -56,7 +63,40 @@ public class LocationReceiver extends BroadcastReceiver {
     }
 
     @Override
-    public void onReceive(@NonNull Context context, @Nullable final Intent intent) {
+    public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
+        Autopilot.automaticTakeOff(context);
+
+        final PendingResult result = goAsync();
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Future<?> task = AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        processIntent(intent);
+                    }
+                });
+
+                try {
+                    task.get(BROADCAST_INTENT_TIME_MS, TimeUnit.MILLISECONDS);
+                } catch (ExecutionException e) {
+                    Logger.error(e, "Location update exception");
+                } catch (InterruptedException e) {
+                    Logger.error("Location update interrupted");
+                    Thread.currentThread().interrupt();
+                } catch (TimeoutException e) {
+                    Logger.error("Location update took too long, ending broadcast.");
+                }
+
+                if (result != null) {
+                    result.finish();
+                }
+            }
+        });
+    }
+
+    @WorkerThread
+    private void processIntent(@Nullable final Intent intent) {
         if (intent == null || intent.getAction() == null) {
             return;
         }
@@ -68,28 +108,15 @@ public class LocationReceiver extends BroadcastReceiver {
 
         Logger.verbose("LocationReceiver - Received location update");
 
-        Autopilot.automaticTakeOff(context);
+        AirshipLocationManager locationManager;
+        try {
+            locationManager = locationManagerCallable.call();
+        } catch (Exception e) {
+            Logger.error("Airship took too long to takeOff. Dropping location update.");
+            return;
+        }
 
-        final PendingResult result = goAsync();
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                AirshipLocationManager locationManager;
-                try {
-                    locationManager = locationManagerCallable.call();
-                } catch (Exception e) {
-                    Logger.error("Airship took too long to takeOff. Dropping location update.");
-                    result.finish();
-                    return;
-                }
-
-                onLocationUpdate(locationManager, intent);
-
-                if (result != null) {
-                    result.finish();
-                }
-            }
-        });
+        onLocationUpdate(locationManager, intent);
     }
 
     /**
