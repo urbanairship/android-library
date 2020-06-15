@@ -100,7 +100,11 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Requesting location updates: %s", options);
         try {
             PendingIntent pendingIntent = getPendingIntent(availableAdapter, PendingIntent.FLAG_UPDATE_CURRENT);
-            availableAdapter.requestLocationUpdates(context, options, pendingIntent);
+            if (pendingIntent != null) {
+                availableAdapter.requestLocationUpdates(context, options, pendingIntent);
+            } else {
+                Logger.error("Unable to request location updates. Null pending intent.");
+            }
         } catch (Exception e) {
             Logger.error(e, "Unable to request location updates.");
         }
@@ -185,7 +189,9 @@ class UALocationProvider {
 
         if (availableAdapter != null) {
             PendingIntent pendingIntent = getPendingIntent(availableAdapter, PendingIntent.FLAG_UPDATE_CURRENT);
-            availableAdapter.onSystemLocationProvidersChanged(context, options, pendingIntent);
+            if (pendingIntent != null) {
+                availableAdapter.onSystemLocationProvidersChanged(context, options, pendingIntent);
+            }
         }
     }
 
@@ -211,7 +217,13 @@ class UALocationProvider {
      * @param flags The pending intent flags.
      * @return
      */
+    @Nullable
     PendingIntent getPendingIntent(@NonNull LocationAdapter adapter, int flags) {
-        return PendingIntent.getBroadcast(context, adapter.getRequestCode(), this.locationUpdateIntent, flags);
+        try {
+            return PendingIntent.getBroadcast(context, adapter.getRequestCode(), this.locationUpdateIntent, flags);
+        } catch (Exception e) {
+            Logger.error(e, "Unable to get pending intent.");
+            return null;
+        }
     }
 }
