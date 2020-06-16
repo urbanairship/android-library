@@ -107,6 +107,7 @@ public class NamedUser extends AirshipComponent {
         this.jobDispatcher = dispatcher;
         this.namedUserApiClient = namedUserApiClient;
         this.attributeApiClient = attributeApiClient;
+
         this.attributeMutationStore = new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY);
     }
 
@@ -277,7 +278,6 @@ public class NamedUser extends AirshipComponent {
         };
     }
 
-
     @VisibleForTesting
     boolean isIdUpToDate() {
         synchronized (idLock) {
@@ -327,6 +327,7 @@ public class NamedUser extends AirshipComponent {
     private void clearPendingNamedUserUpdates() {
         Logger.verbose("Clearing pending Named Users tag updates.");
         tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
+        attributeMutationStore.clear();
     }
 
     @Override
@@ -446,33 +447,41 @@ public class NamedUser extends AirshipComponent {
     @JobInfo.JobResult
     @WorkerThread
     private int updateAttributes(@NonNull String namedUserId) {
-        while (isIdUpToDate()) {
-            // Collapse mutations before we try to send any updates
+        List<PendingAttributeMutation> mutations;
+        synchronized (idLock) {
+            if (!isIdUpToDate() || !namedUserId.equals(getId())) {
+                return JobInfo.JOB_FINISHED;
+            }
+
             attributeMutationStore.collapseAndSaveMutations();
+            mutations = attributeMutationStore.peek();
+        }
 
-            List<PendingAttributeMutation> mutations = attributeMutationStore.peek();
-            if (mutations == null) {
-                break;
+        if (mutations == null) {
+            return JobInfo.JOB_FINISHED;
+        }
+
+        Response<Void> response;
+        try {
+            response = attributeApiClient.updateNamedUserAttributes(namedUserId, mutations);
+        } catch (RequestException e) {
+            Logger.debug(e, "NamedUser - Failed to update attributes");
+            return JobInfo.JOB_RETRY;
+        }
+
+        Logger.debug("NamedUser - Updated attributes response: %s", response);
+        if (response.isServerError() || response.isTooManyRequestsError()) {
+            return JobInfo.JOB_RETRY;
+        }
+
+        if (response.isClientError()) {
+            Logger.error("NamedUser - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
+        }
+
+        synchronized (idLock) {
+            if (mutations.equals(attributeMutationStore.peek()) && namedUserId.equals(getId())) {
+                attributeMutationStore.pop();
             }
-
-            Response<Void> response;
-            try {
-                response = attributeApiClient.updateNamedUserAttributes(namedUserId, mutations);
-            } catch (RequestException e) {
-                Logger.debug(e, "NamedUser - Failed to update attributes");
-                return JobInfo.JOB_RETRY;
-            }
-
-            Logger.debug("NamedUser - Updated attributes response: %s", response);
-            if (response.isServerError() || response.isTooManyRequestsError()) {
-                return JobInfo.JOB_RETRY;
-            }
-
-            if (response.isClientError()) {
-                Logger.error("NamedUser - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
-            }
-
-            attributeMutationStore.pop();
         }
 
         return JobInfo.JOB_FINISHED;

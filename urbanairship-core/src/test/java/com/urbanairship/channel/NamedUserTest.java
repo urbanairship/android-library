@@ -679,11 +679,12 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testUploadAttributes() throws RequestException {
+        namedUser.setId("namedUserID");
+
         namedUser.editAttributes()
                  .setAttribute("expected_key", "expected_value")
                  .apply();
 
-        namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
         when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
 
@@ -740,11 +741,12 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testUploadAttributesRetry() throws RequestException {
+        namedUser.setId("namedUserID");
+
         namedUser.editAttributes()
                  .setAttribute("expected_key", "expected_value")
                  .apply();
 
-        namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
         when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
 
