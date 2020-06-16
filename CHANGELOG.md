@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.2.0 - June 16, 2020
+Minor release to handle `target="_blank"` URLs in Message Center and HTML In-App messages. This release also adds `extendedBroadcastsEnabled` that once enabled, will broadcast the app key and channel for easier partner integrations.
+
+### Changes
+- Fixed possible background ANRs when processing location updates.
+- Fixed SecurityException when checking if location updates are enabled.
+- Open URLs in an external browser if the target is set.
+- Added extendedBroadcastsEnabled config flag to broadcast when Airship is ready with the channel and app key, and when the channel is created.
+
 ## Version 13.1.2 - May 26, 2020
 Patch release to improve window inset handling for In-App message banners.
 
