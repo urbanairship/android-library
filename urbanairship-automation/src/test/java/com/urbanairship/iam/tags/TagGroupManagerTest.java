@@ -29,7 +29,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -388,23 +387,6 @@ public class TagGroupManagerTest {
                 .lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         verifyNoMoreInteractions(mockClient);
-    }
-
-    /**
-     * Test setting local data time and cache stale read time updates the historians max record age.
-     */
-    @Test
-    public void historianMaxRecordAge() {
-        manager.setPreferLocalTagDataTime(10, TimeUnit.MILLISECONDS);
-        manager.setCacheStaleReadTime(10, TimeUnit.MILLISECONDS);
-
-        reset(mockHistorian);
-
-        manager.setPreferLocalTagDataTime(20, TimeUnit.MILLISECONDS);
-        verify(mockHistorian).setMaxRecordAge(30, TimeUnit.MILLISECONDS);
-
-        manager.setCacheStaleReadTime(20, TimeUnit.MILLISECONDS);
-        verify(mockHistorian).setMaxRecordAge(40, TimeUnit.MILLISECONDS);
     }
 
     /**

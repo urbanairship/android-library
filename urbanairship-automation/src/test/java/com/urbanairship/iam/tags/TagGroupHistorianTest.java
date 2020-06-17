@@ -2,13 +2,11 @@
 
 package com.urbanairship.iam.tags;
 
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsMutation;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +15,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,33 +37,47 @@ import static org.mockito.Mockito.when;
 public class TagGroupHistorianTest {
 
     private TagGroupHistorian historian;
-    private TagGroupRegistrar mockRegistrar;
     private TestClock clock;
 
     private List<TagGroupsMutation> pendingNamedUserMutations;
     private List<TagGroupsMutation> pendingChannelMutations;
-    private TagGroupRegistrar.Listener listener;
+
+    private NamedUser mockNamedUser;
+    private AirshipChannel mockChannel;
+    private TagGroupListener channelListener;
+    private TagGroupListener namedUserListener;
 
     @Before
     public void setup() {
+        mockChannel = mock(AirshipChannel.class);
         pendingChannelMutations = new ArrayList<>();
+        when(mockChannel.getPendingTagUpdates()).thenReturn(pendingChannelMutations);
+
+        mockNamedUser = mock(NamedUser.class);
         pendingNamedUserMutations = new ArrayList<>();
-        mockRegistrar = mock(TagGroupRegistrar.class);
-        when(mockRegistrar.getPendingMutations(TagGroupRegistrar.NAMED_USER)).thenReturn(pendingNamedUserMutations);
-        when(mockRegistrar.getPendingMutations(TagGroupRegistrar.CHANNEL)).thenReturn(pendingChannelMutations);
+        when(mockNamedUser.getPendingTagUpdates()).thenReturn(pendingNamedUserMutations);
 
         // Capture the listener on init
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                listener = invocation.getArgument(0);
+                channelListener = invocation.getArgument(0);
                 return null;
             }
-        }).when(mockRegistrar).addListener(any(TagGroupRegistrar.Listener.class));
+        }).when(mockChannel).addTagGroupListener(any(TagGroupListener.class));
+
+        // Capture the listener on init
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                namedUserListener = invocation.getArgument(0);
+                return null;
+            }
+        }).when(mockNamedUser).addTagGroupListener(any(TagGroupListener.class));
 
         clock = new TestClock();
 
-        historian = new TagGroupHistorian(mockRegistrar, TestApplication.getApplication().preferenceDataStore, clock);
+        historian = new TagGroupHistorian(mockChannel, mockNamedUser, clock);
         historian.init();
     }
 
@@ -75,6 +86,8 @@ public class TagGroupHistorianTest {
      */
     @Test
     public void applyLocalData() {
+        when(mockNamedUser.getId()).thenReturn("named-user-id");
+
         Map<String, Set<String>> tags = new HashMap<>();
         tags.put("cool-group", tagSet("cool-cool", "cool"));
 
@@ -83,7 +96,7 @@ public class TagGroupHistorianTest {
         pendingNamedUserMutations.add(TagGroupsMutation.newRemoveTagsMutation("cool-group", tagSet("cool")));
 
         // Historical
-        listener.onMutationUploaded(TagGroupsMutation.newSetTagsMutation("history-group", tagSet("tag", "tags")));
+        channelListener.onTagGroupsMutationUploaded("channel-id", TagGroupsMutation.newSetTagsMutation("history-group", tagSet("tag", "tags")));
 
         // Apply all local data that was created since beginning of time
         historian.applyLocalData(tags, 0);
@@ -114,16 +127,18 @@ public class TagGroupHistorianTest {
      */
     @Test
     public void applyLocalDataRecordsInOrder() {
+        when(mockNamedUser.getId()).thenReturn("named-user-id");
+
         Map<String, Set<String>> tags = new HashMap<>();
 
         // Add a record
-        listener.onMutationUploaded(TagGroupsMutation.newSetTagsMutation("history-group", tagSet("one", "two")));
+        channelListener.onTagGroupsMutationUploaded("channel-id", TagGroupsMutation.newSetTagsMutation("history-group", tagSet("one", "two")));
 
         // Time travel
         clock.currentTimeMillis += 10;
 
         // Add another record
-        listener.onMutationUploaded(TagGroupsMutation.newAddTagsMutation("history-group", tagSet("three")));
+        namedUserListener.onTagGroupsMutationUploaded("named-user-id", TagGroupsMutation.newAddTagsMutation("history-group", tagSet("three")));
 
         // Apply records in the past 10 seconds (should include both)
         historian.applyLocalData(tags, clock.currentTimeMillis - 10);
@@ -149,15 +164,31 @@ public class TagGroupHistorianTest {
         assertTrue(historyTags.contains("three"));
     }
 
+    /**
+     * Test only current named user tags are applied.
+     */
     @Test
-    public void testNullRecord() {
-        PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(TagGroupHistorian.RECORDS_KEY, JsonValue.wrapOpt(Arrays.asList(JsonMap.EMPTY_MAP)));
-
+    public void testApplyRecordsDifferentNamedUser() {
         Map<String, Set<String>> tags = new HashMap<>();
 
-        // Apply records in the past 10 seconds (should include both)
-        historian.applyLocalData(tags, clock.currentTimeMillis - 10);
-    }
+        // Add a record
+        namedUserListener.onTagGroupsMutationUploaded("some-other-named-user", TagGroupsMutation.newSetTagsMutation("neat", tagSet("one", "two")));
 
+        // Change named user
+        when(mockNamedUser.getId()).thenReturn("named-user");
+
+        // Add another record
+        namedUserListener.onTagGroupsMutationUploaded("named-user", TagGroupsMutation.newSetTagsMutation("cool", tagSet("foo", "bar")));
+
+        // Apply records in the past 10 seconds (should include only named-user tag groups)
+        historian.applyLocalData(tags, clock.currentTimeMillis - 10);
+
+        assertEquals(1, tags.size());
+
+        // history-group: one, two, three
+        Set<String> historyTags = tags.get("cool");
+        assertEquals(2, historyTags.size());
+        assertTrue(historyTags.contains("foo"));
+        assertTrue(historyTags.contains("bar"));
+    }
 }

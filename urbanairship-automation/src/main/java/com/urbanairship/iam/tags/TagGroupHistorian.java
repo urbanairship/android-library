@@ -2,50 +2,42 @@
 
 package com.urbanairship.iam.tags;
 
-import com.urbanairship.Logger;
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsMutation;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Tracks pending and sent mutations.
  */
 class TagGroupHistorian {
 
-    static final String RECORDS_KEY = "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS";
-
     private final Object recordLock = new Object();
 
-    private final TagGroupRegistrar tagGroupRegistrar;
-    private final PreferenceDataStore dataStore;
     private final Clock clock;
-    private long maxRecordAge = Long.MAX_VALUE;
+    private final AirshipChannel channel;
+    private final NamedUser namedUser;
+    private final List<MutationRecord> records = new ArrayList<>();
 
     /**
      * Default constructor.
      *
-     * @param tagGroupRegistrar The tag group registrar.
-     * @param dataStore The data store.
+     * @param channel The channel.
+     * @param namedUser The named user.
+     * @param clock The clock;
      */
-    TagGroupHistorian(TagGroupRegistrar tagGroupRegistrar, PreferenceDataStore dataStore, Clock clock) {
-        this.tagGroupRegistrar = tagGroupRegistrar;
-        this.dataStore = dataStore;
+    TagGroupHistorian(@NonNull AirshipChannel channel, @NonNull NamedUser namedUser, @NonNull Clock clock) {
+        this.channel = channel;
+        this.namedUser = namedUser;
         this.clock = clock;
     }
 
@@ -53,22 +45,19 @@ class TagGroupHistorian {
      * Initializes the historian.
      */
     void init() {
-        tagGroupRegistrar.addListener(new TagGroupRegistrar.Listener() {
+        channel.addTagGroupListener(new TagGroupListener() {
             @Override
-            public void onMutationUploaded(@NonNull TagGroupsMutation mutation) {
-                recordMutation(mutation);
+            public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
+                record(MutationRecord.newChannelRecord(clock.currentTimeMillis(), tagGroupsMutation));
             }
         });
-    }
 
-    /**
-     * Sets the stored max record age.
-     *
-     * @param duration Duration.
-     * @param unit The time unit.
-     */
-    void setMaxRecordAge(long duration, @NonNull TimeUnit unit) {
-        this.maxRecordAge = unit.toMillis(duration);
+        namedUser.addTagGroupListener(new TagGroupListener() {
+            @Override
+            public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
+                record(MutationRecord.newNamedUserRecord(clock.currentTimeMillis(), identifier, tagGroupsMutation));
+            }
+        });
     }
 
     /**
@@ -79,149 +68,57 @@ class TagGroupHistorian {
      * since the epoch.
      */
     void applyLocalData(@NonNull Map<String, Set<String>> tags, long sinceDate) {
-        // Records
-        for (MutationRecord record : getMutationRecords()) {
-            if (record.time >= sinceDate) {
-                record.mutation.apply(tags);
+        // Recently uploaded mutations
+        String namedUserId = namedUser.getId();
+        synchronized (recordLock) {
+            // Records
+            for (MutationRecord record : records) {
+                if (record.time >= sinceDate && (record.namedUserId == null || record.namedUserId.equals(namedUserId))) {
+                    record.mutation.apply(tags);
+                }
+            }
+        }
+
+        // Pending Named User
+        if (namedUserId != null) {
+            for (TagGroupsMutation mutation : namedUser.getPendingTagUpdates()) {
+                mutation.apply(tags);
             }
         }
 
-        // Named User
-        for (TagGroupsMutation mutation : tagGroupRegistrar.getPendingMutations(TagGroupRegistrar.NAMED_USER)) {
-            mutation.apply(tags);
-        }
-
-        // Channel
-        for (TagGroupsMutation mutation : tagGroupRegistrar.getPendingMutations(TagGroupRegistrar.CHANNEL)) {
+        // Pending Channel
+        for (TagGroupsMutation mutation : channel.getPendingTagUpdates()) {
             mutation.apply(tags);
         }
     }
 
-    /**
-     * Records an uploaded mutation. To be used later as local tag data.
-     *
-     * @param mutation The mutation.
-     */
-    private void recordMutation(@NonNull TagGroupsMutation mutation) {
+    private void record(@NonNull MutationRecord record) {
         synchronized (recordLock) {
-            List<MutationRecord> records = getMutationRecords();
-
-            // Add new record
-            records.add(new MutationRecord(clock.currentTimeMillis(), mutation));
-
-            // Sort entries by oldest first
-            Collections.sort(records, new Comparator<MutationRecord>() {
-                @Override
-                public int compare(@NonNull MutationRecord lh, @NonNull MutationRecord rh) {
-                    if (lh.time == rh.time) {
-                        return 0;
-                    }
-                    if (lh.time > rh.time) {
-                        return 1;
-                    }
-                    return -1;
-                }
-            });
-
-            dataStore.put(RECORDS_KEY, JsonValue.wrapOpt(records));
+            records.add(record);
         }
     }
 
     /**
-     * Gets the recorded mutations.
-     *
-     * @return The list of recorded mutations.
+     * Defines a mutation, timestamp, and an optional named user Id.
      */
-    @NonNull
-    private List<MutationRecord> getMutationRecords() {
-        synchronized (recordLock) {
-            // Grab entries, should already be sorted
-            List<MutationRecord> allRecords = MutationRecord.fromJsonList(dataStore.getJsonValue(RECORDS_KEY).optList());
-
-            // Remove any dated records
-            List<MutationRecord> filteredRecords = new ArrayList<>();
-            for (MutationRecord record : allRecords) {
-                long age = clock.currentTimeMillis() - record.time;
-                if (age <= maxRecordAge) {
-                    filteredRecords.add(record);
-                }
-            }
-
-            return filteredRecords;
-        }
-    }
-
-    /**
-     * Defines a mutation and a timestamp.
-     */
-    private static class MutationRecord implements JsonSerializable {
-
-        private final static String TIME_KEY = "time";
-        private final static String MUTATION = "mutation";
+    private static class MutationRecord {
 
         final long time;
         final TagGroupsMutation mutation;
+        final String namedUserId;
 
-        /**
-         * Default constructor.
-         *
-         * @param time The record time.
-         * @param mutation The mutation.
-         */
-        MutationRecord(long time, @NonNull TagGroupsMutation mutation) {
+        private MutationRecord(long time, @Nullable String namedUserId, @NonNull TagGroupsMutation mutation) {
             this.time = time;
+            this.namedUserId = namedUserId;
             this.mutation = mutation;
         }
 
-        @NonNull
-        @Override
-        public JsonValue toJsonValue() {
-            return JsonMap.newBuilder()
-                          .put(TIME_KEY, time)
-                          .put(MUTATION, mutation)
-                          .build()
-                          .toJsonValue();
+        static MutationRecord newChannelRecord(long time, @NonNull TagGroupsMutation mutation) {
+            return new MutationRecord(time, null, mutation);
         }
 
-        /**
-         * Parses a mutation record from a JSON value.
-         *
-         * @param jsonValue The JSON value.
-         * @return The mutation record.
-         */
-        @NonNull
-        static MutationRecord fromJsonValue(@NonNull JsonValue jsonValue) throws JsonException {
-            JsonMap jsonMap = jsonValue.optMap();
-
-            long time = jsonMap.opt(TIME_KEY).getLong(0);
-            if (time < 0) {
-                throw new JsonException("Invalid record: " + jsonValue);
-            }
-
-            TagGroupsMutation mutation = TagGroupsMutation.fromJsonValue(jsonMap.opt(MUTATION));
-            return new MutationRecord(time, mutation);
-        }
-
-        /**
-         * Parses a list of mutation records from a JSON list.
-         *
-         * @param jsonList The JSON list.
-         * @return A list of mutation records.
-         */
-        @NonNull
-        static List<MutationRecord> fromJsonList(@NonNull JsonList jsonList) {
-            List<MutationRecord> records = new ArrayList<>();
-
-            for (JsonValue value : jsonList) {
-                try {
-                    MutationRecord record = fromJsonValue(value);
-                    records.add(record);
-                } catch (JsonException e) {
-                    Logger.error(e, "Failed to parse tag group record.");
-                }
-            }
-
-            return records;
+        static MutationRecord newNamedUserRecord(long time, @NonNull String namedUserId, @NonNull TagGroupsMutation mutation) {
+            return new MutationRecord(time, namedUserId, mutation);
         }
 
     }

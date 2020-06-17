@@ -34,7 +34,7 @@ public class PendingAttributeMutationStoreTest extends BaseTestCase {
 
         store.add(expectedMutations);
 
-        assertEquals(expectedMutations, store.getMutations().get(0));
+        assertEquals(expectedMutations, store.getList().get(0));
     }
 
     @Test
@@ -74,9 +74,9 @@ public class PendingAttributeMutationStoreTest extends BaseTestCase {
         List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
         store.add(expectedMutations);
 
-        store.clear();
+        store.removeAll();
 
-        assertTrue(store.getMutations().isEmpty());
+        assertTrue(store.getList().isEmpty());
     }
 
     @Test

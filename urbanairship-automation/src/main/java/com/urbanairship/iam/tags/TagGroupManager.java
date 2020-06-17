@@ -5,7 +5,7 @@ package com.urbanairship.iam.tags;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
@@ -90,15 +90,15 @@ public class TagGroupManager {
      *
      * @param runtimeConfig The runtime config.
      * @param airshipChannel The Airship channel.
-     * @param tagGroupRegistrar The tag group registrar.
+     * @param namedUser The named user.
      * @param dataStore The preference data store.
      */
     public TagGroupManager(@NonNull AirshipRuntimeConfig runtimeConfig,
                            @NonNull AirshipChannel airshipChannel,
-                           @NonNull TagGroupRegistrar tagGroupRegistrar,
+                           @NonNull NamedUser namedUser,
                            @NonNull PreferenceDataStore dataStore) {
         this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel,
-                new TagGroupHistorian(tagGroupRegistrar, dataStore, Clock.DEFAULT_CLOCK),
+                new TagGroupHistorian(airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
@@ -113,7 +113,6 @@ public class TagGroupManager {
         this.clock = clock;
 
         this.historian.init();
-        updateMaxRecordAge();
     }
 
     /**
@@ -162,7 +161,6 @@ public class TagGroupManager {
      */
     public void setCacheStaleReadTime(@IntRange(from = MIN_CACHE_MAX_AGE_TIME_MS) long duration, @NonNull TimeUnit unit) {
         dataStore.put(CACHE_STALE_READ_TIME_KEY, unit.toMillis(duration));
-        updateMaxRecordAge();
     }
 
     /**
@@ -205,7 +203,6 @@ public class TagGroupManager {
      */
     public void setPreferLocalTagDataTime(@IntRange(from = 0) long duration, @NonNull TimeUnit unit) {
         dataStore.put(PREFER_LOCAL_DATA_TIME_KEY, unit.toMillis(duration));
-        updateMaxRecordAge();
     }
 
     /**
@@ -321,14 +318,6 @@ public class TagGroupManager {
      */
     private Map<String, Set<String>> getCachedRequestTags() {
         return TagGroupUtils.parseTags(dataStore.getJsonValue(CACHE_REQUESTED_TAGS_KEY));
-    }
-
-    /**
-     * Updates the historian's max record age.
-     */
-    private void updateMaxRecordAge() {
-        long age = getCacheStaleReadTimeMilliseconds() + getPreferLocalTagDataTime();
-        this.historian.setMaxRecordAge(age, TimeUnit.MILLISECONDS);
     }
 
     /**

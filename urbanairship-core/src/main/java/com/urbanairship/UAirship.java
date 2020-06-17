@@ -19,7 +19,6 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
@@ -709,10 +708,7 @@ public class UAirship {
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(runtimeConfig, preferenceDataStore);
-        tagGroupRegistrar.migrateKeys();
-
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();
@@ -734,7 +730,7 @@ public class UAirship {
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar, channel);
+        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, channel);
         components.add(this.namedUser);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -772,7 +768,7 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                channel, pushManager, analytics, remoteData, tagGroupRegistrar);
+                channel, pushManager, analytics, remoteData, namedUser);
         processModule(automationModule);
 
         // Debug

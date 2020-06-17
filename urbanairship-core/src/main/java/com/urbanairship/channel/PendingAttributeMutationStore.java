@@ -3,20 +3,17 @@
 package com.urbanairship.channel;
 
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.JsonDataStoreQueue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
 
-class PendingAttributeMutationStore {
-    private final PreferenceDataStore dataStore;
-    private final String storeKey;
-    private final Object attributeLock = new Object();
-
+class PendingAttributeMutationStore extends JsonDataStoreQueue<List<PendingAttributeMutation>> {
 
     /**
      * Default constructor.
@@ -25,109 +22,37 @@ class PendingAttributeMutationStore {
      * @param storeKey The store key.
      */
     PendingAttributeMutationStore(PreferenceDataStore dataStore, String storeKey) {
-        this.dataStore = dataStore;
-        this.storeKey = storeKey;
-    }
-
-    /**
-     * Clears all the mutations.
-     */
-    void clear() {
-        synchronized (attributeLock) {
-            dataStore.remove(storeKey);
-        }
-    }
-
-    /**
-     * Adds new pending attribute mutations to the end of the store.
-     *
-     * @param pendingAttributeMutations A list of pending attribute mutations.
-     */
-    void add(List<PendingAttributeMutation> pendingAttributeMutations) {
-        synchronized (attributeLock) {
-            List<List<PendingAttributeMutation>> allMutations = getMutations();
-            allMutations.add(pendingAttributeMutations);
-            dataStore.put(storeKey, JsonValue.wrapOpt(allMutations));
-        }
-    }
-
-    /**
-     * Pops the next pending attribute mutations off the store.
-     *
-     * @return The next attributes mutation or {@code null} if no mutations exist.
-     */
-    @Nullable
-    List<PendingAttributeMutation> pop() {
-        synchronized (attributeLock) {
-            List<List<PendingAttributeMutation>> allMutations = getMutations();
-
-            if (peek() == null) {
-                return null;
+        super(dataStore, storeKey, new Function<List<PendingAttributeMutation>, JsonSerializable>() {
+            @Override
+            public JsonSerializable apply(List<PendingAttributeMutation> input) {
+                return JsonValue.wrapOpt(input);
             }
-
-            List<PendingAttributeMutation> mutations = allMutations.remove(0);
-
-            dataStore.put(storeKey, JsonValue.wrapOpt(allMutations));
-            return mutations;
-        }
-    }
-
-    /**
-     * Peeks the top mutation.
-     *
-     * @return The top attributes mutation or {@code null} if no mutations exist.
-     */
-    @Nullable
-    List<PendingAttributeMutation> peek() {
-        synchronized (attributeLock) {
-            List<List<PendingAttributeMutation>> allMutations = getMutations();
-
-            if (allMutations.isEmpty()) {
-                return null;
+        }, new Function<JsonValue, List<PendingAttributeMutation>>() {
+            @Override
+            public List<PendingAttributeMutation> apply(JsonValue input) {
+                return PendingAttributeMutation.fromJsonList(input.optList());
             }
-
-            if (allMutations.get(0).isEmpty()) {
-                return null;
-            }
-
-            return allMutations.get(0);
-        }
+        });
     }
 
     /**
      * Collapses a list of mutations down to a single collection of mutations.
      */
     void collapseAndSaveMutations() {
-        synchronized (attributeLock) {
-            List<List<PendingAttributeMutation>> allMutations = getMutations();
+        apply(new Function<List<List<PendingAttributeMutation>>, List<List<PendingAttributeMutation>>>() {
+            @Override
+            public List<List<PendingAttributeMutation>> apply(List<List<PendingAttributeMutation>> input) {
+                List<PendingAttributeMutation> combined = new ArrayList<>();
+                for (List<PendingAttributeMutation> mutations : input) {
+                    combined.addAll(mutations);
+                }
 
-            List<PendingAttributeMutation> combined = new ArrayList<>();
-            for (List<PendingAttributeMutation> mutations : allMutations) {
-                combined.addAll(mutations);
+                if (combined.isEmpty()) {
+                    return Collections.emptyList();
+                }
+
+                return Collections.singletonList(PendingAttributeMutation.collapseMutations(combined));
             }
-
-            List<PendingAttributeMutation> collapsedMutation = PendingAttributeMutation.collapseMutations(combined);
-
-            allMutations.clear();
-            allMutations.add(collapsedMutation);
-
-            dataStore.put(storeKey, JsonValue.wrapOpt(allMutations));
-        }
-    }
-
-    /**
-     * Gets the attribute mutations.
-     *
-     * @return A list of all the attribute mutations.
-     */
-    @NonNull
-    List<List<PendingAttributeMutation>> getMutations() {
-        JsonList jsonList =  dataStore.getJsonValue(storeKey).optList();
-        List<List<PendingAttributeMutation>> allMutations = new ArrayList<>();
-
-        for (JsonValue value : jsonList) {
-            allMutations.add(PendingAttributeMutation.fromJsonList(value.optList()));
-        }
-        return allMutations;
+        });
     }
 }

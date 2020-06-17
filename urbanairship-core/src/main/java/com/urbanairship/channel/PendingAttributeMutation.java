@@ -23,7 +23,7 @@ class PendingAttributeMutation extends AttributeMutation implements JsonSerializ
         this.timestamp = timestamp;
     }
 
-    @Nullable
+    @NonNull
     static List<PendingAttributeMutation> fromAttributeMutations(@NonNull List<AttributeMutation> mutations, long timestamp) {
         List<PendingAttributeMutation> list = new ArrayList<>();
 

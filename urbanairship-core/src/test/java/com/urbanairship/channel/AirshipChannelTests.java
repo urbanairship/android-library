@@ -11,6 +11,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
+import com.urbanairship.TestClock;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestException;
@@ -25,7 +26,6 @@ import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -61,8 +61,6 @@ public class AirshipChannelTests extends BaseTestCase {
     private AirshipChannel airshipChannel;
     private ChannelApiClient mockClient;
     private AttributeApiClient mockAttributeClient;
-    private PendingAttributeMutationStore mockPendingAttributeStore;
-
     private TagGroupRegistrar mockTagGroupRegistrar;
 
     private JobDispatcher mockDispatcher;
@@ -71,6 +69,7 @@ public class AirshipChannelTests extends BaseTestCase {
     private PreferenceDataStore dataStore;
 
     private TestAirshipRuntimeConfig runtimeConfig;
+    private TestClock clock;
 
     private static final JobInfo UPDATE_REGISTRATION_JOB = JobInfo.newBuilder()
                                                                   .setAction("ACTION_UPDATE_CHANNEL_REGISTRATION")
@@ -87,12 +86,13 @@ public class AirshipChannelTests extends BaseTestCase {
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
-        mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
         mockClient = mock(ChannelApiClient.class);
         mockAttributeClient = mock(AttributeApiClient.class);
-        mockPendingAttributeStore = mock(PendingAttributeMutationStore.class);
-        dataStore = getApplication().preferenceDataStore;
+        mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
 
+        clock = new TestClock();
+
+        dataStore = getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
@@ -100,8 +100,8 @@ public class AirshipChannelTests extends BaseTestCase {
         testLocaleManager = new TestLocaleManager();
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
-                mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
+                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                mockClient, mockAttributeClient, mockTagGroupRegistrar);
     }
 
     /**
@@ -382,13 +382,13 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
-     * Test update named user tags succeeds when the registrar returns true.
+     * Test update tag groups.
      */
     @Test
     public void testUpdateNamedUserTagsSucceed() throws RequestException {
         testCreateChannel();
 
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, "channel")).thenReturn(true);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
 
         // Update the tags
         int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_TAGS_JOB);
@@ -415,7 +415,7 @@ public class AirshipChannelTests extends BaseTestCase {
     public void testUpdateTagsRetry() throws RequestException {
         testCreateChannel();
 
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, "channel")).thenReturn(false);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(false);
 
         // Update the tags
         int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_TAGS_JOB);
@@ -601,23 +601,16 @@ public class AirshipChannelTests extends BaseTestCase {
     public void testAttributesUpdate200() throws RequestException {
         testCreateChannel();
 
-        AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-
-        List<AttributeMutation> attributeMutations = new ArrayList<>();
-        attributeMutations.add(expected);
-
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(attributeMutations, 0);
-
-        // Setup response to return some mutations then null
-        when(mockPendingAttributeStore.peek())
-                .thenReturn(expectedMutations)
-                .thenReturn(null);
+        // Set the clock
+        clock.currentTimeMillis = 100;
 
         airshipChannel.editAttributes()
                       .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
+        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
         when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 200));
 
@@ -635,22 +628,16 @@ public class AirshipChannelTests extends BaseTestCase {
     public void testAttributesUpdateRetriesOn429() throws RequestException {
         testCreateChannel();
 
-        AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-
-        List<AttributeMutation> attributeMutations = new ArrayList<>();
-        attributeMutations.add(expected);
-
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(attributeMutations, 0);
-
-        // Setup response
-        when(mockPendingAttributeStore.peek())
-                .thenReturn(expectedMutations);
+        // Set the clock
+        clock.currentTimeMillis = 100;
 
         airshipChannel.editAttributes()
                       .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
+        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
         when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 429));
 
@@ -667,22 +654,16 @@ public class AirshipChannelTests extends BaseTestCase {
     public void testAttributesUpdateRetriesOnServerError() throws RequestException {
         testCreateChannel();
 
-        AttributeMutation expected = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-
-        List<AttributeMutation> attributeMutations = new ArrayList<>();
-        attributeMutations.add(expected);
-
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(attributeMutations, 0);
-
-        // Setup response
-        when(mockPendingAttributeStore.peek())
-                .thenReturn(expectedMutations);
+        // Set the clock
+        clock.currentTimeMillis = 100;
 
         airshipChannel.editAttributes()
                       .setAttribute("expected_key", "expected_value")
                       .apply();
 
         // Setup response
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
+        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
         when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
                 .thenReturn(AirshipChannelTests.<Void>createResponse(null, 500));
 
@@ -913,9 +894,9 @@ public class AirshipChannelTests extends BaseTestCase {
 
         runtimeConfig.setConfigOptions(configOptions);
 
-        airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
-                mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
+        airshipChannel = new AirshipChannel(getApplication(), dataStore,
+                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                mockClient, mockAttributeClient, mockTagGroupRegistrar);
 
         airshipChannel.init();
         assertFalse(airshipChannel.isChannelCreationDelayEnabled());
@@ -928,9 +909,9 @@ public class AirshipChannelTests extends BaseTestCase {
 
         runtimeConfig.setConfigOptions(configOptions);
 
-        airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
-                mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
+        airshipChannel = new AirshipChannel(getApplication(), dataStore,
+                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                mockClient, mockAttributeClient, mockTagGroupRegistrar);
 
         airshipChannel.init();
         assertTrue(airshipChannel.isChannelCreationDelayEnabled());
@@ -950,10 +931,9 @@ public class AirshipChannelTests extends BaseTestCase {
 
         runtimeConfig.setConfigOptions(configOptions);
 
-
-        airshipChannel = new AirshipChannel(getApplication(), getApplication().preferenceDataStore,
-                runtimeConfig, mockClient, mockTagGroupRegistrar, testLocaleManager,
-                mockDispatcher, mockPendingAttributeStore, mockAttributeClient);
+        airshipChannel = new AirshipChannel(getApplication(), dataStore,
+                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                mockClient, mockAttributeClient, mockTagGroupRegistrar);
 
         airshipChannel.init();
 

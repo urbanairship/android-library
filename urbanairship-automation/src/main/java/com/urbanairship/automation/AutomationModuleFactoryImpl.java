@@ -9,7 +9,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessageManager;
@@ -42,9 +42,9 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
                         @NonNull PushManager pushManager,
                         @NonNull Analytics analytics,
                         @NonNull RemoteData remoteData,
-                        @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                        @NonNull NamedUser namedUser) {
 
-        InAppMessageManager inAppMessageManager = new InAppMessageManager(context, dataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(context), airshipChannel, tagGroupRegistrar);
+        InAppMessageManager inAppMessageManager = new InAppMessageManager(context, dataStore, runtimeConfig, analytics, remoteData, InAppActivityMonitor.shared(context), airshipChannel, namedUser);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppMessageManager, analytics, pushManager);
         ActionAutomation automation = new ActionAutomation(context, dataStore, runtimeConfig.getConfigOptions(), analytics, GlobalActivityMonitor.shared(context));
 

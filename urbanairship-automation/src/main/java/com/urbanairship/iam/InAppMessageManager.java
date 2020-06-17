@@ -22,7 +22,7 @@ import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
@@ -134,6 +134,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param activityMonitor The activity monitor.
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
+     * @param namedUser The named user.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -144,7 +145,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                                @NonNull RemoteData remoteData,
                                @NonNull ActivityMonitor activityMonitor,
                                @NonNull AirshipChannel airshipChannel,
-                               @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                               @NonNull NamedUser namedUser) {
         super(context, preferenceDataStore);
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
@@ -168,7 +169,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 .build();
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
-        this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, tagGroupRegistrar, preferenceDataStore);
+        this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
         this.assetManager = new AssetManager(context);
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());

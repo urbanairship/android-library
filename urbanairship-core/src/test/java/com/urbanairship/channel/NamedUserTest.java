@@ -30,7 +30,6 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -70,8 +69,8 @@ public class NamedUserTest extends BaseTestCase {
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        namedUser = new NamedUser(application, dataStore, mockTagGroupRegistrar,
-                mockChannel, mockDispatcher, mockNamedUserClient, mockAttributesClient);
+        namedUser = new NamedUser(application, dataStore, mockChannel, mockDispatcher,
+                mockNamedUserClient, mockAttributesClient, mockTagGroupRegistrar);
     }
 
     @Test
@@ -179,7 +178,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId(null);
 
         // Pending tag group changes should be cleared
-        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
+        verify(mockTagGroupRegistrar).setId(null, true);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -195,7 +194,7 @@ public class NamedUserTest extends BaseTestCase {
      * Test set empty ID (disassociate).
      */
     @Test
-    public void testSetIDEmpty() {
+    public void testSetIdEmpty() {
         // Set an initial id
         namedUser.setId("neat");
         clearInvocations(mockDispatcher, mockTagGroupRegistrar);
@@ -203,7 +202,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId("");
 
         // Pending tag group changes should be cleared
-        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
+        verify(mockTagGroupRegistrar).setId(null, true);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -357,7 +356,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
 
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
 
         for (int statusCode = 200; statusCode < 300; statusCode++) {
             // Force an update
@@ -605,8 +604,7 @@ public class NamedUserTest extends BaseTestCase {
     public void testUpdateNamedUserTagsSucceed() {
         // Return a named user ID
         namedUser.setId("namedUserId");
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(true);
-
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
@@ -641,8 +639,7 @@ public class NamedUserTest extends BaseTestCase {
         when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Provide pending changes
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(false);
-
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(false);
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
@@ -686,7 +683,7 @@ public class NamedUserTest extends BaseTestCase {
                  .apply();
 
         when(mockChannel.getId()).thenReturn("channelID");
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
 
         // Set up a 2xx response to associate the named user
         Response associateResponse = new Response.Builder<Void>(200).build();
@@ -748,7 +745,7 @@ public class NamedUserTest extends BaseTestCase {
                  .apply();
 
         when(mockChannel.getId()).thenReturn("channelID");
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
 
         // Set up a 2xx response to associate the named user
         Response associateResponse = new Response.Builder<Void>(200).build();

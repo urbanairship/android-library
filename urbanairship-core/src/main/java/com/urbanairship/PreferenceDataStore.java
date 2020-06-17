@@ -33,6 +33,10 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class PreferenceDataStore {
 
+    private static final String[] OBSOLETE_KEYS = new String[] {
+            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS"
+    };
+
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
     Executor executor = AirshipExecutors.newSerialExecutor();
@@ -115,6 +119,10 @@ public final class PreferenceDataStore {
             preference.registerObserver();
 
             preferences.put(key, preference);
+        }
+
+        for (String key : OBSOLETE_KEYS) {
+            remove(key);
         }
 
         cursor.close();
