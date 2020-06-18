@@ -85,7 +85,6 @@ public class AirshipChannel extends AirshipComponent {
     private static final String TAG_GROUP_DATASTORE_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
 
     private final ChannelApiClient channelApiClient;
-    private final AttributeApiClient attributeApiClient;
 
     private final JobDispatcher jobDispatcher;
     private final LocaleManager localeManager;
@@ -95,8 +94,8 @@ public class AirshipChannel extends AirshipComponent {
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
     private final Object tagLock = new Object();
 
-    private final PendingAttributeMutationStore attributeMutationStore;
     private final TagGroupRegistrar tagGroupRegistrar;
+    private final AttributeRegistrar attributeRegistrar;
 
     private final AirshipRuntimeConfig runtimeConfig;
 
@@ -137,7 +136,8 @@ public class AirshipChannel extends AirshipComponent {
                           @NonNull AirshipRuntimeConfig runtimeConfig) {
         this(context, dataStore, runtimeConfig, LocaleManager.shared(context),
                 JobDispatcher.shared(context), Clock.DEFAULT_CLOCK,
-                new ChannelApiClient(runtimeConfig), new AttributeApiClient(runtimeConfig),
+                new ChannelApiClient(runtimeConfig),
+                new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)));
     }
 
@@ -149,7 +149,7 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull JobDispatcher jobDispatcher,
                    @NonNull Clock clock,
                    @NonNull ChannelApiClient channelApiClient,
-                   @NonNull AttributeApiClient attributeApiClient,
+                   @NonNull AttributeRegistrar attributeRegistrar,
                    @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, dataStore);
 
@@ -157,11 +157,9 @@ public class AirshipChannel extends AirshipComponent {
         this.localeManager = localeManager;
         this.jobDispatcher = jobDispatcher;
         this.channelApiClient = channelApiClient;
-        this.attributeApiClient = attributeApiClient;
+        this.attributeRegistrar = attributeRegistrar;
         this.tagGroupRegistrar = tagGroupRegistrar;
         this.clock = clock;
-
-        this.attributeMutationStore = new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY);
     }
 
     /**
@@ -393,11 +391,11 @@ public class AirshipChannel extends AirshipComponent {
                     return;
                 }
 
-                List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, clock.currentTimeMillis());
-
-                // Add mutations to store
-                attributeMutationStore.add(pendingMutations);
-                dispatchUpdateAttributesJob();
+                if (!mutations.isEmpty()) {
+                    List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, clock.currentTimeMillis());
+                    attributeRegistrar.addPendingMutations(pendingMutations);
+                    dispatchUpdateAttributesJob();
+                }
             }
         };
     }
@@ -703,6 +701,7 @@ public class AirshipChannel extends AirshipComponent {
             Logger.info("Airship channel created: %s", channelId);
             getDataStore().put(CHANNEL_ID_KEY, channelId);
             tagGroupRegistrar.setId(channelId, false);
+            attributeRegistrar.setId(channelId, false);
             setLastRegistrationPayload(payload);
             for (AirshipChannelListener listener : airshipChannelListeners) {
                 listener.onChannelCreated(channelId);
@@ -801,37 +800,11 @@ public class AirshipChannel extends AirshipComponent {
             return JobInfo.JOB_FINISHED;
         }
 
-        // Collapse mutations before we try to send any updates
-        attributeMutationStore.collapseAndSaveMutations();
-
-        List<PendingAttributeMutation> mutations = attributeMutationStore.peek();
-        if (mutations == null || mutations.isEmpty()) {
+        if (attributeRegistrar.uploadPendingMutations()) {
             return JobInfo.JOB_FINISHED;
-        }
-
-        Response<Void> response;
-        try {
-            response = attributeApiClient.updateChannelAttributes(channelId, mutations);
-        } catch (RequestException e) {
-            Logger.debug(e, "AirshipChannel - Failed to update attributes, retrying.");
+        } else {
             return JobInfo.JOB_RETRY;
         }
-
-        Logger.debug("AirshipChannel - Updated attributes response: %s", response);
-
-        if (response.isServerError() || response.isTooManyRequestsError()) {
-            return JobInfo.JOB_RETRY;
-        }
-
-        if (response.isClientError()) {
-            Logger.error("AirshipChannel - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
-        }
-
-        if (mutations.equals(attributeMutationStore.peek())) {
-            attributeMutationStore.pop();
-        }
-
-        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -883,8 +856,7 @@ public class AirshipChannel extends AirshipComponent {
                 getDataStore().remove(TAGS_KEY);
             }
             tagGroupRegistrar.clearPendingMutations();
-            attributeMutationStore.removeAll();
+            attributeRegistrar.clearPendingMutations();
         }
     }
-
 }

@@ -177,4 +177,13 @@ class AttributeMutation {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "AttributeMutation{" +
+                "action='" + action + '\'' +
+                ", name='" + name + '\'' +
+                ", value=" + value +
+                '}';
+    }
+
 }

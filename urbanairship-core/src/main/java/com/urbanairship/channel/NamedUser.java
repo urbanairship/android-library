@@ -14,6 +14,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
@@ -73,14 +74,13 @@ public class NamedUser extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final Object idLock = new Object();
     private final JobDispatcher jobDispatcher;
+    private final Clock clock;
 
     private final AirshipChannel airshipChannel;
-    private final PendingAttributeMutationStore attributeMutationStore;
-
     private final NamedUserApiClient namedUserApiClient;
-    private final AttributeApiClient attributeApiClient;
 
     private final TagGroupRegistrar tagGroupRegistrar;
+    private final AttributeRegistrar attributeRegistrar;
 
     /**
      * Creates a NamedUser.
@@ -93,7 +93,8 @@ public class NamedUser extends AirshipComponent {
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                      @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull AirshipChannel airshipChannel) {
         this(context, preferenceDataStore, airshipChannel, JobDispatcher.shared(context),
-                new NamedUserApiClient(runtimeConfig), new AttributeApiClient(runtimeConfig),
+                Clock.DEFAULT_CLOCK, new NamedUserApiClient(runtimeConfig),
+                new AttributeRegistrar(AttributeApiClient.namedUserClient(runtimeConfig), new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.namedUserClient(runtimeConfig), new PendingTagGroupMutationStore(preferenceDataStore, TAG_GROUP_MUTATIONS_KEY)));
     }
 
@@ -103,16 +104,16 @@ public class NamedUser extends AirshipComponent {
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
               @NonNull AirshipChannel airshipChannel, @NonNull JobDispatcher dispatcher,
-              @NonNull NamedUserApiClient namedUserApiClient, @NonNull AttributeApiClient attributeApiClient,
-              @NonNull TagGroupRegistrar tagGroupRegistrar) {
+              @NonNull Clock clock, @NonNull NamedUserApiClient namedUserApiClient,
+              @NonNull AttributeRegistrar attributeRegistrar, @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.airshipChannel = airshipChannel;
         this.jobDispatcher = dispatcher;
+        this.clock = clock;
         this.namedUserApiClient = namedUserApiClient;
-        this.attributeApiClient = attributeApiClient;
+        this.attributeRegistrar = attributeRegistrar;
         this.tagGroupRegistrar = tagGroupRegistrar;
-        this.attributeMutationStore = new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY);
     }
 
     @Override
@@ -120,6 +121,8 @@ public class NamedUser extends AirshipComponent {
         super.init();
 
         tagGroupRegistrar.setId(getId(), false);
+        attributeRegistrar.setId(getId(), false);
+
         airshipChannel.addChannelListener(new AirshipChannelListener() {
             @Override
             public void onChannelCreated(@NonNull String channelId) {
@@ -172,6 +175,7 @@ public class NamedUser extends AirshipComponent {
 
     /**
      * Gets any pending tag updates.
+     *
      * @return The list of pending tag updates.
      * @hide
      */
@@ -233,7 +237,7 @@ public class NamedUser extends AirshipComponent {
                 // New/Cleared Named User, clear pending updates and update the token and ID
                 preferenceDataStore.put(NAMED_USER_ID_KEY, id);
                 updateChangeToken();
-                attributeMutationStore.removeAll();
+                attributeRegistrar.setId(getId(), true);
                 tagGroupRegistrar.setId(getId(), true);
                 dispatchNamedUserUpdateJob();
 
@@ -286,11 +290,11 @@ public class NamedUser extends AirshipComponent {
                     return;
                 }
 
-                List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, System.currentTimeMillis());
-
-                // Add mutations to store
-                attributeMutationStore.add(pendingMutations);
-                dispatchNamedUserUpdateJob();
+                if (!mutations.isEmpty()) {
+                    List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, clock.currentTimeMillis());
+                    attributeRegistrar.addPendingMutations(pendingMutations);
+                    dispatchNamedUserUpdateJob();
+                }
             }
         };
     }
@@ -352,11 +356,10 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-
     @Override
     protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
         if (!isDataCollectionEnabled) {
-            attributeMutationStore.removeAll();
+            attributeRegistrar.clearPendingMutations();
             tagGroupRegistrar.clearPendingMutations();
             setId(null);
         }
@@ -384,13 +387,11 @@ public class NamedUser extends AirshipComponent {
             }
         }
 
-        // Update tag groups and attributes
-        String currentId = getId();
-        if (isIdUpToDate() && currentId != null) {
-            int tagResult = updateTagGroups();
-            int attributeResult = updateAttributes(currentId);
-
-            if (tagResult == JobInfo.JOB_RETRY || attributeResult == JobInfo.JOB_RETRY) {
+        // Update tag groups and attributes if we have an Id and it's up to date
+        if (isIdUpToDate() && getId() != null) {
+            boolean attributeResult = attributeRegistrar.uploadPendingMutations();
+            boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
+            if (!attributeResult || !tagResult) {
                 return JobInfo.JOB_RETRY;
             }
         }
@@ -449,66 +450,4 @@ public class NamedUser extends AirshipComponent {
         return JobInfo.JOB_FINISHED;
     }
 
-    /**
-     * Sends any pending tag groups.
-     *
-     * @return The job result.
-     */
-    @WorkerThread
-    @JobInfo.JobResult
-    private int updateTagGroups() {
-        if (tagGroupRegistrar.uploadPendingMutations()) {
-            return JobInfo.JOB_FINISHED;
-        } else {
-            return JobInfo.JOB_RETRY;
-        }
-    }
-
-    /**
-     * Sends any pending attribute changes.
-     *
-     * @return The job result.
-     */
-    @JobInfo.JobResult
-    @WorkerThread
-    private int updateAttributes(@NonNull String namedUserId) {
-        List<PendingAttributeMutation> mutations;
-        synchronized (idLock) {
-            if (!isIdUpToDate() || !namedUserId.equals(getId())) {
-                return JobInfo.JOB_FINISHED;
-            }
-
-            attributeMutationStore.collapseAndSaveMutations();
-            mutations = attributeMutationStore.peek();
-        }
-
-        if (mutations == null || mutations.isEmpty()) {
-            return JobInfo.JOB_FINISHED;
-        }
-
-        Response<Void> response;
-        try {
-            response = attributeApiClient.updateNamedUserAttributes(namedUserId, mutations);
-        } catch (RequestException e) {
-            Logger.debug(e, "NamedUser - Failed to update attributes");
-            return JobInfo.JOB_RETRY;
-        }
-
-        Logger.debug("NamedUser - Updated attributes response: %s", response);
-        if (response.isServerError() || response.isTooManyRequestsError()) {
-            return JobInfo.JOB_RETRY;
-        }
-
-        if (response.isClientError()) {
-            Logger.error("NamedUser - Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
-        }
-
-        synchronized (idLock) {
-            if (mutations.equals(attributeMutationStore.peek()) && namedUserId.equals(getId())) {
-                attributeMutationStore.pop();
-            }
-        }
-
-        return JobInfo.JOB_FINISHED;
-    }
 }

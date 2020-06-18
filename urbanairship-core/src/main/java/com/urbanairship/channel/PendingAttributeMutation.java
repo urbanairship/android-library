@@ -142,4 +142,12 @@ class PendingAttributeMutation extends AttributeMutation implements JsonSerializ
         result = 31 * result + timestamp.hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "PendingAttributeMutation{" +
+                "timestamp='" + timestamp + '\'' +
+                "} " + super.toString();
+    }
+
 }

@@ -60,7 +60,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
     private AirshipChannel airshipChannel;
     private ChannelApiClient mockClient;
-    private AttributeApiClient mockAttributeClient;
+    private AttributeRegistrar mockAttributeRegistrar;
     private TagGroupRegistrar mockTagGroupRegistrar;
 
     private JobDispatcher mockDispatcher;
@@ -87,7 +87,7 @@ public class AirshipChannelTests extends BaseTestCase {
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
         mockClient = mock(ChannelApiClient.class);
-        mockAttributeClient = mock(AttributeApiClient.class);
+        mockAttributeRegistrar = mock(AttributeRegistrar.class);
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
 
         clock = new TestClock();
@@ -101,7 +101,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, testLocaleManager, mockDispatcher, clock,
-                mockClient, mockAttributeClient, mockTagGroupRegistrar);
+                mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
     /**
@@ -153,6 +153,9 @@ public class AirshipChannelTests extends BaseTestCase {
         assertEquals(JobInfo.JOB_FINISHED, result);
         assertEquals("channel", airshipChannel.getId());
         assertTrue(listener.onChannelCreatedCalled);
+
+        verify(mockAttributeRegistrar).setId("channel", false);
+        verify(mockTagGroupRegistrar).setId("channel", false);
 
         // Verify the channel created intent was fired
         List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
@@ -385,7 +388,7 @@ public class AirshipChannelTests extends BaseTestCase {
      * Test update tag groups.
      */
     @Test
-    public void testUpdateNamedUserTagsSucceed() throws RequestException {
+    public void testUpdateTagsSucceed() throws RequestException {
         testCreateChannel();
 
         when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
@@ -421,6 +424,44 @@ public class AirshipChannelTests extends BaseTestCase {
         int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_TAGS_JOB);
         assertEquals(JobInfo.JOB_RETRY, result);
     }
+
+    /**
+     * Test update attributes.
+     */
+    @Test
+    public void testUpdateAttributesSucceed() throws RequestException {
+        testCreateChannel();
+
+        when(mockAttributeRegistrar.uploadPendingMutations()).thenReturn(true);
+
+        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
+        assertEquals(JobInfo.JOB_FINISHED, result);
+    }
+
+    /**
+     * Test update attributes without a channel ID fails.
+     */
+    @Test
+    public void testUpdateAttributesNoChannel() {
+        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
+        assertEquals(JobInfo.JOB_FINISHED, result);
+
+        verifyZeroInteractions(mockAttributeRegistrar);
+    }
+
+    /**
+     * Test update named user retries when the upload fails.
+     */
+    @Test
+    public void testUpdateAttributesRetry() throws RequestException {
+        testCreateChannel();
+
+        when(mockAttributeRegistrar.uploadPendingMutations()).thenReturn(false);
+
+        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
+        assertEquals(JobInfo.JOB_RETRY, result);
+    }
+
 
     /**
      * Test channel registration payload
@@ -578,13 +619,22 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
-     * Test editAttribute's apply function dispatches a job to update the tag groups.
+     * Test editAttribute's apply function dispatches an update job and saves attributes to
+     * the registrar.
      */
     @Test
     public void testAttributesUpdates() {
+        clock.currentTimeMillis = 100;
+
         airshipChannel.editAttributes()
                       .setAttribute("expected_key", "expected_value")
                       .apply();
+
+
+
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
+        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        verify(mockAttributeRegistrar).addPendingMutations(expectedMutations);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -592,85 +642,6 @@ public class AirshipChannelTests extends BaseTestCase {
                 return jobInfo.getAction().equals("ACTION_UPDATE_ATTRIBUTES");
             }
         }));
-    }
-
-    /**
-     * Test attributes update finish on 200.
-     */
-    @Test
-    public void testAttributesUpdate200() throws RequestException {
-        testCreateChannel();
-
-        // Set the clock
-        clock.currentTimeMillis = 100;
-
-        airshipChannel.editAttributes()
-                      .setAttribute("expected_key", "expected_value")
-                      .apply();
-
-        // Setup response
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
-        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
-                .thenReturn(AirshipChannelTests.<Void>createResponse(null, 200));
-
-        // Update the registration
-        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
-
-        assertEquals(JobInfo.JOB_FINISHED, result);
-        assertEquals("channel", airshipChannel.getId());
-    }
-
-    /**
-     * Test attributes update retries when a 429 is returned.
-     */
-    @Test
-    public void testAttributesUpdateRetriesOn429() throws RequestException {
-        testCreateChannel();
-
-        // Set the clock
-        clock.currentTimeMillis = 100;
-
-        airshipChannel.editAttributes()
-                      .setAttribute("expected_key", "expected_value")
-                      .apply();
-
-        // Setup response
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
-        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
-                .thenReturn(AirshipChannelTests.<Void>createResponse(null, 429));
-
-        // Update the registration
-        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
-
-        assertEquals(JobInfo.JOB_RETRY, result);
-    }
-
-    /**
-     * Test attributes update retries when a 5xx is returned.
-     */
-    @Test
-    public void testAttributesUpdateRetriesOnServerError() throws RequestException {
-        testCreateChannel();
-
-        // Set the clock
-        clock.currentTimeMillis = 100;
-
-        airshipChannel.editAttributes()
-                      .setAttribute("expected_key", "expected_value")
-                      .apply();
-
-        // Setup response
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
-        when(mockAttributeClient.updateChannelAttributes(eq("channel"), eq(expectedMutations)))
-                .thenReturn(AirshipChannelTests.<Void>createResponse(null, 500));
-
-        // Update the registration
-        int result = airshipChannel.onPerformJob(UAirship.shared(), UPDATE_ATTRIBUTES_JOB);
-
-        assertEquals(JobInfo.JOB_RETRY, result);
     }
 
     /**
@@ -896,7 +867,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, testLocaleManager, mockDispatcher, clock,
-                mockClient, mockAttributeClient, mockTagGroupRegistrar);
+                mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
         assertFalse(airshipChannel.isChannelCreationDelayEnabled());
@@ -911,7 +882,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, testLocaleManager, mockDispatcher, clock,
-                mockClient, mockAttributeClient, mockTagGroupRegistrar);
+                mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
         assertTrue(airshipChannel.isChannelCreationDelayEnabled());
@@ -933,7 +904,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, testLocaleManager, mockDispatcher, clock,
-                mockClient, mockAttributeClient, mockTagGroupRegistrar);
+                mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
 

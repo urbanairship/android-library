@@ -33,7 +33,7 @@ public class AttributeApiClientTest extends BaseTestCase {
     private TestRequest testRequest;
     private List<AttributeMutation> mutations;
     private TestAirshipRuntimeConfig runtimeConfig;
-    private AttributeApiClient client;
+    private RequestFactory requestFactory;
 
     @Before
     public void setUp() {
@@ -47,13 +47,13 @@ public class AttributeApiClientTest extends BaseTestCase {
         mutations = new ArrayList<>();
         mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", "expected_key"));
 
-        client = new AttributeApiClient(runtimeConfig, new RequestFactory() {
+        requestFactory = new RequestFactory() {
             @NonNull
             @Override
             public Request createRequest() {
                 return testRequest;
             }
-        });
+        };
     }
 
     /**
@@ -61,10 +61,12 @@ public class AttributeApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAttributeUpdateAndroidChannel() throws JsonException, RequestException {
+        AttributeApiClient client = new AttributeApiClient(runtimeConfig, requestFactory, AttributeApiClient.CHANNEL_URL_FACTORY);
+
         testRequest.responseStatus = 200;
 
         List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateChannelAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .putOpt("attributes", attributes)
@@ -82,11 +84,13 @@ public class AttributeApiClientTest extends BaseTestCase {
     @Test
     public void testAttributeUpdateAmazonChannel() throws JsonException, RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
+        AttributeApiClient client = new AttributeApiClient(runtimeConfig, requestFactory, AttributeApiClient.CHANNEL_URL_FACTORY);
+
 
         testRequest.responseStatus = 200;
 
         List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateChannelAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .putOpt("attributes", attributes)
@@ -103,10 +107,11 @@ public class AttributeApiClientTest extends BaseTestCase {
      */
     @Test
     public void testAttributeUpdateNamedUser() throws JsonException, RequestException {
+        AttributeApiClient client = new AttributeApiClient(runtimeConfig, requestFactory, AttributeApiClient.NAMED_USER_URL_FACTORY);
         testRequest.responseStatus = 200;
 
         List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateNamedUserAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .putOpt("attributes", attributes)
