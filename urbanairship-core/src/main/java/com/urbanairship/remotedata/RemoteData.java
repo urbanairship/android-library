@@ -29,6 +29,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.AirshipHandlerThread;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Arrays;
@@ -100,6 +101,7 @@ public class RemoteData extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final PushManager pushManager;
     private final PushListener pushListener;
+    private final Clock clock;
 
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
@@ -133,7 +135,7 @@ public class RemoteData extends AirshipComponent {
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
                       @NonNull PushManager pushManager) {
         this(context, preferenceDataStore, configOptions, activityMonitor,
-                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager);
+                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager, Clock.DEFAULT_CLOCK);
     }
 
     /**
@@ -149,7 +151,8 @@ public class RemoteData extends AirshipComponent {
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager) {
+               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
+               @NonNull Clock clock) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.appKey, DATABASE_NAME);
@@ -159,6 +162,7 @@ public class RemoteData extends AirshipComponent {
         this.activityMonitor = activityMonitor;
         this.localeManager = localeManager;
         this.pushManager = pushManager;
+        this.clock = clock;
 
         this.pushListener = new PushListener() {
             @WorkerThread
@@ -216,8 +220,7 @@ public class RemoteData extends AirshipComponent {
      * Called when the application is foregrounded.
      */
     private void onForeground() {
-        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
-        if (getForegroundRefreshInterval() <= timeSinceLastRefresh || shouldRefresh()) {
+        if (shouldRefresh()) {
             refresh();
         }
     }
@@ -348,8 +351,8 @@ public class RemoteData extends AirshipComponent {
         }
     }
 
-    public boolean shouldRefresh() {
-        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
+    private boolean shouldRefresh() {
+        long timeSinceLastRefresh = clock.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
         if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
             return true;
         }
@@ -395,7 +398,7 @@ public class RemoteData extends AirshipComponent {
 
     @WorkerThread
     void onRefreshFinished() {
-        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, System.currentTimeMillis());
+        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, clock.currentTimeMillis());
 
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
