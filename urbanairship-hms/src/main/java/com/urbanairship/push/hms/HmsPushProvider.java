@@ -42,19 +42,29 @@ public class HmsPushProvider implements PushProvider, AirshipVersionInfo  {
     @Nullable
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
+        String token;
+
         try {
             String appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY);
             if (appId == null) {
                 return null;
             }
 
-            String token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
-            if (UAStringUtil.isEmpty(token)) {
-                throw new RegistrationException("Empty HMS registration token", true);
-            }
-            return token;
+            token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
         } catch (Exception e) {
             throw new RegistrationException("HMS error " + e.getMessage(), true, e);
+        }
+
+        if (UAStringUtil.isEmpty(token)) {
+            String cachedToken = HmsTokenCache.shared().get(context);
+            if (UAStringUtil.isEmpty(cachedToken)) {
+                throw new RegistrationException("Empty HMS registration token", true);
+            } else {
+                return cachedToken;
+            }
+        } else {
+            HmsTokenCache.shared().set(context, token);
+            return token;
         }
     }
 
