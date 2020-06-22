@@ -9,6 +9,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestClock;
 import com.urbanairship.TestLocaleManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -43,6 +44,7 @@ import androidx.annotation.NonNull;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -60,6 +62,7 @@ public class RemoteDataTest extends BaseTestCase {
     private TestLocaleManager localeManager;
     private PushManager pushManager;
     private PushListener pushListener;
+    private TestClock clock;
 
     @Before
     public void setup() {
@@ -77,8 +80,10 @@ public class RemoteDataTest extends BaseTestCase {
 
         pushManager = mock(PushManager.class);
 
+        clock = new TestClock();
+
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
-                activityMonitor, mockDispatcher, localeManager, pushManager);
+                activityMonitor, mockDispatcher, localeManager, pushManager, clock);
         payload = RemoteDataPayload.newBuilder()
                                    .setType("type")
                                    .setTimeStamp(123)
@@ -149,6 +154,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLocaleChangeRefresh() {
+        activityMonitor.foreground();
         clearInvocations(mockDispatcher);
 
         localeManager.setDefaultLocale(new Locale("de"));
@@ -170,11 +176,28 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshInterval() {
-        clearInvocations(mockDispatcher);
-        remoteData.setForegroundRefreshInterval(100000);
+        // Refresh
+        clock.currentTimeMillis = 100;
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onRefreshFinished();
+        runLooperTasks();
 
+        // Set foreground refresh interval to 10 ms
+        remoteData.setForegroundRefreshInterval(10);
+
+        // Time travel 9 ms, should skip refresh on foreground
+        clock.currentTimeMillis += 9;
         activityMonitor.foreground();
+        verify(mockDispatcher, never()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+            }
+        }));
 
+        // Time travel 1 ms, should refresh on foreground
+        clock.currentTimeMillis += 1;
+        activityMonitor.foreground();
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {

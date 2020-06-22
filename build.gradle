@@ -113,6 +113,7 @@ task javadoc(type: Javadoc) {
         docletpath = configurations.doclava.files as List
         doclet "com.google.doclava.Doclava"
         bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+        addStringOption "notimestamp", null
         addStringOption "hdf project.name", "Airship Android SDK"
         addStringOption "hdf project.version", project.version
         addStringOption "apiversion", "v2"

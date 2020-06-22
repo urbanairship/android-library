@@ -56,9 +56,22 @@ public class AirshipHmsIntegration {
      * Called to handle new tokens.
      *
      * @param context The application context.
+     * @deprecated Use {@link #processNewToken(Context, String)} to fix registration issues
+     * with older HMS devices.
      */
+    @Deprecated
     public static void processNewToken(@NonNull Context context) {
         PushProviderBridge.requestRegistrationUpdate(context);
     }
 
+    /**
+     * Called to handle new tokens.
+     *
+     * @param context The application context.
+     * @param token The token.
+     */
+    public static void processNewToken(@NonNull Context context, @NonNull String token) {
+        HmsTokenCache.shared().set(context, token);
+        PushProviderBridge.requestRegistrationUpdate(context);
+    }
 }

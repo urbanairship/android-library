@@ -29,6 +29,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.AirshipHandlerThread;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Arrays;
@@ -99,26 +100,44 @@ public class RemoteData extends AirshipComponent {
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
     private final PushManager pushManager;
-    private final PushListener pushListener;
+    private final Clock clock;
+
+    @VisibleForTesting
+    final Subject<Set<RemoteDataPayload>> payloadUpdates;
+
+    @VisibleForTesting
+    final HandlerThread backgroundThread;
+
+    @VisibleForTesting
+    final RemoteDataStore dataStore;
 
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
         public void onForeground(long time) {
-            RemoteData.this.onForeground();
+            if (shouldRefresh()) {
+                refresh();
+            }
         }
     };
 
-    @VisibleForTesting
-    final
-    Subject<Set<RemoteDataPayload>> payloadUpdates;
+    private final LocaleChangedListener localeChangedListener = new LocaleChangedListener() {
+        @Override
+        public void onLocaleChanged(@NonNull Locale locale) {
+            if (shouldRefresh()) {
+                refresh();
+            }
+        }
+    };
 
-    @VisibleForTesting
-    final
-    HandlerThread backgroundThread;
-
-    @VisibleForTesting
-    final
-    RemoteDataStore dataStore;
+    private final PushListener pushListener = new PushListener() {
+        @WorkerThread
+        @Override
+        public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+            if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
+                refresh();
+            }
+        }
+    };
 
     /**
      * RemoteData constructor.
@@ -133,7 +152,7 @@ public class RemoteData extends AirshipComponent {
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
                       @NonNull PushManager pushManager) {
         this(context, preferenceDataStore, configOptions, activityMonitor,
-                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager);
+                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager, Clock.DEFAULT_CLOCK);
     }
 
     /**
@@ -149,7 +168,8 @@ public class RemoteData extends AirshipComponent {
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager) {
+               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
+               @NonNull Clock clock) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.appKey, DATABASE_NAME);
@@ -159,16 +179,7 @@ public class RemoteData extends AirshipComponent {
         this.activityMonitor = activityMonitor;
         this.localeManager = localeManager;
         this.pushManager = pushManager;
-
-        this.pushListener = new PushListener() {
-            @WorkerThread
-            @Override
-            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-                if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
-                    refresh();
-                }
-            }
-        };
+        this.clock = clock;
     }
 
     @Override
@@ -176,28 +187,21 @@ public class RemoteData extends AirshipComponent {
         super.init();
         backgroundThread.start();
         backgroundHandler = new Handler(this.backgroundThread.getLooper());
-        activityMonitor.addApplicationListener(applicationListener);
 
-        localeManager.addListener(new LocaleChangedListener() {
-            @Override
-            public void onLocaleChanged(@NonNull Locale locale) {
-                if (shouldRefresh()) {
-                    refresh();
-                }
-            }
-        });
+        activityMonitor.addApplicationListener(applicationListener);
+        pushManager.addPushListener(pushListener);
+        localeManager.addListener(localeChangedListener);
 
         if (shouldRefresh()) {
             refresh();
         }
-
-        pushManager.addPushListener(pushListener);
     }
 
     @Override
     protected void tearDown() {
         pushManager.removePushListener(pushListener);
         activityMonitor.removeApplicationListener(applicationListener);
+        localeManager.removeListener(localeChangedListener);
         backgroundThread.quit();
     }
 
@@ -210,16 +214,6 @@ public class RemoteData extends AirshipComponent {
         }
 
         return jobHandler.performJob(jobInfo);
-    }
-
-    /**
-     * Called when the application is foregrounded.
-     */
-    private void onForeground() {
-        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
-        if (getForegroundRefreshInterval() <= timeSinceLastRefresh || shouldRefresh()) {
-            refresh();
-        }
     }
 
     /**
@@ -348,8 +342,12 @@ public class RemoteData extends AirshipComponent {
         }
     }
 
-    public boolean shouldRefresh() {
-        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
+    private boolean shouldRefresh() {
+        if (!activityMonitor.isAppForegrounded()) {
+            return false;
+        }
+
+        long timeSinceLastRefresh = clock.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
         if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
             return true;
         }
@@ -395,7 +393,7 @@ public class RemoteData extends AirshipComponent {
 
     @WorkerThread
     void onRefreshFinished() {
-        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, System.currentTimeMillis());
+        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, clock.currentTimeMillis());
 
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {

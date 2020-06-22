@@ -19,7 +19,7 @@ public class AirshipHmsMessageService extends HmsMessageService {
     }
 
     @Override
-    public void onNewToken(@Nullable String string) {
-        AirshipHmsIntegration.processNewToken(getApplicationContext());
+    public void onNewToken(@Nullable String token) {
+        AirshipHmsIntegration.processNewToken(getApplicationContext(), token);
     }
 }
