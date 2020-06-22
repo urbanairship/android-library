@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
@@ -102,10 +103,11 @@ public interface AutomationDriver<T extends Schedule> {
      * avoid blocking other schedules from executing.
      *
      * @param schedule The schedule.
+     * @param triggerContext The trigger context.
      * @param callback The callback to continue execution.
      */
     @WorkerThread
-    void onPrepareSchedule(@NonNull T schedule, @NonNull PrepareScheduleCallback callback);
+    void onPrepareSchedule(@NonNull T schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback);
 
     /**
      * Checks if the schedule is ready to execute. Will be called before executing the schedule

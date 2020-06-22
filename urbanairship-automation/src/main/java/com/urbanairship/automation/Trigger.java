@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
@@ -23,7 +24,7 @@ import androidx.annotation.RestrictTo;
  * Trigger defines a condition to execute an {@link ScheduleInfo}. Use {@link Triggers} to build
  * triggers.
  */
-public class Trigger implements Parcelable {
+public class Trigger implements Parcelable, JsonSerializable {
 
     // JSON
     private static final String GOAL_KEY = "goal";
@@ -200,6 +201,17 @@ public class Trigger implements Parcelable {
         dest.writeParcelable(predicate == null ? null : predicate.toJsonValue(), flags);
     }
 
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                .put(TYPE_KEY, convertType(type))
+                .put(GOAL_KEY, goal)
+                .put(PREDICATE_KEY, predicate)
+                .build()
+                .toJsonValue();
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -262,53 +274,93 @@ public class Trigger implements Parcelable {
         }
 
         String typeString = jsonMap.opt(TYPE_KEY).optString().toLowerCase(Locale.ROOT);
-        switch (typeString) {
-            case CUSTOM_EVENT_COUNT_NAME:
-                type = CUSTOM_EVENT_COUNT;
-                break;
-
-            case CUSTOM_EVENT_VALUE_NAME:
-                type = CUSTOM_EVENT_VALUE;
-                break;
-
-            case FOREGROUND_NAME:
-                type = LIFE_CYCLE_FOREGROUND;
-                break;
-
-            case BACKGROUND_NAME:
-                type = LIFE_CYCLE_BACKGROUND;
-                break;
-
-            case APP_INIT_NAME:
-                type = LIFE_CYCLE_APP_INIT;
-                break;
-
-            case SCREEN_NAME:
-                type = SCREEN_VIEW;
-                break;
-
-            case REGION_ENTER_NAME:
-                type = REGION_ENTER;
-                break;
-
-            case REGION_EXIT_NAME:
-                type = REGION_EXIT;
-                break;
-
-            case ACTIVE_SESSION_NAME:
-                type = ACTIVE_SESSION;
-                break;
-
-            case VERSION_NAME:
-                type = VERSION;
-                break;
-
-            default:
-                throw new JsonException("Invalid trigger type: " + typeString);
+        try {
+            type = convertType(typeString);
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Invalid trigger type: " + typeString);
         }
+
 
         return new Trigger(type, goal, predicate);
     }
+
+
+
+    private static int convertType(@NonNull String typeString) {
+        switch (typeString) {
+            case CUSTOM_EVENT_COUNT_NAME:
+                return CUSTOM_EVENT_COUNT;
+
+            case CUSTOM_EVENT_VALUE_NAME:
+                return CUSTOM_EVENT_VALUE;
+
+            case FOREGROUND_NAME:
+                return LIFE_CYCLE_FOREGROUND;
+
+            case BACKGROUND_NAME:
+                return LIFE_CYCLE_BACKGROUND;
+
+            case APP_INIT_NAME:
+                return LIFE_CYCLE_APP_INIT;
+
+            case SCREEN_NAME:
+                return SCREEN_VIEW;
+
+            case REGION_ENTER_NAME:
+                return REGION_ENTER;
+
+            case REGION_EXIT_NAME:
+                return REGION_EXIT;
+
+            case ACTIVE_SESSION_NAME:
+                return ACTIVE_SESSION;
+
+            case VERSION_NAME:
+                return VERSION;
+
+            default:
+                throw new IllegalArgumentException("Invalid trigger type: " + typeString);
+        }
+    }
+
+    @NonNull
+    private static String convertType(@TriggerType int type) {
+        switch (type) {
+            case CUSTOM_EVENT_COUNT:
+                return CUSTOM_EVENT_COUNT_NAME;
+
+            case CUSTOM_EVENT_VALUE:
+                return CUSTOM_EVENT_VALUE_NAME;
+
+            case LIFE_CYCLE_FOREGROUND:
+                return FOREGROUND_NAME;
+
+            case LIFE_CYCLE_BACKGROUND:
+                return BACKGROUND_NAME;
+
+            case LIFE_CYCLE_APP_INIT:
+                return APP_INIT_NAME;
+
+            case SCREEN_VIEW:
+                return SCREEN_NAME;
+
+            case REGION_ENTER:
+                return REGION_ENTER_NAME;
+
+            case REGION_EXIT:
+                return REGION_EXIT_NAME;
+
+            case ACTIVE_SESSION:
+                return ACTIVE_SESSION_NAME;
+
+            case VERSION:
+                return VERSION_NAME;
+
+            default:
+                throw new IllegalArgumentException("Invalid trigger type: " + type);
+        }
+    }
+
 
     @Override
     public boolean equals(@Nullable Object o) {
@@ -331,6 +383,15 @@ public class Trigger implements Parcelable {
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (predicate != null ? predicate.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Trigger{" +
+                "type=" + convertType(type) +
+                ", goal=" + goal +
+                ", predicate=" + predicate +
+                '}';
     }
 
 }

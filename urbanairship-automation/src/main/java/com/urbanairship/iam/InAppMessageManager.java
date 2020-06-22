@@ -21,6 +21,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
+import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -265,11 +266,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         driver.setListener(new InAppMessageDriver.Listener() {
             @WorkerThread
             @Override
-            public void onPrepareSchedule(final @NonNull InAppMessageSchedule schedule) {
+            public void onPrepareSchedule(final @NonNull InAppMessageSchedule schedule, @Nullable final TriggerContext triggerContext) {
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        InAppMessageManager.this.prepareSchedule(schedule);
+                        InAppMessageManager.this.prepareSchedule(schedule, triggerContext);
                     }
                 });
 
@@ -600,8 +601,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Prepares a schedule to be displayed.
      *
      * @param schedule The schedule.
+     * @param triggerContext
      */
-    private void prepareSchedule(final @NonNull InAppMessageSchedule schedule) {
+    private void prepareSchedule(final @NonNull InAppMessageSchedule schedule, @Nullable TriggerContext triggerContext) {
+        Logger.verbose("Preparing schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
         final AdapterWrapper adapter = createAdapterWrapper(schedule);
         if (adapter == null) {
             // Failed

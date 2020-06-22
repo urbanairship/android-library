@@ -42,7 +42,7 @@ public class AutomationDataManager extends DataManager {
     /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     /**
      * Appended to the end of schedules GET queries to group rows by schedule ID.
@@ -98,8 +98,8 @@ public class AutomationDataManager extends DataManager {
                 + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_SECONDS + " DOUBLE,"
-                + ScheduleEntry.COLUMN_NAME_INTERVAL + " INTEGER"
-
+                + ScheduleEntry.COLUMN_NAME_INTERVAL + " INTEGER,"
+                + ScheduleEntry.COLUMN_NAME_TRIGGER_CONTEXT + " TEXT"
                 + ");");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TriggerEntry.TABLE_NAME + " ("
@@ -118,29 +118,6 @@ public class AutomationDataManager extends DataManager {
 
     @Override
     protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Upgrade 1 -> 2 changes (SDK 8.4)
-        //
-        //      action_schedules:
-        //          * _id column renamed to s_row_id
-        //          * schedule delay information added
-        //
-        //      triggers
-        //          * _id column renamed to t_row_id
-        //          * is_cancellation column added
-        //          * t_start column removed
-        //
-        // Upgrade 2 -> 3 changes (SDK 9.0 alpha)
-        //
-        //      action_schedules:
-        //          * s_is_pending_execution column renamed to s_execution_state
-        //          * s_actions column renamed to s_data
-        //          * added s_priority
-        //
-        // Upgrade 3 -> 4 changes (SDK 9.0 beta)
-        //
-        //      action_schedules:
-        //          * added s_execution_state_change_date, s_edit_grace_period, s_interval
-
         String tempScheduleTableName = "temp_schedule_entry_table";
         String tempTriggersTableName = "temp_triggers_entry_table";
         String oldIdColumn = "_id";
@@ -334,6 +311,13 @@ public class AutomationDataManager extends DataManager {
             case 4:
                 db.execSQL("BEGIN TRANSACTION;");
                 db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_METADATA + " TEXT;");
+                db.execSQL("COMMIT;");
+
+                break;
+
+            case 5:
+                db.execSQL("BEGIN TRANSACTION;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_TRIGGER_CONTEXT + " TEXT;");
                 db.execSQL("COMMIT;");
 
                 break;

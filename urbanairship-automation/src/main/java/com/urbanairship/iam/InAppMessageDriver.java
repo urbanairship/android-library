@@ -1,17 +1,18 @@
 package com.urbanairship.iam;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.ScheduleInfo;
+import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.json.JsonMap;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Automation driver for in-app messaging.
@@ -31,8 +32,9 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
          * call {@link InAppMessageDriver#schedulePrepared(String, int)}.
          *
          * @param schedule The in-app message schedule.
+         * @param triggerContext The trigger context.
          */
-        void onPrepareSchedule(@NonNull InAppMessageSchedule schedule);
+        void onPrepareSchedule(@NonNull InAppMessageSchedule schedule, TriggerContext triggerContext);
 
         /**
          * Called to check if a schedule is ready to execute.
@@ -69,13 +71,13 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+    public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule, @NonNull TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback) {
         synchronized (prepareCallbacks) {
             prepareCallbacks.put(schedule.getId(), callback);
         }
 
         if (listener != null) {
-            listener.onPrepareSchedule(schedule);
+            listener.onPrepareSchedule(schedule, triggerContext);
         }
     }
 

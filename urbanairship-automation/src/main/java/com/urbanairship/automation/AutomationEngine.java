@@ -37,8 +37,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -1107,6 +1109,7 @@ public class AutomationEngine<T extends Schedule> {
 
                 Set<String> triggeredSchedules = new HashSet<>();
                 Set<String> cancelledSchedules = new HashSet<>();
+                Map<String, TriggerContext> triggerContextMap = new HashMap<>();
 
                 List<TriggerEntry> triggersToUpdate = new ArrayList<>();
 
@@ -1126,6 +1129,7 @@ public class AutomationEngine<T extends Schedule> {
                             cancelScheduleAlarms(Collections.singletonList(trigger.scheduleId));
                         } else {
                             triggeredSchedules.add(trigger.scheduleId);
+                            triggerContextMap.put(trigger.scheduleId, new TriggerContext(trigger.toTrigger(), json.toJsonValue()));
                         }
                     }
                 }
@@ -1137,7 +1141,7 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 if (!triggeredSchedules.isEmpty()) {
-                    handleTriggeredSchedules(dataManager.getScheduleEntries(triggeredSchedules));
+                    handleTriggeredSchedules(dataManager.getScheduleEntries(triggeredSchedules), triggerContextMap);
                 }
             }
         });
@@ -1165,9 +1169,10 @@ public class AutomationEngine<T extends Schedule> {
      * Processes a list of triggered schedule entries.
      *
      * @param scheduleEntries A list of triggered schedule entries.
+     * @param triggerContextMap The map of schedule Id to trigger context.
      */
     @WorkerThread
-    private void handleTriggeredSchedules(@NonNull final List<ScheduleEntry> scheduleEntries) {
+    private void handleTriggeredSchedules(@NonNull final List<ScheduleEntry> scheduleEntries, Map<String, TriggerContext> triggerContextMap) {
         if (isPaused.get() || scheduleEntries.isEmpty()) {
             return;
         }
@@ -1182,6 +1187,8 @@ public class AutomationEngine<T extends Schedule> {
             }
 
             schedulesToUpdate.add(scheduleEntry);
+
+            scheduleEntry.setTriggerContext(triggerContextMap.get(scheduleEntry.scheduleId));
 
             // Expired schedules
             if (scheduleEntry.isExpired()) {
@@ -1225,9 +1232,14 @@ public class AutomationEngine<T extends Schedule> {
             return;
         }
         sortSchedulesByPriority(entries);
-        for (T schedule : convertEntries(entries)) {
+        for (ScheduleEntry entry : entries) {
+            T schedule = convertEntry(entry);
+            if (schedule == null) {
+                continue;
+            }
+
             final String scheduleId = schedule.getId();
-            driver.onPrepareSchedule(schedule, new AutomationDriver.PrepareScheduleCallback() {
+            driver.onPrepareSchedule(schedule, entry.getTriggerContext(), new AutomationDriver.PrepareScheduleCallback() {
                 @Override
                 public void onFinish(@AutomationDriver.PrepareResult final int result) {
                     backgroundHandler.post(new Runnable() {
@@ -1595,15 +1607,24 @@ public class AutomationEngine<T extends Schedule> {
     private List<T> convertEntries(@NonNull Collection<ScheduleEntry> entries) {
         List<T> schedules = new ArrayList<>();
         for (ScheduleEntry entry : entries) {
-            try {
-                schedules.add(driver.createSchedule(entry.scheduleId, entry.metadata, entry));
-            } catch (Exception e) {
-                Logger.error(e, "Unable to create schedule.");
-                cancel(Collections.singletonList(entry.scheduleId));
+            T converted = convertEntry(entry);
+            if (converted != null) {
+                schedules.add(converted);
             }
         }
 
         return schedules;
+    }
+
+    @Nullable
+    private T convertEntry(@NonNull ScheduleEntry entry) {
+        try {
+            return driver.createSchedule(entry.scheduleId, entry.metadata, entry);
+        } catch (Exception e) {
+            Logger.error(e, "Unable to create schedule.");
+            cancel(Collections.singletonList(entry.scheduleId));
+        }
+        return null;
     }
 
     /**

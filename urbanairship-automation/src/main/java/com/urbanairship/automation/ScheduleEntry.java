@@ -85,6 +85,7 @@ class ScheduleEntry implements ScheduleInfo {
     static final String COLUMN_NAME_DELAY_FINISH_DATE = "s_pending_execution_date";
     static final String COLUMN_NAME_COUNT = "s_count";
     static final String COLUMN_NAME_ID = "s_row_id";
+    static final String COLUMN_NAME_TRIGGER_CONTEXT = "s_trigger_context";
 
     public final String scheduleId;
     public final String group;
@@ -112,6 +113,7 @@ class ScheduleEntry implements ScheduleInfo {
     private long executionStateChangeDate;
     private boolean isDirty;
     private boolean isEdit;
+    private TriggerContext triggerContext;
 
     ScheduleEntry(@NonNull String scheduleId, @NonNull ScheduleInfo scheduleInfo, @NonNull JsonMap metadata) {
         this.scheduleId = scheduleId;
@@ -168,6 +170,21 @@ class ScheduleEntry implements ScheduleInfo {
         this.interval = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_INTERVAL));
         this.seconds = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_SECONDS));
         this.screens = parseScreens(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCREEN))));
+        this.triggerContext = parseTriggerContext(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TRIGGER_CONTEXT))));
+    }
+
+    @Nullable
+    private TriggerContext parseTriggerContext(@NonNull JsonValue triggerContext) {
+        if (triggerContext.isNull()) {
+            return null;
+        }
+
+        try {
+            return TriggerContext.fromJson(triggerContext);
+        } catch (JsonException e) {
+            Logger.error(e, "Failed to parse trigger context.");
+        }
+        return null;
     }
 
     private List<String> parseScreens(JsonValue json) {
@@ -231,6 +248,25 @@ class ScheduleEntry implements ScheduleInfo {
     @State
     int getExecutionState() {
         return executionState;
+    }
+
+    /**
+     * Sets the trigger context.
+     *
+     * @param triggerContext The trigger context, or null to clear it.
+     */
+    void setTriggerContext(@Nullable TriggerContext triggerContext) {
+        this.triggerContext = triggerContext;
+    }
+
+    /**
+     * Gets the trigger context.
+     *
+     * @return The trigger context.
+     */
+    @Nullable
+    TriggerContext getTriggerContext() {
+        return triggerContext;
     }
 
     /**
@@ -328,6 +364,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_SECONDS, seconds);
             contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
             contentValues.put(COLUMN_NAME_INTERVAL, interval);
+            contentValues.put(COLUMN_NAME_TRIGGER_CONTEXT, JsonValue.wrapOpt(triggerContext).toString());
             try {
                 id = database.insert(TABLE_NAME, null, contentValues);
                 if (id == -1) {
@@ -343,6 +380,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE, executionStateChangeDate);
             contentValues.put(COLUMN_NAME_DELAY_FINISH_DATE, delayFinishDate);
+            contentValues.put(COLUMN_NAME_TRIGGER_CONTEXT, JsonValue.wrapOpt(triggerContext).toString());
 
             if (isEdit) {
                 contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());

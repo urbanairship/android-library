@@ -15,6 +15,7 @@ import java.util.Map;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -57,7 +58,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+    public void onPrepareSchedule(@NonNull ActionSchedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback) {
         callback.onFinish(PREPARE_RESULT_CONTINUE);
     }
 

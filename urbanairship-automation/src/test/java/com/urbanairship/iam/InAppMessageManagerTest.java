@@ -184,7 +184,7 @@ public class InAppMessageManagerTest {
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -198,7 +198,7 @@ public class InAppMessageManagerTest {
         when(mockAdapter.isReady(any(Context.class))).thenReturn(false);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -222,7 +222,7 @@ public class InAppMessageManagerTest {
         when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driverListener.onCheckExecutionReadiness(schedule));
     }
@@ -247,7 +247,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -284,7 +284,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -304,7 +304,7 @@ public class InAppMessageManagerTest {
     public void testOnExecuteSchedule() {
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -334,7 +334,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -354,7 +354,7 @@ public class InAppMessageManagerTest {
     public void testDisplayException() {
         // Prepare the schedule
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Make sure it's ready
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -402,7 +402,7 @@ public class InAppMessageManagerTest {
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.RETRY);
 
         // Prepare the adapter
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
         verify(mockAdapter, times(1)).onPrepare(any(Context.class), any(Assets.class));
@@ -420,7 +420,7 @@ public class InAppMessageManagerTest {
         when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_RETRY);
 
         // Prepare the adapter
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
         verify(mockAssetManager, times(1)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
@@ -439,7 +439,7 @@ public class InAppMessageManagerTest {
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.CANCEL);
 
         // Start preparing
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Should call it once
         verify(mockAdapter, times(1)).onPrepare(any(Context.class), any(Assets.class));
@@ -458,7 +458,7 @@ public class InAppMessageManagerTest {
         when(mockAssetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage())).thenReturn(AssetManager.PREPARE_RESULT_CANCEL);
 
         // Start preparing
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Should call it once
         verify(mockAssetManager, times(1)).onPrepare(schedule, schedule.getInfo().getInAppMessage());
@@ -488,7 +488,7 @@ public class InAppMessageManagerTest {
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
@@ -511,7 +511,7 @@ public class InAppMessageManagerTest {
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
     }
@@ -534,7 +534,7 @@ public class InAppMessageManagerTest {
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_SKIP);
     }
@@ -557,7 +557,7 @@ public class InAppMessageManagerTest {
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
@@ -587,7 +587,7 @@ public class InAppMessageManagerTest {
         when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Verify its prepared
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
@@ -608,7 +608,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the message
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
             @Override
@@ -683,7 +683,7 @@ public class InAppMessageManagerTest {
         InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", metadata, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
 
         // Verify the schedule is prepared
         verify(mockDriver).schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
@@ -723,7 +723,7 @@ public class InAppMessageManagerTest {
         InAppMessageSchedule schedule = new InAppMessageSchedule("Some-ID", scheduleMetadata, info);
 
         // Prepare the schedule
-        driverListener.onPrepareSchedule(schedule);
+        driverListener.onPrepareSchedule(schedule, null);
         runLooperTasks();
 
         // Verify the schedule is invalidated

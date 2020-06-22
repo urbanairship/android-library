@@ -16,6 +16,7 @@ import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
+import com.urbanairship.util.VersionUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
@@ -122,14 +124,13 @@ public class AutomationEngineTest {
                                   .setEventName("name")
                                   .build();
 
+        final CustomEvent event = CustomEvent.newBuilder("name").build();
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                CustomEvent.newBuilder("name")
-                           .build()
-                           .track();
+                event.track();
             }
-        });
+        }, event.toJsonValue());
     }
 
     @Test
@@ -139,15 +140,16 @@ public class AutomationEngineTest {
                                   .setEventName("some name")
                                   .build();
 
+        final CustomEvent event = CustomEvent.newBuilder("some name")
+                                             .setEventValue(2.0)
+                                             .build();
+
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                CustomEvent.newBuilder("some name")
-                           .setEventValue(2.0)
-                           .build()
-                           .track();
+                event.track();
             }
-        });
+        }, event.toJsonValue());
     }
 
     @Test
@@ -157,17 +159,18 @@ public class AutomationEngineTest {
                                   .setGoal(1.0)
                                   .build();
 
+        final RegionEvent event = RegionEvent.newBuilder()
+                                             .setRegionId("region_id")
+                                             .setSource("test_source")
+                                             .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
+                                             .build();
+
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                RegionEvent event = RegionEvent.newBuilder()
-                                               .setRegionId("region_id")
-                                               .setSource("test_source")
-                                               .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
-                                               .build();
                 UAirship.shared().getAnalytics().addEvent(event);
             }
-        });
+        }, event.toJsonValue());
     }
 
     @Test
@@ -177,17 +180,17 @@ public class AutomationEngineTest {
                                   .setGoal(1.0)
                                   .build();
 
+        final RegionEvent event = RegionEvent.newBuilder()
+                                             .setRegionId("region_id")
+                                             .setSource("test_source")
+                                             .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
+                                             .build();
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                RegionEvent event = RegionEvent.newBuilder()
-                                               .setRegionId("region_id")
-                                               .setSource("test_source")
-                                               .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
-                                               .build();
                 UAirship.shared().getAnalytics().addEvent(event);
             }
-        });
+        }, event.toJsonValue());
     }
 
     @Test
@@ -201,7 +204,7 @@ public class AutomationEngineTest {
             public void run() {
                 activityMonitor.startActivity();
             }
-        });
+        }, JsonValue.NULL);
     }
 
     @Test
@@ -216,7 +219,7 @@ public class AutomationEngineTest {
                 activityMonitor.startActivity();
                 activityMonitor.stopActivity();
             }
-        });
+        }, JsonValue.NULL);
     }
 
     @Test
@@ -230,7 +233,7 @@ public class AutomationEngineTest {
             public void run() {
                 activityMonitor.startActivity();
             }
-        });
+        }, JsonValue.NULL);
     }
 
     @Test
@@ -241,7 +244,7 @@ public class AutomationEngineTest {
 
         activityMonitor.startActivity();
 
-        verifyTrigger(trigger, null);
+        verifyTrigger(trigger, null, JsonValue.NULL);
     }
 
     @Test
@@ -253,7 +256,7 @@ public class AutomationEngineTest {
                                   .setGoal(1)
                                   .build();
 
-        verifyTrigger(trigger, null);
+        verifyTrigger(trigger, null, VersionUtils.createVersionObject(2l).toJsonValue());
     }
 
     @Test
@@ -268,7 +271,7 @@ public class AutomationEngineTest {
             public void run() {
                 UAirship.shared().getAnalytics().trackScreen("screen");
             }
-        });
+        }, JsonValue.wrap("screen"));
     }
 
     @Test
@@ -467,15 +470,14 @@ public class AutomationEngineTest {
                                         .setEventName("name")
                                         .build();
 
+        final CustomEvent event = CustomEvent.newBuilder("name")
+                   .build();
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                // Trigger the schedules
-                CustomEvent.newBuilder("name")
-                           .build()
-                           .track();
+               event.track();
             }
-        });
+        }, event.toJsonValue());
 
         // Verify the listener was called
         verify(listener).onScheduleLimitReached(any(ActionSchedule.class));
@@ -841,7 +843,7 @@ public class AutomationEngineTest {
         assertNull(automationDataManager.getScheduleEntry(schedule.getId()));
     }
 
-    private void verifyTrigger(Trigger trigger, Runnable generateEvents) throws Exception {
+    private void verifyTrigger(Trigger trigger, Runnable generateEvents, JsonValue expectedEvent) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(trigger)
                                                                   .addAction("test_action", JsonValue.wrap("action_value"))
@@ -861,6 +863,11 @@ public class AutomationEngineTest {
         }
 
         runLooperTasks();
+
+        // Verify the trigger context
+        TriggerContext triggerContext = driver.preparedTriggerContextMap.get(schedule.getId());
+        assertEquals(trigger, triggerContext.getTrigger());
+        assertEquals(expectedEvent, triggerContext.getEvent());
 
         // Verify it started preparing the schedule
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
@@ -923,6 +930,7 @@ public class AutomationEngineTest {
         Map<String, ExecutionCallback> executionCallbackMap = new HashMap<>();
         Map<String, PrepareScheduleCallback> prepareCallbackMap = new HashMap<>();
         Map<String, ActionSchedule> preparedSchedulesMap = new HashMap<>();
+        Map<String, TriggerContext> preparedTriggerContextMap = new HashMap<>();
 
         ArrayList<Integer> priorityList = new ArrayList<>();
 
@@ -932,10 +940,11 @@ public class AutomationEngineTest {
         }
 
         @Override
-        public void onPrepareSchedule(@NonNull ActionSchedule schedule, @NonNull PrepareScheduleCallback prepareCallback) {
+        public void onPrepareSchedule(@NonNull ActionSchedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback prepareCallback) {
             prepareCallbackMap.put(schedule.getId(), prepareCallback);
             priorityList.add(schedule.getInfo().getPriority());
             preparedSchedulesMap.put(schedule.getId(), schedule);
+            preparedTriggerContextMap.put(schedule.getId(), triggerContext);
         }
 
     }
