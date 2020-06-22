@@ -44,6 +44,7 @@ import androidx.annotation.NonNull;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -153,6 +154,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLocaleChangeRefresh() {
+        activityMonitor.foreground();
         clearInvocations(mockDispatcher);
 
         localeManager.setDefaultLocale(new Locale("de"));
@@ -174,32 +176,29 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshInterval() {
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        // Refresh
+        clock.currentTimeMillis = 100;
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onRefreshFinished();
+        runLooperTasks();
+
+        // Set foreground refresh interval to 10 ms
+        remoteData.setForegroundRefreshInterval(10);
+
+        // Time travel 9 ms, should skip refresh on foreground
+        clock.currentTimeMillis += 9;
+        activityMonitor.foreground();
+        verify(mockDispatcher, never()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
             }
         }));
 
-        clearInvocations(mockDispatcher);
-        remoteData.setForegroundRefreshInterval(100000);
-
-        clock.currentTimeMillis = clock.currentTimeMillis + 99999;
-
+        // Time travel 1 ms, should refresh on foreground
+        clock.currentTimeMillis += 1;
         activityMonitor.foreground();
-
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
-            }
-        }));
-
-        clock.currentTimeMillis = clock.currentTimeMillis + 100001;
-
-        activityMonitor.foreground();
-
-        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);

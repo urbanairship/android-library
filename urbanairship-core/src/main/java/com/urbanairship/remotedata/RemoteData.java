@@ -100,27 +100,44 @@ public class RemoteData extends AirshipComponent {
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
     private final PushManager pushManager;
-    private final PushListener pushListener;
     private final Clock clock;
+
+    @VisibleForTesting
+    final Subject<Set<RemoteDataPayload>> payloadUpdates;
+
+    @VisibleForTesting
+    final HandlerThread backgroundThread;
+
+    @VisibleForTesting
+    final RemoteDataStore dataStore;
 
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
         public void onForeground(long time) {
-            RemoteData.this.onForeground();
+            if (shouldRefresh()) {
+                refresh();
+            }
         }
     };
 
-    @VisibleForTesting
-    final
-    Subject<Set<RemoteDataPayload>> payloadUpdates;
+    private final LocaleChangedListener localeChangedListener = new LocaleChangedListener() {
+        @Override
+        public void onLocaleChanged(@NonNull Locale locale) {
+            if (shouldRefresh()) {
+                refresh();
+            }
+        }
+    };
 
-    @VisibleForTesting
-    final
-    HandlerThread backgroundThread;
-
-    @VisibleForTesting
-    final
-    RemoteDataStore dataStore;
+    private final PushListener pushListener = new PushListener() {
+        @WorkerThread
+        @Override
+        public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+            if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
+                refresh();
+            }
+        }
+    };
 
     /**
      * RemoteData constructor.
@@ -163,16 +180,6 @@ public class RemoteData extends AirshipComponent {
         this.localeManager = localeManager;
         this.pushManager = pushManager;
         this.clock = clock;
-
-        this.pushListener = new PushListener() {
-            @WorkerThread
-            @Override
-            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-                if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
-                    refresh();
-                }
-            }
-        };
     }
 
     @Override
@@ -180,28 +187,21 @@ public class RemoteData extends AirshipComponent {
         super.init();
         backgroundThread.start();
         backgroundHandler = new Handler(this.backgroundThread.getLooper());
-        activityMonitor.addApplicationListener(applicationListener);
 
-        localeManager.addListener(new LocaleChangedListener() {
-            @Override
-            public void onLocaleChanged(@NonNull Locale locale) {
-                if (shouldRefresh()) {
-                    refresh();
-                }
-            }
-        });
+        activityMonitor.addApplicationListener(applicationListener);
+        pushManager.addPushListener(pushListener);
+        localeManager.addListener(localeChangedListener);
 
         if (shouldRefresh()) {
             refresh();
         }
-
-        pushManager.addPushListener(pushListener);
     }
 
     @Override
     protected void tearDown() {
         pushManager.removePushListener(pushListener);
         activityMonitor.removeApplicationListener(applicationListener);
+        localeManager.removeListener(localeChangedListener);
         backgroundThread.quit();
     }
 
@@ -214,15 +214,6 @@ public class RemoteData extends AirshipComponent {
         }
 
         return jobHandler.performJob(jobInfo);
-    }
-
-    /**
-     * Called when the application is foregrounded.
-     */
-    private void onForeground() {
-        if (shouldRefresh()) {
-            refresh();
-        }
     }
 
     /**
@@ -352,6 +343,10 @@ public class RemoteData extends AirshipComponent {
     }
 
     private boolean shouldRefresh() {
+        if (!activityMonitor.isAppForegrounded()) {
+            return false;
+        }
+
         long timeSinceLastRefresh = clock.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
         if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
             return true;
