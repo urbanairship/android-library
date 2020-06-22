@@ -93,9 +93,6 @@ public class LocaleManager {
     public Locale getDefaultLocale() {
         if (locale == null) {
             locale = ConfigurationCompat.getLocales(context.getResources().getConfiguration()).get(0);
-            Logger.debug("Locale: %s.", locale);
-            Logger.debug("Locales: %s.", ConfigurationCompat.getLocales(context.getResources().getConfiguration()));
-            Logger.debug("System Locale: %s.", Locale.getDefault());
         }
         return locale;
     }

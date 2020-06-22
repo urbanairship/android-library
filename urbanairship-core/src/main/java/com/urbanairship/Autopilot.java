@@ -120,12 +120,10 @@ public class Autopilot implements UAirship.OnReadyCallback {
         }
 
         if (earlyTakeoff && !instance.allowEarlyTakeOff(application)) {
-            Log.i(TAG, "Skipping early takeoff.");
             return;
         }
 
         if (!instance.isReady(application)) {
-            Log.i(TAG, "Autopilot not ready.");
             return;
         }
 
@@ -133,7 +131,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
 
         if (UAirship.isFlying() || UAirship.isTakingOff()) {
             Log.e(TAG, "Airship is flying before autopilot is able to take off. Make sure" +
-                    "AutoPilot.onCreateAirshipConfig is not calling takeOff directly.");
+                    "Autopilot.onCreateAirshipConfig is not calling takeOff directly.");
         }
 
         UAirship.takeOff(application, options, instance);
