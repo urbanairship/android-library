@@ -648,6 +648,51 @@ public class AutomationEngineTest {
     }
 
     @Test
+    public void testRestoreInterval() throws Exception {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setInterval(10, TimeUnit.SECONDS)
+                                                                  .setLimit(2)
+                                                                  .build();
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        runLooperTasks();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
+        runLooperTasks();
+
+        // Verify it's paused
+        assertEquals(ScheduleEntry.STATE_PAUSED, automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState());
+
+        // Restart the engine
+        automationEngine.stop();
+        automationEngine.start();
+        runLooperTasks();
+
+        // Verify its still paused
+        assertEquals(ScheduleEntry.STATE_PAUSED, automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState());
+
+        // Advance the scheduler
+        advanceAutomationLooperScheduler(TimeUnit.SECONDS.toMillis(10));
+
+        // Verify its now idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+    }
+
+    @Test
     public void testOnScheduleChangeBeforeEngineStarts() {
         OperationScheduler scheduler = new OperationScheduler() {
             @Override
