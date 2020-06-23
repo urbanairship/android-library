@@ -195,7 +195,7 @@ public class AutomationEngine<T extends Schedule> {
     private final SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
 
     @VisibleForTesting
-    final HandlerThread backgroundThread;
+    HandlerThread backgroundThread;
     private final List<ScheduleOperation> pendingAlarmOperations = new ArrayList<>();
 
     private String screen;
@@ -297,7 +297,6 @@ public class AutomationEngine<T extends Schedule> {
         this.driver = builder.driver;
         this.scheduleLimit = builder.limit;
         this.scheduler = builder.scheduler;
-        this.backgroundThread = new AirshipHandlerThread("automation");
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -310,6 +309,7 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         this.startTime = System.currentTimeMillis();
+        this.backgroundThread = new AirshipHandlerThread("automation");
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
@@ -362,6 +362,7 @@ public class AutomationEngine<T extends Schedule> {
         analytics.removeAnalyticsListener(analyticsListener);
         cancelAlarms();
         backgroundThread.quit();
+        backgroundThread = null;
         isStarted = false;
     }
 
@@ -1034,14 +1035,14 @@ public class AutomationEngine<T extends Schedule> {
 
         for (ScheduleEntry scheduleEntry : scheduleEntries) {
             long pausedTime = System.currentTimeMillis() - scheduleEntry.getExecutionStateChangeDate();
+            long remaining = scheduleEntry.getInterval() - pausedTime;
 
-            if (pausedTime >= scheduleEntry.getInterval()) {
+            if (remaining > 0) {
+                scheduleIntervalAlarm(scheduleEntry, remaining);
+            } else {
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                 schedulesToUpdate.add(scheduleEntry);
-                continue;
             }
-
-            scheduleIntervalAlarm(scheduleEntry, pausedTime - scheduleEntry.getInterval());
         }
 
         dataManager.saveSchedules(schedulesToUpdate);
