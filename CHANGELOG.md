@@ -3,10 +3,12 @@
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
 ## Version 13.2.1 - June 24, 2020
-Patch release to fix In-App automation display intervals being ignored if the app is killed.
+Patch release to fix In-App automation display intervals being ignored if the app is killed and HMS token registration on older Huawei devices.
 
 ### Changes
 - Fixed display interval not being respected if app is killed.
+- Fixed HMS on older Huawei devices.
+- Removed debug logs from Autopilot.
 
 ## Version 13.2.0 - June 16, 2020
 Minor release to handle `target="_blank"` URLs in Message Center and HTML In-App messages. This release also adds `extendedBroadcastsEnabled` that once enabled, will broadcast the app key and channel for easier partner integrations.
