@@ -10,8 +10,8 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.automation.Triggers;
+import com.urbanairship.iam.InAppAutomation;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
@@ -77,7 +77,7 @@ public class LandingPageAction extends Action {
      */
     public final static float DEFAULT_BORDER_RADIUS = 2;
 
-    private final Callable<InAppMessageManager> inAppCallable;
+    private final Callable<InAppAutomation> inAppCallable;
 
     private float borderRadius = DEFAULT_BORDER_RADIUS;
 
@@ -85,20 +85,20 @@ public class LandingPageAction extends Action {
      * Default constructor.
      */
     public LandingPageAction() {
-        this(AirshipComponentUtils.callableForComponent(InAppMessageManager.class));
+        this(AirshipComponentUtils.callableForComponent(InAppAutomation.class));
     }
 
     @VisibleForTesting
-    LandingPageAction(@NonNull Callable<InAppMessageManager> inAppCallable) {
+    LandingPageAction(@NonNull Callable<InAppAutomation> inAppCallable) {
         this.inAppCallable = inAppCallable;
     }
 
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        InAppMessageManager inAppMessageManager;
+        InAppAutomation inAppAutomation;
         try {
-            inAppMessageManager = inAppCallable.call();
+            inAppAutomation = inAppCallable.call();
         } catch (Exception e) {
             return ActionResult.newErrorResult(e);
         }
@@ -106,7 +106,7 @@ public class LandingPageAction extends Action {
         final Uri uri = parseUri(arguments);
         Checks.checkNotNull(uri, "URI should not be null");
 
-        inAppMessageManager.scheduleMessage(createScheduleInfo(uri, arguments));
+        inAppAutomation.scheduleMessage(createScheduleInfo(uri, arguments));
         return ActionResult.newEmptyResult();
     }
 

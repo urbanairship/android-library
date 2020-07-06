@@ -10,8 +10,8 @@ import androidx.navigation.Navigation
 import com.urbanairship.automation.Trigger
 import com.urbanairship.debug.R
 import com.urbanairship.debug.utils.PendingResultLiveData
+import com.urbanairship.iam.InAppAutomation
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.InAppMessageManager
 import com.urbanairship.iam.InAppMessageSchedule
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -45,7 +45,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
-        val scheduleLiveData = PendingResultLiveData<InAppMessageSchedule>(InAppMessageManager.shared().getSchedule(scheduleId))
+        val scheduleLiveData = PendingResultLiveData<InAppMessageSchedule>(InAppAutomation.shared().getSchedule(scheduleId))
         return Transformations.map(scheduleLiveData) { schedule ->
             detailsForSchedule(schedule)
         }

@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.urbanairship.debug.utils.PendingResultLiveData
-import com.urbanairship.iam.InAppMessageManager
+import com.urbanairship.iam.InAppAutomation
 import com.urbanairship.iam.InAppMessageSchedule
 
 class ScheduleListViewModel : ViewModel() {
@@ -14,7 +14,7 @@ class ScheduleListViewModel : ViewModel() {
     val schedules: LiveData<List<InAppMessageSchedule>>
 
     init {
-        val pendingResultLiveData = PendingResultLiveData<Collection<InAppMessageSchedule>>(InAppMessageManager.shared().schedules)
+        val pendingResultLiveData = PendingResultLiveData<Collection<InAppMessageSchedule>>(InAppAutomation.shared().schedules)
         schedules = Transformations.map(pendingResultLiveData) { collection ->
             collection.toList()
         }

@@ -41,7 +41,7 @@ public class LegacyInAppMessageManagerTest {
 
     LegacyInAppMessageManager legacyInAppMessageManager;
     PreferenceDataStore preferenceDataStore;
-    InAppMessageManager inAppMessageManager;
+    InAppAutomation inAppAutomation;
     Analytics analytics;
     PushMessage pushMessage;
     PushManager pushManager;
@@ -51,10 +51,10 @@ public class LegacyInAppMessageManagerTest {
     @Before
     public void setup() {
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
-        inAppMessageManager = mock(InAppMessageManager.class);
+        inAppAutomation = mock(InAppAutomation.class);
         analytics = mock(Analytics.class);
         pushManager = mock(PushManager.class);
-        legacyInAppMessageManager = new LegacyInAppMessageManager(TestApplication.getApplication(), preferenceDataStore, inAppMessageManager, analytics, pushManager);
+        legacyInAppMessageManager = new LegacyInAppMessageManager(TestApplication.getApplication(), preferenceDataStore, inAppAutomation, analytics, pushManager);
 
         String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
                 "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
@@ -83,7 +83,7 @@ public class LegacyInAppMessageManagerTest {
     public void testPushReceived() {
         pushListener.onPushReceived(pushMessage, true);
 
-        verify(inAppMessageManager).scheduleMessage(argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
+        verify(inAppAutomation).scheduleMessage(argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
             @Override
             public boolean matches(InAppMessageScheduleInfo argument) {
                 if (!argument.getInAppMessage().getId().equals("send id")) {
@@ -117,7 +117,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(true);
-        when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the other push
         pushListener.onPushReceived(otherPush, true);
@@ -140,7 +140,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(false);
-        when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the other push
         pushListener.onPushReceived(otherPush, true);
@@ -157,7 +157,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(true);
-        when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the response
         NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
@@ -175,7 +175,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(false);
-        when(inAppMessageManager.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
 
         // Receive the response
         NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
@@ -199,7 +199,7 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppMessageManager);
+        verifyZeroInteractions(inAppAutomation);
     }
 
     @Test
@@ -216,6 +216,6 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppMessageManager);
+        verifyZeroInteractions(inAppAutomation);
     }
 }

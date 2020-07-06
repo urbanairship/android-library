@@ -70,7 +70,6 @@ public class ActionAutomation extends AirshipComponent {
                 .setScheduleLimit(SCHEDULES_LIMIT)
                 .setActivityMonitor(activityMonitor)
                 .setAnalytics(analytics)
-                .setDriver(new ActionAutomationDriver())
                 .setDataManager(new AutomationDataManager(context, configOptions.appKey, DATABASE_NAME))
                 .setOperationScheduler(AlarmOperationScheduler.shared(context))
                 .build();
@@ -84,7 +83,7 @@ public class ActionAutomation extends AirshipComponent {
             return;
         }
 
-        automationEngine.start();
+        automationEngine.start(new ActionAutomationDriver());
     }
 
     /**

@@ -3,7 +3,10 @@
 package com.urbanairship.util;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
+
+import com.urbanairship.AirshipExecutors;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -72,6 +75,10 @@ public class RetryingExecutor implements Executor {
     public RetryingExecutor(@NonNull Handler scheduler, @NonNull Executor executor) {
         this.scheduler = scheduler;
         this.executor = executor;
+    }
+
+    public static RetryingExecutor newSerialExecutor(Looper looper) {
+        return new RetryingExecutor(new Handler(looper), AirshipExecutors.newSerialExecutor());
     }
 
     /**

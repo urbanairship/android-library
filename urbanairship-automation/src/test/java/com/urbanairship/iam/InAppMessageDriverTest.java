@@ -2,6 +2,7 @@ package com.urbanairship.iam;
 
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
+import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
@@ -11,13 +12,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link InAppMessageDriver}
@@ -27,16 +27,28 @@ public class InAppMessageDriverTest {
 
     private InAppMessageDriver driver;
     private AutomationDriver.ExecutionCallback executionCallback;
-    private InAppMessageDriver.Listener listener;
     private InAppMessageSchedule schedule;
 
     @Before
     public void setup() {
-        listener = mock(InAppMessageDriver.Listener.class);
         executionCallback = mock(AutomationDriver.ExecutionCallback.class);
 
-        driver = new InAppMessageDriver();
-        driver.setListener(listener);
+        driver = new InAppMessageDriver() {
+            @Override
+            public void onPrepareSchedule(@NonNull InAppMessageSchedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback) {
+
+            }
+
+            @Override
+            public int onCheckExecutionReadiness(@NonNull InAppMessageSchedule schedule) {
+                return 0;
+            }
+
+            @Override
+            public void onExecuteTriggeredSchedule(@NonNull InAppMessageSchedule schedule, @NonNull ExecutionCallback finishCallback) {
+
+            }
+        };
 
         InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
                                                                         .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -47,31 +59,6 @@ public class InAppMessageDriverTest {
                                                                         .build();
 
         schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, scheduleInfo);
-    }
-
-    @Test
-    public void testOnCheckExecutionReadiness() {
-        when(listener.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
-        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
-    }
-
-    @Test
-    public void testExecuteTriggeredSchedule() {
-        // Execute the triggered schedule
-        driver.onExecuteTriggeredSchedule(schedule, executionCallback);
-
-        // Result callback should be called in displayFinished
-        verifyZeroInteractions(executionCallback);
-
-        // Verify the callback is called to display the in-app message
-        verify(listener).onExecuteSchedule(schedule);
-    }
-
-    @Test
-    public void testDisplayFinished() {
-        testExecuteTriggeredSchedule();
-        driver.scheduleExecuted(schedule.getId());
-        verify(executionCallback).onFinish();
     }
 
     @Test

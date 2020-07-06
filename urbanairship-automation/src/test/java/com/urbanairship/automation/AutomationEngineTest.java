@@ -87,12 +87,11 @@ public class AutomationEngineTest {
                 .setAnalytics(UAirship.shared().getAnalytics())
                 .setDataManager(automationDataManager)
                 .setActivityMonitor(activityMonitor)
-                .setDriver(driver)
                 .setOperationScheduler(scheduler)
                 .setScheduleLimit(100)
                 .build();
 
-        automationEngine.start();
+        automationEngine.start(driver);
         runLooperTasks();
     }
 
@@ -679,7 +678,7 @@ public class AutomationEngineTest {
 
         // Restart the engine
         automationEngine.stop();
-        automationEngine.start();
+        automationEngine.start(driver);
         runLooperTasks();
 
         // Verify its still paused
@@ -707,7 +706,6 @@ public class AutomationEngineTest {
                 .setAnalytics(UAirship.shared().getAnalytics())
                 .setDataManager(automationDataManager)
                 .setActivityMonitor(activityMonitor)
-                .setDriver(driver)
                 .setOperationScheduler(scheduler)
                 .setScheduleLimit(100)
                 .build();

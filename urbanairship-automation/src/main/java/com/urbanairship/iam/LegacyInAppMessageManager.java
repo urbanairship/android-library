@@ -63,7 +63,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      */
     public static final float DEFAULT_BORDER_RADIUS_DP = 2;
 
-    private final InAppMessageManager inAppMessageManager;
+    private final InAppAutomation inAppAutomation;
     private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
     private final PushManager pushManager;
@@ -121,15 +121,18 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      * Default constructor.
      *
      * @param preferenceDataStore The preference data store.
-     * @param inAppMessageManager The in-app message manager.
+     * @param inAppAutomation The in-app automation instance.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public LegacyInAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull InAppMessageManager inAppMessageManager,
-                                     @NonNull Analytics analytics, @NonNull PushManager push) {
+    public LegacyInAppMessageManager(@NonNull Context context,
+                                     @NonNull PreferenceDataStore preferenceDataStore,
+                                     @NonNull InAppAutomation inAppAutomation,
+                                     @NonNull Analytics analytics,
+                                     @NonNull PushManager push) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
-        this.inAppMessageManager = inAppMessageManager;
+        this.inAppAutomation = inAppAutomation;
         this.analytics = analytics;
         this.pushManager = push;
     }
@@ -172,7 +175,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
 
                 // Cancel the previous pending message if it's still scheduled
                 if (pendingMessageId != null) {
-                    inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
+                    inAppAutomation.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
                         @Override
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
@@ -185,7 +188,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                 }
 
                 // Schedule the new one
-                inAppMessageManager.scheduleMessage(scheduleInfo);
+                inAppAutomation.scheduleMessage(scheduleInfo);
 
                 // Store the pending ID
                 preferenceDataStore.put(PENDING_MESSAGE_ID, messageId);
@@ -201,7 +204,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                     return;
                 }
 
-                inAppMessageManager.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
+                inAppAutomation.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
                     @Override
                     public void onResult(@Nullable Boolean result) {
                         if (result != null && result) {

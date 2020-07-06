@@ -183,7 +183,7 @@ public class AutomationEngine<T extends Schedule> {
 
     private final AutomationDataManager dataManager;
     private final ActivityMonitor activityMonitor;
-    private final AutomationDriver<T> driver;
+    private AutomationDriver<T> driver;
     private final Analytics analytics;
     private final long scheduleLimit;
     private final OperationScheduler scheduler;
@@ -296,7 +296,6 @@ public class AutomationEngine<T extends Schedule> {
         this.dataManager = builder.dataManager;
         this.activityMonitor = builder.activityMonitor;
         this.analytics = builder.analytics;
-        this.driver = builder.driver;
         this.scheduleLimit = builder.limit;
         this.scheduler = builder.scheduler;
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -305,11 +304,12 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Performs setup and starts listening for events.
      */
-    public void start() {
+    public void start(@NonNull AutomationDriver<T> driver) {
         if (isStarted) {
             return;
         }
 
+        this.driver = driver;
         this.startTime = System.currentTimeMillis();
         this.backgroundThread = new AirshipHandlerThread("automation");
         this.backgroundThread.start();
@@ -1776,7 +1776,6 @@ public class AutomationEngine<T extends Schedule> {
 
         private long limit;
         private ActivityMonitor activityMonitor;
-        private AutomationDriver<T> driver;
         private AutomationDataManager dataManager;
         private Analytics analytics;
         private OperationScheduler scheduler;
@@ -1817,17 +1816,6 @@ public class AutomationEngine<T extends Schedule> {
             return this;
         }
 
-        /**
-         * Sets the {@link AutomationDriver<T>}.
-         *
-         * @param driver The engine's driver.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder<T> setDriver(@NonNull AutomationDriver<T> driver) {
-            this.driver = driver;
-            return this;
-        }
 
         /**
          * Sets the {@link AutomationDataManager}.
@@ -1863,7 +1851,6 @@ public class AutomationEngine<T extends Schedule> {
             Checks.checkNotNull(dataManager, "Missing data manager");
             Checks.checkNotNull(analytics, "Missing analytics");
             Checks.checkNotNull(activityMonitor, "Missing activity monitor");
-            Checks.checkNotNull(driver, "Missing driver");
             Checks.checkNotNull(scheduler, "Missing scheduler");
             Checks.checkArgument(limit > 0, "Missing schedule limit");
 

@@ -7,8 +7,8 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.iam.InAppAutomation;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
@@ -38,15 +38,15 @@ public class LandingPageActionTest {
 
     private LandingPageAction action;
     private Whitelist whitelist;
-    private InAppMessageManager inAppMessageManager;
+    private InAppAutomation inAppAutomation;
 
     @Before
     public void setup() {
-        inAppMessageManager = mock(InAppMessageManager.class);
-        action = new LandingPageAction(new Callable<InAppMessageManager>() {
+        inAppAutomation = mock(InAppAutomation.class);
+        action = new LandingPageAction(new Callable<InAppAutomation>() {
             @Override
-            public InAppMessageManager call() throws Exception {
-                return inAppMessageManager;
+            public InAppAutomation call() throws Exception {
+                return inAppAutomation;
             }
         });
 
@@ -146,7 +146,7 @@ public class LandingPageActionTest {
             ActionResult result = action.perform(args);
             assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
-            verify(inAppMessageManager).scheduleMessage(Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
+            verify(inAppAutomation).scheduleMessage(Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
                 @Override
                 public boolean matches(InAppMessageScheduleInfo argument) {
                     InAppMessage message = argument.getInAppMessage();
@@ -177,7 +177,7 @@ public class LandingPageActionTest {
                 }
             }));
 
-            clearInvocations(inAppMessageManager);
+            clearInvocations(inAppAutomation);
         }
 
     }

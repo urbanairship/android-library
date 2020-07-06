@@ -80,26 +80,31 @@ public class DisplayHandler implements Parcelable {
      * @param displayMilliseconds The display time in milliseconds
      */
     public void finished(@NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
-        InAppMessageManager manager = getInAppMessagingManager();
-        if (manager == null) {
+        InAppAutomation inAppAutomation = getInAppAutomation();
+        if (inAppAutomation == null) {
             Logger.error("Takeoff not called. Unable to finish display for schedule: %s", scheduleId);
             return;
         }
 
-        manager.messageFinished(scheduleId, resolutionInfo, displayMilliseconds);
+        inAppAutomation.getInAppMessageManager().onDisplayFinished(scheduleId, resolutionInfo, displayMilliseconds);
+
+        // Cancel the schedule if a cancel button was tapped
+        if (resolutionInfo.getButtonInfo() != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.getButtonInfo().getBehavior())) {
+            inAppAutomation.cancelSchedule(scheduleId);
+        }
     }
 
     /**
      * Prevents the message from displaying again.
      */
     public void cancelFutureDisplays() {
-        InAppMessageManager manager = getInAppMessagingManager();
-        if (manager == null) {
+        InAppAutomation inAppAutomation = getInAppAutomation();
+        if (inAppAutomation == null) {
             Logger.error("Takeoff not called. Unable to cancel displays for schedule: %s", scheduleId);
             return;
         }
 
-        manager.cancelSchedule(scheduleId);
+        inAppAutomation.cancelSchedule(scheduleId);
     }
 
     /**
@@ -113,19 +118,19 @@ public class DisplayHandler implements Parcelable {
     public boolean isDisplayAllowed(@NonNull Context context) {
         Autopilot.automaticTakeOff(context);
 
-        InAppMessageManager manager = getInAppMessagingManager();
-        if (manager == null) {
+        InAppAutomation inAppAutomation = getInAppAutomation();
+        if (inAppAutomation == null) {
             Logger.error("Takeoff not called. Unable to request display lock.");
             return false;
         }
 
-        return manager.isDisplayAllowed(scheduleId);
+        return inAppAutomation.getInAppMessageManager().isDisplayAllowed(scheduleId);
     }
 
     @Nullable
-    private InAppMessageManager getInAppMessagingManager() {
+    private InAppAutomation getInAppAutomation() {
         if (UAirship.isTakingOff() || UAirship.isFlying()) {
-            return InAppMessageManager.shared();
+            return InAppAutomation.shared();
         }
         return null;
     }
