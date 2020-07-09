@@ -51,19 +51,9 @@ public class AirshipChannel extends AirshipComponent {
     public static final String ACTION_CHANNEL_CREATED = "com.urbanairship.CHANNEL_CREATED";
 
     /**
-     * Action to perform update request for pending tag group changes.
-     */
-    private static final String ACTION_UPDATE_TAG_GROUPS = "ACTION_UPDATE_TAG_GROUPS";
-
-    /**
-     * Action to perform update request for pending attribute changes.
-     */
-    private static final String ACTION_UPDATE_ATTRIBUTES = "ACTION_UPDATE_ATTRIBUTES";
-
-    /**
      * Action to update channel registration.
      */
-    private static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "ACTION_UPDATE_CHANNEL_REGISTRATION";
+    private static final String ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL";
 
     /**
      * Max time between channel registration updates.
@@ -191,16 +181,12 @@ public class AirshipChannel extends AirshipComponent {
         localeManager.addListener(new LocaleChangedListener() {
             @Override
             public void onLocaleChanged(@NonNull Locale locale) {
-                dispatchUpdateRegistrationJob();
+                dispatchUpdateJob();
             }
         });
 
-        if (getId() != null) {
-            dispatchUpdateRegistrationJob();
-            dispatchUpdateTagGroupsJob();
-            dispatchUpdateAttributesJob();
-        } else if (!channelCreationDelayEnabled) {
-            dispatchUpdateRegistrationJob();
+        if (getId() != null || !channelCreationDelayEnabled) {
+            dispatchUpdateJob();
         }
     }
 
@@ -221,34 +207,14 @@ public class AirshipChannel extends AirshipComponent {
     @JobInfo.JobResult
     @Override
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        switch (jobInfo.getAction()) {
-            case ACTION_UPDATE_CHANNEL_REGISTRATION:
-                ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
-                String channelId = getId();
+        if (ACTION_UPDATE_CHANNEL.equals(jobInfo.getAction())) {
+            String channelId = getId();
 
-                if (channelId == null && channelCreationDelayEnabled) {
-                    Logger.debug("AirshipChannel - Channel registration is currently disabled.");
-                    return JobInfo.JOB_FINISHED;
-                }
-
-                if (!shouldUpdateRegistration(payload)) {
-                    Logger.verbose("AirshipChannel - Channel already up to date.");
-                    return JobInfo.JOB_FINISHED;
-                }
-
-                Logger.verbose("AirshipChannel - Performing channel registration.");
-
-                if (UAStringUtil.isEmpty(channelId)) {
-                    return onCreateChannel();
-                } else {
-                    return onUpdateChannel();
-                }
-
-            case ACTION_UPDATE_TAG_GROUPS:
-                return onUpdateTagGroups();
-
-            case ACTION_UPDATE_ATTRIBUTES:
-                return onUpdateAttributes();
+            if (channelId == null && channelCreationDelayEnabled) {
+                Logger.debug("AirshipChannel - Channel registration is currently disabled.");
+                return JobInfo.JOB_FINISHED;
+            }
+            return onUpdateChannel();
         }
 
         return JobInfo.JOB_FINISHED;
@@ -273,9 +239,7 @@ public class AirshipChannel extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
         if (isEnabled) {
-            dispatchUpdateRegistrationJob();
-            dispatchUpdateTagGroupsJob();
-            dispatchUpdateAttributesJob();
+            dispatchUpdateJob();
         }
     }
 
@@ -370,7 +334,7 @@ public class AirshipChannel extends AirshipComponent {
 
                 if (!collapsedMutations.isEmpty()) {
                     tagGroupRegistrar.addPendingMutations(collapsedMutations);
-                    dispatchUpdateTagGroupsJob();
+                    dispatchUpdateJob();
                 }
             }
         };
@@ -394,7 +358,7 @@ public class AirshipChannel extends AirshipComponent {
                 if (!mutations.isEmpty()) {
                     List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, clock.currentTimeMillis());
                     attributeRegistrar.addPendingMutations(pendingMutations);
-                    dispatchUpdateAttributesJob();
+                    dispatchUpdateJob();
                 }
             }
         };
@@ -417,7 +381,7 @@ public class AirshipChannel extends AirshipComponent {
                 getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
             }
 
-            dispatchUpdateRegistrationJob();
+            dispatchUpdateJob();
         } else {
             Logger.warn("AirshipChannel - Unable to set tags when opted out of data collection.");
         }
@@ -465,7 +429,7 @@ public class AirshipChannel extends AirshipComponent {
     public void enableChannelCreation() {
         if (isChannelCreationDelayEnabled()) {
             channelCreationDelayEnabled = false;
-            dispatchUpdateRegistrationJob();
+            dispatchUpdateJob();
         }
     }
 
@@ -476,7 +440,7 @@ public class AirshipChannel extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void updateRegistration() {
-        dispatchUpdateRegistrationJob();
+        dispatchUpdateJob();
     }
 
     /**
@@ -659,26 +623,6 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Handles performing any tag group requests if any pending tag group changes are available.
-     *
-     * @return The job result.
-     */
-    @JobInfo.JobResult
-    private int onUpdateTagGroups() {
-        String channelId = getId();
-        if (channelId == null) {
-            Logger.verbose("Failed to update channel tags due to null channel ID.");
-            return JobInfo.JOB_FINISHED;
-        }
-
-        if (tagGroupRegistrar.uploadPendingMutations()) {
-            return JobInfo.JOB_FINISHED;
-        } else {
-            return JobInfo.JOB_RETRY;
-        }
-    }
-
-    /**
      * Called to create the channel.
      *
      * @return The job result.
@@ -718,9 +662,6 @@ public class AirshipChannel extends AirshipComponent {
                 getContext().sendBroadcast(channelCreatedIntent);
             }
 
-            dispatchUpdateTagGroupsJob();
-            dispatchUpdateAttributesJob();
-
             return JobInfo.JOB_FINISHED;
         }
 
@@ -735,7 +676,7 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Called to update the channel.
+     * Handles channel registration update job.
      *
      * @return The job result.
      */
@@ -743,14 +684,43 @@ public class AirshipChannel extends AirshipComponent {
     @JobInfo.JobResult
     private int onUpdateChannel() {
         String channelId = getId();
-        if (channelId == null) {
+        // Create or Update Channel Registration
+        int result = channelId == null ? onCreateChannel() : updateChannelRegistration(channelId);
+        if (result != JobInfo.JOB_FINISHED) {
+            return result;
+        } else {
+            channelId = getId();
+            if (channelId != null) {
+                // Update tag groups and attributes
+                boolean attributeResult = attributeRegistrar.uploadPendingMutations();
+                boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
+                if (!attributeResult || !tagResult) {
+                    return JobInfo.JOB_RETRY;
+                }
+            }
+        }
+        return JobInfo.JOB_FINISHED;
+    }
+
+    /**
+     * Handles Channel Registration update.
+     * @param channelId The channel ID.
+     * @return The job result.
+     */
+    @WorkerThread
+    @JobInfo.JobResult
+    private int updateChannelRegistration(@NonNull String channelId) {
+        ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
+        if (!shouldUpdateRegistration(payload)) {
+            Logger.verbose("AirshipChannel - Channel already up to date.");
             return JobInfo.JOB_FINISHED;
         }
-        ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
-        ChannelRegistrationPayload minimizedPayload = payload.minimizedPayload(getLastRegistrationPayload());
+
+        Logger.verbose("AirshipChannel - Performing channel registration.");
 
         Response<Void> response;
         try {
+            ChannelRegistrationPayload minimizedPayload = payload.minimizedPayload(getLastRegistrationPayload());
             response = channelApiClient.updateChannelWithPayload(channelId, minimizedPayload);
         } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
@@ -774,12 +744,13 @@ public class AirshipChannel extends AirshipComponent {
             return JobInfo.JOB_RETRY;
         }
 
-        // 403
+        // 409
         if (response.getStatus() == HttpURLConnection.HTTP_CONFLICT) {
+            Logger.debug("Channel registration failed with status: %s, will clear channel ID and create a new channel.", response.getStatus());
             setLastRegistrationPayload(null);
             getDataStore().remove(CHANNEL_ID_KEY);
-            dispatchUpdateRegistrationJob();
-            return JobInfo.JOB_FINISHED;
+            // Create Channel Registration
+            return onCreateChannel();
         }
 
         Logger.debug("Channel registration failed with status: %s", response.getStatus());
@@ -787,61 +758,12 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Called to upload attribute mutations.
-     *
-     * @return The job result.
-     */
-    @WorkerThread
-    @JobInfo.JobResult
-    private int onUpdateAttributes() {
-        String channelId = getId();
-        if (channelId == null) {
-            Logger.verbose("Failed to update channel attributes due to null channel ID.");
-            return JobInfo.JOB_FINISHED;
-        }
-
-        if (attributeRegistrar.uploadPendingMutations()) {
-            return JobInfo.JOB_FINISHED;
-        } else {
-            return JobInfo.JOB_RETRY;
-        }
-    }
-
-    /**
      * Dispatches a job to update registration.
      */
-    private void dispatchUpdateRegistrationJob() {
+    private void dispatchUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                 .setId(JobInfo.CHANNEL_UPDATE_REGISTRATION)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(AirshipChannel.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
-     * Dispatches a job to update the tag groups.
-     */
-    private void dispatchUpdateTagGroupsJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_TAG_GROUPS)
-                                 .setId(JobInfo.CHANNEL_UPDATE_TAG_GROUPS)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(AirshipChannel.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
-     * Dispatches a job to update the tag groups.
-     */
-    private void dispatchUpdateAttributesJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_ATTRIBUTES)
-                                 .setId(JobInfo.CHANNEL_UPDATE_ATTRIBUTES)
+                                 .setAction(ACTION_UPDATE_CHANNEL)
+                                 .setId(JobInfo.CHANNEL_UPDATE)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(AirshipChannel.class)
                                  .build();

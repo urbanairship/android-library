@@ -37,7 +37,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public class JobInfo {
 
     @IntDef({ ANALYTICS_EVENT_UPLOAD, ANALYTICS_UPDATE_ADVERTISING_ID, NAMED_USER_UPDATE_ID,
-            NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE_REGISTRATION,
+            NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE,
             CHANNEL_UPDATE_TAG_GROUPS, RICH_PUSH_UPDATE_USER, RICH_PUSH_UPDATE_MESSAGES,
             RICH_PUSH_SYNC_MESSAGE_STATE, REMOTE_DATA_REFRESH, CHANNEL_UPDATE_ATTRIBUTES})
     @Retention(SOURCE)
@@ -50,7 +50,7 @@ public class JobInfo {
     public static final int NAMED_USER_UPDATE_TAG_GROUPS = 3;
 
     public static final int CHANNEL_UPDATE_PUSH_TOKEN = 4;
-    public static final int CHANNEL_UPDATE_REGISTRATION = 5;
+    public static final int CHANNEL_UPDATE = 5;
     public static final int CHANNEL_UPDATE_TAG_GROUPS = 6;
     public static final int CHANNEL_UPDATE_ATTRIBUTES = 11;
 
