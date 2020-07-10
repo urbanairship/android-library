@@ -2,6 +2,10 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.2.2 - July 10, 2020
+Patch release to make MessageWebViewClient methods `addAuthRequestCredentials` and
+`removeAuthRequestCredentials` public instead of package-private.
+
 ## Version 13.2.1 - June 24, 2020
 Patch release to fix In-App automation display intervals being ignored if the app is killed and HMS token registration on older Huawei devices.
 
