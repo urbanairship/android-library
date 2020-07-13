@@ -9,6 +9,8 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.push.InternalNotificationListener;
 import com.urbanairship.push.NotificationInfo;
@@ -83,14 +85,14 @@ public class LegacyInAppMessageManagerTest {
     public void testPushReceived() {
         pushListener.onPushReceived(pushMessage, true);
 
-        verify(inAppAutomation).scheduleMessage(argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
+        verify(inAppAutomation).schedule(argThat(new ArgumentMatcher<Schedule>() {
             @Override
-            public boolean matches(InAppMessageScheduleInfo argument) {
-                if (!argument.getInAppMessage().getId().equals("send id")) {
+            public boolean matches(Schedule schedule) {
+                if (!schedule.getId().equals("send id")) {
                     return false;
                 }
 
-                BannerDisplayContent displayContent = argument.getInAppMessage().getDisplayContent();
+                BannerDisplayContent displayContent = ((InAppMessage) schedule.requireData()).getDisplayContent();
                 if (!displayContent.getBody().getText().equals("Oh hi!")) {
                     return false;
                 }
@@ -117,7 +119,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(true);
-        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelSchedule("send id")).thenReturn(pendingResult);
 
         // Receive the other push
         pushListener.onPushReceived(otherPush, true);
@@ -140,7 +142,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(false);
-        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelSchedule("send id")).thenReturn(pendingResult);
 
         // Receive the other push
         pushListener.onPushReceived(otherPush, true);
@@ -157,7 +159,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(true);
-        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelSchedule("send id")).thenReturn(pendingResult);
 
         // Receive the response
         NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
@@ -175,7 +177,7 @@ public class LegacyInAppMessageManagerTest {
         // Set up a pending result for a cancelled message
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(false);
-        when(inAppAutomation.cancelMessage("send id")).thenReturn(pendingResult);
+        when(inAppAutomation.cancelSchedule("send id")).thenReturn(pendingResult);
 
         // Receive the response
         NotificationInfo info = new NotificationInfo(pushMessage, 1, "cool");
@@ -204,10 +206,10 @@ public class LegacyInAppMessageManagerTest {
 
     @Test
     public void testScheduleExtenderException() {
-        legacyInAppMessageManager.setScheduleBuilderExtender(new LegacyInAppMessageManager.ScheduleInfoBuilderExtender() {
+        legacyInAppMessageManager.setScheduleBuilderExtender(new LegacyInAppMessageManager.ScheduleBuilderExtender() {
             @NonNull
             @Override
-            public InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage) {
+            public Schedule.Builder extend(@NonNull Context context, @NonNull Schedule.Builder builder, @NonNull LegacyInAppMessage legacyMessage) {
                 throw new RuntimeException("exception!");
             }
         });

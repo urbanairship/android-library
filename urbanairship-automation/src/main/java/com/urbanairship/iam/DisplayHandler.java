@@ -9,6 +9,7 @@ import android.os.Parcelable;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.InAppAutomation;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

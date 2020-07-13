@@ -7,7 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import com.urbanairship.UAirship
-import com.urbanairship.iam.InAppAutomation
+import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.preference.UACheckBoxPreference
 
 /**

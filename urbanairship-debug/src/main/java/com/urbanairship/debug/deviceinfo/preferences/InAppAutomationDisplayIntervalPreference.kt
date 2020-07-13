@@ -5,8 +5,8 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import androidx.preference.DialogPreference
+import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.debug.R
-import com.urbanairship.iam.InAppAutomation
 import java.util.concurrent.TimeUnit
 
 /**

@@ -11,13 +11,9 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
-import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
-import com.urbanairship.iam.tags.TagGroupManager;
-import com.urbanairship.iam.tags.TagGroupResult;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -28,10 +24,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -63,7 +55,6 @@ public class InAppMessageManagerTest {
     private Analytics mockAnalytics;
     private InAppMessageAdapter mockAdapter;
     private ActionRunRequestFactory actionRunRequestFactory;
-    private TagGroupManager mockTagManager;
     private DisplayCoordinator mockCoordinator;
     private AssetManager mockAssetManager;
     private InAppMessageManager.Delegate mockDelegate;
@@ -87,7 +78,6 @@ public class InAppMessageManagerTest {
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
         actionRunRequestFactory = mock(ActionRunRequestFactory.class);
-        mockTagManager = mock(TagGroupManager.class);
         mockCoordinator = mock(DisplayCoordinator.class);
         when(mockCoordinator.isReady()).thenReturn(true);
 
@@ -104,8 +94,9 @@ public class InAppMessageManagerTest {
             }
         });
 
-        manager = new InAppMessageManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockAnalytics,
-                mockTagManager, executor, actionRunRequestFactory, mockAssetManager, mockDelegate);
+        manager = new InAppMessageManager(TestApplication.getApplication(),
+                TestApplication.getApplication().preferenceDataStore, mockAnalytics,
+                executor, actionRunRequestFactory, mockAssetManager, mockDelegate);
 
         manager.setAdapterFactory(InAppMessage.TYPE_CUSTOM, new InAppMessageAdapter.Factory() {
             @NonNull
@@ -369,109 +360,6 @@ public class InAppMessageManagerTest {
     }
 
     @Test
-    public void testAudienceConditionsCheckDefaultMissBehavior() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        InAppMessage extended = InAppMessage.newBuilder(message)
-                                            .setAudience(Audience.newBuilder()
-                                                                 .setNotificationsOptIn(true)
-                                                                 .build())
-                                            .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
-
-        // Verify the miss behavior
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-    }
-
-    @Test
-    public void testAudienceConditionsCheckMissBehaviorCancel() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        InAppMessage extended = InAppMessage.newBuilder(message)
-                                            .setAudience(Audience.newBuilder()
-                                                                 .setNotificationsOptIn(true)
-                                                                 .setMissBehavior(Audience.MISS_BEHAVIOR_CANCEL)
-                                                                 .build())
-                                            .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
-
-        // Verify the miss behavior
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
-    }
-
-    @Test
-    public void testAudienceConditionsCheckMissBehaviorSkip() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        InAppMessage extended = InAppMessage.newBuilder(message)
-                                            .setAudience(Audience.newBuilder()
-                                                                 .setNotificationsOptIn(true)
-                                                                 .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
-                                                                 .build())
-                                            .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
-
-        // Verify the miss behavior
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
-    }
-
-    @Test
-    public void testAudienceConditionsCheckMissBehaviorPenalize() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        InAppMessage extended = InAppMessage.newBuilder(message)
-                                            .setAudience(Audience.newBuilder()
-                                                                 .setNotificationsOptIn(true)
-                                                                 .setMissBehavior(Audience.MISS_BEHAVIOR_PENALIZE)
-                                                                 .build())
-                                            .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
-
-        // Verify the miss behavior
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-    }
-
-    @Test
-    public void testAudienceConditionCheckWithTagGroups() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-        tagGroups.put("expected group", Collections.singleton("expected tag"));
-        when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
-
-        InAppMessage extended = InAppMessage.newBuilder(message)
-                                            .setAudience(Audience.newBuilder()
-                                                                 .setTagSelector(TagSelector.tag("expected tag", "expected group"))
-                                                                 .build())
-                                            .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
-        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
-
-        // Verify prepare result
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-    }
-
-    @Test
     public void testMessageExtending() {
         manager.setMessageExtender(new InAppMessageExtender() {
             @NonNull
@@ -499,12 +387,6 @@ public class InAppMessageManagerTest {
 
     @Test
     public void testNotifyAssetManagerNewSchedule() {
-        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
-                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                                                .setMessage(message)
-                                                                .build();
-        InAppMessageSchedule schedule = new InAppMessageSchedule(scheduleId, JsonMap.EMPTY_MAP, info);
-
         final InAppMessage extended = InAppMessage.newBuilder(message).setId("some other id").build();
         manager.setMessageExtender(new InAppMessageExtender() {
             @NonNull
@@ -514,7 +396,7 @@ public class InAppMessageManagerTest {
             }
         });
 
-        manager.onNewSchedule(schedule);
+        manager.onNewSchedule(scheduleId, extended);
         verify(mockAssetManager).onSchedule(eq(scheduleId), argThat(new ArgumentMatcher<Callable<InAppMessage>>() {
             @Override
             public boolean matches(Callable<InAppMessage> argument) {
@@ -530,17 +412,10 @@ public class InAppMessageManagerTest {
 
     @Test
     public void testNotifyScheduleFinished() {
-        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
-                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                                                .setMessage(message)
-                                                                .build();
-        InAppMessageSchedule schedule = new InAppMessageSchedule(scheduleId, JsonMap.EMPTY_MAP, info);
+        manager.onScheduleFinished(scheduleId, message);
+        manager.onScheduleExpired(scheduleId, 0, message);
 
-        manager.onScheduleCancelled(schedule);
-        manager.onScheduleExpired(schedule);
-        manager.onScheduleLimitReached(schedule);
-
-        verify(mockAssetManager, times(3)).onFinish(scheduleId);
+        verify(mockAssetManager, times(2)).onFinish(scheduleId);
     }
 
 }

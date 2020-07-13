@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
- * Trigger defines a condition to execute an {@link ScheduleInfo}. Use {@link Triggers} to build
+ * Trigger defines a condition to execute an {@link Schedule}. Use {@link Triggers} to build
  * triggers.
  */
 public class Trigger implements Parcelable, JsonSerializable {

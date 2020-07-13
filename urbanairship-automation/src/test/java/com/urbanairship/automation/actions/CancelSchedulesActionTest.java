@@ -5,7 +5,8 @@ package com.urbanairship.automation.actions;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.automation.ActionAutomation;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(AndroidJUnit4.class)
 public class CancelSchedulesActionTest {
 
-    private ActionAutomation automation;
+    private InAppAutomation automation;
     private CancelSchedulesAction action;
 
     @Action.Situation
@@ -40,11 +41,11 @@ public class CancelSchedulesActionTest {
 
     @Before
     public void setup() {
-        this.automation = mock(ActionAutomation.class);
+        this.automation = mock(InAppAutomation.class);
 
-        this.action = new CancelSchedulesAction(new Callable<ActionAutomation>() {
+        this.action = new CancelSchedulesAction(new Callable<InAppAutomation>() {
             @Override
-            public ActionAutomation call() throws Exception {
+            public InAppAutomation call() throws Exception {
                 return automation;
             }
         });
@@ -118,7 +119,7 @@ public class CancelSchedulesActionTest {
 
         action.perform(args);
 
-        verify(automation).cancelAll();
+        verify(automation).cancelSchedules(Schedule.TYPE_ACTION);
     }
 
     /**
@@ -139,7 +140,7 @@ public class CancelSchedulesActionTest {
         action.perform(args);
 
         for (String group : groups) {
-            verify(automation, atLeastOnce()).cancelGroup(group);
+            verify(automation, atLeastOnce()).cancelScheduleGroup(group);
         }
     }
 
@@ -155,7 +156,7 @@ public class CancelSchedulesActionTest {
         ActionArguments args = createArgs(Action.SITUATION_MANUAL_INVOCATION, argValue);
 
         action.perform(args);
-        verify(automation).cancelGroup("group 1");
+        verify(automation).cancelScheduleGroup("group 1");
     }
 
     /**
@@ -175,7 +176,8 @@ public class CancelSchedulesActionTest {
 
         action.perform(args);
 
-        verify(automation).cancel(ids);
+        verify(automation).cancelSchedule(ids.get(0));
+        verify(automation).cancelSchedule(ids.get(1));
     }
 
     /**
@@ -191,7 +193,7 @@ public class CancelSchedulesActionTest {
 
         action.perform(args);
 
-        verify(automation).cancel("id 1");
+        verify(automation).cancelSchedule("id 1");
     }
 
     private ActionArguments createArgs(int situation, JsonSerializable value) {

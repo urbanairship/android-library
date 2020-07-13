@@ -7,9 +7,8 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.automation.ActionAutomation;
-import com.urbanairship.automation.ActionSchedule;
-import com.urbanairship.automation.ActionScheduleInfo;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class ScheduleActionTest {
 
-    private ActionAutomation automation;
+    private InAppAutomation automation;
     private JsonMap scheduleJson;
     private ScheduleAction action;
 
@@ -47,11 +46,11 @@ public class ScheduleActionTest {
 
     @Before
     public void setup() {
-        this.automation = mock(ActionAutomation.class);
+        this.automation = mock(InAppAutomation.class);
 
-        this.action = new ScheduleAction(new Callable<ActionAutomation>() {
+        this.action = new ScheduleAction(new Callable<InAppAutomation>() {
             @Override
-            public ActionAutomation call() throws Exception {
+            public InAppAutomation call() throws Exception {
                 return automation;
             }
         });
@@ -114,15 +113,13 @@ public class ScheduleActionTest {
      */
     @Test
     public void testPerform() throws JsonException {
-        ActionScheduleInfo scheduleInfo = ActionScheduleInfo.fromJson(JsonValue.wrap(scheduleJson));
+        PendingResult<Boolean> pendingResult = new PendingResult<>();
+        pendingResult.setResult(true);
 
-        PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
-        pendingResult.setResult(new ActionSchedule("automation id", JsonMap.EMPTY_MAP, scheduleInfo));
-
-        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(pendingResult);
+        when(automation.schedule(any(Schedule.class))).thenReturn(pendingResult);
 
         ActionResult result = action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, scheduleJson));
-        assertEquals("automation id", result.getValue().getString());
+        assertNotNull(result.getValue().getString());
     }
 
     /**

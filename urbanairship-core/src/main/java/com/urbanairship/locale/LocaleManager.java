@@ -44,7 +44,6 @@ public class LocaleManager {
                 }
             }
         }
-
         return instance;
     }
 

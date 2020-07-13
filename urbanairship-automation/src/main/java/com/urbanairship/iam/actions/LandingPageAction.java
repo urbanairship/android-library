@@ -9,10 +9,10 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Triggers;
-import com.urbanairship.iam.InAppAutomation;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonMap;
@@ -106,7 +106,7 @@ public class LandingPageAction extends Action {
         final Uri uri = parseUri(arguments);
         Checks.checkNotNull(uri, "URI should not be null");
 
-        inAppAutomation.scheduleMessage(createScheduleInfo(uri, arguments));
+        inAppAutomation.schedule(createSchedule(uri, arguments));
         return ActionResult.newEmptyResult();
     }
 
@@ -136,7 +136,7 @@ public class LandingPageAction extends Action {
      * @return The schedule info.
      */
     @NonNull
-    protected InAppMessageScheduleInfo createScheduleInfo(@NonNull Uri uri, @NonNull ActionArguments arguments) {
+    protected Schedule createSchedule(@NonNull Uri uri, @NonNull ActionArguments arguments) {
         JsonMap options = arguments.getValue().toJsonValue().optMap();
 
         int width = options.opt(HtmlDisplayContent.WIDTH_KEY).getInt(0);
@@ -173,11 +173,11 @@ public class LandingPageAction extends Action {
 
         InAppMessage message = extendMessage(messageBuilder).build();
 
-        InAppMessageScheduleInfo.Builder scheduleInfoBuilder = InAppMessageScheduleInfo.newBuilder()
-                                                                                       .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
-                                                                                       .setLimit(1)
-                                                                                       .setPriority(Integer.MIN_VALUE)
-                                                                                       .setMessage(message);
+        Schedule.Builder scheduleInfoBuilder = Schedule.newMessageScheduleBuilder(message)
+                                                       .setId(messageId)
+                                                       .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                       .setLimit(1)
+                                                       .setPriority(Integer.MIN_VALUE);
 
         return extendSchedule(scheduleInfoBuilder).build();
     }
@@ -194,13 +194,13 @@ public class LandingPageAction extends Action {
     }
 
     /**
-     * Can be used to customize the {@link InAppMessageScheduleInfo}.
+     * Can be used to customize the {@link Schedule}.
      *
      * @param builder The builder.
      * @return The builder.
      */
     @NonNull
-    protected InAppMessageScheduleInfo.Builder extendSchedule(@NonNull InAppMessageScheduleInfo.Builder builder) {
+    protected Schedule.Builder extendSchedule(@NonNull Schedule.Builder builder) {
         return builder;
     }
 

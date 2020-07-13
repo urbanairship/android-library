@@ -5,18 +5,20 @@ package com.urbanairship.debug.automation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.Schedule
 import com.urbanairship.debug.utils.PendingResultLiveData
-import com.urbanairship.iam.InAppAutomation
-import com.urbanairship.iam.InAppMessageSchedule
 
 class ScheduleListViewModel : ViewModel() {
 
-    val schedules: LiveData<List<InAppMessageSchedule>>
+    val schedules: LiveData<List<Schedule>>
 
     init {
-        val pendingResultLiveData = PendingResultLiveData<Collection<InAppMessageSchedule>>(InAppAutomation.shared().schedules)
+        val pendingResultLiveData = PendingResultLiveData<Collection<Schedule>>(InAppAutomation.shared().schedules)
         schedules = Transformations.map(pendingResultLiveData) { collection ->
-            collection.toList()
+            collection.toList().filter {
+                        it.type == Schedule.TYPE_IN_APP_MESSAGE
+                    }
         }
     }
 }

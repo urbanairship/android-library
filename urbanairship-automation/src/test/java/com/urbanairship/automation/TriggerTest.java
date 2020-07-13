@@ -69,7 +69,7 @@ public class TriggerTest {
      */
     @Test(expected = JsonException.class)
     public void testParseEmptyJson() throws JsonException {
-        ActionScheduleInfo.fromJson(JsonValue.NULL);
+        Trigger.fromJson(JsonValue.NULL);
     }
 
     /**

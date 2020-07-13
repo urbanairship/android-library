@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import static com.urbanairship.iam.tags.TestUtils.tagSet;
+import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -7,11 +7,9 @@ import android.content.Context;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.iam.InAppAutomation;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
@@ -45,9 +43,8 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
 
         InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig, analytics, remoteData, airshipChannel, namedUser);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
-        ActionAutomation automation = new ActionAutomation(context, dataStore, runtimeConfig.getConfigOptions(), analytics, GlobalActivityMonitor.shared(context));
 
-        Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager, automation);
+        Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);
         return Module.multipleComponents(components, R.xml.ua_automation_actions);
     }
 

@@ -10,20 +10,18 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
+import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
-import com.urbanairship.iam.tags.TagGroupManager;
-import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -39,10 +37,13 @@ import androidx.annotation.RestrictTo;
  */
 public class InAppMessageManager {
 
-    interface Delegate {
-
+    /**
+     * IAM delegate
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public interface Delegate {
         void onReadinessChanged();
-
     }
 
     /**
@@ -68,7 +69,6 @@ public class InAppMessageManager {
     private final AssetManager assetManager;
     private final Context context;
     private final PreferenceDataStore dataStore;
-    private final TagGroupManager tagGroupManager;
     private final Delegate delegate;
 
     @Nullable
@@ -86,13 +86,15 @@ public class InAppMessageManager {
 
     private final Map<String, AutomationDriver.ExecutionCallback> executionCallbacks = new HashMap<>();
 
+    /**
+     * @hide
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    InAppMessageManager(@NonNull Context context,
+    public InAppMessageManager(@NonNull Context context,
                         @NonNull PreferenceDataStore dataStore,
                         @NonNull Analytics analytics,
-                        @NonNull TagGroupManager tagGroupManager,
                         @NonNull Delegate delegate) {
-        this(context, dataStore, analytics, tagGroupManager, RetryingExecutor.newSerialExecutor(Looper.getMainLooper()),
+        this(context, dataStore, analytics, RetryingExecutor.newSerialExecutor(Looper.getMainLooper()),
                 new ActionRunRequestFactory(), new AssetManager(context), delegate);
     }
 
@@ -100,7 +102,6 @@ public class InAppMessageManager {
     InAppMessageManager(@NonNull Context context,
                         @NonNull PreferenceDataStore dataStore,
                         @NonNull Analytics analytics,
-                        @NonNull TagGroupManager tagGroupManager,
                         @NonNull RetryingExecutor executor,
                         @NonNull ActionRunRequestFactory runRequestFactory,
                         @NonNull AssetManager assetManager,
@@ -110,7 +111,6 @@ public class InAppMessageManager {
         this.dataStore = dataStore;
         this.analytics = analytics;
         this.executor = executor;
-        this.tagGroupManager = tagGroupManager;
         this.assetManager = assetManager;
         this.delegate = delegate;
         this.actionRunRequestFactory = runRequestFactory;
@@ -217,12 +217,15 @@ public class InAppMessageManager {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void onAirshipReady() {
+    public void onAirshipReady() {
         executor.setPaused(false);
     }
 
+    /**
+     * @hide
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void onPrepare(final @NonNull String scheduleId,
+    public void onPrepare(final @NonNull String scheduleId,
                    final @NonNull InAppMessage inAppMessage,
                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         final AdapterWrapper adapter = createAdapterWrapper(scheduleId, inAppMessage);
@@ -231,49 +234,6 @@ public class InAppMessageManager {
             callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
             return;
         }
-
-        // Audience checks
-        RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                InAppMessage message = adapter.message;
-                if (message.getAudience() == null) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                Map<String, Set<String>> tagGroups = null;
-
-                if (message.getAudience().getTagSelector() != null && message.getAudience().getTagSelector().containsTagGroups()) {
-                    Map<String, Set<String>> tags = message.getAudience().getTagSelector().getTagGroups();
-                    TagGroupResult result = tagGroupManager.getTags(tags);
-                    if (!result.success) {
-                        return RetryingExecutor.RESULT_RETRY;
-                    }
-
-                    tagGroups = result.tagGroups;
-                }
-
-                if (AudienceChecks.checkAudience(context, message.getAudience(), tagGroups)) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                switch (message.getAudience().getMissBehavior()) {
-                    case Audience.MISS_BEHAVIOR_CANCEL:
-                        result = AutomationDriver.PREPARE_RESULT_CANCEL;
-                        break;
-                    case Audience.MISS_BEHAVIOR_SKIP:
-                        result = AutomationDriver.PREPARE_RESULT_SKIP;
-                        break;
-                    case Audience.MISS_BEHAVIOR_PENALIZE:
-                        result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                        break;
-                }
-
-                callback.onFinish(result);
-                return RetryingExecutor.RESULT_CANCEL;
-            }
-        };
 
         // Prepare Assets
         RetryingExecutor.Operation prepareAssets = new RetryingExecutor.Operation() {
@@ -329,13 +289,16 @@ public class InAppMessageManager {
         };
 
         // Execute the operations
-        executor.execute(checkAudience, prepareAssets, prepareAdapter);
+        executor.execute(prepareAssets, prepareAdapter);
     }
 
+    /**
+     * @hide
+     */
     @MainThread
     @AutomationDriver.ReadyResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    int onCheckExecutionReadiness(@NonNull String scheduleId) {
+    public int onCheckExecutionReadiness(@NonNull String scheduleId) {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
             Logger.error("Missing adapter for schedule: %", scheduleId);
@@ -349,8 +312,12 @@ public class InAppMessageManager {
         }
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
+    public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
             Logger.error("Missing adapter for schedule: %", scheduleId);
@@ -396,7 +363,7 @@ public class InAppMessageManager {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void onExecutionInvalidated(@NonNull final String scheduleId) {
+    public void onExecutionInvalidated(@NonNull final String scheduleId) {
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
         if (adapterWrapper == null) {
             return;
@@ -472,45 +439,39 @@ public class InAppMessageManager {
         return adapterWrapper != null && adapterWrapper.displayed;
     }
 
-    void onScheduleExpired(@NonNull final InAppMessageSchedule schedule) {
-        if (schedule.getInfo().getInAppMessage().isReportingEnabled()) {
-            analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
-        }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onScheduleFinished(@NonNull final String scheduleId, @NonNull InAppMessage message) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                assetManager.onFinish(schedule.getId());
+                assetManager.onFinish(scheduleId);
             }
         });
     }
 
-    void onScheduleCancelled(@NonNull final InAppMessageSchedule schedule) {
+    public void onScheduleExpired(@NonNull final String scheduleId, long expiry, @NonNull InAppMessage message) {
+
+        ResolutionEvent event = ResolutionEvent.messageExpired(message, expiry);
+        analytics.addEvent(event);
+
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                assetManager.onFinish(schedule.getId());
+                assetManager.onFinish(scheduleId);
             }
         });
     }
 
-    void onScheduleLimitReached(@NonNull final InAppMessageSchedule schedule) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onNewSchedule(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                assetManager.onFinish(schedule.getId());
-            }
-        });
-    }
-
-    void onNewSchedule(@NonNull final InAppMessageSchedule schedule) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                assetManager.onSchedule(schedule.getId(), new Callable<InAppMessage>() {
+                assetManager.onSchedule(scheduleId, new Callable<InAppMessage>() {
                     @Override
                     public InAppMessage call() {
-                        return extendMessage(schedule.getInfo().getInAppMessage());
+                        return extendMessage(message);
                     }
                 });
             }

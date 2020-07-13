@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.NumberPicker
 import androidx.preference.PreferenceDialogFragmentCompat
+import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.debug.R
-import com.urbanairship.iam.InAppAutomation
 
 /**
  * PreferenceDialogFragment to set the IAA (In-App Automation) Display Interval
