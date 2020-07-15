@@ -94,7 +94,8 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        if (airship.getLocationClient() != null) {
+        if (airship.getLocationClient() != null && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED) {
             return airship.getLocationClient().isLocationUpdatesEnabled();
         } else {
             return false;
