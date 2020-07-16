@@ -59,6 +59,8 @@ public class PushManagerTest extends BaseTestCase {
         mockDispatcher = mock(JobDispatcher.class);
         mockAirshipChannel = mock(AirshipChannel.class);
         mockPushProvider = mock(PushProvider.class);
+        when(mockPushProvider.getDeliveryType()).thenReturn("some type");
+
         mockAnalytics = mock(Analytics.class);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
@@ -90,6 +92,29 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+     * Test delivery type changes will clear the previous token.
+     */
+    @Test
+    public void testInitClearsPushTokenOnDeliveryChange() throws PushProvider.RegistrationException {
+        // Register for a token
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        when(mockPushProvider.getDeliveryType()).thenReturn("some type");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+
+        // Init to verify token does not clear if the delivery type is the same
+        pushManager.init();
+        assertEquals("token", pushManager.getPushToken());
+
+        // Change the delivery type, should clear the token on init
+        when(mockPushProvider.getDeliveryType()).thenReturn("some other type");
+        pushManager.init();
+        assertNull(pushManager.getPushToken());
+    }
+
+    /**
      * Test enabling push.
      */
     @Test
@@ -98,6 +123,7 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, false));
         verify(mockAirshipChannel).updateRegistration();
     }
+
 
     /**
      * Test disabling push
