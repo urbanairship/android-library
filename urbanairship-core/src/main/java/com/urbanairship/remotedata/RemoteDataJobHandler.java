@@ -47,7 +47,7 @@ public class RemoteDataJobHandler {
     RemoteDataJobHandler(@NonNull Context context, @NonNull UAirship airship) {
         this(airship.getRemoteData(),
                 new RemoteDataApiClient(airship.getRuntimeConfig(), airship.getPushProviders()),
-                LocaleManager.shared(context));
+                UAirship.shared().getLocaleManager());
     }
 
     /**
@@ -55,7 +55,6 @@ public class RemoteDataJobHandler {
      *
      * @param apiClient The RemoteDataApiClient.
      * @param remoteData The remote data instance.
-     * @param localeManager The locale manager.
      */
     @VisibleForTesting
     RemoteDataJobHandler(@NonNull RemoteData remoteData, @NonNull RemoteDataApiClient apiClient, @NonNull LocaleManager localeManager) {
@@ -89,7 +88,7 @@ public class RemoteDataJobHandler {
     @JobInfo.JobResult
     private int onRefresh() {
         String lastModified = remoteData.getLastModified();
-        Locale locale = localeManager.getDefaultLocale();
+        Locale locale = localeManager.getLocale();
         Response response = apiClient.fetchRemoteData(lastModified, locale);
 
         if (response == null) {

@@ -10,12 +10,12 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.locale.LocaleManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +52,7 @@ public class AnalyticsTest extends BaseTestCase {
     private EventManager mockEventManager;
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
-    private TestLocaleManager testLocaleManager;
+    private LocaleManager localeManager;
     private Executor executor;
     private TestAirshipRuntimeConfig runtimeConfig;
     private TestActivityMonitor activityMonitor;
@@ -66,7 +66,7 @@ public class AnalyticsTest extends BaseTestCase {
         this.dataStore = TestApplication.getApplication().preferenceDataStore;
         this.dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        this.testLocaleManager = new TestLocaleManager();
+        this.localeManager = new LocaleManager(getApplication(), getApplication().preferenceDataStore);
         this.activityMonitor = new TestActivityMonitor();
 
         this.executor = new Executor() {
@@ -79,7 +79,7 @@ public class AnalyticsTest extends BaseTestCase {
         this.runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         this.analytics = new Analytics(TestApplication.getApplication(), dataStore, runtimeConfig,
-                mockChannel, activityMonitor, testLocaleManager, executor, mockEventManager);
+                mockChannel, activityMonitor, localeManager, executor, mockEventManager);
 
         this.analytics.init();
     }
@@ -424,7 +424,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaders() {
-        testLocaleManager.setDefaultLocale(new Locale("en", "US", "POSIX"));
+        localeManager.setLocaleOverride(new Locale("en", "US", "POSIX"));
         analytics.setEnabled(true);
         analytics.registerSDKExtension("cordova", "1.2.3");
         when(mockChannel.getId()).thenReturn("channel");
@@ -492,7 +492,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLocaleCountryHeaders() {
-        testLocaleManager.setDefaultLocale(new Locale("en", "", "POSIX"));
+        localeManager.setLocaleOverride(new Locale("en", "", "POSIX"));
 
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn("channel");
@@ -516,7 +516,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLocaleVariantHeaders() {
-        testLocaleManager.setDefaultLocale(new Locale("en", "US", ""));
+        localeManager.setLocaleOverride(new Locale("en", "US", ""));
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn("channel");
 
@@ -539,7 +539,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaderEmptyLanguageLocaleHeaders() {
-        testLocaleManager.setDefaultLocale(new Locale("", "US", "POSIX"));
+        localeManager.setLocaleOverride(new Locale("", "US", "POSIX"));
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn("channel");
 

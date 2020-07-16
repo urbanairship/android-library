@@ -3,6 +3,7 @@ package com.urbanairship.locale;
 import android.content.Context;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
@@ -25,7 +26,7 @@ public class LocaleManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         context = TestApplication.getApplication();
-        localeManager = new LocaleManager(context);
+        localeManager = new LocaleManager(context, new PreferenceDataStore(context));
     }
 
     @Test
@@ -33,7 +34,7 @@ public class LocaleManagerTest extends BaseTestCase {
         Locale de = new Locale("de");
         context.getResources().getConfiguration().setLocale(de);
 
-        assertEquals(de, localeManager.getDefaultLocale());
+        assertEquals(de, localeManager.getLocale());
     }
 
     @Test
@@ -44,7 +45,7 @@ public class LocaleManagerTest extends BaseTestCase {
         LocaleChangedListener listener = mock(LocaleChangedListener.class);
         localeManager.addListener(listener);
 
-        localeManager.notifyLocaleChanged();
+        localeManager.onDeviceLocaleChanged();
 
         verify(listener).onLocaleChanged(en);
     }

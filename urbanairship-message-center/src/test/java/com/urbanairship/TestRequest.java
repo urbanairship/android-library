@@ -2,10 +2,14 @@
 
 package com.urbanairship;
 
+import android.os.Build;
+
 import com.urbanairship.http.Request;
 import com.urbanairship.http.Response;
+import com.urbanairship.locale.LocaleManager;
 
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -25,6 +29,16 @@ public class TestRequest extends Request {
     @Override
     public Response safeExecute() {
         return response;
+    }
+
+    /**
+     * Gets the Airship User Agent used for any Airship requests.
+     *
+     * @return The Airship User Agent.
+     */
+    @Override @NonNull
+    public String getUrbanAirshipUserAgent() {
+        return "";
     }
 
     /**

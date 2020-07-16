@@ -12,6 +12,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.js.Whitelist;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
@@ -46,6 +47,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
             }
         };
 
+
         testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
@@ -55,15 +57,15 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
-
+        UAirship.sharedAirship.localeManager = new LocaleManager(this, preferenceDataStore);
 
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
 
         TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.sharedAirship.runtimeConfig, preferenceDataStore);
 
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar);
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar, UAirship.sharedAirship.localeManager);
 
-        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
+        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager);
 
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);

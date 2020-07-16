@@ -130,9 +130,10 @@ public class AirshipChannel extends AirshipComponent {
     public AirshipChannel(@NonNull Context context,
                           @NonNull PreferenceDataStore dataStore,
                           @NonNull AirshipRuntimeConfig runtimeConfig,
-                          @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                          @NonNull TagGroupRegistrar tagGroupRegistrar,
+                          @NonNull LocaleManager localeManager) {
         this(context, dataStore, runtimeConfig, new ChannelApiClient(runtimeConfig),
-                tagGroupRegistrar, LocaleManager.shared(context), JobDispatcher.shared(context),
+                tagGroupRegistrar, localeManager, JobDispatcher.shared(context),
                 new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY), new AttributeApiClient(runtimeConfig));
     }
 
@@ -490,7 +491,7 @@ public class AirshipChannel extends AirshipComponent {
 
         builder.setTimezone(TimeZone.getDefault().getID());
 
-        Locale locale = localeManager.getDefaultLocale();
+        Locale locale = localeManager.getLocale();
 
         if (!UAStringUtil.isEmpty(locale.getCountry())) {
             builder.setCountry(locale.getCountry());

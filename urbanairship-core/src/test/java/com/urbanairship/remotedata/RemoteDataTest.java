@@ -10,10 +10,11 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
-import com.urbanairship.TestLocaleManager;
+import com.urbanairship.UAirship;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -59,7 +60,7 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload payload;
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
-    private TestLocaleManager localeManager;
+    private LocaleManager localeManager;
     private PushManager pushManager;
     private PushListener pushListener;
     private TestClock clock;
@@ -71,7 +72,7 @@ public class RemoteDataTest extends BaseTestCase {
         mockDispatcher = mock(JobDispatcher.class);
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
-        localeManager = new TestLocaleManager();
+        localeManager = new LocaleManager(getApplication(), preferenceDataStore);
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -157,8 +158,7 @@ public class RemoteDataTest extends BaseTestCase {
         activityMonitor.foreground();
         clearInvocations(mockDispatcher);
 
-        localeManager.setDefaultLocale(new Locale("de"));
-        localeManager.notifyLocaleChange();
+        localeManager.setLocaleOverride(new Locale("de"));
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -178,7 +178,7 @@ public class RemoteDataTest extends BaseTestCase {
     public void testRefreshInterval() {
         // Refresh
         clock.currentTimeMillis = 100;
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
         remoteData.onRefreshFinished();
         runLooperTasks();
 
@@ -461,7 +461,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLastModified() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
         runLooperTasks();
 
         Assert.assertEquals(remoteData.getLastModified(), "lastModified");
@@ -472,12 +472,12 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testLastModifiedMetadataChanges() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getDefaultLocale()));
+        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
         runLooperTasks();
 
         Assert.assertEquals("lastModified", remoteData.getLastModified());
 
-        localeManager.setDefaultLocale(new Locale("de"));
+        UAirship.shared().setLocaleOverride(new Locale("de"));
         Assert.assertNull(remoteData.getLastModified());
     }
 

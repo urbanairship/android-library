@@ -3,11 +3,13 @@
 package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestLocaleManager;
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.DateUtils;
 
 import org.junit.Assert;
@@ -29,15 +31,15 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
     private RemoteData remoteData;
     private RemoteDataJobHandler jobHandler;
     private JsonMap responsePayload;
-    private TestLocaleManager testLocaleManager;
+    private LocaleManager localeManager;
 
     @Before
     public void setup() {
         client = Mockito.mock(RemoteDataApiClient.class);
         remoteData = Mockito.mock(RemoteData.class);
-        testLocaleManager = new TestLocaleManager();
+        localeManager = new LocaleManager(getApplication(), new PreferenceDataStore(getApplication()));
 
-        jobHandler = new RemoteDataJobHandler(remoteData, client, testLocaleManager);
+        jobHandler = new RemoteDataJobHandler(remoteData, client, localeManager);
 
         when(remoteData.getLastModified()).thenReturn("lastModifiedRequest");
 
@@ -85,7 +87,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
 
     private void validateRemoteDataSuccess(int status) {
         Locale locale = new Locale("de");
-        testLocaleManager.setDefaultLocale(locale);
+        localeManager.setLocaleOverride(locale);
         JsonMap metadata = RemoteData.createMetadata(locale);
 
         clearInvocations(remoteData);

@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import androidx.preference.Preference
+import com.urbanairship.UAirship
 import com.urbanairship.debug.extensions.copyToClipboard
 import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
@@ -14,7 +15,7 @@ import java.lang.ref.WeakReference
 import java.util.Locale
 
 class LocalePreference : Preference {
-    private val localeManager: LocaleManager = LocaleManager.shared(context)
+    private val localeManager: LocaleManager = UAirship.shared().localeManager
 
     private val localeListener: LocaleChangedListener = LocaleChangedListener { refreshPreference(it) }
 
@@ -45,7 +46,7 @@ class LocalePreference : Preference {
         super.onAttached()
 
         localeManager.addListener(localeListener)
-        refreshPreference(localeManager.defaultLocale)
+        refreshPreference(localeManager.locale)
     }
 
     override fun onDetached() {
