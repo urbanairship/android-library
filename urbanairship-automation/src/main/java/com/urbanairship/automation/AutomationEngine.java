@@ -871,9 +871,12 @@ public class AutomationEngine {
 
             // If grace period is unset - use the executionStateChangeDate as finishDate to avoid unnecessarily keeping schedules around
             if (entry.schedule.editGracePeriod == 0) {
+                finishDate = entry.schedule.executionStateChangeDate;
+            } else if (entry.schedule.scheduleEnd >= 0) {
                 finishDate = entry.schedule.scheduleEnd + entry.schedule.editGracePeriod;
             } else {
-                finishDate = entry.schedule.executionStateChangeDate;
+                // no end date, keep it around for edits
+                continue;
             }
 
             if (System.currentTimeMillis() >= finishDate) {

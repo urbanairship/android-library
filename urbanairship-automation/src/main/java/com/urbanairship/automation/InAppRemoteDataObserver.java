@@ -169,11 +169,11 @@ class InAppRemoteDataObserver {
         long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
         JsonMap lastPayloadMetadata = getLastPayloadMetadata();
 
-        JsonMap currentMetadata = JsonMap.newBuilder()
+        JsonMap scheduleMetadata = JsonMap.newBuilder()
                                          .put(REMOTE_DATA_METADATA, payload.getMetadata())
                                          .build();
 
-        boolean isMetadataUpToDate = currentMetadata.equals(lastPayloadMetadata);
+        boolean isMetadataUpToDate = payload.getMetadata().equals(lastPayloadMetadata);
 
         List<Schedule> newSchedules = new ArrayList<>();
 
@@ -207,7 +207,7 @@ class InAppRemoteDataObserver {
 
             if (createdTimeStamp > lastUpdate) {
                 try {
-                    Schedule schedule = parseSchedule(messageJson, currentMetadata);
+                    Schedule schedule = parseSchedule(messageJson, scheduleMetadata);
                     if (checkSchedule(schedule, createdTimeStamp)) {
                         newSchedules.add(schedule);
                         Logger.debug("New in-app message: %s", schedule);
@@ -219,10 +219,11 @@ class InAppRemoteDataObserver {
                 try {
                     ScheduleEdits originalEdits = parseEdits(messageJson);
                     ScheduleEdits edits = ScheduleEdits.newBuilder(originalEdits)
-                                                       .setMetadata(currentMetadata)
-                                                       // Since we cancel a schedule by setting the end time to 0 (1970), we need to clear
-                                                       // it (-1) if the edits/schedule does not define an end time.
+                                                       .setMetadata(scheduleMetadata)
+                                                       // Since we cancel a schedule by setting the end and start time to the payload,
+                                                       // clear them (-1) if the edits are null.
                                                        .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
+                                                       .setStart(originalEdits.getStart() == null ? -1 : originalEdits.getStart())
                                                        .build();
 
                     Schedule schedule = scheduler.editSchedule(scheduleId, edits).get();
@@ -250,7 +251,7 @@ class InAppRemoteDataObserver {
             // validation errors, the start must to be equal to or before the end time. If the schedule
             // comes back, the edits will reapply the start and end times from the schedule edits.
             ScheduleEdits edits = ScheduleEdits.newBuilder()
-                                               .setMetadata(currentMetadata)
+                                               .setMetadata(scheduleMetadata)
                                                .setStart(payload.getTimestamp())
                                                .setEnd(payload.getTimestamp())
                                                .build();
@@ -262,7 +263,7 @@ class InAppRemoteDataObserver {
 
         // Store data
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
-        preferenceDataStore.put(LAST_PAYLOAD_METADATA, currentMetadata);
+        preferenceDataStore.put(LAST_PAYLOAD_METADATA, payload.getMetadata());
 
         synchronized (listeners) {
             if (!listeners.isEmpty()) {
@@ -330,7 +331,7 @@ class InAppRemoteDataObserver {
      *
      * @return The last payload metadata.
      */
-    public JsonMap getLastPayloadMetadata() {
+    private JsonMap getLastPayloadMetadata() {
         return preferenceDataStore.getJsonValue(LAST_PAYLOAD_METADATA).optMap();
     }
 
