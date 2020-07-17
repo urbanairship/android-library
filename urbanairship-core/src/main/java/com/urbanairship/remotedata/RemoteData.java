@@ -94,11 +94,11 @@ public class RemoteData extends AirshipComponent {
     static final String REMOTE_DATA_UPDATE_KEY = "com.urbanairship.remote-data.update";
 
     private final JobDispatcher jobDispatcher;
-    private final LocaleManager localeManager;
     private RemoteDataJobHandler jobHandler;
     private final PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
+    private LocaleManager localeManager;
     private final PushManager pushManager;
     private final Clock clock;
 
@@ -147,12 +147,13 @@ public class RemoteData extends AirshipComponent {
      * @param configOptions The config options.
      * @param activityMonitor The activity monitor.
      * @param pushManager The push manager.
+     * @param localeManager The locale manager.
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-                      @NonNull PushManager pushManager) {
+                      @NonNull PushManager pushManager, @NonNull LocaleManager localeManager) {
         this(context, preferenceDataStore, configOptions, activityMonitor,
-                JobDispatcher.shared(context), LocaleManager.shared(context), pushManager, Clock.DEFAULT_CLOCK);
+                JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK);
     }
 
     /**
@@ -162,14 +163,13 @@ public class RemoteData extends AirshipComponent {
      * @param preferenceDataStore The preference data store
      * @param activityMonitor The activity monitor.
      * @param dispatcher The job dispatcher.
-     * @param localeManager The locale manager.
      * @param pushManager The push manager.
      */
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
-               @NonNull Clock clock) {
+               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager,
+               @NonNull PushManager pushManager, @NonNull Clock clock) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.appKey, DATABASE_NAME);
@@ -440,7 +440,7 @@ public class RemoteData extends AirshipComponent {
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
     public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
-        return jsonMap.equals(createMetadata(localeManager.getDefaultLocale()));
+        return jsonMap.equals(createMetadata(localeManager.getLocale()));
     }
 
     /**

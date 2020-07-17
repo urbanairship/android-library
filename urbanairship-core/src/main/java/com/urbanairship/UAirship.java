@@ -25,6 +25,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.Whitelist;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
 import com.urbanairship.modules.accengage.AccengageModule;
@@ -45,6 +46,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.IntDef;
@@ -153,6 +155,7 @@ public class UAirship {
     AccengageNotificationHandler accengageNotificationHandler;
     PushProviders providers;
     AirshipRuntimeConfig runtimeConfig;
+    LocaleManager localeManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -697,6 +700,8 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
+        this.localeManager = new LocaleManager(application, preferenceDataStore);
+
         this.providers = PushProviders.load(application, airshipConfigOptions);
         int platform = determinePlatform(providers);
         this.pushProvider = determinePushProvider(platform, providers);
@@ -708,7 +713,7 @@ public class UAirship {
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
 
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, localeManager);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();
@@ -721,7 +726,7 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, channel);
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, channel, localeManager);
         components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -1043,6 +1048,36 @@ public class UAirship {
      */
     public boolean isDataCollectionEnabled() {
         return this.preferenceDataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, true);
+    }
+
+    /**
+     * Sets a locale to be stored in UAirship.
+     *
+     * @param locale The new locale to use.
+     */
+    public void setLocaleOverride(@Nullable Locale locale) {
+        this.localeManager.setLocaleOverride(locale);
+    }
+
+    /**
+     * Get the locale stored in UAirship.
+     *
+     * @return The locale stored in UAirship, if none, return the default Locale from the device.
+     */
+    public Locale getLocale() {
+        return this.localeManager.getLocale();
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.locale.LocaleManager} instance.
+     *
+     * @return The {@link com.urbanairship.locale.LocaleManager} instance.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public LocaleManager getLocaleManager() {
+        return localeManager;
     }
 
     /**

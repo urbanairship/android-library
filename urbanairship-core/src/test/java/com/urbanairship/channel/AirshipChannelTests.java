@@ -12,12 +12,12 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestClock;
-import com.urbanairship.TestLocaleManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.locale.LocaleManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class AirshipChannelTests extends BaseTestCase {
     private TagGroupRegistrar mockTagGroupRegistrar;
 
     private JobDispatcher mockDispatcher;
-    private TestLocaleManager testLocaleManager;
+    private LocaleManager localeManager;
 
     private PreferenceDataStore dataStore;
 
@@ -89,10 +89,10 @@ public class AirshipChannelTests extends BaseTestCase {
 
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        testLocaleManager = new TestLocaleManager();
+        localeManager = new LocaleManager(getApplication(), dataStore);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                runtimeConfig, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
@@ -483,7 +483,7 @@ public class AirshipChannelTests extends BaseTestCase {
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
 
-        testLocaleManager.setDefaultLocale(new Locale("wookiee", "KASHYYYK"));
+        localeManager.setLocaleOverride(new Locale("wookiee", "KASHYYYK"));
 
         // Add an extender
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
@@ -529,7 +529,7 @@ public class AirshipChannelTests extends BaseTestCase {
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
 
-        testLocaleManager.setDefaultLocale(new Locale("wookiee", "KASHYYYK"));
+        localeManager.setLocaleOverride(new Locale("wookiee", "KASHYYYK"));
 
         // Add an extender
         airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
@@ -578,8 +578,8 @@ public class AirshipChannelTests extends BaseTestCase {
                 .setDeviceType("amazon")
                 .setTimezone(TimeZone.getDefault().getID())
                 .setTags(true, Collections.<String>emptySet())
-                .setCountry(testLocaleManager.getDefaultLocale().getCountry())
-                .setLanguage(testLocaleManager.getDefaultLocale().getLanguage())
+                .setCountry(localeManager.getLocale().getCountry())
+                .setLanguage(localeManager.getLocale().getLanguage())
                 .setAppVersion(UAirship.getPackageInfo().versionName)
                 .setDeviceModel(Build.MODEL)
                 .setApiVersion(Build.VERSION.SDK_INT)
@@ -895,7 +895,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                runtimeConfig, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
@@ -910,7 +910,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                runtimeConfig, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
@@ -932,7 +932,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, testLocaleManager, mockDispatcher, clock,
+                runtimeConfig, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();

@@ -319,7 +319,7 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param username The auth user.
      * @param password The auth password.
      */
-    void addAuthRequestCredentials(@NonNull String expectedAuthHost, @Nullable String username, @Nullable String password) {
+    public void addAuthRequestCredentials(@NonNull String expectedAuthHost, @Nullable String username, @Nullable String password) {
         authRequestCredentials.put(expectedAuthHost, new Credentials(username, password));
     }
 
@@ -328,7 +328,7 @@ public class AirshipWebViewClient extends WebViewClient {
      *
      * @param expectedAuthHost The expected host.
      */
-    void removeAuthRequestCredentials(@NonNull String expectedAuthHost) {
+    public void removeAuthRequestCredentials(@NonNull String expectedAuthHost) {
         authRequestCredentials.remove(expectedAuthHost);
     }
 

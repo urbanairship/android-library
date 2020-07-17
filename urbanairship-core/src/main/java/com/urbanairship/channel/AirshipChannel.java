@@ -118,13 +118,16 @@ public class AirshipChannel extends AirshipComponent {
      * @param context The application context.
      * @param dataStore The preference data store.
      * @param runtimeConfig The runtime config.
+     * @param localeManager Locale manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AirshipChannel(@NonNull Context context,
                           @NonNull PreferenceDataStore dataStore,
-                          @NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(context, dataStore, runtimeConfig, LocaleManager.shared(context),
+                          @NonNull AirshipRuntimeConfig runtimeConfig,
+                          @NonNull LocaleManager localeManager) {
+
+        this(context, dataStore, runtimeConfig, localeManager,
                 JobDispatcher.shared(context), Clock.DEFAULT_CLOCK,
                 new ChannelApiClient(runtimeConfig),
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
@@ -468,7 +471,7 @@ public class AirshipChannel extends AirshipComponent {
 
         builder.setTimezone(TimeZone.getDefault().getID());
 
-        Locale locale = localeManager.getDefaultLocale();
+        Locale locale = localeManager.getLocale();
 
         if (!UAStringUtil.isEmpty(locale.getCountry())) {
             builder.setCountry(locale.getCountry());
@@ -704,6 +707,7 @@ public class AirshipChannel extends AirshipComponent {
 
     /**
      * Handles Channel Registration update.
+     *
      * @param channelId The channel ID.
      * @return The job result.
      */
@@ -781,4 +785,5 @@ public class AirshipChannel extends AirshipComponent {
             attributeRegistrar.clearPendingMutations();
         }
     }
+
 }

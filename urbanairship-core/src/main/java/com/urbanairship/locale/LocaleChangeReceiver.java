@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.urbanairship.Autopilot;
+import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +26,7 @@ public class LocaleChangeReceiver extends BroadcastReceiver {
         }
 
         Autopilot.automaticTakeOff(context);
-        LocaleManager.shared(context).notifyLocaleChanged();
+        UAirship.shared().getLocaleManager().onDeviceLocaleChanged();
     }
 
 }

@@ -195,6 +195,7 @@ public class PushManager extends AirshipComponent {
     static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
     static final String USER_NOTIFICATIONS_ENABLED_KEY = KEY_PREFIX + ".USER_NOTIFICATIONS_ENABLED";
     static final String PUSH_TOKEN_REGISTRATION_ENABLED_KEY = KEY_PREFIX + ".PUSH_TOKEN_REGISTRATION_ENABLED";
+    static final String PUSH_DELIVERY_TYPE = KEY_PREFIX + ".PUSH_DELIVERY_TYPE";
 
     // As of version 5.0.0
     static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
@@ -297,6 +298,16 @@ public class PushManager extends AirshipComponent {
         });
 
         notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
+
+        String pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null);
+
+        if (pushProvider == null) {
+            preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
+            preferenceDataStore.remove(PUSH_TOKEN_KEY);
+        } else if (!pushProvider.getDeliveryType().equals(pushDeliveryType)) {
+            preferenceDataStore.remove(PUSH_TOKEN_KEY);
+            preferenceDataStore.put(PUSH_DELIVERY_TYPE, pushProvider.getDeliveryType());
+        }
 
         dispatchUpdatePushTokenJob();
     }

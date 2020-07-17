@@ -318,13 +318,13 @@ public class Request {
      * @return The Airship User Agent.
      */
     @NonNull
-    public static String getUrbanAirshipUserAgent() {
+    public String getUrbanAirshipUserAgent() {
         String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? "amazon" : "android";
 
         return String.format(Locale.US, USER_AGENT_FORMAT, UAirship.getPackageName(),
                 Build.MODEL, Build.VERSION.RELEASE, platform, UAirship.getVersion(),
                 UAirship.shared().getAirshipConfigOptions().appKey,
-                LocaleManager.shared(UAirship.getApplicationContext()).getDefaultLocale());
+                UAirship.shared().getLocale());
     }
 
     @Nullable

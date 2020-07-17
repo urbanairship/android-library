@@ -27,8 +27,6 @@ import androidx.annotation.Nullable;
 public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static final String AMAZON_SEND_PERMISSION = "com.amazon.device.messaging.permission.SEND";
-    private static final long REGISTRATION_TIMEOUT_MS = 10000; // 10 seconds
-
     private static Boolean isAdmDependencyAvailable;
 
     @Override
@@ -60,12 +58,10 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         context.registerReceiver(registerReceiver, intentFilter, AMAZON_SEND_PERMISSION, new Handler(Looper.getMainLooper()));
         AdmWrapper.startRegistration(context);
 
-        synchronized (RegistrationReceiver.class) {
-            try {
-                registerReceiver.wait(REGISTRATION_TIMEOUT_MS);
-            } catch (InterruptedException e) {
-                throw new RegistrationException("ADM registration interrupted", true, e);
-            }
+        try {
+            registerReceiver.awaitRegistration();
+        } catch (InterruptedException e) {
+            throw new RegistrationException("ADM registration interrupted", true, e);
         }
 
         context.unregisterReceiver(registerReceiver);
@@ -120,6 +116,8 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static class RegistrationReceiver extends BroadcastReceiver {
 
+        private static final long REGISTRATION_TIMEOUT_MS = 10000; // 10 seconds
+
         private String registrationToken;
         private String error;
 
@@ -138,11 +136,15 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
                 setResultCode(Activity.RESULT_OK);
             }
 
-            synchronized (RegistrationReceiver.class) {
+            synchronized (this) {
                 this.notifyAll();
             }
         }
 
+        void awaitRegistration() throws InterruptedException {
+            synchronized (this) {
+                this.wait(REGISTRATION_TIMEOUT_MS);
+            }
+        }
     }
-
 }

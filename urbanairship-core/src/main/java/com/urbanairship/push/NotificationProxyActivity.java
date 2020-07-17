@@ -29,13 +29,13 @@ public class NotificationProxyActivity extends Activity {
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
             Logger.error("NotificationProxyActivity - unable to receive intent, takeOff not called.");
+            finish();
             return;
         }
 
         Intent intent = getIntent();
-
-
         if (intent == null || intent.getAction() == null) {
+            finish();
             return;
         }
 

@@ -171,9 +171,10 @@ public class Analytics extends AirshipComponent {
     public Analytics(@NonNull Context context,
                      @NonNull PreferenceDataStore dataStore,
                      @NonNull AirshipRuntimeConfig runtimeConfig,
-                     @NonNull AirshipChannel channel) {
+                     @NonNull AirshipChannel channel,
+                     @NonNull LocaleManager localeManager) {
         this(context, dataStore, runtimeConfig, channel, GlobalActivityMonitor.shared(context),
-                LocaleManager.shared(context), AirshipExecutors.newSerialExecutor(),
+                localeManager, AirshipExecutors.newSerialExecutor(),
                 new EventManager(context, dataStore, runtimeConfig));
     }
 
@@ -664,7 +665,7 @@ public class Analytics extends AirshipComponent {
         headers.put("X-UA-Device-Model", Build.MODEL);
         headers.put("X-UA-Timezone", TimeZone.getDefault().getID());
 
-        Locale locale = localeManager.getDefaultLocale();
+        Locale locale = localeManager.getLocale();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
             headers.put("X-UA-Locale-Language", locale.getLanguage());
 
