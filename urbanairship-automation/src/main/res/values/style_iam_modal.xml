@@ -104,8 +104,8 @@
 
     <!-- Heading -->
     <style name="UrbanAirship.InAppModal.Heading">
-        <item name="android:layout_marginLeft">24dp</item>
-        <item name="android:layout_marginRight">48dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">72dp</item>
         <item name="android:ellipsize">end</item>
     </style>
 
@@ -115,11 +115,10 @@
     <!-- Heading overrides for HEADER_BODY_MEDIA template -->
     <style name="UrbanAirship.InAppModal.Heading.HeaderBodyMedia" />
 
-
     <!-- Heading overrides for MEDIA_HEADER_BODY template -->
     <style name="UrbanAirship.InAppModal.Heading.MediaHeaderBody">
-        <!-- Remove right margin since its no longer at the top -->
-        <item name="android:layout_marginRight">0dp</item>
+        <!-- Reset right padding since it's no longer at the top -->
+        <item name="android:paddingRight">24dp</item>
         <item name="android:layout_marginTop">24dp</item>
     </style>
 

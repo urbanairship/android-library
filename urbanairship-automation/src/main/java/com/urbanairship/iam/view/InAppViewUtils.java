@@ -4,7 +4,6 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,7 +18,7 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
-import android.view.View;
+import android.view.Gravity;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
@@ -96,7 +95,6 @@ public class InAppViewUtils {
      * @param textInfo The text info.
      */
     public static void applyTextInfo(@NonNull TextView textView, @NonNull TextInfo textInfo) {
-
         if (textInfo.getFontSize() != null) {
             textView.setTextSize(textInfo.getFontSize());
         }
@@ -162,18 +160,18 @@ public class InAppViewUtils {
             }
         }
 
-        if (textInfo.getAlignment() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        if (textInfo.getAlignment() != null) {
             switch (textInfo.getAlignment()) {
                 case TextInfo.ALIGNMENT_CENTER:
-                    textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    textView.setGravity(Gravity.CENTER_HORIZONTAL);
                     break;
 
                 case TextInfo.ALIGNMENT_LEFT:
-                    textView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+                    textView.setGravity(Gravity.START);
                     break;
 
                 case TextInfo.ALIGNMENT_RIGHT:
-                    textView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
+                    textView.setGravity(Gravity.END);
                     break;
             }
         }
