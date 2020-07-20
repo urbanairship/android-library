@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -16,6 +17,7 @@ import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.iam.TextInfo;
 import com.urbanairship.iam.view.BackgroundDrawableBuilder;
 import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.BoundedLinearLayout;
@@ -87,6 +89,13 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         // Heading
         if (displayContent.getHeading() != null) {
             InAppViewUtils.applyTextInfo(heading, displayContent.getHeading());
+
+            // Heading overlaps with the dismiss button, so it has more padding on the right than
+            // the left. If its centered, normalize the padding to prevent center text being misaligned.
+            if (TextInfo.ALIGNMENT_CENTER.equals(displayContent.getHeading().getAlignment())) {
+                normalizeHorizontalPadding(heading);
+            }
+
         } else {
             heading.setVisibility(View.GONE);
         }
@@ -223,4 +232,9 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         return template;
     }
 
+    private void normalizeHorizontalPadding(@NonNull TextView view) {
+        int padding = Math.max(ViewCompat.getPaddingEnd(view), ViewCompat.getPaddingStart(view));
+        view.setPadding(padding, view.getPaddingTop(), padding, view.getPaddingBottom());
+        view.requestLayout();
+    }
 }

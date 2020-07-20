@@ -2,10 +2,17 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+## Version 13.3.1 - July 18, 2020
+Patch release to fix ADM registration exceptions that occur on first run and text alignment issues with In-App Automation. Any apps that are configured to run ADM and are running 13.0.0 - 13.3.0 should update.
+
+### Changes
+- Fixed In-App Automation text alignment.
+- Fixed ADM registration crash.
+
 ## Version 13.3.0 - July 16, 2020
 Minor release that allows overriding the locale used by Airship.
 
-## Changes
+### Changes
 - Added locale override.
 - Fixed IllegalStateException in NotificationProxyActivity.
 
