@@ -1,32 +1,110 @@
-package com.urbanairship.util;
 /* Copyright Airship and Contributors */
+package com.urbanairship.util;
 
 import java.util.Date;
 
 /**
  * Predefined attributes.
  *
- * @hide
  */
-public class Attributes {
-    private static final String UAAttributeTitle = "title";
-    private static final String UAAttributeFirstName = "first_name";
-    private static final String UAAttributeLastName = "last_name";
-    private static final String UAAttributeFullName = "full_name";
-    private static final String UAAttributeGender = "gender";
-    private static final Number UAAttributeZipCode = null;
-    private static final String UAAttributeCity = "city";
-    private static final String UAAttributeRegion = "region";
-    private static final String UAAttributeCountry = "country";
-    private static final Date UAAttributeBirthdate = null;
-    private static final Number UAAttributeAge = null;
-    private static final Number UAAttributeMobilePhone = null;
-    private static final Number UAAttributeHomePhone = null;
-    private static final Number UAAttributeWorkPhone = null;
-    private static final String UAAttributeLoyaltyTier = "loyalty_tier";
-    private static final String UAAttributeCompany = "company";
-    private static final String UAAttributeUsername = "username";
-    private static final Date UAAttributeAccountCreation = null;
-    private static final String UAAttributeEmail = "email";
-    private static final String UAAttributeAdvertisingId = "advertising_id";
+public interface Attributes {
+    /**
+    * Title attribute.
+    */
+    String TITLE = "title";
+
+    /**
+     * Firs name attribute.
+     */
+    String FIRST_NAME = "first_name";
+
+    /**
+     * Last name attribute.
+     */
+    String LAST_NAME = "last_name";
+
+    /**
+     * Full name attribute.
+     */
+    String FULL_NAME = "full_name";
+
+    /**
+     * Gender attribute.
+     */
+    String GENDER = "gender";
+
+    /**
+     * Zip code attribute.
+     */
+    String ZIP_CODE = "zip_code";
+
+    /**
+     * City attribute.
+     */
+    String CITY = "city";
+
+    /**
+     * Region attribute.
+     */
+    String REGION = "region";
+
+    /**
+     * Country attribute.
+     */
+    String COUNTRY = "country";
+
+    /**
+     * Birthdate attribute.
+     */
+    String BIRTHDATE = "birthdate";
+
+    /**
+     * Age attribute.
+     */
+    String AGE = "age";
+
+    /**
+     * Mobile phone attribute.
+     */
+    String MOBILE_PHONE = "mobile_phone";
+
+    /**
+     * Home phone attribute.
+     */
+    String HOME_PHONE = "home_phone";
+
+    /**
+     * Work phone attribute.
+     */
+    String WORK_PHONE = "work_phone";
+
+    /**
+     * Loyalty tier attribute.
+     */
+    String LOYALTY_TIER = "loyalty_tier";
+
+    /**
+     * Company attribute.
+     */
+    String COMPANY = "company";
+
+    /**
+     * Username attribute.
+     */
+    String USERNAME = "username";
+
+    /**
+     * Account creation attribute.
+     */
+    String ACCOUNT_CREATION = "account_creation";
+
+    /**
+     * Email attribute.
+     */
+    String EMAIL = "email";
+
+    /**
+     * Advertising id attribute.
+     */
+    String ADVERTISING_ID = "advertising_id";
 }
