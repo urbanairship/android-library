@@ -1,8 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.util;
 
-import java.util.Date;
-
 /**
  * Predefined attributes.
  *
