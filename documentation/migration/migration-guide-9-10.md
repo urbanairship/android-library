@@ -8,7 +8,7 @@
 
 Both `urbanairship-gcm` and `urbanairship-sdk` have been removed. Please
 migrate to `urbanairship-fcm` and or `urbanairship-adm` instead. For GCM to FCM
-migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/tree/master/documentation/migration/migration-guide-fcm.md).
+migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-fcm.md).
 
 #### Auto Tracking Advertising ID
 

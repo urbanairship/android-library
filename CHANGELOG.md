@@ -1,6 +1,6 @@
 # Android ChangeLog
 
-[Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
+[Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
 ## Version 13.3.1 - July 18, 2020
 Patch release to fix ADM registration exceptions that occur on first run and text alignment issues with In-App Automation. Any apps that are configured to run ADM and are running 13.0.0 - 13.3.0 should update.
@@ -261,7 +261,7 @@ Major release that addresses new background restrictions with Android Q,
 includes enhancements to In-App Automation, and adds notification channel
 compatibility to simplify notification channel settings across Android versions.
 
-[9.x to 10.x Migration Guide](https://github.com/urbanairship/android-library/tree/master/documentation/migration/migration-guide-9-10.md)
+[9.x to 10.x Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-9-10.md)
 
 ### Changes
 
@@ -494,7 +494,7 @@ message center.
 ## Version 9.1.0 - April 18, 2018
 
 Minor release that introduces support for FCM apis, modular packages, and in-app message design
-updates. For FCM migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/blob/master/documentation/migration/migration-guide-fcm.md).
+updates. For FCM migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/blob/main/documentation/migration/migration-guide-fcm.md).
 
 ### Changes
 - Added support for FCM Google Play Services dependency.
