@@ -10,6 +10,7 @@ import android.os.Build;
 import android.util.AttributeSet;
 
 import com.urbanairship.AirshipExecutors;
+import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
@@ -94,12 +95,16 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        if (airship.getLocationClient() != null && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED &&
-                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED) {
+        if (airship.getLocationClient() != null && isPermissionGranted()) {
             return airship.getLocationClient().isLocationUpdatesEnabled();
         } else {
             return false;
         }
+    }
+
+    private boolean isPermissionGranted() {
+        return (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED);
     }
 
     @Override
