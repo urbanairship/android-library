@@ -10,7 +10,7 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
@@ -64,7 +64,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);

@@ -61,17 +61,17 @@ public class AirshipWebViewClientTest extends BaseTestCase {
         });
         when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
-        UAirship.shared().getWhitelist().addEntry("http://test-client");
+        UAirship.shared().getUrlAllowList().addEntry("http://test-client");
 
         client = new AirshipWebViewClient(nativeBridge);
     }
 
     /**
-     * Test any uairship scheme does not get intercepted when the webview's url is not white listed.
+     * Test any uairship scheme does not get intercepted when the webview's url is not allowed.
      */
     @Test
-    public void testHandleCommandNotWhitelisted() {
-        webViewUrl = "http://not-white-listed";
+    public void testHandleCommandNotAllowed() {
+        webViewUrl = "http://not-allowed";
         String url = "uairship://run-actions?action";
         assertFalse(client.shouldOverrideUrlLoading(webView, url));
 
@@ -105,12 +105,12 @@ public class AirshipWebViewClientTest extends BaseTestCase {
     }
 
     /**
-     * Test the js interface is not injected if the url is not white listed.
+     * Test the js interface is not injected if the url is not allowed.
      */
     @Test
     @SuppressLint("NewApi")
-    public void testOnPageFinishedNotWhiteListed() {
-        webViewUrl = "http://notwhitelisted";
+    public void testOnPageFinishedNotAllowed() {
+        webViewUrl = "http://notallowed";
         client.onPageFinished(webView, webViewUrl);
         verifyZeroInteractions(nativeBridge);
     }

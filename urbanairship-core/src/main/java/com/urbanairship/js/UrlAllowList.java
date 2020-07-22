@@ -22,20 +22,20 @@ import androidx.annotation.Nullable;
 /**
  * Defines a set of URL patterns to match a URL.
  */
-public class Whitelist {
+public class UrlAllowList {
 
     /**
-     * Whitelist entry applies to JS interface.
+     * UrlAllowList entry applies to JS interface.
      */
     public static final int SCOPE_JAVASCRIPT_INTERFACE = 1;
 
     /**
-     * Whitelist entry applies to any url handling.
+     * UrlAllowList entry applies to any url handling.
      */
     public static final int SCOPE_OPEN_URL = 1 << 1;
 
     /**
-     * Whitelist entry applies to both url and JS interface.
+     * UrlAllowList entry applies to both url and JS interface.
      */
     public static final int SCOPE_ALL = SCOPE_JAVASCRIPT_INTERFACE | SCOPE_OPEN_URL;
 
@@ -79,29 +79,28 @@ public class Whitelist {
     private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
     /**
-     * Interface that defines a callback that can be used to reject whitelisting of a URL.
+     * Interface that defines a callback that can be used to reject or allow a URL.
      */
-    public interface OnWhitelistCallback {
+    public interface OnUrlAllowListCallback {
 
         /**
-         * Called when the url has passed the isWhitelisted() check.
+         * Called when the URL has passed the isAllowed() check.
          *
          * @param url The URL.
          * @param scope The scope.
-         * @return <code>true</code> to accept the whitelisting, <code>false</code> to reject the whitelisting.
+         * @return <code>true</code> to accept the URL, <code>false</code> to reject the URL.
          */
-        boolean acceptWhitelisting(@NonNull String url, @Scope int scope);
+        boolean allowUrl(@NonNull String url, @Scope int scope);
 
     }
 
     @Nullable
-    private OnWhitelistCallback whitelistCallback;
+    private OnUrlAllowListCallback urlAllowListCallback;
 
     private final List<Entry> entries = new ArrayList<>();
-    private boolean isOpenUrlWhitelistingEnabled = true;
 
     /**
-     * Adds an entry to the whitelist for URL matching. Patterns must be defined with the following
+     * Adds an entry to the URL allow list for URL matching. Patterns must be defined with the following
      * syntax:
      * <pre>
      * {@code
@@ -125,7 +124,7 @@ public class Whitelist {
      * Note: International domains should add entries for both the ASCII and the unicode versions of
      * the domain.
      *
-     * @param pattern The URL pattern to add as a whitelist matcher.
+     * @param pattern The URL pattern to add as a URL allow list matcher.
      * @return <code>true</code> if the pattern was added successfully, <code>false</code> if the pattern
      * was unable to be added because it was either null or did not match the url-pattern syntax.
      */
@@ -134,7 +133,7 @@ public class Whitelist {
     }
 
     /**
-     * Adds an entry to the whitelist for URL matching. Patterns must be defined with the following
+     * Adds an entry to the URL allow list for URL matching. Patterns must be defined with the following
      * syntax:
      * <pre>
      * {@code
@@ -158,7 +157,7 @@ public class Whitelist {
      * Note: International domains should add entries for both the ASCII and the unicode versions of
      * the domain.
      *
-     * @param pattern The URL pattern to add as a whitelist matcher.
+     * @param pattern The URL pattern to add as a URL allow list matcher.
      * @param scope The scope that entry applies to.
      * @return <code>true</code> if the pattern was added successfully, <code>false</code> if the pattern
      * was unable to be added because it was either null or did not match the url-pattern syntax.
@@ -166,7 +165,7 @@ public class Whitelist {
     public boolean addEntry(@NonNull String pattern, @Scope int scope) {
         //noinspection ConstantConditions
         if (pattern == null || !VALID_PATTERN.matcher(pattern).matches()) {
-            Logger.error("Invalid whitelist pattern %s", pattern);
+            Logger.error("Invalid URL allow list pattern %s", pattern);
             return false;
         }
 
@@ -215,63 +214,46 @@ public class Whitelist {
     }
 
     /**
-     * Checks if a given URL is whitelisted or not with scope {@link #SCOPE_ALL}.
+     * Checks if a given URL is allowed or not with scope {@link #SCOPE_ALL}.
      *
      * @param url The URL.
-     * @return <code>true</code> If the URL matches any entries in the whitelist.
+     * @return <code>true</code> If the URL matches any entries in the URL allow list.
      */
-    public boolean isWhitelisted(@Nullable String url) {
-        return isWhitelisted(url, SCOPE_ALL);
+    public boolean isAllowed(@Nullable String url) {
+        return isAllowed(url, SCOPE_ALL);
     }
 
     /**
-     * Checks if a given URL is whitelisted or not.
+     * Checks if a given URL is allowed or not.
      *
      * @param url The URL.
      * @param scope The scope.
-     * @return <code>true</code> If the URL matches any entries in the whitelist.
+     * @return <code>true</code> If the URL matches any entries in the URL allow list.
      */
-    public boolean isWhitelisted(@Nullable String url, @Scope int scope) {
+    public boolean isAllowed(@Nullable String url, @Scope int scope) {
         if (url == null) {
             return false;
         }
 
-        boolean match;
+        Uri uri = Uri.parse(url);
+        int matchedScope = 0;
 
-        if (scope == SCOPE_OPEN_URL && !isOpenUrlWhitelistingEnabled) {
-            match = true;
-        } else {
-            Uri uri = Uri.parse(url);
-            int matchedScope = 0;
-
-            synchronized (entries) {
-                for (Entry entry : entries) {
-                    if (entry.pattern.matches(uri)) {
-                        matchedScope |= entry.scope;
-                    }
+        synchronized (entries) {
+            for (Entry entry : entries) {
+                if (entry.pattern.matches(uri)) {
+                    matchedScope |= entry.scope;
                 }
             }
-
-            match = ((matchedScope & scope) == scope);
         }
 
-        // if the url is whitelisted, allow the app to reject the whitelisting
-        if (match && (whitelistCallback != null)) {
-            match = whitelistCallback.acceptWhitelisting(url, scope);
+        boolean match = ((matchedScope & scope) == scope);
+
+        // if the url is allowed, allow the app to reject the url
+        if (match && (urlAllowListCallback != null)) {
+            match = urlAllowListCallback.allowUrl(url, scope);
         }
 
         return match;
-    }
-
-    /**
-     * Enables/disbales {@link #SCOPE_OPEN_URL} checking. If disabled, all URL checks for the open
-     * url scope will be allowed.
-     *
-     * @param isOpenUrlWhitelistingEnabled {@code true} to enable whitelist checking for {@link #SCOPE_OPEN_URL},
-     * otherwise {@code false}.
-     */
-    public void setOpenUrlWhitelistingEnabled(boolean isOpenUrlWhitelistingEnabled) {
-        this.isOpenUrlWhitelistingEnabled = isOpenUrlWhitelistingEnabled;
     }
 
     /**
@@ -301,34 +283,38 @@ public class Whitelist {
     }
 
     /**
-     * Factory method to create the default whitelist with values from the airship config.
+     * Factory method to create the default URL allow list with values from the airship config.
      *
      * @param airshipConfigOptions The airship config options.
-     * @return The default whitelist.
+     * @return The default URL allow list.
      * @hide
      */
     @NonNull
-    public static Whitelist createDefaultWhitelist(@NonNull AirshipConfigOptions airshipConfigOptions) {
-        Whitelist whitelist = new Whitelist();
-        whitelist.addEntry("https://*.urbanairship.com");
-        whitelist.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
-        whitelist.addEntry("https://*.asnapieu.com");
-        for (String entry : airshipConfigOptions.whitelist) {
-            whitelist.addEntry(entry);
+    public static UrlAllowList createDefaultUrlAllowList(@NonNull AirshipConfigOptions airshipConfigOptions) {
+        UrlAllowList urlAllowList = new UrlAllowList();
+        urlAllowList.addEntry("https://*.urbanairship.com");
+        urlAllowList.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
+        urlAllowList.addEntry("https://*.asnapieu.com");
+        for (String entry : airshipConfigOptions.urlAllowList) {
+            urlAllowList.addEntry(entry, SCOPE_ALL);
+        }
+        for (String entry : airshipConfigOptions.urlAllowListScopeJavaScriptBridge) {
+            urlAllowList.addEntry(entry, SCOPE_JAVASCRIPT_INTERFACE);
+        }
+        for (String entry : airshipConfigOptions.urlAllowListScopeOpen) {
+            urlAllowList.addEntry(entry, SCOPE_OPEN_URL);
         }
 
-        whitelist.setOpenUrlWhitelistingEnabled(airshipConfigOptions.enableUrlWhitelisting);
-
-        return whitelist;
+        return urlAllowList;
     }
 
     /**
-     * Sets the whitelist callback.
+     * Sets the urlAllowList callback.
      *
-     * @param whitelistCallback The whitelist callback.
+     * @param urlAllowListCallback The urlAllowList callback.
      */
-    public void setWhitelistCallback(@Nullable OnWhitelistCallback whitelistCallback) {
-        this.whitelistCallback = whitelistCallback;
+    public void setUrlAllowListCallback(@Nullable OnUrlAllowListCallback urlAllowListCallback) {
+        this.urlAllowListCallback = urlAllowListCallback;
     }
 
     /**

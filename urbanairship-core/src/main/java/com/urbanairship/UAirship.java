@@ -24,7 +24,7 @@ import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
@@ -146,7 +146,7 @@ public class UAirship {
     PushManager pushManager;
     AirshipChannel channel;
     AirshipLocationClient locationClient;
-    Whitelist whitelist;
+    UrlAllowList urlAllowList;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
@@ -721,7 +721,7 @@ public class UAirship {
 
         components.add(channel);
 
-        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        this.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
@@ -912,14 +912,14 @@ public class UAirship {
     }
 
     /**
-     * The URL whitelist is used to determine if a URL is allowed to be used for various features, including:
+     * The URL allow list is used to determine if a URL is allowed to be used for various features, including:
      * Airship JS interface, open external URL action, wallet action, HTML in-app messages, and landing pages.
      *
-     * @return The url whitelist.
+     * @return The urlAllowList.
      */
     @NonNull
-    public Whitelist getWhitelist() {
-        return whitelist;
+    public UrlAllowList getUrlAllowList() {
+        return urlAllowList;
     }
 
     /**

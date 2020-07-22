@@ -14,7 +14,7 @@ import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.html.HtmlDisplayContent;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.AirshipComponentUtils;
@@ -234,7 +234,7 @@ public class LandingPageAction extends Action {
      * Parses the ActionArguments for a landing page URI.
      *
      * @param arguments The action arguments.
-     * @return A landing page Uri, or null if the arguments could not be parsed or is not whitelisted.
+     * @return A landing page Uri, or null if the arguments could not be parsed or is not allowed.
      */
     @Nullable
     protected Uri parseUri(@NonNull ActionArguments arguments) {
@@ -261,8 +261,8 @@ public class LandingPageAction extends Action {
             uri = Uri.parse("https://" + uri);
         }
 
-        if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("Landing page URL is not whitelisted: %s", uri);
+        if (!UAirship.shared().getUrlAllowList().isAllowed(uri.toString(), UrlAllowList.SCOPE_OPEN_URL)) {
+            Logger.error("Landing page URL is not allowed: %s", uri);
             return null;
         }
 

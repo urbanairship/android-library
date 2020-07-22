@@ -14,7 +14,6 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageButton;
@@ -26,7 +25,7 @@ import com.urbanairship.automation.R;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.view.BoundedFrameLayout;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.webkit.AirshipWebChromeClient;
@@ -95,8 +94,8 @@ public class HtmlActivity extends InAppMessageActivity {
         this.handler = new Handler(Looper.getMainLooper());
         this.url = displayContent.getUrl();
 
-        if (!UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
+        if (!UAirship.shared().getUrlAllowList().isAllowed(url, UrlAllowList.SCOPE_OPEN_URL)) {
+            Logger.error("HTML in-app message URL is not allowed. Unable to display message.");
             finish();
             return;
         }
