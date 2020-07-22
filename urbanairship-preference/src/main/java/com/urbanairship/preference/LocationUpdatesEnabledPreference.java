@@ -10,7 +10,6 @@ import android.os.Build;
 import android.util.AttributeSet;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
