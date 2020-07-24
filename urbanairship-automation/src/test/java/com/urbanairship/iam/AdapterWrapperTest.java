@@ -4,10 +4,8 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 
-import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -50,17 +48,13 @@ public class AdapterWrapperTest {
         mockAdapter = mock(InAppMessageAdapter.class);
         mockCoordinator = mock(DisplayCoordinator.class);
 
-        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
-                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                                                .setMessage(InAppMessage.newBuilder()
-                                                                                        .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                                                                        .setId("message id")
-                                                                                        .addAction("action_name", JsonValue.wrap("action_value"))
-                                                                                        .build())
-                                                                .build();
-        InAppMessageSchedule schedule = new InAppMessageSchedule("schedule id", JsonMap.EMPTY_MAP, info);
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .setId("message id")
+                                           .addAction("action_name", JsonValue.wrap("action_value"))
+                                           .build();
 
-        adapterWrapper = new AdapterWrapper(schedule, mockAdapter, mockCoordinator);
+        adapterWrapper = new AdapterWrapper("schedule id", message, mockAdapter, mockCoordinator);
 
         context = ApplicationProvider.getApplicationContext();
     }

@@ -7,7 +7,6 @@ import android.content.Context;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.iam.InAppMessageSchedule;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -53,7 +52,6 @@ public class AssetManager {
     @NonNull
     private final AssetCache assetCache;
 
-
     /**
      * Default constructor. Applications should not create their own, instead use the asset manager
      * from {@link InAppMessageManager#getAssetManager()}
@@ -96,25 +94,26 @@ public class AssetManager {
     /**
      * Called when a new schedule is available.
      *
-     * @param schedule The schedule
+     * @param scheduleId The schedule ID.
      * @param extendedMessageCallable Callback used to get the extended message.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @WorkerThread
-    public void onSchedule(@NonNull InAppMessageSchedule schedule, @NonNull Callable<InAppMessage> extendedMessageCallable) {
+    public void onSchedule(@NonNull String scheduleId, @NonNull Callable<InAppMessage> extendedMessageCallable) {
         CachePolicyDelegate cachePolicyDelegate = this.cachePolicyDelegate;
-        if (cachePolicyDelegate != null && cachePolicyDelegate.shouldCacheOnSchedule(schedule)) {
+        PrepareAssetsDelegate assetsDelegate = this.assetsDelegate;
+
+        if (cachePolicyDelegate != null && assetsDelegate != null) {
             try {
-                PrepareAssetsDelegate assetsDelegate = this.assetsDelegate;
-                if (assetsDelegate != null) {
-                    InAppMessage message = extendedMessageCallable.call();
-                    Assets assets = assetCache.getAssets(schedule.getId());
-                    assetsDelegate.onSchedule(schedule, message, assets);
-                    assetCache.releaseAssets(schedule.getId(), false);
+                InAppMessage message = extendedMessageCallable.call();
+                if (cachePolicyDelegate.shouldCacheOnSchedule(scheduleId, message)) {
+                    Assets assets = assetCache.getAssets(scheduleId);
+                    assetsDelegate.onSchedule(scheduleId, message, assets);
+                    assetCache.releaseAssets(scheduleId, false);
                 }
             } catch (Exception e) {
-                Logger.error(e, "Unable to prepare assets for schedule: %s message: %s", schedule.getId(), schedule.getInfo().getInAppMessage().getId());
+                Logger.error(e, "Unable to prepare assets for schedule: %s", scheduleId);
             }
         }
     }
@@ -122,17 +121,17 @@ public class AssetManager {
     /**
      * Called when a schedule needs to be prepared.
      *
-     * @param schedule The schedule.
+     * @param scheduleId The schedule ID.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @WorkerThread
     @PrepareResult
-    public int onPrepare(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessage message) {
+    public int onPrepare(@NonNull String scheduleId, @NonNull InAppMessage message) {
         PrepareAssetsDelegate assetsDelegate = this.assetsDelegate;
         if (assetsDelegate != null) {
-            Assets assets = assetCache.getAssets(schedule.getId());
-            return assetsDelegate.onPrepare(schedule, message, assets);
+            Assets assets = assetCache.getAssets(scheduleId);
+            return assetsDelegate.onPrepare(scheduleId, message, assets);
         }
 
         return PREPARE_RESULT_OK;
@@ -141,31 +140,31 @@ public class AssetManager {
     /**
      * Called when the schedule's message finished displaying.
      *
-     * @param schedule The schedule.
+     * @param scheduleId The schedule ID.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @WorkerThread
-    public void onDisplayFinished(@NonNull InAppMessageSchedule schedule) {
+    public void onDisplayFinished(@NonNull String scheduleId, @NonNull InAppMessage inAppMessage) {
         CachePolicyDelegate cachePolicyDelegate = this.cachePolicyDelegate;
         boolean delete = false;
-        if (cachePolicyDelegate == null || !cachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)) {
+        if (cachePolicyDelegate == null || !cachePolicyDelegate.shouldPersistCacheAfterDisplay(scheduleId, inAppMessage)) {
             delete = true;
         }
 
-        assetCache.releaseAssets(schedule.getId(), delete);
+        assetCache.releaseAssets(scheduleId, delete);
     }
 
     /**
      * Called when a schedule is finished.
      *
-     * @param schedule The schedule.
+     * @param scheduleId The schedule.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @WorkerThread
-    public void onScheduleFinished(@NonNull InAppMessageSchedule schedule) {
-        assetCache.releaseAssets(schedule.getId(), true);
+    public void onFinish(@NonNull String scheduleId) {
+        assetCache.releaseAssets(scheduleId, true);
     }
 
     /**

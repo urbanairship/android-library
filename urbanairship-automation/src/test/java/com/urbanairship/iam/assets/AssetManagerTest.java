@@ -2,12 +2,8 @@
 
 package com.urbanairship.iam.assets;
 
-import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageSchedule;
-import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.custom.CustomDisplayContent;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -35,7 +31,10 @@ public class AssetManagerTest {
     private PrepareAssetsDelegate mockAssetsDelegate;
     private CachePolicyDelegate mockCachePolicyDelegate;
 
-    private InAppMessageSchedule schedule;
+    private InAppMessage MESSAGE = InAppMessage.newBuilder()
+                                               .setId("some-message-id")
+                                               .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                               .build();
 
     @Before
     public void setup() {
@@ -45,14 +44,6 @@ public class AssetManagerTest {
         assetManager = new AssetManager(mockCache);
         assetManager.setPrepareAssetDelegate(mockAssetsDelegate);
         assetManager.setCachePolicyDelegate(mockCachePolicyDelegate);
-
-        schedule = new InAppMessageSchedule("some-id", JsonMap.EMPTY_MAP, InAppMessageScheduleInfo.newBuilder()
-                                                                                                  .addTrigger(Triggers.newActiveSessionTriggerBuilder().build())
-                                                                                                  .setMessage(InAppMessage.newBuilder()
-                                                                                                                          .setId("some-message-id")
-                                                                                                                          .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                                                                                                          .build())
-                                                                                                  .build());
     }
 
     /**
@@ -60,22 +51,22 @@ public class AssetManagerTest {
      */
     @Test
     public void testSchedule() {
-        final InAppMessage extendedMessage = InAppMessage.newBuilder(schedule.getInfo().getInAppMessage())
+        final InAppMessage extendedMessage = InAppMessage.newBuilder(MESSAGE)
                                                          .addAction("cool", JsonValue.wrap("story"))
                                                          .build();
 
         Assets mockAssets = mock(Assets.class);
         when(mockCache.getAssets("some-id")).thenReturn(mockAssets);
-        when(mockCachePolicyDelegate.shouldCacheOnSchedule(schedule)).thenReturn(true);
+        when(mockCachePolicyDelegate.shouldCacheOnSchedule("some-id", extendedMessage)).thenReturn(true);
 
-        assetManager.onSchedule(schedule, new Callable<InAppMessage>() {
+        assetManager.onSchedule("some-id", new Callable<InAppMessage>() {
             @Override
             public InAppMessage call() throws Exception {
                 return extendedMessage;
             }
         });
 
-        verify(mockAssetsDelegate).onSchedule(schedule, extendedMessage, mockAssets);
+        verify(mockAssetsDelegate).onSchedule("some-id", extendedMessage, mockAssets);
     }
 
     /**
@@ -85,12 +76,12 @@ public class AssetManagerTest {
     public void testSkipSchedule() {
         Assets mockAssets = mock(Assets.class);
         when(mockCache.getAssets("some-id")).thenReturn(mockAssets);
-        when(mockCachePolicyDelegate.shouldCacheOnSchedule(schedule)).thenReturn(false);
+        when(mockCachePolicyDelegate.shouldCacheOnSchedule("some-id", MESSAGE)).thenReturn(false);
 
-        assetManager.onSchedule(schedule, new Callable<InAppMessage>() {
+        assetManager.onSchedule("Some-id", new Callable<InAppMessage>() {
             @Override
             public InAppMessage call() throws Exception {
-                return schedule.getInfo().getInAppMessage();
+                return MESSAGE;
             }
         });
 
@@ -102,17 +93,13 @@ public class AssetManagerTest {
      */
     @Test
     public void testPrepare() {
-        final InAppMessage extendedMessage = InAppMessage.newBuilder(schedule.getInfo().getInAppMessage())
-                                                         .addAction("cool", JsonValue.wrap("story"))
-                                                         .build();
-
         Assets mockAssets = mock(Assets.class);
         when(mockCache.getAssets("some-id")).thenReturn(mockAssets);
-        when(mockAssetsDelegate.onPrepare(schedule, schedule.getInfo().getInAppMessage(), mockAssets)).thenReturn(AssetManager.PREPARE_RESULT_RETRY);
+        when(mockAssetsDelegate.onPrepare("some-id", MESSAGE, mockAssets)).thenReturn(AssetManager.PREPARE_RESULT_RETRY);
 
-        int result = assetManager.onPrepare(schedule, schedule.getInfo().getInAppMessage());
+        int result = assetManager.onPrepare("some-id", MESSAGE);
         assertEquals(AssetManager.PREPARE_RESULT_RETRY, result);
-        verify(mockAssetsDelegate).onPrepare(schedule, extendedMessage, mockAssets);
+        verify(mockAssetsDelegate).onPrepare("some-id", MESSAGE, mockAssets);
     }
 
     /**
@@ -120,9 +107,9 @@ public class AssetManagerTest {
      */
     @Test
     public void testClearAssetsDisplayFinished() {
-        when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)).thenReturn(false);
-        assetManager.onDisplayFinished(schedule);
-        verify(mockCache).releaseAssets(schedule.getId(), true);
+        when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay("some-id", MESSAGE)).thenReturn(false);
+        assetManager.onDisplayFinished("some-id", MESSAGE);
+        verify(mockCache).releaseAssets("some-id", true);
     }
 
     /**
@@ -130,10 +117,10 @@ public class AssetManagerTest {
      */
     @Test
     public void testPersistAfterDisplay() {
-        when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay(schedule)).thenReturn(true);
-        assetManager.onDisplayFinished(schedule);
+        when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay("some-id", MESSAGE)).thenReturn(true);
+        assetManager.onDisplayFinished("some-id", MESSAGE);
         verifyZeroInteractions(mockAssetsDelegate);
-        verify(mockCache).releaseAssets(schedule.getId(), false);
+        verify(mockCache).releaseAssets("some-id", false);
     }
 
     /**
@@ -141,8 +128,8 @@ public class AssetManagerTest {
      */
     @Test
     public void testClearOnScheduleFinished() {
-        assetManager.onScheduleFinished(schedule);
-        verify(mockCache).releaseAssets(schedule.getId(), true);
+        assetManager.onFinish("some-id");
+        verify(mockCache).releaseAssets("some-id", true);
     }
 
 }

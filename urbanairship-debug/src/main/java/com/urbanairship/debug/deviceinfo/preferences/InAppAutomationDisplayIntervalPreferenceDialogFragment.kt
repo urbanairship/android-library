@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.NumberPicker
 import androidx.preference.PreferenceDialogFragmentCompat
+import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.debug.R
-import com.urbanairship.iam.InAppMessageManager
 
 /**
  * PreferenceDialogFragment to set the IAA (In-App Automation) Display Interval
@@ -23,7 +23,7 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
             minValue = MIN_VALUE
             maxValue = MAX_VALUE
 
-            val seconds = InAppMessageManager.shared().displayInterval / 1000L
+            val seconds = InAppAutomation.shared().inAppMessageManager.displayInterval / 1000L
             value = seconds.toInt()
         }
     }

@@ -10,7 +10,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
@@ -100,12 +100,12 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                                    @NonNull NamedUser namedUser) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
-                        analytics, remoteData, tagGroupRegistrar);
+                        analytics, remoteData, namedUser);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Automation module");

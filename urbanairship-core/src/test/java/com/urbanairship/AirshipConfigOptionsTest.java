@@ -47,8 +47,8 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://test.host.url.com/", production.deviceUrl);
         assertEquals("https://test.analytics.url.com/", production.analyticsUrl);
         assertEquals(Arrays.asList("GCM_TRANSPORT"), production.allowedTransports);
-        assertEquals("https://first.whitelist.url.com/", production.whitelist.get(0));
-        assertEquals("https://second.whitelist.url.com/", production.whitelist.get(1));
+        assertEquals("https://first.urlAllowList.url.com/", production.urlAllowList.get(0));
+        assertEquals("https://second.urlAllowList.url.com/", production.urlAllowList.get(1));
         assertTrue(production.inProduction);
         assertFalse(production.analyticsEnabled);
         assertEquals(2700, production.backgroundReportingIntervalMS);

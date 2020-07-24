@@ -3,13 +3,13 @@
 package com.urbanairship.channel;
 
 import com.google.common.collect.Lists;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.LegacyTestRequest;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
@@ -30,11 +30,9 @@ import static org.junit.Assert.assertEquals;
 public class TagGroupApiClientTest extends BaseTestCase {
 
     private LegacyTestRequest testRequest;
-    private AirshipConfigOptions configOptions;
     private RequestFactory requestFactory;
     private TagGroupsMutation mutation;
     private TestAirshipRuntimeConfig runtimeConfig;
-    private TagGroupApiClient client;
 
     @Before
     public void setUp() {
@@ -45,8 +43,8 @@ public class TagGroupApiClientTest extends BaseTestCase {
 
         testRequest = new LegacyTestRequest();
         testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody("{ \"ok\": true}")
-                                       .build();
+                .setResponseBody("{ \"ok\": true}")
+                .build();
 
         requestFactory = new RequestFactory() {
             @NonNull
@@ -60,72 +58,51 @@ public class TagGroupApiClientTest extends BaseTestCase {
         };
 
         mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-
-        client = new TagGroupApiClient(runtimeConfig, requestFactory);
     }
 
-    /**
-     * Test android channel update.
-     */
     @Test
-    public void testAndroidChannelTagUpdate() throws JsonException {
-        Response response = client.updateTagGroups(TagGroupRegistrar.CHANNEL, "identifier", mutation);
+    public void testUpload() throws JsonException, RequestException {
+        TagGroupApiClient client = new TagGroupApiClient(runtimeConfig, requestFactory, "some-audience", "some-path");
+
+        Response<Void> response = client.updateTags("identifier", mutation);
         assertEquals(testRequest.response, response);
-        assertEquals("https://test.urbanairship.com/api/channels/tags/", testRequest.getURL().toString());
+        assertEquals("https://test.urbanairship.com/some-path", testRequest.getURL().toString());
         assertEquals("POST", testRequest.getRequestMethod());
 
         JsonMap expectedBody = JsonMap.newBuilder()
                                       .put("audience", JsonMap.newBuilder()
-                                                              .put("android_channel", "identifier")
+                                                              .put("some-audience", "identifier")
                                                               .build())
-                                      .putAll(mutation.toJsonValue().getMap())
+                                      .putAll(mutation.toJsonValue().optMap())
                                       .build();
 
         JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
         assertEquals(expectedBody.toJsonValue(), requestBody);
     }
 
-    /**
-     * Test amazon channel update.
-     */
     @Test
-    public void testAmazonChannelTagUpdate() throws JsonException {
+    public void testAndroidChannelClient() {
+        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
+        TagGroupApiClient client = TagGroupApiClient.channelClient(runtimeConfig);
+
+        assertEquals("android_channel", client.getAudienceKey());
+        assertEquals("api/channels/tags/", client.getPath());
+    }
+
+    @Test
+    public void testAmazonChannelClient() {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
-        Response response = client.updateTagGroups(TagGroupRegistrar.CHANNEL, "identifier", mutation);
-        assertEquals(testRequest.response, response);
-        assertEquals("https://test.urbanairship.com/api/channels/tags/", testRequest.getURL().toString());
-        assertEquals("POST", testRequest.getRequestMethod());
+        TagGroupApiClient client = TagGroupApiClient.channelClient(runtimeConfig);
 
-        JsonMap expectedBody = JsonMap.newBuilder()
-                                      .put("audience", JsonMap.newBuilder()
-                                                              .put("amazon_channel", "identifier")
-                                                              .build())
-                                      .putAll(mutation.toJsonValue().optMap())
-                                      .build();
-
-        JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
-        assertEquals(expectedBody.toJsonValue(), requestBody);
+        assertEquals("amazon_channel", client.getAudienceKey());
+        assertEquals("api/channels/tags/", client.getPath());
     }
 
-    /**
-     * Test named user update.
-     */
     @Test
-    public void testNamedUserTagUpdate() throws JsonException {
-        Response response = client.updateTagGroups(TagGroupRegistrar.NAMED_USER, "identifier", mutation);
-        assertEquals(testRequest.response, response);
-        assertEquals("https://test.urbanairship.com/api/named_users/tags/", testRequest.getURL().toString());
-        assertEquals("POST", testRequest.getRequestMethod());
+    public void testNamedUserClient() {
+        TagGroupApiClient client = TagGroupApiClient.namedUserClient(runtimeConfig);
 
-        JsonMap expectedBody = JsonMap.newBuilder()
-                                      .put("audience", JsonMap.newBuilder()
-                                                              .put("named_user_id", "identifier")
-                                                              .build())
-                                      .putAll(mutation.toJsonValue().optMap())
-                                      .build();
-
-        JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
-        assertEquals(expectedBody.toJsonValue(), requestBody);
+        assertEquals("named_user_id", client.getAudienceKey());
+        assertEquals("api/named_users/tags/", client.getPath());;
     }
-
 }

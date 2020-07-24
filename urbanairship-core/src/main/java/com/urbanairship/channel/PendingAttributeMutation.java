@@ -23,7 +23,7 @@ class PendingAttributeMutation extends AttributeMutation implements JsonSerializ
         this.timestamp = timestamp;
     }
 
-    @Nullable
+    @NonNull
     static List<PendingAttributeMutation> fromAttributeMutations(@NonNull List<AttributeMutation> mutations, long timestamp) {
         List<PendingAttributeMutation> list = new ArrayList<>();
 
@@ -126,9 +126,28 @@ class PendingAttributeMutation extends AttributeMutation implements JsonSerializ
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        PendingAttributeMutation that = (PendingAttributeMutation) o;
+
+        return timestamp.equals(that.timestamp);
+    }
+
+    @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+        result = 31 * result + timestamp.hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "PendingAttributeMutation{" +
+                "timestamp='" + timestamp + '\'' +
+                "} " + super.toString();
+    }
+
 }

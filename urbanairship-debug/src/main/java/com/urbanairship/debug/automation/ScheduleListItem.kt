@@ -2,10 +2,11 @@
 
 package com.urbanairship.debug.automation
 
-import com.urbanairship.iam.InAppMessageSchedule
+import com.urbanairship.automation.Schedule
+import com.urbanairship.iam.InAppMessage
 
-class ScheduleListItem(inAppMessageSchedule: InAppMessageSchedule) {
-    val message = inAppMessageSchedule.info.inAppMessage
+class ScheduleListItem(schedule: Schedule) {
+    val message = schedule.requireData<InAppMessage>()
 
     val type = message.type
 

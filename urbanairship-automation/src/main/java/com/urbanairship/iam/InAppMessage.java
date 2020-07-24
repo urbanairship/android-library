@@ -51,7 +51,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String DISPLAY_CONTENT_KEY = "display";
     private static final String NAME_KEY = "name";
     private static final String EXTRA_KEY = "extra";
-    private static final String AUDIENCE_KEY = "audience";
     private static final String ACTIONS_KEY = "actions";
     private static final String SOURCE_KEY = "source";
     private static final String CAMPAIGNS_KEY = "campaigns";
@@ -61,24 +60,36 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String RENDERED_LOCALE_LANGUAGE_KEY = "language";
     private static final String RENDERED_LOCALE_COUNTRY_KEY = "country";
 
+    /**
+     * @hide
+     */
     @StringDef({ SOURCE_LEGACY_PUSH, SOURCE_REMOTE_DATA, SOURCE_APP_DEFINED })
     @Retention(RetentionPolicy.SOURCE)
-    @interface Source {}
+    public @interface Source {}
 
     /**
      * In-app message was generated from a push in the legacy in-app message manager.
+     * @hide
      */
-    static final String SOURCE_LEGACY_PUSH = "legacy-push";
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public static final String SOURCE_LEGACY_PUSH = "legacy-push";
 
     /**
      * In-app message from the remote-data service.
+     * @hide
      */
-    static final String SOURCE_REMOTE_DATA = "remote-data";
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public static final String SOURCE_REMOTE_DATA = "remote-data";
 
     /**
      * In-app message created programmatically by the application.
+     * @hide
      */
-    static final String SOURCE_APP_DEFINED = "app-defined";
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public static final String SOURCE_APP_DEFINED = "app-defined";
 
     @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULLSCREEN, TYPE_MODAL, TYPE_HTML })
     @Retention(RetentionPolicy.SOURCE)
@@ -137,7 +148,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final String id;
     private final String name;
     private final JsonSerializable content;
-    private final Audience audience;
     private final Map<String, JsonValue> actions;
     private final JsonValue campaigns;
 
@@ -161,7 +171,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.id = builder.id;
         this.name = builder.name;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
-        this.audience = builder.audience;
         this.actions = builder.actions;
         this.source = builder.source;
         this.campaigns = builder.campaigns;
@@ -234,16 +243,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Gets the audience.
-     *
-     * @return The audience.
-     */
-    @Nullable
-    public Audience getAudience() {
-        return audience;
-    }
-
-    /**
      * Gets the actions.
      *
      * @return The actions.
@@ -262,7 +261,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Source
     @NonNull
-    String getSource() {
+    public String getSource() {
         return source;
     }
 
@@ -313,7 +312,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(EXTRA_KEY, extras)
                       .putOpt(DISPLAY_CONTENT_KEY, content)
                       .putOpt(DISPLAY_TYPE_KEY, type)
-                      .putOpt(AUDIENCE_KEY, audience)
                       .putOpt(ACTIONS_KEY, actions)
                       .putOpt(SOURCE_KEY, source)
                       .putOpt(CAMPAIGNS_KEY, campaigns)
@@ -334,7 +332,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static InAppMessage fromJson(@NonNull JsonValue jsonValue, @Nullable @Source String defaultSource) throws JsonException {
+    public static InAppMessage fromJson(@NonNull JsonValue jsonValue, @Nullable @Source String defaultSource) throws JsonException {
         String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).optString();
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
@@ -370,11 +368,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             }
 
             builder.setActions(jsonMap.getMap());
-        }
-
-        // Audience
-        if (jsonValue.optMap().containsKey(AUDIENCE_KEY)) {
-            builder.setAudience(Audience.fromJson(jsonValue.optMap().opt(AUDIENCE_KEY)));
         }
 
         // Campaigns
@@ -442,7 +435,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @throws JsonException If the json is invalid.
      */
     @NonNull
-    static InAppMessage fromJson(@NonNull JsonValue jsonValue) throws JsonException {
+    public static InAppMessage fromJson(@NonNull JsonValue jsonValue) throws JsonException {
         return fromJson(jsonValue, null);
     }
 
@@ -546,9 +539,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return false;
         }
 
-        if (audience != null ? !audience.equals(message.audience) : message.audience != null) {
-            return false;
-        }
 
         if (!actions.equals(message.actions)) {
             return false;
@@ -572,7 +562,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + id.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + content.hashCode();
-        result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + actions.hashCode();
         result = 31 * result + (renderedLocale != null ? renderedLocale.hashCode() : 0);
         result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
@@ -593,7 +582,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String id;
         private String name;
         private JsonSerializable content;
-        private Audience audience;
         private Map<String, JsonValue> actions = new HashMap<>();
 
         @Source
@@ -615,7 +603,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.id = message.id;
             this.name = message.name;
             this.extras = message.extras;
-            this.audience = message.audience;
             this.actions = message.actions;
             this.source = message.source;
             this.campaigns = message.campaigns;
@@ -731,7 +718,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          */
         @NonNull
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        Builder setSource(@Nullable @Source String source) {
+        public Builder setSource(@Nullable @Source String source) {
             this.source = source;
             return this;
         }
@@ -796,18 +783,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         @NonNull
         public Builder setName(@Nullable @Size(min = 1, max = MAX_NAME_LENGTH) String name) {
             this.name = name;
-            return this;
-        }
-
-        /**
-         * Sets the audience.
-         *
-         * @param audience The audience.
-         * @return The builder.
-         */
-        @NonNull
-        public Builder setAudience(@Nullable Audience audience) {
-            this.audience = audience;
             return this;
         }
 

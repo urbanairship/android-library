@@ -84,7 +84,7 @@ public class ScheduleDelay implements Parcelable {
 
     ScheduleDelay(@NonNull Builder builder) {
         this.seconds = builder.seconds;
-        this.screens = builder.screens;
+        this.screens = builder.screens == null ? Collections.<String>emptyList() : new ArrayList<>(builder.screens);
         this.appState = builder.appState;
         this.regionId = builder.regionId;
         this.cancellationTriggers = builder.cancellationTriggers;
@@ -386,8 +386,8 @@ public class ScheduleDelay implements Parcelable {
          */
         @NonNull
         public ScheduleDelay build() {
-            if (cancellationTriggers.size() > ActionScheduleInfo.TRIGGER_LIMIT) {
-                throw new IllegalArgumentException("No more than " + ActionScheduleInfo.TRIGGER_LIMIT + " cancellation triggers allowed.");
+            if (cancellationTriggers.size() > Schedule.TRIGGER_LIMIT) {
+                throw new IllegalArgumentException("No more than " + Schedule.TRIGGER_LIMIT + " cancellation triggers allowed.");
             }
 
             return new ScheduleDelay(this);

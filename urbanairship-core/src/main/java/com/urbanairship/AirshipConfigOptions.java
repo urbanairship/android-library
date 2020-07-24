@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ConfigParser;
@@ -190,21 +191,34 @@ public class AirshipConfigOptions {
      * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
      * and landing pages. Airship https URLs are included by default.
      * <p>
-     * See {@link com.urbanairship.js.Whitelist#addEntry(String)} for valid url patterns.
+     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
      * <p>
      * Defaults null.
      */
     @NonNull
-    public final List<String> whitelist;
+    public final List<String> urlAllowList;
 
     /**
-     * Enables/disables whitelist checks for {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL}.
-     * If disabled, any URL checks with scope {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL} will
-     * be allowed even if the URL is not in the whitelist.
+     * List of URLs that are allowed to be used for Airship JS interface.
+     * Airship https URLs are included by default.
      * <p>
-     * Defaults to false.
+     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
+     * <p>
+     * Defaults null.
      */
-    public final boolean enableUrlWhitelisting;
+    @NonNull
+    public final List<String> urlAllowListScopeJavaScriptBridge;
+
+    /**
+     * List of URLs that are allowed to be used for open external URL action.
+     * Airship https URLs are included by default.
+     * <p>
+     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
+     * <p>
+     * Defaults null.
+     */
+    @NonNull
+    public final List<String> urlAllowListScopeOpen;
 
     /**
      * Flag indicating whether the application will use analytics.
@@ -338,7 +352,9 @@ public class AirshipConfigOptions {
         }
 
         this.allowedTransports = Collections.unmodifiableList(new ArrayList<>(builder.allowedTransports));
-        this.whitelist = Collections.unmodifiableList(new ArrayList<>(builder.whitelist));
+        this.urlAllowList = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowList));
+        this.urlAllowListScopeJavaScriptBridge = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeJavaScriptBridge));
+        this.urlAllowListScopeOpen = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeOpen));
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
@@ -349,7 +365,6 @@ public class AirshipConfigOptions {
         this.notificationLargeIcon = builder.notificationLargeIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
         this.notificationChannel = builder.notificationChannel;
-        this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
@@ -483,7 +498,9 @@ public class AirshipConfigOptions {
         private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
-        private static final String FIELD_WHITELIST = "whitelist";
+        private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
+        private static final String FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_BRIDGE = "urlAllowListScopeJavaScriptBridge";
+        private static final String FIELD_URL_ALLOW_LIST_SCOPE_OPEN = "urlAllowListScopeOpen";
         private static final String FIELD_IN_PRODUCTION = "inProduction";
         private static final String FIELD_ANALYTICS_ENABLED = "analyticsEnabled";
         private static final String FIELD_BACKGROUND_REPORTING_INTERVAL_MS = "backgroundReportingIntervalMS";
@@ -501,7 +518,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_FCM_SENDER_ID = "fcmSenderId";
         private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
-        private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
+        private static final String FIELD_ENABLE_URL_ALLOW_LIST = "enableUrlAllowList";
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
         private static final String FIELD_SITE = "site";
@@ -521,7 +538,9 @@ public class AirshipConfigOptions {
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
-        private List<String> whitelist = new ArrayList<>();
+        private List<String> urlAllowList = new ArrayList<>();
+        private List<String> urlAllowListScopeJavaScriptBridge = new ArrayList<>();
+        private List<String> urlAllowListScopeOpen = new ArrayList<>();
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
@@ -536,7 +555,6 @@ public class AirshipConfigOptions {
         private int notificationAccentColor = NotificationCompat.COLOR_DEFAULT;
         private String walletUrl;
         private String notificationChannel;
-        private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
         private Uri appStoreUri;
         private boolean dataCollectionOptInEnabled;
@@ -718,8 +736,22 @@ public class AirshipConfigOptions {
                             this.setAllowedTransports(configParser.getStringArray(name));
                             break;
 
-                        case FIELD_WHITELIST:
-                            this.setWhitelist(configParser.getStringArray(name));
+                        /* Deprecated. To be removed in a future version of the SDK. */
+                        case "whitelist":
+                            Logger.error("Parameter whitelist is deprecated and will be removed in a future version of the SDK. Use urlAllowList instead.");
+                            this.setUrlAllowList(configParser.getStringArray(name));
+                            break;
+
+                        case FIELD_URL_ALLOW_LIST:
+                            this.setUrlAllowList(configParser.getStringArray(name));
+                            break;
+
+                        case FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_BRIDGE:
+                            this.setUrlAllowListScopeJavaScriptBridge(configParser.getStringArray(name));
+                            break;
+
+                        case FIELD_URL_ALLOW_LIST_SCOPE_OPEN:
+                            this.setUrlAllowListScopeOpen(configParser.getStringArray(name));
                             break;
 
                         case FIELD_IN_PRODUCTION:
@@ -790,8 +822,8 @@ public class AirshipConfigOptions {
                             this.setProductionFcmSenderId(configParser.getString(name));
                             break;
 
-                        case FIELD_ENABLE_URL_WHITELISTING:
-                            this.setEnableUrlWhitelisting(configParser.getBoolean(name, enableUrlWhitelisting));
+                        case "enableUrlWhitelisting":
+                            Logger.error("Parameter enableUrlWhitelisting has been removed. See urlAllowListScopeJavaScriptBridge and urlAllowListScopeOpen instead.");
                             break;
 
                         case FIELD_CUSTOM_PUSH_PROVIDER:
@@ -1069,14 +1101,46 @@ public class AirshipConfigOptions {
          * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
          * and landing pages. Airship https URLs are included by default.
          *
-         * @param whitelist The whitelist.
+         * @param urlAllowList The urlAllowList.
          * @return The config options builder.
          */
         @NonNull
-        public Builder setWhitelist(@Nullable String[] whitelist) {
-            this.whitelist.clear();
-            if (whitelist != null) {
-                this.whitelist.addAll(Arrays.asList(whitelist));
+        public Builder setUrlAllowList(@Nullable String[] urlAllowList) {
+            this.urlAllowList.clear();
+            if (urlAllowList != null) {
+                this.urlAllowList.addAll(Arrays.asList(urlAllowList));
+            }
+            return this;
+        }
+
+        /**
+         * Set the list of additional URLs that are allowed to be used for the Airship JS interface.
+         * Airship https URLs are included by default.
+         *
+         * @param urlAllowListScopeJavaScriptBridge The URL allow list for the Airship JS interface.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setUrlAllowListScopeJavaScriptBridge(@Nullable String[] urlAllowListScopeJavaScriptBridge) {
+            this.urlAllowListScopeJavaScriptBridge.clear();
+            if (urlAllowListScopeJavaScriptBridge != null) {
+                this.urlAllowListScopeJavaScriptBridge.addAll(Arrays.asList(urlAllowListScopeJavaScriptBridge));
+            }
+            return this;
+        }
+
+        /**
+         * Set the list of additional URLs that are allowed to be used for the open external URL action.
+         * Airship https URLs are included by default.
+         *
+         * @param urlAllowListScopeOpen The URL allow list for the open external URL action.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setUrlAllowListScopeOpen(@Nullable String[] urlAllowListScopeOpen) {
+            this.urlAllowListScopeOpen.clear();
+            if (urlAllowListScopeOpen != null) {
+                this.urlAllowListScopeOpen.addAll(Arrays.asList(urlAllowListScopeOpen));
             }
             return this;
         }
@@ -1223,19 +1287,6 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setWalletUrl(@NonNull String walletUrl) {
             this.walletUrl = walletUrl;
-            return this;
-        }
-
-        /**
-         * Enables/disables whitelist checks for {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL}.
-         * If disabled, any URL checks with scope {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL} will
-         * be allowed even if the URL is not in the whitelist.
-         *
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setEnableUrlWhitelisting(boolean enableUrlWhitelisting) {
-            this.enableUrlWhitelisting = enableUrlWhitelisting;
             return this;
         }
 

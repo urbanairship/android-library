@@ -82,7 +82,7 @@ public class FullScreenAdapterTest  {
 
     @Test
     public void testOkPrepare() {
-        UAirship.shared().getWhitelist().setOpenUrlWhitelistingEnabled(false);
+        UAirship.shared().getUrlAllowList().addEntry("*");
 
         int youTubeOnPrepare = testPrepare(MediaInfo.TYPE_YOUTUBE, "https://www.youtube.com", "Youtube");
         assertEquals(InAppMessageAdapter.OK, youTubeOnPrepare);
@@ -95,9 +95,7 @@ public class FullScreenAdapterTest  {
     }
 
     @Test
-    public void testWhitelistEnabled() {
-        UAirship.shared().getWhitelist().setOpenUrlWhitelistingEnabled(true);
-
+    public void testUrlAllowListEnabled() {
         int youTubeOnPrepare = testPrepare(MediaInfo.TYPE_YOUTUBE, "https://www.youtube.com", "Youtube");
         assertEquals(InAppMessageAdapter.OK, youTubeOnPrepare);
 
@@ -109,9 +107,8 @@ public class FullScreenAdapterTest  {
     }
 
     @Test
-    public void testWhiteListEnabledWithEntry() {
-        UAirship.shared().getWhitelist().setOpenUrlWhitelistingEnabled(true);
-        UAirship.shared().getWhitelist().addEntry("*://story");
+    public void testUrlAllowListEnabledWithEntry() {
+        UAirship.shared().getUrlAllowList().addEntry("*://story");
 
         int youTubeOnPrepare = testPrepare(MediaInfo.TYPE_YOUTUBE, "https://www.youtube.com", "Youtube");
         assertEquals(InAppMessageAdapter.OK, youTubeOnPrepare);
@@ -126,8 +123,6 @@ public class FullScreenAdapterTest  {
 
     @Test
     public void testCancelPrepare() {
-        UAirship.shared().getWhitelist().setOpenUrlWhitelistingEnabled(true);
-
         int youtubeResult = testPrepare(MediaInfo.TYPE_VIDEO, "badurl", "Youtube");
         assertEquals(InAppMessageAdapter.CANCEL, youtubeResult);
 

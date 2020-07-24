@@ -147,12 +147,13 @@ public class RemoteData extends AirshipComponent {
      * @param configOptions The config options.
      * @param activityMonitor The activity monitor.
      * @param pushManager The push manager.
+     * @param localeManager The locale manager.
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipConfigOptions configOptions, @NonNull ActivityMonitor activityMonitor,
-                      @NonNull PushManager pushManager) {
+                      @NonNull PushManager pushManager, @NonNull LocaleManager localeManager) {
         this(context, preferenceDataStore, configOptions, activityMonitor,
-                JobDispatcher.shared(context), UAirship.shared().getLocaleManager(), pushManager, Clock.DEFAULT_CLOCK);
+                JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK);
     }
 
     /**

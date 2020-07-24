@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageSchedule;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
@@ -43,8 +42,8 @@ public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
      * {@inheritDoc}
      */
     @Override
-    public void onSchedule(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessage message, @NonNull Assets assets) {
-        onPrepare(schedule, message, assets);
+    public void onSchedule(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull Assets assets) {
+        onPrepare(scheduleId, message, assets);
     }
 
     /**
@@ -52,7 +51,7 @@ public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
      */
     @Override
     @AssetManager.PrepareResult
-    public int onPrepare(@NonNull InAppMessageSchedule schedule, @NonNull InAppMessage message, @NonNull Assets assets) {
+    public int onPrepare(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull Assets assets) {
         MediaInfo mediaInfo = getMediaInfo(message);
         if (mediaInfo == null || !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) || assets.file(mediaInfo.getUrl()).exists()) {
             return AssetManager.PREPARE_RESULT_OK;

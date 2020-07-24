@@ -5,7 +5,7 @@ package com.urbanairship.actions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class WalletActionTest extends BaseTestCase {
 
     private WalletAction action;
     private ActionArguments testArgs;
-    private Whitelist whitelist;
+    private UrlAllowList urlAllowList;
 
     @Before
     public void setup() {
@@ -28,9 +28,8 @@ public class WalletActionTest extends BaseTestCase {
         action = new WalletAction();
         testArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://yep.example.com");
 
-        whitelist = UAirship.shared().getWhitelist();
-        whitelist.addEntry("https://yep.example.com");
-        whitelist.setOpenUrlWhitelistingEnabled(true);
+        urlAllowList = UAirship.shared().getUrlAllowList();
+        urlAllowList.addEntry("https://yep.example.com");
 
         // Default the platform to Android
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
@@ -64,10 +63,10 @@ public class WalletActionTest extends BaseTestCase {
     }
 
     /**
-     * Test rejects arguments for URLs that are not whitelisted.
+     * Test rejects arguments for URLs that are not allowed.
      */
     @Test
-    public void testWhiteList() {
+    public void testUrlAllowList() {
         testArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com");
         assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com")));
     }

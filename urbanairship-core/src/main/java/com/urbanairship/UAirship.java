@@ -19,13 +19,12 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.TagGroupRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
@@ -147,7 +146,7 @@ public class UAirship {
     PushManager pushManager;
     AirshipChannel channel;
     AirshipLocationClient locationClient;
-    Whitelist whitelist;
+    UrlAllowList urlAllowList;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
@@ -714,10 +713,7 @@ public class UAirship {
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(runtimeConfig, preferenceDataStore);
-        tagGroupRegistrar.migrateKeys();
-
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar, localeManager);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, localeManager);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();
@@ -725,7 +721,7 @@ public class UAirship {
 
         components.add(channel);
 
-        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        this.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
@@ -739,13 +735,14 @@ public class UAirship {
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, tagGroupRegistrar, channel);
+        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, channel);
         components.add(this.namedUser);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, GlobalActivityMonitor.shared(application), pushManager);
+        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions,
+                GlobalActivityMonitor.shared(application), pushManager, localeManager);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
@@ -777,7 +774,7 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                channel, pushManager, analytics, remoteData, tagGroupRegistrar);
+                channel, pushManager, analytics, remoteData, namedUser);
         processModule(automationModule);
 
         // Debug
@@ -915,14 +912,14 @@ public class UAirship {
     }
 
     /**
-     * The URL whitelist is used to determine if a URL is allowed to be used for various features, including:
+     * The URL allow list is used to determine if a URL is allowed to be used for various features, including:
      * Airship JS interface, open external URL action, wallet action, HTML in-app messages, and landing pages.
      *
-     * @return The url whitelist.
+     * @return The urlAllowList.
      */
     @NonNull
-    public Whitelist getWhitelist() {
-        return whitelist;
+    public UrlAllowList getUrlAllowList() {
+        return urlAllowList;
     }
 
     /**

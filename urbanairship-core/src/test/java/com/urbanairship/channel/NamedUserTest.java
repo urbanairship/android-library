@@ -7,6 +7,7 @@ import android.app.Application;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -17,10 +18,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -30,10 +31,6 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
@@ -54,24 +51,27 @@ public class NamedUserTest extends BaseTestCase {
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
     private NamedUserApiClient mockNamedUserClient;
-    private AttributeApiClient mockAttributesClient;
+    private AttributeRegistrar mockAttributeRegistrar;
     private Application application;
+    private TestClock clock;
 
     @Before
     public void setUp() {
         application = ApplicationProvider.getApplicationContext();
         mockDispatcher = mock(JobDispatcher.class);
         mockNamedUserClient = Mockito.mock(NamedUserApiClient.class);
-        mockAttributesClient = Mockito.mock(AttributeApiClient.class);
 
+        mockAttributeRegistrar = Mockito.mock(AttributeRegistrar.class);
         mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
+
         mockChannel = mock(AirshipChannel.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
 
-        namedUser = new NamedUser(application, dataStore, mockTagGroupRegistrar,
-                mockChannel, mockDispatcher, mockNamedUserClient, mockAttributesClient);
+        clock = new TestClock();
+        namedUser = new NamedUser(application, dataStore, mockChannel, mockDispatcher, clock,
+                mockNamedUserClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
     @Test
@@ -88,6 +88,17 @@ public class NamedUserTest extends BaseTestCase {
                 return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
             }
         }));
+    }
+
+    @Test
+    public void testInitSetsIdOnRegistrars() {
+        namedUser.setId("neat");
+        clearInvocations(mockTagGroupRegistrar);
+        clearInvocations(mockAttributeRegistrar);
+
+        namedUser.init();
+        verify(mockTagGroupRegistrar).setId("neat", false);
+        verify(mockAttributeRegistrar).setId("neat", false);
     }
 
     @Test
@@ -152,6 +163,9 @@ public class NamedUserTest extends BaseTestCase {
             }
         }));
 
+        verify(mockTagGroupRegistrar).setId(fakeNamedUserId, true);
+        verify(mockAttributeRegistrar).setId(fakeNamedUserId, true);
+
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
 
@@ -173,13 +187,13 @@ public class NamedUserTest extends BaseTestCase {
     public void testSetIDNull() {
         // Set an initial id
         namedUser.setId("neat");
-        clearInvocations(mockDispatcher, mockTagGroupRegistrar);
+        clearInvocations(mockDispatcher, mockTagGroupRegistrar, mockAttributeRegistrar);
 
         // Clear it
         namedUser.setId(null);
 
-        // Pending tag group changes should be cleared
-        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
+        verify(mockTagGroupRegistrar).setId(null, true);
+        verify(mockAttributeRegistrar).setId(null, true);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -195,15 +209,15 @@ public class NamedUserTest extends BaseTestCase {
      * Test set empty ID (disassociate).
      */
     @Test
-    public void testSetIDEmpty() {
+    public void testSetIdEmpty() {
         // Set an initial id
         namedUser.setId("neat");
-        clearInvocations(mockDispatcher, mockTagGroupRegistrar);
+        clearInvocations(mockDispatcher, mockTagGroupRegistrar, mockAttributeRegistrar);
 
         namedUser.setId("");
 
-        // Pending tag group changes should be cleared
-        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
+        verify(mockTagGroupRegistrar).setId(null, true);
+        verify(mockAttributeRegistrar).setId(null, true);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -357,7 +371,8 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId("namedUserID");
         when(mockChannel.getId()).thenReturn("channelID");
 
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
+        when(mockAttributeRegistrar.uploadPendingMutations()).thenReturn(true);
 
         for (int statusCode = 200; statusCode < 300; statusCode++) {
             // Force an update
@@ -605,8 +620,7 @@ public class NamedUserTest extends BaseTestCase {
     public void testUpdateNamedUserTagsSucceed() {
         // Return a named user ID
         namedUser.setId("namedUserId");
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(true);
-
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
         assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
@@ -641,7 +655,59 @@ public class NamedUserTest extends BaseTestCase {
         when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Provide pending changes
-        when(mockTagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "namedUserId")).thenReturn(false);
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(false);
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test update named user tags succeeds when the registrar returns true.
+     */
+    @Test
+    public void testUpdateAttributesSucceed() {
+        // Return a named user ID
+        namedUser.setId("namedUserId");
+
+        // Make both registrars return true
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
+        when(mockAttributeRegistrar.uploadPendingMutations()).thenReturn(true);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test update attribues without named user ID fails.
+     */
+    @Test
+    public void testUpdateAttributesNoId() {
+        // Return a null named user ID
+        namedUser.setId(null);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
+        assertEquals(JobInfo.JOB_FINISHED, namedUser.onPerformJob(UAirship.shared(), jobInfo));
+
+        verifyZeroInteractions(mockAttributeRegistrar);
+    }
+
+    /**
+     * Test update named user retries when attributes fail.
+     */
+    @Test
+    public void testUpdateAttributesRetry() throws RequestException {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        // Set up a 2xx response when associating the named user
+        Response<Void> response = new Response.Builder<Void>(200).build();
+        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Provide pending changes
+        when(mockTagGroupRegistrar.uploadPendingMutations()).thenReturn(true);
+        when(mockAttributeRegistrar.uploadPendingMutations()).thenReturn(false);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
@@ -658,54 +724,25 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     /**
-     * Test editAttribute's apply function dispatches a job to update the attributes.
+     * Test editAttribute's apply function dispatches an update job and saves attributes to
+     * the registrar.
      */
     @Test
     public void testAttributesUpdates() {
+        clock.currentTimeMillis = 100;
+
         namedUser.editAttributes()
-                 .setAttribute("expected_key", "expected_value")
-                 .apply();
+                      .setAttribute("expected_key", "expected_value")
+                      .apply();
+
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
+        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        verify(mockAttributeRegistrar).addPendingMutations(expectedMutations);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
-            }
-        }));
-    }
-
-    /**
-     * Test editAttribute's apply function dispatches a job to update the attributes.
-     */
-    @Test
-    public void testUploadAttributes() throws RequestException {
-        namedUser.editAttributes()
-                 .setAttribute("expected_key", "expected_value")
-                 .apply();
-
-        namedUser.setId("namedUserID");
-        when(mockChannel.getId()).thenReturn("channelID");
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
-
-        // Set up a 2xx response to associate the named user
-        Response associateResponse = new Response.Builder<Void>(200).build();
-        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(associateResponse);
-
-        Response<Void> attributeResponse = new Response.Builder<Void>(500).build();
-        when(mockAttributesClient.updateNamedUserAttributes(anyString(), ArgumentMatchers.<PendingAttributeMutation>anyList()))
-                .thenReturn(attributeResponse);
-
-        // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
-        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
-
-        verify(mockAttributesClient).updateNamedUserAttributes(eq("namedUserID"), argThat(new ArgumentMatcher<List<PendingAttributeMutation>>() {
-            @Override
-            public boolean matches(List<PendingAttributeMutation> mutations) {
-                if (mutations.size() != 1) {
-                    return false;
-                }
-                return mutations.get(0).getMutationName().equals("expected_key");
             }
         }));
     }
@@ -735,39 +772,4 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockChannel).updateRegistration();
     }
 
-    /**
-     * Test editAttribute's apply function dispatches a job to update the attributes.
-     */
-    @Test
-    public void testUploadAttributesRetry() throws RequestException {
-        namedUser.editAttributes()
-                 .setAttribute("expected_key", "expected_value")
-                 .apply();
-
-        namedUser.setId("namedUserID");
-        when(mockChannel.getId()).thenReturn("channelID");
-        when(mockTagGroupRegistrar.uploadMutations(anyInt(), anyString())).thenReturn(true);
-
-        // Set up a 2xx response to associate the named user
-        Response associateResponse = new Response.Builder<Void>(200).build();
-        when(mockNamedUserClient.associate("namedUserID", "channelID")).thenReturn(associateResponse);
-
-        Response<Void> attributeResponse = new Response.Builder<Void>(500).build();
-        when(mockAttributesClient.updateNamedUserAttributes(anyString(), ArgumentMatchers.<PendingAttributeMutation>anyList()))
-                .thenReturn(attributeResponse);
-
-        // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUser.ACTION_UPDATE_NAMED_USER).build();
-        assertEquals(JobInfo.JOB_RETRY, namedUser.onPerformJob(UAirship.shared(), jobInfo));
-
-        verify(mockAttributesClient).updateNamedUserAttributes(eq("namedUserID"), argThat(new ArgumentMatcher<List<PendingAttributeMutation>>() {
-            @Override
-            public boolean matches(List<PendingAttributeMutation> mutations) {
-                if (mutations.size() != 1) {
-                    return false;
-                }
-                return mutations.get(0).getMutationName().equals("expected_key");
-            }
-        }));
-    }
 }

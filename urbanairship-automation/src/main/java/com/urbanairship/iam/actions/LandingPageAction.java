@@ -9,12 +9,12 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.AirshipComponentUtils;
@@ -77,7 +77,7 @@ public class LandingPageAction extends Action {
      */
     public final static float DEFAULT_BORDER_RADIUS = 2;
 
-    private final Callable<InAppMessageManager> inAppCallable;
+    private final Callable<InAppAutomation> inAppCallable;
 
     private float borderRadius = DEFAULT_BORDER_RADIUS;
 
@@ -85,20 +85,20 @@ public class LandingPageAction extends Action {
      * Default constructor.
      */
     public LandingPageAction() {
-        this(AirshipComponentUtils.callableForComponent(InAppMessageManager.class));
+        this(AirshipComponentUtils.callableForComponent(InAppAutomation.class));
     }
 
     @VisibleForTesting
-    LandingPageAction(@NonNull Callable<InAppMessageManager> inAppCallable) {
+    LandingPageAction(@NonNull Callable<InAppAutomation> inAppCallable) {
         this.inAppCallable = inAppCallable;
     }
 
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        InAppMessageManager inAppMessageManager;
+        InAppAutomation inAppAutomation;
         try {
-            inAppMessageManager = inAppCallable.call();
+            inAppAutomation = inAppCallable.call();
         } catch (Exception e) {
             return ActionResult.newErrorResult(e);
         }
@@ -106,7 +106,7 @@ public class LandingPageAction extends Action {
         final Uri uri = parseUri(arguments);
         Checks.checkNotNull(uri, "URI should not be null");
 
-        inAppMessageManager.scheduleMessage(createScheduleInfo(uri, arguments));
+        inAppAutomation.schedule(createSchedule(uri, arguments));
         return ActionResult.newEmptyResult();
     }
 
@@ -136,7 +136,7 @@ public class LandingPageAction extends Action {
      * @return The schedule info.
      */
     @NonNull
-    protected InAppMessageScheduleInfo createScheduleInfo(@NonNull Uri uri, @NonNull ActionArguments arguments) {
+    protected Schedule createSchedule(@NonNull Uri uri, @NonNull ActionArguments arguments) {
         JsonMap options = arguments.getValue().toJsonValue().optMap();
 
         int width = options.opt(HtmlDisplayContent.WIDTH_KEY).getInt(0);
@@ -173,11 +173,11 @@ public class LandingPageAction extends Action {
 
         InAppMessage message = extendMessage(messageBuilder).build();
 
-        InAppMessageScheduleInfo.Builder scheduleInfoBuilder = InAppMessageScheduleInfo.newBuilder()
-                                                                                       .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
-                                                                                       .setLimit(1)
-                                                                                       .setPriority(Integer.MIN_VALUE)
-                                                                                       .setMessage(message);
+        Schedule.Builder scheduleInfoBuilder = Schedule.newMessageScheduleBuilder(message)
+                                                       .setId(messageId)
+                                                       .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                       .setLimit(1)
+                                                       .setPriority(Integer.MIN_VALUE);
 
         return extendSchedule(scheduleInfoBuilder).build();
     }
@@ -194,13 +194,13 @@ public class LandingPageAction extends Action {
     }
 
     /**
-     * Can be used to customize the {@link InAppMessageScheduleInfo}.
+     * Can be used to customize the {@link Schedule}.
      *
      * @param builder The builder.
      * @return The builder.
      */
     @NonNull
-    protected InAppMessageScheduleInfo.Builder extendSchedule(@NonNull InAppMessageScheduleInfo.Builder builder) {
+    protected Schedule.Builder extendSchedule(@NonNull Schedule.Builder builder) {
         return builder;
     }
 
@@ -234,7 +234,7 @@ public class LandingPageAction extends Action {
      * Parses the ActionArguments for a landing page URI.
      *
      * @param arguments The action arguments.
-     * @return A landing page Uri, or null if the arguments could not be parsed or is not whitelisted.
+     * @return A landing page Uri, or null if the arguments could not be parsed or is not allowed.
      */
     @Nullable
     protected Uri parseUri(@NonNull ActionArguments arguments) {
@@ -261,8 +261,8 @@ public class LandingPageAction extends Action {
             uri = Uri.parse("https://" + uri);
         }
 
-        if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("Landing page URL is not whitelisted: %s", uri);
+        if (!UAirship.shared().getUrlAllowList().isAllowed(uri.toString(), UrlAllowList.SCOPE_OPEN_URL)) {
+            Logger.error("Landing page URL is not allowed: %s", uri);
             return null;
         }
 
