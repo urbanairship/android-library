@@ -12,7 +12,7 @@ public interface Attributes {
     String TITLE = "title";
 
     /**
-     * Firs name attribute.
+     * First name attribute.
      */
     String FIRST_NAME = "first_name";
 
