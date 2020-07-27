@@ -5,10 +5,7 @@ package com.urbanairship.automation;
 import com.urbanairship.automation.storage.FullSchedule;
 import com.urbanairship.automation.storage.ScheduleEntity;
 import com.urbanairship.automation.storage.TriggerEntity;
-import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonSerializable;
-import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +30,7 @@ class ScheduleConverters {
 
     @NonNull
     static Schedule convert(@NonNull FullSchedule entry) throws JsonException, IllegalArgumentException {
-        Schedule.Builder scheduleBuilder =  createScheduleBuilder(entry.schedule.scheduleType, entry.schedule.data)
+        Schedule.Builder scheduleBuilder =  Schedule.newBuilder(entry.schedule.scheduleType, entry.schedule.data)
                        .setId(entry.schedule.scheduleId)
                        .setMetadata(entry.schedule.metadata)
                        .setGroup(entry.schedule.group)
@@ -83,7 +80,7 @@ class ScheduleConverters {
         entity.editGracePeriod = schedule.getEditGracePeriod();
         entity.audience = schedule.getAudience();
         entity.scheduleType = schedule.getType();
-        entity.data = ((JsonSerializable) schedule.requireData()).toJsonValue();
+        entity.data = schedule.getDataAsJson();
 
         for (Trigger trigger : schedule.getTriggers()) {
             triggerEntities.add(convert(trigger, false, schedule.getId()));
@@ -115,17 +112,5 @@ class ScheduleConverters {
         entity.jsonPredicate = trigger.getPredicate();
         entity.parentScheduleId = parentScheduleId;
         return entity;
-    }
-
-    @NonNull
-    private static Schedule.Builder createScheduleBuilder(@NonNull String scheduleType, @NonNull JsonValue json) throws JsonException {
-        switch (scheduleType) {
-            case Schedule.TYPE_ACTION:
-                return Schedule.newActionScheduleBuilder(json.optMap());
-            case Schedule.TYPE_IN_APP_MESSAGE:
-                return Schedule.newMessageScheduleBuilder(InAppMessage.fromJson(json));
-            default:
-                throw new IllegalArgumentException("Invalid type: " + scheduleType);
-        }
     }
 }

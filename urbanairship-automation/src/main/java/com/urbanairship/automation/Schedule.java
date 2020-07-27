@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 
 /**
@@ -46,9 +47,15 @@ public class Schedule implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {}
 
+    /**
+     * Message in-app automation type.
+     */
     @NonNull
     public static final String TYPE_IN_APP_MESSAGE = "in_app_message";
 
+    /**
+     * Actions in-app automation type.
+     */
     @NonNull
     public static final String TYPE_ACTION = "actions";
 
@@ -317,6 +324,18 @@ public class Schedule implements Parcelable {
     }
 
     /**
+     * Gets the schedule data as JSON.
+     * @return The schedule data as a JSON value.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    JsonValue getDataAsJson() {
+        return data.toJsonValue();
+    }
+
+    /**
      * Create a new builder for an action schedule.
      *
      * @return A new builder instance.
@@ -345,6 +364,21 @@ public class Schedule implements Parcelable {
     @NonNull
     public static Builder newBuilder(@NonNull Schedule schedule) {
         return new Builder(schedule);
+    }
+
+    /**
+     * Creates a builder with a given type and value.
+     *
+     * @param type The schedule type.
+     * @param json The JSON value.
+     * @return The builder.
+     * @throws JsonException If the value or type is invalid.
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    static Builder newBuilder(@NonNull String type, @NonNull JsonValue json) throws JsonException {
+        @Type String parsedType = parseType(type);
+        return new Builder(parsedType, parseData(json, parsedType));
     }
 
     @Override
@@ -418,9 +452,9 @@ public class Schedule implements Parcelable {
                 return TYPE_ACTION;
             case TYPE_IN_APP_MESSAGE:
                 return TYPE_IN_APP_MESSAGE;
-            default:
-                throw new JsonException("Invalid type: " + type);
         }
+
+        throw new JsonException("Invalid type: " + type);
     }
 
     private static JsonSerializable parseData(@NonNull JsonValue json, @Schedule.Type String type) throws JsonException {
@@ -429,9 +463,9 @@ public class Schedule implements Parcelable {
                 return json.optMap();
             case Schedule.TYPE_IN_APP_MESSAGE:
                 return InAppMessage.fromJson(json);
-            default:
-                throw new JsonException("Invalid type: " + type);
         }
+
+        throw new JsonException("Invalid type: " + type);
     }
 
     /**
@@ -454,9 +488,6 @@ public class Schedule implements Parcelable {
         private JsonMap metadata;
         private String id;
         private Audience audience;
-
-        private Builder() {
-        }
 
         private Builder(@NonNull Schedule info) {
             this.id = info.id;

@@ -492,6 +492,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                         break;
                 }
 
+                Logger.error("Unexpected schedule type: %s", schedule.getType());
                 return RetryingExecutor.RESULT_FINISHED;
             }
         };
@@ -523,7 +524,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 return inAppMessageManager.onCheckExecutionReadiness(schedule.getId());
         }
 
-        return inAppMessageManager.onCheckExecutionReadiness(schedule.getId());
+        Logger.error("Unexpected schedule type: %s", schedule.getType());
+        return AutomationDriver.READY_RESULT_CONTINUE;
     }
 
     @MainThread
@@ -536,6 +538,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 break;
             case Schedule.TYPE_IN_APP_MESSAGE:
                 inAppMessageManager.onExecute(schedule.getId(), callback);
+                break;
+            default:
+                Logger.error("Unexpected schedule type: %s", schedule.getType());
+                callback.onFinish();
                 break;
         }
     }
