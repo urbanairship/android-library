@@ -2,6 +2,9 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 13.3.2 - July 28, 2020
+Patch release to fix In-App Automation version triggers to only fire on app updates instead of new installs.
+
 ## Version 13.3.1 - July 18, 2020
 Patch release to fix ADM registration exceptions that occur on first run and text alignment issues with In-App Automation. Any apps that are configured to run ADM and are running 13.0.0 - 13.3.0 should update.
 
