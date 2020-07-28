@@ -43,7 +43,7 @@ public class Schedule implements Parcelable {
         }
     };
 
-    @StringDef({ TYPE_IN_APP_MESSAGE, TYPE_ACTION })
+    @StringDef({ TYPE_IN_APP_MESSAGE, TYPE_ACTION, TYPE_DEFERRED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {}
 
@@ -58,6 +58,12 @@ public class Schedule implements Parcelable {
      */
     @NonNull
     public static final String TYPE_ACTION = "actions";
+
+    /**
+     * Deferred in-app automation type.
+     */
+    @NonNull
+    public static final String TYPE_DEFERRED = "deferred";
 
     /**
      * The triggers limit for a single schedule.
@@ -452,6 +458,8 @@ public class Schedule implements Parcelable {
                 return TYPE_ACTION;
             case TYPE_IN_APP_MESSAGE:
                 return TYPE_IN_APP_MESSAGE;
+            case TYPE_DEFERRED:
+                return TYPE_DEFERRED;
         }
 
         throw new JsonException("Invalid type: " + type);
@@ -463,6 +471,8 @@ public class Schedule implements Parcelable {
                 return json.optMap();
             case Schedule.TYPE_IN_APP_MESSAGE:
                 return InAppMessage.fromJson(json);
+            case Schedule.TYPE_DEFERRED:
+                return DeferredScheduleData.fromJson(json);
         }
 
         throw new JsonException("Invalid type: " + type);
