@@ -22,7 +22,6 @@ public class ApplicationMetrics extends AirshipComponent {
     private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
     private boolean appVersionUpdated;
-    private boolean appVersionChecked;
 
     ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
@@ -36,7 +35,6 @@ public class ApplicationMetrics extends AirshipComponent {
         this.activityMonitor = activityMonitor;
 
         this.appVersionUpdated = false;
-        this.appVersionChecked = false;
     }
 
     @Override
@@ -91,9 +89,6 @@ public class ApplicationMetrics extends AirshipComponent {
     }
 
     private void checkAppVersion() {
-        if (appVersionChecked) {
-            return;
-        }
 
         long currentAppVersion = UAirship.getAppVersion();
         long lastAppVersion = getLastAppVersion();
@@ -103,6 +98,5 @@ public class ApplicationMetrics extends AirshipComponent {
         }
 
         preferenceDataStore.put(LAST_APP_VERSION_KEY, currentAppVersion);
-        appVersionChecked = true;
     }
 }
