@@ -3,28 +3,46 @@
 package com.urbanairship;
 
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
+import com.urbanairship.http.ResponseParser;
+import com.urbanairship.util.Checks;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Request class used for testing.
  */
 public class TestRequest extends Request {
 
-    public Response response;
-    private long ifModifiedSince;
+    public Map<String, List<String>> responseHeaders;
+    public long responseLastModifiedTime;
+    public String responseBody;
+    public int responseStatus;
 
     public TestRequest() {
-        super(null, null);
+        super();
     }
 
     @Override
-    public Response safeExecute() {
-        return response;
+    public <T> Response<T> execute(ResponseParser<T> parser) throws RequestException {
+
+        try {
+            Checks.checkNotNull(url, "missing url");
+            Checks.checkNotNull(requestMethod, "missing request method");
+            return new Response.Builder<T>(responseStatus)
+                    .setLastModified(responseLastModifiedTime)
+                    .setResponseBody(responseBody)
+                    .setResponseHeaders(responseHeaders)
+                    .setResult(parser.parseResponse(responseStatus, responseHeaders, responseBody))
+                    .build();
+        } catch (Exception e) {
+            throw new RequestException("parse error", e);
+        }
     }
 
     /**
@@ -45,52 +63,17 @@ public class TestRequest extends Request {
         return responseProperties;
     }
 
-    /**
-     * Set the URL.
-     *
-     * @param url The URL.
-     */
-    public void setURL(URL url) {
-        this.url = url;
-    }
-
-    /**
-     * Get the URL.
-     *
-     * @return The URL.
-     */
-    public URL getURL() {
-        return url;
-    }
-
-    /**
-     * Set the request method.
-     *
-     * @param requestMethod The requestMethod as a string.
-     */
-    public void setRequestMethod(String requestMethod) {
-        this.requestMethod = requestMethod;
-    }
-
-    /**
-     * Get the request method.
-     *
-     * @return The requestMethod as a string.
-     */
-    public String getRequestMethod() {
-        return requestMethod;
-    }
-
-    @NonNull
-    @Override
-    public Request setIfModifiedSince(long milliseconds) {
-        super.setIfModifiedSince(milliseconds);
-        ifModifiedSince = milliseconds;
-        return this;
-    }
-
     public long getIfModifiedSince() {
         return ifModifiedSince;
     }
 
+    @Nullable
+    public String getRequestMethod() {
+        return requestMethod;
+    }
+
+    @Nullable
+    public URL getUrl() {
+        return url;
+    }
 }
