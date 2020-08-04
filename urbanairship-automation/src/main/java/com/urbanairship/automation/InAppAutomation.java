@@ -193,28 +193,28 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             @Override
             public void onScheduleExpired(@NonNull final Schedule schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-                    inAppMessageManager.onScheduleExpired(schedule.getId(), schedule.getEnd(), (InAppMessage) schedule.requireData());
+                    inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
             public void onScheduleCancelled(@NonNull final Schedule schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-                    inAppMessageManager.onScheduleFinished(schedule.getId(), (InAppMessage) schedule.requireData());
+                    inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
             public void onScheduleLimitReached(@NonNull final Schedule schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-                    inAppMessageManager.onScheduleFinished(schedule.getId(), (InAppMessage) schedule.requireData());
+                    inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
             public void onNewSchedule(@NonNull final Schedule schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-                    inAppMessageManager.onNewSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
+                    inAppMessageManager.onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
                 }
             }
         });

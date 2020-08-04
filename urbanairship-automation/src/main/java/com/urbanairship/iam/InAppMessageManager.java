@@ -441,20 +441,7 @@ public class InAppMessageManager {
 
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onScheduleFinished(@NonNull final String scheduleId, @NonNull InAppMessage message) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                assetManager.onFinish(scheduleId);
-            }
-        });
-    }
-
-    public void onScheduleExpired(@NonNull final String scheduleId, long expiry, @NonNull InAppMessage message) {
-
-        ResolutionEvent event = ResolutionEvent.messageExpired(message, expiry);
-        analytics.addEvent(event);
-
+    public void onMessageScheduleFinished(@NonNull final String scheduleId) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -464,7 +451,7 @@ public class InAppMessageManager {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onNewSchedule(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
+    public void onNewMessageSchedule(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
         executor.execute(new Runnable() {
             @Override
             public void run() {

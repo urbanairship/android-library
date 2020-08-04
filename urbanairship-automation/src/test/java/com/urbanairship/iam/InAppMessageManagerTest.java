@@ -396,7 +396,7 @@ public class InAppMessageManagerTest {
             }
         });
 
-        manager.onNewSchedule(scheduleId, extended);
+        manager.onNewMessageSchedule(scheduleId, extended);
         verify(mockAssetManager).onSchedule(eq(scheduleId), argThat(new ArgumentMatcher<Callable<InAppMessage>>() {
             @Override
             public boolean matches(Callable<InAppMessage> argument) {
@@ -412,10 +412,9 @@ public class InAppMessageManagerTest {
 
     @Test
     public void testNotifyScheduleFinished() {
-        manager.onScheduleFinished(scheduleId, message);
-        manager.onScheduleExpired(scheduleId, 0, message);
+        manager.onMessageScheduleFinished(scheduleId);
 
-        verify(mockAssetManager, times(2)).onFinish(scheduleId);
+        verify(mockAssetManager, times(1)).onFinish(scheduleId);
     }
 
 }

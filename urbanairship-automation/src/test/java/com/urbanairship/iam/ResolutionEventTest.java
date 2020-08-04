@@ -155,23 +155,6 @@ public class ResolutionEventTest {
         verifyEvent(expectedResolutionInfo, event);
     }
 
-    /**
-     * Test expired resolution event.
-     */
-    @Test
-    public void testExpiredResolutionEvent() throws JSONException {
-        long expiry = System.currentTimeMillis();
-
-        ResolutionEvent event = ResolutionEvent.messageExpired(message, expiry);
-
-        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
-                                                .put("type", "expired")
-                                                .put("expiry", DateUtils.createIso8601TimeStamp(expiry))
-                                                .build();
-
-        verifyEvent(expectedResolutionInfo, event);
-    }
-
     private void verifyEvent(JsonMap expectedResolutionInfo, ResolutionEvent event) {
         assertEquals(expectedResolutionInfo, event.getEventData().get("resolution"));
         assertEquals("in_app_resolution", event.getType());

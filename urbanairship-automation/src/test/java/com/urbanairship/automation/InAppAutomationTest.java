@@ -338,14 +338,12 @@ public class InAppAutomationTest {
                                     .build();
 
         scheduleListener.onNewSchedule(schedule);
-        verify(mockIamManager, times(1)).onNewSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
+        verify(mockIamManager, times(1)).onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
 
         scheduleListener.onScheduleLimitReached(schedule);
         scheduleListener.onScheduleCancelled(schedule);
-        verify(mockIamManager, times(2)).onScheduleFinished(schedule.getId(), (InAppMessage) schedule.requireData());
-
         scheduleListener.onScheduleExpired(schedule);
-        verify(mockIamManager, times(1)).onScheduleExpired(schedule.getId(), schedule.getEnd(), (InAppMessage) schedule.requireData());
+        verify(mockIamManager, times(3)).onMessageScheduleFinished(schedule.getId());
     }
 
     @Test

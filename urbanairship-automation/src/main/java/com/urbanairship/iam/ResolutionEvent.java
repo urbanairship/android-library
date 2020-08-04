@@ -31,14 +31,12 @@ class ResolutionEvent extends InAppMessageEvent {
 
     private static final String LEGACY_MESSAGE_REPLACED = "replaced";
     private static final String LEGACY_MESSAGE_DIRECT_OPEN = "direct_open";
-    private static final String MESSAGE_EXPIRED = "expired";
 
     // Resolution fields
     private static final String DISPLAY_TIME = "display_time";
     private static final String BUTTON_ID = "button_id";
     private static final String BUTTON_DESCRIPTION = "button_description";
     private static final String REPLACEMENT_ID = "replacement_id";
-    private static final String EXPIRY = "expiry";
 
     private final JsonMap resolutionData;
 
@@ -81,22 +79,6 @@ class ResolutionEvent extends InAppMessageEvent {
                                         .build();
 
         return new ResolutionEvent(JsonValue.wrap(messageId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
-    }
-
-    /**
-     * Creates a resolution event for when an in-app message expires.
-     *
-     * @param message The in-app message.
-     * @param expiry The message expiration.
-     * @return The ResolutionEvent.
-     */
-    static ResolutionEvent messageExpired(@NonNull InAppMessage message, long expiry) {
-        JsonMap resolutionData = JsonMap.newBuilder()
-                                        .put(RESOLUTION_TYPE, MESSAGE_EXPIRED)
-                                        .put(EXPIRY, DateUtils.createIso8601TimeStamp(expiry))
-                                        .build();
-
-        return new ResolutionEvent(message, resolutionData);
     }
 
     /**
