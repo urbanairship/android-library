@@ -1,4 +1,5 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.tags;
 
 import com.urbanairship.TestAirshipRuntimeConfig;
@@ -7,7 +8,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
-import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,20 +55,17 @@ public class TagGroupLookupApiClientTest {
                                                    .build());
 
         testRequest = new TestRequest();
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody(JsonMap.newBuilder()
-                                                               .putOpt("tag_groups", responseTags)
-                                                               .put("last_modified", "lastModifiedTime")
-                                                               .build().toString())
-                                       .build();
+        testRequest.responseBody = JsonMap.newBuilder()
+                                          .putOpt("tag_groups", responseTags)
+                                          .put("last_modified", "lastModifiedTime")
+                                          .build().toString();
+
+        testRequest.responseStatus = HttpURLConnection.HTTP_OK;
 
         requestFactory = new RequestFactory() {
             @NonNull
             @Override
-            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
-                testRequest.setURL(url);
-                testRequest.setRequestMethod(requestMethod);
-
+            public Request createRequest() {
                 return testRequest;
             }
         };
@@ -111,8 +107,7 @@ public class TagGroupLookupApiClientTest {
      */
     @Test
     public void testFailedResponse() {
-        testRequest.response = new Response.Builder<Void>(400)
-                                       .build();
+        testRequest.responseStatus = 400;
 
         TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
@@ -134,11 +129,11 @@ public class TagGroupLookupApiClientTest {
         // Update the response to return a 200 with the same lastModified time as the
         // response, but no tags. This indicates a 304, but since its a POST we do not
         // get a 304.
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody(JsonMap.newBuilder()
-                                                               .put("last_modified", "lastModifiedTime")
-                                                               .build().toString())
-                                       .build();
+        testRequest.responseBody = JsonMap.newBuilder()
+                                          .put("last_modified", "lastModifiedTime")
+                                          .build().toString();
+
+        testRequest.responseStatus = HttpURLConnection.HTTP_OK;
 
         TagGroupResponse cachedResponse = client.lookupTagGroups("some-channel", requestTags, response);
         verifyRequest(UAirship.ANDROID_PLATFORM, "some-channel", requestTags, response.lastModifiedTime);
@@ -156,12 +151,12 @@ public class TagGroupLookupApiClientTest {
         TagGroupResponse response = client.lookupTagGroups("some-channel", requestTags, null);
 
         // Update the response to return new data
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody(JsonMap.newBuilder()
-                                                               .putOpt("tag_groups", responseTags)
-                                                               .put("last_modified", "newDate")
-                                                               .build().toString())
-                                       .build();
+        testRequest.responseBody = JsonMap.newBuilder()
+                                          .putOpt("tag_groups", responseTags)
+                                          .put("last_modified", "newDate")
+                                          .build().toString();
+
+        testRequest.responseStatus = HttpURLConnection.HTTP_OK;
 
         TagGroupResponse newResponse = client.lookupTagGroups("some-channel", requestTags, response);
 
@@ -171,7 +166,7 @@ public class TagGroupLookupApiClientTest {
     }
 
     void verifyRequest(@UAirship.Platform int platform, String channel, Map<String, Set<String>> tags, String ifModifiedSince) throws JsonException {
-        assertEquals("https://test.urbanairship.com/api/channel-tags-lookup", testRequest.getURL().toString());
+        assertEquals("https://test.urbanairship.com/api/channel-tags-lookup", testRequest.getUrl().toString());
         assertEquals("POST", testRequest.getRequestMethod());
 
         JsonMap body = JsonValue.parseString(testRequest.getRequestBody()).optMap();

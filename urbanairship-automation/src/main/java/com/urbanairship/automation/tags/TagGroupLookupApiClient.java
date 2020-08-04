@@ -5,6 +5,7 @@ package com.urbanairship.automation.tags;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
@@ -96,14 +97,16 @@ class TagGroupLookupApiClient {
         String tagPayload = payload.toString();
         Logger.debug("Looking up tags with payload: %s", tagPayload);
 
-        Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                                          .setRequestBody(tagPayload, "application/json")
-                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .safeExecute();
-
-        if (response == null) {
-            Logger.error("Failed to refresh the cache.");
+        Response<Void> response;
+        try {
+            response = requestFactory.createRequest()
+                                     .setOperation("POST", url)
+                                     .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                                     .setRequestBody(tagPayload, "application/json")
+                                     .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                     .execute();
+        } catch (RequestException e) {
+            Logger.error(e, "Failed to refresh the cache.");
             return null;
         }
 
