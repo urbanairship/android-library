@@ -14,11 +14,17 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.auth.AuthException;
+import com.urbanairship.automation.deferred.Deferred;
+import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.tags.TagGroupManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -36,6 +42,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +62,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -73,6 +82,7 @@ public class InAppAutomationTest {
     private InAppMessageManager mockIamManager;
     private AirshipChannel mockChannel;
     private ActionRunRequestFactory mockActionRunRequestFactory;
+    private DeferredScheduleClient mockDeferredScheduleClient;
 
     @Before
     public void setup() {
@@ -81,6 +91,7 @@ public class InAppAutomationTest {
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
         mockEngine = mock(AutomationEngine.class);
+        mockDeferredScheduleClient = mock(DeferredScheduleClient.class);
 
         doAnswer(new Answer<Void>() {
             @Override
@@ -108,7 +119,7 @@ public class InAppAutomationTest {
         mockActionRunRequestFactory = mock(ActionRunRequestFactory.class);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                mockEngine, mockChannel, mockTagManager, mockObserver, mockIamManager, executor, mockActionRunRequestFactory);
+                mockEngine, mockChannel, mockTagManager, mockObserver, mockIamManager, executor, mockActionRunRequestFactory, mockDeferredScheduleClient);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -169,6 +180,58 @@ public class InAppAutomationTest {
     }
 
     @Test
+    public void testPrepareDeferredSchedule() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+        CustomEvent event = CustomEvent.newBuilder("some event").build();
+        TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .build();
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setId("cool")
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, message))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, triggerContext, callback);
+        verify(mockIamManager).onPrepare(schedule.getId(), message, callback);
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleMissedAudience() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        CustomEvent event = CustomEvent.newBuilder("some event").build();
+        TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setAudience(Audience.newBuilder()
+                                                                                 .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
+                                                                                 .build())
+                                                            .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(false, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, triggerContext, callback);
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+    }
+
+    @Test
     public void testOnCheckExecutionReadinessMessage() {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setId("cool")
@@ -184,6 +247,29 @@ public class InAppAutomationTest {
     }
 
     @Test
+    public void testPrepareDeferredScheduleNoMessage() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setAudience(Audience.newBuilder()
+                                                                                 .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
+                                                                                 .build())
+                                                            .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+    }
+
+    @Test
     public void testOnCheckExecutionReadinessActions() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                              .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -193,6 +279,109 @@ public class InAppAutomationTest {
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
 
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleFailedResponse() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(400).build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        verifyZeroInteractions(callback);
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleNoResponse() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenThrow(new RequestException("neat"))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        verifyZeroInteractions(callback);
+        runLooperTasks();
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleNoResponseNoRetry() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenThrow(new RequestException("neat"));
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleAuthException() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Schedule<Deferred> schedule = Schedule.newBuilder(deferredScheduleData)
+                                              .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                              .build();
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+                .thenThrow(new AuthException("neat"))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        verifyZeroInteractions(callback);
+
+        runLooperTasks();
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+    }
+
+    @Test
+    public void testPrepareDeferredScheduleNoChannel() throws MalformedURLException, AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn(null);
+
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .build();
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        verifyZeroInteractions(callback);
     }
 
     @Test
@@ -431,12 +620,12 @@ public class InAppAutomationTest {
     @Test
     public void testAudienceConditionsCheckMissBehaviorSkip() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setAudience(Audience.newBuilder()
-                                                         .setNotificationsOptIn(true)
-                                                         .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
-                                                         .build())
-                                    .build();
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .setAudience(Audience.newBuilder()
+                                                                  .setNotificationsOptIn(true)
+                                                                  .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
+                                                                  .build())
+                                             .build();
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -449,12 +638,12 @@ public class InAppAutomationTest {
     @Test
     public void testAudienceConditionsCheckMissBehaviorPenalize() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setAudience(Audience.newBuilder()
-                                                         .setNotificationsOptIn(true)
-                                                         .setMissBehavior(Audience.MISS_BEHAVIOR_PENALIZE)
-                                                         .build())
-                                    .build();
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .setAudience(Audience.newBuilder()
+                                                                  .setNotificationsOptIn(true)
+                                                                  .setMissBehavior(Audience.MISS_BEHAVIOR_PENALIZE)
+                                                                  .build())
+                                             .build();
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -471,13 +660,13 @@ public class InAppAutomationTest {
         when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
 
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setAudience(Audience.newBuilder()
-                                                         .setNotificationsOptIn(true)
-                                                         .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
-                                                         .setTagSelector(TagSelector.tag("expected tag", "expected group"))
-                                                         .build())
-                                    .build();
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .setAudience(Audience.newBuilder()
+                                                                  .setNotificationsOptIn(true)
+                                                                  .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
+                                                                  .setTagSelector(TagSelector.tag("expected tag", "expected group"))
+                                                                  .build())
+                                             .build();
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);

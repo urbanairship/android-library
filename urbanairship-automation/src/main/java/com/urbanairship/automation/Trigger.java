@@ -323,6 +323,17 @@ public class Trigger implements Parcelable, JsonSerializable {
         }
     }
 
+    /**
+     * Gets the trigger name.
+     * @return The trigger name.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public String getTriggerName() {
+        return convertType(type);
+    }
+
     @NonNull
     private static String convertType(@TriggerType int type) {
         switch (type) {

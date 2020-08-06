@@ -1,7 +1,8 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.automation;
+package com.urbanairship.automation.deferred;
 
+import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;

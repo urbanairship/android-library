@@ -68,7 +68,7 @@ public class AuthApiClientTest {
 
         assertEquals("https://example.com/api/auth/device", testRequest.getUrl().toString());
         assertEquals("GET", testRequest.getRequestMethod());
-        assertEquals("bearer VWtkZq18HZM3GWzD/q27qPSVszysSyoQfQ6tDEAcAko=\n", testRequest.getRequestHeaders().get("Authorization"));
+        assertEquals("Bearer VWtkZq18HZM3GWzD/q27qPSVszysSyoQfQ6tDEAcAko=\n", testRequest.getRequestHeaders().get("Authorization"));
         assertEquals("appKey", testRequest.getRequestHeaders().get("X-UA-App-Key"));
         assertEquals("some channel", testRequest.getRequestHeaders().get("X-UA-Channel"));
     }

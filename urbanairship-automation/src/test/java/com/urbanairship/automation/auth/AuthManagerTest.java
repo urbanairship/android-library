@@ -14,7 +14,6 @@ import org.junit.runner.RunWith;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +35,7 @@ public class AuthManagerTest {
     }
 
     @Test
-    public void testGetTokenFromClient() throws RequestException {
+    public void testGetTokenFromClient() throws RequestException, AuthException {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
@@ -47,19 +46,19 @@ public class AuthManagerTest {
         assertEquals("some token", authManager.getToken());
     }
 
-    @Test
-    public void testGetTokenFailed() throws RequestException {
+    @Test(expected = AuthException.class)
+    public void testGetTokenFailed() throws RequestException, AuthException {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
                 .thenReturn(new Response.Builder<AuthToken>(400)
                         .build());
 
-        assertNull(authManager.getToken());
+        authManager.getToken();
     }
 
     @Test
-    public void testGetTokenExpired() throws RequestException {
+    public void testGetTokenExpired() throws RequestException, AuthException {
         clock.currentTimeMillis = 0;
         when(mockChannel.getId()).thenReturn("channel id");
 
@@ -81,7 +80,7 @@ public class AuthManagerTest {
     }
 
     @Test
-    public void testGetTokenChannelIdChanged() throws RequestException {
+    public void testGetTokenChannelIdChanged() throws RequestException, AuthException {
         clock.currentTimeMillis = 0;
         when(mockChannel.getId()).thenReturn("channel id");
         when(mockClient.getToken("channel id"))
@@ -101,7 +100,7 @@ public class AuthManagerTest {
     }
 
     @Test
-    public void tokenExpired() throws RequestException {
+    public void tokenExpired() throws RequestException, AuthException {
         clock.currentTimeMillis = 0;
         when(mockChannel.getId()).thenReturn("channel id");
 

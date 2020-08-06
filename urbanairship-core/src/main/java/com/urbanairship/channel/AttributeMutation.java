@@ -11,9 +11,10 @@ import androidx.annotation.RestrictTo;
 
 /**
  * A model defining attribute mutations.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class AttributeMutation {
+public class AttributeMutation {
     private static final String ATTRIBUTE_ACTION_REMOVE = "remove";
     private static final String ATTRIBUTE_ACTION_SET = "set";
 

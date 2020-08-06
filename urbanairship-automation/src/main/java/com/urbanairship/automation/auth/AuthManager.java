@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.auth;
 
-import com.urbanairship.Logger;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -45,15 +44,15 @@ public class AuthManager {
     /**
      * Gets the auth token.
      *
-     * @return The auth token or null if the token was unable to be requested.
+     * @return The auth token.
      */
     @WorkerThread
-    @Nullable
-    public String getToken() {
+    @NonNull
+    public String getToken() throws AuthException {
         String channelId = channel.getId();
 
         if (channelId == null) {
-            return null;
+            throw new AuthException("Unable to create token, channel not created");
         }
 
         String cachedToken = getCachedToken(channelId);
@@ -67,13 +66,11 @@ public class AuthManager {
                 cache(authResponse.getResult());
                 return authResponse.getResult().getToken();
             } else {
-                Logger.error("Failed to generate token: %s", authResponse);
+                throw new AuthException("Failed to generate token. Response: " + authResponse);
             }
         } catch (RequestException e) {
-            Logger.error(e, "Failed to generate token");
+            throw new AuthException("Failed to generate token.", e);
         }
-
-        return null;
     }
 
     /**

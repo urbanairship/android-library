@@ -21,12 +21,18 @@ import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.auth.AuthException;
+import com.urbanairship.automation.auth.AuthManager;
+import com.urbanairship.automation.deferred.Deferred;
+import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.tags.TagGroupManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagGroupUtils;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
@@ -75,6 +81,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final TagGroupManager tagGroupManager;
     private final RetryingExecutor retryingExecutor;
     private final ActionRunRequestFactory actionRunRequestFactory;
+    private final DeferredScheduleClient deferredScheduleClient;
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -138,6 +145,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
         this.actionRunRequestFactory = new ActionRunRequestFactory();
+
+        this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig, new AuthManager(runtimeConfig, airshipChannel));
     }
 
     @VisibleForTesting
@@ -149,7 +158,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull InAppRemoteDataObserver observer,
                     @NonNull InAppMessageManager inAppMessageManager,
                     @NonNull RetryingExecutor retryingExecutor,
-                    @NonNull ActionRunRequestFactory actionRunRequestFactory) {
+                    @NonNull ActionRunRequestFactory actionRunRequestFactory,
+                    @NonNull DeferredScheduleClient deferredScheduleClient) {
         super(context, preferenceDataStore);
         this.automationEngine = engine;
         this.airshipChannel = airshipChannel;
@@ -158,6 +168,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.inAppMessageManager = inAppMessageManager;
         this.retryingExecutor = retryingExecutor;
         this.actionRunRequestFactory = actionRunRequestFactory;
+        this.deferredScheduleClient = deferredScheduleClient;
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
     }
 
@@ -500,20 +511,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
-                @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                switch (schedule.getAudience().getMissBehavior()) {
-                    case Audience.MISS_BEHAVIOR_CANCEL:
-                        result = AutomationDriver.PREPARE_RESULT_CANCEL;
-                        break;
-                    case Audience.MISS_BEHAVIOR_SKIP:
-                        result = AutomationDriver.PREPARE_RESULT_SKIP;
-                        break;
-                    case Audience.MISS_BEHAVIOR_PENALIZE:
-                        result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                        break;
-                }
-
-                callback.onFinish(result);
+                callback.onFinish(getPrepareResultMissedAudience(schedule));
                 return RetryingExecutor.RESULT_CANCEL;
             }
         };
@@ -524,10 +522,14 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 switch (schedule.getType()) {
                     case Schedule.TYPE_ACTION:
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-                        break;
+                        return RetryingExecutor.RESULT_FINISHED;
+
                     case Schedule.TYPE_IN_APP_MESSAGE:
                         inAppMessageManager.onPrepare(schedule.getId(), (InAppMessage) schedule.coerceType(), callback);
-                        break;
+                        return RetryingExecutor.RESULT_FINISHED;
+
+                    case Schedule.TYPE_DEFERRED:
+                        return onPrepareDeferredSchedule(schedule, triggerContext, callback);
                 }
 
                 Logger.error("Unexpected schedule type: %s", schedule.getType());
@@ -536,6 +538,56 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         };
 
         retryingExecutor.execute(checkAudience, prepareSchedule);
+    }
+
+    @RetryingExecutor.Result
+    private int onPrepareDeferredSchedule(final @NonNull Schedule<? extends ScheduleData> schedule,
+                                          final @Nullable TriggerContext triggerContext,
+                                          final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+
+        Deferred deferredScheduleData = (Deferred) schedule.coerceType();
+        Response<DeferredScheduleClient.Result> response;
+
+        String channelId = airshipChannel.getId();
+        if (channelId == null) {
+            return RetryingExecutor.RESULT_RETRY;
+        }
+
+        try {
+            response = deferredScheduleClient.performRequest(deferredScheduleData.url, channelId, triggerContext);
+        } catch (RequestException e) {
+            if (deferredScheduleData.retryOnTimeout) {
+                Logger.debug(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());
+                return RetryingExecutor.RESULT_RETRY;
+            } else {
+                Logger.debug(e, "Failed to resolve deferred schedule. Schedule: %s", schedule.getId());
+                callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+                return RetryingExecutor.RESULT_CANCEL;
+            }
+        } catch (AuthException e) {
+            Logger.debug(e, "Failed to resolve deferred schedule: %s", schedule.getId());
+            return RetryingExecutor.RESULT_RETRY;
+        }
+
+        if (!response.isSuccessful()) {
+            Logger.debug("Failed to resolve deferred schedule, will retry. Schedule: %s, Response: %", schedule.getId(), response);
+            return RetryingExecutor.RESULT_RETRY;
+        }
+
+        if (!response.getResult().isAudienceMatch()) {
+            callback.onFinish(getPrepareResultMissedAudience(schedule));
+            return RetryingExecutor.RESULT_CANCEL;
+        }
+
+        InAppMessage message = response.getResult().getMessage();
+        if (message != null) {
+            inAppMessageManager.onPrepare(schedule.getId(), message, callback);
+        } else {
+            // Handled by backend, penalize to count towards limit
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+        }
+
+        return RetryingExecutor.RESULT_FINISHED;
     }
 
     @MainThread
@@ -614,6 +666,24 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                    .setMetadata(metadata)
                                    .run(Looper.getMainLooper(), actionCallback);
         }
+    }
+
+    @AutomationDriver.PrepareResult
+    private int getPrepareResultMissedAudience(@NonNull Schedule schedule) {
+        @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
+        switch (schedule.getAudience().getMissBehavior()) {
+            case Audience.MISS_BEHAVIOR_CANCEL:
+                result = AutomationDriver.PREPARE_RESULT_CANCEL;
+                break;
+            case Audience.MISS_BEHAVIOR_SKIP:
+                result = AutomationDriver.PREPARE_RESULT_SKIP;
+                break;
+            case Audience.MISS_BEHAVIOR_PENALIZE:
+                result = AutomationDriver.PREPARE_RESULT_PENALIZE;
+                break;
+        }
+
+        return result;
     }
 
     /**

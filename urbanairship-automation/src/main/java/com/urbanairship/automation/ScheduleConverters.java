@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.storage.FullSchedule;
 import com.urbanairship.automation.storage.ScheduleEntity;
 import com.urbanairship.automation.storage.TriggerEntity;

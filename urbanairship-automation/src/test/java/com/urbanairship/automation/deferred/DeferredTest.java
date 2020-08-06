@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.automation;
+package com.urbanairship.automation.deferred;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class DeferredScheduleDataTest {
+public class DeferredTest {
 
     @Test
     public void testFromJson() throws JsonException, MalformedURLException {

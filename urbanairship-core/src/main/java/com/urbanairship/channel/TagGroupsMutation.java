@@ -21,6 +21,8 @@ import androidx.annotation.RestrictTo;
 
 /**
  * Defines a tag group mutations.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class TagGroupsMutation implements JsonSerializable {
@@ -363,7 +365,7 @@ public class TagGroupsMutation implements JsonSerializable {
                 Set<String> tags = tagGroups.get(entry.getKey());
                 if (tags == null) {
                     tags = new HashSet<>();
-                    tagGroups.put(entry.getKey(),tags);
+                    tagGroups.put(entry.getKey(), tags);
                 }
 
                 tags.addAll(entry.getValue());

@@ -72,7 +72,7 @@ class AuthApiClient {
                              .setAirshipJsonAcceptsHeader()
                              .setHeader("X-UA-App-Key", runtimeConfig.getConfigOptions().appKey)
                              .setHeader("X-UA-Channel", channelId)
-                             .setHeader("Authorization", "bearer " + bearerToken)
+                             .setHeader("Authorization", "Bearer " + bearerToken)
                              .execute(new ResponseParser<AuthToken>() {
                                  @Override
                                  public AuthToken parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {

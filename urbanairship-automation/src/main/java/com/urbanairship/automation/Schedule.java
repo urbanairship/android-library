@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
