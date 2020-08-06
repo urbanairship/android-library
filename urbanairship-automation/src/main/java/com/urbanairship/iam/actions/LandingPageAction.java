@@ -136,7 +136,7 @@ public class LandingPageAction extends Action {
      * @return The schedule info.
      */
     @NonNull
-    protected Schedule createSchedule(@NonNull Uri uri, @NonNull ActionArguments arguments) {
+    protected Schedule<InAppMessage> createSchedule(@NonNull Uri uri, @NonNull ActionArguments arguments) {
         JsonMap options = arguments.getValue().toJsonValue().optMap();
 
         int width = options.opt(HtmlDisplayContent.WIDTH_KEY).getInt(0);
@@ -173,7 +173,7 @@ public class LandingPageAction extends Action {
 
         InAppMessage message = extendMessage(messageBuilder).build();
 
-        Schedule.Builder scheduleInfoBuilder = Schedule.newMessageScheduleBuilder(message)
+        Schedule.Builder<InAppMessage> scheduleInfoBuilder = Schedule.newBuilder(message)
                                                        .setId(messageId)
                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
                                                        .setLimit(1)
@@ -200,7 +200,7 @@ public class LandingPageAction extends Action {
      * @return The builder.
      */
     @NonNull
-    protected Schedule.Builder extendSchedule(@NonNull Schedule.Builder builder) {
+    protected Schedule.Builder<InAppMessage> extendSchedule(@NonNull Schedule.Builder<InAppMessage> builder) {
         return builder;
     }
 

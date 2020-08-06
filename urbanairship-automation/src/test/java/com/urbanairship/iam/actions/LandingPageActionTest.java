@@ -10,7 +10,6 @@ import com.urbanairship.actions.ActionValue;
 import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonValue;
@@ -146,12 +145,12 @@ public class LandingPageActionTest {
             ActionResult result = action.perform(args);
             assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
-            verify(inAppAutomation).schedule(Mockito.argThat(new ArgumentMatcher<Schedule>() {
+            verify(inAppAutomation).schedule(Mockito.argThat(new ArgumentMatcher<Schedule<InAppMessage>>() {
 
                 @Override
-                public boolean matches(Schedule argument) {
+                public boolean matches(Schedule<InAppMessage> argument) {
                     try {
-                        InAppMessage message = argument.requireData();
+                        InAppMessage message = argument.getData();
                         if (!message.getType().equals(InAppMessage.TYPE_HTML)) {
                             return false;
                         }

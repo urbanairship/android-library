@@ -63,9 +63,25 @@ public abstract class AutomationDao {
     public abstract FullSchedule getSchedule(@NonNull String scheduleId);
 
     @Transaction
+    @Query("SELECT * FROM schedules WHERE (scheduleId == :scheduleId) AND (scheduleType = :type)")
+    @Nullable
+    public abstract FullSchedule getSchedule(@NonNull String scheduleId, @NonNull String type);
+
+    @Transaction
     @Query("SELECT * FROM schedules WHERE (scheduleId IN (:scheduleIds))")
     @NonNull
     public abstract List<FullSchedule> getSchedules(@NonNull Collection<String> scheduleIds);
+
+
+    @Transaction
+    @Query("SELECT * FROM schedules WHERE (scheduleId IN (:scheduleIds)) AND (scheduleType = :type)")
+    @NonNull
+    public abstract List<FullSchedule> getSchedules(@NonNull Collection<String> scheduleIds, @NonNull String type);
+
+    @Transaction
+    @Query("SELECT * FROM schedules WHERE (`group` == :group) AND (scheduleType = :type)")
+    @NonNull
+    public abstract List<FullSchedule> getSchedulesWithGroup(@NonNull String group, @NonNull String type);
 
     @Transaction
     @Query("SELECT * FROM schedules WHERE (`group` == :group)")

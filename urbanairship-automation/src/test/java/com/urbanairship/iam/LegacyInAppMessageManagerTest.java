@@ -85,14 +85,14 @@ public class LegacyInAppMessageManagerTest {
     public void testPushReceived() {
         pushListener.onPushReceived(pushMessage, true);
 
-        verify(inAppAutomation).schedule(argThat(new ArgumentMatcher<Schedule>() {
+        verify(inAppAutomation).schedule(argThat(new ArgumentMatcher<Schedule<InAppMessage>>() {
             @Override
-            public boolean matches(Schedule schedule) {
+            public boolean matches(Schedule<InAppMessage> schedule) {
                 if (!schedule.getId().equals("send id")) {
                     return false;
                 }
 
-                BannerDisplayContent displayContent = ((InAppMessage) schedule.requireData()).getDisplayContent();
+                BannerDisplayContent displayContent = schedule.getData().getDisplayContent();
                 if (!displayContent.getBody().getText().equals("Oh hi!")) {
                     return false;
                 }

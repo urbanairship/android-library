@@ -7,6 +7,7 @@ import android.text.format.DateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.navigation.Navigation
+import com.urbanairship.automation.Audience
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.Trigger
@@ -36,23 +37,23 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
     }
 
-    private fun navigateToAudience(schedule: Schedule) {
+    private fun navigateToAudience(audience: Audience) {
         val args = Bundle()
-        args.putParcelable(AudienceDetailsFragment.AUDIENCE_SCHEDULE, schedule)
+        args.putString(AudienceDetailsFragment.ARGUMENT_AUDIENCE, audience.toJsonValue().toString())
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppAudienceDetailsFragment, args)
     }
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
-        val scheduleLiveData = PendingResultLiveData<Schedule>(InAppAutomation.shared().getSchedule(scheduleId))
+        val scheduleLiveData = PendingResultLiveData<Schedule<InAppMessage>>(InAppAutomation.shared().getMessageSchedule(scheduleId))
         return Transformations.map(scheduleLiveData) { schedule ->
             detailsForSchedule(schedule)
         }
     }
 
-    private fun detailsForSchedule(schedule: Schedule): List<AutomationDetail> {
-        val message = schedule.requireData<InAppMessage>()
+    private fun detailsForSchedule(schedule: Schedule<InAppMessage>): List<AutomationDetail> {
+        val message = schedule.data
         val dateFormat = DateFormat.getLongDateFormat(requireContext())
 
         return mutableListOf<AutomationDetail>().apply {
@@ -61,9 +62,13 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()) {
                 navigateToDisplayContent(message)
             })
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_audience_key)) {
-                navigateToAudience(schedule)
-            })
+
+            schedule.audience?.let {
+                add(AutomationDetail(getString(R.string.ua_iaa_debug_audience_key)) {
+                    navigateToAudience(it)
+                })
+            }
+
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
 
             if (schedule.start >= 0) {

@@ -25,9 +25,9 @@ public class DeferredScheduleDataTest {
                                      .build()
                                      .toJsonValue();
 
-        DeferredScheduleData deferredScheduleData = DeferredScheduleData.fromJson(jsonValue);
-        assertEquals(new URL("https://neat.com"), deferredScheduleData.getUrl());
-        assertFalse(deferredScheduleData.isRetriableOnTimeout());
+        Deferred deferred = Deferred.fromJson(jsonValue);
+        assertEquals(new URL("https://neat.com"), deferred.getUrl());
+        assertFalse(deferred.isRetriableOnTimeout());
     }
 
     @Test
@@ -37,9 +37,9 @@ public class DeferredScheduleDataTest {
                                      .build()
                                      .toJsonValue();
 
-        DeferredScheduleData deferredScheduleData = DeferredScheduleData.fromJson(jsonValue);
-        assertEquals(new URL("https://neat.com"), deferredScheduleData.getUrl());
-        assertTrue(deferredScheduleData.isRetriableOnTimeout());
+        Deferred deferred = Deferred.fromJson(jsonValue);
+        assertEquals(new URL("https://neat.com"), deferred.getUrl());
+        assertTrue(deferred.isRetriableOnTimeout());
     }
 
     @Test(expected = JsonException.class)
@@ -49,7 +49,7 @@ public class DeferredScheduleDataTest {
                                      .build()
                                      .toJsonValue();
 
-        DeferredScheduleData.fromJson(jsonValue);
+        Deferred.fromJson(jsonValue);
     }
 
     @Test(expected = JsonException.class)
@@ -59,7 +59,7 @@ public class DeferredScheduleDataTest {
                                      .build()
                                      .toJsonValue();
 
-        DeferredScheduleData.fromJson(jsonValue);
+        Deferred.fromJson(jsonValue);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class DeferredScheduleDataTest {
                                     .build()
                                     .toJsonValue();
 
-        JsonValue toJson = new DeferredScheduleData(new URL("https://neat.com"), false).toJsonValue();
+        JsonValue toJson = new Deferred(new URL("https://neat.com"), false).toJsonValue();
 
         assertEquals(expected, toJson);
     }

@@ -170,12 +170,12 @@ class InAppRemoteDataObserver {
         JsonMap lastPayloadMetadata = getLastPayloadMetadata();
 
         JsonMap scheduleMetadata = JsonMap.newBuilder()
-                                         .put(REMOTE_DATA_METADATA, payload.getMetadata())
-                                         .build();
+                                          .put(REMOTE_DATA_METADATA, payload.getMetadata())
+                                          .build();
 
         boolean isMetadataUpToDate = payload.getMetadata().equals(lastPayloadMetadata);
 
-        List<Schedule> newSchedules = new ArrayList<>();
+        List<Schedule<? extends ScheduleData>> newSchedules = new ArrayList<>();
 
         Set<String> scheduledRemoteIds = filterRemoteSchedules(scheduler.getSchedules().get());
 
@@ -207,7 +207,7 @@ class InAppRemoteDataObserver {
 
             if (createdTimeStamp > lastUpdate) {
                 try {
-                    Schedule schedule = parseSchedule(messageJson, scheduleMetadata);
+                    Schedule<? extends ScheduleData> schedule = parseSchedule(messageJson, scheduleMetadata);
                     if (checkSchedule(schedule, createdTimeStamp)) {
                         newSchedules.add(schedule);
                         Logger.debug("New in-app message: %s", schedule);
@@ -217,17 +217,17 @@ class InAppRemoteDataObserver {
                 }
             } else if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
-                    ScheduleEdits originalEdits = parseEdits(messageJson);
-                    ScheduleEdits edits = ScheduleEdits.newBuilder(originalEdits)
-                                                       .setMetadata(scheduleMetadata)
-                                                       // Since we cancel a schedule by setting the end and start time to the payload,
-                                                       // clear them (-1) if the edits are null.
-                                                       .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
-                                                       .setStart(originalEdits.getStart() == null ? -1 : originalEdits.getStart())
-                                                       .build();
+                    ScheduleEdits<?> originalEdits = parseEdits(messageJson);
+                    ScheduleEdits<?> edits = ScheduleEdits.newBuilder(originalEdits)
+                                                          .setMetadata(scheduleMetadata)
+                                                          // Since we cancel a schedule by setting the end and start time to the payload,
+                                                          // clear them (-1) if the edits are null.
+                                                          .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
+                                                          .setStart(originalEdits.getStart() == null ? -1 : originalEdits.getStart())
+                                                          .build();
 
-                    Schedule schedule = scheduler.editSchedule(scheduleId, edits).get();
-                    if (schedule != null) {
+                    Boolean edited = scheduler.editSchedule(scheduleId, edits).get();
+                    if (edited != null && edited) {
                         Logger.debug("Updated in-app message: %s with edits: %s", scheduleId, edits);
                     }
                 } catch (JsonException e) {
@@ -250,11 +250,11 @@ class InAppRemoteDataObserver {
             // To cancel, we need to set the end time to the payload's last modified timestamp. To avoid
             // validation errors, the start must to be equal to or before the end time. If the schedule
             // comes back, the edits will reapply the start and end times from the schedule edits.
-            ScheduleEdits edits = ScheduleEdits.newBuilder()
-                                               .setMetadata(scheduleMetadata)
-                                               .setStart(payload.getTimestamp())
-                                               .setEnd(payload.getTimestamp())
-                                               .build();
+            ScheduleEdits<? extends ScheduleData> edits = ScheduleEdits.newBuilder()
+                                                                       .setMetadata(scheduleMetadata)
+                                                                       .setStart(payload.getTimestamp())
+                                                                       .setEnd(payload.getTimestamp())
+                                                                       .build();
 
             for (String scheduleId : schedulesToRemove) {
                 scheduler.editSchedule(scheduleId, edits).get();
@@ -282,7 +282,7 @@ class InAppRemoteDataObserver {
      * @param createdTimeStamp The created times stamp.
      * @return {@code true} if the message should be scheduled, otherwise {@code false}.
      */
-    private boolean checkSchedule(Schedule schedule, long createdTimeStamp) {
+    private boolean checkSchedule(Schedule<? extends ScheduleData> schedule, long createdTimeStamp) {
         Context context = UAirship.getApplicationContext();
         Audience audience = schedule.getAudience();
         boolean allowNewUser = createdTimeStamp <= getScheduleNewUserCutOffTime();
@@ -290,14 +290,14 @@ class InAppRemoteDataObserver {
     }
 
     @NonNull
-    private Set<String> filterRemoteSchedules(@Nullable Collection<Schedule> schedules) {
+    private Set<String> filterRemoteSchedules(@Nullable Collection<Schedule<? extends ScheduleData>> schedules) {
         if (schedules == null) {
             return Collections.emptySet();
         }
 
         HashSet<String> scheduleIds = new HashSet<>();
 
-        for (Schedule schedule : schedules) {
+        for (Schedule<? extends ScheduleData> schedule : schedules) {
             if (isRemoteSchedule(schedule)) {
                 scheduleIds.add(schedule.getId());
             }
@@ -342,17 +342,17 @@ class InAppRemoteDataObserver {
      * @return A schedule info.
      * @throws JsonException If the json value contains an invalid schedule info.
      */
-    public static Schedule parseSchedule(@NonNull JsonValue value, @Nullable JsonMap metadata) throws JsonException {
+    public static Schedule<? extends ScheduleData> parseSchedule(@NonNull JsonValue value, @NonNull JsonMap metadata) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
 
-        Schedule.Builder builder = Schedule.newMessageScheduleBuilder(message)
-                                           .setId(message.getId())
-                                           .setMetadata(metadata)
-                                           .setGroup(jsonMap.opt(GROUP_KEY).getString())
-                                           .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
-                                           .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
+        Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(message)
+                                                         .setId(message.getId())
+                                                         .setMetadata(metadata)
+                                                         .setGroup(jsonMap.opt(GROUP_KEY).getString())
+                                                         .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+                                                         .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
 
         if (jsonMap.containsKey(END_KEY)) {
             try {
@@ -406,10 +406,12 @@ class InAppRemoteDataObserver {
      * @throws JsonException If the json is invalid.
      */
     @NonNull
-    public static ScheduleEdits parseEdits(@NonNull JsonValue value) throws JsonException {
+    public static ScheduleEdits<? extends ScheduleData> parseEdits(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
-        ScheduleEdits.Builder builder = ScheduleEdits.newBuilder();
+        InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
+
+        ScheduleEdits.Builder<InAppMessage> builder = ScheduleEdits.newBuilder(message);
 
         if (jsonMap.containsKey(LIMIT_KEY)) {
             builder.setLimit(jsonMap.opt(LIMIT_KEY).getInt(1));
@@ -443,9 +445,6 @@ class InAppRemoteDataObserver {
             builder.setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS);
         }
 
-        InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
-        builder.setData(message);
-
         return builder.build();
     }
 
@@ -464,7 +463,7 @@ class InAppRemoteDataObserver {
      * @param schedule The schedule.
      * @return {@code true} if the schedule valid, otherwise {@code false}.
      */
-    public boolean isScheduleValid(@NonNull Schedule schedule) {
+    public boolean isScheduleValid(@NonNull Schedule<? extends ScheduleData> schedule) {
         return remoteData.isMetadataCurrent(schedule.getMetadata()
                                                     .opt(InAppRemoteDataObserver.REMOTE_DATA_METADATA)
                                                     .optMap());
@@ -476,17 +475,14 @@ class InAppRemoteDataObserver {
      * @param schedule The schedule.
      * @return {@code true} if the schedule is from remote-data, otherwise {@code false}.
      */
-    boolean isRemoteSchedule(@NonNull Schedule schedule) {
+    boolean isRemoteSchedule(@NonNull Schedule<? extends ScheduleData> schedule) {
         if (schedule.getMetadata().containsKey(REMOTE_DATA_METADATA)) {
             return true;
         }
 
-        // Legacy way of determining a remote-data schedule
         if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-            InAppMessage message = schedule.requireData();
-            if (InAppMessage.SOURCE_REMOTE_DATA.equals(message.getSource())) {
-                return true;
-            }
+            InAppMessage message = (InAppMessage) schedule.coerceType();
+            return InAppMessage.SOURCE_REMOTE_DATA.equals(message.getSource());
         }
 
         return false;

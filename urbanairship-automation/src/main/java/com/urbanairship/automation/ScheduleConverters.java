@@ -2,10 +2,14 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.storage.FullSchedule;
 import com.urbanairship.automation.storage.ScheduleEntity;
 import com.urbanairship.automation.storage.TriggerEntity;
+import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,33 +24,34 @@ import androidx.annotation.NonNull;
 class ScheduleConverters {
 
     @NonNull
-    static List<FullSchedule> convertSchedules(@NonNull Collection<Schedule> schedules) {
+    static List<FullSchedule> convertSchedules(@NonNull Collection<Schedule<? extends ScheduleData>> schedules) {
         List<FullSchedule> entries = new ArrayList<>();
-        for (Schedule schedule : schedules) {
+        for (Schedule<?> schedule : schedules) {
             entries.add(convert(schedule));
         }
         return entries;
     }
 
     @NonNull
-    static Schedule convert(@NonNull FullSchedule entry) throws JsonException, IllegalArgumentException {
-        Schedule.Builder scheduleBuilder =  Schedule.newBuilder(entry.schedule.scheduleType, entry.schedule.data)
-                       .setId(entry.schedule.scheduleId)
-                       .setMetadata(entry.schedule.metadata)
-                       .setGroup(entry.schedule.group)
-                       .setEnd(entry.schedule.scheduleEnd)
-                       .setStart(entry.schedule.scheduleStart)
-                       .setLimit(entry.schedule.limit)
-                       .setPriority(entry.schedule.priority)
-                       .setInterval(entry.schedule.interval, TimeUnit.MILLISECONDS)
-                       .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
-                       .setAudience(entry.schedule.audience);
+    static <T extends ScheduleData> Schedule<T> convert(@NonNull FullSchedule entry) throws JsonException, IllegalArgumentException, ClassCastException {
+        Schedule.Builder<T> scheduleBuilder = createScheduleBuilder(entry.schedule.data, entry.schedule.scheduleType);
+
+        scheduleBuilder = scheduleBuilder.setId(entry.schedule.scheduleId)
+                .setMetadata(entry.schedule.metadata)
+                .setGroup(entry.schedule.group)
+                .setEnd(entry.schedule.scheduleEnd)
+                .setStart(entry.schedule.scheduleStart)
+                .setLimit(entry.schedule.limit)
+                .setPriority(entry.schedule.priority)
+                .setInterval(entry.schedule.interval, TimeUnit.MILLISECONDS)
+                .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
+                .setAudience(entry.schedule.audience);
 
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
-                .setAppState(entry.schedule.appState)
-                .setRegionId(entry.schedule.regionId)
-                .setScreens(entry.schedule.screens)
-                .setSeconds(entry.schedule.seconds);
+                                                          .setAppState(entry.schedule.appState)
+                                                          .setRegionId(entry.schedule.regionId)
+                                                          .setScreens(entry.schedule.screens)
+                                                          .setSeconds(entry.schedule.seconds);
 
         for (TriggerEntity entity : entry.triggers) {
             if (entity.isCancellation) {
@@ -65,7 +70,7 @@ class ScheduleConverters {
     }
 
     @NonNull
-    static FullSchedule convert(@NonNull Schedule schedule) {
+    static FullSchedule convert(@NonNull Schedule<?> schedule) {
         ScheduleEntity entity = new ScheduleEntity();
         List<TriggerEntity> triggerEntities = new ArrayList<>();
 
@@ -113,4 +118,22 @@ class ScheduleConverters {
         entity.parentScheduleId = parentScheduleId;
         return entity;
     }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends ScheduleData> Schedule.Builder<T> createScheduleBuilder(@NonNull JsonValue json, @Schedule.Type String type) throws JsonException {
+        switch (type) {
+            case Schedule.TYPE_ACTION:
+                JsonMap actionsMap = json.optMap();
+                return (Schedule.Builder<T>) Schedule.newBuilder(new Actions(actionsMap));
+            case Schedule.TYPE_IN_APP_MESSAGE:
+                InAppMessage message = InAppMessage.fromJson(json);
+                return (Schedule.Builder<T>) Schedule.newBuilder(message);
+            case Schedule.TYPE_DEFERRED:
+                Deferred deferred = Deferred.fromJson(json);
+                return (Schedule.Builder<T>) Schedule.newBuilder(deferred);
+        }
+
+        throw new IllegalArgumentException("Invalid type: " + type);
+    }
+
 }

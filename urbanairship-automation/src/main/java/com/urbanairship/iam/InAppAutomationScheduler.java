@@ -4,12 +4,15 @@ package com.urbanairship.iam;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.automation.Schedule;
+import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.automation.ScheduleEdits;
+import com.urbanairship.automation.actions.Actions;
 
 import java.util.Collection;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Interface for scheduling in-app automations.
@@ -24,7 +27,7 @@ public interface InAppAutomationScheduler {
      * otherwise {@code false}.
      */
     @NonNull
-    PendingResult<Boolean> schedule(@NonNull Schedule schedule);
+    PendingResult<Boolean> schedule(@NonNull Schedule<? extends ScheduleData> schedule);
 
     /**
      * Cancels an in-app schedule.
@@ -53,42 +56,79 @@ public interface InAppAutomationScheduler {
      * otherwise {@code false}.
      */
     @NonNull
-    PendingResult<Boolean> schedule(@NonNull List<Schedule> schedules);
+    PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules);
 
     /**
-     * Gets the schedules by group.
+     * Gets action schedules by group.
      *
      * @param group The group.
      * @return A pending result.
      */
     @NonNull
-    PendingResult<Collection<Schedule>> getScheduleGroup(@NonNull String group);
+    PendingResult<Collection<Schedule<Actions>>> getActionScheduleGroup(@NonNull String group);
 
     /**
-     * Gets the schedule.
+     * Gets an action schedule by ID.
      *
      * @param scheduleId The schedule ID.
      * @return A pending result.
      */
     @NonNull
-    PendingResult<Schedule> getSchedule(@NonNull String scheduleId);
+    PendingResult<Schedule<Actions>> getActionSchedule(@NonNull String scheduleId);
+
+    /**
+     * Gets all action schedules.
+     *
+     * @return A pending result.
+     */
+    @NonNull
+    PendingResult<Collection<Schedule<Actions>>> getActionSchedules();
+
+
+    /**
+     * Gets message schedules by group.
+     *
+     * @param group The group.
+     * @return A pending result.
+     */
+    @NonNull
+    PendingResult<Collection<Schedule<InAppMessage>>> getMessageScheduleGroup(@NonNull String group);
+
+    /**
+     * Gets a message schedule by ID.
+     *
+     * @param scheduleId The schedule ID.
+     * @return A pending result.
+     */
+    @NonNull
+    PendingResult<Schedule<InAppMessage>> getMessageSchedule(@NonNull String scheduleId);
+
+    /**
+     * Gets all message schedules.
+     *
+     * @return A pending result.
+     */
+    @NonNull
+    PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules();
 
     /**
      * Gets all the schedules.
      *
      * @return A pending result.
+     * @hide
      */
     @NonNull
-    PendingResult<Collection<Schedule>> getSchedules();
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules();
 
     /**
      * Edits an in-app schedule.
      *
      * @param scheduleId The schedule ID.
      * @param edits The edits.
-     * @return A pending result with the updated schedule.
+     * @return A pending result with the result.
      */
     @NonNull
-    PendingResult<Schedule> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits edits);
+    PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits);
 
 }

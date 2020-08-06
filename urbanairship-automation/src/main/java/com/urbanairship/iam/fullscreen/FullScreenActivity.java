@@ -150,7 +150,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         InAppActionUtils.runActions(buttonInfo);
-        getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo), getDisplayTime());
+        getDisplayHandler().finished(ResolutionInfo.dismissed(), getDisplayTime());
         finish();
     }
 

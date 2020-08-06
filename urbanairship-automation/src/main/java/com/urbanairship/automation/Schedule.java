@@ -2,13 +2,9 @@
 
 package com.urbanairship.automation;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
 
@@ -27,42 +23,46 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 
 /**
- * Schedule info.
+ * Schedule.
  */
-public class Schedule implements Parcelable {
+public final class Schedule<T extends ScheduleData> {
 
-    public static final Creator<Schedule> CREATOR = new Creator<Schedule>() {
-        @Override
-        public Schedule createFromParcel(Parcel in) {
-            return new Schedule(in);
-        }
-
-        @Override
-        public Schedule[] newArray(int size) {
-            return new Schedule[size];
-        }
-    };
-
+    /**
+     * Schedule types.
+     *
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @StringDef({ TYPE_IN_APP_MESSAGE, TYPE_ACTION, TYPE_DEFERRED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {}
 
     /**
      * Message in-app automation type.
+     *
+     * @hide
      */
     @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static final String TYPE_IN_APP_MESSAGE = "in_app_message";
 
     /**
      * Actions in-app automation type.
+     *
+     * @hide
      */
     @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static final String TYPE_ACTION = "actions";
 
     /**
      * Deferred in-app automation type.
+     *
+     * @hide
      */
     @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static final String TYPE_DEFERRED = "deferred";
 
     /**
@@ -85,14 +85,14 @@ public class Schedule implements Parcelable {
 
     @Type
     private final String type;
-    private final JsonSerializable data;
+    private final T data;
 
     /**
      * Default constructor.
      *
      * @param builder The schedule builder.
      */
-    private Schedule(@NonNull Builder builder) {
+    private Schedule(@NonNull Builder<T> builder) {
         this.id = builder.id == null ? UUID.randomUUID().toString() : builder.id;
         this.metadata = builder.metadata == null ? JsonMap.EMPTY_MAP : builder.metadata;
         this.limit = builder.limit;
@@ -107,70 +107,6 @@ public class Schedule implements Parcelable {
         this.type = builder.type;
         this.group = builder.group;
         this.audience = builder.audience;
-    }
-
-    private Schedule(Parcel in) {
-        this.id = in.readString();
-        JsonMap parsedMetadata;
-        try {
-            parsedMetadata = JsonValue.parseString(in.readString()).optMap();
-        } catch (JsonException e) {
-            throw new IllegalArgumentException("Unexpected metadata", e);
-        }
-
-        this.metadata = parsedMetadata;
-
-        this.triggers = in.createTypedArrayList(Trigger.CREATOR);
-        this.limit = in.readInt();
-        this.priority = in.readInt();
-        this.group = in.readString();
-        this.start = in.readLong();
-        this.end = in.readLong();
-        this.editGracePeriod = in.readLong();
-        this.interval = in.readLong();
-        this.delay = in.readParcelable(ScheduleDelay.class.getClassLoader());
-        try {
-            String type = in.readString();
-            Checks.checkNotNull(type, "Missing type");
-            this.type = parseType(type);
-            this.data = parseData(JsonValue.parseString(in.readString()), type);
-        } catch (JsonException e) {
-            throw new IllegalArgumentException("Unexpected type and data", e);
-        }
-
-        String audienceJson = in.readString();
-        if (audienceJson != null) {
-            try {
-                this.audience = Audience.fromJson(JsonValue.parseString(audienceJson));
-            } catch (JsonException e) {
-                throw new IllegalArgumentException("Unexpected audience", e);
-            }
-        } else {
-            this.audience = null;
-        }
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(metadata.toString());
-        dest.writeTypedList(triggers);
-        dest.writeInt(limit);
-        dest.writeInt(priority);
-        dest.writeString(group);
-        dest.writeLong(start);
-        dest.writeLong(end);
-        dest.writeLong(editGracePeriod);
-        dest.writeLong(interval);
-        dest.writeParcelable(delay, flags);
-        dest.writeString(type);
-        dest.writeParcelable(JsonValue.wrapOpt(data), flags);
-        dest.writeString(audience == null ? null : audience.toJsonValue().toString());
     }
 
     /**
@@ -224,35 +160,31 @@ public class Schedule implements Parcelable {
     }
 
     /**
-     * Gets the schedule data.
+     * Gets the schedule data, coerced to the specified type.
      *
-     * @return Schedule data or null if the type is mismatched.
+     * @return Schedule data, coerced to the specified type.
      */
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public <T> T getData() {
-        try {
-            return (T) data;
-        } catch (ClassCastException e) {
-            return null;
-        }
+    public T getData() {
+        return data;
     }
 
     /**
      * Gets the data.
      *
-     * If the data is the wrong type, an {@link IllegalArgumentException} will be thrown..
+     * If the data is the wrong type, an {@link IllegalArgumentException} will be thrown.
      *
      * @return Schedule data.
+     * @hide
      */
     @NonNull
-    public <T> T requireData() {
-        T data = getData();
-        if (data == null) {
-            throw new IllegalArgumentException("Unexpected data");
+    @SuppressWarnings("unchecked")
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public <R extends ScheduleData> R coerceType() {
+        try {
+            return (R) data;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Unexpected data", e);
         }
-
-        return data;
     }
 
     /**
@@ -331,8 +263,8 @@ public class Schedule implements Parcelable {
 
     /**
      * Gets the schedule data as JSON.
-     * @return The schedule data as a JSON value.
      *
+     * @return The schedule data as a JSON value.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -344,21 +276,35 @@ public class Schedule implements Parcelable {
     /**
      * Create a new builder for an action schedule.
      *
+     * @param actions The actions.
      * @return A new builder instance.
      */
     @NonNull
-    public static Builder newActionScheduleBuilder(@NonNull JsonMap actions) {
-        return new Builder(TYPE_ACTION, actions);
+    public static Builder<Actions> newBuilder(@NonNull Actions actions) {
+        return new Builder<>(TYPE_ACTION, actions);
     }
 
     /**
      * Create a new builder for an in-app message schedule.
      *
+     * @param message The message.
      * @return A new builder instance.
      */
     @NonNull
-    public static Builder newMessageScheduleBuilder(@NonNull InAppMessage message) {
-        return new Builder(TYPE_IN_APP_MESSAGE, message);
+    public static Builder<InAppMessage> newBuilder(@NonNull InAppMessage message) {
+        return new Builder<>(TYPE_IN_APP_MESSAGE, message);
+    }
+
+    /**
+     * Create a new builder for a deferred schedule.
+     *
+     * @param deferred The deferred schedule data.
+     * @return A new builder instance.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    static Builder<Deferred> newBuilder(Deferred deferred) {
+        return new Builder<>(TYPE_DEFERRED, deferred);
     }
 
     /**
@@ -368,23 +314,8 @@ public class Schedule implements Parcelable {
      * @return A new builder instance.
      */
     @NonNull
-    public static Builder newBuilder(@NonNull Schedule schedule) {
-        return new Builder(schedule);
-    }
-
-    /**
-     * Creates a builder with a given type and value.
-     *
-     * @param type The schedule type.
-     * @param json The JSON value.
-     * @return The builder.
-     * @throws JsonException If the value or type is invalid.
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static Builder newBuilder(@NonNull String type, @NonNull JsonValue json) throws JsonException {
-        @Type String parsedType = parseType(type);
-        return new Builder(parsedType, parseData(json, parsedType));
+    public static <T extends ScheduleData> Builder<T> newBuilder(@NonNull Schedule<T> schedule) {
+        return new Builder<>(schedule);
     }
 
     @Override
@@ -451,37 +382,10 @@ public class Schedule implements Parcelable {
                 '}';
     }
 
-    @Type
-    private static String parseType(@NonNull String type) throws JsonException {
-        switch (type) {
-            case TYPE_ACTION:
-                return TYPE_ACTION;
-            case TYPE_IN_APP_MESSAGE:
-                return TYPE_IN_APP_MESSAGE;
-            case TYPE_DEFERRED:
-                return TYPE_DEFERRED;
-        }
-
-        throw new JsonException("Invalid type: " + type);
-    }
-
-    private static JsonSerializable parseData(@NonNull JsonValue json, @Schedule.Type String type) throws JsonException {
-        switch (type) {
-            case Schedule.TYPE_ACTION:
-                return json.optMap();
-            case Schedule.TYPE_IN_APP_MESSAGE:
-                return InAppMessage.fromJson(json);
-            case Schedule.TYPE_DEFERRED:
-                return DeferredScheduleData.fromJson(json);
-        }
-
-        throw new JsonException("Invalid type: " + type);
-    }
-
     /**
      * In-app message schedule info builder.
      */
-    public static class Builder {
+    public static class Builder<T extends ScheduleData> {
 
         private int limit = 1;
         private long start = -1;
@@ -491,7 +395,7 @@ public class Schedule implements Parcelable {
         private int priority;
         private long editGracePeriod;
         private long interval;
-        private JsonSerializable data;
+        private T data;
         @Type
         private String type;
         private String group;
@@ -499,7 +403,7 @@ public class Schedule implements Parcelable {
         private String id;
         private Audience audience;
 
-        private Builder(@NonNull Schedule info) {
+        private Builder(@NonNull Schedule<T> info) {
             this.id = info.id;
             this.metadata = info.metadata == null ? JsonMap.EMPTY_MAP : info.metadata;
             this.limit = info.limit;
@@ -515,7 +419,7 @@ public class Schedule implements Parcelable {
             this.audience = info.audience;
         }
 
-        private Builder(@NonNull @Type String type, @NonNull JsonSerializable data) {
+        private Builder(@NonNull @Type String type, @NonNull T data) {
             this.type = type;
             this.data = data;
         }
@@ -527,7 +431,7 @@ public class Schedule implements Parcelable {
          * @return The builder.
          */
         @NonNull
-        public Builder setAudience(@Nullable Audience audience) {
+        public Builder<T> setAudience(@Nullable Audience audience) {
             this.audience = audience;
             return this;
         }
@@ -539,7 +443,7 @@ public class Schedule implements Parcelable {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setId(@NonNull String id) {
+        public Builder<T> setId(@NonNull String id) {
             this.id = id;
             return this;
         }
@@ -551,7 +455,7 @@ public class Schedule implements Parcelable {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setMetadata(@NonNull JsonMap metadata) {
+        public Builder<T> setMetadata(@NonNull JsonMap metadata) {
             this.metadata = metadata;
             return this;
         }
@@ -563,7 +467,7 @@ public class Schedule implements Parcelable {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setLimit(int limit) {
+        public Builder<T> setLimit(int limit) {
             this.limit = limit;
             return this;
         }
@@ -575,7 +479,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setStart(long start) {
+        public Builder<T> setStart(long start) {
             this.start = start;
             return this;
         }
@@ -587,7 +491,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setEnd(long end) {
+        public Builder<T> setEnd(long end) {
             this.end = end;
             return this;
         }
@@ -599,7 +503,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setDelay(@Nullable ScheduleDelay delay) {
+        public Builder<T> setDelay(@Nullable ScheduleDelay delay) {
             this.delay = delay;
             return this;
         }
@@ -611,7 +515,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setPriority(int priority) {
+        public Builder<T> setPriority(int priority) {
             this.priority = priority;
             return this;
         }
@@ -623,7 +527,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setGroup(@Nullable String group) {
+        public Builder<T> setGroup(@Nullable String group) {
             this.group = group;
             return this;
         }
@@ -635,7 +539,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder addTrigger(@NonNull Trigger trigger) {
+        public Builder<T> addTrigger(@NonNull Trigger trigger) {
             this.triggers.add(trigger);
             return this;
         }
@@ -647,7 +551,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder addTriggers(@NonNull List<Trigger> triggers) {
+        public Builder<T> addTriggers(@NonNull List<Trigger> triggers) {
             this.triggers.addAll(triggers);
             return this;
         }
@@ -659,7 +563,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setTriggers(@Nullable List<Trigger> triggers) {
+        public Builder<T> setTriggers(@Nullable List<Trigger> triggers) {
             this.triggers.clear();
             if (triggers != null) {
                 this.triggers.addAll(triggers);
@@ -675,7 +579,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+        public Builder<T> setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
         }
@@ -688,7 +592,7 @@ public class Schedule implements Parcelable {
          * @return The Builder instance.
          */
         @NonNull
-        public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+        public Builder<T> setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
             return this;
         }
@@ -701,13 +605,13 @@ public class Schedule implements Parcelable {
          * or the start time is set after the end time.
          */
         @NonNull
-        public Schedule build() {
+        public Schedule<T> build() {
             Checks.checkNotNull(data, "Missing data.");
             Checks.checkNotNull(type, "Missing type.");
             Checks.checkArgument(start < 0 || end < 0 || start <= end, "End must be on or after start.");
             Checks.checkArgument(triggers.size() > 0, "Must contain at least 1 trigger.");
             Checks.checkArgument(triggers.size() <= TRIGGER_LIMIT, "No more than " + TRIGGER_LIMIT + " triggers allowed.");
-            return new Schedule(this);
+            return new Schedule<T>(this);
         }
 
     }

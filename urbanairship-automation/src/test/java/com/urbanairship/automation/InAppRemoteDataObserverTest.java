@@ -6,6 +6,7 @@ import android.os.Looper;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -129,7 +130,7 @@ public class InAppRemoteDataObserverTest {
         assertTrue(scheduler.isScheduled("bar"));
 
         // Verify "bar" was edited with updated end and start time
-        ScheduleEdits edits = scheduler.getScheduleEdits("bar");
+        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("bar");
         assertEquals(Long.valueOf(payload.getTimestamp()), edits.getEnd());
         assertEquals(Long.valueOf(payload.getTimestamp()), edits.getStart());
     }
@@ -163,7 +164,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" was edited with the updated message
-        ScheduleEdits edits = scheduler.getScheduleEdits("foo");
+        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("foo");
         assertEquals(message, edits.getData());
     }
 
@@ -197,7 +198,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" was edited with the updated message
-        ScheduleEdits edits = scheduler.getScheduleEdits("foo");
+        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("foo");
         JsonMap expected = JsonMap.newBuilder()
                                   .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", updatedMetadata)
                                   .build();
@@ -279,12 +280,12 @@ public class InAppRemoteDataObserverTest {
 
     private static class TestScheduler implements InAppAutomationScheduler {
 
-        private final Map<String, Schedule> schedules = new HashMap<>();
-        private final Map<String, ScheduleEdits> scheduleEdits = new HashMap<>();
+        private final Map<String, Schedule<? extends ScheduleData>> schedules = new HashMap<>();
+        private final Map<String, ScheduleEdits<? extends ScheduleData>> scheduleEdits = new HashMap<>();
 
         @NonNull
         @Override
-        public PendingResult<Boolean> schedule(@NonNull Schedule schedule) {
+        public PendingResult<Boolean> schedule(@NonNull Schedule<? extends ScheduleData> schedule) {
             schedules.put(schedule.getId(), schedule);
 
             PendingResult<Boolean> scheduleResult = new PendingResult<>();
@@ -296,7 +297,7 @@ public class InAppRemoteDataObserverTest {
         @Override
         public PendingResult<Boolean> cancelSchedule(@NonNull String scheduleId) {
             PendingResult<Boolean> cancelResult = new PendingResult<>();
-            Schedule schedule = this.schedules.remove(scheduleId);
+            Schedule<? extends ScheduleData> schedule = this.schedules.remove(scheduleId);
             cancelResult.setResult(schedule != null);
             return cancelResult;
         }
@@ -309,8 +310,44 @@ public class InAppRemoteDataObserverTest {
 
         @NonNull
         @Override
-        public PendingResult<Boolean> schedule(@NonNull List<Schedule> schedules) {
-            for (Schedule schedule : schedules) {
+        public PendingResult<Collection<Schedule<Actions>>> getActionScheduleGroup(@NonNull String group) {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Schedule<Actions>> getActionSchedule(@NonNull String scheduleId) {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Collection<Schedule<Actions>>> getActionSchedules() {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Collection<Schedule<InAppMessage>>> getMessageScheduleGroup(@NonNull String group) {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Schedule<InAppMessage>> getMessageSchedule(@NonNull String scheduleId) {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules() {
+            throw new IllegalArgumentException();
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
+            for (Schedule<? extends ScheduleData> schedule : schedules) {
                 this.schedules.put(schedule.getId(), schedule);
             }
 
@@ -319,37 +356,31 @@ public class InAppRemoteDataObserverTest {
             return scheduleResult;
         }
 
+
         @NonNull
-        @Override
-        public PendingResult<Collection<Schedule>> getScheduleGroup(@NonNull String group) {
+        public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull String scheduleId) {
             throw new IllegalArgumentException();
         }
 
         @NonNull
         @Override
-        public PendingResult<Schedule> getSchedule(@NonNull String scheduleId) {
-            PendingResult<Schedule> pendingResult = new PendingResult<>();
-            pendingResult.setResult(schedules.get(scheduleId));
-            return pendingResult;
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Collection<Schedule>> getSchedules() {
-            PendingResult<Collection<Schedule>> pendingResult = new PendingResult<>();
+        public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
+            PendingResult<Collection<Schedule<? extends ScheduleData>>> pendingResult = new PendingResult<>();
             pendingResult.setResult(schedules.values());
             return pendingResult;
         }
 
         @NonNull
         @Override
-        public PendingResult<Schedule> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits edits) {
-            PendingResult<Schedule> result = new PendingResult<>();
-            Schedule schedule = schedules.get(scheduleId);
-            result.setResult(schedule);
+        public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
+            PendingResult<Boolean> result = new PendingResult<>();
+            Schedule<?> schedule = schedules.get(scheduleId);
 
             if (schedule != null) {
                 scheduleEdits.put(scheduleId, edits);
+                result.setResult(true);
+            } else {
+                result.setResult(false);
             }
 
             return result;
@@ -360,7 +391,7 @@ public class InAppRemoteDataObserverTest {
         }
 
         public boolean isScheduled(@NonNull String scheduleId, JsonMap metadata) {
-            Schedule schedule = schedules.get(scheduleId);
+            Schedule<?> schedule = schedules.get(scheduleId);
             if (schedule != null) {
                 return schedule.getMetadata().equals(metadata);
             } else {
@@ -368,7 +399,7 @@ public class InAppRemoteDataObserverTest {
             }
         }
 
-        public ScheduleEdits getScheduleEdits(@NonNull String scheduleId) {
+        public ScheduleEdits<? extends ScheduleData> getScheduleEdits(@NonNull String scheduleId) {
             return scheduleEdits.get(scheduleId);
         }
 

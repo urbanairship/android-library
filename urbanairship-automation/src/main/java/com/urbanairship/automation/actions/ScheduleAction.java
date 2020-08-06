@@ -108,22 +108,22 @@ public class ScheduleAction extends Action {
         }
 
         try {
-            Schedule schedule = parseSchedule(arguments.getValue().toJsonValue());
-            boolean result = automation.schedule(schedule).get();
-            return result ? ActionResult.newResult(ActionValue.wrap(schedule.getId())) : ActionResult.newEmptyResult();
+            Schedule<Actions> schedule = parseSchedule(arguments.getValue().toJsonValue());
+            Boolean result = automation.schedule(schedule).get();
+            return (result != null && result) ? ActionResult.newResult(ActionValue.wrap(schedule.getId())) : ActionResult.newEmptyResult();
         } catch (JsonException | InterruptedException | ExecutionException e) {
             return ActionResult.newErrorResult(e);
         }
     }
 
     @NonNull
-    Schedule parseSchedule(@NonNull JsonValue value) throws JsonException {
+    Schedule<Actions> parseSchedule(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
-        Schedule.Builder builder = Schedule.newActionScheduleBuilder(jsonMap.opt(ACTIONS_KEY).optMap())
-                                           .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
-                                           .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
-                                           .setGroup(jsonMap.opt(GROUP_KEY).getString());
+        Schedule.Builder<Actions> builder = Schedule.newBuilder(new Actions(jsonMap.opt(ACTIONS_KEY).optMap()))
+                                                    .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+                                                    .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
+                                                    .setGroup(jsonMap.opt(GROUP_KEY).getString());
 
         if (jsonMap.containsKey(END_KEY)) {
             builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).optString(), -1));

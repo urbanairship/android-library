@@ -4,7 +4,6 @@ package com.urbanairship.automation;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
 import java.net.MalformedURLException;
@@ -15,10 +14,11 @@ import androidx.annotation.RestrictTo;
 
 /**
  * Deferred schedule data.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class DeferredScheduleData implements JsonSerializable {
+public class Deferred implements ScheduleData {
 
     private static final String URL_KEY = "url";
     private static final String RETRY_ON_TIMEOUT = "retry_on_timeout";
@@ -26,13 +26,14 @@ public class DeferredScheduleData implements JsonSerializable {
     public URL url;
     public boolean retryOnTimeout;
 
-    public DeferredScheduleData(@NonNull URL url, boolean retryOnTimeout) {
+    public Deferred(@NonNull URL url, boolean retryOnTimeout) {
         this.url = url;
         this.retryOnTimeout = retryOnTimeout;
     }
 
     /**
      * The deferred URL.
+     *
      * @return The URL.
      */
     @NonNull
@@ -42,6 +43,7 @@ public class DeferredScheduleData implements JsonSerializable {
 
     /**
      * If the deferred URL should be retried if no response was received.
+     *
      * @return
      */
     public boolean isRetriableOnTimeout() {
@@ -52,9 +54,9 @@ public class DeferredScheduleData implements JsonSerializable {
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                .put(URL_KEY, url.toString())
-                .put(RETRY_ON_TIMEOUT, retryOnTimeout)
-                .build().toJsonValue();
+                      .put(URL_KEY, url.toString())
+                      .put(RETRY_ON_TIMEOUT, retryOnTimeout)
+                      .build().toJsonValue();
     }
 
     /**
@@ -67,7 +69,7 @@ public class DeferredScheduleData implements JsonSerializable {
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static DeferredScheduleData fromJson(@NonNull JsonValue jsonValue) throws JsonException {
+    public static Deferred fromJson(@NonNull JsonValue jsonValue) throws JsonException {
         String urlString = jsonValue.optMap().opt(URL_KEY).getString();
         if (urlString == null) {
             throw new JsonException("Missing URL");
@@ -81,6 +83,7 @@ public class DeferredScheduleData implements JsonSerializable {
         }
 
         boolean retryOnTimeout = jsonValue.optMap().opt(RETRY_ON_TIMEOUT).getBoolean(true);
-        return new DeferredScheduleData(url, retryOnTimeout);
+        return new Deferred(url, retryOnTimeout);
     }
+
 }

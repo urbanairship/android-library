@@ -105,7 +105,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
          * @return The builder.
          */
         @NonNull
-        Schedule.Builder extend(@NonNull Context context, @NonNull Schedule.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
+        Schedule.Builder<InAppMessage> extend(@NonNull Context context, @NonNull Schedule.Builder<InAppMessage> builder, @NonNull LegacyInAppMessage legacyMessage);
 
     }
 
@@ -164,7 +164,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                     return;
                 }
 
-                Schedule schedule = createScheduleInfo(UAirship.getApplicationContext(), legacyInAppMessage);
+                Schedule<InAppMessage> schedule = createSchedule(UAirship.getApplicationContext(), legacyInAppMessage);
                 if (schedule == null) {
                     return;
                 }
@@ -277,7 +277,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      * @return The schedule info, or {@code null} if the factory is unable to create a schedule info.
      */
     @Nullable
-    private Schedule createScheduleInfo(@NonNull Context context, @NonNull LegacyInAppMessage legacyInAppMessage) {
+    private Schedule<InAppMessage> createSchedule(@NonNull Context context, @NonNull LegacyInAppMessage legacyInAppMessage) {
         try {
             Trigger trigger;
 
@@ -289,7 +289,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                 trigger = Triggers.newForegroundTriggerBuilder().build();
             }
 
-            Schedule.Builder builder = Schedule.newMessageScheduleBuilder(createMessage(context, legacyInAppMessage))
+            Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(createMessage(context, legacyInAppMessage))
                                                .addTrigger(trigger)
                                                .setEnd(legacyInAppMessage.getExpiry())
                                                .setId(legacyInAppMessage.getId());

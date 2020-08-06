@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.storage.FullSchedule;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -23,13 +24,13 @@ import static org.junit.Assert.assertEquals;
 public class ScheduleConvertersTest {
     @Test
     public void testConvert() throws JsonException {
-        List<Schedule> scheduleList = new ArrayList<>();
+        List<Schedule<? extends ScheduleData>> scheduleList = new ArrayList<>();
 
         // Action schedule
-        JsonMap actions = JsonMap.newBuilder()
+        JsonMap actionsMap = JsonMap.newBuilder()
                                  .put("cool", "story")
                                  .build();
-        scheduleList.add(Schedule.newActionScheduleBuilder(actions)
+        scheduleList.add(Schedule.newBuilder(new Actions(actionsMap))
                                  .setId("actions!")
                                  .setGroup("some-group")
                                  .setLimit(100)
@@ -49,7 +50,7 @@ public class ScheduleConvertersTest {
                                            .setId("some-id")
                                            .setDisplayContent(new CustomDisplayContent(JsonMap.EMPTY_MAP.toJsonValue()))
                                            .build();
-        scheduleList.add(Schedule.newMessageScheduleBuilder(message)
+        scheduleList.add(Schedule.newBuilder(message)
                                  .setId("message!")
                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                  .build());

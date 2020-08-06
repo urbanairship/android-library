@@ -163,7 +163,7 @@ public class AutomationEngine {
          * @param schedule The schedule.
          */
         @MainThread
-        void onScheduleExpired(@NonNull Schedule schedule);
+        void onScheduleExpired(@NonNull Schedule<? extends ScheduleData> schedule);
 
         /**
          * Called when a schedule is cancelled.
@@ -171,7 +171,7 @@ public class AutomationEngine {
          * @param schedule The schedule.
          */
         @MainThread
-        void onScheduleCancelled(@NonNull Schedule schedule);
+        void onScheduleCancelled(@NonNull Schedule<? extends ScheduleData> schedule);
 
         /**
          * Called when a schedule's limit is reached.
@@ -179,7 +179,7 @@ public class AutomationEngine {
          * @param schedule The schedule.
          */
         @MainThread
-        void onScheduleLimitReached(@NonNull Schedule schedule);
+        void onScheduleLimitReached(@NonNull Schedule<? extends ScheduleData> schedule);
 
         /**
          * Called when a new schedule is available.
@@ -187,7 +187,7 @@ public class AutomationEngine {
          * @param schedule The schedule.
          */
         @MainThread
-        void onNewSchedule(@NonNull Schedule schedule);
+        void onNewSchedule(@NonNull Schedule<? extends ScheduleData> schedule);
 
     }
 
@@ -288,7 +288,7 @@ public class AutomationEngine {
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Boolean> schedule(@NonNull final Schedule schedule) {
+    public PendingResult<Boolean> schedule(@NonNull final Schedule<? extends ScheduleData> schedule) {
         final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -306,7 +306,7 @@ public class AutomationEngine {
                 dao.insert(entry);
                 subscribeStateObservables(Collections.singletonList(entry));
 
-                notifyNewSchedule(Collections.singletonList(schedule));
+                notifyNewSchedule(Collections.<Schedule<? extends ScheduleData>>singletonList(schedule));
 
                 Logger.verbose("AutomationEngine - Scheduled entries: %s", schedule);
                 pendingResult.setResult(true);
@@ -323,7 +323,7 @@ public class AutomationEngine {
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Boolean> schedule(@NonNull final List<Schedule> schedules) {
+    public PendingResult<Boolean> schedule(@NonNull final List<Schedule<? extends ScheduleData>> schedules) {
         final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -346,7 +346,7 @@ public class AutomationEngine {
                 dao.insert(entries);
                 subscribeStateObservables(entries);
 
-                List<Schedule> result = convertSchedules(entries);
+                Collection<Schedule<? extends ScheduleData>> result = convertSchedulesUnknownTypes(entries);
                 notifyNewSchedule(result);
 
                 Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
@@ -505,21 +505,45 @@ public class AutomationEngine {
     }
 
     /**
-     * Gets a schedule for the given schedule ID.
+     * Gets all schedules by type.
      *
-     * @param scheduleId The schedule ID.
+     * @param type The schedule type.
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Schedule> getSchedule(@NonNull final String scheduleId) {
-        final PendingResult<Schedule> pendingResult = new PendingResult<>();
+    public <T extends ScheduleData> PendingResult<Collection<Schedule<T>>> getSchedulesByType(@Schedule.Type final String type) {
+        final PendingResult<Collection<Schedule<T>>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
                 cleanSchedules();
-                List<Schedule> result = convertSchedules(dao.getSchedules(Collections.singleton(scheduleId)));
-                pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
+                List<FullSchedule> entries = dao.getSchedulesByType(type);
+                Collection<Schedule<T>> schedules = convertSchedules(entries);
+                pendingResult.setResult(schedules);
+            }
+        });
+
+        return pendingResult;
+    }
+
+    /**
+     * Gets a schedule for the given schedule ID.
+     *
+     * @param scheduleId The schedule ID.
+     * @param type The type.
+     * @return A pending result.
+     */
+    @NonNull
+    public <T extends ScheduleData> PendingResult<Schedule<T>> getSchedule(@NonNull final String scheduleId, @Schedule.Type final String type) {
+        final PendingResult<Schedule<T>> pendingResult = new PendingResult<>();
+
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                cleanSchedules();
+                Schedule<T> result = convert(dao.getSchedule(scheduleId, type));
+                pendingResult.setResult(result);
             }
         });
 
@@ -533,14 +557,14 @@ public class AutomationEngine {
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Collection<Schedule>> getSchedules(@NonNull final Set<String> scheduleIds) {
-        final PendingResult<Collection<Schedule>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules(@NonNull final Set<String> scheduleIds) {
+        final PendingResult<Collection<Schedule<? extends ScheduleData>>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
                 cleanSchedules();
-                pendingResult.setResult(convertSchedules(dao.getSchedules(scheduleIds)));
+                pendingResult.setResult(convertSchedulesUnknownTypes(dao.getSchedules(scheduleIds)));
             }
         });
 
@@ -551,17 +575,19 @@ public class AutomationEngine {
      * Gets all schedules for the specified group.
      *
      * @param group The schedule group.
+     * @param type The type.
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Collection<Schedule>> getSchedules(@NonNull final String group) {
-        final PendingResult<Collection<Schedule>> pendingResult = new PendingResult<>();
+    public <T extends ScheduleData> PendingResult<Collection<Schedule<T>>> getSchedules(@NonNull final String group, @NonNull @Schedule.Type final String type) {
+        final PendingResult<Collection<Schedule<T>>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
                 cleanSchedules();
-                pendingResult.setResult(convertSchedules(dao.getSchedulesWithGroup(group)));
+                Collection<Schedule<T>> schedules = convertSchedules(dao.getSchedulesWithGroup(group, type));
+                pendingResult.setResult(schedules);
             }
         });
 
@@ -573,11 +599,11 @@ public class AutomationEngine {
      *
      * @param scheduleId The schedule ID.
      * @param edits The schedule edits.
-     * @return Pending result with the updated schedule.
+     * @return Pending result with the result.
      */
     @NonNull
-    public PendingResult<Schedule> editSchedule(@NonNull final String scheduleId, @NonNull final ScheduleEdits edits) {
-        final PendingResult<Schedule> pendingResult = new PendingResult<>();
+    public PendingResult<Boolean> editSchedule(@NonNull final String scheduleId, @NonNull final ScheduleEdits<? extends ScheduleData> edits) {
+        final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -586,7 +612,7 @@ public class AutomationEngine {
 
                 if (entry == null) {
                     Logger.error("AutomationEngine - Schedule no longer exists. Unable to edit: %s", scheduleId);
-                    pendingResult.setResult(null);
+                    pendingResult.setResult(false);
                     return;
                 }
 
@@ -619,9 +645,8 @@ public class AutomationEngine {
                     subscribeStateObservables(entry, stateChangeTimeStamp);
                 }
 
-                List<Schedule> result = convertSchedules(dao.getSchedules(Collections.singleton(scheduleId)));
-                Logger.verbose("AutomationEngine - Updated schedule: %s", result);
-                pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
+                Logger.verbose("AutomationEngine - Updated schedule: %s", scheduleId);
+                pendingResult.setResult(true);
             }
         });
 
@@ -643,13 +668,13 @@ public class AutomationEngine {
      * @return A pending result.
      */
     @NonNull
-    public PendingResult<Collection<Schedule>> getSchedules() {
-        final PendingResult<Collection<Schedule>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
+        final PendingResult<Collection<Schedule<? extends ScheduleData>>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                pendingResult.setResult(convertSchedules(dao.getSchedules()));
+                pendingResult.setResult(convertSchedulesUnknownTypes(dao.getSchedules()));
             }
         });
 
@@ -1176,7 +1201,7 @@ public class AutomationEngine {
 
         sortSchedulesByPriority(entries);
         for (FullSchedule entry : entries) {
-            Schedule schedule = convert(entry);
+            Schedule<? extends ScheduleData> schedule = convert(entry);
             if (schedule == null) {
                 continue;
             }
@@ -1236,21 +1261,39 @@ public class AutomationEngine {
     }
 
     @Nullable
-    private Schedule convert(@NonNull FullSchedule entry) {
+    private <T extends ScheduleData> Schedule<T> convert(@Nullable FullSchedule entry) {
+        if (entry == null) {
+            return null;
+        }
+
         try {
             return ScheduleConverters.convert(entry);
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             Logger.error(e, "Exception converting entity to schedule %s", entry.schedule.scheduleId);
+        } catch (Exception e) {
+            Logger.error(e, "Exception converting entity to schedule %s. Cancelling.", entry.schedule.scheduleId);
             cancel(Collections.singleton(entry.schedule.scheduleId));
         }
         return null;
     }
 
     @NonNull
-    private List<Schedule> convertSchedules(@NonNull Collection<FullSchedule> entries) {
-        List<Schedule> schedules = new ArrayList<>();
+    private Collection<Schedule<? extends ScheduleData>> convertSchedulesUnknownTypes(@NonNull Collection<FullSchedule> entries) {
+        Collection <Schedule<? extends ScheduleData>> schedules = new ArrayList<>();
         for (FullSchedule entry : entries) {
-            Schedule schedule = convert(entry);
+            Schedule<? extends ScheduleData> schedule = convert(entry);
+            if (schedule != null) {
+                schedules.add(schedule);
+            }
+        }
+        return schedules;
+    }
+
+    @NonNull
+    private <T extends ScheduleData> Collection<Schedule<T>> convertSchedules(@NonNull Collection<FullSchedule> entries) {
+        List<Schedule<T>> schedules = new ArrayList<>();
+        for (FullSchedule entry : entries) {
+            Schedule<T> schedule = convert(entry);
             if (schedule != null) {
                 schedules.add(schedule);
             }
@@ -1280,7 +1323,7 @@ public class AutomationEngine {
         ScheduleRunnable<Integer> runnable = new ScheduleRunnable<Integer>(entry.schedule.scheduleId, entry.schedule.group) {
             @Override
             public void run() {
-                Schedule schedule = null;
+                Schedule<? extends ScheduleData> schedule = null;
                 result = AutomationDriver.READY_RESULT_NOT_READY;
 
                 if (isPaused.get()) {
@@ -1347,9 +1390,9 @@ public class AutomationEngine {
      */
     @WorkerThread
     private void notifyExpiredSchedules(@NonNull Collection<FullSchedule> entries) {
-        notifyHelper(convertSchedules(entries), new NotifySchedule() {
+        notifyHelper(convertSchedulesUnknownTypes(entries), new NotifySchedule() {
             @Override
-            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule) {
+            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule<? extends ScheduleData> schedule) {
                 listener.onScheduleExpired(schedule);
             }
         });
@@ -1362,9 +1405,9 @@ public class AutomationEngine {
      */
     @WorkerThread
     private void notifyCancelledSchedule(@NonNull Collection<FullSchedule> entries) {
-        notifyHelper(convertSchedules(entries), new NotifySchedule() {
+        notifyHelper(convertSchedulesUnknownTypes(entries), new NotifySchedule() {
             @Override
-            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule) {
+            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule<? extends ScheduleData> schedule) {
                 listener.onScheduleCancelled(schedule);
             }
         });
@@ -1377,9 +1420,9 @@ public class AutomationEngine {
      */
     @WorkerThread
     private void notifyScheduleLimitReached(@NonNull FullSchedule entry) {
-        notifyHelper(convertSchedules(Collections.singleton(entry)), new NotifySchedule() {
+        notifyHelper(convertSchedulesUnknownTypes(Collections.singleton(entry)), new NotifySchedule() {
             @Override
-            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule) {
+            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule<? extends ScheduleData> schedule) {
                 listener.onScheduleLimitReached(schedule);
             }
         });
@@ -1391,7 +1434,7 @@ public class AutomationEngine {
      * @param schedules The new schedules.
      */
     @WorkerThread
-    private void notifyNewSchedule(@NonNull final List<Schedule> schedules) {
+    private void notifyNewSchedule(@NonNull final Collection<Schedule<? extends ScheduleData>> schedules) {
         notifyHelper(schedules, new NotifySchedule() {
             @Override
             public void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule) {
@@ -1405,7 +1448,7 @@ public class AutomationEngine {
      */
     private interface NotifySchedule {
 
-        void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule);
+        void notify(@NonNull ScheduleListener listener, @NonNull Schedule<? extends ScheduleData> schedule);
 
     }
 
@@ -1416,14 +1459,14 @@ public class AutomationEngine {
      * @param notify The notify method.
      */
     @WorkerThread
-    private void notifyHelper(@NonNull final Collection<Schedule> entries, @NonNull final NotifySchedule notify) {
+    private void notifyHelper(@NonNull final Collection<Schedule<? extends ScheduleData>> entries, @NonNull final NotifySchedule notify) {
         if (this.scheduleListener == null || entries.isEmpty()) {
             return;
         }
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                for (Schedule schedule : entries) {
+                for (Schedule<? extends ScheduleData> schedule : entries) {
                     ScheduleListener listener = AutomationEngine.this.scheduleListener;
                     if (listener != null) {
                         notify.notify(listener, schedule);

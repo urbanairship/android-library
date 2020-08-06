@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
@@ -27,7 +28,7 @@ public class ScheduleTest {
     private InAppMessage message;
     private Trigger trigger;
     private ScheduleDelay delay;
-    private JsonMap actions;
+    private Actions actions;
 
     @Before
     public void setup() {
@@ -45,41 +46,41 @@ public class ScheduleTest {
                              .setSeconds(100)
                              .build();
 
-        actions = JsonMap.newBuilder()
-                         .put("cool", "story")
-                         .build();
+        actions = new Actions(JsonMap.newBuilder()
+                                     .put("cool", "story")
+                                     .build());
     }
 
     @Test
     public void testMessage() {
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(trigger)
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(trigger)
+                                                  .build();
         assertEquals(message, schedule.getData());
         assertEquals(Schedule.TYPE_IN_APP_MESSAGE, schedule.getType());
     }
 
     @Test
     public void testActions() {
-        Schedule schedule = Schedule.newActionScheduleBuilder(actions)
-                                    .addTrigger(trigger)
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(actions)
+                                             .addTrigger(trigger)
+                                             .build();
         assertEquals(actions, schedule.getData());
         assertEquals(Schedule.TYPE_ACTION, schedule.getType());
     }
 
     @Test
     public void testBuilder() {
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(trigger)
-                                    .setStart(1)
-                                    .setEnd(2)
-                                    .setLimit(3)
-                                    .setDelay(delay)
-                                    .setPriority(-4)
-                                    .setId("schedule id")
-                                    .setGroup("group")
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(trigger)
+                                                  .setStart(1)
+                                                  .setEnd(2)
+                                                  .setLimit(3)
+                                                  .setDelay(delay)
+                                                  .setPriority(-4)
+                                                  .setId("schedule id")
+                                                  .setGroup("group")
+                                                  .build();
 
         assertEquals(1, schedule.getTriggers().size());
         assertEquals(trigger, schedule.getTriggers().get(0));
@@ -96,7 +97,7 @@ public class ScheduleTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testEndBeforeStart() {
-        Schedule.newMessageScheduleBuilder(message)
+        Schedule.newBuilder(message)
                 .addTrigger(trigger)
                 .setEnd(100)
                 .setStart(1000)
@@ -105,7 +106,7 @@ public class ScheduleTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingTrigger() {
-        Schedule.newActionScheduleBuilder(actions)
+        Schedule.newBuilder(actions)
                 .build();
     }
 
@@ -117,7 +118,7 @@ public class ScheduleTest {
             triggers.add(trigger);
         }
 
-        Schedule.newMessageScheduleBuilder(message)
+        Schedule.newBuilder(message)
                 .addTriggers(triggers)
                 .build();
     }

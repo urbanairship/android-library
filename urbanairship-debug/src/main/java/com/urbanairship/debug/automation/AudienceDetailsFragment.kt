@@ -3,20 +3,19 @@ package com.urbanairship.debug.automation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.urbanairship.automation.Audience
-import com.urbanairship.automation.Schedule
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.toFormattedJsonString
+import com.urbanairship.json.JsonValue
 
 class AudienceDetailsFragment : AutomationDetailsFragment() {
 
     companion object {
-        const val AUDIENCE_SCHEDULE = "schedule"
+        const val ARGUMENT_AUDIENCE = "audience"
     }
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
-        var schedule = requireArguments().getParcelable<Schedule>(AUDIENCE_SCHEDULE)!!
-
-        return MutableLiveData(audienceDetails(schedule.audience!!))
+        var json = JsonValue.parseString(requireArguments().getString(ARGUMENT_AUDIENCE))
+        return MutableLiveData(audienceDetails(Audience.fromJson(json)))
     }
 
     private fun audienceDetails(audience: Audience): List<AutomationDetail> {

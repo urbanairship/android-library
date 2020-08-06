@@ -20,6 +20,7 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.tags.TagGroupManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagGroupUtils;
@@ -173,12 +174,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
                 Map<String, Set<String>> tags = new HashMap<>();
 
-                Collection<Schedule> schedules = getSchedules().get();
+                Collection<Schedule<? extends ScheduleData>> schedules = getSchedules().get();
                 if (schedules == null) {
                     return tags;
                 }
 
-                for (Schedule schedule : schedules) {
+                for (Schedule<? extends ScheduleData> schedule : schedules) {
                     Audience audience = schedule.getAudience();
                     if (audience != null && audience.getTagSelector() != null && audience.getTagSelector().containsTagGroups()) {
                         TagGroupUtils.addAll(tags, audience.getTagSelector().getTagGroups());
@@ -191,30 +192,30 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener() {
             @Override
-            public void onScheduleExpired(@NonNull final Schedule schedule) {
+            public void onScheduleExpired(@NonNull final Schedule<? extends ScheduleData> schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
                     inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
-            public void onScheduleCancelled(@NonNull final Schedule schedule) {
+            public void onScheduleCancelled(@NonNull final Schedule<? extends ScheduleData> schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
                     inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
-            public void onScheduleLimitReached(@NonNull final Schedule schedule) {
+            public void onScheduleLimitReached(@NonNull final Schedule<? extends ScheduleData> schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
                     inAppMessageManager.onMessageScheduleFinished(schedule.getId());
                 }
             }
 
             @Override
-            public void onNewSchedule(@NonNull final Schedule schedule) {
+            public void onNewSchedule(@NonNull final Schedule<? extends ScheduleData> schedule) {
                 if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-                    inAppMessageManager.onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
+                    inAppMessageManager.onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.coerceType());
                 }
             }
         });
@@ -289,7 +290,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     @Override
-    public PendingResult<Boolean> schedule(@NonNull List<Schedule> schedules) {
+    public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
         return automationEngine.schedule(schedules);
     }
 
@@ -298,7 +299,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     @Override
-    public PendingResult<Boolean> schedule(@NonNull Schedule schedule) {
+    public PendingResult<Boolean> schedule(@NonNull Schedule<? extends ScheduleData> schedule) {
         return automationEngine.schedule(schedule);
     }
 
@@ -335,8 +336,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     @Override
-    public PendingResult<Collection<Schedule>> getScheduleGroup(@NonNull final String group) {
-        return automationEngine.getSchedules(group);
+    public PendingResult<Collection<Schedule<Actions>>> getActionScheduleGroup(@NonNull final String group) {
+        return automationEngine.getSchedules(group, Schedule.TYPE_ACTION);
     }
 
     /**
@@ -344,7 +345,53 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     @Override
-    public PendingResult<Collection<Schedule>> getSchedules() {
+    public PendingResult<Schedule<Actions>> getActionSchedule(@NonNull String scheduleId) {
+        return automationEngine.getSchedule(scheduleId, Schedule.TYPE_ACTION);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public PendingResult<Collection<Schedule<Actions>>> getActionSchedules() {
+        return automationEngine.getSchedulesByType(Schedule.TYPE_ACTION);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public PendingResult<Collection<Schedule<InAppMessage>>> getMessageScheduleGroup(@NonNull String group) {
+        return automationEngine.getSchedules(group, Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public PendingResult<Schedule<InAppMessage>> getMessageSchedule(@NonNull String scheduleId) {
+        return automationEngine.getSchedule(scheduleId, Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules() {
+        return automationEngine.getSchedulesByType(Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
         return automationEngine.getSchedules();
     }
 
@@ -353,17 +400,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     @Override
-    public PendingResult<Schedule> getSchedule(@NonNull String scheduleId) {
-        return automationEngine.getSchedule(scheduleId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<Schedule> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits edit) {
-        return automationEngine.editSchedule(scheduleId, edit);
+    public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
+        return automationEngine.editSchedule(scheduleId, edits);
     }
 
     /**
@@ -383,7 +421,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     /**
-     * Returns {@code true} if automatinos are paused, otherwise {@code false}.
+     * Returns {@code true} if automations are paused, otherwise {@code false}.
      *
      * @return {@code true} automations are paused, otherwise {@code false}.
      */
@@ -411,7 +449,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     @WorkerThread
-    private void onPrepareSchedule(final @NonNull Schedule schedule,
+    private void onPrepareSchedule(final @NonNull Schedule<? extends ScheduleData> schedule,
                                    final @Nullable TriggerContext triggerContext,
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         Logger.verbose("InAppAutomation - onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
@@ -488,7 +526,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
                         break;
                     case Schedule.TYPE_IN_APP_MESSAGE:
-                        inAppMessageManager.onPrepare(schedule.getId(), (InAppMessage) schedule.requireData(), callback);
+                        inAppMessageManager.onPrepare(schedule.getId(), (InAppMessage) schedule.coerceType(), callback);
                         break;
                 }
 
@@ -502,7 +540,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     @MainThread
     @AutomationDriver.ReadyResult
-    private int onCheckExecutionReadiness(@NonNull Schedule schedule) {
+    private int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
         Logger.verbose("InAppAutomation - onCheckExecutionReadiness schedule: %s", schedule.getId());
 
         // Prevent display on pause.
@@ -529,12 +567,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     @MainThread
-    private void onExecuteTriggeredSchedule(@NonNull Schedule schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
+    private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
         Logger.verbose("InAppAutomation - onExecuteTriggeredSchedule schedule: %s", schedule.getId());
 
         switch (schedule.getType()) {
             case Schedule.TYPE_ACTION:
-                executeActions(schedule, (JsonMap) schedule.requireData(), callback);
+                executeActions(schedule, (Actions) schedule.coerceType(), callback);
                 break;
             case Schedule.TYPE_IN_APP_MESSAGE:
                 inAppMessageManager.onExecute(schedule.getId(), callback);
@@ -560,16 +598,16 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param schedule The in-app schedule.
      * @return {@code true} if the schedule is valid, otherwise {@code false}.
      */
-    private boolean isScheduleInvalid(@NonNull Schedule schedule) {
+    private boolean isScheduleInvalid(@NonNull Schedule<? extends ScheduleData> schedule) {
         return remoteDataSubscriber.isRemoteSchedule(schedule) && !remoteDataSubscriber.isScheduleValid(schedule);
     }
 
-    private void executeActions(@NonNull Schedule schedule, @NonNull JsonMap actions, AutomationDriver.ExecutionCallback callback) {
+    private void executeActions(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Actions actions, AutomationDriver.ExecutionCallback callback) {
         Bundle metadata = new Bundle();
-        metadata.putParcelable(ActionArguments.ACTION_SCHEDULE_METADATA, schedule);
+        metadata.putString(ActionArguments.ACTION_SCHEDULE_ID_METADATA, schedule.getId());
 
-        ActionCallback actionCallback = new ActionCallback(callback, actions.size());
-        for (Map.Entry<String, JsonValue> entry : actions.entrySet()) {
+        ActionCallback actionCallback = new ActionCallback(callback, actions.getActionsMap().size());
+        for (Map.Entry<String, JsonValue> entry : actions.getActionsMap().entrySet()) {
             actionRunRequestFactory.createActionRequest(entry.getKey())
                                    .setValue(entry.getValue())
                                    .setSituation(Action.SITUATION_AUTOMATION)

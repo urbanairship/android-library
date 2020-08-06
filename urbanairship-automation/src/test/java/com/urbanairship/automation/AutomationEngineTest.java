@@ -14,6 +14,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.location.RegionEvent;
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.storage.AutomationDao;
 import com.urbanairship.automation.storage.AutomationDatabase;
 import com.urbanairship.automation.storage.FullSchedule;
@@ -33,6 +34,7 @@ import org.robolectric.shadows.ShadowLooper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +66,7 @@ public class AutomationEngineTest {
     private AutomationEngine automationEngine;
     private TestActivityMonitor activityMonitor;
     private ApplicationMetrics mockMetrics;
-    private Schedule schedule;
+    private Schedule<Actions> schedule;
     private Context context;
     private AutomationDatabase automationDatabase;
     private AutomationDao dao;
@@ -73,9 +75,9 @@ public class AutomationEngineTest {
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
 
-        schedule = Schedule.newActionScheduleBuilder(JsonMap.newBuilder()
-                                                            .put("test_action", JsonValue.wrap("action_value"))
-                                                            .build())
+        schedule = Schedule.newBuilder(new Actions(JsonMap.newBuilder()
+                                                          .put("test_action", JsonValue.wrap("action_value"))
+                                                          .build()))
                            .addTrigger(Triggers.newCustomEventTriggerBuilder()
                                                .setCountGoal(1)
                                                .setEventName("event")
@@ -130,6 +132,31 @@ public class AutomationEngineTest {
         assertNotNull(entity);
 
         assertEquals(schedule, ScheduleConverters.convert(entity));
+    }
+
+    @Test
+    public void testGetScheduleWrongType() throws Exception {
+        Future<Boolean> pendingResult = automationEngine.schedule(schedule);
+        runLooperTasks();
+        assertTrue(pendingResult.get());
+
+        // Wrong type
+        PendingResult<Schedule<Actions>> actionSchedulePendingResult = automationEngine.getSchedule(schedule.getId(), Schedule.TYPE_IN_APP_MESSAGE);
+        PendingResult<Collection<Schedule<Actions>>> actionSchedulesByTypePendingResult = automationEngine.getSchedulesByType(Schedule.TYPE_IN_APP_MESSAGE);
+        PendingResult<Collection<Schedule<Actions>>> actionSchedulesByGroupPendingResult = automationEngine.getSchedules(schedule.getGroup(), Schedule.TYPE_IN_APP_MESSAGE);
+        runLooperTasks();
+        assertNull(actionSchedulePendingResult.get());
+        assertTrue(actionSchedulesByGroupPendingResult.get().isEmpty());
+        assertTrue(actionSchedulesByTypePendingResult.get().isEmpty());
+
+        // Proper type
+        actionSchedulePendingResult = automationEngine.getSchedule(schedule.getId(), Schedule.TYPE_ACTION);
+        actionSchedulesByTypePendingResult = automationEngine.getSchedulesByType(Schedule.TYPE_ACTION);
+        actionSchedulesByGroupPendingResult = automationEngine.getSchedules(schedule.getGroup(), Schedule.TYPE_ACTION);
+        runLooperTasks();
+        assertEquals(schedule, actionSchedulePendingResult.get());
+        assertTrue(actionSchedulesByTypePendingResult.get().contains(schedule));
+        assertTrue(actionSchedulesByGroupPendingResult.get().contains(schedule));
     }
 
     @Test
@@ -384,7 +411,7 @@ public class AutomationEngineTest {
 
     @Test
     public void testPriority() throws Exception {
-        ArrayList<Schedule> schedules = new ArrayList<>();
+        ArrayList<Schedule<? extends ScheduleData>> schedules = new ArrayList<>();
 
         Integer[] addedPriorityLevels = new Integer[] { 5, 2, 1, 0, 0, 4, 3, 3, 2 };
         ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
@@ -392,13 +419,13 @@ public class AutomationEngineTest {
 
         // Add schedules out of order
         for (int priority : addedPriorityLevels) {
-            final Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                              .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                                                                  .setCountGoal(1)
-                                                                  .setEventName("event")
-                                                                  .build())
-                                              .setPriority(priority)
-                                              .build();
+            final Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                                       .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                           .setCountGoal(1)
+                                                                           .setEventName("event")
+                                                                           .build())
+                                                       .setPriority(priority)
+                                                       .build();
 
             schedules.add(schedule);
             schedule(schedule);
@@ -417,13 +444,13 @@ public class AutomationEngineTest {
 
     @Test
     public void testExpiryListener() throws ExecutionException, InterruptedException {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                    .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                                                        .setCountGoal(1)
-                                                        .setEventName("name")
-                                                        .build())
-                                    .setEnd(System.currentTimeMillis() - 1)
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                 .setCountGoal(1)
+                                                                 .setEventName("name")
+                                                                 .build())
+                                             .setEnd(System.currentTimeMillis() - 1)
+                                             .build();
 
         AutomationEngine.ScheduleListener expiryListener = mock(AutomationEngine.ScheduleListener.class);
         automationEngine.setScheduleListener(expiryListener);
@@ -481,13 +508,13 @@ public class AutomationEngineTest {
 
     @Test
     public void testReachLimitScheduleListener() throws Exception {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                    .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                                                        .setCountGoal(1)
-                                                        .setEventName("name")
-                                                        .build())
-                                    .setLimit(1)
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                 .setCountGoal(1)
+                                                                 .setEventName("name")
+                                                                 .build())
+                                             .setLimit(1)
+                                             .build();
 
         // Schedule it
         schedule(schedule);
@@ -555,9 +582,9 @@ public class AutomationEngineTest {
 
     @Test
     public void testEditSchedule() throws Exception {
-        final Schedule schedule = Schedule.newBuilder(this.schedule)
-                                          .setEditGracePeriod(100, TimeUnit.SECONDS)
-                                          .build();
+        final Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
+                                                   .setEditGracePeriod(100, TimeUnit.SECONDS)
+                                                   .build();
 
         schedule(schedule);
 
@@ -580,19 +607,23 @@ public class AutomationEngineTest {
 
         // Update the schedule with a end time set to the next day
         long end = System.currentTimeMillis() + 1000 * 60 * 60 * 24;
-        final ScheduleEdits edits = ScheduleEdits.newBuilder()
-                                                 .setLimit(2)
-                                                 .setStart(10)
-                                                 .setEnd(end)
-                                                 .setPriority(300)
-                                                 .setData(JsonMap.newBuilder()
-                                                                 .put("another_action", "COOL")
-                                                                 .build())
-                                                 .build();
+        final ScheduleEdits<Actions> edits = ScheduleEdits.newBuilder(new Actions(JsonMap.newBuilder()
+                                                                                         .put("another_action", "COOL")
+                                                                                         .build()))
+                                                          .setLimit(2)
+                                                          .setStart(10)
+                                                          .setEnd(end)
+                                                          .setPriority(300)
+                                                          .build();
 
-        Future<Schedule> future = automationEngine.editSchedule(schedule.getId(), edits);
+        Future<Boolean> future = automationEngine.editSchedule(schedule.getId(), edits);
         runLooperTasks();
-        Schedule updated = future.get();
+        assertEquals(Boolean.TRUE, future.get());
+
+        Future<Schedule<Actions>> updatedFuture = automationEngine.getSchedule(schedule.getId(), Schedule.TYPE_ACTION);
+        runLooperTasks();
+
+        Schedule<Actions> updated = updatedFuture.get();
 
         // Verify it's now idle
         verifyState(this.schedule, ScheduleState.IDLE);
@@ -602,12 +633,12 @@ public class AutomationEngineTest {
         assertEquals(edits.getStart().longValue(), updated.getStart());
         assertEquals(edits.getEnd().longValue(), updated.getEnd());
         assertEquals(edits.getPriority().intValue(), updated.getPriority());
-        assertEquals("COOL", ((JsonMap) updated.requireData()).get("another_action").getString());
+        assertEquals("COOL", updated.getData().getActionsMap().get("another_action").getString());
     }
 
     @Test
     public void testEditScheduleEndZero() throws Exception {
-        final Schedule scheduleInfo = Schedule.newBuilder(this.schedule)
+        final Schedule<Actions> scheduleInfo = Schedule.newBuilder(this.schedule)
                                               .setEditGracePeriod(100, TimeUnit.SECONDS)
                                               .build();
 
@@ -617,11 +648,15 @@ public class AutomationEngineTest {
         verifyState(scheduleInfo, ScheduleState.IDLE);
 
         // Update the schedule
-        final ScheduleEdits edits = ScheduleEdits.newBuilder().setEnd(0).build();
+        final ScheduleEdits<?> edits = ScheduleEdits.newBuilder().setEnd(System.currentTimeMillis()).build();
 
-        Future<Schedule> future = automationEngine.editSchedule(scheduleInfo.getId(), edits);
+        Future<Boolean> future = automationEngine.editSchedule(scheduleInfo.getId(), edits);
         runLooperTasks();
-        Schedule updated = future.get();
+        assertEquals(Boolean.TRUE, future.get());
+
+        Future<Schedule<Actions>> updatedFuture = automationEngine.getSchedule(scheduleInfo.getId(), Schedule.TYPE_ACTION);
+        runLooperTasks();
+        Schedule<Actions> updated = updatedFuture.get();
 
         // Verify it's finished
         verifyState(scheduleInfo, ScheduleState.FINISHED);
@@ -758,10 +793,10 @@ public class AutomationEngineTest {
 
     @Test
     public void testSkipPenalizePrepareResult() throws ExecutionException, InterruptedException {
-        Schedule schedule = Schedule.newBuilder(this.schedule)
-                                    .setInterval(10, TimeUnit.SECONDS)
-                                    .setLimit(2)
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
+                                             .setInterval(10, TimeUnit.SECONDS)
+                                             .setLimit(2)
+                                             .build();
 
         schedule(schedule);
 
@@ -783,10 +818,10 @@ public class AutomationEngineTest {
 
     @Test
     public void testInvalidatePrepareResult() throws ExecutionException, InterruptedException {
-        Schedule schedule = Schedule.newBuilder(this.schedule)
-                                    .setInterval(10, TimeUnit.SECONDS)
-                                    .setLimit(2)
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
+                                             .setInterval(10, TimeUnit.SECONDS)
+                                             .setLimit(2)
+                                             .build();
 
         schedule(schedule);
 
@@ -798,23 +833,23 @@ public class AutomationEngineTest {
         runLooperTasks();
 
         // Edit the schedule
-        ScheduleEdits edits = ScheduleEdits.newBuilder()
-                                           .setPriority(300)
-                                           .build();
+        ScheduleEdits<? extends ScheduleData> edits = ScheduleEdits.newBuilder()
+                                                                   .setPriority(300)
+                                                                   .build();
 
         automationEngine.editSchedule(schedule.getId(), edits);
         driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
         runLooperTasks();
 
         // Verify the updated schedule is being prepared
-        Schedule updated = driver.preparedSchedulesMap.get(schedule.getId());
+        Schedule<Actions> updated = driver.preparedSchedulesMap.get(schedule.getId());
         assertEquals(300, updated.getPriority());
     }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
-        final Schedule schedule = Schedule.newBuilder(this.schedule)
-                                          .setDelay(delay)
-                                          .build();
+        final Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
+                                                   .setDelay(delay)
+                                                   .build();
 
         schedule(schedule);
 
@@ -871,11 +906,11 @@ public class AutomationEngineTest {
     }
 
     private void verifyTrigger(Trigger trigger, Runnable generateEvents, JsonValue expectedEvent) throws Exception {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                          .addTrigger(trigger)
-                                          .setGroup("group")
-                                          .setLimit(2)
-                                          .build();
+        final Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                                   .addTrigger(trigger)
+                                                   .setGroup("group")
+                                                   .setLimit(2)
+                                                   .build();
 
         schedule(schedule);
 
@@ -941,13 +976,13 @@ public class AutomationEngineTest {
         automationLooper.getScheduler().advanceBy(millis, TimeUnit.MILLISECONDS);
     }
 
-    private void schedule(Schedule schedule) throws ExecutionException, InterruptedException {
+    private void schedule(Schedule<?> schedule) throws ExecutionException, InterruptedException {
         PendingResult<Boolean> future = automationEngine.schedule(schedule);
         runLooperTasks();
         assertTrue(future.get());
     }
 
-    private void verifyState(Schedule schedule, int state) {
+    private void verifyState(Schedule<?> schedule, int state) {
         assertEquals(dao.getSchedule(schedule.getId()).schedule.executionState, state);
     }
 

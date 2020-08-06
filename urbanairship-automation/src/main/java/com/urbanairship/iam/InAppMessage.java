@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
@@ -32,7 +33,7 @@ import androidx.annotation.StringDef;
 /**
  * Defines an in-app message.
  */
-public class InAppMessage implements Parcelable, JsonSerializable {
+public class InAppMessage implements Parcelable, ScheduleData {
 
     /**
      * Max message ID length.

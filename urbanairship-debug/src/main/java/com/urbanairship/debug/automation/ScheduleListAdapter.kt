@@ -9,8 +9,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.automation.Schedule
 import com.urbanairship.debug.databinding.UaItemAutomationBinding
+import com.urbanairship.iam.InAppMessage
 
-internal class ScheduleListAdapter(private val callback: ((schedule: Schedule) -> Unit)) : ListAdapter<Schedule, ScheduleListAdapter.ViewHolder>(diffCallback) {
+internal class ScheduleListAdapter(private val callback: ((schedule: Schedule<InAppMessage>) -> Unit)) : ListAdapter<Schedule<InAppMessage>, ScheduleListAdapter.ViewHolder>(diffCallback) {
 
     class ViewHolder(val binding: UaItemAutomationBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -32,12 +33,12 @@ internal class ScheduleListAdapter(private val callback: ((schedule: Schedule) -
     }
 
     companion object {
-        private val diffCallback = object : DiffUtil.ItemCallback<Schedule>() {
-            override fun areItemsTheSame(oldItem: Schedule, newItem: Schedule): Boolean {
+        private val diffCallback = object : DiffUtil.ItemCallback<Schedule<InAppMessage>>() {
+            override fun areItemsTheSame(oldItem: Schedule<InAppMessage>, newItem: Schedule<InAppMessage>): Boolean {
                 return oldItem == newItem
             }
 
-            override fun areContentsTheSame(oldItem: Schedule, newItem: Schedule): Boolean {
+            override fun areContentsTheSame(oldItem: Schedule<InAppMessage>, newItem: Schedule<InAppMessage>): Boolean {
                 return oldItem == newItem
             }
         }

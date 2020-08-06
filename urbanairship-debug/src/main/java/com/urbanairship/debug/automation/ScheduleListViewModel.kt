@@ -8,17 +8,17 @@ import androidx.lifecycle.ViewModel
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.debug.utils.PendingResultLiveData
+import com.urbanairship.iam.InAppMessage
 
+@Suppress("UNCHECKED_CAST")
 class ScheduleListViewModel : ViewModel() {
 
-    val schedules: LiveData<List<Schedule>>
+    val schedules: LiveData<List<Schedule<InAppMessage>>>
 
     init {
-        val pendingResultLiveData = PendingResultLiveData<Collection<Schedule>>(InAppAutomation.shared().schedules)
+        val pendingResultLiveData = PendingResultLiveData(InAppAutomation.shared().messageSchedules)
         schedules = Transformations.map(pendingResultLiveData) { collection ->
-            collection.toList().filter {
-                        it.type == Schedule.TYPE_IN_APP_MESSAGE
-                    }
+            collection.toList()
         }
     }
 }

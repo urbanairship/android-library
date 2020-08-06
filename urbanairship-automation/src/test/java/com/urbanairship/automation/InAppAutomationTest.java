@@ -14,6 +14,7 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.tags.TagGroupManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagSelector;
@@ -116,19 +117,55 @@ public class InAppAutomationTest {
     }
 
     @Test
+    public void testGetMessageSchedules() {
+        inAppAutomation.getMessageSchedules();
+        verify(mockEngine).getSchedulesByType(Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    @Test
+    public void testGetMessageSchedule() {
+        inAppAutomation.getMessageSchedule("some id");
+        verify(mockEngine).getSchedule("some id", Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    @Test
+    public void testGetMessageSchedulesByGroup() {
+        inAppAutomation.getMessageScheduleGroup("some group");
+        verify(mockEngine).getSchedules("some group", Schedule.TYPE_IN_APP_MESSAGE);
+    }
+
+    @Test
+    public void testGetActionSchedules() {
+        inAppAutomation.getActionSchedules();
+        verify(mockEngine).getSchedulesByType(Schedule.TYPE_ACTION);
+    }
+
+    @Test
+    public void testGetActionSchedule() {
+        inAppAutomation.getActionSchedule("some id");
+        verify(mockEngine).getSchedule("some id", Schedule.TYPE_ACTION);
+    }
+
+    @Test
+    public void testGetActionSchedulesByGroup() {
+        inAppAutomation.getActionScheduleGroup("some group");
+        verify(mockEngine).getSchedules("some group", Schedule.TYPE_ACTION);
+    }
+
+    @Test
     public void testPrepareSchedule() {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setId("cool")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
-        verify(mockIamManager).onPrepare(schedule.getId(), (InAppMessage) schedule.requireData(), callback);
+        verify(mockIamManager).onPrepare(schedule.getId(), schedule.getData(), callback);
     }
 
     @Test
@@ -138,9 +175,9 @@ public class InAppAutomationTest {
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
 
         when(mockIamManager.onCheckExecutionReadiness(schedule.getId())).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
@@ -148,9 +185,9 @@ public class InAppAutomationTest {
 
     @Test
     public void testOnCheckExecutionReadinessActions() {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .build();
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(false);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
@@ -160,11 +197,11 @@ public class InAppAutomationTest {
 
     @Test
     public void testExecuteActions() {
-        JsonMap actions = JsonMap.newBuilder()
-                                 .put("cool", "story")
-                                 .build();
+        JsonMap actionsMap = JsonMap.newBuilder()
+                                    .put("cool", "story")
+                                    .build();
 
-        final Schedule schedule = Schedule.newActionScheduleBuilder(actions)
+        final Schedule schedule = Schedule.newBuilder(new Actions(actionsMap))
                                           .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                           .build();
 
@@ -187,7 +224,7 @@ public class InAppAutomationTest {
         verify(stubbedActionRunRequest).setMetadata(ArgumentMatchers.argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Bundle argument) {
-                return argument.get(ActionArguments.ACTION_SCHEDULE_METADATA).equals(schedule);
+                return argument.get(ActionArguments.ACTION_SCHEDULE_ID_METADATA).equals(schedule.getId());
             }
         }));
     }
@@ -199,9 +236,9 @@ public class InAppAutomationTest {
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
 
         AutomationDriver.ExecutionCallback callback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, callback);
@@ -210,13 +247,12 @@ public class InAppAutomationTest {
 
     @Test
     public void testIsPaused() {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .build();
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(false);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
-
 
         inAppAutomation.setPaused(true);
         assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driver.onCheckExecutionReadiness(schedule));
@@ -285,10 +321,10 @@ public class InAppAutomationTest {
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setMetadata(metadata)
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setMetadata(metadata)
+                                                  .build();
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(true);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
@@ -306,9 +342,9 @@ public class InAppAutomationTest {
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(true);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
@@ -333,12 +369,13 @@ public class InAppAutomationTest {
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
 
         scheduleListener.onNewSchedule(schedule);
-        verify(mockIamManager, times(1)).onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.requireData());
+        verify(mockIamManager, times(1))
+                .onNewMessageSchedule(schedule.getId(), schedule.getData());
 
         scheduleListener.onScheduleLimitReached(schedule);
         scheduleListener.onScheduleCancelled(schedule);
@@ -353,12 +390,12 @@ public class InAppAutomationTest {
                                            .setId("message id")
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setAudience(Audience.newBuilder()
-                                                         .setNotificationsOptIn(true)
-                                                         .build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setAudience(Audience.newBuilder()
+                                                                       .setNotificationsOptIn(true)
+                                                                       .build())
+                                                  .build();
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -375,13 +412,13 @@ public class InAppAutomationTest {
                                            .setId("message id")
                                            .build();
 
-        Schedule schedule = Schedule.newMessageScheduleBuilder(message)
-                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                    .setAudience(Audience.newBuilder()
-                                                         .setNotificationsOptIn(true)
-                                                         .setMissBehavior(Audience.MISS_BEHAVIOR_CANCEL)
-                                                         .build())
-                                    .build();
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setAudience(Audience.newBuilder()
+                                                                       .setNotificationsOptIn(true)
+                                                                       .setMissBehavior(Audience.MISS_BEHAVIOR_CANCEL)
+                                                                       .build())
+                                                  .build();
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -393,7 +430,7 @@ public class InAppAutomationTest {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorSkip() {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                     .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                     .setAudience(Audience.newBuilder()
                                                          .setNotificationsOptIn(true)
@@ -411,7 +448,7 @@ public class InAppAutomationTest {
 
     @Test
     public void testAudienceConditionsCheckMissBehaviorPenalize() {
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                     .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                     .setAudience(Audience.newBuilder()
                                                          .setNotificationsOptIn(true)
@@ -433,7 +470,7 @@ public class InAppAutomationTest {
         tagGroups.put("expected group", Collections.singleton("expected tag"));
         when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
 
-        Schedule schedule = Schedule.newActionScheduleBuilder(JsonMap.EMPTY_MAP)
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                     .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                     .setAudience(Audience.newBuilder()
                                                          .setNotificationsOptIn(true)
