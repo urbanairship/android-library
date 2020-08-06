@@ -67,7 +67,6 @@ public class InAppMessageManagerTest {
     public void setup() {
         message = InAppMessage.newBuilder()
                               .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                              .setId(UUID.randomUUID().toString())
                               .build();
 
         scheduleId = UUID.randomUUID().toString();
@@ -365,7 +364,7 @@ public class InAppMessageManagerTest {
             @NonNull
             @Override
             public InAppMessage extend(@NonNull InAppMessage message) {
-                return InAppMessage.newBuilder(message).setId("some other id").build();
+                return InAppMessage.newBuilder(message).setName("extended").build();
             }
         });
 
@@ -380,14 +379,14 @@ public class InAppMessageManagerTest {
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
             @Override
             public boolean matches(InAppMessage argument) {
-                return argument.getId().equals("some other id");
+                return argument.getName().equals("extended");
             }
         }));
     }
 
     @Test
     public void testNotifyAssetManagerNewSchedule() {
-        final InAppMessage extended = InAppMessage.newBuilder(message).setId("some other id").build();
+        final InAppMessage extended = InAppMessage.newBuilder(message).setName("extended").build();
         manager.setMessageExtender(new InAppMessageExtender() {
             @NonNull
             @Override

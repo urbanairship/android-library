@@ -18,10 +18,11 @@ class DisplayEvent extends InAppMessageEvent {
     /**
      * Default constructor.
      *
+     * @param scheduleId The schedule ID.
      * @param message The in-app message.
      */
-    DisplayEvent(@NonNull InAppMessage message) {
-        super(message);
+    DisplayEvent(@NonNull String scheduleId, @NonNull InAppMessage message) {
+        super(scheduleId, message);
     }
 
     @NonNull

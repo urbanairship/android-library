@@ -50,7 +50,6 @@ public class AdapterWrapperTest {
 
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 

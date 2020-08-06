@@ -238,7 +238,6 @@
     <string name="ua_iaa_debug_limit_key">Schedule Limit</string>
     <string name="ua_iaa_debug_edit_grace_period_key">Schedule Edit Grace Period</string>
     <string name="ua_iaa_debug_interval_key">Schedule Interval</string>
-    <string name="ua_iaa_debug_message_id_key">Message Identifier</string>
     <string name="ua_iaa_debug_message_name_key">Message Name</string>
     <string name="ua_iaa_debug_message_display_type_key">Message Display Type</string>
     <string name="ua_iaa_debug_audience_key">Message Audience</string>

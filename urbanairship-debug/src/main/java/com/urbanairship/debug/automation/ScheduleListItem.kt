@@ -10,5 +10,5 @@ class ScheduleListItem(schedule: Schedule<InAppMessage>) {
 
     val type = message.type
 
-    val id = message.id
+    val id = schedule.id
 }

@@ -38,8 +38,8 @@ abstract class InAppMessageEvent extends Event {
 
     @Nullable private final InAppMessage message;
 
-    InAppMessageEvent(@NonNull InAppMessage message) {
-        this.eventId = createEventId(message);
+    InAppMessageEvent(@NonNull String scheduleId, @NonNull InAppMessage message) {
+        this.eventId = createEventId(scheduleId, message);
         this.source = message.getSource();
         this.message = message;
     }
@@ -75,21 +75,21 @@ abstract class InAppMessageEvent extends Event {
     }
 
     @NonNull
-    static JsonValue createEventId(InAppMessage message) {
+    static JsonValue createEventId(String scheduleId, InAppMessage message) {
         switch (message.getSource()) {
             case InAppMessage.SOURCE_LEGACY_PUSH:
-                return JsonValue.wrap(message.getId());
+                return JsonValue.wrap(scheduleId);
 
             case InAppMessage.SOURCE_REMOTE_DATA:
                 return JsonMap.newBuilder()
-                              .put(MESSAGE_ID, message.getId())
+                              .put(MESSAGE_ID, scheduleId)
                               .put(CAMPAIGNS, message.getCampaigns())
                               .build()
                               .toJsonValue();
 
             case InAppMessage.SOURCE_APP_DEFINED:
                 return JsonMap.newBuilder()
-                              .put(MESSAGE_ID, message.getId())
+                              .put(MESSAGE_ID, scheduleId)
                               .build()
                               .toJsonValue();
         }

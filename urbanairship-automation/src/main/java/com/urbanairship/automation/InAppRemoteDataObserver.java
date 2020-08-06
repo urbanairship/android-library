@@ -60,6 +60,7 @@ class InAppRemoteDataObserver {
     private static final String INTERVAL_KEY = "interval";
     private static final String AUDIENCE_KEY = "audience";
     private static final String MESSAGE_KEY = "message";
+    private static final String MESSAGE_ID_KEY = "message_id";
 
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -192,7 +193,7 @@ class InAppRemoteDataObserver {
                 continue;
             }
 
-            String scheduleId = messageJson.optMap().opt("message").optMap().opt("message_id").getString();
+            String scheduleId = parseScheduleId(messageJson);
             if (UAStringUtil.isEmpty(scheduleId)) {
                 Logger.error("Missing schedule ID: %s", messageJson);
                 continue;
@@ -207,7 +208,7 @@ class InAppRemoteDataObserver {
 
             if (createdTimeStamp > lastUpdate) {
                 try {
-                    Schedule<? extends ScheduleData> schedule = parseSchedule(messageJson, scheduleMetadata);
+                    Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
                     if (checkSchedule(schedule, createdTimeStamp)) {
                         newSchedules.add(schedule);
                         Logger.debug("New in-app message: %s", schedule);
@@ -275,6 +276,11 @@ class InAppRemoteDataObserver {
         }
     }
 
+    @Nullable
+    private static String parseScheduleId(JsonValue messageJson) {
+        return messageJson.optMap().opt(MESSAGE_KEY).optMap().opt(MESSAGE_ID_KEY).getString();
+    }
+
     /**
      * Helper method to check if the message should be scheduled.
      *
@@ -338,17 +344,19 @@ class InAppRemoteDataObserver {
     /**
      * Creates a schedule info from a json value.
      *
-     * @param value The json value.
+     * @param scheduleId The schedule ID.
+     * @param value The schedule JSON.
+     * @param metadata The schedule metadata.
      * @return A schedule info.
      * @throws JsonException If the json value contains an invalid schedule info.
      */
-    public static Schedule<? extends ScheduleData> parseSchedule(@NonNull JsonValue value, @NonNull JsonMap metadata) throws JsonException {
+    public static Schedule<? extends ScheduleData> parseSchedule(@NonNull String scheduleId, @NonNull JsonValue value, @NonNull JsonMap metadata) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
 
         Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(message)
-                                                         .setId(message.getId())
+                                                         .setId(scheduleId)
                                                          .setMetadata(metadata)
                                                          .setGroup(jsonMap.opt(GROUP_KEY).getString())
                                                          .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))

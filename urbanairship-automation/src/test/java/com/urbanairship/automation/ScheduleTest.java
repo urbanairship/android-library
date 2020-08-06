@@ -33,7 +33,6 @@ public class ScheduleTest {
     @Before
     public void setup() {
         message = InAppMessage.newBuilder()
-                              .setId("message id")
                               .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                               .build();
 

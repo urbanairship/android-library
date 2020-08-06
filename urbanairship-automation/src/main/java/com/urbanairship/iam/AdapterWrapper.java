@@ -63,7 +63,7 @@ final class AdapterWrapper {
     @InAppMessageAdapter.PrepareResult
     int prepare(@NonNull Context context, @NonNull Assets assets) {
         try {
-            Logger.debug("AdapterWrapper - Preparing schedule: %s message: %s", scheduleId, message.getId());
+            Logger.debug("AdapterWrapper - Preparing message for schedule %s", scheduleId);
             return adapter.onPrepare(context, assets);
         } catch (Exception e) {
             Logger.error(e, "AdapterWrapper - Exception during prepare(Context).");
@@ -92,7 +92,7 @@ final class AdapterWrapper {
      * @throws DisplayException if the adapter throws an exception.
      */
     void display(@NonNull Context context) throws DisplayException {
-        Logger.debug("AdapterWrapper - Displaying schedule: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Displaying message for schedule %s", scheduleId);
         displayed = true;
 
         try {
@@ -109,7 +109,7 @@ final class AdapterWrapper {
      */
     @MainThread
     void displayFinished() {
-        Logger.debug("AdapterWrapper - Display finished: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Display finished for schedule %s", scheduleId);
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -127,7 +127,7 @@ final class AdapterWrapper {
      */
     @WorkerThread
     void adapterFinished(@NonNull Context context) {
-        Logger.debug("AdapterWrapper - Adapter finished: %s message: %s", scheduleId, message.getId());
+        Logger.debug("AdapterWrapper - Adapter finished for schedule %s", scheduleId);
         try {
             adapter.onFinish(context);
         } catch (Exception e) {

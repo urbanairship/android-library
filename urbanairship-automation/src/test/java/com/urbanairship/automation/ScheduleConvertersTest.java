@@ -47,7 +47,6 @@ public class ScheduleConvertersTest {
 
         // Message schedule
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("some-id")
                                            .setDisplayContent(new CustomDisplayContent(JsonMap.EMPTY_MAP.toJsonValue()))
                                            .build();
         scheduleList.add(Schedule.newBuilder(message)

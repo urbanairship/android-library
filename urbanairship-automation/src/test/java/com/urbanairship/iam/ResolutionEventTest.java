@@ -6,7 +6,6 @@ import com.urbanairship.analytics.Event;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
@@ -26,7 +25,6 @@ public class ResolutionEventTest {
     @Before
     public void before() {
         message = InAppMessage.newBuilder()
-                              .setId("message id")
                               .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
                               .build();
     }
@@ -43,7 +41,7 @@ public class ResolutionEventTest {
                                                             .build())
                                           .build();
 
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
+        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -69,7 +67,7 @@ public class ResolutionEventTest {
                                                             .build())
                                           .build();
 
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
+        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -86,7 +84,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testClickedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.messageClicked(), 5500);
+        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.messageClicked(), 5500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "message_click")
@@ -101,7 +99,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testUserDismissedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.dismissed(), 3500);
+        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.dismissed(), 3500);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "user_dismissed")
@@ -116,7 +114,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testTimedOutResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.timedOut(), 15000);
+        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.timedOut(), 15000);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "timed_out")

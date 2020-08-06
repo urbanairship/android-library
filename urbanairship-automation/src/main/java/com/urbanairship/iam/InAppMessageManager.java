@@ -39,11 +39,14 @@ public class InAppMessageManager {
 
     /**
      * IAM delegate
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface Delegate {
+
         void onReadinessChanged();
+
     }
 
     /**
@@ -91,9 +94,9 @@ public class InAppMessageManager {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(@NonNull Context context,
-                        @NonNull PreferenceDataStore dataStore,
-                        @NonNull Analytics analytics,
-                        @NonNull Delegate delegate) {
+                               @NonNull PreferenceDataStore dataStore,
+                               @NonNull Analytics analytics,
+                               @NonNull Delegate delegate) {
         this(context, dataStore, analytics, RetryingExecutor.newSerialExecutor(Looper.getMainLooper()),
                 new ActionRunRequestFactory(), new AssetManager(context), delegate);
     }
@@ -226,8 +229,8 @@ public class InAppMessageManager {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onPrepare(final @NonNull String scheduleId,
-                   final @NonNull InAppMessage inAppMessage,
-                   final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+                          final @NonNull InAppMessage inAppMessage,
+                          final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         final AdapterWrapper adapter = createAdapterWrapper(scheduleId, inAppMessage);
         if (adapter == null) {
             // Failed
@@ -243,16 +246,16 @@ public class InAppMessageManager {
 
                 switch (result) {
                     case AssetManager.PREPARE_RESULT_OK:
-                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s message %s", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s.", scheduleId);
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case AssetManager.PREPARE_RESULT_RETRY:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s message %s. Will retry.", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case AssetManager.PREPARE_RESULT_CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s message %s", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
                         assetManager.onDisplayFinished(scheduleId, adapter.message);
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
@@ -268,7 +271,7 @@ public class InAppMessageManager {
 
                 switch (result) {
                     case InAppMessageAdapter.OK:
-                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s message %s", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s.", scheduleId);
 
                         // Store the adapter
                         adapterWrappers.put(scheduleId, adapter);
@@ -276,12 +279,12 @@ public class InAppMessageManager {
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s message %s. Will retry.", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case InAppMessageAdapter.CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s message %s", scheduleId, adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
@@ -301,7 +304,7 @@ public class InAppMessageManager {
     public int onCheckExecutionReadiness(@NonNull String scheduleId) {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
-            Logger.error("Missing adapter for schedule: %", scheduleId);
+            Logger.error("Missing adapter for schedule %.", scheduleId);
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
@@ -320,7 +323,7 @@ public class InAppMessageManager {
     public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
-            Logger.error("Missing adapter for schedule: %", scheduleId);
+            Logger.error("Missing adapter for schedule %.", scheduleId);
             callback.onFinish();
             return;
         }
@@ -332,7 +335,7 @@ public class InAppMessageManager {
         try {
             adapterWrapper.display(context);
         } catch (AdapterWrapper.DisplayException e) {
-            Logger.error(e, "Failed to display in-app message: %s, schedule: %s", scheduleId, adapterWrapper.message.getId());
+            Logger.error(e, "Failed to display in-app message for schedule %s.", scheduleId);
             callExecutionFinishedCallback(scheduleId);
             executor.execute(new Runnable() {
                 @Override
@@ -344,7 +347,7 @@ public class InAppMessageManager {
         }
 
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(new DisplayEvent(adapterWrapper.message));
+            analytics.addEvent(new DisplayEvent(scheduleId, adapterWrapper.message));
         }
 
         synchronized (listeners) {
@@ -353,7 +356,7 @@ public class InAppMessageManager {
             }
         }
 
-        Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: %s", scheduleId);
+        Logger.verbose("InAppMessagingManager - Message displayed for schedule %s.", scheduleId);
     }
 
     /**
@@ -388,7 +391,7 @@ public class InAppMessageManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
-        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: %s", scheduleId);
+        Logger.verbose("InAppMessagingManager - Message finished for schedule %s.", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 
@@ -399,7 +402,7 @@ public class InAppMessageManager {
 
         // Add resolution event
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo, displayMilliseconds));
+            analytics.addEvent(ResolutionEvent.messageResolution(scheduleId, adapterWrapper.message, resolutionInfo, displayMilliseconds));
         }
 
         // Run Actions
@@ -438,7 +441,6 @@ public class InAppMessageManager {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         return adapterWrapper != null && adapterWrapper.displayed;
     }
-
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onMessageScheduleFinished(@NonNull final String scheduleId) {
@@ -487,8 +489,7 @@ public class InAppMessageManager {
 
             if (factory == null) {
                 Logger.debug("InAppMessageManager - No display adapter for message type: %s. " +
-                                "Unable to process schedule: %s message: %s", message.getType(),
-                        scheduleId, message.getId());
+                                "Unable to process schedule: %s.", message.getType(), scheduleId);
             } else {
                 adapter = factory.createAdapter(message);
             }

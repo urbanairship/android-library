@@ -166,7 +166,6 @@ public class InAppAutomationTest {
     @Test
     public void testPrepareSchedule() {
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("cool")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
@@ -234,7 +233,6 @@ public class InAppAutomationTest {
     @Test
     public void testOnCheckExecutionReadinessMessage() {
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("cool")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
@@ -421,7 +419,6 @@ public class InAppAutomationTest {
     @Test
     public void testExecuteMessage() {
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("cool")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
@@ -506,7 +503,6 @@ public class InAppAutomationTest {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
@@ -527,7 +523,6 @@ public class InAppAutomationTest {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
@@ -554,7 +549,6 @@ public class InAppAutomationTest {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
@@ -576,7 +570,6 @@ public class InAppAutomationTest {
     public void testAudienceConditionsCheckDefaultMissBehavior() {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .build();
 
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
@@ -598,7 +591,6 @@ public class InAppAutomationTest {
     public void testAudienceConditionsCheckMissBehaviorCancel() {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .setId("message id")
                                            .build();
 
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)

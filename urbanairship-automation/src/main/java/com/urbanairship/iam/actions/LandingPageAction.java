@@ -168,7 +168,6 @@ public class LandingPageAction extends Action {
                                                                                                .setRequireConnectivity(false)
                                                                                                .build())
                                                           .setReportingEnabled(reportEvents)
-                                                          .setId(messageId)
                                                           .setDisplayBehavior(InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE);
 
         InAppMessage message = extendMessage(messageBuilder).build();

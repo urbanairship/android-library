@@ -47,7 +47,6 @@ public class FullScreenAdapterTest  {
 
         message = InAppMessage.newBuilder()
                               .setDisplayContent(displayContent)
-                              .setId("id")
                               .build();
 
         displayHandler = new DisplayHandler("schedule ID");
@@ -152,7 +151,6 @@ public class FullScreenAdapterTest  {
 
         InAppMessage message = InAppMessage.newBuilder()
                               .setDisplayContent(displayContent)
-                              .setId("id")
                               .build();
 
         FullScreenAdapter adapter = FullScreenAdapter.newAdapter(message);

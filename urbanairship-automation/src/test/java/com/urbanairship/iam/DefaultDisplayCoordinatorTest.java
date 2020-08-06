@@ -30,12 +30,12 @@ public class DefaultDisplayCoordinatorTest {
 
         messageOne = InAppMessage.newBuilder()
                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                .setId("message id one")
+                .setName("message id one")
                 .build();
 
         messageTwo = InAppMessage.newBuilder()
                 .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                .setId("message id two")
+                .setName("message id two")
                 .build();
     }
 

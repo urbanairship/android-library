@@ -58,7 +58,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
 
         return mutableListOf<AutomationDetail>().apply {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_message_name_key), message.name.orEmpty()))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_message_id_key), message.id))
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()) {
                 navigateToDisplayContent(message)
             })
@@ -68,8 +68,6 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                     navigateToAudience(it)
                 })
             }
-
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
 
             if (schedule.start >= 0) {
                 add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_start_key), dateFormat.format(Date(schedule.start))))

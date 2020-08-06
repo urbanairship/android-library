@@ -370,17 +370,14 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
         InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                    .setDisplayContent(displayContentBuilder.build())
-                                                   .setExtras(legacyMessage.getExtras());
+                                                   .setExtras(legacyMessage.getExtras())
+                                                   .setSource(InAppMessage.SOURCE_LEGACY_PUSH);
 
         MessageBuilderExtender builderExtender = this.messageBuilderExtender;
         if (builderExtender != null) {
             builderExtender.extend(context, builder, legacyMessage);
         }
-
-        // Set ID and source after building the message
-        return builder.setSource(InAppMessage.SOURCE_LEGACY_PUSH)
-                      .setId(legacyMessage.getId())
-                      .build();
+        return builder.build();
     }
 
 }

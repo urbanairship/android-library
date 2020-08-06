@@ -69,21 +69,6 @@ public class InAppMessageTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testMissingId() {
-        InAppMessage.newBuilder()
-                    .setDisplayContent(customDisplayContent)
-                    .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidId() {
-        InAppMessage.newBuilder()
-                    .setId(UAStringUtil.repeat("a", 101, ""))
-                    .setDisplayContent(customDisplayContent)
-                    .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testInvalidName() {
         InAppMessage.newBuilder()
                     .setName(UAStringUtil.repeat("a", 1025, ""))
@@ -94,7 +79,6 @@ public class InAppMessageTest {
     @Test(expected = IllegalArgumentException.class)
     public void testMissingDisplayContent() {
         InAppMessage.newBuilder()
-                    .setId("messageId")
                     .build();
     }
 
@@ -102,7 +86,6 @@ public class InAppMessageTest {
     public void testBannerDisplayContent() throws JsonException {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(bannerDisplayContent)
-                                           .setId("messageId")
                                            .setName("banner message name")
                                            .addAction("action_name", JsonValue.wrap(100))
                                            .build();
@@ -119,7 +102,6 @@ public class InAppMessageTest {
     public void testCustomDisplayContent() throws JsonException {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(customDisplayContent)
-                                           .setId("messageId")
                                            .build();
 
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
@@ -133,7 +115,6 @@ public class InAppMessageTest {
     public void testFullScreenDisplayContent() throws JsonException {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(fullScreenDisplayContent)
-                                           .setId("messageId")
                                            .setName("full screen message name")
                                            .build();
 
@@ -161,7 +142,6 @@ public class InAppMessageTest {
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.toJsonValue());
 
-        assertEquals("messageId", message.getId());
         assertEquals("message name", message.getName());
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
         assertEquals(customDisplayContent, message.getDisplayContent());

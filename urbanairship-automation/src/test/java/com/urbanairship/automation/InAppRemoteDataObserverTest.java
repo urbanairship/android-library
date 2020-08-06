@@ -65,8 +65,8 @@ public class InAppRemoteDataObserverTest {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("meta", "data").build();
         JsonMap expectedMetadata = JsonMap.newBuilder()
-                                  .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
-                                  .build();
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
+                                          .build();
         // Create a payload with foo and bar.
         RemoteDataPayload payload = new TestPayloadBuilder()
                 .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
@@ -77,8 +77,6 @@ public class InAppRemoteDataObserverTest {
 
         // Notify the observer
         updates.onNext(payload);
-
-
 
         // Verify "foo" and "bar" are scheduled
         assertTrue(scheduler.isScheduled("foo", expectedMetadata));
@@ -152,11 +150,10 @@ public class InAppRemoteDataObserverTest {
         // Update the message with newer foo
         final InAppMessage message = InAppMessage.newBuilder()
                                                  .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                                 .setId("foo")
                                                  .build();
 
         payload = new TestPayloadBuilder()
-                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
+                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
                 .build();
 
@@ -172,13 +169,12 @@ public class InAppRemoteDataObserverTest {
     public void testMetadataChange() {
         final InAppMessage message = InAppMessage.newBuilder()
                                                  .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                                 .setId("foo")
                                                  .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                                  .build();
 
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(JsonMap.newBuilder().putOpt("cool", "story").build())
                 .build();
@@ -190,7 +186,7 @@ public class InAppRemoteDataObserverTest {
 
         // Update the metadata
         payload = new TestPayloadBuilder()
-                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(updatedMetadata)
                 .build();
@@ -224,17 +220,22 @@ public class InAppRemoteDataObserverTest {
             return this;
         }
 
-        public TestPayloadBuilder addScheduleInfo(InAppMessage message, long created, long updated) {
+        public TestPayloadBuilder addScheduleInfo(String scheduleId, InAppMessage message, long created, long updated) {
             List<JsonMap> triggersJson = new ArrayList<>();
             triggersJson.add(JsonMap.newBuilder()
                                     .put("type", "foreground")
                                     .put("goal", 20.0)
                                     .build());
 
+            JsonMap messageJson = JsonMap.newBuilder()
+                                         .putAll(message.toJsonValue().optMap())
+                                         .put("message_id", scheduleId)
+                                         .build();
+
             JsonMap scheduleJson = JsonMap.newBuilder()
                                           .put("created", DateUtils.createIso8601TimeStamp(created))
                                           .put("last_updated", DateUtils.createIso8601TimeStamp(updated))
-                                          .put("message", message)
+                                          .put("message", messageJson)
                                           .put("triggers", JsonValue.wrapOpt(triggersJson))
                                           .put("limit", 10)
                                           .put("priority", 1)
@@ -251,9 +252,9 @@ public class InAppRemoteDataObserverTest {
             return this;
         }
 
-        public TestPayloadBuilder addScheduleInfo(String messageId, long created, long updated) {
-            InAppMessage message = createMessage(messageId);
-            return addScheduleInfo(message, created, updated);
+        public TestPayloadBuilder addScheduleInfo(String scheduleId, long created, long updated) {
+            InAppMessage message = createMessage();
+            return addScheduleInfo(scheduleId, message, created, updated);
         }
 
         public RemoteDataPayload build() {
@@ -269,9 +270,8 @@ public class InAppRemoteDataObserverTest {
 
     }
 
-    private static InAppMessage createMessage(String messageId) {
+    private static InAppMessage createMessage() {
         return InAppMessage.newBuilder()
-                           .setId(messageId)
                            .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                            .build();
@@ -355,7 +355,6 @@ public class InAppRemoteDataObserverTest {
             scheduleResult.setResult(true);
             return scheduleResult;
         }
-
 
         @NonNull
         public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull String scheduleId) {

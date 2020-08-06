@@ -12,6 +12,7 @@ import com.urbanairship.automation.Schedule;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
@@ -25,6 +26,7 @@ import androidx.annotation.RestrictTo;
 
 /**
  * Migrates in-app and ua_automation into new database.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -76,6 +78,7 @@ public class LegacyDataMigrator {
         List<TriggerEntity> triggerEntities = new ArrayList<>();
         String currentScheduleId = null;
 
+        List<String> messageIds = new ArrayList<>();
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             String scheduleId = cursor.getString(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_SCHEDULE_ID));
@@ -116,10 +119,23 @@ public class LegacyDataMigrator {
                     scheduleEntity.data = dataJson;
 
                     if (Schedule.TYPE_IN_APP_MESSAGE.equals(dataType)) {
-                        // Use the message ID for the schedule ID if we scheduled the message
-                        if (!InAppMessage.SOURCE_APP_DEFINED.equals(dataJson.optMap().opt("source").optString())) {
-                            scheduleEntity.scheduleId = dataJson.optMap().opt("message_id").getString(scheduleId);
+                        // Set the message ID as the schedule ID
+                        String messageId = dataJson.optMap().opt("message_id").getString(scheduleId);
+
+                        if (InAppMessage.SOURCE_APP_DEFINED.equals(dataJson.optMap().opt("source").optString())) {
+                            // Add the old schedule ID as metadata just in case devs have no way of
+                            // mapping the old schedule ID.
+                            scheduleEntity.metadata = JsonMap.newBuilder().putAll(scheduleEntity.metadata)
+                                                             .put("com.urbanairship.original_schedule_id", scheduleEntity.scheduleId)
+                                                             .put("com.urbanairship.original_message_id", messageId)
+                                                             .build();
+
+                            // Unique it
+                            messageId = getUniqueId(messageId, messageIds);
                         }
+
+                        scheduleEntity.scheduleId = messageId;
+                        messageIds.add(messageId);
 
                         // Migrate audience to top level
                         JsonValue audienceJson = dataJson.optMap().get("audience");
@@ -153,6 +169,16 @@ public class LegacyDataMigrator {
             Logger.verbose("Migrating schedule: %s triggers: %s", scheduleEntity, triggerEntities);
             dao.insert(new FullSchedule(scheduleEntity, triggerEntities));
         }
+    }
+
+    private String getUniqueId(String messageId, List<String> messageIds) {
+        String uniqueId = messageId;
+        int i = 0;
+        while (messageIds.contains(uniqueId)) {
+            i++;
+            uniqueId = messageId + "#" + i;
+        }
+        return uniqueId;
     }
 
     private List<String> parseScreens(JsonValue json) {

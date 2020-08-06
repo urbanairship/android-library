@@ -32,7 +32,6 @@ public class AssetManagerTest {
     private CachePolicyDelegate mockCachePolicyDelegate;
 
     private InAppMessage MESSAGE = InAppMessage.newBuilder()
-                                               .setId("some-message-id")
                                                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                                .build();
 

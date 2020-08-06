@@ -17,7 +17,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
-import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -36,17 +35,9 @@ import androidx.annotation.StringDef;
 public class InAppMessage implements Parcelable, ScheduleData {
 
     /**
-     * Max message ID length.
-     */
-    public static final int MAX_ID_LENGTH = 100;
-
-    /**
      * Max message name length.
      */
     public static final int MAX_NAME_LENGTH = 1024;
-
-    // JSON keys
-    static final String MESSAGE_ID_KEY = "message_id";
 
     private static final String DISPLAY_TYPE_KEY = "display_type";
     private static final String DISPLAY_CONTENT_KEY = "display";
@@ -146,7 +137,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     @DisplayType
     private final String type;
     private final JsonMap extras;
-    private final String id;
     private final String name;
     private final JsonSerializable content;
     private final Map<String, JsonValue> actions;
@@ -169,7 +159,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     private InAppMessage(@NonNull Builder builder) {
         this.type = builder.type;
         this.content = builder.content;
-        this.id = builder.id;
         this.name = builder.name;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.actions = builder.actions;
@@ -222,16 +211,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
      */
     @Nullable
     public String getName() { return name; }
-
-    /**
-     * Gets the message ID.
-     *
-     * @return The message ID.
-     */
-    @NonNull
-    public String getId() {
-        return id;
-    }
 
     /**
      * Gets the extras.
@@ -308,7 +287,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                      .put(MESSAGE_ID_KEY, id)
                       .putOpt(NAME_KEY, name)
                       .putOpt(EXTRA_KEY, extras)
                       .putOpt(DISPLAY_CONTENT_KEY, content)
@@ -337,18 +315,12 @@ public class InAppMessage implements Parcelable, ScheduleData {
         String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).optString();
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
-        String messageId = jsonValue.optMap().opt(MESSAGE_ID_KEY).getString();
-        if (messageId == null || messageId.length() > MAX_ID_LENGTH) {
-            throw new JsonException("Invalid message ID. Must be nonnull and less than or equal to " + MAX_ID_LENGTH + " characters.");
-        }
-
         String name = jsonValue.optMap().opt(NAME_KEY).getString();
         if (name != null && name.length() > MAX_NAME_LENGTH) {
             throw new JsonException("Invalid message name. Must be less than or equal to " + MAX_NAME_LENGTH + " characters.");
         }
 
         InAppMessage.Builder builder = InAppMessage.newBuilder()
-                                                   .setId(messageId)
                                                    .setName(name)
                                                    .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                                                    .setDisplayContent(type, content);
@@ -528,10 +500,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
             return false;
         }
 
-        if (!id.equals(message.id)) {
-            return false;
-        }
-
         if (name != null ? !name.equals(message.name) : message.name != null) {
             return false;
         }
@@ -560,7 +528,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     public int hashCode() {
         int result = type.hashCode();
         result = 31 * result + extras.hashCode();
-        result = 31 * result + id.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + content.hashCode();
         result = 31 * result + actions.hashCode();
@@ -580,7 +547,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         @DisplayType
         private String type;
         private JsonMap extras;
-        private String id;
         private String name;
         private JsonSerializable content;
         private Map<String, JsonValue> actions = new HashMap<>();
@@ -601,7 +567,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         public Builder(@NonNull InAppMessage message) {
             this.type = message.type;
             this.content = message.content;
-            this.id = message.id;
             this.name = message.name;
             this.extras = message.extras;
             this.actions = message.actions;
@@ -764,18 +729,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         }
 
         /**
-         * Sets the in-app message ID.
-         *
-         * @param id The message ID.
-         * @return The builder.
-         */
-        @NonNull
-        public Builder setId(@NonNull @Size(min = 1, max = MAX_ID_LENGTH) String id) {
-            this.id = id;
-            return this;
-        }
-
-        /**
          * Sets the in-app message name.
          *
          * @param name The message name.
@@ -847,14 +800,11 @@ public class InAppMessage implements Parcelable, ScheduleData {
          * Builds the in-app message.
          *
          * @return The built in-app message.
-         * @throws IllegalArgumentException If the ID is missing, ID length is greater than the {@link #MAX_ID_LENGTH},
-         * or if the content is missing.
+         * @throws IllegalArgumentException If the content is missing.
          */
         @NonNull
         public InAppMessage build() {
-            Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
             Checks.checkArgument(name == null || name.length() <= MAX_NAME_LENGTH, "Name exceeds max name length: " + MAX_NAME_LENGTH);
-            Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkNotNull(type, "Missing type.");
             Checks.checkNotNull(content, "Missing content.");
             return new InAppMessage(this);
