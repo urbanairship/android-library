@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
@@ -22,7 +23,7 @@ import androidx.annotation.Nullable;
 /**
  * Defines conditions that might delay the execution of a schedule.
  */
-public class ScheduleDelay implements Parcelable {
+public class ScheduleDelay implements Parcelable, JsonSerializable {
 
     private static final String SECONDS_KEY = "seconds";
 
@@ -277,6 +278,44 @@ public class ScheduleDelay implements Parcelable {
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid schedule delay info", e);
         }
+    }
+
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        String appState = null;
+        switch (getAppState()) {
+            case APP_STATE_ANY:
+                appState = APP_STATE_ANY_NAME;
+                break;
+            case APP_STATE_BACKGROUND:
+                appState = APP_STATE_BACKGROUND_NAME;
+                break;
+            case APP_STATE_FOREGROUND:
+                appState = APP_STATE_FOREGROUND_NAME;
+                break;
+        }
+
+        return JsonMap.newBuilder()
+                      .put(SECONDS_KEY, getSeconds())
+                      .put(APP_STATE_KEY, appState)
+                      .put(SCREEN_KEY, JsonValue.wrapOpt(getScreens()))
+                      .put(REGION_ID_KEY, getRegionId())
+                      .put(CANCELLATION_TRIGGERS_KEY, JsonValue.wrapOpt(getCancellationTriggers()))
+                      .build()
+                      .toJsonValue();
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "ScheduleDelay{" +
+                "seconds=" + seconds +
+                ", screens=" + screens +
+                ", appState=" + appState +
+                ", regionId='" + regionId + '\'' +
+                ", cancellationTriggers=" + cancellationTriggers +
+                '}';
     }
 
     /**

@@ -9,6 +9,8 @@ import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
@@ -59,8 +61,13 @@ class InAppRemoteDataObserver {
     private static final String EDIT_GRACE_PERIOD_KEY = "edit_grace_period";
     private static final String INTERVAL_KEY = "interval";
     private static final String AUDIENCE_KEY = "audience";
+    private static final String TYPE_KEY = "type";
+    private static final String SCHEDULE_ID_KEY = "id";
+    private static final String LEGACY_MESSAGE_ID_KEY = "message_id";
+
     private static final String MESSAGE_KEY = "message";
-    private static final String MESSAGE_ID_KEY = "message_id";
+    private static final String DEFERRED_KEY = "deferred";
+    private static final String ACTIONS_KEY = "actions";
 
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -211,10 +218,10 @@ class InAppRemoteDataObserver {
                     Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
                     if (checkSchedule(schedule, createdTimeStamp)) {
                         newSchedules.add(schedule);
-                        Logger.debug("New in-app message: %s", schedule);
+                        Logger.debug("New in-app automation: %s", schedule);
                     }
-                } catch (JsonException e) {
-                    Logger.error(e, "Failed to parse in-app message: %s", messageJson);
+                } catch (Exception e) {
+                    Logger.error(e, "Failed to parse in-app automation: %s", messageJson);
                 }
             } else if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
@@ -229,10 +236,10 @@ class InAppRemoteDataObserver {
 
                     Boolean edited = scheduler.editSchedule(scheduleId, edits).get();
                     if (edited != null && edited) {
-                        Logger.debug("Updated in-app message: %s with edits: %s", scheduleId, edits);
+                        Logger.debug("Updated in-app automation: %s with edits: %s", scheduleId, edits);
                     }
                 } catch (JsonException e) {
-                    Logger.error(e, "Failed to parse in-app message edits: %s", scheduleId);
+                    Logger.error(e, "Failed to parse in-app automation edits: %s", scheduleId);
                 }
             }
         }
@@ -277,8 +284,24 @@ class InAppRemoteDataObserver {
     }
 
     @Nullable
-    private static String parseScheduleId(JsonValue messageJson) {
-        return messageJson.optMap().opt(MESSAGE_KEY).optMap().opt(MESSAGE_ID_KEY).getString();
+    private static String parseScheduleId(JsonValue json) {
+        String scheduleId = json.optMap().opt(SCHEDULE_ID_KEY).getString();
+        if (scheduleId == null) {
+            // LEGACY
+            scheduleId = json.optMap().opt(MESSAGE_KEY).optMap().opt(LEGACY_MESSAGE_ID_KEY).getString();
+        }
+        return scheduleId;
+    }
+
+    @Nullable
+    private static Audience parseAudience(@NonNull JsonValue jsonValue) throws JsonException {
+        JsonValue audienceJson = jsonValue.optMap().get(AUDIENCE_KEY);
+        if (audienceJson == null) {
+            // Legacy
+            audienceJson = jsonValue.optMap().opt(MESSAGE_KEY).optMap().get(AUDIENCE_KEY);
+        }
+
+        return audienceJson == null ? null : Audience.fromJson(audienceJson);
     }
 
     /**
@@ -353,14 +376,36 @@ class InAppRemoteDataObserver {
     public static Schedule<? extends ScheduleData> parseSchedule(@NonNull String scheduleId, @NonNull JsonValue value, @NonNull JsonMap metadata) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
-        InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
+        // Fallback to in-app message to support legacy messages
+        String type = jsonMap.opt(TYPE_KEY).getString(Schedule.TYPE_IN_APP_MESSAGE);
 
-        Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(message)
-                                                         .setId(scheduleId)
-                                                         .setMetadata(metadata)
-                                                         .setGroup(jsonMap.opt(GROUP_KEY).getString())
-                                                         .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
-                                                         .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
+        Schedule.Builder<? extends ScheduleData> builder;
+        switch (type) {
+            case Schedule.TYPE_ACTION:
+                JsonMap actionsMap = jsonMap.opt(ACTIONS_KEY).getMap();
+                if (actionsMap == null) {
+                    throw new JsonException("Missing actions payload");
+                }
+                builder = Schedule.newBuilder(new Actions(actionsMap));
+                break;
+            case Schedule.TYPE_IN_APP_MESSAGE:
+                InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
+                builder = Schedule.newBuilder(message);
+                break;
+            case Schedule.TYPE_DEFERRED:
+                Deferred deferred = Deferred.fromJson(jsonMap.opt(DEFERRED_KEY));
+                builder = Schedule.newBuilder(deferred);
+                break;
+            default:
+                throw new JsonException("Unexpected type: " + type);
+        }
+
+        builder.setId(scheduleId)
+               .setMetadata(metadata)
+               .setGroup(jsonMap.opt(GROUP_KEY).getString())
+               .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+               .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
+               .setAudience(parseAudience(value));
 
         if (jsonMap.containsKey(END_KEY)) {
             try {
@@ -394,11 +439,6 @@ class InAppRemoteDataObserver {
             builder.setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS);
         }
 
-        JsonValue audienceJson = jsonMap.opt(MESSAGE_KEY).optMap().get(AUDIENCE_KEY);
-        if (audienceJson != null) {
-            builder.setAudience(Audience.fromJson(audienceJson));
-        }
-
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -417,9 +457,28 @@ class InAppRemoteDataObserver {
     public static ScheduleEdits<? extends ScheduleData> parseEdits(@NonNull JsonValue value) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
-        InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
-
-        ScheduleEdits.Builder<InAppMessage> builder = ScheduleEdits.newBuilder(message);
+        // Fallback to in-app message to support legacy messages
+        String type = jsonMap.opt(TYPE_KEY).getString(Schedule.TYPE_IN_APP_MESSAGE);
+        ScheduleEdits.Builder<? extends ScheduleData> builder;
+        switch (type) {
+            case Schedule.TYPE_ACTION:
+                JsonMap actionsMap = jsonMap.opt(ACTIONS_KEY).getMap();
+                if (actionsMap == null) {
+                    throw new JsonException("Missing actions payload");
+                }
+                builder = ScheduleEdits.newBuilder(new Actions(actionsMap));
+                break;
+            case Schedule.TYPE_IN_APP_MESSAGE:
+                InAppMessage message = InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
+                builder = ScheduleEdits.newBuilder(message);
+                break;
+            case Schedule.TYPE_DEFERRED:
+                Deferred deferred = Deferred.fromJson(jsonMap.opt(DEFERRED_KEY));
+                builder = ScheduleEdits.newBuilder(deferred);
+                break;
+            default:
+                throw new JsonException("Unexpected schedule type: " + type);
+        }
 
         if (jsonMap.containsKey(LIMIT_KEY)) {
             builder.setLimit(jsonMap.opt(LIMIT_KEY).getInt(1));
@@ -452,6 +511,8 @@ class InAppRemoteDataObserver {
         if (jsonMap.containsKey(INTERVAL_KEY)) {
             builder.setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS);
         }
+
+        builder.setAudience(parseAudience(value));
 
         return builder.build();
     }
@@ -489,7 +550,7 @@ class InAppRemoteDataObserver {
         }
 
         if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
-            InAppMessage message = (InAppMessage) schedule.coerceType();
+            InAppMessage message = schedule.coerceType();
             return InAppMessage.SOURCE_REMOTE_DATA.equals(message.getSource());
         }
 

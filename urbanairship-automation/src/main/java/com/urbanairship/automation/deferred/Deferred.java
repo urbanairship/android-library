@@ -87,4 +87,22 @@ public class Deferred implements ScheduleData {
         return new Deferred(url, retryOnTimeout);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Deferred deferred = (Deferred) o;
+
+        if (retryOnTimeout != deferred.retryOnTimeout) return false;
+        return url.equals(deferred.url);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = url.hashCode();
+        result = 31 * result + (retryOnTimeout ? 1 : 0);
+        return result;
+    }
+
 }

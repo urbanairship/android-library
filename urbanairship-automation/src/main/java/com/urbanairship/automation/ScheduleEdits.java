@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonMap;
 
@@ -26,6 +27,7 @@ public class ScheduleEdits<T extends ScheduleData> {
     private final Long editGracePeriod;
     private final Long interval;
     private final JsonMap metadata;
+    private final Audience audience;
     @Schedule.Type
     private final String type;
 
@@ -39,6 +41,7 @@ public class ScheduleEdits<T extends ScheduleData> {
         this.interval = builder.interval;
         this.editGracePeriod = builder.editGracePeriod;
         this.metadata = builder.metadata;
+        this.audience = builder.audience;
     }
 
     /**
@@ -136,6 +139,16 @@ public class ScheduleEdits<T extends ScheduleData> {
     }
 
     /**
+     * Gets the schedule's audience edits.
+     *
+     * @return The schedule's audience edits.
+     */
+    @Nullable
+    public Audience getAudience() {
+        return audience;
+    }
+
+    /**
      * Create a new builder that extends an edits instance.
      *
      * @return A new builder instance.
@@ -168,6 +181,19 @@ public class ScheduleEdits<T extends ScheduleData> {
     }
 
     /**
+     * Create a new builder that edits the schedule type as deferred.
+     *
+     * @param deferred The deferred data.
+     * @return A new builder instance.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static Builder<Deferred> newBuilder(@NonNull Deferred deferred) {
+        return new Builder<>(Schedule.TYPE_DEFERRED, deferred);
+    }
+
+    /**
      * Create a new builder that extends an edits instance.
      *
      * @param edits Edits to extend.
@@ -177,6 +203,7 @@ public class ScheduleEdits<T extends ScheduleData> {
     public static <T extends ScheduleData> Builder<T> newBuilder(@NonNull ScheduleEdits<T> edits) {
         return new Builder<>(edits);
     }
+
 
     /**
      * {@link ScheduleEdits} builder.
@@ -194,6 +221,7 @@ public class ScheduleEdits<T extends ScheduleData> {
 
         @Schedule.Type
         private String type;
+        private Audience audience;
 
         private Builder() {
         }
@@ -295,6 +323,17 @@ public class ScheduleEdits<T extends ScheduleData> {
         @NonNull
         public Builder<T> setMetadata(@Nullable JsonMap metadata) {
             this.metadata = metadata;
+            return this;
+        }
+
+        /**
+         * Sets the audience.
+         *
+         * @param audience The audience.
+         * @return The builder instance.
+         */
+        public Builder<T> setAudience(@Nullable Audience audience) {
+            this.audience = audience;
             return this;
         }
 

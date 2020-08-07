@@ -7,6 +7,7 @@ import android.os.Looper;
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -21,6 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,7 +35,6 @@ import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -61,16 +63,54 @@ public class InAppRemoteDataObserverTest {
     }
 
     @Test
-    public void testSchedule() {
+    public void testSchedule() throws MalformedURLException {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("meta", "data").build();
+
         JsonMap expectedMetadata = JsonMap.newBuilder()
                                           .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
                                           .build();
+
+        Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setMetadata(expectedMetadata)
+                                                     .setStart(1000)
+                                                     .setEnd(3000)
+                                                     .setInterval(10, TimeUnit.SECONDS)
+                                                     .setAudience(Audience.newBuilder()
+                                                                          .setLocationOptIn(true)
+                                                                          .build())
+                                                     .setDelay(ScheduleDelay.newBuilder()
+                                                                            .setSeconds(100)
+                                                                            .build())
+                                                     .setId("foo")
+                                                     .build();
+
+        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(new URL("https://neat"), false))
+                                                 .addTrigger(Triggers.newActiveSessionTriggerBuilder()
+                                                                     .setGoal(1)
+                                                                     .build())
+                                                 .setId("bar")
+                                                 .setMetadata(expectedMetadata)
+                                                 .build();
+
+        Schedule<Actions> bazSchedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                                .addTrigger(Triggers.newActiveSessionTriggerBuilder()
+                                                                    .setGoal(1)
+                                                                    .build())
+                                                .setId("baz")
+                                                .setMetadata(expectedMetadata)
+                                                .build();
+
         // Create a payload with foo and bar.
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
-                .addScheduleInfo("bar", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(barSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(metadata)
                 .build();
@@ -79,14 +119,14 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are scheduled
-        assertTrue(scheduler.isScheduled("foo", expectedMetadata));
-        assertTrue(scheduler.isScheduled("bar", expectedMetadata));
+        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
+        assertEquals(barSchedule, scheduler.schedules.get("bar"));
 
         // Create another payload with added baz
         payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
-                .addScheduleInfo("bar", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
-                .addScheduleInfo("baz", TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(2))
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(barSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(bazSchedule, TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(2))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
                 .setMetadata(metadata)
                 .build();
@@ -95,37 +135,107 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "baz" is scheduled
-        assertTrue(scheduler.isScheduled("baz", expectedMetadata));
+        assertEquals(bazSchedule, scheduler.schedules.get("baz"));
 
         // Verify "foo" and "bar" are still scheduled
-        assertTrue(scheduler.isScheduled("foo", expectedMetadata));
-        assertTrue(scheduler.isScheduled("bar", expectedMetadata));
+        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
+        assertEquals(barSchedule, scheduler.schedules.get("bar"));
     }
 
     @Test
-    public void testEndMessages() {
+    public void testLegacy() throws MalformedURLException {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        JsonMap expectedMetadata = JsonMap.newBuilder()
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
+                                          .build();
+
+        Schedule<InAppMessage> legacySchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setMetadata(expectedMetadata)
+                                                     .setStart(1000)
+                                                     .setEnd(3000)
+                                                     .setInterval(10, TimeUnit.SECONDS)
+                                                     .setAudience(Audience.newBuilder()
+                                                                          .setLocationOptIn(true)
+                                                                          .build())
+                                                     .setDelay(ScheduleDelay.newBuilder()
+                                                                            .setSeconds(100)
+                                                                            .build())
+                                                     .setId("legacy")
+                                                     .build();
+
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .addLegacySchedule(legacySchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata)
+                .build();
+
+        // Notify the observer
+        updates.onNext(payload);
+
+        // Verify "foo" and "bar" are scheduled
+        assertEquals(legacySchedule, scheduler.schedules.get("legacy"));
+    }
+
+    @Test
+    public void testEndMessages() throws MalformedURLException {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        JsonMap expectedMetadata = JsonMap.newBuilder()
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
+                                          .build();
+
+        Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setId("foo")
+                                                     .setMetadata(expectedMetadata)
+                                                     .build();
+
+        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(new URL("https://neat"), false))
+                                                 .addTrigger(Triggers.newActiveSessionTriggerBuilder()
+                                                                     .setGoal(1)
+                                                                     .build())
+                                                 .setId("bar")
+                                                 .setMetadata(expectedMetadata)
+                                                 .build();
+
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", 100, 100)
-                .addScheduleInfo("bar", 100, 100)
+                .addSchedule(fooSchedule, 100, 100)
+                .addSchedule(barSchedule, 100, 100)
+                .setMetadata(metadata)
                 .build();
 
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are scheduled
-        assertTrue(scheduler.isScheduled("foo"));
-        assertTrue(scheduler.isScheduled("bar"));
+        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
+        assertEquals(barSchedule, scheduler.schedules.get("bar"));
 
         // Update the message without bar
         payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", 100, 100)
+                .addSchedule(fooSchedule, 100, 100)
+                .setMetadata(metadata)
                 .build();
 
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are still scheduled
-        assertTrue(scheduler.isScheduled("foo"));
-        assertTrue(scheduler.isScheduled("bar"));
+        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
+        assertEquals(barSchedule, scheduler.schedules.get("bar"));
 
         // Verify "bar" was edited with updated end and start time
         ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("bar");
@@ -135,48 +245,85 @@ public class InAppRemoteDataObserverTest {
 
     @Test
     public void testEdit() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        JsonMap expectedMetadata = JsonMap.newBuilder()
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
+                                          .build();
+
+        Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setId("foo")
+                                                     .setMetadata(expectedMetadata)
+                                                     .build();
+
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata)
                 .build();
 
         // Process payload
         updates.onNext(payload);
 
         // Verify "foo" is scheduled
-        assertTrue(scheduler.isScheduled("foo"));
+        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
 
-        // Update the message with newer foo
-        final InAppMessage message = InAppMessage.newBuilder()
-                                                 .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                                 .build();
+        // Update "foo" as a different type
+        Schedule<Actions> newFooSchedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                                   .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                       .setGoal(1)
+                                                                       .build())
+                                                   .setId("foo")
+                                                   .setMetadata(expectedMetadata)
+                                                   .build();
 
         payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
+                .addSchedule(newFooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
+                .setMetadata(metadata)
                 .build();
 
         // Return pending result for the edit
         updates.onNext(payload);
 
         // Verify "foo" was edited with the updated message
-        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("foo");
-        assertEquals(message, edits.getData());
+        ScheduleEdits<? extends ScheduleData> edits = scheduler.scheduleEdits.get("foo");
+        assertEquals(Schedule.TYPE_ACTION, edits.getType());
     }
 
     @Test
     public void testMetadataChange() {
-        final InAppMessage message = InAppMessage.newBuilder()
-                                                 .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                                 .setSource(InAppMessage.SOURCE_REMOTE_DATA)
-                                                 .build();
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        JsonMap expectedMetadata = JsonMap.newBuilder()
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
+                                          .build();
+
+        Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setId("foo")
+                                                     .setMetadata(expectedMetadata)
+                                                     .build();
 
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(fooSchedule,  TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
-                .setMetadata(JsonMap.newBuilder().putOpt("cool", "story").build())
+                .setMetadata(metadata)
                 .build();
 
         // Process payload
@@ -186,7 +333,7 @@ public class InAppRemoteDataObserverTest {
 
         // Update the metadata
         payload = new TestPayloadBuilder()
-                .addScheduleInfo("foo", message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(updatedMetadata)
                 .build();
@@ -220,30 +367,65 @@ public class InAppRemoteDataObserverTest {
             return this;
         }
 
-        public TestPayloadBuilder addScheduleInfo(String scheduleId, InAppMessage message, long created, long updated) {
-            List<JsonMap> triggersJson = new ArrayList<>();
-            triggersJson.add(JsonMap.newBuilder()
-                                    .put("type", "foreground")
-                                    .put("goal", 20.0)
-                                    .build());
-
+        public TestPayloadBuilder addLegacySchedule(Schedule<InAppMessage> schedule, long created, long updated) {
             JsonMap messageJson = JsonMap.newBuilder()
-                                         .putAll(message.toJsonValue().optMap())
-                                         .put("message_id", scheduleId)
+                                         .putAll(schedule.getData().toJsonValue().optMap())
+                                         .put("message_id", schedule.getId())
+                                         .put("audience", schedule.getAudience())
                                          .build();
 
-            JsonMap scheduleJson = JsonMap.newBuilder()
-                                          .put("created", DateUtils.createIso8601TimeStamp(created))
-                                          .put("last_updated", DateUtils.createIso8601TimeStamp(updated))
-                                          .put("message", messageJson)
-                                          .put("triggers", JsonValue.wrapOpt(triggersJson))
-                                          .put("limit", 10)
-                                          .put("priority", 1)
-                                          .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
-                                          .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
-                                          .build();
+            JsonMap.Builder scheduleJsonBuilder = JsonMap.newBuilder()
+                                                         .put("created", DateUtils.createIso8601TimeStamp(created))
+                                                         .put("last_updated", DateUtils.createIso8601TimeStamp(updated))
+                                                         .put("triggers", JsonValue.wrapOpt(schedule.getTriggers()))
+                                                         .put("limit", schedule.getLimit())
+                                                         .put("priority", schedule.getPriority())
+                                                         .put("interval", TimeUnit.MILLISECONDS.toSeconds(schedule.getInterval()))
+                                                         .put("id", schedule.getId())
+                                                         .put("start", schedule.getStart() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getStart()) : null)
+                                                         .put("end", schedule.getEnd() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getEnd()) : null)
+                                                         .put("audience", schedule.getAudience())
+                                                         .put("group", schedule.getGroup())
+                                                         .put("delay", schedule.getDelay())
+                                                         .put("message", messageJson);
 
-            schedules.add(scheduleJson.toJsonValue());
+            schedules.add(scheduleJsonBuilder.build().toJsonValue());
+            return this;
+        }
+
+        public TestPayloadBuilder addSchedule(Schedule<? extends ScheduleData> schedule, long created, long updated) {
+            JsonMap.Builder scheduleJsonBuilder = JsonMap.newBuilder()
+                                                         .put("created", DateUtils.createIso8601TimeStamp(created))
+                                                         .put("last_updated", DateUtils.createIso8601TimeStamp(updated))
+                                                         .put("triggers", JsonValue.wrapOpt(schedule.getTriggers()))
+                                                         .put("limit", schedule.getLimit())
+                                                         .put("priority", schedule.getPriority())
+                                                         .put("interval", TimeUnit.MILLISECONDS.toSeconds(schedule.getInterval()))
+                                                         .put("id", schedule.getId())
+                                                         .put("start", schedule.getStart() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getStart()) : null)
+                                                         .put("end", schedule.getEnd() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getEnd()) : null)
+                                                         .put("audience", schedule.getAudience())
+                                                         .put("group", schedule.getGroup())
+                                                         .put("delay", schedule.getDelay());
+
+            switch (schedule.getType()) {
+                case Schedule.TYPE_ACTION:
+                    scheduleJsonBuilder.put("type", "actions")
+                                       .put("actions", schedule.getData());
+                    break;
+
+                case Schedule.TYPE_DEFERRED:
+                    scheduleJsonBuilder.put("type", "deferred")
+                                       .put("deferred", schedule.getData());
+                    break;
+
+                case Schedule.TYPE_IN_APP_MESSAGE:
+                    scheduleJsonBuilder.put("type", "in_app_message")
+                                       .put("message", schedule.getData());
+                    break;
+            }
+
+            schedules.add(scheduleJsonBuilder.build().toJsonValue());
             return this;
         }
 
@@ -252,14 +434,8 @@ public class InAppRemoteDataObserverTest {
             return this;
         }
 
-        public TestPayloadBuilder addScheduleInfo(String scheduleId, long created, long updated) {
-            InAppMessage message = createMessage();
-            return addScheduleInfo(scheduleId, message, created, updated);
-        }
-
         public RemoteDataPayload build() {
             JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
-
             return RemoteDataPayload.newBuilder()
                                     .setType("in_app_messages")
                                     .setTimeStamp(timeStamp)
@@ -267,14 +443,6 @@ public class InAppRemoteDataObserverTest {
                                     .setData(data)
                                     .build();
         }
-
-    }
-
-    private static InAppMessage createMessage() {
-        return InAppMessage.newBuilder()
-                           .setSource(InAppMessage.SOURCE_REMOTE_DATA)
-                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                           .build();
 
     }
 
@@ -385,17 +553,9 @@ public class InAppRemoteDataObserverTest {
             return result;
         }
 
-        public boolean isScheduled(@NonNull String scheduleId) {
-            return schedules.containsKey(scheduleId);
-        }
-
-        public boolean isScheduled(@NonNull String scheduleId, JsonMap metadata) {
-            Schedule<?> schedule = schedules.get(scheduleId);
-            if (schedule != null) {
-                return schedule.getMetadata().equals(metadata);
-            } else {
-                return false;
-            }
+        public boolean isScheduled(@NonNull Schedule<? extends ScheduleData> schedule) {
+            Schedule<? extends ScheduleData> found = schedules.get(schedule.getId());
+            return found != null && found.equals(schedule);
         }
 
         public ScheduleEdits<? extends ScheduleData> getScheduleEdits(@NonNull String scheduleId) {

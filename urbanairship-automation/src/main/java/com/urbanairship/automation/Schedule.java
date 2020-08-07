@@ -320,7 +320,7 @@ public final class Schedule<T extends ScheduleData> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -364,6 +364,7 @@ public final class Schedule<T extends ScheduleData> {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "Schedule{" +
                 "id='" + id + '\'' +

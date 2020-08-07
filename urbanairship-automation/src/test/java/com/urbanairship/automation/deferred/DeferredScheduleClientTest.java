@@ -160,7 +160,6 @@ public class DeferredScheduleClientTest {
     @Test
     public void testMessage() throws AuthException, MalformedURLException, RequestException {
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("some id")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 

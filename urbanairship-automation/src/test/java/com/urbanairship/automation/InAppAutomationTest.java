@@ -190,7 +190,6 @@ public class InAppAutomationTest {
                                                             .build();
 
         InAppMessage message = InAppMessage.newBuilder()
-                                           .setId("cool")
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 

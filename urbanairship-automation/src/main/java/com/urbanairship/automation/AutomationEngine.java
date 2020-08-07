@@ -1739,6 +1739,7 @@ public class AutomationEngine {
         scheduleEntity.editGracePeriod = edits.getEditGracePeriod() == null ? scheduleEntity.editGracePeriod : edits.getEditGracePeriod();
         scheduleEntity.metadata = edits.getMetadata() == null ? scheduleEntity.metadata : edits.getMetadata();
         scheduleEntity.scheduleType = edits.getType() == null ? scheduleEntity.scheduleType : edits.getType();
+        scheduleEntity.audience = edits.getAudience() == null ? scheduleEntity.audience : edits.getAudience();
     }
 
     private boolean isExpired(@NonNull FullSchedule entry) {
