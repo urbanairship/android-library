@@ -131,7 +131,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull NamedUser namedUser) {
         super(context, preferenceDataStore);
 
-        this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics);
+        this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
         this.airshipChannel = airshipChannel;
         this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore, remoteData);

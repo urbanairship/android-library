@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.automation.Audience;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -18,7 +19,9 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,35 +35,58 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LegacyDataMigrator {
 
+    private static final String LEGACY_SCHEDULED_MESSAGES_KEY = "com.urbanairship.iam.data.SCHEDULED_MESSAGES";
+
     private final Context context;
     private final AirshipRuntimeConfig config;
+    private final PreferenceDataStore dataStore;
 
-    public LegacyDataMigrator(@NonNull Context context, @NonNull AirshipRuntimeConfig runtimeConfig) {
+    public LegacyDataMigrator(@NonNull Context context,
+                              @NonNull AirshipRuntimeConfig runtimeConfig,
+                              @NonNull PreferenceDataStore dataStore) {
         this.context = context.getApplicationContext();
         this.config = runtimeConfig;
+        this.dataStore = dataStore;
     }
 
-    public void migrateData(@NonNull AutomationDao dao) {
+    interface Migrator {
+
+        @NonNull
+        void onMigrate(@NonNull ScheduleEntity entity, @NonNull List<TriggerEntity> triggerEntities);
+
+    }
+
+    public void migrateData(@NonNull final AutomationDao dao) {
         LegacyDataManager actionDataManager = new LegacyDataManager(context, config.getConfigOptions().appKey, "ua_automation.db");
         if (actionDataManager.databaseExists(context)) {
             Logger.verbose("Migrating actions automation database.");
-            migrateDatabase(actionDataManager, Schedule.TYPE_ACTION, dao);
+            migrateDatabase(actionDataManager, new Migrator() {
+                @NonNull
+                @Override
+                public void onMigrate(@NonNull ScheduleEntity scheduleEntity, @NonNull List<TriggerEntity> triggerEntities) {
+                    scheduleEntity.scheduleType = Schedule.TYPE_ACTION;
+                    Logger.verbose("Saving migrated action schedule: %s triggers: %s", scheduleEntity, triggerEntities);
+                    dao.insert(new FullSchedule(scheduleEntity, triggerEntities));
+                }
+            });
         }
 
         LegacyDataManager iamDataManager = new LegacyDataManager(context, config.getConfigOptions().appKey, "in-app");
         if (iamDataManager.databaseExists(context)) {
             Logger.verbose("Migrating in-app message database.");
-            migrateDatabase(iamDataManager, Schedule.TYPE_IN_APP_MESSAGE, dao);
+
+            Set<String> knownRemoteScheduleIds = dataStore.getJsonValue(LEGACY_SCHEDULED_MESSAGES_KEY).optMap().keySet();
+            migrateDatabase(iamDataManager, new MessageMigrator(dao, knownRemoteScheduleIds));
+            dataStore.remove(LEGACY_SCHEDULED_MESSAGES_KEY);
         }
     }
 
-    private void migrateDatabase(@NonNull LegacyDataManager dataManager, @NonNull @Schedule.Type String dataType, @NonNull AutomationDao dao) {
-
+    private void migrateDatabase(@NonNull LegacyDataManager dataManager, @Nullable Migrator migrator) {
         Cursor cursor = null;
         try {
             cursor = dataManager.querySchedules();
             if (cursor != null) {
-                migrateDataFromCursor(cursor, dataType, dao);
+                migrateDataFromCursor(cursor, migrator);
             }
         } catch (Exception e) {
             Logger.error(e, "Error when migrating database.");
@@ -70,10 +96,9 @@ public class LegacyDataMigrator {
             dataManager.close();
             dataManager.deleteDatabase(context);
         }
-
     }
 
-    private void migrateDataFromCursor(@NonNull Cursor cursor, @NonNull @Schedule.Type String dataType, @NonNull AutomationDao dao) {
+    private void migrateDataFromCursor(@NonNull Cursor cursor, @NonNull Migrator migrator) {
         ScheduleEntity scheduleEntity = null;
         List<TriggerEntity> triggerEntities = new ArrayList<>();
         String currentScheduleId = null;
@@ -85,8 +110,7 @@ public class LegacyDataMigrator {
 
             if (!UAStringUtil.equals(currentScheduleId, scheduleId)) {
                 if (scheduleEntity != null) {
-                    Logger.verbose("Migrating schedule: %s triggers: %s", scheduleEntity, triggerEntities);
-                    dao.insert(new FullSchedule(scheduleEntity, triggerEntities));
+                    migrator.onMigrate(scheduleEntity, triggerEntities);
                 }
 
                 currentScheduleId = scheduleId;
@@ -113,37 +137,8 @@ public class LegacyDataMigrator {
                     scheduleEntity.interval = cursor.getLong(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_INTERVAL));
                     scheduleEntity.seconds = cursor.getLong(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_SECONDS));
                     scheduleEntity.screens = parseScreens(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_SCREEN))));
-
                     JsonValue dataJson = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_DATA)));
-                    scheduleEntity.scheduleType = dataType;
                     scheduleEntity.data = dataJson;
-
-                    if (Schedule.TYPE_IN_APP_MESSAGE.equals(dataType)) {
-                        // Set the message ID as the schedule ID
-                        String messageId = dataJson.optMap().opt("message_id").getString(scheduleId);
-
-                        if (InAppMessage.SOURCE_APP_DEFINED.equals(dataJson.optMap().opt("source").optString())) {
-                            // Add the old schedule ID as metadata just in case devs have no way of
-                            // mapping the old schedule ID.
-                            scheduleEntity.metadata = JsonMap.newBuilder().putAll(scheduleEntity.metadata)
-                                                             .put("com.urbanairship.original_schedule_id", scheduleEntity.scheduleId)
-                                                             .put("com.urbanairship.original_message_id", messageId)
-                                                             .build();
-
-                            // Unique it
-                            messageId = getUniqueId(messageId, messageIds);
-                        }
-
-                        scheduleEntity.scheduleId = messageId;
-                        messageIds.add(messageId);
-
-                        // Migrate audience to top level
-                        JsonValue audienceJson = dataJson.optMap().get("audience");
-                        if (audienceJson != null) {
-                            scheduleEntity.audience = Audience.fromJson(audienceJson);
-                        }
-                    }
-
                 } catch (JsonException e) {
                     Logger.error(e, "Failed to parse schedule entry.");
                     continue;
@@ -166,19 +161,8 @@ public class LegacyDataMigrator {
         }
 
         if (scheduleEntity != null) {
-            Logger.verbose("Migrating schedule: %s triggers: %s", scheduleEntity, triggerEntities);
-            dao.insert(new FullSchedule(scheduleEntity, triggerEntities));
+            migrator.onMigrate(scheduleEntity, triggerEntities);
         }
-    }
-
-    private String getUniqueId(String messageId, List<String> messageIds) {
-        String uniqueId = messageId;
-        int i = 0;
-        while (messageIds.contains(uniqueId)) {
-            i++;
-            uniqueId = messageId + "#" + i;
-        }
-        return uniqueId;
     }
 
     private List<String> parseScreens(JsonValue json) {
@@ -223,6 +207,77 @@ public class LegacyDataMigrator {
         } catch (SQLException e) {
             Logger.error(e, "Failed to close cursor.");
         }
+    }
+
+    private static class MessageMigrator implements Migrator {
+
+        private final Set<String> knownRemoteScheduleIds;
+        private final Set<String> messageIds;
+        private final AutomationDao dao;
+
+        private MessageMigrator(@NonNull AutomationDao dao, @NonNull Set<String> knownRemoteScheduleIds) {
+            this.dao = dao;
+            this.knownRemoteScheduleIds = knownRemoteScheduleIds;
+            this.messageIds = new HashSet<>();
+        }
+
+        private String getUniqueId(String messageId) {
+            String uniqueId = messageId;
+            int i = 0;
+            while (messageIds.contains(uniqueId)) {
+                i++;
+                uniqueId = messageId + "#" + i;
+            }
+            return uniqueId;
+        }
+
+        @NonNull
+        @Override
+        public void onMigrate(@NonNull ScheduleEntity scheduleEntity, @NonNull List<TriggerEntity> triggerEntities) {
+            scheduleEntity.scheduleType = Schedule.TYPE_IN_APP_MESSAGE;
+
+            // Fix any known remote schedules
+            if (knownRemoteScheduleIds.contains(scheduleEntity.scheduleId)) {
+                scheduleEntity.data = JsonMap.newBuilder()
+                                             .putAll(scheduleEntity.data.optMap())
+                                             .put("source", InAppMessage.SOURCE_REMOTE_DATA)
+                                             .build()
+                                             .toJsonValue();
+            }
+
+            // Set the message ID as the schedule ID
+            String messageId = scheduleEntity.data.optMap().opt("message_id").getString(scheduleEntity.scheduleId);
+
+            if (InAppMessage.SOURCE_APP_DEFINED.equals(scheduleEntity.data.optMap().opt("source").optString())) {
+                // Add the old schedule ID as metadata just in case devs have no way of
+                // mapping the old schedule ID.
+                scheduleEntity.metadata = JsonMap.newBuilder().putAll(scheduleEntity.metadata)
+                                                 .put("com.urbanairship.original_schedule_id", scheduleEntity.scheduleId)
+                                                 .put("com.urbanairship.original_message_id", messageId)
+                                                 .build();
+
+                // Unique it
+                messageId = getUniqueId(messageId);
+            }
+
+            scheduleEntity.scheduleId = messageId;
+            messageIds.add(messageId);
+
+            // Migrate audience to schedule
+            JsonValue audienceJson = scheduleEntity.data.optMap().get("audience");
+            if (audienceJson != null) {
+                try {
+                    scheduleEntity.audience = Audience.fromJson(audienceJson);
+                } catch (JsonException e) {
+                    Logger.error(e, "Unable to schedule due to audience JSON");
+                    return;
+                }
+            }
+
+            Logger.verbose("Saving migrated message schedule: %s triggers: %s", scheduleEntity, triggerEntities);
+            dao.insert(new FullSchedule(scheduleEntity, triggerEntities));
+        }
+
     }
 
 }

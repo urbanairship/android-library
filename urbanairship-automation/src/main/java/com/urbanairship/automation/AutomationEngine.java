@@ -14,6 +14,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.OperationScheduler;
 import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
@@ -191,12 +192,15 @@ public class AutomationEngine {
 
     }
 
-    AutomationEngine(@NonNull Context context, @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull Analytics analytics) {
+    AutomationEngine(@NonNull Context context,
+                     @NonNull AirshipRuntimeConfig runtimeConfig,
+                     @NonNull Analytics analytics,
+                     @NonNull PreferenceDataStore dataStore) {
         this(analytics,
                 InAppActivityMonitor.shared(context),
                 AlarmOperationScheduler.shared(context),
                 AutomationDatabase.createDatabase(context, runtimeConfig).getScheduleDao(),
-                new LegacyDataMigrator(context, runtimeConfig));
+                new LegacyDataMigrator(context, runtimeConfig, dataStore));
     }
 
     @VisibleForTesting
