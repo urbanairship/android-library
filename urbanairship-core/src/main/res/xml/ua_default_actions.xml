@@ -13,11 +13,6 @@
         <name>^+t</name>
     </ActionEntry>
 
-    <ActionEntry class="com.urbanairship.actions.ChannelCaptureAction">
-        <name>channel_capture_action</name>
-        <name>^cc</name>
-    </ActionEntry>
-
     <ActionEntry class="com.urbanairship.actions.ClipboardAction">
         <name>clipboard_action</name>
         <name>^c</name>

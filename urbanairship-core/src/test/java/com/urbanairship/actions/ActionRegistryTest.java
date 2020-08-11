@@ -2,6 +2,8 @@
 
 package com.urbanairship.actions;
 
+import androidx.annotation.Nullable;
+
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -10,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
-
-import androidx.annotation.Nullable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -39,7 +39,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions(TestApplication.getApplication());
-        assertEquals("Default entries changed", 13, registry.getEntries().size());
+        assertEquals("Default entries changed", 12, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
@@ -51,7 +51,6 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("toast_action"), "toast_action");
         validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
-        validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
 
@@ -60,7 +59,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActionsFromResource() {
         registry.registerDefaultActions(TestApplication.getApplication().getApplicationContext());
-        assertEquals("Default entries changed", 13, registry.getEntries().size());
+        assertEquals("Default entries changed", 12, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
@@ -72,7 +71,6 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("toast_action"), "toast_action");
         validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
-        validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
     }
