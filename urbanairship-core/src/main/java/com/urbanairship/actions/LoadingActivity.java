@@ -55,5 +55,4 @@ public class LoadingActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
 }
