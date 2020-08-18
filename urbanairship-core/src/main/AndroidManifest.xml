@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.urbanairship"
     android:versionCode="1"
@@ -8,72 +9,69 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application>
-
         <activity
-            android:name="com.urbanairship.push.NotificationProxyActivity"
-            android:taskAffinity="com.urbanairship.push.NotificationProxyActivity"
+            android:name=".push.NotificationProxyActivity"
             android:exported="false"
+            android:taskAffinity="com.urbanairship.push.NotificationProxyActivity"
             android:theme="@android:style/Theme.NoDisplay" />
-
         <activity
-            android:name="com.urbanairship.util.HelperActivity"
+            android:name=".util.HelperActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.HelperActivity">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
         </activity>
-
         <activity
-            android:name="com.urbanairship.google.PlayServicesErrorActivity"
+            android:name=".google.PlayServicesErrorActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
         </activity>
-
         <activity
-            android:name="com.urbanairship.actions.RateAppActivity"
+            android:name=".actions.RateAppActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.RateAppActivity">
-
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
 
             <intent-filter>
                 <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="com.urbanairship.ChannelCaptureActivity"
+            android:name=".ChannelCaptureActivity"
             android:exported="false">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
         </activity>
+        <activity
+            android:name=".actions.LoadingActivity"
+            android:exported="false">
+        </activity>
 
-
-        <service android:name="com.urbanairship.job.AirshipService" />
-
+        <service android:name=".job.AirshipService" />
         <service
-            android:name="com.urbanairship.job.AndroidJobService"
+            android:name=".job.AndroidJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
-            android:name="com.urbanairship.push.NotificationProxyReceiver"
+            android:name=".push.NotificationProxyReceiver"
             android:exported="false">
             <intent-filter android:priority="-999">
                 <action android:name="com.urbanairship.push.OPENED" />
+
                 <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
-
         <receiver
-            android:name="com.urbanairship.locale.LocaleChangeReceiver"
+            android:name=".locale.LocaleChangeReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
@@ -81,9 +79,9 @@
         </receiver>
 
         <provider
-            android:name="com.urbanairship.UrbanAirshipProvider"
+            android:name=".UrbanAirshipProvider"
             android:authorities="${applicationId}.urbanairship.provider"
             android:exported="false" />
-
     </application>
+
 </manifest>
