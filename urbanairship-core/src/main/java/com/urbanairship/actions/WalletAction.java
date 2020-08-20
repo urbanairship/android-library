@@ -3,6 +3,7 @@
 package com.urbanairship.actions;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 
 import com.urbanairship.Logger;
@@ -45,7 +46,7 @@ public class WalletAction extends OpenExternalUrlAction {
 
         Intent intent = new Intent(UAirship.getApplicationContext(), LoadingActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("url", arguments.getValue().getString());
+        intent.setData(Uri.parse(arguments.getValue().getString()));
         UAirship.getApplicationContext().startActivity(intent);
         return ActionResult.newEmptyResult();
     }

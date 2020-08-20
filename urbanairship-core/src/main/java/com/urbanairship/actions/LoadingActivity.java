@@ -25,9 +25,9 @@ public class LoadingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_loading);
 
         try {
-            Bundle extras = getIntent().getExtras();
-            if (extras != null) {
-                url = new URL(getIntent().getExtras().getString("url"));
+            Uri uri = getIntent().getData();
+            if (uri != null) {
+                url = new URL(getIntent().getData().toString());
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -35,22 +35,25 @@ public class LoadingActivity extends AppCompatActivity {
         }
 
         if (url == null) {
-            Logger.debug("User URI null, unable to process link.");
-            Toast.makeText(this, "URL got from the push is null. Going back.", Toast.LENGTH_SHORT).show();
+            Logger.warn("User URI null, unable to process link.");
             finish();
         }
 
         try {
-            //Get the real Google Pay URL and then navigate to it
+            // Get the real Google Pay URL and then navigate to it
             HttpURLConnection httpURLConnection;
             httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setInstanceFollowRedirects(false);
-            URL secondURL = new URL(httpURLConnection.getHeaderField("Location"));
+            String redirectURL = httpURLConnection.getHeaderField("Location");
 
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(secondURL.toString()));
-            startActivity(browserIntent);
+            if (redirectURL != null) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(redirectURL));
+                startActivity(browserIntent);
+            } else {
+                Logger.warn("No redirection found for the Wallet URL. Finishing action.");
+            }
+
             finish();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
