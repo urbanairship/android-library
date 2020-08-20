@@ -13,7 +13,7 @@ import java.util.List;
 
 import androidx.arch.core.util.Function;
 
-class PendingAttributeMutationStore extends JsonDataStoreQueue<List<PendingAttributeMutation>> {
+class PendingAttributeMutationStore extends JsonDataStoreQueue<List<AttributeMutation>> {
 
     /**
      * Default constructor.
@@ -22,15 +22,15 @@ class PendingAttributeMutationStore extends JsonDataStoreQueue<List<PendingAttri
      * @param storeKey The store key.
      */
     PendingAttributeMutationStore(PreferenceDataStore dataStore, String storeKey) {
-        super(dataStore, storeKey, new Function<List<PendingAttributeMutation>, JsonSerializable>() {
+        super(dataStore, storeKey, new Function<List<AttributeMutation>, JsonSerializable>() {
             @Override
-            public JsonSerializable apply(List<PendingAttributeMutation> input) {
+            public JsonSerializable apply(List<AttributeMutation> input) {
                 return JsonValue.wrapOpt(input);
             }
-        }, new Function<JsonValue, List<PendingAttributeMutation>>() {
+        }, new Function<JsonValue, List<AttributeMutation>>() {
             @Override
-            public List<PendingAttributeMutation> apply(JsonValue input) {
-                return PendingAttributeMutation.fromJsonList(input.optList());
+            public List<AttributeMutation> apply(JsonValue input) {
+                return AttributeMutation.fromJsonList(input.optList());
             }
         });
     }
@@ -39,11 +39,11 @@ class PendingAttributeMutationStore extends JsonDataStoreQueue<List<PendingAttri
      * Collapses a list of mutations down to a single collection of mutations.
      */
     void collapseAndSaveMutations() {
-        apply(new Function<List<List<PendingAttributeMutation>>, List<List<PendingAttributeMutation>>>() {
+        apply(new Function<List<List<AttributeMutation>>, List<List<AttributeMutation>>>() {
             @Override
-            public List<List<PendingAttributeMutation>> apply(List<List<PendingAttributeMutation>> input) {
-                List<PendingAttributeMutation> combined = new ArrayList<>();
-                for (List<PendingAttributeMutation> mutations : input) {
+            public List<List<AttributeMutation>> apply(List<List<AttributeMutation>> input) {
+                List<AttributeMutation> combined = new ArrayList<>();
+                for (List<AttributeMutation> mutations : input) {
                     combined.addAll(mutations);
                 }
 
@@ -51,7 +51,7 @@ class PendingAttributeMutationStore extends JsonDataStoreQueue<List<PendingAttri
                     return Collections.emptyList();
                 }
 
-                return Collections.singletonList(PendingAttributeMutation.collapseMutations(combined));
+                return Collections.singletonList(AttributeMutation.collapseMutations(combined));
             }
         });
     }

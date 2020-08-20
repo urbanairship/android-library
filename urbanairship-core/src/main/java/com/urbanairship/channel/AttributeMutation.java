@@ -2,8 +2,19 @@
 
 package com.urbanairship.channel;
 
+import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.DateUtils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -11,10 +22,12 @@ import androidx.annotation.RestrictTo;
 
 /**
  * A model defining attribute mutations.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AttributeMutation {
+public class AttributeMutation implements JsonSerializable {
+
     private static final String ATTRIBUTE_ACTION_REMOVE = "remove";
     private static final String ATTRIBUTE_ACTION_SET = "set";
 
@@ -25,137 +38,122 @@ public class AttributeMutation {
 
     private final String action;
     private final String name;
-    private Object value;
+    private final JsonValue value;
+    private final String timestamp;
 
     /**
      * Default attribute mutation constructor.
      */
-    AttributeMutation(@NonNull String action, @NonNull String key, @Nullable Object value) {
+    AttributeMutation(@NonNull String action,
+                      @NonNull String key,
+                      @Nullable JsonValue value,
+                      @Nullable String timestamp) {
         this.action = action;
         this.name = key;
         this.value = value;
+        this.timestamp = timestamp;
     }
 
     /**
      * Creates a mutation to set a string attribute.
      *
      * @param key The string attribute key.
-     * @param string The string attribute value.
+     * @param jsonValue The json value.
+     * @param timestamp The timestamp in milliseconds.
      * @return The attribute mutation.
      */
     @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, @NonNull String string) {
-        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, string);
-    }
-
-    /**
-     * Creates a mutation to set a int number attribute.
-     *
-     * @param key The string attribute key.
-     * @param number The number attribute value.
-     * @return The attribute mutation.
-     */
-    @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, int number) {
-        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
-    }
-
-    /**
-     * Creates a mutation to set a long number attribute.
-     *
-     * @param key The number attribute key.
-     * @param number The number attribute value.
-     * @return The attribute mutation.
-     */
-    @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, long number) {
-        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
-    }
-
-    /**
-     * Creates a mutation to set a float number attribute.
-     *
-     * @param key The number attribute key.
-     * @param number The number attribute value.
-     * @throws NumberFormatException if the number is NaN or infinite.
-     * @return The attribute mutation.
-     */
-    @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, float number) throws NumberFormatException {
-        if (Float.isNaN(number) || Float.isInfinite(number)) {
-            throw new NumberFormatException("Infinity or NaN: " + number);
+    static AttributeMutation newSetAttributeMutation(@NonNull String key, @NonNull JsonValue jsonValue, long timestamp) {
+        if (jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isJsonMap() || jsonValue.isBoolean()) {
+            throw new IllegalArgumentException("Invalid attribute value: " + jsonValue);
         }
 
-        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
-    }
-
-    /**
-     * Creates a mutation to set a double number attribute.
-     *
-     * @param key The number attribute key.
-     * @param number The number attribute value.
-     * @throws NumberFormatException if the number is NaN or infinite.
-     * @return The attribute mutation.
-     */
-    @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, double number) throws NumberFormatException {
-        if (Double.isNaN(number) || Double.isInfinite(number)) {
-            throw new NumberFormatException("Infinity or NaN: " + number);
-        }
-
-        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, number);
+        return new AttributeMutation(ATTRIBUTE_ACTION_SET, key, jsonValue, DateUtils.createIso8601TimeStamp(timestamp));
     }
 
     /**
      * Creates a mutation to remove a string attribute.
      *
      * @param key The string attribute key.
+     * @param timestamp The timestamp in milliseconds.
      * @return The attribute mutation.
      */
     @NonNull
-    static AttributeMutation newRemoveAttributeMutation(@NonNull String key) {
-        return new AttributeMutation(ATTRIBUTE_ACTION_REMOVE, key, null);
+    static AttributeMutation newRemoveAttributeMutation(@NonNull String key, long timestamp) {
+        return new AttributeMutation(ATTRIBUTE_ACTION_REMOVE, key, null, DateUtils.createIso8601TimeStamp(timestamp));
     }
 
     @NonNull
-    JsonValue toJsonValue() {
-        JsonMap.Builder builder = JsonMap.newBuilder();
+    static AttributeMutation fromJsonValue(@NonNull JsonValue jsonValue) throws JsonException {
+        JsonMap mutation = jsonValue.optMap();
 
-        builder.put(ATTRIBUTE_ACTION_KEY, JsonValue.wrapOpt(getMutationAction()));
-        builder.put(ATTRIBUTE_NAME_KEY, JsonValue.wrapOpt(getMutationName()));
-        builder.putOpt(ATTRIBUTE_VALUE_KEY, JsonValue.wrapOpt(getMutationValue()));
+        String action = mutation.opt(ATTRIBUTE_ACTION_KEY).getString();
+        String name = mutation.opt(ATTRIBUTE_NAME_KEY).getString();
+        JsonValue value = mutation.get(ATTRIBUTE_VALUE_KEY);
+        String timestamp = mutation.opt(ATTRIBUTE_TIMESTAMP_KEY).getString();
 
-        return builder.build().toJsonValue();
+        if (action == null || name == null || (value != null && !isValidValue(value))) {
+            throw new JsonException("Invalid attribute mutation: " + mutation);
+        }
+
+        return new AttributeMutation(action, name, value, timestamp);
+    }
+
+    @NonNull
+    static List<AttributeMutation> fromJsonList(@NonNull JsonList jsonList) {
+        List<AttributeMutation> mutations = new ArrayList<>();
+
+        for (JsonValue value : jsonList) {
+            try {
+                mutations.add(fromJsonValue(value));
+            } catch (JsonException e) {
+                Logger.error(e, "Invalid attribute.");
+            }
+        }
+
+        return mutations;
+    }
+
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                      .put(ATTRIBUTE_ACTION_KEY, action)
+                      .put(ATTRIBUTE_NAME_KEY, name)
+                      .put(ATTRIBUTE_VALUE_KEY, value)
+                      .put(ATTRIBUTE_TIMESTAMP_KEY, timestamp)
+                      .build()
+                      .toJsonValue();
     }
 
     /**
-     * Gets an attribute mutation's action.
+     * Collapses a collection of mutation payloads to a single mutation payload.
      *
-     * @return An attribute mutation's action.
+     * @param mutations a list of attribute mutation instances to collapse.
+     * @return An attribute mutations instance.
      */
     @NonNull
-    String getMutationAction() {
-        return action;
+    static List<AttributeMutation> collapseMutations(@NonNull List<AttributeMutation> mutations) {
+        List<AttributeMutation> result = new ArrayList<>();
+
+        // Reverse the mutations payloads
+        List<AttributeMutation> reversed = new ArrayList<>(mutations);
+        Collections.reverse(reversed);
+
+        Set<String> mutationNames = new HashSet<>();
+
+        for (AttributeMutation mutation : reversed) {
+            if (!mutationNames.contains(mutation.name)) {
+                result.add(0, mutation);
+                mutationNames.add(mutation.name);
+            }
+        }
+
+        return result;
     }
 
-    /**
-     * Gets an attribute mutation's name.
-     *
-     * @return An attribute mutation's name.
-     */
-    @NonNull
-    String getMutationName() {
-        return name;
-    }
-
-    /**
-     * Gets an attribute mutation's value.
-     *
-     * @return An attribute mutation's value.
-     */
-    @Nullable
-    Object getMutationValue() {
-        return value;
+    private static boolean isValidValue(@NonNull JsonValue jsonValue) {
+        return !(jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isJsonMap() || jsonValue.isBoolean());
     }
 
     @Override
@@ -163,11 +161,12 @@ public class AttributeMutation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AttributeMutation that = (AttributeMutation) o;
+        AttributeMutation mutation = (AttributeMutation) o;
 
-        if (!action.equals(that.action)) return false;
-        if (!name.equals(that.name)) return false;
-        return value != null ? value.equals(that.value) : that.value == null;
+        if (!action.equals(mutation.action)) return false;
+        if (!name.equals(mutation.name)) return false;
+        if (value != null ? !value.equals(mutation.value) : mutation.value != null) return false;
+        return timestamp.equals(mutation.timestamp);
     }
 
     @Override
@@ -175,6 +174,7 @@ public class AttributeMutation {
         int result = action.hashCode();
         result = 31 * result + name.hashCode();
         result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + timestamp.hashCode();
         return result;
     }
 
@@ -184,6 +184,7 @@ public class AttributeMutation {
                 "action='" + action + '\'' +
                 ", name='" + name + '\'' +
                 ", value=" + value +
+                ", timestamp='" + timestamp + '\'' +
                 '}';
     }
 

@@ -45,7 +45,7 @@ public class AttributeApiClientTest extends BaseTestCase {
 
         testRequest = new TestRequest();
         mutations = new ArrayList<>();
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", "expected_key"));
+        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_key"), 100));
 
         requestFactory = new RequestFactory() {
             @NonNull
@@ -65,11 +65,10 @@ public class AttributeApiClientTest extends BaseTestCase {
 
         testRequest.responseStatus = 200;
 
-        List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", mutations);
 
         JsonMap expectedBody = JsonMap.newBuilder()
-                                      .putOpt("attributes", attributes)
+                                      .putOpt("attributes", mutations)
                                       .build();
 
         assertEquals("https://example.com/api/channels/expected_identifier/attributes?platform=android", testRequest.getUrl().toString());
@@ -89,11 +88,10 @@ public class AttributeApiClientTest extends BaseTestCase {
 
         testRequest.responseStatus = 200;
 
-        List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", mutations);
 
         JsonMap expectedBody = JsonMap.newBuilder()
-                                      .putOpt("attributes", attributes)
+                                      .putOpt("attributes", mutations)
                                       .build();
 
         assertEquals("https://example.com/api/channels/expected_identifier/attributes?platform=amazon", testRequest.getUrl().toString());
@@ -110,11 +108,10 @@ public class AttributeApiClientTest extends BaseTestCase {
         AttributeApiClient client = new AttributeApiClient(runtimeConfig, requestFactory, AttributeApiClient.NAMED_USER_URL_FACTORY);
         testRequest.responseStatus = 200;
 
-        List<PendingAttributeMutation> attributes = PendingAttributeMutation.fromAttributeMutations(mutations, 0);
-        Response<Void> response = client.updateAttributes("expected_identifier", attributes);
+        Response<Void> response = client.updateAttributes("expected_identifier", mutations);
 
         JsonMap expectedBody = JsonMap.newBuilder()
-                                      .putOpt("attributes", attributes)
+                                      .putOpt("attributes", mutations)
                                       .build();
 
         assertEquals("https://example.com/api/named_users/expected_identifier/attributes", testRequest.getUrl().toString());

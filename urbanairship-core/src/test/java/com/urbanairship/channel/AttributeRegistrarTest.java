@@ -4,6 +4,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +36,8 @@ public class AttributeRegistrarTest extends BaseTestCase {
     public void testSetId() {
         registrar.setId(null, false);
 
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> pendingAttributeMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
+        List<AttributeMutation> pendingAttributeMutations = Collections.singletonList(mutation);
 
         registrar.addPendingMutations(pendingAttributeMutations);
 
@@ -52,16 +53,18 @@ public class AttributeRegistrarTest extends BaseTestCase {
 
     @Test
     public void testAdd() {
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> pendingAttributeMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
+        List<AttributeMutation> pendingAttributeMutations = Collections.singletonList(mutation);
         registrar.addPendingMutations(pendingAttributeMutations);
-        assertEquals(store.peek(), pendingAttributeMutations);
+
+        assertEquals(pendingAttributeMutations, store.peek());
     }
 
     @Test
     public void testClear() {
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> pendingAttributeMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
+        List<AttributeMutation> pendingAttributeMutations = Collections.singletonList(mutation);
+
         registrar.addPendingMutations(pendingAttributeMutations);
         assertFalse(store.getList().isEmpty());
 
@@ -95,8 +98,8 @@ public class AttributeRegistrarTest extends BaseTestCase {
 
         registrar.setId("identifier", true);
 
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> pendingAttributeMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
+        List<AttributeMutation> pendingAttributeMutations = Collections.singletonList(mutation);
 
         registrar.addPendingMutations(pendingAttributeMutations);
 

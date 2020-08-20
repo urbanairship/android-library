@@ -282,7 +282,7 @@ public class NamedUser extends AirshipComponent {
      */
     @NonNull
     public AttributeEditor editAttributes() {
-        return new AttributeEditor() {
+        return new AttributeEditor(clock) {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
                 if (!isDataCollectionEnabled()) {
@@ -291,8 +291,7 @@ public class NamedUser extends AirshipComponent {
                 }
 
                 if (!mutations.isEmpty()) {
-                    List<PendingAttributeMutation> pendingMutations = PendingAttributeMutation.fromAttributeMutations(mutations, clock.currentTimeMillis());
-                    attributeRegistrar.addPendingMutations(pendingMutations);
+                    attributeRegistrar.addPendingMutations(mutations);
                     dispatchNamedUserUpdateJob();
                 }
             }

@@ -17,6 +17,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 
 import org.junit.Before;
@@ -661,8 +662,8 @@ public class AirshipChannelTests extends BaseTestCase {
                       .setAttribute("expected_key", "expected_value")
                       .apply();
 
-        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", "expected_value");
-        List<PendingAttributeMutation> expectedMutations = PendingAttributeMutation.fromAttributeMutations(Collections.singletonList(mutation), 100);
+        AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
+        List<AttributeMutation> expectedMutations = Collections.singletonList(mutation);
         verify(mockAttributeRegistrar).addPendingMutations(expectedMutations);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {

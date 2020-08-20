@@ -105,7 +105,7 @@ class AttributeApiClient {
      * @return The response.
      */
     @NonNull
-    Response<Void> updateAttributes(@NonNull String identifier, @NonNull List<PendingAttributeMutation> mutations) throws RequestException {
+    Response<Void> updateAttributes(@NonNull String identifier, @NonNull List<AttributeMutation> mutations) throws RequestException {
         URL url = urlFactory.createUrl(runtimeConfig, identifier);
 
         JsonMap attributePayload = JsonMap.newBuilder()

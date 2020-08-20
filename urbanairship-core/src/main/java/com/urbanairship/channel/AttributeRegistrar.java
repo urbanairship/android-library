@@ -26,7 +26,7 @@ class AttributeRegistrar {
         this.mutationStore = mutationStore;
     }
 
-    void addPendingMutations(@NonNull List<PendingAttributeMutation> mutations) {
+    void addPendingMutations(@NonNull List<AttributeMutation> mutations) {
         mutationStore.add(mutations);
     }
 
@@ -40,7 +40,7 @@ class AttributeRegistrar {
     }
 
     boolean uploadPendingMutations() {
-        List<PendingAttributeMutation> mutations;
+        List<AttributeMutation> mutations;
         String identifier;
         synchronized (idLock) {
             mutationStore.collapseAndSaveMutations();
