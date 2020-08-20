@@ -6,11 +6,14 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +26,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 /**
- * In-App Message Manager helper class that manages tag group audience data.
+ * In-App Automation helper class that manages tag group audience data.
  *
  * @hide
  */
@@ -82,6 +85,7 @@ public class TagGroupManager {
     private final AirshipChannel airshipChannel;
     private final TagGroupLookupApiClient client;
     private final Clock clock;
+    private final NamedUser namedUser;
 
     private RequestTagsCallback requestTagsCallback;
 
@@ -97,17 +101,18 @@ public class TagGroupManager {
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull NamedUser namedUser,
                            @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel,
+        this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel, namedUser,
                 new TagGroupHistorian(airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
     @VisibleForTesting
     TagGroupManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
-                    @NonNull TagGroupHistorian historian, @NonNull PreferenceDataStore dataStore,
-                    @NonNull Clock clock) {
+                    @NonNull NamedUser namedUser, @NonNull TagGroupHistorian historian,
+                    @NonNull PreferenceDataStore dataStore, @NonNull Clock clock) {
         this.client = client;
         this.airshipChannel = airshipChannel;
+        this.namedUser = namedUser;
         this.historian = historian;
         this.dataStore = dataStore;
         this.clock = clock;
@@ -330,11 +335,9 @@ public class TagGroupManager {
     private Map<String, Set<String>> generateTags(Map<String, Set<String>> requestedTags, TagGroupResponse response, long cacheTime) {
         Map<String, Set<String>> currentTags = new HashMap<>(response.tags);
 
-        this.historian.applyLocalData(currentTags, cacheTime - getPreferLocalTagDataTime());
-
-        // Override the device tags if needed
-        if (requestedTags.containsKey("device") && airshipChannel.getChannelTagRegistrationEnabled()) {
-            currentTags.put("device", airshipChannel.getTags());
+        List<TagGroupsMutation> mutations = getTagGroupOverrides(cacheTime - getPreferLocalTagDataTime());
+        for (TagGroupsMutation mutation : mutations) {
+            mutation.apply(currentTags);
         }
 
         // Only return the requested tags if available
@@ -376,4 +379,31 @@ public class TagGroupManager {
         setCachedResponse(response, requestTags);
     }
 
+    /**
+     * Gets any tag overrides - tags that are pending or tags that have been sent up since
+     * {@link #getPreferLocalTagDataTime()}.
+     *
+     * @return A list of tag mutation overrides.
+     */
+    @NonNull
+    public List<TagGroupsMutation> getTagOverrides() {
+        return getTagGroupOverrides(getPreferLocalTagDataTime());
+    }
+
+    @NonNull
+    private List<TagGroupsMutation> getTagGroupOverrides(long since) {
+        List<TagGroupsMutation> mutations = new ArrayList<>();
+        mutations.addAll(historian.getTagGroupHistory(since));
+
+        // Pending Tags
+        mutations.addAll(namedUser.getPendingTagUpdates());
+        mutations.addAll(airshipChannel.getPendingTagUpdates());
+
+        // Channel tags
+        if (airshipChannel.getChannelTagRegistrationEnabled()) {
+            mutations.add(TagGroupsMutation.newSetTagsMutation(DEVICE_GROUP, airshipChannel.getTags()));
+        }
+
+        return TagGroupsMutation.collapseMutations(mutations);
+    }
 }

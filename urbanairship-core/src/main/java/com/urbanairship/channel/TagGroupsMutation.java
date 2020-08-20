@@ -153,9 +153,11 @@ public class TagGroupsMutation implements JsonSerializable {
      *
      * @param mutations List of mutations to collapse.
      * @return A new list of collapsed mutations.
+     * @hide
      */
     @NonNull
-    static List<TagGroupsMutation> collapseMutations(@Nullable List<TagGroupsMutation> mutations) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static List<TagGroupsMutation> collapseMutations(@Nullable List<TagGroupsMutation> mutations) {
         if (mutations == null || mutations.isEmpty()) {
             return Collections.emptyList();
         }

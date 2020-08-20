@@ -23,6 +23,7 @@ import com.urbanairship.automation.tags.TagGroupManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
@@ -44,8 +45,10 @@ import org.robolectric.Shadows;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -54,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
@@ -193,7 +197,12 @@ public class InAppAutomationTest {
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext))
+        List<TagGroupsMutation> tagOverrides = new ArrayList<>();
+        tagOverrides.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
+        tagOverrides.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
+        when(mockTagManager.getTagOverrides()).thenReturn(tagOverrides);
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext, tagOverrides))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, message))
                         .build());
@@ -218,7 +227,12 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext))
+        List<TagGroupsMutation> tagOverrides = new ArrayList<>();
+        tagOverrides.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
+        tagOverrides.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
+        when(mockTagManager.getTagOverrides()).thenReturn(tagOverrides);
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext, tagOverrides))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(false, null))
                         .build());
@@ -255,7 +269,9 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockTagManager.getTagOverrides()).thenReturn(Collections.<TagGroupsMutation>emptyList());
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
                         .build());
@@ -287,7 +303,9 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockTagManager.getTagOverrides()).thenReturn(Collections.<TagGroupsMutation>emptyList());
+
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(400).build());
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -295,7 +313,7 @@ public class InAppAutomationTest {
 
         verifyZeroInteractions(callback);
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
                         .build());
@@ -313,7 +331,7 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenThrow(new RequestException("neat"))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
@@ -336,7 +354,7 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenThrow(new RequestException("neat"));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -353,7 +371,7 @@ public class InAppAutomationTest {
                                               .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                               .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null))
+        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, Collections.<TagGroupsMutation>emptyList()))
                 .thenThrow(new AuthException("neat"))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))

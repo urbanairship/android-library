@@ -5,6 +5,8 @@ package com.urbanairship.automation.tags;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.TagGroupsMutation;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +14,10 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -26,8 +31,6 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,6 +49,7 @@ public class TagGroupManagerTest {
     private TagGroupLookupApiClient mockClient;
     private AirshipChannel mockChannel;
     private TagGroupHistorian mockHistorian;
+    private NamedUser mockNamedUser;
 
     private TestCallback callback;
     private String channelId;
@@ -53,6 +57,9 @@ public class TagGroupManagerTest {
     private Map<String, Set<String>> requestTags;
     private Map<String, Set<String>> callbackResponseTags;
     private Map<String, Set<String>> clientResponseTags;
+
+    private List<TagGroupsMutation> pendingNamedUserMutations;
+    private List<TagGroupsMutation> pendingChannelMutations;
 
     private TestClock clock;
 
@@ -74,6 +81,12 @@ public class TagGroupManagerTest {
 
         mockClient = mock(TagGroupLookupApiClient.class);
         mockChannel = mock(AirshipChannel.class);
+        mockNamedUser = mock(NamedUser.class);
+
+        pendingChannelMutations = new ArrayList<>();
+        when(mockChannel.getPendingTagUpdates()).thenReturn(pendingChannelMutations);
+        pendingNamedUserMutations = new ArrayList<>();
+        when(mockNamedUser.getPendingTagUpdates()).thenReturn(pendingNamedUserMutations);
 
         channelId = "some-channel-id";
         when(mockChannel.getId()).thenAnswer(new Answer<String>() {
@@ -84,7 +97,8 @@ public class TagGroupManagerTest {
         });
 
         mockHistorian = mock(TagGroupHistorian.class);
-        manager = new TagGroupManager(mockClient, mockChannel, mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
+        manager = new TagGroupManager(mockClient, mockChannel, mockNamedUser,
+                mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
 
         callback = new TestCallback();
         manager.setRequestTagsCallback(callback);
@@ -107,7 +121,7 @@ public class TagGroupManagerTest {
         TagGroupResult result = manager.getTags(requestTags);
 
         // Verify the historian was consulted
-        verify(mockHistorian).applyLocalData(clientResponseTags, clock.currentTimeMillis - manager.getPreferLocalTagDataTime());
+        verify(mockHistorian).getTagGroupHistory(clock.currentTimeMillis - manager.getPreferLocalTagDataTime());
 
         // Verify the result. Should contain only the single tag "cool" in "some-group".
         assertTrue(result.success);
@@ -139,7 +153,7 @@ public class TagGroupManagerTest {
     }
 
     /**
-     * Test getTags uses the local data applied by the historian.
+     * Test getTags uses the tag group history.
      */
     @Test
     public void getTagsUsesLocalData() {
@@ -147,16 +161,11 @@ public class TagGroupManagerTest {
         when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), null))
                 .thenReturn(new TagGroupResponse(200, clientResponseTags, "lastModifiedTime"));
 
-        // Add the tag "story" so we should get "cool" "story" back instead of just "cool".
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Map<String, Set<String>> tags = invocation.getArgument(0);
-                tags.get("some-group").add("story");
-                return null;
-            }
-        }).when(mockHistorian).applyLocalData(eq(clientResponseTags), anyLong());
+        List<TagGroupsMutation> mutations = new ArrayList<>();
+        mutations.add(TagGroupsMutation.newSetTagsMutation("some-group", Collections.singleton("story")));
+        when(mockHistorian.getTagGroupHistory(anyLong())).thenReturn(mutations);
 
+        pendingChannelMutations.add(TagGroupsMutation.newAddTagsMutation("some-group", Collections.singleton("cool")));
         TagGroupResult result = manager.getTags(requestTags);
 
         // Verify the result.
@@ -427,4 +436,28 @@ public class TagGroupManagerTest {
 
     }
 
+    @Test
+    public void testGetTagOverrides() {
+        when(mockNamedUser.getId()).thenReturn("named-user-id");
+
+        List<TagGroupsMutation> history = new ArrayList<>();
+        history.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
+        history.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
+        history.add(TagGroupsMutation.newSetTagsMutation("baz", tagSet("1")));
+
+        when(mockHistorian.getTagGroupHistory(anyLong())).thenReturn(history);
+
+        pendingChannelMutations.add(TagGroupsMutation.newSetTagsMutation("baz", tagSet("2")));
+        pendingChannelMutations.add(TagGroupsMutation.newAddTagsMutation("bar", tagSet("b")));
+
+        pendingNamedUserMutations.add(TagGroupsMutation.newSetTagsMutation("baz", tagSet("3")));
+        pendingNamedUserMutations.add(TagGroupsMutation.newAddTagsMutation("foo", tagSet("one")));
+
+        List<TagGroupsMutation> expected = new ArrayList<>();
+        expected.addAll(history);
+        expected.addAll(pendingNamedUserMutations);
+        expected.addAll(pendingChannelMutations);
+
+        assertEquals(TagGroupsMutation.collapseMutations(expected), manager.getTagOverrides());
+    }
 }

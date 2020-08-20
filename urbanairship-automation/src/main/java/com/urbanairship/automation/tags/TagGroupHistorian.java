@@ -10,8 +10,6 @@ import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,35 +59,25 @@ class TagGroupHistorian {
     }
 
     /**
-     * Applies any relevant tag data.
+     * Gets tag group mutations that have been applied since the app launched.
      *
-     * @param tags The tags.
-     * @param sinceDate Time filter to only apply data that happened since the specified time in milliseconds
-     * since the epoch.
+     * @param sinceDate Time filter to for tag groups in milliseconds.
+     * @return The list of recorded tag group mutations.
      */
-    void applyLocalData(@NonNull Map<String, Set<String>> tags, long sinceDate) {
-        // Recently uploaded mutations
+    public List<TagGroupsMutation> getTagGroupHistory(long sinceDate) {
+        List<TagGroupsMutation> mutations = new ArrayList<>();
         String namedUserId = namedUser.getId();
+
         synchronized (recordLock) {
             // Records
             for (MutationRecord record : records) {
                 if (record.time >= sinceDate && (record.namedUserId == null || record.namedUserId.equals(namedUserId))) {
-                    record.mutation.apply(tags);
+                    mutations.add(record.mutation);
                 }
             }
         }
 
-        // Pending Named User
-        if (namedUserId != null) {
-            for (TagGroupsMutation mutation : namedUser.getPendingTagUpdates()) {
-                mutation.apply(tags);
-            }
-        }
-
-        // Pending Channel
-        for (TagGroupsMutation mutation : channel.getPendingTagUpdates()) {
-            mutation.apply(tags);
-        }
+        return mutations;
     }
 
     private void record(@NonNull MutationRecord record) {

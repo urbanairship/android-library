@@ -554,7 +554,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
 
         try {
-            response = deferredScheduleClient.performRequest(deferredScheduleData.url, channelId, triggerContext);
+            response = deferredScheduleClient.performRequest(deferredScheduleData.url,
+                    channelId, triggerContext, tagGroupManager.getTagOverrides());
         } catch (RequestException e) {
             if (deferredScheduleData.retryOnTimeout) {
                 Logger.debug(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());

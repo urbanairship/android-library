@@ -6,6 +6,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
+import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
@@ -47,6 +48,7 @@ public class DeferredScheduleClient {
     private static final String TRIGGER_TYPE_KEY = "type";
     private static final String TRIGGER_GOAL_KEY = "goal";
     private static final String TRIGGER_EVENT_KEY = "event";
+    private static final String TAG_OVERRIDES_KEY = "tag_overrides";
 
     private static final String AUDIENCE_MATCH_KEY = "audience_match";
     private static final String RESPONSE_TYPE_KEY = "type";
@@ -76,12 +78,15 @@ public class DeferredScheduleClient {
      * Performs a request to resolve a deferred schedule.
      *
      * @param url The deferred schedule URL.
+     * @param channelId The channel ID.
      * @param triggerContext The optional triggering context.
+     * @param tagOverrides Tag overrides.
      * @return The deferred response.
      */
     public Response<Result> performRequest(@NonNull URL url,
                                            @NonNull String channelId,
-                                           @Nullable TriggerContext triggerContext) throws RequestException, AuthException {
+                                           @Nullable TriggerContext triggerContext,
+                                           @NonNull List<TagGroupsMutation> tagOverrides) throws RequestException, AuthException {
         String token = authManager.getToken();
         JsonMap.Builder requestBodyBuilder = JsonMap.newBuilder()
                 .put(PLATFORM_KEY, runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? PLATFORM_AMAZON : PLATFORM_ANDROID)
@@ -93,6 +98,10 @@ public class DeferredScheduleClient {
                                                        .put(TRIGGER_GOAL_KEY, triggerContext.getTrigger().getGoal())
                                                        .put(TRIGGER_EVENT_KEY, triggerContext.getEvent())
                                                        .build());
+        }
+
+        if (!tagOverrides.isEmpty()) {
+            requestBodyBuilder.put(TAG_OVERRIDES_KEY, JsonValue.wrapOpt(tagOverrides));
         }
 
         JsonMap requestBody = requestBodyBuilder.build();
