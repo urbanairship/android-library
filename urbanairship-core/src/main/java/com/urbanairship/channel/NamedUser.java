@@ -186,6 +186,18 @@ public class NamedUser extends AirshipComponent {
     }
 
     /**
+     * Gets any pending attribute updates.
+     *
+     * @return The list of pending attribute updates.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<AttributeMutation> getPendingAttributeUpdates() {
+        return attributeRegistrar.getPendingMutations();
+    }
+
+    /**
      * Returns the named user ID.
      *
      * @return The named user ID as a string or null if it does not exist.
@@ -307,6 +319,17 @@ public class NamedUser extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void addTagGroupListener(@NonNull TagGroupListener listener) {
         this.tagGroupRegistrar.addTagGroupListener(listener);
+    }
+
+    /**
+     * Adds an attribute listener.
+     *
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addAttributeListener(@NonNull AttributeListener listener) {
+        this.attributeRegistrar.addAttributeListener(listener);
     }
 
     @VisibleForTesting

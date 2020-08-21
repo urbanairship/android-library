@@ -5,6 +5,7 @@ package com.urbanairship.automation.tags;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -31,7 +32,7 @@ import androidx.annotation.WorkerThread;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class TagGroupManager {
+public class AudienceManager {
 
     // Device tag group
     private static final String DEVICE_GROUP = "device";
@@ -43,6 +44,7 @@ public class TagGroupManager {
     private static final String CACHE_MAX_AGE_TIME_KEY = "com.urbanairship.iam.tags.TAG_CACHE_MAX_AGE_TIME";
     private static final String CACHE_STALE_READ_TIME_KEY = "com.urbanairship.iam.tags.TAG_CACHE_STALE_READ_TIME";
     private static final String PREFER_LOCAL_DATA_TIME_KEY = "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME";
+
     private static final String ENABLED_KEY = "com.urbanairship.iam.tags.FETCH_ENABLED";
 
     /**
@@ -81,7 +83,7 @@ public class TagGroupManager {
     }
 
     private final PreferenceDataStore dataStore;
-    private final TagGroupHistorian historian;
+    private final AudienceHistorian historian;
     private final AirshipChannel airshipChannel;
     private final TagGroupLookupApiClient client;
     private final Clock clock;
@@ -97,18 +99,18 @@ public class TagGroupManager {
      * @param namedUser The named user.
      * @param dataStore The preference data store.
      */
-    public TagGroupManager(@NonNull AirshipRuntimeConfig runtimeConfig,
+    public AudienceManager(@NonNull AirshipRuntimeConfig runtimeConfig,
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull NamedUser namedUser,
                            @NonNull PreferenceDataStore dataStore) {
         this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel, namedUser,
-                new TagGroupHistorian(airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
+                new AudienceHistorian(airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
     @VisibleForTesting
-    TagGroupManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
-                    @NonNull NamedUser namedUser, @NonNull TagGroupHistorian historian,
+    AudienceManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
+                    @NonNull NamedUser namedUser, @NonNull AudienceHistorian historian,
                     @NonNull PreferenceDataStore dataStore, @NonNull Clock clock) {
         this.client = client;
         this.airshipChannel = airshipChannel;
@@ -405,5 +407,23 @@ public class TagGroupManager {
         }
 
         return TagGroupsMutation.collapseMutations(mutations);
+    }
+
+    /**
+     * Gets any attribute overrides - attributes that are pending or attributes that have been sent up since
+     * {@link #DEFAULT_PREFER_LOCAL_DATA_TIME_MS}.
+     *
+     * @return A list of tag mutation overrides.
+     */
+    @NonNull
+    public List<AttributeMutation> getAttributeOverrides() {
+        List<AttributeMutation> mutations = new ArrayList<>();
+        mutations.addAll(historian.getAttributeHistory(DEFAULT_PREFER_LOCAL_DATA_TIME_MS));
+
+        // Pending
+        mutations.addAll(namedUser.getPendingAttributeUpdates());
+        mutations.addAll(airshipChannel.getPendingAttributeUpdates());
+
+        return AttributeMutation.collapseMutations(mutations);
     }
 }

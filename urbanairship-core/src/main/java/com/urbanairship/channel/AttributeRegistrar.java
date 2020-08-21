@@ -7,7 +7,9 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -18,6 +20,7 @@ class AttributeRegistrar {
     private final Object idLock = new Object();
     private final AttributeApiClient apiClient;
     private final PendingAttributeMutationStore mutationStore;
+    private final List<AttributeListener> attributeListeners = new CopyOnWriteArrayList<>();
 
     private String identifier;
 
@@ -67,6 +70,10 @@ class AttributeRegistrar {
 
         if (response.isClientError()) {
             Logger.error("Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getResponseBody());
+        } else {
+            for (AttributeListener listener : attributeListeners) {
+                listener.onAttributeMutationsUploaded(identifier, mutations);
+            }
         }
 
         synchronized (idLock) {
@@ -81,4 +88,17 @@ class AttributeRegistrar {
     void clearPendingMutations() {
         mutationStore.removeAll();
     }
+
+    void addAttributeListener(@NonNull AttributeListener listener) {
+        attributeListeners.add(listener);
+    }
+
+    List<AttributeMutation> getPendingMutations() {
+        List<AttributeMutation> combined = new ArrayList<>();
+        for (List<AttributeMutation> mutations : mutationStore.getList()) {
+            combined.addAll(mutations);
+        }
+        return combined;
+    }
+
 }

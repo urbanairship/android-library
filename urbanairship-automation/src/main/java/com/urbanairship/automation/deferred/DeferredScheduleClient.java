@@ -6,6 +6,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
+import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -49,6 +50,7 @@ public class DeferredScheduleClient {
     private static final String TRIGGER_GOAL_KEY = "goal";
     private static final String TRIGGER_EVENT_KEY = "event";
     private static final String TAG_OVERRIDES_KEY = "tag_overrides";
+    private static final String ATTRIBUTE_OVERRIDES_KEY = "attribute_overrides";
 
     private static final String AUDIENCE_MATCH_KEY = "audience_match";
     private static final String RESPONSE_TYPE_KEY = "type";
@@ -81,12 +83,14 @@ public class DeferredScheduleClient {
      * @param channelId The channel ID.
      * @param triggerContext The optional triggering context.
      * @param tagOverrides Tag overrides.
+     * @param attributeOverrides Attribute overrides.
      * @return The deferred response.
      */
     public Response<Result> performRequest(@NonNull URL url,
                                            @NonNull String channelId,
                                            @Nullable TriggerContext triggerContext,
-                                           @NonNull List<TagGroupsMutation> tagOverrides) throws RequestException, AuthException {
+                                           @NonNull List<TagGroupsMutation> tagOverrides,
+                                           @NonNull List<AttributeMutation> attributeOverrides) throws RequestException, AuthException {
         String token = authManager.getToken();
         JsonMap.Builder requestBodyBuilder = JsonMap.newBuilder()
                 .put(PLATFORM_KEY, runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? PLATFORM_AMAZON : PLATFORM_ANDROID)
@@ -102,6 +106,10 @@ public class DeferredScheduleClient {
 
         if (!tagOverrides.isEmpty()) {
             requestBodyBuilder.put(TAG_OVERRIDES_KEY, JsonValue.wrapOpt(tagOverrides));
+        }
+
+        if (!attributeOverrides.isEmpty()) {
+            requestBodyBuilder.put(ATTRIBUTE_OVERRIDES_KEY, JsonValue.wrapOpt(attributeOverrides));
         }
 
         JsonMap requestBody = requestBodyBuilder.build();

@@ -63,7 +63,7 @@ public class AttributeMutation implements JsonSerializable {
      * @return The attribute mutation.
      */
     @NonNull
-    static AttributeMutation newSetAttributeMutation(@NonNull String key, @NonNull JsonValue jsonValue, long timestamp) {
+    public static AttributeMutation newSetAttributeMutation(@NonNull String key, @NonNull JsonValue jsonValue, long timestamp) {
         if (jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isJsonMap() || jsonValue.isBoolean()) {
             throw new IllegalArgumentException("Invalid attribute value: " + jsonValue);
         }
@@ -79,7 +79,7 @@ public class AttributeMutation implements JsonSerializable {
      * @return The attribute mutation.
      */
     @NonNull
-    static AttributeMutation newRemoveAttributeMutation(@NonNull String key, long timestamp) {
+    public static AttributeMutation newRemoveAttributeMutation(@NonNull String key, long timestamp) {
         return new AttributeMutation(ATTRIBUTE_ACTION_REMOVE, key, null, DateUtils.createIso8601TimeStamp(timestamp));
     }
 
@@ -133,7 +133,7 @@ public class AttributeMutation implements JsonSerializable {
      * @return An attribute mutations instance.
      */
     @NonNull
-    static List<AttributeMutation> collapseMutations(@NonNull List<AttributeMutation> mutations) {
+    public static List<AttributeMutation> collapseMutations(@NonNull List<AttributeMutation> mutations) {
         List<AttributeMutation> result = new ArrayList<>();
 
         // Reverse the mutations payloads

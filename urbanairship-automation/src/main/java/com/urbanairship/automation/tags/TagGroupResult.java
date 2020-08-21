@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
- * Result returned in the method {@link TagGroupManager#getTags(Map)}}.
+ * Result returned in the method {@link AudienceManager#getTags(Map)}}.
  *
  * @hide
  */

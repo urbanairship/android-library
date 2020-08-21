@@ -2,7 +2,7 @@
 
 package com.urbanairship.automation;
 
-import com.urbanairship.automation.tags.TagGroupManager;
+import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -89,9 +89,9 @@ class InAppRemoteConfig {
         private static final String TAG_GROUP_CACHE_PREFER_LOCAL_UNTIL_SECONDS = "cache_prefer_local_until_seconds";
 
         private static final boolean DEFAULT_FETCH_ENABLED = true;
-        private static final long DEFAULT_CACHE_MAX_AGE_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_MAX_AGE_TIME_MS);
-        private static final long DEFAULT_CACHE_STALE_READ_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_CACHE_STALE_READ_TIME_MS);
-        private static final long DEFAULT_PREFER_LOCAL_DATA_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(TagGroupManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS);
+        private static final long DEFAULT_CACHE_MAX_AGE_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_MAX_AGE_TIME_MS);
+        private static final long DEFAULT_CACHE_STALE_READ_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_STALE_READ_TIME_MS);
+        private static final long DEFAULT_PREFER_LOCAL_DATA_TIME_SEC = TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS);
 
         /**
          * Enable/Disable tag group fetches.

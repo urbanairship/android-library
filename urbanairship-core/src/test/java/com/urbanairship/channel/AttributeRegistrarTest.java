@@ -5,6 +5,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +18,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class AttributeRegistrarTest extends BaseTestCase {
@@ -96,6 +98,9 @@ public class AttributeRegistrarTest extends BaseTestCase {
         final Response<Void> response = new Response.Builder<Void>(status)
                 .build();
 
+        AttributeListener mockListener = mock(AttributeListener.class);
+        registrar.addAttributeListener(mockListener);
+
         registrar.setId("identifier", true);
 
         AttributeMutation mutation = AttributeMutation.newSetAttributeMutation("expected_key", JsonValue.wrapOpt("expected_value"), 100);
@@ -107,5 +112,9 @@ public class AttributeRegistrarTest extends BaseTestCase {
 
         assertEquals(expectedResult, registrar.uploadPendingMutations());
         assertEquals(expectedResult, store.getList().isEmpty());
+
+        if (UAHttpStatusUtil.inSuccessRange(status)) {
+            verify(mockListener).onAttributeMutationsUploaded("identifier", pendingAttributeMutations);
+        }
     }
 }

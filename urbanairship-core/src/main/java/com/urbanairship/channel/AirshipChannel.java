@@ -287,6 +287,17 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Adds an attribute listener.
+     *
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addAttributeListener(@NonNull AttributeListener listener) {
+        this.attributeRegistrar.addAttributeListener(listener);
+    }
+
+    /**
      * Edits channel Tags.
      *
      * @return A {@link TagEditor}
@@ -535,6 +546,18 @@ public class AirshipChannel extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public List<TagGroupsMutation> getPendingTagUpdates() {
         return tagGroupRegistrar.getPendingMutations();
+    }
+
+    /**
+     * Gets any pending attribute updates.
+     *
+     * @return The list of pending attribute updates.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<AttributeMutation> getPendingAttributeUpdates() {
+        return attributeRegistrar.getPendingMutations();
     }
 
     /**

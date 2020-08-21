@@ -25,7 +25,7 @@ import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
-import com.urbanairship.automation.tags.TagGroupManager;
+import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagGroupUtils;
 import com.urbanairship.channel.AirshipChannel;
@@ -78,7 +78,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final AirshipChannel airshipChannel;
     private final AutomationEngine automationEngine;
     private final InAppMessageManager inAppMessageManager;
-    private final TagGroupManager tagGroupManager;
+    private final AudienceManager audienceManager;
     private final RetryingExecutor retryingExecutor;
     private final ActionRunRequestFactory actionRunRequestFactory;
     private final DeferredScheduleClient deferredScheduleClient;
@@ -133,7 +133,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
         this.airshipChannel = airshipChannel;
-        this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
+        this.audienceManager = new AudienceManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore, remoteData);
         this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, new InAppMessageManager.Delegate() {
             @Override
@@ -154,7 +154,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull PreferenceDataStore preferenceDataStore,
                     @NonNull AutomationEngine engine,
                     @NonNull AirshipChannel airshipChannel,
-                    @NonNull TagGroupManager tagGroupManager,
+                    @NonNull AudienceManager audienceManager,
                     @NonNull InAppRemoteDataObserver observer,
                     @NonNull InAppMessageManager inAppMessageManager,
                     @NonNull RetryingExecutor retryingExecutor,
@@ -163,7 +163,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         super(context, preferenceDataStore);
         this.automationEngine = engine;
         this.airshipChannel = airshipChannel;
-        this.tagGroupManager = tagGroupManager;
+        this.audienceManager = audienceManager;
         this.remoteDataSubscriber = observer;
         this.inAppMessageManager = inAppMessageManager;
         this.retryingExecutor = retryingExecutor;
@@ -179,7 +179,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     protected void init() {
         super.init();
-        tagGroupManager.setRequestTagsCallback(new TagGroupManager.RequestTagsCallback() {
+        audienceManager.setRequestTagsCallback(new AudienceManager.RequestTagsCallback() {
             @NonNull
             @Override
             public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
@@ -272,10 +272,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     public void onNewConfig(@Nullable JsonMap configValue) {
         InAppRemoteConfig config = InAppRemoteConfig.fromJsonMap(configValue);
-        tagGroupManager.setEnabled(config.tagGroupsConfig.isEnabled);
-        tagGroupManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
-        tagGroupManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
-        tagGroupManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
+        audienceManager.setEnabled(config.tagGroupsConfig.isEnabled);
+        audienceManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
+        audienceManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
+        audienceManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
     }
 
     /**
@@ -499,7 +499,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
                 if (schedule.getAudience().getTagSelector() != null && schedule.getAudience().getTagSelector().containsTagGroups()) {
                     Map<String, Set<String>> tags = schedule.getAudience().getTagSelector().getTagGroups();
-                    TagGroupResult result = tagGroupManager.getTags(tags);
+                    TagGroupResult result = audienceManager.getTags(tags);
                     if (!result.success) {
                         return RetryingExecutor.RESULT_RETRY;
                     }
@@ -555,7 +555,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         try {
             response = deferredScheduleClient.performRequest(deferredScheduleData.url,
-                    channelId, triggerContext, tagGroupManager.getTagOverrides());
+                    channelId, triggerContext, audienceManager.getTagOverrides(),
+                    audienceManager.getAttributeOverrides());
         } catch (RequestException e) {
             if (deferredScheduleData.retryOnTimeout) {
                 Logger.debug(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());

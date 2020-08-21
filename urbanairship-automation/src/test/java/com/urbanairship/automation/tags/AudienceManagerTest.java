@@ -39,16 +39,16 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link TagGroupManager} tests.
+ * {@link AudienceManager} tests.
  */
 @RunWith(AndroidJUnit4.class)
-public class TagGroupManagerTest {
+public class AudienceManagerTest {
 
-    private TagGroupManager manager;
+    private AudienceManager manager;
 
     private TagGroupLookupApiClient mockClient;
     private AirshipChannel mockChannel;
-    private TagGroupHistorian mockHistorian;
+    private AudienceHistorian mockHistorian;
     private NamedUser mockNamedUser;
 
     private TestCallback callback;
@@ -96,8 +96,8 @@ public class TagGroupManagerTest {
             }
         });
 
-        mockHistorian = mock(TagGroupHistorian.class);
-        manager = new TagGroupManager(mockClient, mockChannel, mockNamedUser,
+        mockHistorian = mock(AudienceHistorian.class);
+        manager = new AudienceManager(mockClient, mockChannel, mockNamedUser,
                 mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
 
         callback = new TestCallback();
@@ -306,7 +306,7 @@ public class TagGroupManagerTest {
      */
     @Test
     public void testRefreshCache() {
-        manager.setCacheMaxAgeTime(TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
+        manager.setCacheMaxAgeTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
 
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
@@ -320,7 +320,7 @@ public class TagGroupManagerTest {
         verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
-        clock.currentTimeMillis += TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
+        clock.currentTimeMillis += AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
 
         // Set up a response that returns all the tags
         when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
@@ -340,8 +340,8 @@ public class TagGroupManagerTest {
      */
     @Test
     public void getTagsStaleCache() {
-        manager.setCacheMaxAgeTime(TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
-        manager.setCacheStaleReadTime(TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS + 10, TimeUnit.MILLISECONDS);
+        manager.setCacheMaxAgeTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
+        manager.setCacheStaleReadTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 10, TimeUnit.MILLISECONDS);
 
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
@@ -355,7 +355,7 @@ public class TagGroupManagerTest {
         verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
-        clock.currentTimeMillis += TagGroupManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
+        clock.currentTimeMillis += AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
 
         // Set up a 400 response
         when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
@@ -424,7 +424,7 @@ public class TagGroupManagerTest {
         return TagGroupUtils.union(callbackResponseTags, requestTags);
     }
 
-    private class TestCallback implements TagGroupManager.RequestTagsCallback {
+    private class TestCallback implements AudienceManager.RequestTagsCallback {
 
         Map<String, Set<String>> tags;
 
