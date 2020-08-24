@@ -33,6 +33,7 @@ public class ApplicationMetrics extends AirshipComponent {
             }
         };
         this.activityMonitor = activityMonitor;
+
         this.appVersionUpdated = false;
     }
 
@@ -88,10 +89,14 @@ public class ApplicationMetrics extends AirshipComponent {
     }
 
     private void checkAppVersion() {
-        if (UAirship.getAppVersion() > getLastAppVersion()) {
-            preferenceDataStore.put(LAST_APP_VERSION_KEY, UAirship.getAppVersion());
+
+        long currentAppVersion = UAirship.getAppVersion();
+        long lastAppVersion = getLastAppVersion();
+
+        if (lastAppVersion > -1 && currentAppVersion > lastAppVersion) {
             appVersionUpdated = true;
         }
-    }
 
+        preferenceDataStore.put(LAST_APP_VERSION_KEY, currentAppVersion);
+    }
 }

@@ -88,17 +88,22 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
             return false;
         }
 
-        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED &&
-                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED;
+        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        if (airship.getLocationClient() != null) {
+        if (airship.getLocationClient() != null && isPermissionGranted()) {
             return airship.getLocationClient().isLocationUpdatesEnabled();
         } else {
             return false;
         }
+    }
+
+    private boolean isPermissionGranted() {
+        return (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED);
     }
 
     @Override

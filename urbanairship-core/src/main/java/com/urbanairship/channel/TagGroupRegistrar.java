@@ -24,6 +24,7 @@ class TagGroupRegistrar {
     TagGroupRegistrar(TagGroupApiClient apiClient, PendingTagGroupMutationStore pendingTagGroupMutationStore) {
         this.apiClient = apiClient;
         this.pendingTagGroupMutationStore = pendingTagGroupMutationStore;
+        this.pendingTagGroupMutationStore.collapseAndSaveMutations();
     }
 
     void addPendingMutations(@NonNull List<TagGroupsMutation> mutations) {
