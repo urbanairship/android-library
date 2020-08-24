@@ -95,6 +95,9 @@ public class TagGroupRegistrar {
         this.namedUserStore = namedUserStore;
         this.channelStore = channelStore;
         this.client = client;
+
+        namedUserStore.collapseMutations();
+        channelStore.collapseMutations();
     }
 
     /**

@@ -172,6 +172,7 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         channelCreationDelayEnabled = getId() == null && runtimeConfig.getConfigOptions().channelCreationDelayEnabled;
+        attributeMutationStore.collapseAndSaveMutations();
     }
 
     /**

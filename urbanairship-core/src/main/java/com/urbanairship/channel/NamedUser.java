@@ -137,6 +137,8 @@ public class NamedUser extends AirshipComponent {
         if (airshipChannel.getId() != null && (!isIdUpToDate() || getId() != null)) {
             dispatchNamedUserUpdateJob();
         }
+
+        attributeMutationStore.collapseAndSaveMutations();
     }
 
     /**
