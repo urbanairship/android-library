@@ -4,14 +4,14 @@ package com.urbanairship.push.hms;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import com.huawei.hms.push.RemoteMessage;
 import com.urbanairship.PendingResult;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
 
 import java.util.concurrent.Future;
-
-import androidx.annotation.NonNull;
 
 /**
  * Airship HMS integration.
@@ -50,18 +50,6 @@ public class AirshipHmsIntegration {
     public static void processMessageSync(@NonNull Context context, @NonNull RemoteMessage message) {
         PushProviderBridge.processPush(HmsPushProvider.class, new PushMessage(message.getDataOfMap()))
                           .executeSync(context);
-    }
-
-    /**
-     * Called to handle new tokens.
-     *
-     * @param context The application context.
-     * @deprecated Use {@link #processNewToken(Context, String)} to fix registration issues
-     * with older HMS devices.
-     */
-    @Deprecated
-    public static void processNewToken(@NonNull Context context) {
-        PushProviderBridge.requestRegistrationUpdate(context);
     }
 
     /**

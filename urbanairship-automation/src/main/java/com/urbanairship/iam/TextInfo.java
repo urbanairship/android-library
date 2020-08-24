@@ -5,8 +5,14 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.graphics.Color;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -19,13 +25,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * Text display info.
@@ -126,20 +125,6 @@ public class TextInfo implements JsonSerializable {
                       .putOpt(ANDROID_DRAWABLE_RES_NAME_KEY, drawableName)
                       .build()
                       .toJsonValue();
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed TextInfo.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static TextInfo parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**
@@ -308,18 +293,6 @@ public class TextInfo implements JsonSerializable {
     /**
      * Returns the button icon.
      *
-     * @return The icon resource ID.
-     *
-     * @deprecated To be removed in SDK 12. Use {@link #getDrawable(Context)} instead.
-     */
-    @DrawableRes
-    public int getDrawable() {
-        return getDrawable(UAirship.getApplicationContext());
-    }
-
-    /**
-     * Returns the button icon.
-     *
      * @param context The application context
      * @return The icon resource ID.
      */
@@ -447,19 +420,6 @@ public class TextInfo implements JsonSerializable {
         public Builder setText(@Nullable @Size(min = 1) String text) {
             this.text = text;
             return this;
-        }
-
-        /**
-         * Sets the drawable to appear next to the text.
-         *
-         * @param drawable The drawable resource ID.
-         * @return The builder instance.
-         *
-         * @deprecated To be removed in SDK 12. Use {@link #setDrawable(Context, int)} instead.
-         */
-        @NonNull
-        public Builder setDrawable(@DrawableRes int drawable) {
-            return setDrawable(UAirship.getApplicationContext(), drawable);
         }
 
         /**

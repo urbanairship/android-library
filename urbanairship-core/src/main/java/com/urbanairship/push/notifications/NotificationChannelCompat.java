@@ -12,6 +12,12 @@ import android.os.Build;
 import android.provider.Settings;
 import android.util.Xml;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.XmlRes;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -28,12 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.XmlRes;
 
 /**
  * Compatibility class for supporting NotificationChannel functionality across Android OS versions.
@@ -135,17 +135,6 @@ public class NotificationChannelCompat implements JsonSerializable {
      * Indicates whether the channel can bypass do-not-disturb.
      *
      * @return <code>true</code> if the channel can bypass do-not-distrub, <code>false</code> otherwise.
-     * @deprecated Use {@link #getBypassDnd()} instead. Will be removed in SDK 14.
-     */
-    @Deprecated
-    public boolean canBypassDnd() {
-        return this.bypassDnd;
-    }
-
-    /**
-     * Indicates whether the channel can bypass do-not-disturb.
-     *
-     * @return <code>true</code> if the channel can bypass do-not-distrub, <code>false</code> otherwise.
      */
     public boolean getBypassDnd() {
         return this.bypassDnd;
@@ -158,17 +147,6 @@ public class NotificationChannelCompat implements JsonSerializable {
      */
     public void setBypassDnd(boolean bypassDnd) {
         this.bypassDnd = bypassDnd;
-    }
-
-    /**
-     * Indicates whether the channel can show badges
-     *
-     * @return <code>true</code> if the channel can show badges, <code>false</code> otherwise.
-     * @deprecated Use {@link #getShowBadge()} instead. Will be removed in SDK 14.
-     */
-    @Deprecated
-    public boolean canShowBadge() {
-        return this.showBadge;
     }
 
     /**

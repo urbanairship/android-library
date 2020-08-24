@@ -4,6 +4,14 @@ package com.urbanairship.iam.banner;
 
 import android.graphics.Color;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.MediaInfo;
@@ -22,14 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_BANNER} in-app message.
@@ -117,20 +117,6 @@ public class BannerDisplayContent implements DisplayContent {
         this.dismissButtonColor = builder.dismissButtonColor;
         this.borderRadius = builder.borderRadius;
         this.actions = builder.actions;
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed BannerDisplayContent.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static BannerDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**

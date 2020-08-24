@@ -2,6 +2,12 @@
 
 package com.urbanairship.automation.tags;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -19,12 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * Tag selector.
@@ -157,20 +157,6 @@ public class TagSelector implements JsonSerializable {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static TagSelector tag(@NonNull String tag, @Nullable String group) {
         return new TagSelector(tag, group);
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed tag selector.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static TagSelector parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**

@@ -4,6 +4,13 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -20,13 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * In-app button display info.
@@ -100,20 +100,6 @@ public class ButtonInfo implements JsonSerializable {
                       .put(ACTIONS_KEY, JsonValue.wrapOpt(actions))
                       .build()
                       .toJsonValue();
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed ButtonInfo.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static ButtonInfo parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**
@@ -194,20 +180,6 @@ public class ButtonInfo implements JsonSerializable {
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid button JSON: " + content, e);
         }
-    }
-
-    /**
-     * {@see #fromJson(JsonList)}
-     *
-     * @param jsonList The json list.
-     * @return The list of parsed button info.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonList)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static List<ButtonInfo> parseJson(@NonNull JsonList jsonList) throws JsonException {
-        return fromJson(jsonList);
     }
 
     /**
