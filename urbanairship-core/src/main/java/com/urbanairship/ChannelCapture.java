@@ -124,6 +124,10 @@ public class ChannelCapture extends AirshipComponent {
             return;
         }
 
+        // reset the knock counters so it takes 6 new knocks to capture channel
+        knockTimes = new long[KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE];
+        indexOfKnocks = 0;
+
         String channel = airshipChannel.getId();
         String channelIdForClipboard = UAStringUtil.isEmpty(channel) ? "ua:" : "ua:" + channel;
 

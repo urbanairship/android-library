@@ -51,7 +51,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         capture.init();
 
-        clipboardManager.clearPrimaryClip();
+        clearClipboard();
     }
 
     @After
@@ -79,11 +79,11 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("channel ID");
 
-        knock();
+        knock(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         if (clipData != null) {
-            assertNotEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
         } else {
             assert true;
         }
@@ -109,7 +109,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("channel ID");
 
-        knock();
+        knock(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
@@ -135,14 +135,14 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn(null);
 
-        knock();
+        knock(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
     }
 
     /**
-     * Test the channel capture on a single foreground.
+     * Test the channel capture on a single knock.
      */
     @Test
     public void testChannelCaptureSingleForeground() {
@@ -161,14 +161,58 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("Channel ID");
 
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
+        knock(1);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         if (clipData != null) {
-            assertNotEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
         } else {
             assert true;
         }
+    }
+
+    /**
+     * Test channel capture requires 6 knocks each time.
+     */
+    @Test
+    public void testChannelCaptureRequires6Knocks() {
+        // Enable the channel capture
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
+                .build();
+
+        // Reinitialize it
+        capture.tearDown();
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
+
+        capture.init();
+
+        when(mockChannel.getId()).thenReturn("channel ID");
+
+        knock(6);
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+
+        clearClipboard();
+        clipData = clipboardManager.getPrimaryClip();
+
+        knock(1);
+
+        clipData = clipboardManager.getPrimaryClip();
+        if (clipData != null) {
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+        } else {
+            assert true;
+        }
+
+        knock(5);
+
+        clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+
     }
 
     /**
@@ -191,15 +235,16 @@ public class ChannelCaptureTest extends BaseTestCase {
     }
 
     /**
-     * Just send a knock (6 foregrounds)
+     * Send one or more knocks
      */
-    public void knock() {
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
-        activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
+    public void knock(int repeat) {
+        for (int i = 0; i < repeat; i++) {
+            activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
+        }
     }
 
+    public void clearClipboard() {
+        ClipData clipData = ClipData.newPlainText("", "");
+        clipboardManager.setPrimaryClip(clipData);
+    }
 }
