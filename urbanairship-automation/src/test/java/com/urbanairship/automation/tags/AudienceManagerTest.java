@@ -5,8 +5,10 @@ package com.urbanairship.automation.tags;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupsMutation;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -438,6 +440,8 @@ public class AudienceManagerTest {
 
     @Test
     public void testGetTagOverrides() {
+        clock.currentTimeMillis = System.currentTimeMillis();
+
         when(mockNamedUser.getId()).thenReturn("named-user-id");
 
         List<TagGroupsMutation> history = new ArrayList<>();
@@ -445,7 +449,7 @@ public class AudienceManagerTest {
         history.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
         history.add(TagGroupsMutation.newSetTagsMutation("baz", tagSet("1")));
 
-        when(mockHistorian.getTagGroupHistory(anyLong())).thenReturn(history);
+        when(mockHistorian.getTagGroupHistory(clock.currentTimeMillis - manager.getPreferLocalTagDataTime() )).thenReturn(history);
 
         pendingChannelMutations.add(TagGroupsMutation.newSetTagsMutation("baz", tagSet("2")));
         pendingChannelMutations.add(TagGroupsMutation.newAddTagsMutation("bar", tagSet("b")));
@@ -459,5 +463,32 @@ public class AudienceManagerTest {
         expected.addAll(pendingChannelMutations);
 
         assertEquals(TagGroupsMutation.collapseMutations(expected), manager.getTagOverrides());
+    }
+
+    @Test
+    public void testGetAttributeOverrides() {
+        clock.currentTimeMillis = System.currentTimeMillis();
+
+        when(mockNamedUser.getId()).thenReturn("named-user-id");
+
+        List<AttributeMutation> history = new ArrayList<>();
+        history.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
+        history.add(AttributeMutation.newSetAttributeMutation("bar", JsonValue.wrapOpt(100), 100));
+        history.add(AttributeMutation.newSetAttributeMutation("baz", JsonValue.wrapOpt("baz"), 100));
+
+        when(mockHistorian.getAttributeHistory(clock.currentTimeMillis - manager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS)).thenReturn(history);
+
+        List<AttributeMutation> pendingChannelAttributes = Collections.singletonList(AttributeMutation.newSetAttributeMutation("baz", JsonValue.wrapOpt("updated baz"), 100));
+        when(mockChannel.getPendingAttributeUpdates()).thenReturn(pendingChannelAttributes);
+
+        List<AttributeMutation> pendingNamedUserAttributes = Collections.singletonList(AttributeMutation.newSetAttributeMutation("bar", JsonValue.wrapOpt("updated bar"), 100));
+        when(mockNamedUser.getPendingAttributeUpdates()).thenReturn(pendingNamedUserAttributes);
+
+        List<AttributeMutation> expected = new ArrayList<>();
+        expected.addAll(history);
+        expected.addAll(pendingNamedUserAttributes);
+        expected.addAll(pendingChannelAttributes);
+
+        assertEquals(AttributeMutation.collapseMutations(expected), manager.getAttributeOverrides());
     }
 }

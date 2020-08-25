@@ -389,7 +389,7 @@ public class AudienceManager {
      */
     @NonNull
     public List<TagGroupsMutation> getTagOverrides() {
-        return getTagGroupOverrides(getPreferLocalTagDataTime());
+        return getTagGroupOverrides(clock.currentTimeMillis() - getPreferLocalTagDataTime());
     }
 
     @NonNull
@@ -418,7 +418,7 @@ public class AudienceManager {
     @NonNull
     public List<AttributeMutation> getAttributeOverrides() {
         List<AttributeMutation> mutations = new ArrayList<>();
-        mutations.addAll(historian.getAttributeHistory(DEFAULT_PREFER_LOCAL_DATA_TIME_MS));
+        mutations.addAll(historian.getAttributeHistory(clock.currentTimeMillis() - DEFAULT_PREFER_LOCAL_DATA_TIME_MS));
 
         // Pending
         mutations.addAll(namedUser.getPendingAttributeUpdates());
