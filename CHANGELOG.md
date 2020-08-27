@@ -2,8 +2,11 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 13.3.4 - August 27, 2020
+Patch release to fix ANRs when opening a background notification button with an action. Applications that use background buttons should update.
+
 ## Version 13.3.3 - August 24, 2020
-Patch release to fix SQL exceptions during SDK init. Applications that are seeing any SQL crashes from Airship should update. 
+Patch release to fix SQL exceptions during SDK init. Applications that are seeing any SQL crashes from Airship should update.
 
 ## Version 13.3.2 - July 28, 2020
 Patch release to fix In-App Automation version triggers to only fire on app updates instead of new installs.

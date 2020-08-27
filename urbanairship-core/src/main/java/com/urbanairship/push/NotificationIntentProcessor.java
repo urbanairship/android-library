@@ -101,7 +101,7 @@ class NotificationIntentProcessor {
             default:
                 Logger.error("NotificationIntentProcessor - Invalid intent action: %s", intent.getAction());
                 pendingResult.setResult(false);
-                return pendingResult;
+                break;
         }
 
         return pendingResult;
@@ -143,11 +143,11 @@ class NotificationIntentProcessor {
             }
         }
 
-        runNotificationResponseActions(completionHandler);
-
         for (InternalNotificationListener internalNotificationListener : airship.getPushManager().getInternalNotificationListeners()) {
             internalNotificationListener.onNotificationResponse(notificationInfo, actionButtonInfo);
         }
+
+        runNotificationResponseActions(completionHandler);
     }
 
     /**
