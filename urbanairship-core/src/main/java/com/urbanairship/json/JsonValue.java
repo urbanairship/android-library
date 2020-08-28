@@ -409,12 +409,16 @@ public class JsonValue implements Parcelable, JsonSerializable {
             return o.isNull();
         }
 
-        if (isFloat() && o.isFloat()) {
-            return Float.compare(getFloat(0), o.getFloat(0)) == 0;
-        }
+        if (isNumber() && o.isNumber()) {
+            if (isDouble() || o.isDouble()) {
+                return Double.compare(getDouble(0), o.getDouble(0)) == 0;
+            }
 
-        if ((isNumber() && o.isNumber()) && (isDouble() || o.isDouble())) {
-            return Double.compare(getDouble(0), o.getDouble(0)) == 0;
+            if (isFloat() || o.isFloat()) {
+                return Float.compare(getFloat(0), o.getFloat(0)) == 0;
+            }
+
+            return getLong(0) == o.getLong(0);
         }
 
         return value.equals(o.value);

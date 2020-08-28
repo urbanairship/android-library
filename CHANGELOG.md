@@ -2,6 +2,9 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 13.3.5 - August 29, 2020
+Patch release to fix Android version equality checks in IAA and to fix a crash with the LocaleChangeReceiver if the Airship SDK is included in the Application but not initialized.
+
 ## Version 13.3.4 - August 27, 2020
 Patch release to fix ANRs when opening a background notification button with an action. Applications that use background buttons should update.
 
