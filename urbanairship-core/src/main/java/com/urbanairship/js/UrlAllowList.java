@@ -298,10 +298,10 @@ public class UrlAllowList {
         for (String entry : airshipConfigOptions.urlAllowList) {
             urlAllowList.addEntry(entry, SCOPE_ALL);
         }
-        for (String entry : airshipConfigOptions.urlAllowListScopeJavaScriptBridge) {
+        for (String entry : airshipConfigOptions.urlAllowListScopeJavaScriptInterface) {
             urlAllowList.addEntry(entry, SCOPE_JAVASCRIPT_INTERFACE);
         }
-        for (String entry : airshipConfigOptions.urlAllowListScopeOpen) {
+        for (String entry : airshipConfigOptions.urlAllowListScopeOpenUrl) {
             urlAllowList.addEntry(entry, SCOPE_OPEN_URL);
         }
 

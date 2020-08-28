@@ -207,7 +207,7 @@ public class AirshipConfigOptions {
      * Defaults null.
      */
     @NonNull
-    public final List<String> urlAllowListScopeJavaScriptBridge;
+    public final List<String> urlAllowListScopeJavaScriptInterface;
 
     /**
      * List of URLs that are allowed to be used for open external URL action.
@@ -218,7 +218,7 @@ public class AirshipConfigOptions {
      * Defaults null.
      */
     @NonNull
-    public final List<String> urlAllowListScopeOpen;
+    public final List<String> urlAllowListScopeOpenUrl;
 
     /**
      * Flag indicating whether the application will use analytics.
@@ -353,8 +353,8 @@ public class AirshipConfigOptions {
 
         this.allowedTransports = Collections.unmodifiableList(new ArrayList<>(builder.allowedTransports));
         this.urlAllowList = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowList));
-        this.urlAllowListScopeJavaScriptBridge = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeJavaScriptBridge));
-        this.urlAllowListScopeOpen = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeOpen));
+        this.urlAllowListScopeJavaScriptInterface = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeJavaScriptInterface));
+        this.urlAllowListScopeOpenUrl = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeOpenUrl));
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
@@ -499,8 +499,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
-        private static final String FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_BRIDGE = "urlAllowListScopeJavaScriptBridge";
-        private static final String FIELD_URL_ALLOW_LIST_SCOPE_OPEN = "urlAllowListScopeOpen";
+        private static final String FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_INTERFACE = "urlAllowListScopeJavaScriptInterface";
+        private static final String FIELD_URL_ALLOW_LIST_SCOPE_OPEN_URL = "urlAllowListScopeOpenUrl";
         private static final String FIELD_IN_PRODUCTION = "inProduction";
         private static final String FIELD_ANALYTICS_ENABLED = "analyticsEnabled";
         private static final String FIELD_BACKGROUND_REPORTING_INTERVAL_MS = "backgroundReportingIntervalMS";
@@ -539,8 +539,8 @@ public class AirshipConfigOptions {
         private String developmentFcmSenderId;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
         private List<String> urlAllowList = new ArrayList<>();
-        private List<String> urlAllowListScopeJavaScriptBridge = new ArrayList<>();
-        private List<String> urlAllowListScopeOpen = new ArrayList<>();
+        private List<String> urlAllowListScopeJavaScriptInterface = new ArrayList<>();
+        private List<String> urlAllowListScopeOpenUrl = new ArrayList<>();
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
@@ -746,12 +746,12 @@ public class AirshipConfigOptions {
                             this.setUrlAllowList(configParser.getStringArray(name));
                             break;
 
-                        case FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_BRIDGE:
-                            this.setUrlAllowListScopeJavaScriptBridge(configParser.getStringArray(name));
+                        case FIELD_URL_ALLOW_LIST_SCOPE_JAVASCRIPT_INTERFACE:
+                            this.setUrlAllowListScopeJavaScriptInterface(configParser.getStringArray(name));
                             break;
 
-                        case FIELD_URL_ALLOW_LIST_SCOPE_OPEN:
-                            this.setUrlAllowListScopeOpen(configParser.getStringArray(name));
+                        case FIELD_URL_ALLOW_LIST_SCOPE_OPEN_URL:
+                            this.setUrlAllowListScopeOpenUrl(configParser.getStringArray(name));
                             break;
 
                         case FIELD_IN_PRODUCTION:
@@ -1117,14 +1117,14 @@ public class AirshipConfigOptions {
          * Set the list of additional URLs that are allowed to be used for the Airship JS interface.
          * Airship https URLs are included by default.
          *
-         * @param urlAllowListScopeJavaScriptBridge The URL allow list for the Airship JS interface.
+         * @param urlAllowListScopeJavaScriptInterface The URL allow list for the Airship JS interface.
          * @return The config options builder.
          */
         @NonNull
-        public Builder setUrlAllowListScopeJavaScriptBridge(@Nullable String[] urlAllowListScopeJavaScriptBridge) {
-            this.urlAllowListScopeJavaScriptBridge.clear();
-            if (urlAllowListScopeJavaScriptBridge != null) {
-                this.urlAllowListScopeJavaScriptBridge.addAll(Arrays.asList(urlAllowListScopeJavaScriptBridge));
+        public Builder setUrlAllowListScopeJavaScriptInterface(@Nullable String[] urlAllowListScopeJavaScriptInterface) {
+            this.urlAllowListScopeJavaScriptInterface.clear();
+            if (urlAllowListScopeJavaScriptInterface != null) {
+                this.urlAllowListScopeJavaScriptInterface.addAll(Arrays.asList(urlAllowListScopeJavaScriptInterface));
             }
             return this;
         }
@@ -1133,14 +1133,14 @@ public class AirshipConfigOptions {
          * Set the list of additional URLs that are allowed to be used for the open external URL action.
          * Airship https URLs are included by default.
          *
-         * @param urlAllowListScopeOpen The URL allow list for the open external URL action.
+         * @param urlAllowListScopeOpenUrl The URL allow list for the open external URL action.
          * @return The config options builder.
          */
         @NonNull
-        public Builder setUrlAllowListScopeOpen(@Nullable String[] urlAllowListScopeOpen) {
-            this.urlAllowListScopeOpen.clear();
-            if (urlAllowListScopeOpen != null) {
-                this.urlAllowListScopeOpen.addAll(Arrays.asList(urlAllowListScopeOpen));
+        public Builder setUrlAllowListScopeOpenUrl(@Nullable String[] urlAllowListScopeOpenUrl) {
+            this.urlAllowListScopeOpenUrl.clear();
+            if (urlAllowListScopeOpenUrl != null) {
+                this.urlAllowListScopeOpenUrl.addAll(Arrays.asList(urlAllowListScopeOpenUrl));
             }
             return this;
         }
