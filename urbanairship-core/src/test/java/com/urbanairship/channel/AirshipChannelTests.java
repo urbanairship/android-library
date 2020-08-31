@@ -550,7 +550,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 .setLanguage("wookiee")
                 .setCountry("KASHYYYK")
                 .setDeviceType("android")
-                .setTags(false, null)
+                .setTags(true, Collections.<String>emptySet())
                 .setTimezone(TimeZone.getDefault().getID())
                 .setUserId("cool")
                 .setPushAddress("story")
@@ -948,6 +948,25 @@ public class AirshipChannelTests extends BaseTestCase {
 
         // Update should be called
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+            }
+        }));
+    }
+
+    @Test
+    public void testDataCollectionUpdatesRegistration() {
+        airshipChannel.onDataCollectionEnabledChanged(true);
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+            }
+        }));
+
+        airshipChannel.onDataCollectionEnabledChanged(false);
+        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");

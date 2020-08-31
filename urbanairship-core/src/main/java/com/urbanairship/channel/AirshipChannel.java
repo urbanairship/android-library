@@ -464,7 +464,7 @@ public class AirshipChannel extends AirshipComponent {
     @WorkerThread
     @NonNull
     private ChannelRegistrationPayload getNextChannelRegistrationPayload() {
-        boolean shouldSetTags = getChannelTagRegistrationEnabled() && isDataCollectionEnabled();
+        boolean shouldSetTags = getChannelTagRegistrationEnabled();
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
                 .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
@@ -504,7 +504,6 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             builder.setDeviceModel(Build.MODEL);
-
             builder.setApiVersion(Build.VERSION.SDK_INT);
         }
 
@@ -806,6 +805,7 @@ public class AirshipChannel extends AirshipComponent {
             tagGroupRegistrar.clearPendingMutations();
             attributeRegistrar.clearPendingMutations();
         }
-    }
 
+        updateRegistration();
+    }
 }
