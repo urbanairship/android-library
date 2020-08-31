@@ -11,11 +11,14 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertTrue;
 
 public class TagGroupsMutationTest extends BaseTestCase {
@@ -199,7 +202,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
     public void testEmptyMutation() {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("empty", new HashSet<String>());
         TagGroupsMutation fromJson = TagGroupsMutation.fromJsonValue(mutation.toJsonValue());
-        assertEquals(mutation.toJsonValue(), fromJson.toJsonValue());
+        assertEquals(mutation, fromJson);
     }
 
     @Test
@@ -221,6 +224,17 @@ public class TagGroupsMutationTest extends BaseTestCase {
         TagGroupsMutation mutation = TagGroupsMutation.newSetTagsMutation("empty", new HashSet<String>());
         List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(Arrays.asList(mutation));
         assertFalse(collapsed.isEmpty());
+    }
+
+    @Test
+    public void testEquals() {
+        final TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("group", new HashSet<>(Arrays.asList("tag1", "tag2")));
+        final TagGroupsMutation sameMutation = TagGroupsMutation.newAddTagsMutation("group", new TreeSet<>(Arrays.asList("tag1", "tag2")));
+        final TagGroupsMutation differentMutation = TagGroupsMutation.newSetTagsMutation("group", tagSet("tag3"));
+
+        assertEquals(mutation, sameMutation);
+        assertNotSame(mutation, differentMutation);
+        assertEquals(mutation, TagGroupsMutation.fromJsonValue(mutation.toJsonValue()));
     }
 
     /**
