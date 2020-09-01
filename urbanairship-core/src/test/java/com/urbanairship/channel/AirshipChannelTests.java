@@ -97,6 +97,18 @@ public class AirshipChannelTests extends BaseTestCase {
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
+    @Test
+    public void testInitSetsIdOnRegistrars() {
+        dataStore.put("com.urbanairship.push.CHANNEL_ID", "channel");
+
+        clearInvocations(mockTagGroupRegistrar);
+        clearInvocations(mockAttributeRegistrar);
+
+        airshipChannel.init();
+        verify(mockTagGroupRegistrar).setId("channel", false);
+        verify(mockAttributeRegistrar).setId("channel", false);
+    }
+
     /**
      * Test enabling the component updates tags and registration.
      */

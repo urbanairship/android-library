@@ -165,9 +165,12 @@ public class AirshipChannel extends AirshipComponent {
     protected void init() {
         super.init();
         tagGroupRegistrar.setId(getId(), false);
+        attributeRegistrar.setId(getId(), false);
+
         if (Logger.getLogLevel() < Log.ASSERT && !UAStringUtil.isEmpty(getId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getId());
         }
+
         channelCreationDelayEnabled = getId() == null && runtimeConfig.getConfigOptions().channelCreationDelayEnabled;
     }
 
