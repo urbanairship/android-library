@@ -103,7 +103,6 @@ public class LegacyDataMigrator {
         List<TriggerEntity> triggerEntities = new ArrayList<>();
         String currentScheduleId = null;
 
-        List<String> messageIds = new ArrayList<>();
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             String scheduleId = cursor.getString(cursor.getColumnIndex(LegacyDataManager.ScheduleTable.COLUMN_NAME_SCHEDULE_ID));
@@ -261,6 +260,10 @@ public class LegacyDataMigrator {
             }
 
             scheduleEntity.scheduleId = messageId;
+            for (TriggerEntity triggerEntity : triggerEntities) {
+                triggerEntity.parentScheduleId = messageId;
+            }
+
             messageIds.add(messageId);
 
             // Migrate audience to schedule
