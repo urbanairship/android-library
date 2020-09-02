@@ -36,6 +36,11 @@ android {
     testOptions.unitTests.includeAndroidResources = true
 }
 
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "sources"
+}
+
 // Create the pom configuration:
 def pomConfig = {
     licenses {
@@ -63,6 +68,7 @@ publishing {
     publications {
         Production(MavenPublication) {
             artifact("$buildDir/outputs/aar/" + project.name + "-release.aar")
+            artifact(sourceJar)
             groupId project.group
             artifactId project.name
 
