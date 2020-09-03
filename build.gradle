@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '13.3.5'
+        airshipVersion = '14.0.0'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "beta"
@@ -26,38 +26,38 @@ buildscript {
         kotlinCoroutinesVersion = '1.3.0'
 
         // Androidx
-        androidxCoreVersion = '1.3.0'
-        androidxFragmentVersion = '1.2.4'
+        androidxCoreVersion = '1.3.1'
+        androidxFragmentVersion = '1.2.5'
         androidxAnnotationVersion = '1.1.0'
-        androidxCustomViewVersion = '1.0.0'
-        androidxAppCompatVersion = '1.1.0'
+        androidxCustomViewVersion = '1.1.0'
+        androidxAppCompatVersion = '1.2.0'
         androidxPreferenceVersion = '1.1.1'
         androidxVectorDrawableVersion = '1.1.0'
         androidxRoomVersion = '2.2.5'
-        androidxConstraintLayoutVersion = '1.1.3'
+        androidxConstraintLayoutVersion = '2.0.1'
         androidxPagingVersion = '2.1.2'
         androidxLifeCycleVersion = '2.2.0'
 
-        androidxNavigationVersion = '2.2.2'
+        androidxNavigationVersion = '2.3.0'
         androidxSwipeRefreshLayoutVersion= '1.0.0'
 
         // Material design
-        materialVersion = '1.1.0'
+        materialVersion = '1.2.0'
 
         // Google Play Services
         playServicesAdsIdentifierVersion = '17.0.0'
         playServicesLocationVersion = '17.0.0'
-        playServicesBaseVersion = '17.3.0'
+        playServicesBaseVersion = '17.4.0'
 
         // Firebase
-        firebaseFcmVersion = '20.2.0'
+        firebaseFcmVersion = '20.2.4'
 
         // Test
         androidxTestTruthVersion = '1.2.0'
         androidxTestRunnerVersion = '1.2.0'
         androidxTestRulesVersion = '1.2.0'
-        androidxTestCoreVersion = '1.2.0'
-        androidxTestJunitVersion = '1.1.1'
+        androidxTestCoreVersion = '1.3.0'
+        androidxTestJunitVersion = '1.1.2'
         androidxEspressoVersion = '3.2.0'
         googleTruthVersion = '1.0.1'
         junitVersion = '4.13'

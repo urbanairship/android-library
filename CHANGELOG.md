@@ -2,6 +2,20 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.0.0 - September 3, 2020
+Airship SDK 14 is a major update that prepares our automation module to support future IAA enhancements, revamps the Channel Capture tool, and provides other improvements.
+
+The majority of apps will only be effected by the new `UrlAllowList` behavior changes.
+
+## Changes
+- **BEHAVIOR CHANGE** All URLs are not verified by default. Applications that use open URL action, landing pages, and custom in-app message image URLs will need to provide a list of URL patterns that match those URLs for SCOPE_OPEN_URL. The easist way to go back to 13.x behavior is to add `urlAllowListScopeOpenURL = *` to the AirshipConfig.
+- Channel Capture tool now detects a `knock` of 6 app opens in 30 seconds. Instead of displaying anything to the user, the tool will write the current channel ID to the clipboard.
+- Whitelist class and terminology removed and replaced with UrlAllowList.
+- ActionAutomation and InAppMessageManager have been combined into InAppAutomation.
+- InAppAutomation APIs have been updated to support future IAA enhancements. See migration guide for details.
+- Removed deprecated APIs.
+- Added sourcesJar maven artifact to each module, this allows browsing source code and java docs directly from Android Studio.
+
 ## Version 13.3.5 - August 29, 2020
 Patch release to fix Android version equality checks in IAA and to fix a crash with the LocaleChangeReceiver if the Airship SDK is included in the Application but not initialized.
 
