@@ -4,7 +4,11 @@ package com.urbanairship.automation.actions;
 
 import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,6 +42,15 @@ public class Actions implements ScheduleData {
         return actions;
     }
 
+    /**
+     * Factory method to create a builder.
+     * @return The builder.
+     */
+    @NonNull
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
@@ -51,5 +64,83 @@ public class Actions implements ScheduleData {
     @Override
     public int hashCode() {
         return actions.hashCode();
+    }
+
+    /**
+     * Actions builder.
+     */
+    public static class Builder {
+        private Map<String, JsonSerializable> actions = new HashMap<>();
+
+        private Builder() {}
+
+        /**
+         * Adds an action.
+         * @param action The action.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder addAction(@NonNull String action, @NonNull JsonSerializable actionValue) {
+            actions.put(action, actionValue);
+            return this;
+        }
+
+        /**
+         * Adds an action.
+         * @param action The action.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder addAction(@NonNull String action, @NonNull String actionValue) {
+            actions.put(action, JsonValue.wrap(actionValue));
+            return this;
+        }
+
+        /**
+         * Adds an action.
+         * @param action The action.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder addAction(@NonNull String action, @NonNull long actionValue) {
+            actions.put(action, JsonValue.wrap(actionValue));
+            return this;
+        }
+
+        /**
+         * Adds an action.
+         * @param action The action.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder addAction(@NonNull String action, @NonNull double actionValue) {
+            actions.put(action, JsonValue.wrap(actionValue));
+            return this;
+        }
+
+        /**
+         * Adds an action.
+         * @param action The action.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder addAction(@NonNull String action, @NonNull boolean actionValue) {
+            actions.put(action, JsonValue.wrap(actionValue));
+            return this;
+        }
+
+        /**
+         * Builds the actions.
+         * @return The actions.
+         */
+        @NonNull
+        public Actions build() {
+            return new Actions(JsonValue.wrapOpt(actions).optMap());
+        }
     }
 }

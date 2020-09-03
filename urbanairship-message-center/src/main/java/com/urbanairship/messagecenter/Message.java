@@ -49,7 +49,7 @@ public class Message implements Comparable<Message> {
     boolean deleted = false;
     boolean unreadClient;
 
-    private Message() {
+    protected Message() {
     }
 
     /**
