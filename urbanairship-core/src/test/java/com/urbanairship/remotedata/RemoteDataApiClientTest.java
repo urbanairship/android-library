@@ -137,7 +137,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     }
 
     /**
-     * Test the manufacturer is included if whitelisted.
+     * Test the manufacturer is included if on the "should include" list.
      */
     @Test
     public void testManufacturer() {
@@ -148,14 +148,14 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     }
 
     /**
-     * Test the manufacturer is not included if not on the whitelisted.
+     * Test the manufacturer is not included if not on the "should include" list.
      */
     @Test
     public void testManufacturerNotIncluded() {
         ShadowBuild.setManufacturer("google");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
         Uri uri = Uri.parse(testRequest.getURL().toString());
-        assertNull(uri.getQueryParameter("fmanufacturer"));
+        assertNull(uri.getQueryParameter("manufacturer"));
     }
 
     /**

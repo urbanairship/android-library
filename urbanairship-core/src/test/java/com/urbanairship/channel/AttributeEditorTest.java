@@ -3,7 +3,10 @@
 package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestClock;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.Clock;
+import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,135 +25,65 @@ import static org.junit.Assert.assertNull;
  */
 public class AttributeEditorTest extends BaseTestCase {
     private TestAttributeEditor editor;
-
+    private TestClock clock = new TestClock();
     @Before
     public void setUp() {
-        editor = new TestAttributeEditor();
+        clock = new TestClock();
+        editor = new TestAttributeEditor(clock);
     }
 
+    @Test(expected = NumberFormatException.class)
+    public void testDoubleNaN() throws NumberFormatException {
+        editor.setAttribute("key", Double.NaN);
+    }
 
-    public void testNanAndInfiniteNumberAttributes() throws NumberFormatException {
-        List<AttributeMutation> mutations = new ArrayList<>();
+    @Test(expected = NumberFormatException.class)
+    public void testDoublePositiveInfinity() throws NumberFormatException {
+        editor.setAttribute("key", Double.POSITIVE_INFINITY);
+    }
 
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Double.NaN));
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Double.POSITIVE_INFINITY));
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Double.NEGATIVE_INFINITY));
+    @Test(expected = NumberFormatException.class)
+    public void testDoubleNegativeInfinity() throws NumberFormatException {
+        editor.setAttribute("key", Double.NEGATIVE_INFINITY);
+    }
 
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Float.NaN));
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Float.POSITIVE_INFINITY));
-        mutations.add(AttributeMutation.newSetAttributeMutation("expected_key", Float.NEGATIVE_INFINITY));
+    @Test(expected = NumberFormatException.class)
+    public void testFloatNaN() throws NumberFormatException {
+        editor.setAttribute("key", Float.NaN);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testFloatPositiveInfinity() throws NumberFormatException {
+        editor.setAttribute("key", Float.POSITIVE_INFINITY);
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testFloatNegativeInfinity() throws NumberFormatException {
+        editor.setAttribute("key", Float.NEGATIVE_INFINITY);
     }
 
     @Test
-    public void testSetNumberAttributes() {
-        int expectedInt = 11;
-        long expectedLong = 11;
-        float expectedFloat = 11.11f;
-        double expectedDouble = 11.11;
-
-        editor.setAttribute("expected_key0", expectedInt)
-              .setAttribute("expected_key1", expectedLong)
-              .setAttribute("expected_key2", expectedFloat)
-              .setAttribute("expected_key3", expectedDouble)
+    public void testAttributes() {
+        clock.currentTimeMillis = 10000;
+        editor.setAttribute("string", "expected_value")
+              .setAttribute("long", 100L)
+              .setAttribute("double", 30.13)
+              .setAttribute("float", 131.2003f)
+              .setAttribute("date", new Date(1561803000000L))
+              .removeAttribute("remove")
               .apply();
 
+        List<AttributeMutation> expected = new ArrayList<>();
+        expected.add(AttributeMutation.newSetAttributeMutation("string", JsonValue.wrapOpt("expected_value"), 10000));
+        expected.add(AttributeMutation.newSetAttributeMutation("long", JsonValue.wrapOpt(100L), 10000));
+        expected.add(AttributeMutation.newSetAttributeMutation("double", JsonValue.wrapOpt(30.13), 10000));
+        expected.add(AttributeMutation.newSetAttributeMutation("float", JsonValue.wrapOpt(131.2003f), 10000));
+        expected.add(AttributeMutation.newSetAttributeMutation("date", JsonValue.wrapOpt(DateUtils.createIso8601TimeStamp(1561803000000L)), 10000));
+        expected.add(AttributeMutation.newRemoveAttributeMutation("remove", 10000));
 
-        String expected =
-                "[{\"action\":\"set\",\"value\":" + expectedInt +",\"key\":\"expected_key0\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"set\",\"value\":" + expectedLong + ",\"key\":\"expected_key1\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"set\",\"value\":" +  JsonValue.wrap(expectedFloat) +",\"key\":\"expected_key2\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"set\",\"value\":" + expectedDouble + ",\"key\":\"expected_key3\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
-
-        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
+        assertEquals(expected, editor.mutations);
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testSetNaNFloat() {
-        editor.setAttribute("expected_key", Float.NaN)
-              .apply();
-    }
-
-    @Test(expected = NumberFormatException.class)
-    public void testSetNaNDouble() {
-        editor.setAttribute("expected_key", Double.NaN)
-              .apply();
-    }
-
-    @Test(expected = NumberFormatException.class)
-    public void testSetInfiniteDouble() {
-        editor.setAttribute("expected_key", Double.POSITIVE_INFINITY)
-              .apply();
-    }
-
-    @Test(expected = NumberFormatException.class)
-    public void testSetNegativeInfiniteDouble() {
-        editor.setAttribute("expected_key", Double.NEGATIVE_INFINITY)
-              .apply();
-    }
-
-    @Test(expected = NumberFormatException.class)
-    public void testSetInfiniteFloat() {
-        editor.setAttribute("expected_key", Float.POSITIVE_INFINITY)
-              .apply();
-    }
-
-    @Test(expected = NumberFormatException.class)
-    public void testSetNegativeInfiniteFloat() {
-        editor.setAttribute("expected_key", Float.NEGATIVE_INFINITY)
-              .apply();
-    }
-
-    @Test
-    public void testSetStringAttributes() {
-        editor.setAttribute("expected_key", "expected_value")
-              .setAttribute("expected_key2", "expected_value2")
-              .apply();
-
-
-        String expected = "[{\"action\":\"set\",\"value\":\"expected_value\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"set\",\"value\":\"expected_value2\",\"key\":\"expected_key2\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
-
-        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
-    }
-
-    @Test
-    public void testSetDateAttributes() {
-        Date date = new Date(1556532600000L);
-        Date date2 = new Date(1561803000000L);
-
-        editor.setAttribute("expected_key", date)
-              .setAttribute("expected_key2", date2)
-              .apply();
-
-        String expected = "[{\"action\":\"set\",\"value\":\"2019-04-29T10:10:00\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"set\",\"value\":\"2019-06-29T10:10:00\",\"key\":\"expected_key2\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
-
-        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
-    }
-
-    @Test
-    public void testRemoveAttributes() {
-        editor.removeAttribute("expected_key")
-              .removeAttribute("expected_key2")
-              .apply();
-
-        String expected = "[{\"action\":\"remove\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"remove\",\"key\":\"expected_key2\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
-
-        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations, 0)).toString());
-    }
-
-    @Test
-    public void testAddAndRemoveStringAttributes() {
-        editor.setAttribute("expected_key", "expected_value")
-              .removeAttribute("expected_key")
-              .apply();
-
-        String expected = "[{\"action\":\"set\",\"value\":\"expected_value\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}," +
-                "{\"action\":\"remove\",\"key\":\"expected_key\",\"timestamp\":\"1970-01-01T00:00:00\"}]";
-
-        assertEquals(expected, JsonValue.wrapOpt(PendingAttributeMutation.fromAttributeMutations(editor.mutations,0)).toString());
-    }
 
     @Test
     public void testAddOrRemoveKeyTooLargeStringAttributes() {
@@ -180,8 +113,11 @@ public class AttributeEditorTest extends BaseTestCase {
     }
 
     private static class TestAttributeEditor extends AttributeEditor {
-
         List<AttributeMutation> mutations;
+
+        TestAttributeEditor(Clock clock) {
+            super(clock);
+        }
 
         @Override
         protected void onApply(@NonNull List<AttributeMutation> mutations) {

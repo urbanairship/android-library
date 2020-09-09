@@ -1,223 +1,97 @@
-/* Copyright Airship and Contributors */
-
 package com.urbanairship.channel;
 
 import com.urbanairship.Logger;
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
-import com.urbanairship.util.UAHttpStatusUtil;
+import com.urbanairship.util.UAStringUtil;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
-/**
- * Tag group registrar.
- *
- * @hide
- */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class TagGroupRegistrar {
+class TagGroupRegistrar {
 
-    /**
-     * Tag group registrar listener.
-     */
-    public interface Listener {
+    private final List<TagGroupListener> tagGroupListeners = new CopyOnWriteArrayList<>();
+    private final Object idLock = new Object();
+    private final TagGroupApiClient apiClient;
+    private final PendingTagGroupMutationStore pendingTagGroupMutationStore;
 
-        /**
-         * Called when a mutation is uploaded.
-         *
-         * @param mutation The mutation.
-         */
-        void onMutationUploaded(@NonNull TagGroupsMutation mutation);
+    private String identifier;
 
+    TagGroupRegistrar(TagGroupApiClient apiClient, PendingTagGroupMutationStore pendingTagGroupMutationStore) {
+        this.apiClient = apiClient;
+        this.pendingTagGroupMutationStore = pendingTagGroupMutationStore;
+        this.pendingTagGroupMutationStore.collapseAndSaveMutations();
     }
 
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    private static final String NAMED_USER_PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
-
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    private static final String CHANNEL_PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
-
-    // Old keys to migrate
-    private static final String CHANNEL_PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
-    private static final String CHANNEL_PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
-    private static final String NAMED_USER_PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_ADD_TAG_GROUPS_KEY";
-    private static final String NAMED_USER_PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
-
-    /**
-     * Named user type.
-     */
-    public static final int NAMED_USER = 1;
-
-    /**
-     * Channel type.
-     */
-    public static final int CHANNEL = 0;
-
-    @IntDef({ NAMED_USER, CHANNEL })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface TagGroupType {}
-
-    private final TagGroupApiClient client;
-    private final PendingTagGroupMutationStore namedUserStore;
-    private final PendingTagGroupMutationStore channelStore;
-
-    private final List<Listener> listeners = new ArrayList<>();
-
-    /**
-     * Default constructor.
-     *
-     * @param runtimeConfig The runtime config.
-     * @param dataStore The data store.
-     */
-    public TagGroupRegistrar(@NonNull AirshipRuntimeConfig runtimeConfig,
-                             @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupApiClient(runtimeConfig),
-                new PendingTagGroupMutationStore(dataStore, NAMED_USER_PENDING_TAG_GROUP_MUTATIONS_KEY),
-                new PendingTagGroupMutationStore(dataStore, CHANNEL_PENDING_TAG_GROUP_MUTATIONS_KEY));
+    void addPendingMutations(@NonNull List<TagGroupsMutation> mutations) {
+        pendingTagGroupMutationStore.addAll(mutations);
     }
 
-    @VisibleForTesting
-    TagGroupRegistrar(@NonNull TagGroupApiClient client, @NonNull PendingTagGroupMutationStore channelStore, @NonNull PendingTagGroupMutationStore namedUserStore) {
-        this.namedUserStore = namedUserStore;
-        this.channelStore = channelStore;
-        this.client = client;
+    void setId(String identifier, boolean clearPendingOnIdChange) {
+        synchronized (idLock) {
+            if (clearPendingOnIdChange && !UAStringUtil.equals(this.identifier, identifier)) {
+                pendingTagGroupMutationStore.removeAll();
+            }
+            this.identifier = identifier;
+        }
     }
 
-    /**
-     * Adds mutations for the specified type.
-     *
-     * @param type The mutation type.
-     * @param mutations The mutations.
-     */
-    public void addMutations(@TagGroupType int type, @NonNull List<TagGroupsMutation> mutations) {
-        getMutationStore(type).add(mutations);
-    }
-
-    /**
-     * Clears mutations for the specified type.
-     *
-     * @param type The mutation type.
-     */
-    public void clearMutations(@TagGroupType int type) {
-        getMutationStore(type).clear();
-    }
-
-    /**
-     * Uploads mutations for the specified type and identifier.
-     *
-     * @param type The type.
-     * @param identifier The identifier. Either the channel ID for {@link #CHANNEL} type, or the named user ID.
-     * @return {@code true} if uploads are complete, otherwise {@code false}.
-     */
-    @WorkerThread
-    public boolean uploadMutations(@TagGroupType int type, @NonNull String identifier) {
-        PendingTagGroupMutationStore mutationStore = getMutationStore(type);
-
+    boolean uploadPendingMutations() {
         while (true) {
-            // Collapse mutations before we try to send any updates
-            mutationStore.collapseMutations();
-
-            TagGroupsMutation mutation = mutationStore.peek();
-            if (mutation == null) {
-                break;
+            TagGroupsMutation mutation;
+            String identifier;
+            synchronized (idLock) {
+                pendingTagGroupMutationStore.collapseAndSaveMutations();
+                mutation = pendingTagGroupMutationStore.peek();
+                identifier = this.identifier;
             }
 
-            Response response = client.updateTagGroups(type, identifier, mutation);
+            if (UAStringUtil.isEmpty(identifier) || mutation == null) {
+                return true;
+            }
 
-            // No response, 5xx, or 429
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-                Logger.debug("Failed to update tag groups, will retry later.");
+            Response<Void> response;
+            try {
+                response = apiClient.updateTags(identifier, mutation);
+            } catch (RequestException e) {
+                Logger.debug(e, "Failed to update tag groups");
                 return false;
             }
 
-            notifyListeners(mutation);
-            mutationStore.pop();
+            Logger.debug("Updated tag group response: %s", response);
+            if (response.isServerError() || response.isTooManyRequestsError()) {
+                return false;
+            }
 
-            int status = response.getStatus();
-            Logger.debug("Update tag groups finished with status: %s", status);
-        }
+            if (response.isClientError()) {
+                Logger.error("Dropping tag group update %s due to error: %s message: %s", mutation, response.getStatus(), response.getResponseBody());
+            } else {
+                for (TagGroupListener listener : tagGroupListeners) {
+                    listener.onTagGroupsMutationUploaded(identifier, mutation);
+                }
+            }
 
-        return true;
-    }
-
-    /**
-     * Adds a listener.
-     *
-     * @param listener The listener.
-     */
-    public void addListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            this.listeners.add(listener);
-        }
-    }
-
-    /**
-     * Removes a listener.
-     *
-     * @param listener The listener.
-     */
-    public void removeListener(@NonNull Listener listener) {
-        synchronized (listeners) {
-            this.listeners.remove(listener);
-        }
-    }
-
-    private void notifyListeners(@NonNull TagGroupsMutation mutation) {
-        synchronized (listeners) {
-            for (Listener listener : new ArrayList<>(listeners)) {
-                listener.onMutationUploaded(mutation);
+            synchronized (idLock) {
+                if (mutation.equals(pendingTagGroupMutationStore.peek()) && identifier.equals(this.identifier)) {
+                    pendingTagGroupMutationStore.pop();
+                }
             }
         }
     }
 
-    /**
-     * Performs any data store migrations.
-     */
-    public void migrateKeys() {
-        channelStore.migrateTagGroups(CHANNEL_PENDING_ADD_TAG_GROUPS_KEY, CHANNEL_PENDING_REMOVE_TAG_GROUPS_KEY);
-        namedUserStore.migrateTagGroups(NAMED_USER_PENDING_ADD_TAG_GROUPS_KEY, NAMED_USER_PENDING_REMOVE_TAG_GROUPS_KEY);
+    void clearPendingMutations() {
+        pendingTagGroupMutationStore.removeAll();
     }
 
-    /**
-     * Gets the pending tag groups mutations.
-     *
-     * @param type The tag group type.
-     * @return The pending tag groups mutations.
-     */
-    @NonNull
-    public List<TagGroupsMutation> getPendingMutations(@TagGroupType int type) {
-        return getMutationStore(type).getMutations();
+    List<TagGroupsMutation> getPendingMutations() {
+        return pendingTagGroupMutationStore.getList();
     }
 
-    /**
-     * Helper method to get the mutation store for the specified type.
-     *
-     * @param type The type.
-     * @return The mutation store for the type.
-     */
-    @NonNull
-    private PendingTagGroupMutationStore getMutationStore(@TagGroupType int type) {
-        switch (type) {
-            case CHANNEL:
-                return channelStore;
-            case NAMED_USER:
-                return namedUserStore;
-        }
-        throw new IllegalArgumentException("Invalid type");
+    void addTagGroupListener(@NonNull TagGroupListener listener) {
+        this.tagGroupListeners.add(listener);
     }
-
 }

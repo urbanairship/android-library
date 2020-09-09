@@ -23,6 +23,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.content.ContextCompat;
 
 /**
  * An abstract class to manage a SQLiteDatabase.
@@ -36,6 +37,7 @@ public abstract class DataManager {
 
     private static final int MAX_ATTEMPTS = 3;
     private final SQLiteOpenHelper openHelper;
+    private final String path;
 
     /**
      * Default Constructor for DataManager
@@ -46,9 +48,9 @@ public abstract class DataManager {
      * @param version The version of the database
      */
     public DataManager(@NonNull Context context, @NonNull String appKey, @NonNull String name, int version) {
-        name = migrateDatabase(context, appKey, name);
+        this.path = migrateDatabase(context, appKey, name);
 
-        openHelper = new SQLiteOpenHelper(context, name, null, version) {
+        openHelper = new SQLiteOpenHelper(context, path, null, version) {
 
             @Override
             public void onCreate(@NonNull SQLiteDatabase db) {
@@ -356,45 +358,47 @@ public abstract class DataManager {
         }
     }
 
+
+    public boolean databaseExists(@NonNull Context context) {
+        return context.getDatabasePath(path).exists();
+    }
+
+    public boolean deleteDatabase(@NonNull Context context) {
+        try {
+            return context.getDatabasePath(path).delete();
+        } catch (Exception e) {
+            Logger.error(e, "Failed to delete database: " + path);
+            return false;
+        }
+    }
+
     /**
-     * Tries to move the database to a prefixed name. On API 21+, it will also move the database
-     * to the no backup directory.
+     * Tries to move the database to a prefixed name in the no backup directory.
      *
      * @param context The application context.
      * @param appKey The appKey.
      * @param name The database name.
-     * @return The name of the database.
+     * @return The full path of the database.
      */
-    private String migrateDatabase(@NonNull Context context, String appKey, String name) {
+    protected static String migrateDatabase(@NonNull Context context, String appKey, String name) {
         String targetName = appKey + "_" + name;
-        File target;
-        File[] sources;
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
-            if (!urbanAirshipNoBackupDirectory.exists() && !urbanAirshipNoBackupDirectory.mkdirs()) {
-                Logger.error("Failed to create UA no backup directory.");
-            }
-
-            target = new File(urbanAirshipNoBackupDirectory, targetName);
-            sources = new File[] {
-                    // Standard directory with the appKey prefix
-                    context.getDatabasePath(targetName),
-
-                    // No backup directory with database name without appKey prefix
-                    new File(urbanAirshipNoBackupDirectory, name),
-
-                    // Standard directory without the appKey prefix
-                    context.getDatabasePath(name)
-            };
-
-        } else {
-            target = context.getDatabasePath(targetName);
-
-            sources = new File[] {
-                    context.getDatabasePath(name)
-            };
+        File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DATABASE_DIRECTORY_NAME);
+        if (!urbanAirshipNoBackupDirectory.exists() && !urbanAirshipNoBackupDirectory.mkdirs()) {
+            Logger.error("Failed to create UA no backup directory.");
         }
+
+        File target = new File(urbanAirshipNoBackupDirectory, targetName);
+        File[] sources = new File[] {
+                // Standard directory with the appKey prefix
+                context.getDatabasePath(targetName),
+
+                // No backup directory with database name without appKey prefix
+                new File(urbanAirshipNoBackupDirectory, name),
+
+                // Standard directory without the appKey prefix
+                context.getDatabasePath(name)
+        };
 
         if (target.exists()) {
             return target.getAbsolutePath();
@@ -419,7 +423,7 @@ public abstract class DataManager {
             }
         }
 
-        return target.getAbsolutePath();
+            return target.getAbsolutePath();
     }
 
 }

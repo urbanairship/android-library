@@ -5,9 +5,7 @@ import com.urbanairship.util.SerialExecutor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -24,20 +22,7 @@ public class AirshipExecutors {
      * The shared thread pool executor.
      */
     @NonNull
-    public static final ExecutorService THREAD_POOL_EXECUTOR;
-
-    static {
-        int processors = Runtime.getRuntime().availableProcessors();
-        int minThreads = 2;
-        int maxThreads = processors * 2;
-        int keepAliveTime = 30;
-
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads, maxThreads, keepAliveTime,
-                TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), AirshipThreadFactory.DEFAULT_THREAD_FACTORY);
-        executor.allowCoreThreadTimeOut(true);
-
-        THREAD_POOL_EXECUTOR = executor;
-    }
+    public static final ExecutorService THREAD_POOL_EXECUTOR = Executors.newCachedThreadPool(AirshipThreadFactory.DEFAULT_THREAD_FACTORY);
 
     /**
      * Creates a new serial executor that shares threads with the {@link #THREAD_POOL_EXECUTOR}.

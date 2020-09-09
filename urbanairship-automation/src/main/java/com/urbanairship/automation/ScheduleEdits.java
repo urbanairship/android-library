@@ -2,25 +2,58 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
+import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
 
+import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
- * Available automation schedule edits.
+ * Schedule edits.
  */
-public interface ScheduleEdits {
+public class ScheduleEdits<T extends ScheduleData> {
+
+    private final Integer limit;
+    private final Long start;
+    private final Long end;
+    private final T data;
+    private final Integer priority;
+    private final Long editGracePeriod;
+    private final Long interval;
+    private final JsonMap metadata;
+    private final Audience audience;
+    @Schedule.Type
+    private final String type;
+
+    private ScheduleEdits(@NonNull Builder<T> builder) {
+        this.limit = builder.limit;
+        this.start = builder.start;
+        this.end = builder.end;
+        this.data = builder.data;
+        this.type = builder.type;
+        this.priority = builder.priority;
+        this.interval = builder.interval;
+        this.editGracePeriod = builder.editGracePeriod;
+        this.metadata = builder.metadata;
+        this.audience = builder.audience;
+    }
 
     /**
      * Gets the schedule data.
      *
      * @return Schedule data.
+     * @hide
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Nullable
-    JsonSerializable getData();
+    public T getData() {
+        return data;
+    }
 
     /**
      * Gets the schedule fulfillment limit.
@@ -28,7 +61,9 @@ public interface ScheduleEdits {
      * @return The fulfillment limit.
      */
     @Nullable
-    Integer getLimit();
+    public Integer getLimit() {
+        return limit;
+    }
 
     /**
      * Gets the schedule priority level.
@@ -36,7 +71,9 @@ public interface ScheduleEdits {
      * @return The priority level.
      */
     @Nullable
-    Integer getPriority();
+    public Integer getPriority() {
+        return priority;
+    }
 
     /**
      * Gets the schedule start time in ms.
@@ -44,7 +81,9 @@ public interface ScheduleEdits {
      * @return The schedule start time in ms.
      */
     @Nullable
-    Long getStart();
+    public Long getStart() {
+        return start;
+    }
 
     /**
      * Gets the schedule end time in ms.
@@ -52,7 +91,9 @@ public interface ScheduleEdits {
      * @return The schedule end time in ms.
      */
     @Nullable
-    Long getEnd();
+    public Long getEnd() {
+        return end;
+    }
 
     /**
      * Gets the schedule interval in ms.
@@ -60,7 +101,9 @@ public interface ScheduleEdits {
      * @return The schedule interval in ms.
      */
     @Nullable
-    Long getInterval();
+    public Long getInterval() {
+        return interval;
+    }
 
     /**
      * Gets the schedule edit grace period in ms.
@@ -68,7 +111,9 @@ public interface ScheduleEdits {
      * @return The schedule edit grace period in ms.
      */
     @Nullable
-    Long getEditGracePeriod();
+    public Long getEditGracePeriod() {
+        return editGracePeriod;
+    }
 
     /**
      * Gets the schedule's metadata.
@@ -76,6 +121,232 @@ public interface ScheduleEdits {
      * @return The schedule's metadata.
      */
     @Nullable
-    JsonMap getMetadata();
+    public JsonMap getMetadata() {
+        return metadata;
+    }
+
+    /**
+     * Gets the schedule's type.
+     *
+     * @return The schedule's type.
+     * @hide
+     */
+    @Schedule.Type
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Nullable
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Gets the schedule's audience edits.
+     *
+     * @return The schedule's audience edits.
+     */
+    @Nullable
+    public Audience getAudience() {
+        return audience;
+    }
+
+    /**
+     * Create a new builder that extends an edits instance.
+     *
+     * @return A new builder instance.
+     */
+    @NonNull
+    public static Builder<?> newBuilder() {
+        return new Builder<>();
+    }
+
+    /**
+     * Create a new builder that edits the schedule type as actions.
+     *
+     * @param actions The actions.
+     * @return A new builder instance.
+     */
+    @NonNull
+    public static Builder<Actions> newBuilder(@NonNull Actions actions) {
+        return new Builder<>(Schedule.TYPE_ACTION, actions);
+    }
+
+    /**
+     * Create a new builder that edits the schedule type as an in-app message.
+     *
+     * @param message The in-app message.
+     * @return A new builder instance.
+     */
+    @NonNull
+    public static Builder<InAppMessage> newBuilder(@NonNull InAppMessage message) {
+        return new Builder<>(Schedule.TYPE_IN_APP_MESSAGE, message);
+    }
+
+    /**
+     * Create a new builder that edits the schedule type as deferred.
+     *
+     * @param deferred The deferred data.
+     * @return A new builder instance.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static Builder<Deferred> newBuilder(@NonNull Deferred deferred) {
+        return new Builder<>(Schedule.TYPE_DEFERRED, deferred);
+    }
+
+    /**
+     * Create a new builder that extends an edits instance.
+     *
+     * @param edits Edits to extend.
+     * @return A new builder instance.
+     */
+    @NonNull
+    public static <T extends ScheduleData> Builder<T> newBuilder(@NonNull ScheduleEdits<T> edits) {
+        return new Builder<>(edits);
+    }
+
+
+    /**
+     * {@link ScheduleEdits} builder.
+     */
+    public static class Builder<T extends ScheduleData> {
+
+        private Integer limit;
+        private Long start;
+        private Long end;
+        private Integer priority;
+        private Long editGracePeriod;
+        private Long interval;
+        private JsonMap metadata;
+        private T data;
+
+        @Schedule.Type
+        private String type;
+        private Audience audience;
+
+        private Builder() {
+        }
+
+        private Builder(@NonNull @Schedule.Type String type, @NonNull T scheduleData) {
+            this.type = type;
+            this.data = scheduleData;
+        }
+
+        private Builder(@NonNull ScheduleEdits<T> edits) {
+            this.limit = edits.limit;
+            this.start = edits.start;
+            this.end = edits.end;
+            this.data = edits.data;
+            this.priority = edits.priority;
+            this.type = edits.type;
+        }
+
+        /**
+         * Sets the display limit.
+         *
+         * @param limit The display limit.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder<T> setLimit(int limit) {
+            this.limit = limit;
+            return this;
+        }
+
+        /**
+         * Sets the start time in ms.
+         *
+         * @param start The start time in ms.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setStart(long start) {
+            this.start = start;
+            return this;
+        }
+
+        /**
+         * Sets the end time in ms.
+         *
+         * @param end The end time in ms.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setEnd(long end) {
+            this.end = end;
+            return this;
+        }
+
+        /**
+         * Sets the priority level, in ascending order.
+         *
+         * @param priority The priority level.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setPriority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        /**
+         * Sets the edit grace period after a schedule expires or finishes.
+         *
+         * @param duration The grace period.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.editGracePeriod = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the display interval.
+         *
+         * @param duration The interval.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the metadata.
+         *
+         * @param metadata The metadata.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public Builder<T> setMetadata(@Nullable JsonMap metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
+        /**
+         * Sets the audience.
+         *
+         * @param audience The audience.
+         * @return The builder instance.
+         */
+        public Builder<T> setAudience(@Nullable Audience audience) {
+            this.audience = audience;
+            return this;
+        }
+
+        /**
+         * Builds the in-app message schedule edits.
+         *
+         * @return The schedule edits.
+         */
+        @NonNull
+        public ScheduleEdits<T> build() {
+            return new ScheduleEdits<>(this);
+        }
+
+    }
 
 }

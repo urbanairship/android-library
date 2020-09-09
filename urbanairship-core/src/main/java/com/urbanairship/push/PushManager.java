@@ -5,6 +5,14 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
@@ -16,8 +24,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
-import com.urbanairship.channel.TagEditor;
-import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -37,14 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationManagerCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -640,19 +638,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Determines whether tags are enabled on the device.
-     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
-     * The default value is <code>true</code>.
-     *
-     * @return <code>true</code> if tags are enabled on the device, <code>false</code> otherwise.
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getChannelTagRegistrationEnabled()} instead.
-     */
-    @Deprecated
-    public boolean getChannelTagRegistrationEnabled() {
-        return airshipChannel.getChannelTagRegistrationEnabled();
-    }
-
-    /**
      * Determines whether the push token is sent during channel registration.
      * If {@code false}, the app will not be able to receive push notifications.
      * Defaults to {@link UAirship#isDataCollectionEnabled()}.
@@ -774,30 +759,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Edit the channel tag groups.
-     *
-     * @return A {@link TagGroupsEditor}.
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#editTagGroups()} instead.
-     */
-    @Deprecated
-    @NonNull
-    public TagGroupsEditor editTagGroups() {
-        return airshipChannel.editTagGroups();
-    }
-
-    /**
-     * Edits channel Tags.
-     *
-     * @return A {@link TagEditor}
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#editTags()} instead.
-     */
-    @Deprecated
-    @NonNull
-    public TagEditor editTags() {
-        return airshipChannel.editTags();
-    }
-
-    /**
      * Register a notification action group under the given name.
      * <p>
      * The provided notification builders will automatically add the actions to the
@@ -870,30 +831,6 @@ public class PushManager extends AirshipComponent {
             return null;
         }
         return actionGroupMap.get(id);
-    }
-
-    /**
-     * Get the Channel ID
-     *
-     * @return A Channel ID string
-     * @deprecated Will be removed in SDK 13. Use {@link AirshipChannel#getId()} instead.
-     */
-    @Deprecated
-    @Nullable
-    public String getChannelId() {
-        return airshipChannel.getId();
-    }
-
-    /**
-     * Gets the push token.
-     *
-     * @return The push token.
-     * @deprecated Use {@link #getPushToken()} instead.
-     */
-    @Nullable
-    @Deprecated
-    public String getRegistrationToken() {
-        return getPushToken();
     }
 
     /**

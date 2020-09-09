@@ -5,9 +5,8 @@ package com.urbanairship;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
+
+import androidx.annotation.NonNull;
 
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -15,28 +14,13 @@ import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationManagerCompat;
+import java.util.Calendar;
 
 /**
- * ChannelCapture checks the device clipboard for a String that is prefixed by
- * an expected token on app foreground and posts a notification
- * that allows the user to copy the Channel or optionally open a url with the channel as
- * an argument.
+ * ChannelCapture detects a knock when the application is foregrounded 6 times in 30 seconds.
+ * When a knock is detected, it writes the channel ID to the clipboard as ua:<channel_id>.
  */
 public class ChannelCapture extends AirshipComponent {
-
-    static final String CHANNEL_CAPTURE_ENABLED_KEY = "com.urbanairship.CHANNEL_CAPTURE_ENABLED";
-
-    static final String CHANNEL = "channel";
-    static final String URL = "url";
-
-    private final static String CHANNEL_PLACEHOLDER = "CHANNEL";
-    private final static String GO_URL = "https://go.urbanairship.com/";
 
     private final Context context;
     private final AirshipConfigOptions configOptions;
@@ -44,9 +28,13 @@ public class ChannelCapture extends AirshipComponent {
     private ClipboardManager clipboardManager;
     private final ApplicationListener listener;
     private final ActivityMonitor activityMonitor;
-    private final PreferenceDataStore preferenceDataStore;
 
-    Executor executor = AirshipExecutors.THREAD_POOL_EXECUTOR;
+    private static final long KNOCKS_MAX_TIME_IN_MS = 30000;
+    private static final int KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE = 6;
+    private int indexOfKnocks;
+    private long[] knockTimes;
+
+    private boolean enabled;
 
     /**
      * Default constructor.
@@ -63,65 +51,69 @@ public class ChannelCapture extends AirshipComponent {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.airshipChannel = airshipChannel;
+        this.activityMonitor = activityMonitor;
 
+        this.knockTimes = new long[KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE];
         this.listener = new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
-                checkClipboard();
+                countForeground(time);
             }
         };
-
-        this.preferenceDataStore = preferenceDataStore;
-        this.activityMonitor = activityMonitor;
     }
 
     @Override
     protected void init() {
         super.init();
 
-        // ClipboardManager must be initialized on a thread with a prepared looper
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (activityMonitor.isAppForegrounded()) {
-                    checkClipboard();
-                }
+        enabled = configOptions.channelCaptureEnabled;
 
-                activityMonitor.addApplicationListener(listener);
+        activityMonitor.addApplicationListener(listener);
+    }
+
+    /**
+     * Count the number of foregrounds to perform the knock.
+     * @param time the timestamp to when the app has been foregrounded.
+     */
+    private void countForeground(long time) {
+        if (!isEnabled()) {
+            return;
+        }
+
+        if (indexOfKnocks >= KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE) {
+            indexOfKnocks = 0;
+        }
+        knockTimes[indexOfKnocks] = time;
+        indexOfKnocks++;
+        if (checkKnock()) {
+            writeClipboard();
+        }
+    }
+
+    /**
+     * Check if a knock should be launched.
+     * @return {@code true} if there is a knock, otherwise return {@code false}.
+     */
+    private boolean checkKnock() {
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+
+        for (long knockTime : knockTimes) {
+            if (knockTime + KNOCKS_MAX_TIME_IN_MS < currentTime) {
+                return false;
             }
-        });
+        }
+        return true;
     }
 
     /**
-     * Enable channel capture for the specified period of time.
-     *
-     * @param duration The duration of time.
-     * @param unit The time unit.
+     * Check if the clipboard is available and perform the channel capture.
      */
-    public void enable(long duration, @NonNull TimeUnit unit) {
-        long milliDuration = unit.toMillis(duration);
-        preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, System.currentTimeMillis() + milliDuration);
-    }
-
-    /**
-     * Disable channel capture.
-     */
-    public void disable() {
-        preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
-    }
-
-    @Override
-    protected void tearDown() {
-        activityMonitor.removeApplicationListener(listener);
-    }
-
-    private void checkClipboard() {
+    private void writeClipboard() {
         if (clipboardManager == null) {
             // Since ClipboardManager initialization can fail deep in the android platform
             // stack, catch any unanticipated errors here.
             try {
-                Context ctx = ChannelCapture.this.context;
-                clipboardManager = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+                clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             } catch (Exception e) {
                 Logger.error(e, "Unable to initialize clipboard manager: ");
             }
@@ -132,122 +124,38 @@ public class ChannelCapture extends AirshipComponent {
             return;
         }
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                attemptChannelCapture();
-            }
-        });
-    }
+        // reset the knock counters so it takes 6 new knocks to capture channel
+        knockTimes = new long[KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE];
+        indexOfKnocks = 0;
 
-    /**
-     * Checks the clipboard for the token and starts the activity if the token is
-     * available.
-     */
-    private void attemptChannelCapture() {
         String channel = airshipChannel.getId();
+        String channelIdForClipboard = UAStringUtil.isEmpty(channel) ? "ua:" : "ua:" + channel;
 
-        if (UAStringUtil.isEmpty(channel)) {
-            return;
-        }
-
-        // Only perform checks if notifications are enabled for the app.
-        if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-            if (!this.configOptions.channelCaptureEnabled) {
-                return;
-            }
-
-            if (UAirship.shared().getPushManager().isPushEnabled()
-                    && this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
-                this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
-                return;
-            }
-
-            // Clipboard is null on a few VodaPhone devices
-            if (clipboardManager == null) {
-                return;
-            }
-        }
-
-        String clipboardText = null;
-        try {
-            if (!clipboardManager.hasPrimaryClip()) {
-                return;
-            }
-
-            ClipData primaryClip = clipboardManager.getPrimaryClip();
-
-            if (primaryClip != null && primaryClip.getItemCount() > 0) {
-
-                for (int i = 0; i < primaryClip.getItemCount(); i++) {
-                    ClipData.Item item = primaryClip.getItemAt(i);
-                    CharSequence text = item.getText();
-                    if (text != null) {
-                        clipboardText = text.toString();
-                    }
-                }
-            }
-        } catch (SecurityException e) {
-            Logger.debug(e, "Unable to read clipboard.");
-            return;
-        }
-
-        String decodedClipboardString = UAStringUtil.base64DecodedString(clipboardText);
-        String superSecretCode = generateToken();
-        if (UAStringUtil.isEmpty(decodedClipboardString) || !decodedClipboardString.startsWith(superSecretCode)) {
-            return;
-        }
-
-        // Perform the magic
-        String url = null;
-        if (decodedClipboardString.length() > superSecretCode.length()) {
-            url = decodedClipboardString.replace(superSecretCode, GO_URL)
-                                        .replace(CHANNEL_PLACEHOLDER, channel)
-                                        .trim();
-        }
-
-        try {
-            // Clear the clipboard
-            clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
-        } catch (SecurityException e) {
-            Logger.debug(e, "Unable to clear clipboard.");
-        }
-
-        startChannelCaptureActivity(channel, url);
+        ClipData clipData = ClipData.newPlainText("UA Channel ID", channelIdForClipboard);
+        clipboardManager.setPrimaryClip(clipData);
+        Logger.debug("ChannelCapture - Channel ID copied to clipboard");
     }
 
     /**
-     * Create the intent that launches the {@link ChannelCaptureActivity}
-     *
-     * @param channel The channel string.
-     * @param url The channel url.
+     * Sets channel capture enabled
+     * @param enabled {@code true} to enable channel capture, {@code false} to disable.
      */
-    private void startChannelCaptureActivity(@Nullable String channel, @Nullable String url) {
-        Intent intent = new Intent(context, ChannelCaptureActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .putExtra(CHANNEL, channel)
-                .putExtra(URL, url);
-        context.startActivity(intent);
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     /**
-     * Generates the expected clipboard token.
-     *
-     * @return The generated clipboard token.
+     * Returns {@code true} if channel capture is enabled, {@link com.urbanairship.AirshipConfigOptions#channelCaptureEnabled}
+     * is set to {@code true}, otherwise {@code false}.
+     * @return {@code true} if channel capture is enabled, otherwise {@code false}.
      */
-    @NonNull
-    private String generateToken() {
-        byte[] appKeyBytes = configOptions.appKey.getBytes();
-        byte[] appSecretBytes = configOptions.appSecret.getBytes();
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 
-        StringBuilder code = new StringBuilder();
-
-        for (int i = 0; i < appKeyBytes.length; i++) {
-            byte b = (byte) (appKeyBytes[i] ^ appSecretBytes[i % appSecretBytes.length]);
-            code.append(String.format("%02x", b));
-        }
-
-        return code.toString();
+    @Override
+    protected void tearDown() {
+        activityMonitor.removeApplicationListener(listener);
     }
 
 }

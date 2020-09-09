@@ -6,25 +6,23 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.Intent;
-import android.util.Base64;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.urbanairship.channel.AirshipChannel;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
+import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 @SuppressLint("NewApi")
 public class ChannelCaptureTest extends BaseTestCase {
@@ -38,7 +36,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        clipboardManager = (ClipboardManager) RuntimeEnvironment.application.getSystemService(Context.CLIPBOARD_SERVICE);
+        clipboardManager = (ClipboardManager) ApplicationProvider.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
 
         configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -49,108 +47,16 @@ public class ChannelCaptureTest extends BaseTestCase {
         activityMonitor = new TestActivityMonitor();
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockChannel, dataStore, activityMonitor);
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
 
-        // Replace the executor so it runs everything right away
-        capture.executor = new Executor() {
-            @Override
-            public void execute(Runnable runnable) {
-                runnable.run();
-            }
-        };
-        capture.enable(600, TimeUnit.SECONDS);
         capture.init();
+
+        clearClipboard();
     }
 
     @After
     public void takeDown() {
-        capture.disable();
-    }
-
-    /**
-     * Test app foreground when the clipboard contains the clipboard capture token
-     * but the channel does not exist.
-     */
-    @Test
-    public void testForegroundClipboardWithTokenNoChannel() {
-        when(mockChannel.getId()).thenReturn(null);
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
-
-        activityMonitor.startActivity();
-
-        assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);
-    }
-
-    /**
-     * Test app foreground when the clipboard is empty.
-     */
-    @Test
-    public void testForegroundEmptyClipboard() {
-        when(mockChannel.getId()).thenReturn("channel ID");
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
-
-        activityMonitor.startActivity();
-
-        // Verify we did not post a notification
-        assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);
-    }
-
-    /**
-     * Test app foreground when the clipboard has a String that differs from
-     * the expected channel capture token.
-     */
-    @Test
-    public void testForegroundClipboardWithoutToken() {
-        when(mockChannel.getId()).thenReturn("channel ID");
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("WHAT!", "OK!"));
-
-        activityMonitor.startActivity();
-
-        // Verify we did not post a notification
-        assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);
-    }
-
-    /**
-     * Test app foreground when the clipboard contains the expected token and
-     * a channel is created.
-     */
-    @Test
-    public void testForegroundClipboardWithToken() {
-        when(mockChannel.getId()).thenReturn("channel ID");
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken("/oh_hi")));
-
-        activityMonitor.foreground();
-
-        Intent intent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
-
-        // Verify the intent
-        assertNotNull(intent);
-        assertEquals(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK);
-        assertEquals(intent.getComponent().getClassName(), "com.urbanairship.ChannelCaptureActivity");
-        assertEquals("channel ID", intent.getExtras().getString(ChannelCapture.CHANNEL));
-        assertEquals("https://go.urbanairship.com//oh_hi", intent.getExtras().getString(ChannelCapture.URL));
-    }
-
-    /**
-     * Test app foreground when the clipboard contains the expected token without a URL.
-     */
-    @Test
-    public void testForegroundClipboardWithTokenNoUrl() {
-        when(mockChannel.getId()).thenReturn("channel ID");
-
-        // Set the token without a Url
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
-
-        activityMonitor.foreground();
-
-        Intent intent = shadowOf(RuntimeEnvironment.application).getNextStartedActivity();
-
-        // Verify the intent
-        assertNotNull(intent);
-        assertEquals(intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK);
-        assertEquals(intent.getComponent().getClassName(), "com.urbanairship.ChannelCaptureActivity");
-        assertEquals("channel ID", intent.getExtras().getString(ChannelCapture.CHANNEL));
-        assertEquals(null, intent.getExtras().getString(ChannelCapture.URL));
+        capture.setEnabled(false);
     }
 
     /**
@@ -167,62 +73,178 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Reinitialize it
         capture.tearDown();
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockChannel, dataStore, activityMonitor);
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
 
-        // Replace the executor so it runs everything right away
-        capture.executor = new Executor() {
-            @Override
-            public void execute(Runnable runnable) {
-                runnable.run();
-            }
-        };
         capture.init();
 
-        // Set up a valid token
         when(mockChannel.getId()).thenReturn("channel ID");
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-        activityMonitor.foreground();
+        knock(6);
 
-        // Verify we did not post a notification
-        assertEquals(shadowOf(RuntimeEnvironment.application).getNextStartedActivity(), null);
-    }
-
-    @Test
-    public void testEnable() {
-        capture.enable(100, TimeUnit.SECONDS);
-        assertNotEquals(dataStore.getLong(ChannelCapture.CHANNEL_CAPTURE_ENABLED_KEY, 0), 0);
-    }
-
-    @Test
-    public void testDisable() {
-        capture.enable(100, TimeUnit.SECONDS);
-        capture.disable();
-        assertEquals(dataStore.getLong(ChannelCapture.CHANNEL_CAPTURE_ENABLED_KEY, -1), 0);
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        if (clipData != null) {
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+        } else {
+            assert true;
+        }
     }
 
     /**
-     * Helper method to generate the channel capture clipboard token.
-     *
-     * @param urlPath Optional url path.
-     * @return The clipboard token.
+     * Test enabling the channel capture through AirshipConfigOptions.
      */
-    private String generateToken(String urlPath) {
-        byte[] appKeyBytes = configOptions.appKey.getBytes();
-        byte[] appSecretBytes = configOptions.appSecret.getBytes();
+    @Test
+    public void testChannelCaptureEnabled() {
+        // Enable the channel capture
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
+                .build();
 
-        StringBuilder token = new StringBuilder();
+        // Reinitialize it
+        capture.tearDown();
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
 
-        for (int i = 0; i < appKeyBytes.length; i++) {
-            byte b = (byte) (appKeyBytes[i] ^ appSecretBytes[i % appSecretBytes.length]);
-            token.append(String.format("%02x", b));
-        }
+        capture.init();
 
-        if (urlPath != null) {
-            token.append(urlPath);
-        }
+        when(mockChannel.getId()).thenReturn("channel ID");
 
-        return Base64.encodeToString(token.toString().getBytes(), Base64.DEFAULT);
+        knock(6);
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
     }
 
+    /**
+     * Test the channel capture with Channel ID null.
+     */
+    @Test
+    public void testChannelCaptureEnabledChannelNull() {
+        // Enable the channel capture
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
+                .build();
+
+        // Reinitialize it
+        capture.tearDown();
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
+
+        capture.init();
+
+        when(mockChannel.getId()).thenReturn(null);
+
+        knock(6);
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+    }
+
+    /**
+     * Test the channel capture on a single knock.
+     */
+    @Test
+    public void testChannelCaptureSingleForeground() {
+        // Enable the channel capture
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
+                .build();
+
+        // Reinitialize it
+        capture.tearDown();
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
+
+        capture.init();
+
+        when(mockChannel.getId()).thenReturn("Channel ID");
+
+        knock(1);
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        if (clipData != null) {
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+        } else {
+            assert true;
+        }
+    }
+
+    /**
+     * Test channel capture requires 6 knocks each time.
+     */
+    @Test
+    public void testChannelCaptureRequires6Knocks() {
+        // Enable the channel capture
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
+                .build();
+
+        // Reinitialize it
+        capture.tearDown();
+        capture = new ChannelCapture(ApplicationProvider.getApplicationContext(), configOptions, mockChannel, dataStore, activityMonitor);
+
+        capture.init();
+
+        when(mockChannel.getId()).thenReturn("channel ID");
+
+        knock(6);
+
+        ClipData clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+
+        clearClipboard();
+        clipData = clipboardManager.getPrimaryClip();
+
+        knock(1);
+
+        clipData = clipboardManager.getPrimaryClip();
+        if (clipData != null) {
+            assertEquals("", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+        } else {
+            assert true;
+        }
+
+        knock(5);
+
+        clipData = clipboardManager.getPrimaryClip();
+        assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
+
+    }
+
+    /**
+     * Test enabling the channel capture at runtime
+     */
+    @Test
+    public void testEnable() {
+        capture.setEnabled(true);
+        assertTrue(capture.isEnabled());
+    }
+
+    /**
+     * Test disabling the channel capture at runtime
+     */
+    @Test
+    public void testDisable() {
+        capture.setEnabled(true);
+        capture.setEnabled(false);
+        assertFalse(capture.isEnabled());
+    }
+
+    /**
+     * Send one or more knocks
+     */
+    public void knock(int repeat) {
+        for (int i = 0; i < repeat; i++) {
+            activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
+        }
+    }
+
+    public void clearClipboard() {
+        ClipData clipData = ClipData.newPlainText("", "");
+        clipboardManager.setPrimaryClip(clipData);
+    }
 }

@@ -6,6 +6,9 @@ dependencies {
     api project(':urbanairship-core')
     implementation "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
 
+    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
+    annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+
     // Tests
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"

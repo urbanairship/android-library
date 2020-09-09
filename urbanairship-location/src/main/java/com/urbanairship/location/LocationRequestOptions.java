@@ -5,6 +5,10 @@ package com.urbanairship.location;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -16,10 +20,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * High level location requirements to be used for UALocationManager and service.
@@ -280,20 +280,6 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     }
 
     /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed LocationRequestOptions.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static LocationRequestOptions parseJson(@Nullable String json) throws JsonException {
-        return fromJson(JsonValue.parseString(json));
-    }
-
-    /**
      * Creates a LocationRequestOptions from a JSON string.
      *
      * @param value The JSON value.
@@ -409,18 +395,6 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
             verifyPriority(priority);
             this.priority = priority;
             return this;
-        }
-
-        /**
-         * Creates the location request.
-         *
-         * @return The new location request option.
-         * @deprecated To be removed in SDK 12. Use {@link #build()} instaed.
-         */
-        @NonNull
-        @Deprecated
-        public LocationRequestOptions create() {
-            return build();
         }
 
         /**

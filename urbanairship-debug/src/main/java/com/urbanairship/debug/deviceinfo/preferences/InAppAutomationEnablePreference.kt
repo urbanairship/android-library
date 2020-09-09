@@ -7,7 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import com.urbanairship.UAirship
-import com.urbanairship.iam.InAppMessageManager
+import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.preference.UACheckBoxPreference
 
 /**
@@ -24,10 +24,10 @@ class InAppAutomationEnablePreference : UACheckBoxPreference {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
     override fun getInitialAirshipValue(airship: UAirship): Boolean {
-        return InAppMessageManager.shared().isEnabled
+        return InAppAutomation.shared().isEnabled
     }
 
     override fun onApplyAirshipPreference(airship: UAirship, enabled: Boolean) {
-        InAppMessageManager.shared().isEnabled = enabled
+        InAppAutomation.shared().isEnabled = enabled
     }
 }

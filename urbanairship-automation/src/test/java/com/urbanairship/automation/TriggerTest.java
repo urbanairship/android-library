@@ -47,18 +47,20 @@ public class TriggerTest {
         for (int i = 0; i < typeArray.size(); i++) {
             int key = typeArray.keyAt(i);
 
-            JsonMap triggerJson = JsonMap.newBuilder()
+            JsonValue triggerJson = JsonMap.newBuilder()
                                          .put("type", typeArray.get(key))
                                          .put("goal", 20.0)
                                          .put("predicate", predicate)
-                                         .build();
+                                         .build().toJsonValue();
 
-            Trigger trigger = Trigger.fromJson(triggerJson.toJsonValue());
+            Trigger trigger = Trigger.fromJson(triggerJson);
 
             // Triggers
             assertEquals(key, trigger.getType());
             assertEquals(20.0, trigger.getGoal());
             assertEquals(predicate, trigger.getPredicate());
+
+            assertEquals(trigger.toJsonValue(), triggerJson);
         }
     }
 
@@ -67,7 +69,7 @@ public class TriggerTest {
      */
     @Test(expected = JsonException.class)
     public void testParseEmptyJson() throws JsonException {
-        ActionScheduleInfo.fromJson(JsonValue.NULL);
+        Trigger.fromJson(JsonValue.NULL);
     }
 
     /**

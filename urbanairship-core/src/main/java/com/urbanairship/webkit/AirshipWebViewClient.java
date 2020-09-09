@@ -24,7 +24,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.javascript.JavaScriptExecutor;
 import com.urbanairship.javascript.NativeBridge;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 
 import java.io.BufferedInputStream;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * A web view client that enables the Airship Native Bridge on whitelisted URLs.
+ * A web view client that enables the Airship Native Bridge on allowed URLs.
  */
 public class AirshipWebViewClient extends WebViewClient {
 
@@ -222,7 +222,7 @@ public class AirshipWebViewClient extends WebViewClient {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     private boolean interceptUrl(@NonNull final WebView webView, @Nullable String url) {
-        if (!isWhiteListed(webView.getUrl())) {
+        if (!isAllowed(webView.getUrl())) {
             return false;
         }
 
@@ -268,8 +268,8 @@ public class AirshipWebViewClient extends WebViewClient {
             return;
         }
 
-        if (!isWhiteListed(url)) {
-            Logger.debug("AirshipWebViewClient - %s is not a white listed URL. Airship Javascript interface will not be accessible.", url);
+        if (!isAllowed(url)) {
+            Logger.debug("AirshipWebViewClient - %s is not an allowed URL. Airship Javascript interface will not be accessible.", url);
             return;
         }
 
@@ -293,13 +293,13 @@ public class AirshipWebViewClient extends WebViewClient {
     }
 
     /**
-     * Checks if the URL is white listed.
+     * Checks if the URL is allowed.
      *
      * @param url The URL being loaded.
-     * @return <code>true</code> if the URL is white listed, otherwise <code>false</code>.
+     * @return <code>true</code> if the URL is allowed, otherwise <code>false</code>.
      */
-    protected boolean isWhiteListed(@Nullable String url) {
-        return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
+    protected boolean isAllowed(@Nullable String url) {
+        return UAirship.shared().getUrlAllowList().isAllowed(url, UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE);
     }
 
     @CallSuper

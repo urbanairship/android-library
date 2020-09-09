@@ -5,6 +5,7 @@ package com.urbanairship.channel;
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;
@@ -12,16 +13,18 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,175 +34,145 @@ import static org.mockito.Mockito.when;
  */
 public class TagGroupRegistrarTests extends BaseTestCase {
 
-    private PendingTagGroupMutationStore namedUserStore;
-    private PendingTagGroupMutationStore channelStore;
+    private PendingTagGroupMutationStore store;
     private TagGroupApiClient mockClient;
     private TagGroupRegistrar registrar;
 
     @Before
     public void setup() {
         mockClient = mock(TagGroupApiClient.class);
-        namedUserStore = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.named-user");
-        channelStore = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.channel");
+        store = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.named-user");
+        registrar = new TagGroupRegistrar(mockClient, store);
+    }
 
-        namedUserStore.clear();
-        channelStore.clear();
+    @Test
+    public void testSetId() {
+        registrar.setId(null, false);
 
-        registrar = new TagGroupRegistrar(mockClient, channelStore, namedUserStore);
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        registrar.addPendingMutations(Collections.singletonList(mutation));
+
+        registrar.setId("what", false);
+        assertEquals(store.peek(), mutation);
+
+        registrar.setId("what", true);
+        assertEquals(store.peek(), mutation);
+
+        registrar.setId("something-else", true);
+        assertNull(store.peek());
     }
 
     @Test
     public void testAdd() {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-
-        registrar.addMutations(TagGroupRegistrar.NAMED_USER, Collections.singletonList(mutation));
-
-        // Verify it was added to the right store
-        assertEquals(namedUserStore.peek(), mutation);
-        assertTrue(channelStore.getMutations().isEmpty());
-
-        namedUserStore.clear();
-
-        registrar.addMutations(TagGroupRegistrar.CHANNEL, Collections.singletonList(mutation));
-
-        // Verify it was added to the right store
-        assertEquals(channelStore.peek(), mutation);
-        assertTrue(namedUserStore.getMutations().isEmpty());
+        registrar.addPendingMutations(Collections.singletonList(mutation));
+        assertEquals(store.peek(), mutation);
     }
 
     @Test
     public void testClear() {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        registrar.addPendingMutations(Collections.singletonList(mutation));
+        assertFalse(store.getList().isEmpty());
+        assertEquals(store.getList(), registrar.getPendingMutations());
 
-        // Add a mutation to each store
-        registrar.addMutations(TagGroupRegistrar.NAMED_USER, Collections.singletonList(mutation));
-        registrar.addMutations(TagGroupRegistrar.CHANNEL, Collections.singletonList(mutation));
-
-        // Clear the named user
-        registrar.clearMutations(TagGroupRegistrar.NAMED_USER);
-
-        // Verify only the named user store was cleared
-        assertFalse(channelStore.getMutations().isEmpty());
-        assertTrue(namedUserStore.getMutations().isEmpty());
-
-        // Add back to named user
-        registrar.addMutations(TagGroupRegistrar.NAMED_USER, Collections.singletonList(mutation));
-
-        // Clear channel
-        registrar.clearMutations(TagGroupRegistrar.CHANNEL);
-
-        // Verify only the channel store was cleared
-        assertTrue(channelStore.getMutations().isEmpty());
-        assertFalse(namedUserStore.getMutations().isEmpty());
+        registrar.clearPendingMutations();
+        assertTrue(registrar.getPendingMutations().isEmpty());
+        assertTrue(store.getList().isEmpty());
+        ;
     }
 
     /**
      * Test 200 response clears tags.
      */
     @Test
-    public void testUpdate200Response() {
-        // Set up a 200 response
-        Response response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                    .setResponseBody("{ \"ok\": true}")
-                                    .build();
-
-        verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
-        verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
+    public void testUpload() throws RequestException {
+        verifyRequest(200, true);
     }
 
     /**
      * Test 500 response does not clear the tags.
      */
     @Test
-    public void testUpdate500Response() {
-        // Set up a 500 response
-        Response response = new Response.Builder<Void>(500)
-                                    .build();
-
-        verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
-        verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
+    public void testUpdate500Response() throws RequestException {
+        verifyRequest(500, false);
     }
 
     /**
      * Test 429 response does not clear the tags.
      */
     @Test
-    public void testUpdate429Response() {
-        // Set up a 429 response
-        Response response = new Response.Builder<Void>(429)
-                                    .build();
-
-        verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, false);
-        verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, false);
+    public void testUpdate429Response() throws RequestException {
+        verifyRequest(429, false);
     }
 
     /**
      * Test 400 response clears tags and returns true for being done.
      */
     @Test
-    public void testUpdate400Response() {
-        // Set up a 400 response
-        Response response = new Response.Builder<Void>(400)
-                                    .build();
-
-        verifyRequest(response, TagGroupRegistrar.NAMED_USER, namedUserStore, true);
-        verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
+    public void testUpdate400Response() throws RequestException {
+        verifyRequest(400, true);
     }
 
     @Test
-    public void testClearTagsDuringUpload() {
-        final Response response = new Response.Builder(200)
+    public void testClearTagsDuringUpload() throws RequestException {
+        final Response<Void> response = new Response.Builder<Void>(200)
                 .build();
 
         TestListener listener = new TestListener();
-        registrar.addListener(listener);
+        registrar.addTagGroupListener(listener);
 
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        registrar.addMutations(TagGroupRegistrar.NAMED_USER, Collections.singletonList(mutation));
+        registrar.addPendingMutations(Collections.singletonList(mutation));
 
-        when(mockClient.updateTagGroups(TagGroupRegistrar.NAMED_USER, "identifier", mutation)).thenAnswer(new Answer<Response>() {
+        when(mockClient.updateTags("identifier", mutation)).thenAnswer(new Answer<Response>() {
             @Override
             public Response answer(InvocationOnMock invocation) throws Throwable {
-                namedUserStore.clear();
+                registrar.clearPendingMutations();
                 return response;
             }
         });
 
-        registrar.uploadMutations(TagGroupRegistrar.NAMED_USER, "identifier");
+        registrar.setId("identifier", false);
+        registrar.uploadPendingMutations();
 
         assertEquals(1, listener.mutations.size());
-        assertEquals(mutation, listener.mutations.get(0));
-        registrar.removeListener(listener);
+        assertEquals(1, listener.mutations.get("identifier").size());
+        assertEquals(mutation, listener.mutations.get("identifier").get(0));
     }
 
-    private void verifyRequest(Response response, @TagGroupRegistrar.TagGroupType int type, PendingTagGroupMutationStore store, boolean expectedResult) {
+    private void verifyRequest(int status, boolean expectedResult) throws RequestException {
+        final Response<Void> response = new Response.Builder<Void>(status)
+                .build();
+
+        registrar.setId("identifier", true);
 
         TestListener listener = new TestListener();
-        registrar.addListener(listener);
+        registrar.addTagGroupListener(listener);
 
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        registrar.addMutations(type, Collections.singletonList(mutation));
-        assertFalse(store.getMutations().isEmpty());
+        registrar.addPendingMutations(Collections.singletonList(mutation));
 
-        when(mockClient.updateTagGroups(type, "identifier", mutation)).thenReturn(response);
+        when(mockClient.updateTags("identifier", mutation)).thenReturn(response);
 
-        assertEquals(expectedResult, registrar.uploadMutations(type, "identifier"));
-        assertEquals(expectedResult, store.getMutations().isEmpty());
+        assertEquals(expectedResult, registrar.uploadPendingMutations());
+        assertEquals(expectedResult, registrar.getPendingMutations().isEmpty());
 
-        if (expectedResult) {
+        if (status == 200) {
             assertEquals(1, listener.mutations.size());
-            assertEquals(mutation, listener.mutations.get(0));
+            assertEquals(1, listener.mutations.get("identifier").size());
+            assertEquals(mutation, listener.mutations.get("identifier").get(0));
         }
-        registrar.removeListener(listener);
     }
 
-    private static class TestListener implements TagGroupRegistrar.Listener {
+    private static class TestListener implements TagGroupListener {
 
-        List<TagGroupsMutation> mutations = new ArrayList<>();
+        Map<String, List<TagGroupsMutation>> mutations = new HashMap<>();
 
         @Override
-        public void onMutationUploaded(@NonNull TagGroupsMutation mutation) {
-            mutations.add(mutation);
+        public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
+            mutations.putIfAbsent(identifier, new ArrayList<TagGroupsMutation>());
+            mutations.get(identifier).add(tagGroupsMutation);
         }
 
     }

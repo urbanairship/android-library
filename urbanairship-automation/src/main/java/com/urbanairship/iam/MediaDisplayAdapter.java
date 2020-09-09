@@ -7,7 +7,7 @@ import android.content.Context;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.Network;
 
 import androidx.annotation.CallSuper;
@@ -42,10 +42,10 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
             return OK;
         }
 
-        boolean isWhiteListed = isWhiteListed(mediaInfo.getUrl());
+        boolean isAllowed = isAllowed(mediaInfo.getUrl());
 
-        if (!isWhiteListed && !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
-            Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
+        if (!isAllowed && !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
+            Logger.error("URL not allowed. Unable to load: %s", mediaInfo.getUrl());
             return CANCEL;
         }
 
@@ -91,13 +91,13 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
     }
 
     /**
-     * Checks if a URL is whitelisted.
+     * Checks if a URL is allowed.
      *
      * @param url The URL.
-     * @return {@code true} if whitelisted, otherwise {@code false}.
+     * @return {@code true} if allowed, otherwise {@code false}.
      */
-    private static boolean isWhiteListed(String url) {
-        return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_OPEN_URL);
+    private static boolean isAllowed(String url) {
+        return UAirship.shared().getUrlAllowList().isAllowed(url, UrlAllowList.SCOPE_OPEN_URL);
     }
 
 }

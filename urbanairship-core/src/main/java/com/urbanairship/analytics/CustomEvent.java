@@ -2,6 +2,11 @@
 
 package com.urbanairship.analytics;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
@@ -11,14 +16,8 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
 
 /**
  * A class that represents a custom event for the application.
@@ -648,24 +647,6 @@ public class CustomEvent extends Event implements JsonSerializable {
         @NonNull
         public Builder addProperty(@NonNull @Size(min = 1) String name, boolean value) {
             properties.put(name, JsonValue.wrap(value));
-            return this;
-        }
-
-        /**
-         * Adds a custom property to the event.
-         * <p>
-         * If the or if the total of properties exceed {@link #MAX_TOTAL_PROPERTIES_SIZE} in size it will cause the event to be invalid.
-         *
-         * @param name The property name.
-         * @param value The property value.
-         * @return The custom event builder.
-         * @deprecated Use {@link #addProperty(String, JsonSerializable)}
-         */
-        @NonNull
-        @Deprecated
-        public Builder addProperty(@NonNull String name,
-                                   @NonNull Collection<String> value) {
-            properties.put(name, JsonValue.wrapOpt(value));
             return this;
         }
 

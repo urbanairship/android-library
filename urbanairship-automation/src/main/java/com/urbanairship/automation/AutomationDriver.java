@@ -2,14 +2,13 @@
 
 package com.urbanairship.automation;
 
-import com.urbanairship.json.JsonMap;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
@@ -17,11 +16,10 @@ import androidx.annotation.WorkerThread;
  * Driver for AutomationEngine. Handles executing and converting generic ScheduleInfo into the proper
  * Schedule class.
  *
- * @param <T> The schedule type.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public interface AutomationDriver<T extends Schedule> {
+public interface AutomationDriver {
 
     @IntDef({ PREPARE_RESULT_CONTINUE, PREPARE_RESULT_CANCEL, PREPARE_RESULT_PENALIZE, PREPARE_RESULT_SKIP, PREPARE_RESULT_INVALIDATE })
     @Retention(RetentionPolicy.SOURCE)
@@ -102,10 +100,11 @@ public interface AutomationDriver<T extends Schedule> {
      * avoid blocking other schedules from executing.
      *
      * @param schedule The schedule.
+     * @param triggerContext The trigger context.
      * @param callback The callback to continue execution.
      */
     @WorkerThread
-    void onPrepareSchedule(@NonNull T schedule, @NonNull PrepareScheduleCallback callback);
+    void onPrepareSchedule(@NonNull Schedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback);
 
     /**
      * Checks if the schedule is ready to execute. Will be called before executing the schedule
@@ -116,7 +115,7 @@ public interface AutomationDriver<T extends Schedule> {
      */
     @MainThread
     @ReadyResult
-    int onCheckExecutionReadiness(@NonNull T schedule);
+    int onCheckExecutionReadiness(@NonNull Schedule schedule);
 
     /**
      * Executes a schedule. The callback should be called after the schedule's execution is complete.
@@ -125,19 +124,5 @@ public interface AutomationDriver<T extends Schedule> {
      * @param finishCallback The finish callback.
      */
     @MainThread
-    void onExecuteTriggeredSchedule(@NonNull T schedule, @NonNull ExecutionCallback finishCallback);
-
-    /**
-     * Creates a typed schedule from a generic schedule info and ID.
-     *
-     * @param scheduleId The schedule ID.
-     * @param metadata The schedule's metadata.
-     * @param info The generic schedule info.
-     * @return A typed schedule.
-     * @throws ParseScheduleException If the scheduleInfo failed to be parsed. The automation engine will delete
-     * the schedule.
-     */
-    @NonNull
-    T createSchedule(@NonNull String scheduleId, @NonNull JsonMap metadata, @NonNull ScheduleInfo info) throws ParseScheduleException;
-
+    void onExecuteTriggeredSchedule(@NonNull Schedule schedule, @NonNull ExecutionCallback finishCallback);
 }

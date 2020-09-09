@@ -23,7 +23,6 @@ public class HtmlDisplayAdapterTest {
                                   .setDisplayContent(HtmlDisplayContent.newBuilder()
                                                                        .setUrl("https://www.urbanairship.com")
                                                                        .build())
-                                  .setId("message id")
                                   .build();
     }
 

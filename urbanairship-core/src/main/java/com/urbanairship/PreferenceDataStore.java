@@ -15,6 +15,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,10 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class PreferenceDataStore {
+
+    private static final String[] OBSOLETE_KEYS = new String[] {
+            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS"
+    };
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
@@ -100,24 +105,126 @@ public final class PreferenceDataStore {
      * Initializes the preference data store.
      */
     protected void init() {
-        Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), null, null, null, null);
-        if (cursor == null) {
+        loadPreferences();
+    }
+
+    private void loadPreferences() {
+        Cursor cursor = null;
+
+        try {
+            List<Preference> fromStore = new ArrayList<>();
+
+            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), null, null, null, null);
+            if (cursor == null) {
+                Logger.error("Failed to load preferences. Retrying with fallback loading.");
+                fallbackLoad();
+                return;
+            }
+
+            int keyIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_KEY);
+            int valueIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_VALUE);
+
+            while (cursor.moveToNext()) {
+                String key = cursor.getString(keyIndex);
+                String value = cursor.getString(valueIndex);
+                fromStore.add(new Preference(key, value));
+            }
+
+            cursor.close();
+            finishLoad(fromStore);
+        } catch (Exception e) {
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            Logger.error(e, "Failed to load preferences. Retrying with fallback loading.");
+            fallbackLoad();
+        }
+    }
+
+    private void fallbackLoad() {
+        List<String> keys = queryKeys();
+        if (keys.isEmpty()) {
+            Logger.error("Unable to load keys, deleting preference store.");
+            resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), null, null);
             return;
         }
 
-        int keyIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_KEY);
-        int valueIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_VALUE);
+        List<Preference> fromStore = new ArrayList<>();
 
-        while (cursor.moveToNext()) {
-            String key = cursor.getString(keyIndex);
-            String value = cursor.getString(valueIndex);
-            Preference preference = new Preference(key, value);
-            preference.registerObserver();
-
-            preferences.put(key, preference);
+        for (String key : keys) {
+            String value = queryValue(key);
+            if (value == null) {
+                Logger.error("Unable to fetch preference value. Deleting: %s", key);
+                resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), "_id == ?", new String[] { key });
+            } else {
+                fromStore.add(new Preference(key, value));
+            }
         }
 
-        cursor.close();
+        finishLoad(fromStore);
+    }
+
+    private String queryValue(String key) {
+        String[] columns = new String[] {
+                PreferencesDataManager.COLUMN_NAME_VALUE
+        };
+
+        Cursor cursor = null;
+        String value = null;
+
+        try {
+            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), columns, "_id == ?", new String[] { key }, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                value = cursor.getString(0);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to query preference: %s", key);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return value;
+    }
+
+    @NonNull
+    private List<String> queryKeys() {
+        String[] columns = new String[] {
+                PreferencesDataManager.COLUMN_NAME_KEY
+        };
+
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), columns, null, null, null);
+            if (cursor == null) {
+                resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), null, null);
+            }
+            List<String> keys = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                keys.add(cursor.getString(0));
+            }
+            return keys;
+        } catch (Exception e) {
+            Logger.error(e, "Failed to query keys.");
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private void finishLoad(@NonNull List<Preference> preferences) {
+        for (Preference preference : preferences) {
+            this.preferences.put(preference.key, preference);
+            preference.registerObserver();
+        }
+
+        for (String key : OBSOLETE_KEYS) {
+            remove(key);
+        }
     }
 
     /**
@@ -505,7 +612,11 @@ public final class PreferenceDataStore {
                 }
 
                 if (cursor != null) {
-                    setValue(cursor.moveToFirst() ? cursor.getString(0) : null);
+                    try {
+                        setValue(cursor.moveToFirst() ? cursor.getString(0) : null);
+                    } catch (Exception e) {
+                        Logger.error(e, "Unable to sync preference %s from database", key);
+                    }
                 } else {
                     Logger.debug("PreferenceDataStore - Unable to get preference %s from database. Falling back to cached value.", key);
                 }
