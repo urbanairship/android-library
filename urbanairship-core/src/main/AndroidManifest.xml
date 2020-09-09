@@ -45,6 +45,7 @@
 
         <activity
             android:name="com.urbanairship.actions.LoadingActivity"
+            android:noHistory="true"
             android:exported="false">
         </activity>
 
