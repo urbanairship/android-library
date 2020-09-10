@@ -36,6 +36,7 @@ public class LoadingActivity extends AppCompatActivity {
                 url = new URL(getIntent().getData().toString());
             }
         } catch (MalformedURLException e) {
+            Logger.warn("The wallet URL is incorrect, finishing operation.");
             e.printStackTrace();
             finish();
         }
@@ -45,7 +46,7 @@ public class LoadingActivity extends AppCompatActivity {
             finish();
         }
 
-        AirshipExecutors.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
 
             private int maxRetries = 5;
 
@@ -79,7 +80,6 @@ public class LoadingActivity extends AppCompatActivity {
                         Logger.warn("Wallet action request error, trying again, tries left : " + maxRetries);
                         AirshipExecutors.THREAD_POOL_EXECUTOR.submit(this);
                     } else {
-                        AirshipExecutors.THREAD_POOL_EXECUTOR.shutdown();
                         finish();
                     }
                 }
