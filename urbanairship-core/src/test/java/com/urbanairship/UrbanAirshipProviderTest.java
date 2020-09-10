@@ -27,6 +27,10 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         resolver = RuntimeEnvironment.application.getContentResolver();
         preferenceUri = UrbanAirshipProvider.getPreferencesContentUri(TestApplication.getApplication());
         richPushUri = UrbanAirshipProvider.getRichPushContentUri(TestApplication.getApplication());
+
+        // start with empty databases
+        this.resolver.delete(this.preferenceUri, null, null);
+        this.resolver.delete(this.richPushUri, null, null);
     }
 
     @Test

@@ -2,13 +2,13 @@
 
 package com.urbanairship.iam.custom;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_CUSTOM} in-app message.
@@ -35,21 +35,6 @@ public class CustomDisplayContent implements DisplayContent {
                       .put(CUSTOM_KEY, value)
                       .build()
                       .toJsonValue();
-    }
-
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed CustomDisplayContent.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static CustomDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**

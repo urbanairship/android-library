@@ -8,7 +8,7 @@ import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.Module;
 import com.urbanairship.push.PushManager;
@@ -33,6 +33,6 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull PushManager pushManager,
                  @NonNull Analytics analytics,
                  @NonNull RemoteData remoteData,
-                 @NonNull TagGroupRegistrar tagGroupRegistrar);
+                 @NonNull NamedUser namedUser);
 
 }

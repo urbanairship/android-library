@@ -45,7 +45,7 @@ public class RemoteDataApiClient {
     private static final String MANUFACTURER_QUERY_PARAM = "manufacturer";
     private static final String PUSH_PROVIDER_QUERY_PARAM = "push_providers";
 
-    private static final List<String> MANUFACTURERS_WHITE_LIST = Collections.singletonList("huawei");
+    private static final List<String> MANUFACTURERS_ALLOWED = Collections.singletonList("huawei");
 
     private static final String AMAZON = "amazon";
     private static final String ANDROID = "android";
@@ -146,7 +146,7 @@ public class RemoteDataApiClient {
     }
 
     private boolean shouldIncludeManufacturer(@NonNull String manufacturer) {
-        return MANUFACTURERS_WHITE_LIST.contains(manufacturer.toLowerCase());
+        return MANUFACTURERS_ALLOWED.contains(manufacturer.toLowerCase());
     }
 
     @NonNull

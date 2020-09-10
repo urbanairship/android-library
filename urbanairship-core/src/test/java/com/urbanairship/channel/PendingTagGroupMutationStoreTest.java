@@ -34,9 +34,9 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
         mutations.add(TagGroupsMutation.newRemoveTagsMutation("group-two", createTagSet("story")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-one", createTagSet("whatever")));
 
-        store.add(mutations);
+        store.addAll(mutations);
 
-        assertEquals(mutations, store.getMutations());
+        assertEquals(mutations, store.getList());
     }
 
     @Test
@@ -45,7 +45,7 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-two", createTagSet("whatever")));
 
-        store.add(mutations);
+        store.addAll(mutations);
 
         assertEquals(mutations.get(0), store.pop());
         assertEquals(mutations.get(1), store.pop());
@@ -58,7 +58,7 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-two", createTagSet("whatever")));
 
-        store.add(mutations);
+        store.addAll(mutations);
 
         assertEquals(mutations.get(0), store.peek());
         assertEquals(mutations.get(0), store.peek());
@@ -69,11 +69,11 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
         List<TagGroupsMutation> mutations = new ArrayList<>();
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-two", createTagSet("whatever")));
-        store.add(mutations);
+        store.addAll(mutations);
 
-        store.clear();
+        store.removeAll();
 
-        assertTrue(store.getMutations().isEmpty());
+        assertTrue(store.getList().isEmpty());
     }
 
     @Test
@@ -81,9 +81,9 @@ public class PendingTagGroupMutationStoreTest extends BaseTestCase {
         List<TagGroupsMutation> mutations = new ArrayList<>();
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-two", createTagSet("whatever")));
-        store.add(mutations);
+        store.addAll(mutations);
 
-        store.collapseMutations();
+        store.collapseAndSaveMutations();
 
         List<TagGroupsMutation> collapseMutations = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(collapseMutations.get(0), store.peek());

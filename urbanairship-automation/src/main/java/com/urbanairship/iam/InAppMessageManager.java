@@ -3,49 +3,27 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.AirshipExecutors;
-import com.urbanairship.AirshipLoopers;
-import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.app.ActivityMonitor;
-import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationDriver;
-import com.urbanairship.automation.AutomationEngine;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
-import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
-import com.urbanairship.iam.tags.TagGroupManager;
-import com.urbanairship.iam.tags.TagGroupResult;
-import com.urbanairship.iam.tags.TagGroupUtils;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntRange;
@@ -53,29 +31,28 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * In-app messaging manager.
  */
-public class InAppMessageManager extends AirshipComponent implements InAppMessageScheduler {
+public class InAppMessageManager {
+
+    /**
+     * IAM delegate
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public interface Delegate {
+
+        void onReadinessChanged();
+
+    }
 
     /**
      * Default delay between displaying in-app messages.
      */
     public static final long DEFAULT_DISPLAY_INTERVAL_MS = 30000;
-
-    /**
-     * Preference key for enabling/disabling the in-app message manager.
-     */
-    private final static String ENABLE_KEY = "com.urbanairship.iam.enabled";
-
-    /**
-     * Preference key for pausing/unpausing the in-app message manager.
-     */
-    private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
-
     /**
      * Preference key for display interval of in-app automation
      */
@@ -83,24 +60,19 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     // State
     private final Map<String, AdapterWrapper> adapterWrappers = new ConcurrentHashMap<>();
-    private final InAppRemoteDataObserver remoteDataSubscriber;
 
     private final RetryingExecutor executor;
     private final ActionRunRequestFactory actionRunRequestFactory;
-    private final RemoteData remoteData;
     private final Analytics analytics;
-    private final AirshipChannel airshipChannel;
-    private final Handler mainHandler;
-    private final InAppMessageDriver driver;
 
-    private final AutomationEngine<InAppMessageSchedule> automationEngine;
     private final Map<String, InAppMessageAdapter.Factory> adapterFactories = new HashMap<>();
     private final List<InAppMessageListener> listeners = new ArrayList<>();
-    private final TagGroupManager tagGroupManager;
     private final DefaultDisplayCoordinator defaultCoordinator;
     private final ImmediateDisplayCoordinator immediateDisplayCoordinator;
-    private final Handler backgroundHandler;
     private final AssetManager assetManager;
+    private final Context context;
+    private final PreferenceDataStore dataStore;
+    private final Delegate delegate;
 
     @Nullable
     private InAppMessageExtender messageExtender;
@@ -111,358 +83,49 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final DisplayCoordinator.OnDisplayReadyCallback displayReadyCallback = new DisplayCoordinator.OnDisplayReadyCallback() {
         @Override
         public void onReady() {
-            automationEngine.checkPendingSchedules();
+            delegate.onReadinessChanged();
         }
     };
 
-    /**
-     * Gets the shared In-App Message Manager instance.
-     *
-     * @return The shared In-App Message Manager instance.
-     */
-    @NonNull
-    public static InAppMessageManager shared() {
-        return UAirship.shared().requireComponent(InAppMessageManager.class);
-    }
+    private final Map<String, AutomationDriver.ExecutionCallback> executionCallbacks = new HashMap<>();
 
     /**
-     * Default constructor.
-     *
-     * @param context The application context.
-     * @param runtimeConfig The runtime config.
-     * @param analytics Analytics instance.
-     * @param activityMonitor The activity monitor.
-     * @param remoteData Remote data.
-     * @param airshipChannel The airship channel.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(@NonNull Context context,
-                               @NonNull PreferenceDataStore preferenceDataStore,
-                               @NonNull AirshipRuntimeConfig runtimeConfig,
+                               @NonNull PreferenceDataStore dataStore,
                                @NonNull Analytics analytics,
-                               @NonNull RemoteData remoteData,
-                               @NonNull ActivityMonitor activityMonitor,
-                               @NonNull AirshipChannel airshipChannel,
-                               @NonNull TagGroupRegistrar tagGroupRegistrar) {
-        super(context, preferenceDataStore);
+                               @NonNull Delegate delegate) {
+        this(context, dataStore, analytics, RetryingExecutor.newSerialExecutor(Looper.getMainLooper()),
+                new ActionRunRequestFactory(), new AssetManager(context), delegate);
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    InAppMessageManager(@NonNull Context context,
+                        @NonNull PreferenceDataStore dataStore,
+                        @NonNull Analytics analytics,
+                        @NonNull RetryingExecutor executor,
+                        @NonNull ActionRunRequestFactory runRequestFactory,
+                        @NonNull AssetManager assetManager,
+                        @NonNull Delegate delegate) {
+
+        this.context = context;
+        this.dataStore = dataStore;
+        this.analytics = analytics;
+        this.executor = executor;
+        this.assetManager = assetManager;
+        this.delegate = delegate;
+        this.actionRunRequestFactory = runRequestFactory;
 
         this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
         this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
-        this.remoteData = remoteData;
-        this.analytics = analytics;
-        this.airshipChannel = airshipChannel;
-        this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
-        this.mainHandler = new Handler(Looper.getMainLooper());
-        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
 
-        this.executor = new RetryingExecutor(this.mainHandler, AirshipExecutors.newSerialExecutor());
-        this.driver = new InAppMessageDriver();
-        this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
-                .setAnalytics(analytics)
-                .setActivityMonitor(activityMonitor)
-                .setDataManager(new AutomationDataManager(context, runtimeConfig.getConfigOptions().appKey, "in-app"))
-                .setScheduleLimit(200)
-                .setDriver(driver)
-                .setOperationScheduler(AlarmOperationScheduler.shared(context))
-                .build();
-        this.actionRunRequestFactory = new ActionRunRequestFactory();
-
-        this.tagGroupManager = new TagGroupManager(runtimeConfig, airshipChannel, tagGroupRegistrar, preferenceDataStore);
-        this.assetManager = new AssetManager(context);
-
+        executor.setPaused(true);
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_FULLSCREEN, new FullScreenAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_MODAL, new ModalAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_HTML, new HtmlAdapterFactory());
-
-    }
-
-    @VisibleForTesting
-    InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
-                        RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
-                        RemoteData remoteData, AirshipChannel airshipChannel, ActionRunRequestFactory actionRunRequestFactory,
-                        TagGroupManager tagGroupManager, InAppRemoteDataObserver observer, AssetManager assetManager) {
-        super(context, preferenceDataStore);
-
-        this.defaultCoordinator = new DefaultDisplayCoordinator(getDisplayInterval());
-        this.immediateDisplayCoordinator = new ImmediateDisplayCoordinator();
-        this.analytics = analytics;
-        this.remoteData = remoteData;
-        this.airshipChannel = airshipChannel;
-        this.remoteDataSubscriber = observer;
-        this.driver = driver;
-        this.automationEngine = engine;
-        this.mainHandler = new Handler(Looper.getMainLooper());
-        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
-        this.executor = executor;
-        this.actionRunRequestFactory = actionRunRequestFactory;
-        this.tagGroupManager = tagGroupManager;
-        this.assetManager = assetManager;
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Override
-    protected void init() {
-        super.init();
-        executor.setPaused(true);
-
-        this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener<InAppMessageSchedule>() {
-            @Override
-            public void onScheduleExpired(@NonNull final InAppMessageSchedule schedule) {
-                if (schedule.getInfo().getInAppMessage().isReportingEnabled()) {
-                    analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
-                }
-
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        assetManager.onScheduleFinished(schedule);
-                    }
-                });
-            }
-
-            @Override
-            public void onScheduleCancelled(@NonNull final InAppMessageSchedule schedule) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        assetManager.onScheduleFinished(schedule);
-                    }
-                });
-            }
-
-            @Override
-            public void onScheduleLimitReached(@NonNull final InAppMessageSchedule schedule) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        assetManager.onScheduleFinished(schedule);
-                    }
-                });
-            }
-
-            @Override
-            public void onNewSchedule(@NonNull final InAppMessageSchedule schedule) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        assetManager.onSchedule(schedule, new Callable<InAppMessage>() {
-                            @Override
-                            public InAppMessage call() {
-                                return extendMessage(schedule.getInfo().getInAppMessage());
-                            }
-                        });
-                    }
-                });
-            }
-        });
-
-        driver.setListener(new InAppMessageDriver.Listener() {
-            @WorkerThread
-            @Override
-            public void onPrepareSchedule(final @NonNull InAppMessageSchedule schedule) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        InAppMessageManager.this.prepareSchedule(schedule);
-                    }
-                });
-
-            }
-
-            @MainThread
-            @AutomationDriver.ReadyResult
-            @Override
-            public int onCheckExecutionReadiness(@NonNull InAppMessageSchedule schedule) {
-                return InAppMessageManager.this.checkExecutionReadiness(schedule.getId());
-            }
-
-            @MainThread
-            @Override
-            public void onExecuteSchedule(@NonNull InAppMessageSchedule schedule) {
-                InAppMessageManager.this.executeSchedule(schedule.getId());
-            }
-        });
-
-        tagGroupManager.setRequestTagsCallback(new TagGroupManager.RequestTagsCallback() {
-            @NonNull
-            @Override
-            public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
-                Map<String, Set<String>> tags = new HashMap<>();
-
-                Collection<InAppMessageSchedule> schedules = getSchedules().get();
-                if (schedules == null) {
-                    return tags;
-                }
-
-                for (InAppMessageSchedule schedule : schedules) {
-                    Audience audience = schedule.getInfo().getInAppMessage().getAudience();
-                    if (audience != null && audience.getTagSelector() != null && audience.getTagSelector().containsTagGroups()) {
-                        TagGroupUtils.addAll(tags, audience.getTagSelector().getTagGroups());
-                    }
-                }
-
-                return tags;
-            }
-        });
-
-        automationEngine.start();
-        automationEngine.setPaused(true);
-        updateEnginePauseState();
-
-        // New user cut off time
-        if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-            remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
-        }
-    }
-
-    /**
-     * @hide
-     */
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    public int getComponentGroup() {
-        return AirshipComponentGroups.IN_APP;
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Override
-    public void onAirshipReady(@NonNull UAirship airship) {
-        super.onAirshipReady(airship);
-        executor.setPaused(false);
-        remoteDataSubscriber.subscribe(remoteData, backgroundHandler.getLooper(), this);
-        automationEngine.checkPendingSchedules();
-    }
-
-    @Override
-    protected void tearDown() {
-        super.tearDown();
-        remoteDataSubscriber.cancel();
-        automationEngine.stop();
-    }
-
-    @Override
-    public void onNewConfig(@Nullable JsonMap configValue) {
-        InAppRemoteConfig config = InAppRemoteConfig.fromJsonMap(configValue);
-
-        tagGroupManager.setEnabled(config.tagGroupsConfig.isEnabled);
-        tagGroupManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
-        tagGroupManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
-        tagGroupManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Override
-    protected void onComponentEnableChange(boolean isEnabled) {
-        updateEnginePauseState();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos) {
-        return automationEngine.schedule(scheduleInfos, JsonMap.EMPTY_MAP);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos, @NonNull JsonMap metadata) {
-        return automationEngine.schedule(scheduleInfos, metadata);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo) {
-        return automationEngine.schedule(messageScheduleInfo, JsonMap.EMPTY_MAP);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo, @NonNull JsonMap metadata) {
-        return automationEngine.schedule(messageScheduleInfo, metadata);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    public PendingResult<Void> cancelSchedule(@NonNull String scheduleId) {
-        return automationEngine.cancel(Collections.singletonList(scheduleId));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    public PendingResult<Boolean> cancelMessage(@NonNull String messageId) {
-        return automationEngine.cancelGroup(messageId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<Void> cancelMessages(@NonNull Collection<String> messageIds) {
-        return automationEngine.cancelGroups(messageIds);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<Collection<InAppMessageSchedule>> getSchedules(@NonNull final String messageId) {
-        return automationEngine.getSchedules(messageId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<Collection<InAppMessageSchedule>> getSchedules() {
-        return automationEngine.getSchedules();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId) {
-        return automationEngine.getSchedule(scheduleId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public PendingResult<InAppMessageSchedule> editSchedule(@NonNull String scheduleId, @NonNull InAppMessageScheduleEdits edit) {
-        return automationEngine.editSchedule(scheduleId, edit);
     }
 
     /**
@@ -487,7 +150,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param timeUnit The time unit.
      */
     public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
-        getDataStore().put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
+        dataStore.put(DISPLAY_INTERVAL_KEY, timeUnit.toMillis(time));
         this.defaultCoordinator.setDisplayInterval(time, timeUnit);
     }
 
@@ -497,7 +160,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @return The display interval in milliseconds.
      */
     public long getDisplayInterval() {
-        return getDataStore().getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
+        return dataStore.getLong(InAppMessageManager.DISPLAY_INTERVAL_KEY, InAppMessageManager.DEFAULT_DISPLAY_INTERVAL_MS);
     }
 
     /**
@@ -533,57 +196,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Sets the message extender. The message will be extended after its been
-     * triggered, but before the adapter is created.
+     * Sets the message extender. The message will be extended before asset caching, or before
+     * the message is prepared for display.
      *
      * @param extender The extender.
      */
     public void setMessageExtender(@Nullable InAppMessageExtender extender) {
         this.messageExtender = extender;
-    }
-
-    /**
-     * Pauses or unpauses in-app messaging.
-     *
-     * @param paused {@code true} to pause in-app message display, otherwise {@code false}.
-     */
-    public void setPaused(boolean paused) {
-        boolean storedPausedState = getDataStore().getBoolean(PAUSE_KEY, paused);
-
-        // Only update when paused state transitions from paused to unpaused
-        if (storedPausedState && storedPausedState != paused) {
-            automationEngine.checkPendingSchedules();
-        }
-
-        getDataStore().put(PAUSE_KEY, paused);
-    }
-
-    /**
-     * Returns {@code true} if in-app message display is paused, otherwise {@code false}.
-     *
-     * @return {@code true} if in-app message display is paused, otherwise {@code false}.
-     */
-    public boolean isPaused() {
-        return getDataStore().getBoolean(PAUSE_KEY, false);
-    }
-
-    /**
-     * Enables or disables in-app messaging.
-     *
-     * @param enabled {@code true} to enable in-app messaging, otherwise {@code false}.
-     */
-    public void setEnabled(boolean enabled) {
-        getDataStore().put(ENABLE_KEY, enabled);
-        updateEnginePauseState();
-    }
-
-    /**
-     * Returns {@code true} if in-app messaging is enabled, {@code false} if its disabled.
-     *
-     * @return {@code true} if in-app messaging is enabled, {@code false} if its disabled.
-     */
-    public boolean isEnabled() {
-        return getDataStore().getBoolean(ENABLE_KEY, true);
     }
 
     /**
@@ -596,142 +215,100 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Prepares a schedule to be displayed.
+     * Called by {@link InAppAutomation} when airship is ready.
      *
-     * @param schedule The schedule.
+     * @hide
      */
-    private void prepareSchedule(final @NonNull InAppMessageSchedule schedule) {
-        final AdapterWrapper adapter = createAdapterWrapper(schedule);
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onAirshipReady() {
+        executor.setPaused(false);
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onPrepare(final @NonNull String scheduleId,
+                          final @NonNull InAppMessage inAppMessage,
+                          final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, inAppMessage);
         if (adapter == null) {
             // Failed
-            driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_PENALIZE);
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
             return;
         }
 
-        // Audience checks
-        PrepareScheduleOperation checkAudience = new PrepareScheduleOperation(schedule) {
-            @Override
-            public int onPrepare() {
-                InAppMessage message = adapter.message;
-                if (message.getAudience() == null) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                Map<String, Set<String>> tagGroups = null;
-
-                if (message.getAudience().getTagSelector() != null && message.getAudience().getTagSelector().containsTagGroups()) {
-                    Map<String, Set<String>> tags = message.getAudience().getTagSelector().getTagGroups();
-                    TagGroupResult result = tagGroupManager.getTags(tags);
-                    if (!result.success) {
-                        return RetryingExecutor.RESULT_RETRY;
-                    }
-
-                    tagGroups = result.tagGroups;
-                }
-
-                if (AudienceChecks.checkAudience(getContext(), message.getAudience(), tagGroups)) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                switch (message.getAudience().getMissBehavior()) {
-                    case Audience.MISS_BEHAVIOR_CANCEL:
-                        result = AutomationDriver.PREPARE_RESULT_CANCEL;
-                        break;
-                    case Audience.MISS_BEHAVIOR_SKIP:
-                        result = AutomationDriver.PREPARE_RESULT_SKIP;
-                        break;
-                    case Audience.MISS_BEHAVIOR_PENALIZE:
-                        result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                        break;
-                }
-                driver.schedulePrepared(schedule.getId(), result);
-                return RetryingExecutor.RESULT_CANCEL;
-            }
-        };
-
         // Prepare Assets
-        PrepareScheduleOperation prepareAssets = new PrepareScheduleOperation(schedule) {
+        RetryingExecutor.Operation prepareAssets = new RetryingExecutor.Operation() {
             @Override
-            public int onPrepare() {
-                int result = assetManager.onPrepare(schedule, adapter.message);
+            public int run() {
+                int result = assetManager.onPrepare(scheduleId, adapter.message);
 
                 switch (result) {
                     case AssetManager.PREPARE_RESULT_OK:
-                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s.", scheduleId);
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case AssetManager.PREPARE_RESULT_RETRY:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case AssetManager.PREPARE_RESULT_CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s message %s", schedule.getId(), adapter.message.getId());
-                        assetManager.onDisplayFinished(schedule);
-                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
+                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                        assetManager.onDisplayFinished(scheduleId, adapter.message);
+                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
             }
         };
 
         // Prepare Adapter
-        PrepareScheduleOperation prepareAdapter = new PrepareScheduleOperation(schedule) {
+        RetryingExecutor.Operation prepareAdapter = new RetryingExecutor.Operation() {
             @Override
-            public int onPrepare() {
-                int result = adapter.prepare(getContext(), assetManager.getAssets(schedule.getId()));
+            public int run() {
+                int result = adapter.prepare(context, assetManager.getAssets(scheduleId));
 
                 switch (result) {
                     case InAppMessageAdapter.OK:
-                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s message %s", schedule.getId(), adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s.", scheduleId);
 
                         // Store the adapter
-                        adapterWrappers.put(schedule.getId(), adapter);
-                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CONTINUE);
+                        adapterWrappers.put(scheduleId, adapter);
+                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s message %s. Will retry.", schedule.getId(), adapter.message.getId());
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case InAppMessageAdapter.CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s message %s", schedule.getId(), adapter.message.getId());
-                        driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_CANCEL);
+                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
             }
         };
 
         // Execute the operations
-        executor.execute(checkAudience, prepareAssets, prepareAdapter);
+        executor.execute(prepareAssets, prepareAdapter);
     }
 
     /**
-     * Checks if the schedule is ready to be executed.
-     *
-     * @param scheduleId The schedule ID.
-     * @return The ready result.
+     * @hide
      */
     @MainThread
     @AutomationDriver.ReadyResult
-    private int checkExecutionReadiness(@NonNull String scheduleId) {
-        // Prevent display on pause.
-        if (isPaused()) {
-            return AutomationDriver.READY_RESULT_NOT_READY;
-        }
-
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onCheckExecutionReadiness(@NonNull String scheduleId) {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
+            Logger.error("Missing adapter for schedule %.", scheduleId);
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
-        if (isScheduleInvalid(adapterWrapper.schedule)) {
-            adapterWrappers.remove(scheduleId);
-            return AutomationDriver.READY_RESULT_INVALIDATE;
-        }
-
-        if (adapterWrapper.isReady(getContext())) {
+        if (adapterWrapper.isReady(context)) {
             return AutomationDriver.READY_RESULT_CONTINUE;
         } else {
             return AutomationDriver.READY_RESULT_NOT_READY;
@@ -739,57 +316,168 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Helper method to display the in-app message.
-     *
-     * @param scheduleId The schedule ID to display.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    private void executeSchedule(@NonNull String scheduleId) {
+    public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-
         if (adapterWrapper == null) {
-            driver.scheduleExecuted(scheduleId);
+            Logger.error("Missing adapter for schedule %.", scheduleId);
+            callback.onFinish();
             return;
         }
 
+        synchronized (executionCallbacks) {
+            executionCallbacks.put(scheduleId, callback);
+        }
+
         try {
-            adapterWrapper.display(getContext());
+            adapterWrapper.display(context);
         } catch (AdapterWrapper.DisplayException e) {
-            Logger.error(e, "Failed to display in-app message: %s, schedule: %s", adapterWrapper.schedule.getId(), adapterWrapper.message.getId());
-            driver.scheduleExecuted(scheduleId);
+            Logger.error(e, "Failed to display in-app message for schedule %s.", scheduleId);
+            callExecutionFinishedCallback(scheduleId);
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    adapterWrapper.adapterFinished(getContext());
+                    adapterWrapper.adapterFinished(context);
                 }
             });
             return;
         }
 
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(new DisplayEvent(adapterWrapper.message));
+            analytics.addEvent(new DisplayEvent(scheduleId, adapterWrapper.message));
         }
+
         synchronized (listeners) {
             for (InAppMessageListener listener : new ArrayList<>(listeners)) {
                 listener.onMessageDisplayed(scheduleId, adapterWrapper.message);
             }
         }
 
-        Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: %s", scheduleId);
+        Logger.verbose("InAppMessagingManager - Message displayed for schedule %s.", scheduleId);
+    }
+
+    /**
+     * Called by {@link InAppAutomation} when an execution is no longer valid.
+     *
+     * @param scheduleId The schedule Id.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onExecutionInvalidated(@NonNull final String scheduleId) {
+        final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
+        if (adapterWrapper == null) {
+            return;
+        }
+
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                assetManager.onDisplayFinished(scheduleId, adapterWrapper.message);
+            }
+        });
+    }
+
+    /**
+     * Called by the display handler when an in-app message is finished.
+     *
+     * @param scheduleId The schedule ID.
+     * @param resolutionInfo Info on why the event is finished.
+     * @param displayMilliseconds The display time in milliseconds
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @MainThread
+    void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
+        Logger.verbose("InAppMessagingManager - Message finished for schedule %s.", scheduleId);
+
+        final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
+
+        // No record
+        if (adapterWrapper == null) {
+            return;
+        }
+
+        // Add resolution event
+        if (adapterWrapper.message.isReportingEnabled()) {
+            analytics.addEvent(ResolutionEvent.messageResolution(scheduleId, adapterWrapper.message, resolutionInfo, displayMilliseconds));
+        }
+
+        // Run Actions
+        InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
+
+        // Notify any listeners
+        synchronized (listeners) {
+            for (InAppMessageListener listener : new ArrayList<>(listeners)) {
+                listener.onMessageFinished(scheduleId, adapterWrapper.message, resolutionInfo);
+            }
+        }
+
+        // Finish the schedule
+        callExecutionFinishedCallback(scheduleId);
+        adapterWrapper.displayFinished();
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                adapterWrapper.adapterFinished(context);
+                // Notify the asset manager
+                assetManager.onDisplayFinished(adapterWrapper.scheduleId, adapterWrapper.message);
+            }
+        });
+    }
+
+    /**
+     * Called by the display handler to see if an in-app message is allowed to display.
+     *
+     * @param scheduleId The schedule ID.
+     * @return {@code true} To allow the message to display, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @MainThread
+    boolean isDisplayAllowed(@NonNull String scheduleId) {
+        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        return adapterWrapper != null && adapterWrapper.displayed;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onMessageScheduleFinished(@NonNull final String scheduleId) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                assetManager.onFinish(scheduleId);
+            }
+        });
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onNewMessageSchedule(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                assetManager.onSchedule(scheduleId, new Callable<InAppMessage>() {
+                    @Override
+                    public InAppMessage call() {
+                        return extendMessage(message);
+                    }
+                });
+            }
+        });
     }
 
     /**
      * Creates an adapter wrapper.
      *
-     * @param schedule The schedule.
+     * @param scheduleId The schedule Id.
      * @return The adapter wrapper.
      */
     @Nullable
-    private AdapterWrapper createAdapterWrapper(@NonNull InAppMessageSchedule schedule) {
+    private AdapterWrapper createAdapterWrapper(@NonNull String scheduleId,
+                                                @NonNull InAppMessage message) {
         InAppMessageAdapter adapter = null;
         DisplayCoordinator coordinator = null;
-
-        InAppMessage message = schedule.getInfo().getInAppMessage();
 
         try {
             message = extendMessage(message);
@@ -801,8 +489,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
             if (factory == null) {
                 Logger.debug("InAppMessageManager - No display adapter for message type: %s. " +
-                                "Unable to process schedule: %s message: %s", message.getType(),
-                        schedule.getId(), message.getId());
+                                "Unable to process schedule: %s.", message.getType(), scheduleId);
             } else {
                 adapter = factory.createAdapter(message);
             }
@@ -834,7 +521,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         coordinator.setDisplayReadyCallback(displayReadyCallback);
-        return new AdapterWrapper(schedule, adapter, coordinator);
+        return new AdapterWrapper(scheduleId, message, adapter, coordinator);
     }
 
     /**
@@ -855,137 +542,17 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
-     * Updates the automation engine pause state with user enable and component enable flags.
-     */
-    private void updateEnginePauseState() {
-        automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
-    }
-
-    /**
-     * Called by the display handler when an in-app message is finished.
+     * Called to finish the display of an in-app message.
      *
      * @param scheduleId The schedule ID.
-     * @param resolutionInfo Info on why the event is finished.
-     * @param displayMilliseconds The display time in milliseconds
-     * @hide
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @MainThread
-    void messageFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
-        Logger.verbose("InAppMessagingManager - Message finished. ScheduleID: %s", scheduleId);
-
-        final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
-
-        // No record
-        if (adapterWrapper == null) {
-            return;
-        }
-
-        // Add resolution event
-        if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo, displayMilliseconds));
-        }
-
-        // Run Actions
-        InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
-
-        // Notify any listeners
-        synchronized (listeners) {
-            for (InAppMessageListener listener : new ArrayList<>(listeners)) {
-                listener.onMessageFinished(scheduleId, adapterWrapper.message, resolutionInfo);
+    private void callExecutionFinishedCallback(final String scheduleId) {
+        synchronized (executionCallbacks) {
+            final AutomationDriver.ExecutionCallback callback = executionCallbacks.remove(scheduleId);
+            if (callback != null) {
+                callback.onFinish();
             }
         }
-
-        // Finish the schedule
-        driver.scheduleExecuted(scheduleId);
-        adapterWrapper.displayFinished();
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                adapterWrapper.adapterFinished(getContext());
-                // Notify the asset manager
-                assetManager.onDisplayFinished(adapterWrapper.schedule);
-            }
-        });
-
-        // Cancel the schedule if a cancel button was tapped
-        if (resolutionInfo.getButtonInfo() != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.getButtonInfo().getBehavior())) {
-            cancelSchedule(scheduleId);
-        }
-    }
-
-    /**
-     * Called by the display handler to see if an in-app message is allowed to display.
-     *
-     * @param scheduleId The schedule ID.
-     * @return {@code true} To allow the message to display, otherwise {@code false}.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @MainThread
-    boolean isDisplayAllowed(String scheduleId) {
-        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        return adapterWrapper != null && adapterWrapper.displayed;
-    }
-
-    /**
-     * Checks to see if a schedule from remote-data is still valid by checking
-     * the schedule metadata.
-     *
-     * @param schedule The in-app schedule.
-     * @return {@code true} if the schedule is valid, otherwise {@code false}.
-     */
-    private boolean isScheduleInvalid(InAppMessageSchedule schedule) {
-        if (!InAppMessage.SOURCE_REMOTE_DATA.equals(schedule.getInfo().getInAppMessage().getSource())) {
-            return false;
-        }
-
-        return !remoteData.isMetadataCurrent(schedule.getMetadata());
-    }
-
-    /**
-     * Operation to prepare a schedule.
-     */
-    private abstract class PrepareScheduleOperation implements RetryingExecutor.Operation {
-
-        private final InAppMessageSchedule schedule;
-
-        PrepareScheduleOperation(@NonNull InAppMessageSchedule schedule) {
-            this.schedule = schedule;
-        }
-
-        @Override
-        public int run() {
-            if (isScheduleInvalid(schedule)) {
-                // Posted on the background handler to avoid race conditions if the remote data
-                // were to update at the same time as checking the last metadata.
-                backgroundHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // If the subscriber is already up to date, invalidate immediately
-                        if (remoteData.isMetadataCurrent(remoteDataSubscriber.getLastPayloadMetadata())) {
-                            driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                        } else {
-                            // Otherwise wait to invalidate
-                            remoteDataSubscriber.addListener(new InAppRemoteDataObserver.Listener() {
-                                @Override
-                                public void onSchedulesUpdated() {
-                                    driver.schedulePrepared(schedule.getId(), AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                                    remoteDataSubscriber.removeListener(this);
-                                }
-                            });
-                        }
-                    }
-                });
-                return RetryingExecutor.RESULT_CANCEL;
-            }
-
-            return onPrepare();
-        }
-
-        @RetryingExecutor.Result
-        abstract int onPrepare();
-
     }
 
 }

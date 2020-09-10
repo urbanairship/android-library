@@ -4,6 +4,13 @@ package com.urbanairship.iam.modal;
 
 import android.graphics.Color;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.MediaInfo;
@@ -19,13 +26,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_MODAL} in-app message.
@@ -90,20 +90,6 @@ public class ModalDisplayContent implements DisplayContent {
         this.footer = builder.footer;
         this.borderRadius = builder.borderRadius;
         this.isFullscreenDisplayAllowed = builder.isFullscreenDisplayAllowed;
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed ModalDisplayContent.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static ModalDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**

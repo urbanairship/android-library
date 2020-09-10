@@ -3,9 +3,13 @@
 package com.urbanairship.json;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.util.VersionUtils;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -413,6 +417,19 @@ public class JsonPredicateTest extends BaseTestCase {
     @Test(expected = JsonException.class)
     public void testParseInvalidJson() throws JsonException {
         JsonPredicate.parse(JsonValue.wrap("not valid"));
+    }
+
+    @Test
+    public void testAndroidVersionTest() {
+        JsonSerializable versionObject = VersionUtils.createVersionObject(2008200331);
+        JsonPredicate predicate =  JsonPredicate.newBuilder()
+                                                .addMatcher(JsonMatcher.newBuilder()
+                                                                       .setScope(Arrays.asList("android", "version"))
+                                                                       .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt(2008200331)))
+                                                                       .build())
+                                                .build();
+
+        Assert.assertTrue(predicate.apply(versionObject));
     }
 
 }

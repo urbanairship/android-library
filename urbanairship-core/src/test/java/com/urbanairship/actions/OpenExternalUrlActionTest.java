@@ -6,7 +6,7 @@ import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,13 +23,12 @@ import static org.robolectric.Shadows.shadowOf;
 public class OpenExternalUrlActionTest extends BaseTestCase {
 
     private OpenExternalUrlAction action;
-    private Whitelist whitelist;
+    private UrlAllowList urlAllowList;
 
     @Before
     public void setup() {
         action = new OpenExternalUrlAction();
-        whitelist = UAirship.shared().getWhitelist();
-        whitelist.setOpenUrlWhitelistingEnabled(true);
+        urlAllowList = UAirship.shared().getUrlAllowList();
     }
 
     /**
@@ -37,7 +36,7 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArguments() throws MalformedURLException {
-        whitelist.addEntry("*");
+        urlAllowList.addEntry("*");
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "http://example.com");
         assertTrue("Should accept valid url string", action.acceptsArguments(args));
 
@@ -52,11 +51,11 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
     }
 
     /**
-     * Test accepts arguments for URLs that are whitelisted.
+     * Test accepts arguments for URLs that are allowed.
      */
     @Test
-    public void testWhiteList() {
-        whitelist.addEntry("https://yep.example.com");
+    public void testUrlAllowList() {
+        urlAllowList.addEntry("https://yep.example.com");
 
         assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://yep.example.com")));
         assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com")));

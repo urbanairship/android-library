@@ -12,7 +12,7 @@ import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.Network;
 
 import androidx.annotation.NonNull;
@@ -54,8 +54,8 @@ public class HtmlDisplayAdapter extends ForegroundDisplayAdapter {
     @PrepareResult
     @Override
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
-        if (!UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
+        if (!UAirship.shared().getUrlAllowList().isAllowed(displayContent.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
+            Logger.error("HTML in-app message URL is not allowed. Unable to display message.");
             return InAppMessageAdapter.CANCEL;
         }
 

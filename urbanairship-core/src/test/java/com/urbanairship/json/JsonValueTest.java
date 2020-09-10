@@ -466,16 +466,45 @@ public class JsonValueTest extends BaseTestCase {
     }
 
     /**
-     * Tests the double handling in {@link JsonValue#equals(Object)}.
+     * Tests equals handling for numbers.
      */
     @Test
     public void testNumberEquals() {
-        JsonValue doubleValue = JsonValue.wrap(1.5);
-        JsonValue intValue = JsonValue.wrap(1);
-        assertFalse(intValue.equals(doubleValue));
+        // Double
+        assertFalse(JsonValue.wrap(1).equals(JsonValue.wrap(1.5D)));
+        assertFalse(JsonValue.wrap(1L).equals(JsonValue.wrap(1.5D)));
+        assertFalse(JsonValue.wrap(1F).equals(JsonValue.wrap(1.5D)));
+        assertFalse(JsonValue.wrap(1D).equals(JsonValue.wrap(1.5D)));
+        assertTrue(JsonValue.wrap(1.5D).equals(JsonValue.wrap(1.5D)));
+        assertTrue(JsonValue.wrap(1.5F).equals(JsonValue.wrap(1.5D)));
 
-        doubleValue = JsonValue.wrap(1.0);
-        assertTrue(intValue.equals(doubleValue));
+        // Float
+        assertFalse(JsonValue.wrap(1).equals(JsonValue.wrap(1.5F)));
+        assertFalse(JsonValue.wrap(1L).equals(JsonValue.wrap(1.5F)));
+        assertFalse(JsonValue.wrap(1F).equals(JsonValue.wrap(1.5F)));
+        assertFalse(JsonValue.wrap(1D).equals(JsonValue.wrap(1.5F)));
+        assertTrue(JsonValue.wrap(1.5D).equals(JsonValue.wrap(1.5F)));
+        assertTrue(JsonValue.wrap(1.5F).equals(JsonValue.wrap(1.5F)));
+
+        // Int
+        assertFalse(JsonValue.wrap(1).equals(JsonValue.wrap(2)));
+        assertFalse(JsonValue.wrap(1L).equals(JsonValue.wrap(2)));
+        assertFalse(JsonValue.wrap(1F).equals(JsonValue.wrap(2)));
+        assertFalse(JsonValue.wrap(1D).equals(JsonValue.wrap(2)));
+        assertTrue(JsonValue.wrap(2L).equals(JsonValue.wrap(2)));
+        assertTrue(JsonValue.wrap(2).equals(JsonValue.wrap(2)));
+        assertTrue(JsonValue.wrap(2.0D).equals(JsonValue.wrap(2)));
+        assertTrue(JsonValue.wrap(2.0F).equals(JsonValue.wrap(2)));
+
+        // Long
+        assertFalse(JsonValue.wrap(1).equals(JsonValue.wrap(2L)));
+        assertFalse(JsonValue.wrap(1L).equals(JsonValue.wrap(2L)));
+        assertFalse(JsonValue.wrap(1F).equals(JsonValue.wrap(2L)));
+        assertFalse(JsonValue.wrap(1D).equals(JsonValue.wrap(2L)));
+        assertTrue(JsonValue.wrap(2L).equals(JsonValue.wrap(2L)));
+        assertTrue(JsonValue.wrap(2).equals(JsonValue.wrap(2L)));
+        assertTrue(JsonValue.wrap(2.0D).equals(JsonValue.wrap(2L)));
+        assertTrue(JsonValue.wrap(2.0F).equals(JsonValue.wrap(2L)));
     }
 
 }

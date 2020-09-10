@@ -23,7 +23,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.images.ImageRequestOptions;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
@@ -235,8 +235,8 @@ public class MediaView extends FrameLayout {
 
         addView(frameLayout);
 
-        if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
-            Logger.error("URL not whitelisted. Unable to load: %s", mediaInfo.getUrl());
+        if (!UAirship.shared().getUrlAllowList().isAllowed(mediaInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
+            Logger.error("URL not allowed. Unable to load: %s", mediaInfo.getUrl());
             return;
         }
 

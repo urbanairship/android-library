@@ -2,6 +2,9 @@
 
 package com.urbanairship.messagecenter.actions;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
@@ -13,9 +16,6 @@ import com.urbanairship.util.AirshipComponentUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Callable;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * Starts an activity to display either the {@link Inbox} or a {@link Message} using
@@ -44,24 +44,6 @@ public class MessageCenterAction extends Action {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mc";
-
-    /**
-     * Overlay message center registry name
-     *
-     * @deprecated May be removed in a future SDK version. Use "open_mc_action" instead.
-     */
-    @NonNull
-    @Deprecated
-    public static final String REGISTRY_NAME_OVERLAY = "open_mc_overlay_action";
-
-    /**
-     * Overlay message center registry short name
-     *
-     * @deprecated May be removed in a future SDK version. Use "^mc" instead.
-     */
-    @NonNull
-    @Deprecated
-    public static final String REGISTRY_SHORT_NAME_OVERLAY = "^mco";
 
     /**
      * Message ID place holder. Will pull the message ID from the push metadata.

@@ -35,10 +35,9 @@ public final class ActionArguments {
 
     /**
      * Metadata attached to action arguments when running scheduled actions from Action Automation.
-     * The value is stored as a Action Schedule.
      */
     @NonNull
-    public static final String ACTION_SCHEDULE_METADATA = "com.urbanairship.ACTION_SCHEDULE";
+    public static final String ACTION_SCHEDULE_ID_METADATA = "com.urbanairship.ACTION_SCHEDULE_ID";
 
     /**
      * Metadata attached to action arguments when triggering an action from by name.

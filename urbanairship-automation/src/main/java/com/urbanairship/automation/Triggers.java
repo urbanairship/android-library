@@ -272,7 +272,7 @@ public class Triggers {
     public static class CustomEventTriggerBuilder {
 
         private double goal = 1;
-        private int type;
+        private int type = Trigger.CUSTOM_EVENT_COUNT;
         private String eventName;
 
         private CustomEventTriggerBuilder() {

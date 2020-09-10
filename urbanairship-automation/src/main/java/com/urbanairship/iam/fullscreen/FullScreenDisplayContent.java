@@ -4,6 +4,12 @@ package com.urbanairship.iam.fullscreen;
 
 import android.graphics.Color;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
+
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.MediaInfo;
@@ -19,12 +25,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_FULLSCREEN} in-app message.
@@ -85,20 +85,6 @@ public class FullScreenDisplayContent implements DisplayContent {
         this.backgroundColor = builder.backgroundColor;
         this.dismissButtonColor = builder.dismissButtonColor;
         this.footer = builder.footer;
-    }
-
-    /**
-     * {@see #fromJson(JsonValue)}
-     *
-     * @param json The json value.
-     * @return The parsed FullScreenDisplayContent.
-     * @throws JsonException If the JSON is invalid.
-     * @deprecated To be removed in SDK 12. Use {@link #fromJson(JsonValue)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static FullScreenDisplayContent parseJson(@NonNull JsonValue json) throws JsonException {
-        return fromJson(json);
     }
 
     /**

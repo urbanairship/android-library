@@ -10,6 +10,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.banner.BannerDisplayContent;
@@ -35,7 +37,7 @@ import androidx.annotation.WorkerThread;
 /**
  * Legacy in-app message manager.
  */
-public class LegacyInAppMessageManager extends AirshipComponent  {
+public class LegacyInAppMessageManager extends AirshipComponent {
 
     // Preference data store keys
     private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
@@ -63,12 +65,12 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      */
     public static final float DEFAULT_BORDER_RADIUS_DP = 2;
 
-    private final InAppMessageManager inAppMessageManager;
+    private final InAppAutomation inAppAutomation;
     private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
     private final PushManager pushManager;
     private MessageBuilderExtender messageBuilderExtender;
-    private ScheduleInfoBuilderExtender scheduleBuilderExtender;
+    private ScheduleBuilderExtender scheduleBuilderExtender;
     private boolean displayAsapEnabled = true;
 
     /**
@@ -90,20 +92,20 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
     }
 
     /**
-     * Interface to extend the {@link InAppMessageScheduleInfo.Builder} that generates the in-app
+     * Interface to extend the {@link Schedule.Builder} that generates the in-app
      * schedule info from a legacy in-app message.
      */
-    public interface ScheduleInfoBuilderExtender {
+    public interface ScheduleBuilderExtender {
 
         /**
-         * Extends the {@link InAppMessageScheduleInfo.Builder}.
+         * Extends the {@link Schedule.Builder}.
          *
          * @param context The application context.
          * @param legacyMessage The legacy in-app message.
          * @return The builder.
          */
         @NonNull
-        InAppMessageScheduleInfo.Builder extend(@NonNull Context context, @NonNull InAppMessageScheduleInfo.Builder builder, @NonNull LegacyInAppMessage legacyMessage);
+        Schedule.Builder<InAppMessage> extend(@NonNull Context context, @NonNull Schedule.Builder<InAppMessage> builder, @NonNull LegacyInAppMessage legacyMessage);
 
     }
 
@@ -121,15 +123,18 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      * Default constructor.
      *
      * @param preferenceDataStore The preference data store.
-     * @param inAppMessageManager The in-app message manager.
+     * @param inAppAutomation The in-app automation instance.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public LegacyInAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull InAppMessageManager inAppMessageManager,
-                                     @NonNull Analytics analytics, @NonNull PushManager push) {
+    public LegacyInAppMessageManager(@NonNull Context context,
+                                     @NonNull PreferenceDataStore preferenceDataStore,
+                                     @NonNull InAppAutomation inAppAutomation,
+                                     @NonNull Analytics analytics,
+                                     @NonNull PushManager push) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
-        this.inAppMessageManager = inAppMessageManager;
+        this.inAppAutomation = inAppAutomation;
         this.analytics = analytics;
         this.pushManager = push;
     }
@@ -159,12 +164,12 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                     return;
                 }
 
-                InAppMessageScheduleInfo scheduleInfo = createScheduleInfo(UAirship.getApplicationContext(), legacyInAppMessage);
-                if (scheduleInfo == null) {
+                Schedule<InAppMessage> schedule = createSchedule(UAirship.getApplicationContext(), legacyInAppMessage);
+                if (schedule == null) {
                     return;
                 }
 
-                final String messageId = scheduleInfo.getInAppMessage().getId();
+                final String messageId = schedule.getId();
 
                 Logger.debug("LegacyInAppMessageManager - Received a Push with an in-app message.");
 
@@ -172,7 +177,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
 
                 // Cancel the previous pending message if it's still scheduled
                 if (pendingMessageId != null) {
-                    inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
+                    inAppAutomation.cancelSchedule(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
                         @Override
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
@@ -185,7 +190,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                 }
 
                 // Schedule the new one
-                inAppMessageManager.scheduleMessage(scheduleInfo);
+                inAppAutomation.schedule(schedule);
 
                 // Store the pending ID
                 preferenceDataStore.put(PENDING_MESSAGE_ID, messageId);
@@ -201,7 +206,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                     return;
                 }
 
-                inAppMessageManager.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
+                inAppAutomation.cancelSchedule(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
                     @Override
                     public void onResult(@Nullable Boolean result) {
                         if (result != null && result) {
@@ -240,7 +245,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      *
      * @param scheduleBuilderExtender The extender.
      */
-    public void setScheduleBuilderExtender(@Nullable ScheduleInfoBuilderExtender scheduleBuilderExtender) {
+    public void setScheduleBuilderExtender(@Nullable ScheduleBuilderExtender scheduleBuilderExtender) {
         this.scheduleBuilderExtender = scheduleBuilderExtender;
     }
 
@@ -272,7 +277,7 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
      * @return The schedule info, or {@code null} if the factory is unable to create a schedule info.
      */
     @Nullable
-    private InAppMessageScheduleInfo createScheduleInfo(@NonNull Context context, @NonNull LegacyInAppMessage legacyInAppMessage) {
+    private Schedule<InAppMessage> createSchedule(@NonNull Context context, @NonNull LegacyInAppMessage legacyInAppMessage) {
         try {
             Trigger trigger;
 
@@ -284,17 +289,17 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
                 trigger = Triggers.newForegroundTriggerBuilder().build();
             }
 
-            InAppMessageScheduleInfo.Builder builder = InAppMessageScheduleInfo.newBuilder()
-                                                                               .addTrigger(trigger)
-                                                                               .setEnd(legacyInAppMessage.getExpiry());
+            Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(createMessage(context, legacyInAppMessage))
+                                               .addTrigger(trigger)
+                                               .setEnd(legacyInAppMessage.getExpiry())
+                                               .setId(legacyInAppMessage.getId());
 
-            ScheduleInfoBuilderExtender builderExtender = this.scheduleBuilderExtender;
+            ScheduleBuilderExtender builderExtender = this.scheduleBuilderExtender;
             if (builderExtender != null) {
                 builderExtender.extend(context, builder, legacyInAppMessage);
             }
 
-            return builder.setMessage(createMessage(context, legacyInAppMessage))
-                          .build();
+            return builder.build();
 
         } catch (Exception e) {
             Logger.error(e, "Error during factory method to convert legacy in-app message.");
@@ -365,17 +370,14 @@ public class LegacyInAppMessageManager extends AirshipComponent  {
 
         InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                    .setDisplayContent(displayContentBuilder.build())
-                                                   .setExtras(legacyMessage.getExtras());
+                                                   .setExtras(legacyMessage.getExtras())
+                                                   .setSource(InAppMessage.SOURCE_LEGACY_PUSH);
 
         MessageBuilderExtender builderExtender = this.messageBuilderExtender;
         if (builderExtender != null) {
             builderExtender.extend(context, builder, legacyMessage);
         }
-
-        // Set ID and source after building the message
-        return builder.setSource(InAppMessage.SOURCE_LEGACY_PUSH)
-                      .setId(legacyMessage.getId())
-                      .build();
+        return builder.build();
     }
 
 }

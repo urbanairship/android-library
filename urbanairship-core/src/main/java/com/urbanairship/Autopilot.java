@@ -136,6 +136,7 @@ public class Autopilot implements UAirship.OnReadyCallback {
 
         UAirship.takeOff(application, options, instance);
         instance = null;
+
     }
 
     /**

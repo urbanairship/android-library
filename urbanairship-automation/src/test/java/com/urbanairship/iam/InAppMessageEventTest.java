@@ -37,14 +37,12 @@ public class InAppMessageEventTest {
         renderedLocale.put("country", JsonValue.wrap("US"));
 
         legacyInAppMessage = InAppMessage.newBuilder()
-                                         .setId("message id")
                                          .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
                                          .setSource(InAppMessage.SOURCE_LEGACY_PUSH)
                                          .setCampaigns(JsonValue.wrap("campaigns info"))
                                          .build();
 
         remoteDataInAppMessage = InAppMessage.newBuilder()
-                                             .setId("message id")
                                              .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
                                              .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                              .setCampaigns(JsonValue.wrap("campaigns info"))
@@ -52,7 +50,6 @@ public class InAppMessageEventTest {
                                              .build();
 
         appDefinedInAppMessage = InAppMessage.newBuilder()
-                                             .setId("message id")
                                              .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
                                              .setSource(InAppMessage.SOURCE_APP_DEFINED)
                                              .setCampaigns(JsonValue.wrap("campaigns info"))
@@ -74,7 +71,7 @@ public class InAppMessageEventTest {
                                            .put("conversion_metadata", "metadata")
                                            .build();
 
-        TestEvent event = new TestEvent(legacyInAppMessage);
+        TestEvent event = new TestEvent("message id", legacyInAppMessage);
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -96,7 +93,7 @@ public class InAppMessageEventTest {
                                            .put("conversion_metadata", "metadata")
                                            .build();
 
-        TestEvent event = new TestEvent(appDefinedInAppMessage);
+        TestEvent event = new TestEvent("message id", appDefinedInAppMessage);
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -120,7 +117,7 @@ public class InAppMessageEventTest {
                                            .put("locale", JsonValue.wrap(renderedLocale))
                                            .build();
 
-        TestEvent event = new TestEvent(remoteDataInAppMessage);
+        TestEvent event = new TestEvent("message id", remoteDataInAppMessage);
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -138,15 +135,15 @@ public class InAppMessageEventTest {
                                            .put("source", "urban-airship")
                                            .build();
 
-        TestEvent event = new TestEvent(legacyInAppMessage);
+        TestEvent event = new TestEvent("message id", legacyInAppMessage);
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
 
     private static class TestEvent extends InAppMessageEvent {
 
-        TestEvent(InAppMessage message) {
-            super(message);
+        TestEvent(String id, InAppMessage message) {
+            super(id, message);
         }
 
         @NonNull

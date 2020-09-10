@@ -7,8 +7,7 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.TagGroupRegistrar;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
@@ -51,13 +50,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
         UAirship.sharedAirship.localeManager = new LocaleManager(this, preferenceDataStore);
-
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.sharedAirship.runtimeConfig, preferenceDataStore);
-
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar, UAirship.sharedAirship.localeManager);
-        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager);
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, UAirship.sharedAirship.localeManager);
+        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel,  UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, null, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
-        UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);

@@ -7,11 +7,11 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.html.HtmlDisplayContent;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -37,21 +37,20 @@ import static org.mockito.Mockito.verify;
 public class LandingPageActionTest {
 
     private LandingPageAction action;
-    private Whitelist whitelist;
-    private InAppMessageManager inAppMessageManager;
+    private UrlAllowList urlAllowList;
+    private InAppAutomation inAppAutomation;
 
     @Before
     public void setup() {
-        inAppMessageManager = mock(InAppMessageManager.class);
-        action = new LandingPageAction(new Callable<InAppMessageManager>() {
+        inAppAutomation = mock(InAppAutomation.class);
+        action = new LandingPageAction(new Callable<InAppAutomation>() {
             @Override
-            public InAppMessageManager call() throws Exception {
-                return inAppMessageManager;
+            public InAppAutomation call() throws Exception {
+                return inAppAutomation;
             }
         });
 
-        whitelist = UAirship.shared().getWhitelist();
-        whitelist.setOpenUrlWhitelistingEnabled(true);
+        urlAllowList = UAirship.shared().getUrlAllowList();
     }
 
     /**
@@ -75,7 +74,7 @@ public class LandingPageActionTest {
      */
     @Test
     public void testRejectsArguments() {
-        whitelist.addEntry("*");
+        urlAllowList.addEntry("*");
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
         // Empty payload
@@ -84,11 +83,11 @@ public class LandingPageActionTest {
     }
 
     /**
-     * Test accepts arguments for URLs that are whitelisted.
+     * Test accepts arguments for URLs that are allowed.
      */
     @Test
-    public void testWhiteList() {
-        whitelist.addEntry("https://yep.example.com");
+    public void testUrlAllowList() {
+        urlAllowList.addEntry("https://yep.example.com");
 
         // Basic URIs
         verifyAcceptsArgumentValue("https://yep.example.com", true);
@@ -109,7 +108,7 @@ public class LandingPageActionTest {
      */
     @Test
     public void testPerform() {
-        whitelist.setOpenUrlWhitelistingEnabled(false);
+        urlAllowList.addEntry("*");
 
         // Verify scheme less URIs turn into https
         verifyPerform("www.urbanairship.com", "https://www.urbanairship.com");
@@ -146,38 +145,41 @@ public class LandingPageActionTest {
             ActionResult result = action.perform(args);
             assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
-            verify(inAppMessageManager).scheduleMessage(Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleInfo>() {
+            verify(inAppAutomation).schedule(Mockito.argThat(new ArgumentMatcher<Schedule<InAppMessage>>() {
+
                 @Override
-                public boolean matches(InAppMessageScheduleInfo argument) {
-                    InAppMessage message = argument.getInAppMessage();
-                    if (!message.getType().equals(InAppMessage.TYPE_HTML)) {
+                public boolean matches(Schedule<InAppMessage> argument) {
+                    try {
+                        InAppMessage message = argument.getData();
+                        if (!message.getType().equals(InAppMessage.TYPE_HTML)) {
+                            return false;
+                        }
+
+                        if (!message.getDisplayBehavior().equals(InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE)) {
+                            return false;
+                        }
+
+                        if (message.isReportingEnabled()) {
+                            return false;
+                        }
+
+                        HtmlDisplayContent displayContent = message.getDisplayContent();
+                        if (displayContent.getRequireConnectivity()) {
+                            return false;
+                        }
+
+                        if (!displayContent.getUrl().equals(expectedUrl)) {
+                            return false;
+                        }
+                    } catch (IllegalArgumentException e) {
                         return false;
                     }
-
-                    if (!message.getDisplayBehavior().equals(InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE)) {
-                        return false;
-                    }
-
-                    if (message.isReportingEnabled()) {
-                        return false;
-                    }
-
-                    HtmlDisplayContent displayContent = message.getDisplayContent();
-                    if (displayContent.getRequireConnectivity()) {
-                        return false;
-                    }
-
-                    if (!displayContent.getUrl().equals(expectedUrl)) {
-                        return false;
-                    }
-
-
 
                     return true;
                 }
             }));
 
-            clearInvocations(inAppMessageManager);
+            clearInvocations(inAppAutomation);
         }
 
     }

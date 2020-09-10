@@ -10,8 +10,7 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.TagGroupRegistrar;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
@@ -58,23 +57,18 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
         UAirship.sharedAirship.localeManager = new LocaleManager(this, preferenceDataStore);
-
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
 
-        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(UAirship.sharedAirship.runtimeConfig, preferenceDataStore);
-
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, tagGroupRegistrar, UAirship.sharedAirship.localeManager);
-
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager);
-
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
-        UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, tagGroupRegistrar, UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor(), UAirship.sharedAirship.pushManager);
+        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
+        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, new TestActivityMonitor(), UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();

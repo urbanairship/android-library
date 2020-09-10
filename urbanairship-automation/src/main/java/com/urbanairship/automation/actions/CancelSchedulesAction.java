@@ -5,12 +5,11 @@ package com.urbanairship.automation.actions;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
-import com.urbanairship.automation.ActionAutomation;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.AirshipComponentUtils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import androidx.annotation.NonNull;
@@ -66,20 +65,20 @@ public class CancelSchedulesAction extends Action {
     @NonNull
     public static final String ALL = "all";
 
-    private final Callable<ActionAutomation> actionAutomationCallable;
+    private final Callable<InAppAutomation> actionAutomationCallable;
 
     /**
      * Default constructor.
      */
     public CancelSchedulesAction() {
-        this(AirshipComponentUtils.callableForComponent(ActionAutomation.class));
+        this(AirshipComponentUtils.callableForComponent(InAppAutomation.class));
     }
 
     /**
      * @hide
      */
     @VisibleForTesting
-    CancelSchedulesAction(@NonNull Callable<ActionAutomation> actionAutomationCallable) {
+    CancelSchedulesAction(@NonNull Callable<InAppAutomation> actionAutomationCallable) {
         this.actionAutomationCallable = actionAutomationCallable;
     }
 
@@ -107,29 +106,29 @@ public class CancelSchedulesAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        ActionAutomation actionAutomation;
+        InAppAutomation automation;
         try {
-            actionAutomation = actionAutomationCallable.call();
+            automation = actionAutomationCallable.call();
         } catch (Exception e) {
             return ActionResult.newErrorResult(e);
         }
 
         JsonValue jsonValue = arguments.getValue().toJsonValue();
 
-        // All
+        // All - Only cancel action schedules
         if (jsonValue.isString() && ALL.equalsIgnoreCase(jsonValue.getString())) {
-            actionAutomation.cancelAll();
+            automation.cancelSchedules(Schedule.TYPE_ACTION);
             return ActionResult.newEmptyResult();
         }
 
         // Groups
         JsonValue groupsJson = jsonValue.optMap().opt(GROUPS);
         if (groupsJson.isString()) {
-            actionAutomation.cancelGroup(groupsJson.optString());
+            automation.cancelScheduleGroup(groupsJson.optString());
         } else if (groupsJson.isJsonList()) {
             for (JsonValue value : groupsJson.optList()) {
                 if (value.isString()) {
-                    actionAutomation.cancelGroup(value.optString());
+                    automation.cancelScheduleGroup(value.optString());
                 }
             }
         }
@@ -137,16 +136,13 @@ public class CancelSchedulesAction extends Action {
         // IDs
         JsonValue idsJson = jsonValue.optMap().opt(IDS);
         if (idsJson.isString()) {
-            actionAutomation.cancel(idsJson.optString());
+            automation.cancelSchedule(idsJson.optString());
         } else if (idsJson.isJsonList()) {
-            List<String> ids = new ArrayList<>();
             for (JsonValue value : idsJson.optList()) {
                 if (value.isString()) {
-                    ids.add(value.getString());
+                    automation.cancelSchedule(value.optString());
                 }
             }
-
-            actionAutomation.cancel(ids);
         }
 
         return ActionResult.newEmptyResult();

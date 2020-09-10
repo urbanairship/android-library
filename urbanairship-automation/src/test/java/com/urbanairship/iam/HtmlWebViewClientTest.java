@@ -46,7 +46,7 @@ public class HtmlWebViewClientTest {
         });
         when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
-        UAirship.shared().getWhitelist().addEntry("http://test-client");
+        UAirship.shared().getUrlAllowList().addEntry("http://test-client");
 
         passedValue = new ArrayList<>();
         client = new HtmlWebViewClient() {

@@ -2,12 +2,13 @@
 
 package com.urbanairship.debug.automation
 
-import com.urbanairship.iam.InAppMessageSchedule
+import com.urbanairship.automation.Schedule
+import com.urbanairship.iam.InAppMessage
 
-class ScheduleListItem(inAppMessageSchedule: InAppMessageSchedule) {
-    val message = inAppMessageSchedule.info.inAppMessage
+class ScheduleListItem(schedule: Schedule<InAppMessage>) {
+    val message = schedule.data
 
     val type = message.type
 
-    val id = message.id
+    val id = schedule.id
 }

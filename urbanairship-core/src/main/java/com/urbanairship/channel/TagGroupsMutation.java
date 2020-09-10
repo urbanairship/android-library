@@ -21,6 +21,8 @@ import androidx.annotation.RestrictTo;
 
 /**
  * Defines a tag group mutations.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class TagGroupsMutation implements JsonSerializable {
@@ -41,9 +43,9 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param setTags Map of pending set tags.
      */
     private TagGroupsMutation(@Nullable Map<String, Set<String>> addTags, @Nullable Map<String, Set<String>> removeTags, @Nullable Map<String, Set<String>> setTags) {
-        this.addTags = addTags;
-        this.removeTags = removeTags;
-        this.setTags = setTags;
+        this.addTags = addTags == null ? Collections.<String, Set<String>>emptyMap() : addTags;
+        this.removeTags = removeTags == null ? Collections.<String, Set<String>>emptyMap() : removeTags;
+        this.setTags = setTags == null ? Collections.<String, Set<String>>emptyMap() : setTags;
     }
 
     /**
@@ -56,7 +58,7 @@ public class TagGroupsMutation implements JsonSerializable {
     @NonNull
     public static TagGroupsMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
-        tagMap.put(group, tags);
+        tagMap.put(group, new HashSet<>(tags));
 
         return new TagGroupsMutation(tagMap, null, null);
     }
@@ -71,7 +73,7 @@ public class TagGroupsMutation implements JsonSerializable {
     @NonNull
     public static TagGroupsMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
-        tagMap.put(group, tags);
+        tagMap.put(group, new HashSet<>(tags));
 
         return new TagGroupsMutation(null, tagMap, null);
     }
@@ -86,64 +88,9 @@ public class TagGroupsMutation implements JsonSerializable {
     @NonNull
     public static TagGroupsMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
-        tagMap.put(group, tags);
+        tagMap.put(group, new HashSet<>(tags));
 
         return new TagGroupsMutation(null, null, tagMap);
-    }
-
-    /**
-     * Creates a mutation from a set of pending add tag groups and pending remove tag groups.
-     *
-     * @param pendingAddTags Map of pending add tags.
-     * @param pendingRemoveTags Map of pending remove tags.
-     * @return Tag group mutation.
-     */
-    @NonNull
-    public static TagGroupsMutation newAddRemoveMutation(@Nullable Map<String, Set<String>> pendingAddTags, @Nullable Map<String, Set<String>> pendingRemoveTags) {
-        Map<String, Set<String>> normalizedPendingAddTags = new HashMap<>();
-        Map<String, Set<String>> normalizedPendingRemoveTags = new HashMap<>();
-
-        if (pendingAddTags != null) {
-            for (Map.Entry<String, Set<String>> entry : pendingAddTags.entrySet()) {
-                String group = entry.getKey().trim();
-                if (group.isEmpty()) {
-                    continue;
-                }
-
-                if (entry.getValue() == null) {
-                    continue;
-                }
-
-                Set<String> tags = TagUtils.normalizeTags(entry.getValue());
-                if (tags.isEmpty()) {
-                    continue;
-                }
-
-                normalizedPendingAddTags.put(entry.getKey(), tags);
-            }
-        }
-
-        if (pendingRemoveTags != null) {
-            for (Map.Entry<String, Set<String>> entry : pendingRemoveTags.entrySet()) {
-                String group = entry.getKey().trim();
-                if (group.isEmpty()) {
-                    continue;
-                }
-
-                if (entry.getValue() == null) {
-                    continue;
-                }
-
-                Set<String> tags = TagUtils.normalizeTags(entry.getValue());
-                if (tags.isEmpty()) {
-                    continue;
-                }
-
-                normalizedPendingRemoveTags.put(entry.getKey(), tags);
-            }
-        }
-
-        return new TagGroupsMutation(normalizedPendingAddTags, normalizedPendingRemoveTags, null);
     }
 
     /**
@@ -151,9 +98,11 @@ public class TagGroupsMutation implements JsonSerializable {
      *
      * @param mutations List of mutations to collapse.
      * @return A new list of collapsed mutations.
+     * @hide
      */
     @NonNull
-    static List<TagGroupsMutation> collapseMutations(@Nullable List<TagGroupsMutation> mutations) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static List<TagGroupsMutation> collapseMutations(@Nullable List<TagGroupsMutation> mutations) {
         if (mutations == null || mutations.isEmpty()) {
             return Collections.emptyList();
         }
@@ -333,19 +282,17 @@ public class TagGroupsMutation implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         TagGroupsMutation mutation = (TagGroupsMutation) o;
 
-        return mutation.toJsonValue().equals(mutation.toJsonValue());
-
+        if (addTags != null ? !addTags.equals(mutation.addTags) : mutation.addTags != null)
+            return false;
+        if (removeTags != null ? !removeTags.equals(mutation.removeTags) : mutation.removeTags != null)
+            return false;
+        return setTags != null ? setTags.equals(mutation.setTags) : mutation.setTags == null;
     }
 
     @Override
@@ -363,7 +310,7 @@ public class TagGroupsMutation implements JsonSerializable {
                 Set<String> tags = tagGroups.get(entry.getKey());
                 if (tags == null) {
                     tags = new HashSet<>();
-                    tagGroups.put(entry.getKey(),tags);
+                    tagGroups.put(entry.getKey(), tags);
                 }
 
                 tags.addAll(entry.getValue());
