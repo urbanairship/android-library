@@ -38,11 +38,13 @@ public class LoadingActivity extends AppCompatActivity {
         } catch (MalformedURLException e) {
             Logger.warn("The wallet URL is incorrect, finishing operation.", e);
             finish();
+            return;
         }
 
         if (url == null) {
             Logger.warn("User URI null, unable to process link.");
             finish();
+            return;
         }
 
         AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
