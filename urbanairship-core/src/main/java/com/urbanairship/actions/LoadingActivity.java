@@ -36,8 +36,7 @@ public class LoadingActivity extends AppCompatActivity {
                 url = new URL(getIntent().getData().toString());
             }
         } catch (MalformedURLException e) {
-            Logger.warn("The wallet URL is incorrect, finishing operation.");
-            e.printStackTrace();
+            Logger.warn("The wallet URL is incorrect, finishing operation.", e);
             finish();
         }
 
