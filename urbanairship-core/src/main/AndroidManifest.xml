@@ -42,7 +42,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
+        
         <activity
             android:name="com.urbanairship.actions.LoadingActivity"
             android:noHistory="true"
@@ -50,7 +50,6 @@
         </activity>
 
         <service android:name="com.urbanairship.job.AirshipService" />
-
         <service
             android:name="com.urbanairship.job.AndroidJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
