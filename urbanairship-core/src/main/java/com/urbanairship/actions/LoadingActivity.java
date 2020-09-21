@@ -2,6 +2,8 @@ package com.urbanairship.actions;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -24,6 +26,8 @@ import java.util.Map;
 public class LoadingActivity extends AppCompatActivity {
 
     private URL url;
+    private final MutableLiveData<Result> liveData = new MutableLiveData<>();
+    private int maxRetries = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +51,28 @@ public class LoadingActivity extends AppCompatActivity {
             return;
         }
 
-        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+        liveData.observe(this, new Observer<Result>() {
+            @Override
+            public void onChanged(Result result) {
+                if (result.exception != null) {
+                    maxRetries--;
+                    if (maxRetries > 0) {
+                        Logger.warn("Wallet action request error, trying again, tries left : " + maxRetries);
+                        resolveWalletUrl();
+                    } else {
+                        finish();
+                    }
+                } else {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, result.uri);
+                    startActivity(browserIntent);
+                }
+            }
+        });
+        resolveWalletUrl();
+    }
 
-            private int maxRetries = 5;
+    private void resolveWalletUrl() {
+        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -69,22 +92,25 @@ public class LoadingActivity extends AppCompatActivity {
                                 }
                             });
                     if (response.getResult() != null) {
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(response.getResponseHeader("Location")));
-                        startActivity(browserIntent);
+                        liveData.postValue(new Result(Uri.parse(response.getResponseHeader("Location")), null));
                     } else {
-                        Logger.warn("No redirection found for the Wallet URL. Finishing action.");
+                        Logger.warn("No result found for Wallet URL, finishing action.");
                         finish();
                     }
                 } catch (RequestException e) {
-                    maxRetries--;
-                    if (maxRetries > 0) {
-                        Logger.warn("Wallet action request error, trying again, tries left : " + maxRetries);
-                        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(this);
-                    } else {
-                        finish();
-                    }
+                    liveData.postValue(new Result(null , e));
                 }
             }
         });
+    }
+
+    private static class Result {
+        Uri uri;
+        Exception exception;
+
+        public Result(Uri uri, Exception exception) {
+            this.uri = uri;
+            this.exception = exception;
+        }
     }
 }
