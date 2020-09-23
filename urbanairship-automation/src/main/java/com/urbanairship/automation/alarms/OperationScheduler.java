@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.automation.alarms;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -19,6 +19,6 @@ public interface OperationScheduler {
      * @param delay The delay.
      * @param operation The operation.
      */
-    void schedule(long delay, @NonNull CancelableOperation operation);
+    void schedule(long delay, @NonNull Runnable operation);
 
 }

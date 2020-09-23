@@ -2,6 +2,8 @@
 
 package com.urbanairship.util;
 
+import android.os.SystemClock;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
@@ -18,4 +20,7 @@ public class Clock {
         return System.currentTimeMillis();
     }
 
+    public long elapsedRealtime() {
+        return SystemClock.elapsedRealtime();
+    }
 }

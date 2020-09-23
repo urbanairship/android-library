@@ -32,5 +32,11 @@
                 android:value="true" />
         </activity>
 
+        <receiver android:name="com.urbanairship.automation.alarms.AlarmOperationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.urbanairship.automation.alarms.ALARM_FIRED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

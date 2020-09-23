@@ -3,11 +3,11 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
+import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.CancelableOperation;
-import com.urbanairship.OperationScheduler;
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
@@ -15,6 +15,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.alarms.OperationScheduler;
 import com.urbanairship.automation.storage.AutomationDao;
 import com.urbanairship.automation.storage.AutomationDatabase;
 import com.urbanairship.automation.storage.FullSchedule;
@@ -71,6 +72,21 @@ public class AutomationEngineTest {
     private AutomationDatabase automationDatabase;
     private AutomationDao dao;
 
+    final OperationScheduler handlerScheduler = new OperationScheduler() {
+        @Override
+        public void schedule(long delay, @NonNull Runnable runnable) {
+            Handler handler;
+            if (runnable instanceof CancelableOperation) {
+                handler = ((CancelableOperation) runnable).getHandler();
+            } else {
+                handler = new Handler(Looper.getMainLooper());
+            }
+
+            handler.postDelayed(runnable, delay);
+        }
+    };
+
+
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
@@ -93,12 +109,6 @@ public class AutomationEngineTest {
         mockMetrics = mock(ApplicationMetrics.class);
         TestApplication.getApplication().setApplicationMetrics(mockMetrics);
 
-        OperationScheduler scheduler = new OperationScheduler() {
-            @Override
-            public void schedule(long delay, @NonNull CancelableOperation operation) {
-                operation.getHandler().postDelayed(operation, delay);
-            }
-        };
 
         driver = new TestDriver();
         mockDataMigrator = mock(LegacyDataMigrator.class);
@@ -106,7 +116,7 @@ public class AutomationEngineTest {
                                  .allowMainThreadQueries()
                                  .build();
         dao = automationDatabase.getScheduleDao();
-        automationEngine = new AutomationEngine(UAirship.shared().getAnalytics(), activityMonitor, scheduler, dao, mockDataMigrator);
+        automationEngine = new AutomationEngine(UAirship.shared().getAnalytics(), activityMonitor, handlerScheduler, dao, mockDataMigrator);
 
         automationEngine.start(driver);
         runLooperTasks();
@@ -738,15 +748,8 @@ public class AutomationEngineTest {
 
     @Test
     public void testOnScheduleChangeBeforeEngineStarts() {
-        OperationScheduler scheduler = new OperationScheduler() {
-            @Override
-            public void schedule(long delay, @NonNull CancelableOperation operation) {
-                operation.getHandler().postDelayed(operation, delay);
-            }
-        };
-
         automationEngine = new AutomationEngine(UAirship.shared().getAnalytics(), activityMonitor,
-                scheduler, dao, mockDataMigrator);
+                handlerScheduler, dao, mockDataMigrator);
 
         // Should not crash
         automationEngine.checkPendingSchedules();
