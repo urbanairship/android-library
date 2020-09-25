@@ -8,6 +8,8 @@ import androidx.lifecycle.Observer;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
@@ -23,16 +25,17 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-public class LoadingActivity extends AppCompatActivity {
+public class WalletLoadingActivity extends AppCompatActivity {
 
     private URL url;
     private final MutableLiveData<Result> liveData = new MutableLiveData<>();
     private int maxRetries = 5;
+    private Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_loading);
+        setContentView(R.layout.ua_activity_wallet_loading);
 
         try {
             Uri uri = getIntent().getData();
@@ -55,10 +58,16 @@ public class LoadingActivity extends AppCompatActivity {
             @Override
             public void onChanged(Result result) {
                 if (result.exception != null) {
-                    maxRetries--;
                     if (maxRetries > 0) {
-                        Logger.warn("Wallet action request error, trying again, tries left : " + maxRetries);
-                        resolveWalletUrl();
+                        if (handler != null)
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    maxRetries--;
+                                    Logger.warn("Wallet action request error, trying again in 10s, tries left : " + maxRetries);
+                                    resolveWalletUrl();
+                                }
+                            }, 10000);
                     } else {
                         finish();
                     }
@@ -77,6 +86,7 @@ public class LoadingActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
+                    Logger.debug("Runner starting");
                     Response<String> response = new Request()
                             .setOperation("GET", url)
                             .setInstanceFollowRedirects(false)

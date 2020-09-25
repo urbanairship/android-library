@@ -44,7 +44,7 @@
         </activity>
         
         <activity
-            android:name="com.urbanairship.actions.LoadingActivity"
+            android:name="com.urbanairship.actions.WalletLoadingActivity"
             android:noHistory="true"
             android:exported="false">
         </activity>

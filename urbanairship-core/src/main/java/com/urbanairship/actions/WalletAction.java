@@ -44,7 +44,7 @@ public class WalletAction extends OpenExternalUrlAction {
     public ActionResult perform(@NonNull ActionArguments arguments) {
         Logger.info("Processing Wallet adaptive link.");
 
-        Intent intent = new Intent(UAirship.getApplicationContext(), LoadingActivity.class);
+        Intent intent = new Intent(UAirship.getApplicationContext(), WalletLoadingActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setData(Uri.parse(arguments.getValue().getString()));
         UAirship.getApplicationContext().startActivity(intent);
