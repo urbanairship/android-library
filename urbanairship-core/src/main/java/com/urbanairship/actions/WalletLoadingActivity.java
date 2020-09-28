@@ -29,8 +29,6 @@ public class WalletLoadingActivity extends AppCompatActivity {
 
     private URL url;
     private final MutableLiveData<Result> liveData = new MutableLiveData<>();
-    private int maxRetries = 5;
-    private Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,19 +56,7 @@ public class WalletLoadingActivity extends AppCompatActivity {
             @Override
             public void onChanged(Result result) {
                 if (result.exception != null) {
-                    if (maxRetries > 0) {
-                        if (handler != null)
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    maxRetries--;
-                                    Logger.warn("Wallet action request error, trying again in 10s, tries left : " + maxRetries);
-                                    resolveWalletUrl();
-                                }
-                            }, 10000);
-                    } else {
-                        finish();
-                    }
+                    finish();
                 } else {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, result.uri);
                     startActivity(browserIntent);
