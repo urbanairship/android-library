@@ -55,7 +55,7 @@ public class WalletLoadingActivity extends AppCompatActivity {
         liveData.observe(this, new Observer<Result>() {
             @Override
             public void onChanged(Result result) {
-                if (result.exception != null) {
+                if (result.exception != null || result.uri == null) {
                     finish();
                 } else {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, result.uri);
@@ -91,7 +91,7 @@ public class WalletLoadingActivity extends AppCompatActivity {
                         liveData.postValue(new Result(Uri.parse(response.getResponseHeader("Location")), null));
                     } else {
                         Logger.warn("No result found for Wallet URL, finishing action.");
-                        finish();
+                        liveData.postValue(new Result(null, null));
                     }
                 } catch (RequestException e) {
                     liveData.postValue(new Result(null , e));
