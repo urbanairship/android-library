@@ -1,19 +1,19 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.actions;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
+import com.urbanairship.activity.ThemedActivity;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -25,15 +25,16 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-public class WalletLoadingActivity extends AppCompatActivity {
+public class WalletLoadingActivity extends ThemedActivity {
 
-    private URL url;
     private final MutableLiveData<Result> liveData = new MutableLiveData<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ua_activity_wallet_loading);
+
+        URL url = null;
 
         try {
             Uri uri = getIntent().getData();
@@ -63,10 +64,10 @@ public class WalletLoadingActivity extends AppCompatActivity {
                 }
             }
         });
-        resolveWalletUrl();
+        resolveWalletUrl(url);
     }
 
-    private void resolveWalletUrl() {
+    private void resolveWalletUrl(final URL url) {
         AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
 
             @Override
