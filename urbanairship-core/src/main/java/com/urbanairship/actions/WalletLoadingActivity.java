@@ -2,6 +2,7 @@
 
 package com.urbanairship.actions;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
@@ -67,7 +68,7 @@ public class WalletLoadingActivity extends ThemedActivity {
         resolveWalletUrl(url);
     }
 
-    private void resolveWalletUrl(final URL url) {
+    private void resolveWalletUrl(@NonNull final URL url) {
         AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
 
             @Override
