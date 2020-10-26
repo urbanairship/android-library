@@ -34,6 +34,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,6 +53,7 @@ public class AudienceManagerTest {
     private AirshipChannel mockChannel;
     private AudienceHistorian mockHistorian;
     private NamedUser mockNamedUser;
+    private TagGroupLookupResponseCache spyCache;
 
     private TestCallback callback;
     private String channelId;
@@ -84,6 +86,7 @@ public class AudienceManagerTest {
         mockClient = mock(TagGroupLookupApiClient.class);
         mockChannel = mock(AirshipChannel.class);
         mockNamedUser = mock(NamedUser.class);
+        spyCache = spy(new TagGroupLookupResponseCache(TestApplication.getApplication().preferenceDataStore, clock));
 
         pendingChannelMutations = new ArrayList<>();
         when(mockChannel.getPendingTagUpdates()).thenReturn(pendingChannelMutations);
@@ -99,7 +102,7 @@ public class AudienceManagerTest {
         });
 
         mockHistorian = mock(AudienceHistorian.class);
-        manager = new AudienceManager(mockClient, mockChannel, mockNamedUser,
+        manager = new AudienceManager(mockClient, mockChannel, mockNamedUser, spyCache,
                 mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
 
         callback = new TestCallback();
@@ -308,7 +311,7 @@ public class AudienceManagerTest {
      */
     @Test
     public void testRefreshCache() {
-        manager.setCacheMaxAgeTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
+        manager.setCacheMaxAgeTime(TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
 
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
@@ -322,7 +325,7 @@ public class AudienceManagerTest {
         verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
-        clock.currentTimeMillis += AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
+        clock.currentTimeMillis += TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS + 1;
 
         // Set up a response that returns all the tags
         when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
@@ -342,8 +345,8 @@ public class AudienceManagerTest {
      */
     @Test
     public void getTagsStaleCache() {
-        manager.setCacheMaxAgeTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
-        manager.setCacheStaleReadTime(AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 10, TimeUnit.MILLISECONDS);
+        manager.setCacheMaxAgeTime(TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS, TimeUnit.MILLISECONDS);
+        manager.setCacheStaleReadTime(TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS + 10, TimeUnit.MILLISECONDS);
 
         TagGroupResponse response = new TagGroupResponse(200, clientResponseTags, "lastModifiedTime");
 
@@ -357,7 +360,7 @@ public class AudienceManagerTest {
         verify(mockClient, times(1)).lookupTagGroups(channelId, getExpectedClientRequestTags(), null);
 
         // Time travel past the cache max age
-        clock.currentTimeMillis += AudienceManager.MIN_CACHE_MAX_AGE_TIME_MS + 1;
+        clock.currentTimeMillis += TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS + 1;
 
         // Set up a 400 response
         when(mockClient.lookupTagGroups(channelId, getExpectedClientRequestTags(), response))
@@ -490,5 +493,17 @@ public class AudienceManagerTest {
         expected.addAll(pendingChannelAttributes);
 
         assertEquals(AttributeMutation.collapseMutations(expected), manager.getAttributeOverrides());
+    }
+
+    @Test
+    public void testNamedUserIdChangeClearsCache() {
+        manager.onNamedUserIdChanged("new ID");
+        verify(spyCache).clear();
+    }
+
+    @Test
+    public void testNamedUserIdRemovalClearsCache() {
+        manager.onNamedUserIdChanged(null);
+        verify(spyCache).clear();
     }
 }

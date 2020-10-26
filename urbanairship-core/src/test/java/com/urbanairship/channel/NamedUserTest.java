@@ -15,6 +15,7 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import static junit.framework.Assert.assertEquals;
@@ -154,6 +156,16 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDValid() {
+        TestListener listener = new TestListener() {
+            @Override
+            public void onNamedUserIdChanged(@Nullable String id) {
+                super.onNamedUserIdChanged(id);
+                Assert.assertEquals(fakeNamedUserId, id);
+            }
+        };
+
+        namedUser.addNamedUserListener(listener);
+
         // Make sure we have a pending tag group change
         namedUser.setId(fakeNamedUserId);
 
@@ -168,6 +180,7 @@ public class NamedUserTest extends BaseTestCase {
         verify(mockAttributeRegistrar).setId(fakeNamedUserId, true);
 
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
+        assertTrue(listener.onNamedUserIdChangedCalled);
     }
 
     /**
@@ -175,10 +188,14 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDInvalid() {
+        TestListener listener = new TestListener();
+        namedUser.addNamedUserListener(listener);
+
         String currentNamedUserId = namedUser.getId();
 
         namedUser.setId("     ");
         assertEquals("Named user ID should not have changed", currentNamedUserId, namedUser.getId());
+        assertFalse(listener.onNamedUserIdChangedCalled);
     }
 
     /**
@@ -189,6 +206,16 @@ public class NamedUserTest extends BaseTestCase {
         // Set an initial id
         namedUser.setId("neat");
         clearInvocations(mockDispatcher, mockTagGroupRegistrar, mockAttributeRegistrar);
+
+        TestListener listener = new TestListener() {
+            @Override
+            public void onNamedUserIdChanged(@Nullable String id) {
+                super.onNamedUserIdChanged(id);
+                Assert.assertNull(id);
+            }
+        };
+
+        namedUser.addNamedUserListener(listener);
 
         // Clear it
         namedUser.setId(null);
@@ -204,6 +231,7 @@ public class NamedUserTest extends BaseTestCase {
         }));
 
         assertNull("Named user ID should be null", namedUser.getId());
+        assertTrue(listener.onNamedUserIdChangedCalled);
     }
 
     /**
@@ -214,6 +242,16 @@ public class NamedUserTest extends BaseTestCase {
         // Set an initial id
         namedUser.setId("neat");
         clearInvocations(mockDispatcher, mockTagGroupRegistrar, mockAttributeRegistrar);
+
+        TestListener listener = new TestListener() {
+            @Override
+            public void onNamedUserIdChanged(@Nullable String id) {
+                super.onNamedUserIdChanged(id);
+                Assert.assertNull(id);
+            }
+        };
+
+        namedUser.addNamedUserListener(listener);
 
         namedUser.setId("");
 
@@ -228,6 +266,7 @@ public class NamedUserTest extends BaseTestCase {
         }));
 
         assertNull("Named user ID should be null", namedUser.getId());
+        assertTrue(listener.onNamedUserIdChangedCalled);
     }
 
     /**
@@ -771,6 +810,14 @@ public class NamedUserTest extends BaseTestCase {
     public void testChangingIdUpdatesChannelRegistration() {
         namedUser.setId("namedUserId");
         verify(mockChannel).updateRegistration();
+    }
+
+    private static class TestListener implements NamedUserListener {
+        boolean onNamedUserIdChangedCalled;
+
+        public void onNamedUserIdChanged(@Nullable String id) {
+            onNamedUserIdChangedCalled = true;
+        }
     }
 
 }

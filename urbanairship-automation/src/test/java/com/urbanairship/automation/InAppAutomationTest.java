@@ -20,6 +20,7 @@ import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.tags.AudienceManager;
+import com.urbanairship.automation.tags.TagGroupLookupResponseCache;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
@@ -506,8 +507,8 @@ public class InAppAutomationTest {
         inAppAutomation.onNewConfig(null);
 
         verify(mockAudienceManager).setEnabled(true);
-        verify(mockAudienceManager).setCacheMaxAgeTime(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_MAX_AGE_TIME_MS), TimeUnit.SECONDS);
-        verify(mockAudienceManager).setCacheStaleReadTime(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_STALE_READ_TIME_MS), TimeUnit.SECONDS);
+        verify(mockAudienceManager).setCacheMaxAgeTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_MAX_AGE_TIME_MS), TimeUnit.SECONDS);
+        verify(mockAudienceManager).setCacheStaleReadTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_STALE_READ_TIME_MS), TimeUnit.SECONDS);
         verify(mockAudienceManager).setPreferLocalTagDataTime(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS), TimeUnit.SECONDS);
     }
 
