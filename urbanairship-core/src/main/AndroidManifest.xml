@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.urbanairship"
     android:versionCode="1"
@@ -9,11 +8,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application>
+
         <activity
             android:name="com.urbanairship.push.NotificationProxyActivity"
-            android:exported="false"
             android:taskAffinity="com.urbanairship.push.NotificationProxyActivity"
+            android:exported="false"
             android:theme="@android:style/Theme.NoDisplay" />
+
         <activity
             android:name="com.urbanairship.util.HelperActivity"
             android:exported="false"
@@ -22,6 +23,7 @@
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
         </activity>
+
         <activity
             android:name="com.urbanairship.google.PlayServicesErrorActivity"
             android:exported="false"
@@ -30,26 +32,25 @@
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
         </activity>
+
         <activity
             android:name="com.urbanairship.actions.RateAppActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.RateAppActivity">
+
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
+
             <intent-filter>
                 <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        
-        <activity
-            android:name="com.urbanairship.actions.WalletLoadingActivity"
-            android:noHistory="true"
-            android:exported="false">
-        </activity>
+
 
         <service android:name="com.urbanairship.job.AirshipService" />
+
         <service
             android:name="com.urbanairship.job.AndroidJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
@@ -62,6 +63,7 @@
                 <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name="com.urbanairship.locale.LocaleChangeReceiver"
             android:exported="false">
@@ -74,5 +76,6 @@
             android:name="com.urbanairship.UrbanAirshipProvider"
             android:authorities="${applicationId}.urbanairship.provider"
             android:exported="false" />
+
     </application>
 </manifest>

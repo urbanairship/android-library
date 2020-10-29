@@ -70,8 +70,6 @@ public class Request {
 
     protected boolean compressRequestBody = false;
 
-    protected boolean followRedirects = true;
-
     @NonNull
     protected final Map<String, String> responseProperties;
 
@@ -208,18 +206,6 @@ public class Request {
     }
 
     /**
-     * Sets whether the request must follow the redirection.
-     *
-     * @param followRedirects A boolean to follow redirection.
-     * @return The request.
-     */
-    @NonNull
-    public Request setInstanceFollowRedirects(boolean followRedirects) {
-        this.followRedirects = followRedirects;
-        return this;
-    }
-
-    /**
      * Executes the request.
      *
      * @return The request response.
@@ -268,7 +254,6 @@ public class Request {
             conn.setDoInput(true);
             conn.setUseCaches(false);
             conn.setAllowUserInteraction(false);
-            conn.setInstanceFollowRedirects(followRedirects);
 
             if (ifModifiedSince > 0) {
                 conn.setIfModifiedSince(ifModifiedSince);

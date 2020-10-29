@@ -2,11 +2,8 @@
 
 package com.urbanairship.actions;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -38,18 +35,6 @@ public class WalletAction extends OpenExternalUrlAction {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^w";
-
-    @NonNull
-    @Override
-    public ActionResult perform(@NonNull ActionArguments arguments) {
-        Logger.info("Processing Wallet adaptive link.");
-
-        Intent intent = new Intent(UAirship.getApplicationContext(), WalletLoadingActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setData(Uri.parse(arguments.getValue().getString()));
-        UAirship.getApplicationContext().startActivity(intent);
-        return ActionResult.newEmptyResult();
-    }
 
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
