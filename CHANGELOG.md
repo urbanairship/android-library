@@ -2,8 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.0.2 - October 29, 2020
+Patch release optimizing named user tag group cache usage in In-App-Automation.
+
+### Changes
+- IAA tag group cache is now cleared when a named user is associated or disassociated
+
 ## Version 14.0.1 - September 23, 2020
-Patch release to fix an exception caused by too many alarms being scheduled for in-app automation message intervals on Samsung devices. Applications seeing crashes related to alarms should update. 
+Patch release to fix an exception caused by too many alarms being scheduled for in-app automation message intervals on Samsung devices. Applications seeing crashes related to alarms should update.
 
 ## Version 14.0.0 - September 3, 2020
 Airship SDK 14 is a major update that prepares our automation module to support future IAA enhancements, revamps the Channel Capture tool, and provides other improvements.
