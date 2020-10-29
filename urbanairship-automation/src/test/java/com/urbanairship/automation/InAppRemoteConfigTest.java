@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.automation.tags.AudienceManager;
+import com.urbanairship.automation.tags.TagGroupLookupResponseCache;
 import com.urbanairship.json.JsonMap;
 
 import org.junit.Test;
@@ -75,8 +76,8 @@ public class InAppRemoteConfigTest {
 
         assertNotNull(config);
         assertNotNull(config.tagGroupsConfig);
-        assertEquals(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_MAX_AGE_TIME_MS), config.tagGroupsConfig.cacheMaxAgeInSeconds);
-        assertEquals(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_CACHE_STALE_READ_TIME_MS), config.tagGroupsConfig.cacheStaleReadTimeSeconds);
+        assertEquals(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_MAX_AGE_TIME_MS), config.tagGroupsConfig.cacheMaxAgeInSeconds);
+        assertEquals(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_STALE_READ_TIME_MS), config.tagGroupsConfig.cacheStaleReadTimeSeconds);
         assertEquals(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS), config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds);
     }
 

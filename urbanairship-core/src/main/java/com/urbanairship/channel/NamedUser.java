@@ -20,6 +20,7 @@ import com.urbanairship.util.UAStringUtil;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,6 +82,8 @@ public class NamedUser extends AirshipComponent {
 
     private final TagGroupRegistrar tagGroupRegistrar;
     private final AttributeRegistrar attributeRegistrar;
+
+    private final List<NamedUserListener> namedUserListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a NamedUser.
@@ -258,6 +261,9 @@ public class NamedUser extends AirshipComponent {
                     airshipChannel.updateRegistration();
                 }
 
+                for (NamedUserListener listener : namedUserListeners) {
+                    listener.onNamedUserIdChanged(id);
+                }
             } else {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }
@@ -330,6 +336,17 @@ public class NamedUser extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void addAttributeListener(@NonNull AttributeListener listener) {
         this.attributeRegistrar.addAttributeListener(listener);
+    }
+
+    /**
+     * Adds a named user listener.
+     *
+     * @param listener The named user listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addNamedUserListener(@NonNull NamedUserListener listener) {
+        namedUserListeners.add(listener);
     }
 
     @VisibleForTesting

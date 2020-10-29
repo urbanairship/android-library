@@ -7,6 +7,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.channel.NamedUserListener;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.json.JsonValue;
@@ -32,35 +33,14 @@ import androidx.annotation.WorkerThread;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class AudienceManager {
-
+public class AudienceManager implements NamedUserListener {
     // Device tag group
     private static final String DEVICE_GROUP = "device";
 
     // Data store keys
-    private static final String CACHE_RESPONSE_KEY = "com.urbanairship.iam.tags.TAG_CACHE_RESPONSE";
-    private static final String CACHE_CREATE_DATE_KEY = "com.urbanairship.iam.tags.TAG_CACHE_CREATE_DATE";
-    private static final String CACHE_REQUESTED_TAGS_KEY = "com.urbanairship.iam.tags.TAG_CACHE_REQUESTED_TAGS";
-    private static final String CACHE_MAX_AGE_TIME_KEY = "com.urbanairship.iam.tags.TAG_CACHE_MAX_AGE_TIME";
-    private static final String CACHE_STALE_READ_TIME_KEY = "com.urbanairship.iam.tags.TAG_CACHE_STALE_READ_TIME";
     private static final String PREFER_LOCAL_DATA_TIME_KEY = "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME";
 
     private static final String ENABLED_KEY = "com.urbanairship.iam.tags.FETCH_ENABLED";
-
-    /**
-     * Min cache age time.
-     */
-    public static final long MIN_CACHE_MAX_AGE_TIME_MS = 60000; // 1 minute
-
-    /**
-     * Default cache max age time.
-     */
-    public static final long DEFAULT_CACHE_MAX_AGE_TIME_MS = 600000; // 10 minutes
-
-    /**
-     * Default cache stale read time.
-     */
-    public static final long DEFAULT_CACHE_STALE_READ_TIME_MS = 3600000; // 1 hour
 
     /**
      * Default prefer local data time.
@@ -88,6 +68,7 @@ public class AudienceManager {
     private final TagGroupLookupApiClient client;
     private final Clock clock;
     private final NamedUser namedUser;
+    private final TagGroupLookupResponseCache cache;
 
     private RequestTagsCallback requestTagsCallback;
 
@@ -104,22 +85,26 @@ public class AudienceManager {
                            @NonNull NamedUser namedUser,
                            @NonNull PreferenceDataStore dataStore) {
         this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel, namedUser,
-                new AudienceHistorian(airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
+                new TagGroupLookupResponseCache(dataStore, Clock.DEFAULT_CLOCK), new AudienceHistorian(
+                        airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
     @VisibleForTesting
     AudienceManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
-                    @NonNull NamedUser namedUser, @NonNull AudienceHistorian historian,
-                    @NonNull PreferenceDataStore dataStore, @NonNull Clock clock) {
+                    @NonNull NamedUser namedUser, @NonNull TagGroupLookupResponseCache cache,
+                    @NonNull AudienceHistorian historian, @NonNull PreferenceDataStore dataStore, @NonNull Clock clock) {
         this.client = client;
         this.airshipChannel = airshipChannel;
         this.namedUser = namedUser;
+        this.cache = cache;
         this.historian = historian;
         this.dataStore = dataStore;
         this.clock = clock;
 
         this.historian.init();
+
+        namedUser.addNamedUserListener(this);
     }
 
     /**
@@ -146,7 +131,7 @@ public class AudienceManager {
      * @param unit The time unit.
      */
     public void setCacheMaxAgeTime(@IntRange(from = 0) long duration, @NonNull TimeUnit unit) {
-        dataStore.put(CACHE_MAX_AGE_TIME_KEY, unit.toMillis(duration));
+        cache.setMaxAgeTime(duration, unit);
     }
 
     /**
@@ -155,8 +140,7 @@ public class AudienceManager {
      * @return The max cache age in milliseconds.
      */
     public long getCacheMaxAgeTimeMilliseconds() {
-        long maxAge = dataStore.getLong(CACHE_MAX_AGE_TIME_KEY, DEFAULT_CACHE_MAX_AGE_TIME_MS);
-        return Math.max(maxAge, MIN_CACHE_MAX_AGE_TIME_MS);
+        return cache.getMaxAgeTimeMilliseconds();
     }
 
     /**
@@ -166,8 +150,8 @@ public class AudienceManager {
      * @param duration The duration.
      * @param unit The time unit.
      */
-    public void setCacheStaleReadTime(@IntRange(from = MIN_CACHE_MAX_AGE_TIME_MS) long duration, @NonNull TimeUnit unit) {
-        dataStore.put(CACHE_STALE_READ_TIME_KEY, unit.toMillis(duration));
+    public void setCacheStaleReadTime(@IntRange(from = TagGroupLookupResponseCache.MIN_MAX_AGE_TIME_MS) long duration, @NonNull TimeUnit unit) {
+        cache.setStaleReadTime(duration, unit);
     }
 
     /**
@@ -176,7 +160,7 @@ public class AudienceManager {
      * @return The cache stale age read time in milliseconds.
      */
     public long getCacheStaleReadTimeMilliseconds() {
-        return dataStore.getLong(CACHE_STALE_READ_TIME_KEY, DEFAULT_CACHE_STALE_READ_TIME_MS);
+        return cache.getStaleReadTimeMilliseconds();
     }
 
     /**
@@ -193,7 +177,7 @@ public class AudienceManager {
      * Gets the prefer local tag data time.
      * <p>
      *
-     * @return The cache stale age read time in milliseconds.
+     * @return The prefer local tag data time in milliseconds.
      */
     public long getPreferLocalTagDataTime() {
         return dataStore.getLong(PREFER_LOCAL_DATA_TIME_KEY, DEFAULT_PREFER_LOCAL_DATA_TIME_MS);
@@ -254,11 +238,11 @@ public class AudienceManager {
         long cacheMaxAgeTime = getCacheMaxAgeTimeMilliseconds();
 
         TagGroupResponse cachedResponse = null;
-        if (TagGroupUtils.containsAll(getCachedRequestTags(), tags)) {
-            cachedResponse = getCachedResponse();
+        if (TagGroupUtils.containsAll(cache.getRequestTags(), tags)) {
+            cachedResponse = cache.getResponse();
         }
 
-        long cacheCreateDate = getCacheCreateDate();
+        long cacheCreateDate = cache.getCreateDate();
 
         if (cachedResponse != null && cacheMaxAgeTime > clock.currentTimeMillis() - cacheCreateDate) {
             return new TagGroupResult(true, generateTags(tags, cachedResponse, cacheCreateDate));
@@ -267,8 +251,8 @@ public class AudienceManager {
         // Refresh the cache
         try {
             refreshCache(tags, cachedResponse);
-            cachedResponse = getCachedResponse();
-            cacheCreateDate = getCacheCreateDate();
+            cachedResponse = cache.getResponse();
+            cacheCreateDate = cache.getCreateDate();
         } catch (Exception e) {
             Logger.error(e, "Failed to refresh tags.");
         }
@@ -284,47 +268,9 @@ public class AudienceManager {
         return new TagGroupResult(false, null);
     }
 
-    /**
-     * Sets the cached response.
-     *
-     * @param response The response to cache.
-     */
-    private void setCachedResponse(@NonNull TagGroupResponse response, @NonNull Map<String, Set<String>> requestedTags) {
-        dataStore.put(CACHE_RESPONSE_KEY, response);
-        dataStore.put(CACHE_CREATE_DATE_KEY, clock.currentTimeMillis());
-        dataStore.put(CACHE_REQUESTED_TAGS_KEY, JsonValue.wrapOpt(requestedTags));
-    }
-
-    /**
-     * Gets the cached response.
-     *
-     * @return The cached response, or null if not available.
-     */
-    @Nullable
-    private TagGroupResponse getCachedResponse() {
-        JsonValue value = dataStore.getJsonValue(CACHE_RESPONSE_KEY);
-        if (value.isNull()) {
-            return null;
-        }
-        return TagGroupResponse.fromJsonValue(value);
-    }
-
-    /**
-     * Gets the cache creation date.
-     *
-     * @return The cache creation date if available, otherwise {@code -1} will be returned.
-     */
-    private long getCacheCreateDate() {
-        return dataStore.getLong(CACHE_CREATE_DATE_KEY, -1);
-    }
-
-    /**
-     * Gets the cache creation date.
-     *
-     * @return The cache creation date if available, otherwise {@code -1} will be returned.
-     */
-    private Map<String, Set<String>> getCachedRequestTags() {
-        return TagGroupUtils.parseTags(dataStore.getJsonValue(CACHE_REQUESTED_TAGS_KEY));
+    @Override
+    public void onNamedUserIdChanged(@Nullable String id) {
+        cache.clear();
     }
 
     /**
@@ -361,7 +307,7 @@ public class AudienceManager {
         }
 
         // Only use the cached response if it the requested tags are the same
-        if (cachedResponse != null && !requestTags.equals(getCachedRequestTags())) {
+        if (cachedResponse != null && !requestTags.equals(cache.getRequestTags())) {
             cachedResponse = null;
         }
 
@@ -378,7 +324,7 @@ public class AudienceManager {
         }
 
         Logger.verbose("Refreshed tag group with response: %s", response);
-        setCachedResponse(response, requestTags);
+        cache.setResponse(response, requestTags);
     }
 
     /**
