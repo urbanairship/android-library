@@ -244,4 +244,33 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
     }
 
+    /**
+     * Test wishlist event.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testWishlistEventBasic() throws JSONException {
+        CustomEvent event = RetailEventTemplate.newWishlishTemplate().createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.WISHLIST_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+    }
+
+    /**
+     * Test wishlist event with optional properties.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testWishlistEvent() throws JSONException {
+        CustomEvent event = RetailEventTemplate.newWishlishTemplate("cool", "12345").createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.WISHLIST_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+        EventTestUtils.validateNestedEventValue(event, "properties", "wishlist_name", "cool");
+        EventTestUtils.validateNestedEventValue(event, "properties", "wishlist_id", "12345");
+    }
 }

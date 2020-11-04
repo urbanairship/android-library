@@ -49,6 +49,12 @@ public class RetailEventTemplate {
     public static final String PURCHASED_EVENT = "purchased";
 
     /**
+     * The wishlist event name.
+     */
+    @NonNull
+    public static final String WISHLIST_EVENT = "wishlist";
+
+    /**
      * The lifetime value property.
      */
     private static final String LIFETIME_VALUE = "ltv";
@@ -88,6 +94,16 @@ public class RetailEventTemplate {
      */
     private static final String MEDIUM = "medium";
 
+    /**
+     * The wishlist name property.
+     */
+    private static final String WISHLIST_NAME = "wishlist_name";
+
+    /**
+     * The wishlist ID property.
+     */
+    private static final String WISHLIST_ID = "wishlist_id";
+
     @NonNull
     private final String eventName;
 
@@ -115,6 +131,12 @@ public class RetailEventTemplate {
     @Nullable
     private String medium;
 
+    @Nullable
+    private String wishlistName;
+
+    @Nullable
+    private String wishlistId;
+
     private boolean newItem;
     private boolean newItemSet;
 
@@ -122,10 +144,13 @@ public class RetailEventTemplate {
         this.eventName = eventName;
     }
 
-    private RetailEventTemplate(@NonNull String eventName, @Nullable String source, @Nullable String medium) {
+    private RetailEventTemplate(@NonNull String eventName, @Nullable String source, @Nullable String medium,
+                                @Nullable String wishlistName, @Nullable String wishlistId) {
         this.eventName = eventName;
         this.source = source;
         this.medium = medium;
+        this.wishlistName = wishlistName;
+        this.wishlistId = wishlistId;
     }
 
     /**
@@ -170,8 +195,6 @@ public class RetailEventTemplate {
 
     /**
      * Creates a shared product event template.
-     * <p>
-     * If the source or medium exceeds 255 characters it will cause the event to be invalid.
      *
      * @param source The source as a string.
      * @param medium The medium as a string.
@@ -179,7 +202,29 @@ public class RetailEventTemplate {
      */
     @NonNull
     public static RetailEventTemplate newSharedProductTemplate(@Nullable String source, @Nullable String medium) {
-        return new RetailEventTemplate(SHARED_PRODUCT_EVENT, source, medium);
+        return new RetailEventTemplate(SHARED_PRODUCT_EVENT, source, medium, null, null);
+    }
+
+    /**
+     * Creates a wishlist event template.
+     *
+     * @return A RetailEventTemplate.
+     */
+    @NonNull
+    public static RetailEventTemplate newWishlishTemplate() {
+        return new RetailEventTemplate(WISHLIST_EVENT);
+    }
+
+    /**
+     * Creates a wishlist event template.
+     *
+     * @param name The wishlist name.
+     * @param id The wishlist ID.
+     * @return A RetailEventTemplate.
+     */
+    @NonNull
+    public static RetailEventTemplate newWishlishTemplate(@Nullable String name, @Nullable String id) {
+        return new RetailEventTemplate(WISHLIST_EVENT, null, null, name, id);
     }
 
     /**
@@ -273,8 +318,6 @@ public class RetailEventTemplate {
 
     /**
      * Set the ID.
-     * <p>
-     * If the ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param id The ID as a string.
      * @return A RetailEventTemplate.
@@ -287,8 +330,6 @@ public class RetailEventTemplate {
 
     /**
      * Set the category.
-     * <p>
-     * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
      * @return A RetailEventTemplate.
@@ -301,8 +342,6 @@ public class RetailEventTemplate {
 
     /**
      * Set the description.
-     * <p>
-     * If the description exceeds 255 characters it will cause the event to be invalid.
      *
      * @param description The description as a string.
      * @return A RetailEventTemplate.
@@ -315,8 +354,6 @@ public class RetailEventTemplate {
 
     /**
      * Set the brand.
-     * <p>
-     * If the brand exceeds 255 characters it will cause the event to be invalid.
      *
      * @param brand The brand as a string.
      * @return A RetailEventTemplate.
@@ -389,6 +426,14 @@ public class RetailEventTemplate {
 
         if (this.medium != null) {
             builder.addProperty(MEDIUM, this.medium);
+        }
+
+        if (this.wishlistName != null) {
+            builder.addProperty(WISHLIST_NAME, this.wishlistName);
+        }
+
+        if (this.wishlistId != null) {
+            builder.addProperty(WISHLIST_ID, this.wishlistId);
         }
 
         builder.setTemplateType(RETAIL_EVENT_TEMPLATE);
