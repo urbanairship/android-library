@@ -17,6 +17,7 @@ import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
@@ -71,15 +73,16 @@ public class FrequencyLimitManager {
      * The checker will keep a snapshot of the constraint definition at the time of checker creation.
      * Any updates to the constraints will be ignored until a new checker is created.
      *
+     * @param constraintIds The collection of constraint Ids.
      * @return A future for the checker.
      */
     @NonNull
-    public Future<FrequencyChecker> getFrequencyChecker() {
+    public Future<FrequencyChecker> getFrequencyChecker(@Nullable final Collection<String> constraintIds) {
         final PendingResult<FrequencyChecker> pendingResult = new PendingResult<>();
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                final Collection<ConstraintEntity> constraints = fetchConstraints();
+                final Collection<ConstraintEntity> constraints = fetchConstraints(constraintIds);
                 FrequencyChecker checker = new FrequencyChecker() {
                     @Override
                     public boolean isOverLimit() {
@@ -139,6 +142,10 @@ public class FrequencyLimitManager {
     }
 
     private boolean checkAndIncrement(@NonNull Collection<ConstraintEntity> constraints) {
+        if (constraints.isEmpty()) {
+            return true;
+        }
+
         synchronized (lock) {
             if (isOverLimit(constraints)) {
                 return false;
@@ -149,6 +156,10 @@ public class FrequencyLimitManager {
     }
 
     private boolean isOverLimit(@NonNull Collection<ConstraintEntity> constraints) {
+        if (constraints.isEmpty()) {
+            return false;
+        }
+
         synchronized (lock) {
             for (ConstraintEntity constraint : constraints) {
                 if (isConstraintOverLimit(constraint)) {
@@ -192,8 +203,12 @@ public class FrequencyLimitManager {
     }
 
     @NonNull
-    private Collection<ConstraintEntity> fetchConstraints() {
-        Collection<ConstraintEntity> constraints = dao.getConstraints();
+    private Collection<ConstraintEntity> fetchConstraints(@Nullable Collection<String> constraintIds) {
+        if (constraintIds == null || constraintIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Collection<ConstraintEntity> constraints = dao.getConstraints(constraintIds);
 
         for (ConstraintEntity constraint : constraints) {
             List<OccurrenceEntity> occurrences = dao.getOccurrences(constraint.constraintId);
@@ -245,4 +260,5 @@ public class FrequencyLimitManager {
         }
         return constraintIds;
     }
+
 }

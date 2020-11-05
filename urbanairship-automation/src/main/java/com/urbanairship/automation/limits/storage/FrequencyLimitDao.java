@@ -21,6 +21,7 @@ import androidx.room.Update;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
 public interface FrequencyLimitDao {
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(@NonNull ConstraintEntity constraint);
 
@@ -30,11 +31,14 @@ public interface FrequencyLimitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(@NonNull OccurrenceEntity occurrence);
 
+    @Query("SELECT * FROM constraints WHERE (constraintId IN (:constraintIds))")
+    List<ConstraintEntity> getConstraints(Collection<String> constraintIds);
+
     @Query("SELECT * FROM constraints")
     List<ConstraintEntity> getConstraints();
 
     @Query("SELECT * FROM occurrences WHERE parentConstraintId = :constraintId ORDER BY timeStamp ASC")
-    List<OccurrenceEntity>getOccurrences(String constraintId);
+    List<OccurrenceEntity> getOccurrences(String constraintId);
 
     @Delete
     @Transaction
@@ -43,4 +47,5 @@ public interface FrequencyLimitDao {
     @Query("DELETE FROM constraints WHERE (constraintId IN (:constraintIds))")
     @Transaction
     void delete(Collection<String> constraintIds);
+
 }

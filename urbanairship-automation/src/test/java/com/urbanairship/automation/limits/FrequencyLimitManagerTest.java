@@ -15,6 +15,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -54,7 +56,7 @@ public class FrequencyLimitManagerTest {
 
     @Test
     public void testGetCheckerNoLimits() throws ExecutionException, InterruptedException {
-        FrequencyChecker checker = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker = limitManager.getFrequencyChecker(Collections.<String>emptyList()).get();
         assertFalse(checker.isOverLimit());
         assertTrue(checker.checkAndIncrement());
         assertTrue(dao.getConstraints().isEmpty());
@@ -71,7 +73,7 @@ public class FrequencyLimitManagerTest {
         limitManager.updateConstraints(Collections.singletonList(constraint));
 
         clock.currentTimeMillis = 0;
-        FrequencyChecker checker = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker = limitManager.getFrequencyChecker(ids("some-id")).get();
         assertFalse(checker.isOverLimit());
         assertTrue(checker.checkAndIncrement());
 
@@ -108,8 +110,8 @@ public class FrequencyLimitManagerTest {
         limitManager.updateConstraints(Collections.singletonList(constraint));
         clock.currentTimeMillis = 0;
 
-        FrequencyChecker checker1 = limitManager.getFrequencyChecker().get();
-        FrequencyChecker checker2 = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker1 = limitManager.getFrequencyChecker(ids("some-id")).get();
+        FrequencyChecker checker2 = limitManager.getFrequencyChecker(ids("some-id")).get();
 
         assertFalse(checker1.isOverLimit());
         assertFalse(checker2.isOverLimit());
@@ -165,7 +167,7 @@ public class FrequencyLimitManagerTest {
         limitManager.updateConstraints(constraints);
 
         clock.currentTimeMillis = 0;
-        FrequencyChecker checker = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker = limitManager.getFrequencyChecker(ids("foo", "bar")).get();
         assertFalse(checker.isOverLimit());
         assertTrue(checker.checkAndIncrement());
 
@@ -204,30 +206,34 @@ public class FrequencyLimitManagerTest {
 
     @Test
     public void testConstraintRemovedMidCheck() throws ExecutionException, InterruptedException {
-        limitManager.updateConstraints(Collections.singletonList(FrequencyConstraint.newBuilder()
-                                                                                    .setCount(2)
-                                                                                    .setRange(TimeUnit.MILLISECONDS, 10)
-                                                                                    .setId("foo")
-                                                                                    .build()));
+        List<FrequencyConstraint> constraints = new ArrayList<>();
 
-        FrequencyChecker fooChecker = limitManager.getFrequencyChecker().get();
+        constraints.add(FrequencyConstraint.newBuilder()
+                                           .setCount(2)
+                                           .setRange(TimeUnit.MILLISECONDS, 10)
+                                           .setId("foo")
+                                           .build());
+
+        constraints.add(FrequencyConstraint.newBuilder()
+                                           .setCount(2)
+                                           .setRange(TimeUnit.MILLISECONDS, 20)
+                                           .setId("bar")
+                                           .build());
+
+        limitManager.updateConstraints(constraints);
+
+
+        FrequencyChecker fooBarChecker = limitManager.getFrequencyChecker(ids("foo", "bar")).get();
 
         limitManager.updateConstraints(Collections.singletonList(FrequencyConstraint.newBuilder()
                                                                                     .setCount(2)
                                                                                     .setRange(TimeUnit.MILLISECONDS, 10)
                                                                                     .setId("bar")
                                                                                     .build()));
-
-        FrequencyChecker barChecker = limitManager.getFrequencyChecker().get();
-
         clock.currentTimeMillis = 0;
-        assertTrue(fooChecker.checkAndIncrement());
-        assertTrue(fooChecker.checkAndIncrement());
-        assertFalse(fooChecker.checkAndIncrement());
-
-        assertTrue(barChecker.checkAndIncrement());
-        assertTrue(barChecker.checkAndIncrement());
-        assertFalse(barChecker.checkAndIncrement());
+        assertTrue(fooBarChecker.checkAndIncrement());
+        assertTrue(fooBarChecker.checkAndIncrement());
+        assertFalse(fooBarChecker.checkAndIncrement());
 
         assertTrue(dao.getOccurrences("foo").isEmpty());
 
@@ -248,7 +254,7 @@ public class FrequencyLimitManagerTest {
                                                                                     .setId("foo")
                                                                                     .build()));
 
-        FrequencyChecker checker = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker = limitManager.getFrequencyChecker(ids("foo")).get();
 
         clock.currentTimeMillis = 100;
         assertTrue(checker.checkAndIncrement());
@@ -274,7 +280,7 @@ public class FrequencyLimitManagerTest {
                                                                                     .setId("foo")
                                                                                     .build()));
 
-        FrequencyChecker checker = limitManager.getFrequencyChecker().get();
+        FrequencyChecker checker = limitManager.getFrequencyChecker(ids("foo")).get();
 
         clock.currentTimeMillis = 100;
         assertTrue(checker.checkAndIncrement());
@@ -290,5 +296,9 @@ public class FrequencyLimitManagerTest {
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
         assertEquals(1, dao.getOccurrences("foo").size());
+    }
+
+    private static Collection<String> ids(String... ids) {
+        return Arrays.asList(ids);
     }
 }
