@@ -29,12 +29,12 @@ public class AccountEventTemplateTest extends BaseTestCase {
     }
 
     /**
-     * Test basic AccountEvent with no optional value or properties.
+     * Test basic Registered AccountEvent with no optional value or properties.
      *
      * @throws JSONException
      */
     @Test
-    public void testBasicAccountEvent() throws JSONException {
+    public void testBasicRegisteredAccountEvent() throws JSONException {
         CustomEvent event = AccountEventTemplate.newRegisteredTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.REGISTERED_ACCOUNT_EVENT);
@@ -43,12 +43,40 @@ public class AccountEventTemplateTest extends BaseTestCase {
     }
 
     /**
-     * Test AccountEvent with optional value and properties.
+     * Test basic Logged in AccountEvent with no optional value or properties.
      *
      * @throws JSONException
      */
     @Test
-    public void testAccountEvent() throws JSONException {
+    public void testBasicLoggedInAccountEvent() throws JSONException {
+        CustomEvent event = AccountEventTemplate.newLoggedInTemplate().createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.LOGGED_IN);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+    }
+
+    /**
+     * Test basic Logged out AccountEvent with no optional value or properties.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testBasicLoggedOutAccountEvent() throws JSONException {
+        CustomEvent event = AccountEventTemplate.newLoggedOutTemplate().createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.LOGGED_OUT);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+    }
+
+    /**
+     * Test Registered AccountEvent with optional value and properties.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testRegisteredAccountEvent() throws JSONException {
         CustomEvent event = AccountEventTemplate.newRegisteredTemplate()
                                                 .setValue(new BigDecimal(123))
                                                 .setTransactionId("Wednesday 11/4/2015")
@@ -61,6 +89,56 @@ public class AccountEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "Premium");
+    }
+
+    /**
+     * Test Logged in AccountEvent with optional value and properties.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testLoggedInAccountEvent() throws JSONException {
+        CustomEvent event = AccountEventTemplate.newLoggedInTemplate()
+                .setValue(new BigDecimal(123))
+                .setTransactionId("Wednesday 11/4/2015")
+                .setCategory("Premium")
+                .setUserId("FakeUserId")
+                .setType("FakeType")
+                .createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.LOGGED_IN);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
+        EventTestUtils.validateEventValue(event, "event_value", 123000000L);
+        EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "Premium");
+        EventTestUtils.validateNestedEventValue(event, "properties", "user_id", "FakeUserId");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "FakeType");
+    }
+
+    /**
+     * Test Logged out AccountEvent with optional value and properties.
+     *
+     * @throws JSONException
+     */
+    @Test
+    public void testLoggedOutAccountEvent() throws JSONException {
+        CustomEvent event = AccountEventTemplate.newLoggedOutTemplate()
+                .setValue(new BigDecimal(123))
+                .setTransactionId("Wednesday 11/4/2015")
+                .setCategory("Premium")
+                .setUserId("FakeUserId")
+                .setType("FakeType")
+                .createEvent();
+
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.LOGGED_OUT);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
+        EventTestUtils.validateEventValue(event, "event_value", 123000000L);
+        EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
+        EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
+        EventTestUtils.validateNestedEventValue(event, "properties", "category", "Premium");
+        EventTestUtils.validateNestedEventValue(event, "properties", "user_id", "FakeUserId");
+        EventTestUtils.validateNestedEventValue(event, "properties", "type", "FakeType");
     }
 
 }

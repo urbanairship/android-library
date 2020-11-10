@@ -2,10 +2,10 @@
 
 package com.urbanairship.analytics;
 
-import java.math.BigDecimal;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.math.BigDecimal;
 
 /**
  * A class that represents a custom account event template for the application.
@@ -25,6 +25,18 @@ public class AccountEventTemplate {
     public static final String REGISTERED_ACCOUNT_EVENT = "registered_account";
 
     /**
+     * The logged in event name.
+     */
+    @NonNull
+    public static final String LOGGED_IN = "logged_in";
+
+    /**
+     * The logged out event name.
+     */
+    @NonNull
+    public static final String LOGGED_OUT = "logged_out";
+
+    /**
      * The lifetime value property.
      */
     private static final String LIFETIME_VALUE = "ltv";
@@ -34,12 +46,32 @@ public class AccountEventTemplate {
      */
     private static final String CATEGORY = "category";
 
+    /**
+     * The user id property.
+     */
+    private static final String USER_ID = "user_id";
+
+    /**
+     * The type property.
+     */
+    private static final String TYPE = "type";
+
+    @NonNull
+    private final String eventName;
+
     // optional
     private BigDecimal value;
     private String category;
     private String transactionId;
 
-    private AccountEventTemplate() {
+    @Nullable
+    private String userId;
+
+    @Nullable
+    private String type;
+
+    private AccountEventTemplate(@NonNull String eventName) {
+        this.eventName = eventName;
     }
 
     /**
@@ -49,7 +81,27 @@ public class AccountEventTemplate {
      */
     @NonNull
     public static AccountEventTemplate newRegisteredTemplate() {
-        return new AccountEventTemplate();
+        return new AccountEventTemplate(REGISTERED_ACCOUNT_EVENT);
+    }
+
+    /**
+     * Creates a registered account event template with logged in as template id.
+     *
+     * @return An AccountEventTemplate.
+     */
+    @NonNull
+    public static AccountEventTemplate newLoggedInTemplate() {
+        return new AccountEventTemplate(LOGGED_IN);
+    }
+
+    /**
+     * Creates a registered account event template with logged out as template id.
+     *
+     * @return An AccountEventTemplate.
+     */
+    @NonNull
+    public static AccountEventTemplate newLoggedOutTemplate() {
+        return new AccountEventTemplate(LOGGED_OUT);
     }
 
     /**
@@ -146,13 +198,37 @@ public class AccountEventTemplate {
     }
 
     /**
+     * Set the user id.
+     *
+     * @param userId The user id as a string.
+     * @return An AccountEventTemplate.
+     */
+    @NonNull
+    public AccountEventTemplate setUserId(String userId) {
+        this.userId = userId;
+        return this;
+    }
+
+    /**
+     * Set the type.
+     *
+     * @param type The type as a string.
+     * @return An AccountEventTemplate.
+     */
+    @NonNull
+    public AccountEventTemplate setType(String type) {
+        this.type = type;
+        return this;
+    }
+
+    /**
      * Creates the custom account event.
      *
      * @return The custom account event.
      */
     @NonNull
     public CustomEvent createEvent() {
-        CustomEvent.Builder builder = CustomEvent.newBuilder(REGISTERED_ACCOUNT_EVENT);
+        CustomEvent.Builder builder = CustomEvent.newBuilder(this.eventName);
 
         if (this.value != null) {
             builder.setEventValue(this.value);
@@ -167,6 +243,14 @@ public class AccountEventTemplate {
 
         if (this.category != null) {
             builder.addProperty(CATEGORY, this.category);
+        }
+
+        if (this.userId != null) {
+            builder.addProperty(USER_ID, this.userId);
+        }
+
+        if (this.type != null) {
+            builder.addProperty(TYPE, this.type);
         }
 
         builder.setTemplateType(ACCOUNT_EVENT_TEMPLATE);
