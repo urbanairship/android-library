@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import androidx.annotation.NonNull;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
@@ -69,6 +70,15 @@ public class UrlAllowListTest extends BaseTestCase {
         assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_OPEN_URL));
         assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
         assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_ALL));
+
+        // sms
+        assertTrue(urlAllowList.isAllowed("sms:+18675309?body=Hi%20you", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("sms:8675309", UrlAllowList.SCOPE_OPEN_URL));
+
+
+        // email
+        assertTrue(urlAllowList.isAllowed("mailto:name@example.com?subject=The%20subject%20of%20the%20mail", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("mailto:name@example.com", UrlAllowList.SCOPE_OPEN_URL));
     }
 
     /**
@@ -78,10 +88,6 @@ public class UrlAllowListTest extends BaseTestCase {
     public void testInvalidPatterns() {
         // Not a URL
         assertFalse(urlAllowList.addEntry("not a url"));
-        assertFalse(urlAllowList.addEntry(null));
-
-        // Missing /
-        assertFalse(urlAllowList.addEntry("*:*"));
 
         // Missing schemes
         assertFalse(urlAllowList.addEntry("www.urbanairship.com"));
@@ -93,12 +99,6 @@ public class UrlAllowListTest extends BaseTestCase {
         // Invalid hosts
         assertFalse(urlAllowList.addEntry("*://what*"));
         assertFalse(urlAllowList.addEntry("*://*what"));
-
-        // Missing host
-        assertFalse(urlAllowList.addEntry("*://"));
-
-        // Missing file path
-        assertFalse(urlAllowList.addEntry("file://"));
     }
 
     /**
@@ -238,6 +238,8 @@ public class UrlAllowListTest extends BaseTestCase {
         assertTrue(urlAllowList.isAllowed("https://hi.urbanairship.com/path", UrlAllowList.SCOPE_ALL));
         assertTrue(urlAllowList.isAllowed("http://urbanairship.com", UrlAllowList.SCOPE_ALL));
         assertTrue(urlAllowList.isAllowed("cool.story://urbanairship.com", UrlAllowList.SCOPE_ALL));
+        assertTrue(urlAllowList.isAllowed("sms:+18664504185?body=Hi", UrlAllowList.SCOPE_ALL));
+
     }
 
     /**
@@ -297,7 +299,6 @@ public class UrlAllowListTest extends BaseTestCase {
         assertTrue(urlAllowList.isAllowed("wild://cool", UrlAllowList.SCOPE_ALL));
         assertTrue(urlAllowList.isAllowed("wild://cool/", UrlAllowList.SCOPE_ALL));
         assertTrue(urlAllowList.isAllowed("wild://cool/path", UrlAllowList.SCOPE_ALL));
-
     }
 
     /**
@@ -430,6 +431,22 @@ public class UrlAllowListTest extends BaseTestCase {
         assertFalse(urlAllowList.isAllowed(nonMatchingURL, scope));
     }
 
+    /**
+     * Test sms wild card in the path
+     */
+    @Test
+    public void testSmsPath() {
+        urlAllowList.addEntry("sms:86753*9*");
+
+        // Reject
+        assertFalse(urlAllowList.isAllowed("sms:86753"));
+        assertFalse(urlAllowList.isAllowed("sms:867530"));
+
+        // Accept
+        assertTrue(urlAllowList.isAllowed("sms:86753191"));
+        assertTrue(urlAllowList.isAllowed("sms:8675309"));
+    }
+
     private class TestUrlAllowListCallback implements UrlAllowList.OnUrlAllowListCallback {
 
         public String matchingURLToAccept;
@@ -450,7 +467,5 @@ public class UrlAllowListTest extends BaseTestCase {
                 return false;
             }
         }
-
     }
-
 }
