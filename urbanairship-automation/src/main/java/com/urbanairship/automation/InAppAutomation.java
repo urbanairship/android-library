@@ -3,7 +3,6 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -14,11 +13,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.Action;
-import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionCompletionCallback;
-import com.urbanairship.actions.ActionResult;
-import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.auth.AuthException;
@@ -37,7 +31,6 @@ import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -80,8 +73,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final InAppMessageManager inAppMessageManager;
     private final AudienceManager audienceManager;
     private final RetryingExecutor retryingExecutor;
-    private final ActionRunRequestFactory actionRunRequestFactory;
     private final DeferredScheduleClient deferredScheduleClient;
+
+    private ActionsScheduleDelegate actionScheduleDelegate;
+    private InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
+
+    private Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -144,9 +141,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
-        this.actionRunRequestFactory = new ActionRunRequestFactory();
 
         this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig, new AuthManager(runtimeConfig, airshipChannel));
+        this.actionScheduleDelegate = new ActionsScheduleDelegate();
+        this.inAppMessageScheduleDelegate = new InAppMessageScheduleDelegate(inAppMessageManager);
     }
 
     @VisibleForTesting
@@ -158,8 +156,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull InAppRemoteDataObserver observer,
                     @NonNull InAppMessageManager inAppMessageManager,
                     @NonNull RetryingExecutor retryingExecutor,
-                    @NonNull ActionRunRequestFactory actionRunRequestFactory,
-                    @NonNull DeferredScheduleClient deferredScheduleClient) {
+                    @NonNull DeferredScheduleClient deferredScheduleClient,
+                    @NonNull ActionsScheduleDelegate actionsScheduleDelegate,
+                    @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate) {
         super(context, preferenceDataStore);
         this.automationEngine = engine;
         this.airshipChannel = airshipChannel;
@@ -167,9 +166,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.remoteDataSubscriber = observer;
         this.inAppMessageManager = inAppMessageManager;
         this.retryingExecutor = retryingExecutor;
-        this.actionRunRequestFactory = actionRunRequestFactory;
         this.deferredScheduleClient = deferredScheduleClient;
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
+        this.actionScheduleDelegate = actionsScheduleDelegate;
+        this.inAppMessageScheduleDelegate = inAppMessageScheduleDelegate;
     }
 
     /**
@@ -520,19 +520,16 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             @Override
             public int run() {
                 switch (schedule.getType()) {
-                    case Schedule.TYPE_ACTION:
-                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-                        return RetryingExecutor.RESULT_FINISHED;
-
-                    case Schedule.TYPE_IN_APP_MESSAGE:
-                        inAppMessageManager.onPrepare(schedule.getId(), (InAppMessage) schedule.coerceType(), callback);
-                        return RetryingExecutor.RESULT_FINISHED;
-
                     case Schedule.TYPE_DEFERRED:
-                        return onPrepareDeferredSchedule(schedule, triggerContext, callback);
+                        return resolveDeferred(schedule, triggerContext, callback);
+                    case Schedule.TYPE_ACTION:
+                        prepareSchedule(schedule.getId(), (Actions) schedule.coerceType(), actionScheduleDelegate, callback);
+                        break;
+                    case Schedule.TYPE_IN_APP_MESSAGE:
+                        prepareSchedule(schedule.getId(), (InAppMessage) schedule.coerceType(), inAppMessageScheduleDelegate, callback);
+                        break;
                 }
 
-                Logger.error("Unexpected schedule type: %s", schedule.getType());
                 return RetryingExecutor.RESULT_FINISHED;
             }
         };
@@ -540,10 +537,22 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         retryingExecutor.execute(checkAudience, prepareSchedule);
     }
 
+    private <T extends ScheduleData> void prepareSchedule(final String scheduleId, T scheduleData, final ScheduleDelegate<T> delegate, final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+        delegate.onPrepareSchedule(scheduleId, scheduleData, new AutomationDriver.PrepareScheduleCallback() {
+            @Override
+            public void onFinish(int result) {
+                if (result == AutomationDriver.PREPARE_RESULT_CONTINUE) {
+                    scheduleDelegateMap.put(scheduleId, delegate);
+                }
+                callback.onFinish(result);
+            }
+        });
+    }
+
     @RetryingExecutor.Result
-    private int onPrepareDeferredSchedule(final @NonNull Schedule<? extends ScheduleData> schedule,
-                                          final @Nullable TriggerContext triggerContext,
-                                          final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+    private int resolveDeferred(final @NonNull Schedule<? extends ScheduleData> schedule,
+                                final @Nullable TriggerContext triggerContext,
+                                final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
         Deferred deferredScheduleData = (Deferred) schedule.coerceType();
         Response<DeferredScheduleClient.Result> response;
@@ -583,7 +592,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         InAppMessage message = response.getResult().getMessage();
         if (message != null) {
-            inAppMessageManager.onPrepare(schedule.getId(), message, callback);
+            prepareSchedule(schedule.getId(), message, inAppMessageScheduleDelegate, callback);
         } else {
             // Handled by backend, penalize to count towards limit
             callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -602,39 +611,28 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return AutomationDriver.READY_RESULT_NOT_READY;
         }
 
-        switch (schedule.getType()) {
-            case Schedule.TYPE_ACTION:
-                if (isScheduleInvalid(schedule)) {
-                    return AutomationDriver.READY_RESULT_INVALIDATE;
-                }
-                return AutomationDriver.READY_RESULT_CONTINUE;
-            case Schedule.TYPE_IN_APP_MESSAGE:
-                if (isScheduleInvalid(schedule)) {
-                    inAppMessageManager.onExecutionInvalidated(schedule.getId());
-                    return AutomationDriver.READY_RESULT_INVALIDATE;
-                }
-                return inAppMessageManager.onCheckExecutionReadiness(schedule.getId());
+        if (isScheduleInvalid(schedule)) {
+            ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
+            if (delegate != null) {
+                delegate.onExecutionInvalidated(schedule.getId());
+            }
+            return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
-        Logger.error("Unexpected schedule type: %s", schedule.getType());
-        return AutomationDriver.READY_RESULT_CONTINUE;
+        ScheduleDelegate<?> delegate = scheduleDelegateMap.get(schedule.getId());
+        return delegate == null ? AutomationDriver.READY_RESULT_NOT_READY : delegate.onCheckExecutionReadiness(schedule.getId());
     }
 
     @MainThread
-    private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
+    private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends
+            ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
         Logger.verbose("InAppAutomation - onExecuteTriggeredSchedule schedule: %s", schedule.getId());
-
-        switch (schedule.getType()) {
-            case Schedule.TYPE_ACTION:
-                executeActions(schedule, (Actions) schedule.coerceType(), callback);
-                break;
-            case Schedule.TYPE_IN_APP_MESSAGE:
-                inAppMessageManager.onExecute(schedule.getId(), callback);
-                break;
-            default:
-                Logger.error("Unexpected schedule type: %s", schedule.getType());
-                callback.onFinish();
-                break;
+        ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
+        if (delegate != null) {
+            delegate.onExecute(schedule.getId(), callback);
+        } else {
+            Logger.error("Unexpected schedule type: %s", schedule.getType());
+            callback.onFinish();
         }
     }
 
@@ -656,65 +654,24 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         return remoteDataSubscriber.isRemoteSchedule(schedule) && !remoteDataSubscriber.isScheduleValid(schedule);
     }
 
-    private void executeActions(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Actions actions, AutomationDriver.ExecutionCallback callback) {
-        Bundle metadata = new Bundle();
-        metadata.putString(ActionArguments.ACTION_SCHEDULE_ID_METADATA, schedule.getId());
-
-        ActionCallback actionCallback = new ActionCallback(callback, actions.getActionsMap().size());
-        for (Map.Entry<String, JsonValue> entry : actions.getActionsMap().entrySet()) {
-            actionRunRequestFactory.createActionRequest(entry.getKey())
-                                   .setValue(entry.getValue())
-                                   .setSituation(Action.SITUATION_AUTOMATION)
-                                   .setMetadata(metadata)
-                                   .run(Looper.getMainLooper(), actionCallback);
-        }
-    }
-
     @AutomationDriver.PrepareResult
     private int getPrepareResultMissedAudience(@NonNull Schedule schedule) {
         @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-        switch (schedule.getAudience().getMissBehavior()) {
-            case Audience.MISS_BEHAVIOR_CANCEL:
-                result = AutomationDriver.PREPARE_RESULT_CANCEL;
-                break;
-            case Audience.MISS_BEHAVIOR_SKIP:
-                result = AutomationDriver.PREPARE_RESULT_SKIP;
-                break;
-            case Audience.MISS_BEHAVIOR_PENALIZE:
-                result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                break;
-        }
-
-        return result;
-    }
-
-    /**
-     * Helper class that calls the callback after all actions have run.
-     */
-    private static class ActionCallback implements ActionCompletionCallback {
-
-        private final AutomationDriver.ExecutionCallback callback;
-        private int pendingActionCallbacks;
-
-        /**
-         * Default constructor.
-         *
-         * @param callback The completion callback.
-         * @param pendingActionCallbacks Number of pending callbacks to expect.
-         */
-        ActionCallback(AutomationDriver.ExecutionCallback callback, int pendingActionCallbacks) {
-            this.callback = callback;
-            this.pendingActionCallbacks = pendingActionCallbacks;
-        }
-
-        @Override
-        public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
-            pendingActionCallbacks--;
-            if (pendingActionCallbacks == 0) {
-                callback.onFinish();
+        if (schedule.getAudience() != null) {
+            switch (schedule.getAudience().getMissBehavior()) {
+                case Audience.MISS_BEHAVIOR_CANCEL:
+                    result = AutomationDriver.PREPARE_RESULT_CANCEL;
+                    break;
+                case Audience.MISS_BEHAVIOR_SKIP:
+                    result = AutomationDriver.PREPARE_RESULT_SKIP;
+                    break;
+                case Audience.MISS_BEHAVIOR_PENALIZE:
+                    result = AutomationDriver.PREPARE_RESULT_PENALIZE;
+                    break;
             }
         }
 
+        return result;
     }
 
 }
