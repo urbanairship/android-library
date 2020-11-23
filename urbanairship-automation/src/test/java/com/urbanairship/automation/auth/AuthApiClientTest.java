@@ -70,7 +70,7 @@ public class AuthApiClientTest {
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("Bearer VWtkZq18HZM3GWzD/q27qPSVszysSyoQfQ6tDEAcAko=\n", testRequest.getRequestHeaders().get("Authorization"));
         assertEquals("appKey", testRequest.getRequestHeaders().get("X-UA-App-Key"));
-        assertEquals("some channel", testRequest.getRequestHeaders().get("X-UA-Channel"));
+        assertEquals("some channel", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
     }
 
     @Test(expected = RequestException.class)
