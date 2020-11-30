@@ -4,10 +4,6 @@ package com.urbanairship.js;
 
 import android.net.Uri;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
@@ -16,7 +12,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Defines a set of URL patterns to match a URL.
@@ -38,27 +39,44 @@ public class UrlAllowList {
      */
     public static final int SCOPE_ALL = SCOPE_JAVASCRIPT_INTERFACE | SCOPE_OPEN_URL;
 
-    @IntDef(flag = true, value = {SCOPE_JAVASCRIPT_INTERFACE, SCOPE_OPEN_URL, SCOPE_ALL})
+    @IntDef(flag = true, value = { SCOPE_JAVASCRIPT_INTERFACE, SCOPE_OPEN_URL, SCOPE_ALL })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Scope {
-    }
+    public @interface Scope {}
+
+    /**
+     * Regular expression to match the scheme.
+     * <scheme> := '*' | <valid scheme characters, `*` will match 0 or more characters>
+     */
+    private static final String SCHEME_REGEX = "([^\\s]+)";
 
     /**
      * Regular expression to match the host.
      * <host> := '*' | *.<valid host characters> | <valid host characters>
      */
-    private static final Pattern HOST_PATTERN = Pattern.compile("((\\*)|(\\*\\.[^/\\*]+)|([^/\\*]+))", Pattern.CASE_INSENSITIVE);
+    private static final String HOST_REGEX = "((\\*)|(\\*\\.[^/\\*]+)|([^/\\*]+))";
 
     /**
-     * Regular expression to match the path or scheme.
-     * <path> := <any chars (no spaces), `*` will match 0 or more characters>
+     * Regular expression to match the path.
+     * <path> := <any chars, `*` will match 0 or more characters>
      */
-    private static final Pattern PATH_OR_SCHEME_PATTERN = Pattern.compile("([^\\s]*)", Pattern.CASE_INSENSITIVE);
+    private static final String PATH_REGEX = "(.*)";
+
+    /**
+     * Regular expression to match the pattern.
+     * <pattern> := '*' | <scheme>://<host>/<path> | <scheme>://<host> | <scheme>:///<path> | <scheme>:/<path> | <scheme>:/
+     */
+    private static final String PATTERN_REGEX = String.format(Locale.US, "^((\\*)|((%s://%s/%s)|(%s://%s)|(%s:/[^/]%s)|(%s:/)|(%s:///%s)))",
+            SCHEME_REGEX, HOST_REGEX, PATH_REGEX, SCHEME_REGEX, HOST_REGEX, SCHEME_REGEX, PATH_REGEX, SCHEME_REGEX, SCHEME_REGEX, PATH_REGEX);
 
     /**
      * Regular expression characters. Used to escape any regular expression from the path and host.
      */
     private static final String REGEX_SPECIAL_CHARACTERS = "\\.[]{}()^$?+|*";
+
+    /**
+     * Compiled pattern to validate url pattern entries.
+     */
+    private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
     /**
      * Interface that defines a callback that can be used to reject or allow a URL.
@@ -86,10 +104,10 @@ public class UrlAllowList {
      * syntax:
      * <pre>
      * {@code
-     * <pattern> := '*' | <scheme>'://'<host>/<path> | <scheme>'://'<host> | <scheme>':/'<path> | <scheme>':///'<path>  | <scheme>':'<path>
-     * <scheme> := <any char combination ' ', '*' are treated as wild cards>
-     * <host> := '*' | '*.'<any char combination except ' ', '/' and '*'> | <any char combination except ' ', '/', and '*'>
-     * <path> := <any char combination except ' ', '*' are treated as wild cards>
+     * <pattern> := '*' | <scheme>'://'<host>/<path> | <scheme>'://'<host> | <scheme>':/'<path> | <scheme>':///'<path>
+     * <scheme> := <any char combination, '*' are treated as wild cards>
+     * <host> := '*' | '*.'<any char combination except '/' and '*'> | <any char combination except '/' and '*'>
+     * <path> := <any char combination, '*' are treated as wild cards>
      * }
      *
      * Examples:
@@ -145,34 +163,16 @@ public class UrlAllowList {
      * was unable to be added because it was either null or did not match the url-pattern syntax.
      */
     public boolean addEntry(@NonNull String pattern, @Scope int scope) {
-        if (pattern.equals("*")) {
-            addEntry(new UriPattern(null, null, null), scope);
-            return true;
-        }
-
-        Uri uri = Uri.parse(pattern);
-        if (uri == null) {
+        //noinspection ConstantConditions
+        if (pattern == null || !VALID_PATTERN.matcher(pattern).matches()) {
             Logger.error("Invalid URL allow list pattern %s", pattern);
             return false;
         }
 
+        Uri uri = Uri.parse(pattern);
         String scheme = uri.getScheme();
-        if (UAStringUtil.isEmpty(scheme) || !PATH_OR_SCHEME_PATTERN.matcher(scheme).matches()) {
-            Logger.error("Invalid scheme %s in URL allow list pattern %s", scheme, pattern);
-            return false;
-        }
-
-        String host = UAStringUtil.nullIfEmpty(uri.getEncodedAuthority());
-        if (host != null && !HOST_PATTERN.matcher(host).matches()) {
-            Logger.error("Invalid host %s in URL allow list pattern %s", host, pattern);
-            return false;
-        }
-
-        String path = uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
-        if (path != null && !PATH_OR_SCHEME_PATTERN.matcher(path).matches()) {
-            Logger.error("Invalid path %s in URL allow list pattern %s", path, pattern);
-            return false;
-        }
+        String host = uri.getEncodedAuthority();
+        String path = uri.getPath();
 
         Pattern schemePattern;
         if (UAStringUtil.isEmpty(scheme) || scheme.equals("*")) {
@@ -295,9 +295,6 @@ public class UrlAllowList {
         urlAllowList.addEntry("https://*.urbanairship.com");
         urlAllowList.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
         urlAllowList.addEntry("https://*.asnapieu.com");
-        urlAllowList.addEntry("sms:*", SCOPE_OPEN_URL);
-        urlAllowList.addEntry("mailto:*", SCOPE_OPEN_URL);
-
         for (String entry : airshipConfigOptions.urlAllowList) {
             urlAllowList.addEntry(entry, SCOPE_ALL);
         }
@@ -357,8 +354,7 @@ public class UrlAllowList {
                 return false;
             }
 
-            String uriPath = uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
-            return path == null || (uriPath != null && path.matcher(uriPath).matches());
+            return path == null || (uri.getPath() != null && path.matcher(uri.getPath()).matches());
         }
 
         @Override
@@ -375,11 +371,9 @@ public class UrlAllowList {
             if (scheme != null ? !scheme.equals(that.scheme) : that.scheme != null) {
                 return false;
             }
-
             if (host != null ? !host.equals(that.host) : that.host != null) {
                 return false;
             }
-
             return path != null ? path.equals(that.path) : that.path == null;
         }
 
