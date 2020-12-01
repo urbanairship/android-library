@@ -2,8 +2,11 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.0.3 - November 30, 2020
+Patch release that fixes crashes related to In-App Automation SQL exceptions if the database is unable to be accessed due to low storage or permission issues.  
+
 ## Version 14.0.2 - October 29, 2020
-Patch release optimizing named user tag group cache usage in In-App-Automation.
+Patch release optimizing named user tag group cache usage in In-App Automation.
 
 ### Changes
 - IAA tag group cache is now cleared when a named user is associated or disassociated

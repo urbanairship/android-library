@@ -44,9 +44,6 @@ public abstract class AutomationDao {
     @Query("SELECT COUNT(*) FROM schedules")
     public abstract int getScheduleCount();
 
-    @Query("DELETE FROM schedules WHERE scheduleType = :scheduleType")
-    abstract void deleteSchedulesByType(int scheduleType);
-
     @Transaction
     @Query("SELECT * FROM schedules")
     @NonNull
