@@ -19,11 +19,11 @@ import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntRange;
@@ -59,7 +59,7 @@ public class InAppMessageManager {
     private static final String DISPLAY_INTERVAL_KEY = "com.urbanairship.iam.displayinterval";
 
     // State
-    private final Map<String, AdapterWrapper> adapterWrappers = new ConcurrentHashMap<>();
+    private final Map<String, AdapterWrapper> adapterWrappers = Collections.synchronizedMap(new HashMap<String, AdapterWrapper>());
 
     private final RetryingExecutor executor;
     private final ActionRunRequestFactory actionRunRequestFactory;

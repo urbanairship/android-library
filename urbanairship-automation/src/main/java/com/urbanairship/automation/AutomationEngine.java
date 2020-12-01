@@ -22,6 +22,7 @@ import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.automation.alarms.AlarmOperationScheduler;
 import com.urbanairship.automation.alarms.OperationScheduler;
 import com.urbanairship.automation.storage.AutomationDao;
+import com.urbanairship.automation.storage.AutomationDaoWrapper;
 import com.urbanairship.automation.storage.AutomationDatabase;
 import com.urbanairship.automation.storage.FullSchedule;
 import com.urbanairship.automation.storage.LegacyDataMigrator;
@@ -199,7 +200,7 @@ public class AutomationEngine {
         this(analytics,
                 InAppActivityMonitor.shared(context),
                 AlarmOperationScheduler.shared(context),
-                AutomationDatabase.createDatabase(context, runtimeConfig).getScheduleDao(),
+                new AutomationDaoWrapper(AutomationDatabase.createDatabase(context, runtimeConfig).getScheduleDao()),
                 new LegacyDataMigrator(context, runtimeConfig, dataStore));
     }
 
@@ -444,64 +445,6 @@ public class AutomationEngine {
                     cancelGroupAlarms(Collections.singletonList(group));
                     notifyCancelledSchedule(entries);
                 }
-            }
-        });
-
-        return pendingResult;
-    }
-
-    /**
-     * Cancels schedule groups.
-     *
-     * @param groups A collection of groups.
-     * @return A pending result.
-     */
-    @NonNull
-    public PendingResult<Void> cancelGroups(@NonNull final Collection<String> groups) {
-        final PendingResult<Void> pendingResult = new PendingResult<>();
-
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Collection<FullSchedule> entries = new ArrayList<>();
-                for (String group : groups) {
-                    entries.addAll(dao.getSchedulesWithGroup(group));
-                }
-
-                if (!entries.isEmpty()) {
-                    notifyCancelledSchedule(entries);
-                    cancelGroupAlarms(groups);
-                    dao.deleteSchedules(entries);
-                }
-
-                Logger.verbose("AutomationEngine - Canceled schedule groups: %s", groups);
-                pendingResult.setResult(null);
-            }
-        });
-
-        return pendingResult;
-    }
-
-    /**
-     * Cancels all schedules.
-     *
-     * @return A pending result.
-     */
-    @NonNull
-    public PendingResult<Void> cancelAll() {
-        final PendingResult<Void> pendingResult = new PendingResult<>();
-
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Collection<FullSchedule> entries = dao.getSchedules();
-                if (!entries.isEmpty()) {
-                    notifyCancelledSchedule(entries);
-                    dao.deleteSchedules(entries);
-                    cancelAlarms();
-                }
-                Logger.verbose("AutomationEngine - Canceled all schedules.");
-                pendingResult.setResult(null);
             }
         });
 
@@ -1283,7 +1226,7 @@ public class AutomationEngine {
 
     @NonNull
     private Collection<Schedule<? extends ScheduleData>> convertSchedulesUnknownTypes(@NonNull Collection<FullSchedule> entries) {
-        Collection <Schedule<? extends ScheduleData>> schedules = new ArrayList<>();
+        Collection<Schedule<? extends ScheduleData>> schedules = new ArrayList<>();
         for (FullSchedule entry : entries) {
             Schedule<? extends ScheduleData> schedule = convert(entry);
             if (schedule != null) {
