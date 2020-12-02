@@ -3,6 +3,7 @@
 package com.urbanairship.push;
 
 import android.content.Context;
+import android.os.Bundle;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
@@ -21,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -123,7 +126,6 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, false));
         verify(mockAirshipChannel).updateRegistration();
     }
-
 
     /**
      * Test disabling push
@@ -379,5 +381,59 @@ public class PushManagerTest extends BaseTestCase {
 
         Map<String, String> headers = delegate.onCreateAnalyticsHeaders();
         assertEquals(expectedHeaders, headers);
+    }
+
+    @Test
+    public void testOnPushReceived() {
+        Bundle bundle = new Bundle();
+        PushMessage message = new PushMessage(bundle);
+
+        PushListener internalPushListener = mock(PushListener.class);
+        PushListener pushListener = mock(PushListener.class);
+        pushManager.addInternalPushListener(internalPushListener);
+        pushManager.addPushListener(pushListener);
+
+        pushManager.onPushReceived(message, true);
+        pushManager.onPushReceived(message, false);
+
+        verify(pushListener).onPushReceived(message, true);
+        verify(internalPushListener).onPushReceived(message, true);
+
+        verify(pushListener).onPushReceived(message, false);
+        verify(internalPushListener).onPushReceived(message, false);
+    }
+
+    @Test
+    public void testOnPushReceivedInternal() {
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.REMOTE_DATA_UPDATE_KEY, "true");
+        PushMessage message = new PushMessage(bundle);
+
+        PushListener internalPushListener = mock(PushListener.class);
+        PushListener pushListener = mock(PushListener.class);
+        pushManager.addInternalPushListener(internalPushListener);
+        pushManager.addPushListener(pushListener);
+
+        pushManager.onPushReceived(message, false);
+        verify(internalPushListener).onPushReceived(message, false);
+        verifyZeroInteractions(pushListener);
+    }
+
+    @Test
+    public void testOnNotificationPosted() {
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.REMOTE_DATA_UPDATE_KEY, "true");
+        final PushMessage message = new PushMessage(bundle);
+
+        NotificationListener notificationListener = mock(NotificationListener.class);
+        pushManager.setNotificationListener(notificationListener);
+
+        pushManager.onNotificationPosted(message, 100, "neat");
+        verify(notificationListener).onNotificationPosted(ArgumentMatchers.argThat(new ArgumentMatcher<NotificationInfo>() {
+            @Override
+            public boolean matches(NotificationInfo argument) {
+                return argument.getMessage().equals(message) && argument.getNotificationId() == 100 && argument.getNotificationTag().equals("neat");
+            }
+        }));
     }
 }

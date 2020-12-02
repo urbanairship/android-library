@@ -5,7 +5,6 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * Notification info.
@@ -26,7 +25,6 @@ public class NotificationInfo {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @VisibleForTesting
     public NotificationInfo(@NonNull PushMessage message, int notificationId, @Nullable String notificationTag) {
         this.message = message;
         this.notificationTag = notificationTag;

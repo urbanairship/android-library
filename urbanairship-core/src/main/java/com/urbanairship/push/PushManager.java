@@ -5,14 +5,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationManagerCompat;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
@@ -43,6 +35,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -223,6 +223,7 @@ public class PushManager extends AirshipComponent {
     private List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
 
     private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
+    private List<PushListener> internalPushListeners = new CopyOnWriteArrayList<>();
     private List<InternalNotificationListener> internalNotificationListeners = new CopyOnWriteArrayList<>();
 
     private final Object uniqueIdLock = new Object();
@@ -698,6 +699,18 @@ public class PushManager extends AirshipComponent {
         pushListeners.add(listener);
     }
 
+
+    /**
+     * Adds an internal push listener.
+     *
+     * @param listener The push listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addInternalPushListener(@NonNull PushListener listener) {
+        internalPushListeners.add(listener);
+    }
+
     /**
      * Removes a push listener.
      *
@@ -705,6 +718,7 @@ public class PushManager extends AirshipComponent {
      */
     public void removePushListener(@NonNull PushListener listener) {
         pushListeners.remove(listener);
+        internalPushListeners.remove(listener);
     }
 
     /**
@@ -746,16 +760,27 @@ public class PushManager extends AirshipComponent {
         return notificationListener;
     }
 
-    /**
-     * Gets the push listeners.
-     *
-     * @return The push listeners.
-     * @hide
-     */
-    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    List<PushListener> getPushListeners() {
-        return pushListeners;
+    void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
+        for (PushListener listener : internalPushListeners) {
+            listener.onPushReceived(message, notificationPosted);
+        }
+
+        boolean isInternal = message.isRemoteDataUpdate() || message.isPing();
+        if (!isInternal) {
+            for (PushListener listener : pushListeners) {
+                listener.onPushReceived(message, notificationPosted);
+            }
+        }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void onNotificationPosted(@NonNull PushMessage message, int notificationId, @Nullable String notificationTag) {
+        NotificationListener listener = notificationListener;
+        if (listener != null) {
+            NotificationInfo info = new NotificationInfo(message, notificationId, notificationTag);
+            listener.onNotificationPosted(info);
+        }
     }
 
     /**

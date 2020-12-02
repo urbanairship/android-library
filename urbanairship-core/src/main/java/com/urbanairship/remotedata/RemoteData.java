@@ -86,13 +86,6 @@ public class RemoteData extends AirshipComponent {
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
 
-    /**
-     * The Push key indicating that a remote data update is required.
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @VisibleForTesting
-    static final String REMOTE_DATA_UPDATE_KEY = "com.urbanairship.remote-data.update";
-
     private final JobDispatcher jobDispatcher;
     private RemoteDataJobHandler jobHandler;
     private final PreferenceDataStore preferenceDataStore;
@@ -133,7 +126,7 @@ public class RemoteData extends AirshipComponent {
         @WorkerThread
         @Override
         public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-            if (message.getPushBundle().containsKey(REMOTE_DATA_UPDATE_KEY)) {
+            if (message.isRemoteDataUpdate()) {
                 refresh();
             }
         }
@@ -189,7 +182,7 @@ public class RemoteData extends AirshipComponent {
         backgroundHandler = new Handler(this.backgroundThread.getLooper());
 
         activityMonitor.addApplicationListener(applicationListener);
-        pushManager.addPushListener(pushListener);
+        pushManager.addInternalPushListener(pushListener);
         localeManager.addListener(localeChangedListener);
 
         if (shouldRefresh()) {

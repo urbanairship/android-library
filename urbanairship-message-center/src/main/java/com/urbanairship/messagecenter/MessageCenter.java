@@ -139,7 +139,7 @@ public class MessageCenter extends AirshipComponent {
         super.init();
         inbox.init();
 
-        pushManager.addPushListener(pushListener);
+        pushManager.addInternalPushListener(pushListener);
     }
 
     /**

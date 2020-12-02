@@ -34,8 +34,6 @@ import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPendingIntent;
 
-import java.util.Collections;
-
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -58,9 +56,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private Bundle pushBundle;
     private PushMessage message;
     private PushMessage accengageMessage;
-
-    private PushListener pushListener;
-    private NotificationListener notificationListener;
 
     private PushManager pushManager;
     private NotificationManagerCompat notificationManager;
@@ -91,14 +86,9 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         accengageMessage = new PushMessage(bundle);
 
         pushManager = mock(PushManager.class);
-        pushListener = mock(PushListener.class);
-        notificationListener = mock(NotificationListener.class);
         testPushProvider = new TestPushProvider();
 
         when(pushManager.getPushProvider()).thenReturn(testPushProvider);
-        when(pushManager.getNotificationListener()).thenReturn(notificationListener);
-        when(pushManager.getPushListeners()).thenReturn(Collections.singletonList(pushListener));
-
         notificationManager = mock(NotificationManagerCompat.class);
 
         when(pushManager.isPushAvailable()).thenReturn(true);
@@ -175,8 +165,8 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertBundlesEquals("The push message bundles should match.", pushBundle, intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
 
-        verify(pushListener).onPushReceived(message, true);
-        verify(notificationListener).onNotificationPosted(any(NotificationInfo.class));
+        verify(pushManager).onPushReceived(message, true);
+        verify(pushManager).onNotificationPosted(message, TEST_NOTIFICATION_ID, "testNotificationTag");
     }
 
     /**
@@ -235,7 +225,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verify(pushListener).onPushReceived(message, false);
+        verify(pushManager).onPushReceived(message, false);
     }
 
     /**
@@ -250,7 +240,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verify(pushListener).onPushReceived(message, false);
+        verify(pushManager).onPushReceived(message, false);
     }
 
     /**
@@ -469,6 +459,41 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         assertEquals(NotificationManager.IMPORTANCE_HIGH, channelCompat.getImportance());
         assertEquals(notification.defaults & Notification.DEFAULT_VIBRATE, Notification.DEFAULT_VIBRATE);
         assertEquals(notification.ledARGB, channelCompat.getLightColor());
+    }
+
+    /**
+     * Test remote data notifications
+     */
+    @Test
+    public void testRemoteDataMessage() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        // Set a notification factory that throws an exception
+        notificationProvider = mock(TestNotificationProvider.class);
+
+        Bundle pushBundle = new Bundle();
+        pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
+        pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
+        pushBundle.putString(PushMessage.REMOTE_DATA_UPDATE_KEY, "true");
+        PushMessage message = new PushMessage(pushBundle);
+
+        new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(message)
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .build()
+                .run();
+
+        verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
+        verifyZeroInteractions(notificationProvider);
+        verify(pushManager).onPushReceived(message, false);
+        verify(analytics).addEvent(any(PushArrivedEvent.class));
     }
 
     private Notification createNotification() {

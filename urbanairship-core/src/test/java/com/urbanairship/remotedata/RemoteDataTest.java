@@ -103,7 +103,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         remoteData.init();
-        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        verify(pushManager).addInternalPushListener(pushListenerArgumentCaptor.capture());
         pushListener = pushListenerArgumentCaptor.getValue();
     }
 
@@ -117,7 +117,7 @@ public class RemoteDataTest extends BaseTestCase {
         clearInvocations(mockDispatcher);
 
         Map<String, String> pushData = new HashMap<>();
-        pushData.put(RemoteData.REMOTE_DATA_UPDATE_KEY, "remoteDataUpdate");
+        pushData.put(PushMessage.REMOTE_DATA_UPDATE_KEY, "remoteDataUpdate");
         PushMessage message = new PushMessage(pushData);
 
         pushListener.onPushReceived(message, true);

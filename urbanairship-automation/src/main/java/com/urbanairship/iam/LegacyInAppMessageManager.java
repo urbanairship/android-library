@@ -148,7 +148,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         preferenceDataStore.remove(AUTO_DISPLAY_ENABLED_KEY);
         preferenceDataStore.remove(LAST_DISPLAYED_ID_KEY);
 
-        pushManager.addPushListener(new PushListener() {
+        pushManager.addInternalPushListener(new PushListener() {
             @Override
             @WorkerThread
             public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {

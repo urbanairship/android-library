@@ -27,6 +27,8 @@ import java.util.Map;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * A push message, usually created from handling a message intent from either GCM,
@@ -242,6 +244,14 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     @NonNull
     private static final String ACCENGAGE_CONTENT_KEY = "a4scontent";
+
+    /**
+     * The Push key indicating that a remote data update is required.
+     * @hide
+     */
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String REMOTE_DATA_UPDATE_KEY = "com.urbanairship.remote-data.update";
 
     /**
      * Default sound name.
@@ -803,6 +813,16 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
 
         return new PushMessage(data);
+    }
+
+    /**
+     * Checks if the message is to update remote-data or not.
+     *
+     * @return <code>true</code> if the message contains the remote-data key, otherwise {@code false}.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean isRemoteDataUpdate() {
+        return data.containsKey(REMOTE_DATA_UPDATE_KEY);
     }
 
     /**

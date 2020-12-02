@@ -74,7 +74,7 @@ public class LegacyInAppMessageManagerTest {
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         ArgumentCaptor<InternalNotificationListener> notificationListenerArgumentCaptor = ArgumentCaptor.forClass(InternalNotificationListener.class);
         legacyInAppMessageManager.init();
-        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        verify(pushManager).addInternalPushListener(pushListenerArgumentCaptor.capture());
         verify(pushManager).addInternalNotificationListener(notificationListenerArgumentCaptor.capture());
 
         pushListener = pushListenerArgumentCaptor.getValue();

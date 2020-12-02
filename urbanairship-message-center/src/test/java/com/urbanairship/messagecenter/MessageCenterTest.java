@@ -59,7 +59,7 @@ public class MessageCenterTest {
 
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         messageCenter.init();
-        verify(pushManager).addPushListener(pushListenerArgumentCaptor.capture());
+        verify(pushManager).addInternalPushListener(pushListenerArgumentCaptor.capture());
         pushListener = pushListenerArgumentCaptor.getValue();
     }
 

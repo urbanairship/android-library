@@ -28,7 +28,7 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
     override fun onAirshipReady(airship: UAirship) {
         super.onAirshipReady(airship)
 
-        airship.pushManager.addPushListener { message, _ ->
+        airship.pushManager.addInternalPushListener { message, _ ->
             GlobalScope.launch(Dispatchers.IO) {
                 ServiceLocator.shared(context).getPushDao().insertPush(PushEntity(message))
             }

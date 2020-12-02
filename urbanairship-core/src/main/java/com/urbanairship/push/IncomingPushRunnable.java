@@ -124,8 +124,10 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        if (message.isPing()) {
-            Logger.verbose("PushJobHandler - Received UA Ping");
+        if (message.isPing() || message.isRemoteDataUpdate()) {
+            Logger.verbose("Received internal push.");
+            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+            airship.getPushManager().onPushReceived(message, false);
             return;
         }
 
@@ -148,7 +150,7 @@ class IncomingPushRunnable implements Runnable {
     private void postProcessPush(final UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
             Logger.info("User notifications opted out. Unable to display notification for message: %s", message);
-            notifyPushReceived(airship, false);
+            airship.getPushManager().onPushReceived(message, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -157,7 +159,7 @@ class IncomingPushRunnable implements Runnable {
 
         if (provider == null) {
             Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
-            notifyPushReceived(airship, false);
+            airship.getPushManager().onPushReceived(message, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -167,7 +169,7 @@ class IncomingPushRunnable implements Runnable {
             arguments = provider.onCreateNotificationArguments(context, message);
         } catch (Exception e) {
             Logger.error(e, "Failed to generate notification arguments for message. Skipping.");
-            notifyPushReceived(airship, false);
+            airship.getPushManager().onPushReceived(message, false);
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             return;
         }
@@ -211,19 +213,17 @@ class IncomingPushRunnable implements Runnable {
                 boolean posted = postNotification(notification, arguments);
 
                 airship.getAnalytics().addEvent(new PushArrivedEvent(message, notificationChannel));
+                airship.getPushManager().onPushReceived(message, posted);
 
                 if (posted) {
-                    notifyPushReceived(airship, true);
-                    notifyNotificationPosted(airship, arguments);
-                } else {
-                    notifyPushReceived(airship, false);
+                    airship.getPushManager().onNotificationPosted(message, arguments.getNotificationId(), arguments.getNotificationTag());
                 }
 
                 break;
 
             case NotificationResult.CANCEL:
                 airship.getAnalytics().addEvent(new PushArrivedEvent(message));
-                notifyPushReceived(airship, false);
+                airship.getPushManager().onPushReceived(message, false);
                 break;
 
             case NotificationResult.RETRY:
@@ -326,20 +326,6 @@ class IncomingPushRunnable implements Runnable {
         } catch (Exception e) {
             Logger.error(e, "Failed to post notification.");
             return false;
-        }
-    }
-
-    private void notifyPushReceived(UAirship airship, boolean notificationPosted) {
-        for (PushListener listener : airship.getPushManager().getPushListeners()) {
-            listener.onPushReceived(message, notificationPosted);
-        }
-    }
-
-    private void notifyNotificationPosted(UAirship airship, NotificationArguments arguments) {
-        NotificationListener listener = airship.getPushManager().getNotificationListener();
-        if (listener != null) {
-            NotificationInfo info = new NotificationInfo(arguments.getMessage(), arguments.getNotificationId(), arguments.getNotificationTag());
-            listener.onNotificationPosted(info);
         }
     }
 
