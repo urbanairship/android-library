@@ -104,7 +104,7 @@ public interface AutomationDriver {
      * @param callback The callback to continue execution.
      */
     @WorkerThread
-    void onPrepareSchedule(@NonNull Schedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback);
+    void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback);
 
     /**
      * Checks if the schedule is ready to execute. Will be called before executing the schedule
@@ -115,7 +115,7 @@ public interface AutomationDriver {
      */
     @MainThread
     @ReadyResult
-    int onCheckExecutionReadiness(@NonNull Schedule schedule);
+    int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule);
 
     /**
      * Executes a schedule. The callback should be called after the schedule's execution is complete.
@@ -124,5 +124,14 @@ public interface AutomationDriver {
      * @param finishCallback The finish callback.
      */
     @MainThread
-    void onExecuteTriggeredSchedule(@NonNull Schedule schedule, @NonNull ExecutionCallback finishCallback);
+    void onExecuteTriggeredSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull ExecutionCallback finishCallback);
+
+    /**
+     * Called if the app was terminated before the schedule was able to finish executing.
+     *
+     * @param schedule The schedule.
+     */
+    @WorkerThread
+    void onScheduleExecutionInterrupted(Schedule<? extends ScheduleData> schedule);
+
 }

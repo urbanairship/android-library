@@ -38,26 +38,41 @@ class ActionsScheduleDelegate implements ScheduleDelegate<Actions> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull String scheduleId, Actions scheduleData, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        actionsMap.put(scheduleId, scheduleData);
+    public void onNewSchedule(@NonNull Schedule<? extends ScheduleData> schedule) {
+        // no-op
+    }
+
+    @Override
+    public void onScheduleFinished(@NonNull Schedule<? extends ScheduleData> schedule) {
+        // no-op
+    }
+
+    @Override
+    public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Actions scheduleData, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+        actionsMap.put(schedule.getId(), scheduleData);
         callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
 
     @Override
-    public void onExecutionInvalidated(@NonNull String scheduleId) {
-        actionsMap.remove(scheduleId);
+    public void onExecutionInvalidated(@NonNull Schedule<? extends ScheduleData> schedule) {
+        actionsMap.remove(schedule.getId());
     }
 
     @Override
-    public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
-        Actions actions = actionsMap.get(scheduleId);
+    public void onExecutionInterrupted(@NonNull Schedule<? extends ScheduleData> schedule) {
+        // no-op
+    }
+
+    @Override
+    public void onExecute(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
+        Actions actions = actionsMap.get(schedule.getId());
         if (actions == null) {
             callback.onFinish();
             return;
         }
 
         Bundle metadata = new Bundle();
-        metadata.putString(ActionArguments.ACTION_SCHEDULE_ID_METADATA, scheduleId);
+        metadata.putString(ActionArguments.ACTION_SCHEDULE_ID_METADATA, schedule.getId());
 
         ActionCallback actionCallback = new ActionCallback(callback, actions.getActionsMap().size());
         for (Map.Entry<String, JsonValue> entry : actions.getActionsMap().entrySet()) {
@@ -71,8 +86,8 @@ class ActionsScheduleDelegate implements ScheduleDelegate<Actions> {
 
     @Override
     @AutomationDriver.ReadyResult
-    public int onCheckExecutionReadiness(@NonNull String scheduleId) {
-        if (actionsMap.containsKey(scheduleId)) {
+    public int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
+        if (actionsMap.containsKey(schedule.getId())) {
             return AutomationDriver.READY_RESULT_CONTINUE;
         } else {
             return AutomationDriver.READY_RESULT_INVALIDATE;

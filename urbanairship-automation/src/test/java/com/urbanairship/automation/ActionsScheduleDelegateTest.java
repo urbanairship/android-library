@@ -35,20 +35,25 @@ public class ActionsScheduleDelegateTest {
 
     private ActionRunRequestFactory mockRunRequestFactory;
     private ActionsScheduleDelegate delegate;
+    private Schedule<Actions> actionsSchedule;
 
     @Before
     public void setup() {
         mockRunRequestFactory = mock(ActionRunRequestFactory.class);
         delegate = new ActionsScheduleDelegate(mockRunRequestFactory);
-    }
 
-    @Test
-    public void testExecute() {
         JsonMap actionsMap = JsonMap.newBuilder()
                                     .put("cool", "story")
                                     .build();
 
-        Actions actions = new Actions(actionsMap);
+        actionsSchedule = Schedule.newBuilder(new Actions(actionsMap))
+                                  .setId("scheduleId")
+                                  .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                  .build();
+    }
+
+    @Test
+    public void testExecute() {
 
         StubbedActionRunRequest stubbedActionRunRequest = new StubbedActionRunRequest() {
             @Override
@@ -62,11 +67,11 @@ public class ActionsScheduleDelegateTest {
         when(mockRunRequestFactory.createActionRequest("cool")).thenReturn(stubbedActionRunRequest);
 
         // Prepare
-        delegate.onPrepareSchedule("scheduleId", actions, mock(AutomationDriver.PrepareScheduleCallback.class));
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), mock(AutomationDriver.PrepareScheduleCallback.class));
 
         // Execute
         AutomationDriver.ExecutionCallback callback = mock(AutomationDriver.ExecutionCallback.class);
-        delegate.onExecute("scheduleId", callback);
+        delegate.onExecute(actionsSchedule, callback);
 
         verify(stubbedActionRunRequest).setValue(JsonValue.wrapOpt("story"));
         verify(stubbedActionRunRequest).setSituation(Action.SITUATION_AUTOMATION);
@@ -80,31 +85,19 @@ public class ActionsScheduleDelegateTest {
 
     @Test
     public void testPrepare() {
-        JsonMap actionsMap = JsonMap.newBuilder()
-                                    .put("cool", "story")
-                                    .build();
-
-        Actions actions = new Actions(actionsMap);
-
         // Prepare
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        delegate.onPrepareSchedule("scheduleId", actions, callback);
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), callback);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
 
     @Test
     public void testReadiness() {
-        assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, delegate.onCheckExecutionReadiness("scheduleId"));
-
-        JsonMap actionsMap = JsonMap.newBuilder()
-                                    .put("cool", "story")
-                                    .build();
-
-        Actions actions = new Actions(actionsMap);
+        assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, delegate.onCheckExecutionReadiness(actionsSchedule));
 
         // Prepare
-        delegate.onPrepareSchedule("scheduleId", actions, mock(AutomationDriver.PrepareScheduleCallback.class));
-        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, delegate.onCheckExecutionReadiness("scheduleId"));
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), mock(AutomationDriver.PrepareScheduleCallback.class));
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, delegate.onCheckExecutionReadiness(actionsSchedule));
     }
 
 }

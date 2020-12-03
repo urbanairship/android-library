@@ -758,6 +758,10 @@ public class UAirship {
 
         components.add(this.remoteConfigManager);
 
+        // Debug
+        Module debugModule = Modules.debug(application, preferenceDataStore);
+        processModule(debugModule);
+
         // Accengage
         AccengageModule accengageModule = Modules.accengage(application, preferenceDataStore, channel, pushManager, analytics);
         processModule(accengageModule);
@@ -776,10 +780,6 @@ public class UAirship {
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 channel, pushManager, analytics, remoteData, namedUser);
         processModule(automationModule);
-
-        // Debug
-        Module debugModule = Modules.debug(application, preferenceDataStore);
-        processModule(debugModule);
 
         // Ad Id
         Module adIdModule = Modules.adId(application, preferenceDataStore);

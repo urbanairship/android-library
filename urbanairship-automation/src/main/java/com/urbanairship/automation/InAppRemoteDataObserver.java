@@ -68,6 +68,7 @@ class InAppRemoteDataObserver {
     private static final String MESSAGE_KEY = "message";
     private static final String DEFERRED_KEY = "deferred";
     private static final String ACTIONS_KEY = "actions";
+    private static final String CAMPAIGNS = "campaigns";
 
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -405,6 +406,7 @@ class InAppRemoteDataObserver {
                .setGroup(jsonMap.opt(GROUP_KEY).getString())
                .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
+               .setCampaigns(jsonMap.get(CAMPAIGNS))
                .setAudience(parseAudience(value));
 
         if (jsonMap.containsKey(END_KEY)) {

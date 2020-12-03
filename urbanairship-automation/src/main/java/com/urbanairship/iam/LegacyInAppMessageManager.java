@@ -182,7 +182,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
                                 Logger.debug("LegacyInAppMessageManager - Pending in-app message replaced.");
-                                ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessageReplaced(pendingMessageId, messageId);
+                                InAppMessageEvent resolutionEvent = ResolutionEvent.newLegacyMessageReplacedEvent(pendingMessageId, messageId);
                                 analytics.addEvent(resolutionEvent);
                             }
                         }
@@ -212,7 +212,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         if (result != null && result) {
                             Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
                             // Direct open event
-                            ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessagePushOpened(push.getSendId());
+                            InAppMessageEvent resolutionEvent = ResolutionEvent.newLegacyMessagePushOpenedEvent(push.getSendId());
                             analytics.addEvent(resolutionEvent);
                         }
                     }
@@ -290,9 +290,9 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             }
 
             Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(createMessage(context, legacyInAppMessage))
-                                               .addTrigger(trigger)
-                                               .setEnd(legacyInAppMessage.getExpiry())
-                                               .setId(legacyInAppMessage.getId());
+                                                             .addTrigger(trigger)
+                                                             .setEnd(legacyInAppMessage.getExpiry())
+                                                             .setId(legacyInAppMessage.getId());
 
             ScheduleBuilderExtender builderExtender = this.scheduleBuilderExtender;
             if (builderExtender != null) {

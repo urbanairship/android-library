@@ -22,12 +22,14 @@ public class DeferredTest {
         JsonValue jsonValue = JsonMap.newBuilder()
                                      .put("url", "https://neat.com")
                                      .put("retry_on_timeout", false)
+                                     .put("type", "in_app_message")
                                      .build()
                                      .toJsonValue();
 
         Deferred deferred = Deferred.fromJson(jsonValue);
         assertEquals(new URL("https://neat.com"), deferred.getUrl());
         assertFalse(deferred.isRetriableOnTimeout());
+        assertEquals("in_app_message", deferred.getType());
     }
 
     @Test
@@ -70,7 +72,7 @@ public class DeferredTest {
                                     .build()
                                     .toJsonValue();
 
-        JsonValue toJson = new Deferred(new URL("https://neat.com"), false).toJsonValue();
+        JsonValue toJson = new Deferred(new URL("https://neat.com"), false, null).toJsonValue();
 
         assertEquals(expected, toJson);
     }

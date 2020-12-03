@@ -45,6 +45,7 @@ public class ScheduleEntity {
     public long seconds;
     public String regionId;
     public Audience audience;
+    public JsonValue campaigns;
 
     @Ignore
     @Override
@@ -71,6 +72,7 @@ public class ScheduleEntity {
                 ", seconds=" + seconds +
                 ", regionId='" + regionId + '\'' +
                 ", audience=" + audience +
+                ", campaigns=" + campaigns +
                 '}';
     }
 

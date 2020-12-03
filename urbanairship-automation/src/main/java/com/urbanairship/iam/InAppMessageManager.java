@@ -16,6 +16,7 @@ import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.ArrayList;
@@ -229,9 +230,10 @@ public class InAppMessageManager {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onPrepare(final @NonNull String scheduleId,
+                          final @Nullable JsonValue campaigns,
                           final @NonNull InAppMessage inAppMessage,
                           final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, inAppMessage);
+        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, campaigns, inAppMessage);
         if (adapter == null) {
             // Failed
             callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -347,7 +349,7 @@ public class InAppMessageManager {
         }
 
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(new DisplayEvent(scheduleId, adapterWrapper.message));
+            analytics.addEvent(DisplayEvent.newEvent(scheduleId, adapterWrapper.message, adapterWrapper.campaigns));
         }
 
         synchronized (listeners) {
@@ -381,6 +383,26 @@ public class InAppMessageManager {
     }
 
     /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onExecutionInterrupted(@NonNull final String scheduleId, @Nullable final JsonValue campaigns, @Nullable final InAppMessage message) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (message == null) {
+                    // Null message means it was deferred
+                    ResolutionEvent event = ResolutionEvent.newEvent(scheduleId, InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 0, campaigns);
+                    analytics.addEvent(event);
+                } else if (message.isReportingEnabled()) {
+                    ResolutionEvent event = ResolutionEvent.newEvent(scheduleId, InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 0, campaigns);
+                    analytics.addEvent(event);
+                }
+            }
+        });
+    }
+
+    /**
      * Called by the display handler when an in-app message is finished.
      *
      * @param scheduleId The schedule ID.
@@ -402,7 +424,9 @@ public class InAppMessageManager {
 
         // Add resolution event
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(ResolutionEvent.messageResolution(scheduleId, adapterWrapper.message, resolutionInfo, displayMilliseconds));
+            InAppMessageEvent event = ResolutionEvent.newEvent(scheduleId, adapterWrapper.message.getSource(),
+                    resolutionInfo, displayMilliseconds, adapterWrapper.campaigns);
+            analytics.addEvent(event);
         }
 
         // Run Actions
@@ -471,10 +495,13 @@ public class InAppMessageManager {
      * Creates an adapter wrapper.
      *
      * @param scheduleId The schedule Id.
+     * @param campaigns The campaign info.
+     * @param message The message.
      * @return The adapter wrapper.
      */
     @Nullable
     private AdapterWrapper createAdapterWrapper(@NonNull String scheduleId,
+                                                @Nullable JsonValue campaigns,
                                                 @NonNull InAppMessage message) {
         InAppMessageAdapter adapter = null;
         DisplayCoordinator coordinator = null;
@@ -489,7 +516,7 @@ public class InAppMessageManager {
 
             if (factory == null) {
                 Logger.debug("InAppMessageManager - No display adapter for message type: %s. " +
-                                "Unable to process schedule: %s.", message.getType(), scheduleId);
+                        "Unable to process schedule: %s.", message.getType(), scheduleId);
             } else {
                 adapter = factory.createAdapter(message);
             }
@@ -521,7 +548,7 @@ public class InAppMessageManager {
         }
 
         coordinator.setDisplayReadyCallback(displayReadyCallback);
-        return new AdapterWrapper(scheduleId, message, adapter, coordinator);
+        return new AdapterWrapper(scheduleId, campaigns, message, adapter, coordinator);
     }
 
     /**

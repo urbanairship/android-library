@@ -124,7 +124,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockCallback);
+        manager.onPrepare(scheduleId, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -140,7 +140,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockCallback);
+        manager.onPrepare(scheduleId, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -166,7 +166,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockCallback);
+        manager.onPrepare(scheduleId, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -188,7 +188,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, extended, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -226,7 +226,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, extended, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -253,7 +253,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -288,7 +288,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
@@ -310,7 +310,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -332,7 +332,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once
@@ -349,7 +349,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
 
         // Should call it once
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -374,7 +374,7 @@ public class InAppMessageManagerTest {
         // Prepare the message
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        manager.onPrepare(scheduleId, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
 
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
             @Override

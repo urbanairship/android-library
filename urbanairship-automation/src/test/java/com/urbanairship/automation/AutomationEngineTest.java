@@ -849,6 +849,38 @@ public class AutomationEngineTest {
         assertEquals(300, updated.getPriority());
     }
 
+    @Test
+    public void testInterrupted() throws ExecutionException, InterruptedException {
+        Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
+                                             .setLimit(2)
+                                             .build();
+
+        schedule(schedule);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        // Preparing schedule
+        verifyState(schedule, ScheduleState.PREPARING_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        runLooperTasks();
+
+        // Verify it started executing the schedule
+        assertTrue(driver.executionCallbackMap.containsKey(schedule.getId()));
+        verifyState(schedule, ScheduleState.EXECUTING);
+
+        automationEngine.stop();
+        automationEngine.start(driver);
+        runLooperTasks();
+
+        assertEquals(schedule, driver.interrupted.get(schedule.getId()));
+        verifyState(schedule, ScheduleState.IDLE);
+    }
+
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
                                                    .setDelay(delay)
@@ -870,11 +902,6 @@ public class AutomationEngineTest {
         // Resolve delay seconds
         if (delay.getSeconds() > 0) {
             verifyState(schedule, ScheduleState.TIME_DELAYED);
-
-            // Set the state change to the past
-//            entity.schedule.executionStateChangeDate = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(delay.getSeconds());
-//            dao.update(entity);
-
             runLooperTasks();
             verifyState(schedule, ScheduleState.PREPARING_SCHEDULE);
         }
@@ -995,6 +1022,7 @@ public class AutomationEngineTest {
         Map<String, PrepareScheduleCallback> prepareCallbackMap = new HashMap<>();
         Map<String, Schedule> preparedSchedulesMap = new HashMap<>();
         Map<String, TriggerContext> preparedTriggerContextMap = new HashMap<>();
+        Map<String, Schedule> interrupted = new HashMap<>();
 
         ArrayList<Integer> priorityList = new ArrayList<>();
 
@@ -1014,6 +1042,11 @@ public class AutomationEngineTest {
         @Override
         public int onCheckExecutionReadiness(@NonNull Schedule schedule) {
             return READY_RESULT_CONTINUE;
+        }
+
+        @Override
+        public void onScheduleExecutionInterrupted(Schedule<? extends ScheduleData> schedule) {
+            interrupted.put(schedule.getId(), schedule);
         }
 
     }

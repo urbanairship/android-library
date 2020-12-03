@@ -83,6 +83,7 @@ public final class Schedule<T extends ScheduleData> {
     private final long interval;
     private final String group;
     private final Audience audience;
+    private final JsonValue campaigns;
 
     @Type
     private final String type;
@@ -108,6 +109,7 @@ public final class Schedule<T extends ScheduleData> {
         this.type = builder.type;
         this.group = builder.group;
         this.audience = builder.audience;
+        this.campaigns = builder.campaigns;
     }
 
     /**
@@ -167,6 +169,18 @@ public final class Schedule<T extends ScheduleData> {
      */
     public T getData() {
         return data;
+    }
+
+    /**
+     * The campaigns info.
+     *
+     * @return The campaigns info.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getCampaigns() {
+        return campaigns;
     }
 
     /**
@@ -320,11 +334,11 @@ public final class Schedule<T extends ScheduleData> {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Schedule schedule = (Schedule) o;
+        Schedule<?> schedule = (Schedule<?>) o;
 
         if (limit != schedule.limit) return false;
         if (start != schedule.start) return false;
@@ -339,6 +353,8 @@ public final class Schedule<T extends ScheduleData> {
         if (delay != null ? !delay.equals(schedule.delay) : schedule.delay != null) return false;
         if (group != null ? !group.equals(schedule.group) : schedule.group != null) return false;
         if (audience != null ? !audience.equals(schedule.audience) : schedule.audience != null)
+            return false;
+        if (campaigns != null ? !campaigns.equals(schedule.campaigns) : schedule.campaigns != null)
             return false;
         if (!type.equals(schedule.type)) return false;
         return data.equals(schedule.data);
@@ -358,6 +374,7 @@ public final class Schedule<T extends ScheduleData> {
         result = 31 * result + (int) (interval ^ (interval >>> 32));
         result = 31 * result + (group != null ? group.hashCode() : 0);
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
+        result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
         result = 31 * result + type.hashCode();
         result = 31 * result + data.hashCode();
         return result;
@@ -381,6 +398,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", audience=" + audience +
                 ", type='" + type + '\'' +
                 ", data=" + data +
+                ", campaigns=" + campaigns +
                 '}';
     }
 
@@ -404,6 +422,7 @@ public final class Schedule<T extends ScheduleData> {
         private JsonMap metadata;
         private String id;
         private Audience audience;
+        private JsonValue campaigns;
 
         private Builder(@NonNull Schedule<T> info) {
             this.id = info.id;
@@ -419,6 +438,8 @@ public final class Schedule<T extends ScheduleData> {
             this.editGracePeriod = info.editGracePeriod;
             this.interval = info.interval;
             this.audience = info.audience;
+            this.group = info.group;
+            this.campaigns = info.campaigns;
         }
 
         private Builder(@NonNull @Type String type, @NonNull T data) {
@@ -596,6 +617,20 @@ public final class Schedule<T extends ScheduleData> {
         @NonNull
         public Builder<T> setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the campaigns info.
+         *
+         * @param campaigns The campaigns info.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setCampaigns(@Nullable JsonValue campaigns) {
+            this.campaigns = campaigns;
             return this;
         }
 

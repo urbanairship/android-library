@@ -179,7 +179,7 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(schedule.getData()), argumentCaptor.capture());
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
@@ -190,7 +190,7 @@ public class InAppAutomationTest {
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
@@ -217,7 +217,7 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, triggerContext, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(message), argumentCaptor.capture());
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -225,14 +225,14 @@ public class InAppAutomationTest {
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
 
         // Readiness
-        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule.getId())).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
-        verify(mockMessageScheduleDelegate).onCheckExecutionReadiness(schedule.getId());
+        verify(mockMessageScheduleDelegate).onCheckExecutionReadiness(schedule);
 
         // Execution
         AutomationDriver.ExecutionCallback executeCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executeCallback);
-        verify(mockMessageScheduleDelegate).onExecute(schedule.getId(), executeCallback);
+        verify(mockMessageScheduleDelegate).onExecute(schedule, executeCallback);
     }
 
     @Test
@@ -242,7 +242,7 @@ public class InAppAutomationTest {
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setAudience(Audience.newBuilder()
@@ -275,12 +275,12 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(message), argumentCaptor.capture());
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         // Check execution readiness
-        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule.getId())).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
     }
 
@@ -321,11 +321,11 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(schedule.getData()), argumentCaptor.capture());
+        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
-        when(mockActionsScheduleDelegate.onCheckExecutionReadiness(schedule.getId())).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        when(mockActionsScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
     }
 
@@ -359,7 +359,7 @@ public class InAppAutomationTest {
     public void testPrepareDeferredScheduleNoResponse() throws MalformedURLException, AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
@@ -382,7 +382,7 @@ public class InAppAutomationTest {
     public void testPrepareDeferredScheduleNoResponseNoRetry() throws MalformedURLException, AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
@@ -399,7 +399,7 @@ public class InAppAutomationTest {
     public void testPrepareDeferredScheduleAuthException() throws MalformedURLException, AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<Deferred> schedule = Schedule.newBuilder(deferredScheduleData)
                                               .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                               .build();
@@ -422,7 +422,7 @@ public class InAppAutomationTest {
     public void testPrepareDeferredScheduleNoChannel() throws MalformedURLException, AuthException, RequestException {
         when(mockChannel.getId()).thenReturn(null);
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false);
+        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
@@ -445,11 +445,11 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(schedule.getData()), argumentCaptor.capture());
+        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
-        when(mockActionsScheduleDelegate.onCheckExecutionReadiness(schedule.getId())).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        when(mockActionsScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
 
         inAppAutomation.setPaused(true);
         assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driver.onCheckExecutionReadiness(schedule));
@@ -568,13 +568,13 @@ public class InAppAutomationTest {
                                                   .build();
 
         scheduleListener.onNewSchedule(schedule);
-        verify(mockIamManager, times(1))
-                .onNewMessageSchedule(schedule.getId(), schedule.getData());
+        verify(mockMessageScheduleDelegate, times(1))
+                .onNewSchedule(schedule);
 
         scheduleListener.onScheduleLimitReached(schedule);
         scheduleListener.onScheduleCancelled(schedule);
         scheduleListener.onScheduleExpired(schedule);
-        verify(mockIamManager, times(3)).onMessageScheduleFinished(schedule.getId());
+        verify(mockMessageScheduleDelegate, times(3)).onScheduleFinished(schedule);
     }
 
     @Test
@@ -693,13 +693,13 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(message), argumentCaptor.capture());
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
-        verify(mockMessageScheduleDelegate).onExecute(schedule.getId(), executionCallback);
+        verify(mockMessageScheduleDelegate).onExecute(schedule, executionCallback);
     }
 
     @Test
@@ -712,13 +712,13 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule.getId()), eq(schedule.getData()), argumentCaptor.capture());
+        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), argumentCaptor.capture());
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
-        verify(mockActionsScheduleDelegate).onExecute(schedule.getId(), executionCallback);
+        verify(mockActionsScheduleDelegate).onExecute(schedule, executionCallback);
     }
 
     /**

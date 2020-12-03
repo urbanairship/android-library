@@ -3,17 +3,12 @@
 package com.urbanairship.iam;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -23,38 +18,6 @@ import static junit.framework.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class InAppMessageEventTest {
-
-    InAppMessage appDefinedInAppMessage;
-    InAppMessage legacyInAppMessage;
-    InAppMessage remoteDataInAppMessage;
-    Map<String, JsonValue> renderedLocale;
-
-    @Before
-    public void setup() {
-
-        renderedLocale = new HashMap<>();
-        renderedLocale.put("language", JsonValue.wrap("en"));
-        renderedLocale.put("country", JsonValue.wrap("US"));
-
-        legacyInAppMessage = InAppMessage.newBuilder()
-                                         .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                         .setSource(InAppMessage.SOURCE_LEGACY_PUSH)
-                                         .setCampaigns(JsonValue.wrap("campaigns info"))
-                                         .build();
-
-        remoteDataInAppMessage = InAppMessage.newBuilder()
-                                             .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                             .setSource(InAppMessage.SOURCE_REMOTE_DATA)
-                                             .setCampaigns(JsonValue.wrap("campaigns info"))
-                                             .setRenderedLocale(renderedLocale)
-                                             .build();
-
-        appDefinedInAppMessage = InAppMessage.newBuilder()
-                                             .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                                             .setSource(InAppMessage.SOURCE_APP_DEFINED)
-                                             .setCampaigns(JsonValue.wrap("campaigns info"))
-                                             .build();
-    }
 
     /**
      * Test display event from a legacy in-app message.
@@ -71,7 +34,20 @@ public class InAppMessageEventTest {
                                            .put("conversion_metadata", "metadata")
                                            .build();
 
-        TestEvent event = new TestEvent("message id", legacyInAppMessage);
+        InAppMessageEvent event = new InAppMessageEvent("message id", InAppMessage.SOURCE_LEGACY_PUSH, JsonValue.wrap("campaign info")) {
+            @NonNull
+            @Override
+            public String getType() {
+                return "test";
+            }
+
+            @NonNull
+            @Override
+            protected JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder) {
+                return builder;
+            }
+        };
+
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -93,7 +69,20 @@ public class InAppMessageEventTest {
                                            .put("conversion_metadata", "metadata")
                                            .build();
 
-        TestEvent event = new TestEvent("message id", appDefinedInAppMessage);
+        InAppMessageEvent event = new InAppMessageEvent("message id", InAppMessage.SOURCE_APP_DEFINED, JsonValue.wrap("campaign info")) {
+            @NonNull
+            @Override
+            public String getType() {
+                return "test";
+            }
+
+            @NonNull
+            @Override
+            protected JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder) {
+                return builder;
+            }
+        };
+
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -109,15 +98,28 @@ public class InAppMessageEventTest {
         JsonMap expectedEventData = JsonMap.newBuilder()
                                            .put("id", JsonMap.newBuilder()
                                                              .put("message_id", "message id")
-                                                             .put("campaigns", "campaigns info")
+                                                             .put("campaigns", "campaign info")
                                                              .build())
                                            .put("source", "urban-airship")
                                            .put("conversion_send_id", "send id")
                                            .put("conversion_metadata", "metadata")
-                                           .put("locale", JsonValue.wrap(renderedLocale))
                                            .build();
 
-        TestEvent event = new TestEvent("message id", remoteDataInAppMessage);
+
+        InAppMessageEvent event = new InAppMessageEvent("message id", InAppMessage.SOURCE_REMOTE_DATA, JsonValue.wrap("campaign info")) {
+            @NonNull
+            @Override
+            public String getType() {
+                return "test";
+            }
+
+            @NonNull
+            @Override
+            protected JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder) {
+                return builder;
+            }
+        };
+
         assertEquals(expectedEventData, event.getEventData());
         assertTrue(event.isValid());
     }
@@ -126,7 +128,7 @@ public class InAppMessageEventTest {
      * Test display event when the conversion send id is null.
      */
     @Test
-    public void testDisplayEventNoConversionSendId() throws JsonException {
+    public void testNoConversionSendId() throws JsonException {
         UAirship.shared().getAnalytics().setConversionSendId(null);
         UAirship.shared().getAnalytics().setConversionMetadata(null);
 
@@ -135,23 +137,19 @@ public class InAppMessageEventTest {
                                            .put("source", "urban-airship")
                                            .build();
 
-        TestEvent event = new TestEvent("message id", legacyInAppMessage);
-        assertEquals(expectedEventData, event.getEventData());
-        assertTrue(event.isValid());
-    }
+        InAppMessageEvent event = new InAppMessageEvent("message id", InAppMessage.SOURCE_APP_DEFINED, JsonValue.wrap("campaign info")) {
+            @NonNull
+            @Override
+            public String getType() {
+                return "test";
+            }
 
-    private static class TestEvent extends InAppMessageEvent {
-
-        TestEvent(String id, InAppMessage message) {
-            super(id, message);
-        }
-
-        @NonNull
-        @Override
-        public String getType() {
-            return "test";
-        }
-
+            @NonNull
+            @Override
+            protected JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder) {
+                return builder;
+            }
+        };
     }
 
 }

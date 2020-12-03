@@ -23,23 +23,41 @@ class InAppMessageScheduleDelegate implements ScheduleDelegate<InAppMessage> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull String scheduleId, InAppMessage message, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        messageManager.onPrepare(scheduleId, message, callback);
+    public void onNewSchedule(@NonNull Schedule<? extends ScheduleData> schedule) {
+        if (Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType())) {
+            messageManager.onNewMessageSchedule(schedule.getId(), (InAppMessage) schedule.coerceType());
+        }
     }
 
     @Override
-    public void onExecutionInvalidated(@NonNull String scheduleId) {
-        messageManager.onExecutionInvalidated(scheduleId);
+    public void onScheduleFinished(@NonNull Schedule<? extends ScheduleData> schedule) {
+        messageManager.onMessageScheduleFinished(schedule.getId());
     }
 
     @Override
-    public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
-        messageManager.onExecute(scheduleId, callback);
+    public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull InAppMessage message, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+        messageManager.onPrepare(schedule.getId(), schedule.getCampaigns(), message, callback);
     }
 
     @Override
-    public int onCheckExecutionReadiness(@NonNull String scheduleId) {
-        return messageManager.onCheckExecutionReadiness(scheduleId);
+    public void onExecutionInvalidated(@NonNull Schedule<? extends ScheduleData> schedule) {
+        messageManager.onExecutionInvalidated(schedule.getId());
+    }
+
+    @Override
+    public void onExecutionInterrupted(@NonNull Schedule<? extends ScheduleData> schedule) {
+        InAppMessage message = Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType()) ? (InAppMessage) schedule.coerceType() : null;
+        messageManager.onExecutionInterrupted(schedule.getId(), schedule.getCampaigns(), message);
+    }
+
+    @Override
+    public void onExecute(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
+        messageManager.onExecute(schedule.getId(), callback);
+    }
+
+    @Override
+    public int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
+        return messageManager.onCheckExecutionReadiness(schedule.getId());
     }
 
 }

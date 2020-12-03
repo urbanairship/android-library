@@ -7,11 +7,15 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
 
 /**
  * Deferred schedule data.
@@ -21,15 +25,42 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Deferred implements ScheduleData {
 
+    /**
+     * Schedule types.
+     *
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @StringDef({ TYPE_IN_APP_MESSAGE })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {}
+
+    /**
+     * Message in-app automation type.
+     *
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String TYPE_IN_APP_MESSAGE = "in_app_message";
+
     private static final String URL_KEY = "url";
     private static final String RETRY_ON_TIMEOUT = "retry_on_timeout";
+    private static final String TYPE = "type";
 
-    public URL url;
-    public boolean retryOnTimeout;
+    private final URL url;
+    private final boolean retryOnTimeout;
+    private final String type;
 
     public Deferred(@NonNull URL url, boolean retryOnTimeout) {
+        this(url, retryOnTimeout, null);
+    }
+
+    public Deferred(@NonNull URL url, boolean retryOnTimeout, @Type @Nullable String type) {
         this.url = url;
         this.retryOnTimeout = retryOnTimeout;
+        this.type = type;
     }
 
     /**
@@ -40,6 +71,22 @@ public class Deferred implements ScheduleData {
     @NonNull
     public URL getUrl() {
         return url;
+    }
+
+    /**
+     * The deferred type.
+     *
+     * @return The deferred type.
+     */
+    @Type
+    @Nullable
+    public String getType() {
+        return type;
+    }
+
+
+    public boolean getRetryOnTimeout() {
+        return retryOnTimeout;
     }
 
     /**
@@ -57,6 +104,7 @@ public class Deferred implements ScheduleData {
         return JsonMap.newBuilder()
                       .put(URL_KEY, url.toString())
                       .put(RETRY_ON_TIMEOUT, retryOnTimeout)
+                      .put(TYPE, type)
                       .build().toJsonValue();
     }
 
@@ -76,6 +124,8 @@ public class Deferred implements ScheduleData {
             throw new JsonException("Missing URL");
         }
 
+        String type = jsonValue.optMap().opt(TYPE).getString();
+
         URL url;
         try {
             url = new URL(urlString);
@@ -84,7 +134,7 @@ public class Deferred implements ScheduleData {
         }
 
         boolean retryOnTimeout = jsonValue.optMap().opt(RETRY_ON_TIMEOUT).getBoolean(true);
-        return new Deferred(url, retryOnTimeout);
+        return new Deferred(url, retryOnTimeout, type);
     }
 
     @Override
@@ -95,13 +145,15 @@ public class Deferred implements ScheduleData {
         Deferred deferred = (Deferred) o;
 
         if (retryOnTimeout != deferred.retryOnTimeout) return false;
-        return url.equals(deferred.url);
+        if (!url.equals(deferred.url)) return false;
+        return type != null ? type.equals(deferred.type) : deferred.type == null;
     }
 
     @Override
     public int hashCode() {
         int result = url.hashCode();
         result = 31 * result + (retryOnTimeout ? 1 : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
         return result;
     }
 

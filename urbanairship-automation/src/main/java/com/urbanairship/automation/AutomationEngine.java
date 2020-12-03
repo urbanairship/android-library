@@ -240,8 +240,9 @@ public class AutomationEngine {
             @Override
             public void run() {
                 legacyDataMigrator.migrateData(dao);
+                finishExecutingSchedules();
                 cleanSchedules();
-                resetExecutingSchedules();
+                resetWaitingSchedules();
                 restoreDelayAlarms();
                 restoreIntervalAlarms();
                 prepareSchedules(dao.getSchedulesWithStates(ScheduleState.PREPARING_SCHEDULE));
@@ -253,6 +254,7 @@ public class AutomationEngine {
         onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
         isStarted = true;
     }
+
 
     /**
      * Pauses processing any triggers or executing schedules. Any events will be dropped and
@@ -807,12 +809,23 @@ public class AutomationEngine {
     }
 
     /**
-     * Resets the schedules that were executing back to pending execution.
+     * Notifies the driver on any schedule that was executing.
      */
     @WorkerThread
-    private void resetExecutingSchedules() {
-        List<FullSchedule> entries = dao.getSchedulesWithStates(ScheduleState.EXECUTING,
-                ScheduleState.WAITING_SCHEDULE_CONDITIONS);
+    private void finishExecutingSchedules() {
+        List<FullSchedule> entries = dao.getSchedulesWithStates(ScheduleState.EXECUTING);
+        for (FullSchedule entry : entries) {
+            driver.onScheduleExecutionInterrupted(convert(entry));
+            onScheduleFinishedExecuting(entry);
+        }
+    }
+
+    /**
+     * Resets the schedules that were waiting for state conditions back to pending.
+     */
+    @WorkerThread
+    private void resetWaitingSchedules() {
+        List<FullSchedule> entries = dao.getSchedulesWithStates(ScheduleState.WAITING_SCHEDULE_CONDITIONS);
 
         if (entries.isEmpty()) {
             return;

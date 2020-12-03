@@ -45,7 +45,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     private static final String EXTRA_KEY = "extra";
     private static final String ACTIONS_KEY = "actions";
     private static final String SOURCE_KEY = "source";
-    private static final String CAMPAIGNS_KEY = "campaigns";
     private static final String DISPLAY_BEHAVIOR_KEY = "display_behavior";
     private static final String REPORTING_ENABLED_KEY = "reporting_enabled";
     private static final String RENDERED_LOCALE_KEY = "rendered_locale";
@@ -140,7 +139,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
     private final String name;
     private final JsonSerializable content;
     private final Map<String, JsonValue> actions;
-    private final JsonValue campaigns;
 
     @DisplayBehavior
     private final String displayBehavior;
@@ -163,7 +161,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.actions = builder.actions;
         this.source = builder.source;
-        this.campaigns = builder.campaigns;
         this.displayBehavior = builder.displayBehavior;
         this.isReportingEnabled = builder.isReportingEnabled;
         this.renderedLocale = builder.renderedLocale;
@@ -245,18 +242,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         return source;
     }
 
-    /**
-     * The in-app message campaigns info.
-     *
-     * @return The in-app message campaigns info.
-     * @hide
-     */
-    @Nullable
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    JsonValue getCampaigns() {
-        return campaigns;
-    }
-
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     Map<String, JsonValue> getRenderedLocale() {
@@ -293,7 +278,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
                       .putOpt(DISPLAY_TYPE_KEY, type)
                       .putOpt(ACTIONS_KEY, actions)
                       .putOpt(SOURCE_KEY, source)
-                      .putOpt(CAMPAIGNS_KEY, campaigns)
                       .putOpt(DISPLAY_BEHAVIOR_KEY, displayBehavior)
                       .putOpt(REPORTING_ENABLED_KEY, isReportingEnabled)
                       .putOpt(RENDERED_LOCALE_KEY, renderedLocale)
@@ -341,11 +325,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
             }
 
             builder.setActions(jsonMap.getMap());
-        }
-
-        // Campaigns
-        if (jsonValue.optMap().containsKey(CAMPAIGNS_KEY)) {
-            builder.setCampaigns(jsonValue.optMap().opt(CAMPAIGNS_KEY));
         }
 
         // Behavior
@@ -513,10 +492,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
             return false;
         }
 
-        if (campaigns != null ? !campaigns.equals(message.campaigns) : message.campaigns != null) {
-            return false;
-        }
-
         if (renderedLocale != null ? !renderedLocale.equals(message.renderedLocale) : message.renderedLocale != null) {
             return false;
         }
@@ -532,7 +507,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         result = 31 * result + content.hashCode();
         result = 31 * result + actions.hashCode();
         result = 31 * result + (renderedLocale != null ? renderedLocale.hashCode() : 0);
-        result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
         result = 31 * result + displayBehavior.hashCode();
         result = 31 * result + (isReportingEnabled ? 1 : 0);
         result = 31 * result + source.hashCode();
@@ -553,7 +527,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
 
         @Source
         private String source = SOURCE_APP_DEFINED;
-        private JsonValue campaigns;
 
         @DisplayBehavior
         private String displayBehavior = DISPLAY_BEHAVIOR_DEFAULT;
@@ -571,7 +544,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
             this.extras = message.extras;
             this.actions = message.actions;
             this.source = message.source;
-            this.campaigns = message.campaigns;
             this.displayBehavior = message.displayBehavior;
             this.isReportingEnabled = message.isReportingEnabled;
             this.renderedLocale = message.renderedLocale;
@@ -686,20 +658,6 @@ public class InAppMessage implements Parcelable, ScheduleData {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setSource(@Nullable @Source String source) {
             this.source = source;
-            return this;
-        }
-
-        /**
-         * Sets the campaigns info for the in-app message.
-         *
-         * @param campaigns The in-app message campaigns info.
-         * @return The builder.
-         * @hide
-         */
-        @NonNull
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        Builder setCampaigns(@Nullable JsonValue campaigns) {
-            this.campaigns = campaigns;
             return this;
         }
 

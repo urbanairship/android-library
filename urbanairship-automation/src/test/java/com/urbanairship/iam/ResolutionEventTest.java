@@ -3,13 +3,11 @@
 package com.urbanairship.iam;
 
 import com.urbanairship.analytics.Event;
-import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -19,15 +17,6 @@ import static junit.framework.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)
 public class ResolutionEventTest {
-
-    InAppMessage message;
-
-    @Before
-    public void before() {
-        message = InAppMessage.newBuilder()
-                              .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
-                              .build();
-    }
 
     /**
      * Test button click resolution event.
@@ -41,7 +30,7 @@ public class ResolutionEventTest {
                                                             .build())
                                           .build();
 
-        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.buttonPressed(buttonInfo), 3500, null);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -67,7 +56,7 @@ public class ResolutionEventTest {
                                                             .build())
                                           .build();
 
-        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.buttonPressed(buttonInfo), 3500);
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.buttonPressed(buttonInfo), 3500, null);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
@@ -84,7 +73,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testClickedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.messageClicked(), 5500);
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.messageClicked(), 5500, null);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "message_click")
@@ -99,7 +88,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testUserDismissedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.dismissed(), 3500);
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 3500, null);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "user_dismissed")
@@ -114,7 +103,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testTimedOutResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("schedule ID", message, ResolutionInfo.timedOut(), 15000);
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.timedOut(), 15000, null);
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "timed_out")
@@ -129,7 +118,7 @@ public class ResolutionEventTest {
      */
     @Test
     public void testReplacedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.legacyMessageReplaced("iam id", "replacement id");
+        ResolutionEvent event = ResolutionEvent.newLegacyMessageReplacedEvent("iam id", "replacement id");
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "replaced")
@@ -144,13 +133,29 @@ public class ResolutionEventTest {
      */
     @Test
     public void testDirectOpenResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.legacyMessagePushOpened("iam id");
+        ResolutionEvent event = ResolutionEvent.newLegacyMessagePushOpenedEvent("iam id");
 
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "direct_open")
                                                 .build();
 
         verifyEvent(expectedResolutionInfo, event);
+    }
+
+    /**
+     * Test campaigns in the event.
+     */
+    @Test
+    public void testCampaigns() throws JSONException {
+        ResolutionEvent event = ResolutionEvent.newEvent("schedule ID", InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 3500, JsonValue.wrap("campaigns"));
+
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "user_dismissed")
+                                                .put("display_time", Event.millisecondsToSecondsString(3500))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
+        assertEquals(JsonValue.wrap("campaigns"), event.getEventData().get("id").optMap().get("campaigns"));
     }
 
     private void verifyEvent(JsonMap expectedResolutionInfo, ResolutionEvent event) {

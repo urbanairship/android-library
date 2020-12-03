@@ -38,15 +38,16 @@ class ScheduleConverters {
         Schedule.Builder<T> scheduleBuilder = createScheduleBuilder(entry.schedule.data, entry.schedule.scheduleType);
 
         scheduleBuilder = scheduleBuilder.setId(entry.schedule.scheduleId)
-                .setMetadata(entry.schedule.metadata)
-                .setGroup(entry.schedule.group)
-                .setEnd(entry.schedule.scheduleEnd)
-                .setStart(entry.schedule.scheduleStart)
-                .setLimit(entry.schedule.limit)
-                .setPriority(entry.schedule.priority)
-                .setInterval(entry.schedule.interval, TimeUnit.MILLISECONDS)
-                .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
-                .setAudience(entry.schedule.audience);
+                                         .setMetadata(entry.schedule.metadata)
+                                         .setGroup(entry.schedule.group)
+                                         .setEnd(entry.schedule.scheduleEnd)
+                                         .setStart(entry.schedule.scheduleStart)
+                                         .setLimit(entry.schedule.limit)
+                                         .setPriority(entry.schedule.priority)
+                                         .setInterval(entry.schedule.interval, TimeUnit.MILLISECONDS)
+                                         .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
+                                         .setAudience(entry.schedule.audience)
+                                         .setCampaigns(entry.schedule.campaigns);
 
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
                                                           .setAppState(entry.schedule.appState)
@@ -87,6 +88,7 @@ class ScheduleConverters {
         entity.audience = schedule.getAudience();
         entity.scheduleType = schedule.getType();
         entity.data = schedule.getDataAsJson();
+        entity.campaigns = schedule.getCampaigns();
 
         for (Trigger trigger : schedule.getTriggers()) {
             triggerEntities.add(convert(trigger, false, schedule.getId()));

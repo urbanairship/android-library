@@ -6,6 +6,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -37,16 +38,11 @@ class ResolutionEvent extends InAppMessageEvent {
     private static final String BUTTON_DESCRIPTION = "button_description";
     private static final String REPLACEMENT_ID = "replacement_id";
 
-    private final JsonMap resolutionData;
+    private final JsonMap resolutionInfo;
 
-    ResolutionEvent(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull JsonMap resolutionData) {
-        super(scheduleId, message);
-        this.resolutionData = resolutionData;
-    }
-
-    ResolutionEvent(@NonNull JsonValue eventId, @NonNull String source, @NonNull JsonMap resolutionData) {
-        super(eventId, source);
-        this.resolutionData = resolutionData;
+    private ResolutionEvent(@NonNull String scheduleId, @NonNull String source, @Nullable JsonValue campaigns, @NonNull JsonMap resolutionInfo) {
+        super(scheduleId, source, campaigns);
+        this.resolutionInfo = resolutionInfo;
     }
 
     /**
@@ -56,13 +52,13 @@ class ResolutionEvent extends InAppMessageEvent {
      * @param newId The new schedule ID.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent legacyMessageReplaced(@NonNull String scheduleId, @NonNull String newId) {
-        JsonMap resolutionData = JsonMap.newBuilder()
+    public static ResolutionEvent newLegacyMessageReplacedEvent(@NonNull String scheduleId, @NonNull String newId) {
+        JsonMap resolutionInfo = JsonMap.newBuilder()
                                         .put(RESOLUTION_TYPE, LEGACY_MESSAGE_REPLACED)
                                         .put(REPLACEMENT_ID, newId)
                                         .build();
 
-        return new ResolutionEvent(JsonValue.wrap(scheduleId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
+        return new ResolutionEvent(scheduleId, InAppMessage.SOURCE_LEGACY_PUSH, null, resolutionInfo);
     }
 
     /**
@@ -72,23 +68,30 @@ class ResolutionEvent extends InAppMessageEvent {
      * @param scheduleId The in-app message ID.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent legacyMessagePushOpened(@NonNull String scheduleId) {
-        JsonMap resolutionData = JsonMap.newBuilder()
+    public static ResolutionEvent newLegacyMessagePushOpenedEvent(@NonNull String scheduleId) {
+        JsonMap resolutionInfo = JsonMap.newBuilder()
                                         .put(RESOLUTION_TYPE, LEGACY_MESSAGE_DIRECT_OPEN)
                                         .build();
 
-        return new ResolutionEvent(JsonValue.wrap(scheduleId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
+        return new ResolutionEvent(scheduleId, InAppMessage.SOURCE_LEGACY_PUSH, null, resolutionInfo);
     }
 
     /**
      * Creates a resolution event from a {@link ResolutionInfo}.
      *
      * @param scheduleId The schedule ID.
-     * @param message The in-app message.
+     * @param source The message source.
      * @param resolutionInfo The resolution info.
+     * @param displayMilliseconds Display time in milliseconds.
+     * @param campaigns The campaign info.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent messageResolution(@NonNull String scheduleId, @NonNull InAppMessage message, ResolutionInfo resolutionInfo, long displayMilliseconds) {
+    public static ResolutionEvent newEvent(@NonNull String scheduleId,
+                                           @NonNull @InAppMessage.Source String source,
+                                           @NonNull ResolutionInfo resolutionInfo,
+                                           long displayMilliseconds,
+                                           @Nullable JsonValue campaigns) {
+
         displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
 
         JsonMap.Builder resolutionDataBuilder = JsonMap.newBuilder()
@@ -104,26 +107,19 @@ class ResolutionEvent extends InAppMessageEvent {
                                  .put(BUTTON_DESCRIPTION, description);
         }
 
-        return new ResolutionEvent(scheduleId, message, resolutionDataBuilder.build());
+        return new ResolutionEvent(scheduleId, source, campaigns, resolutionDataBuilder.build());
     }
 
     @NonNull
     @Override
-    public final String getType() {
+    protected JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder) {
+        return builder.put(RESOLUTION, resolutionInfo);
+    }
+
+    @NonNull
+    @Override
+    public String getType() {
         return TYPE;
-    }
-
-    /**
-     * @hide
-     */
-    @NonNull
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public JsonMap getEventData() {
-        return JsonMap.newBuilder()
-                      .putAll(super.getEventData())
-                      .put(RESOLUTION, resolutionData)
-                      .build();
     }
 
 }

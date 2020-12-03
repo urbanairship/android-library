@@ -31,59 +31,42 @@ abstract class InAppMessageEvent extends Event {
     private static final String SOURCE_URBAN_AIRSHIP = "urban-airship";
     private static final String SOURCE_APP_DEFINED = "app-defined";
 
-    private static final String LOCALE = "locale";
-
-    private final JsonValue eventId;
+    private final String scheduleId;
     private final String source;
+    private final JsonValue campaigns;
 
-    @Nullable private final InAppMessage message;
-
-    InAppMessageEvent(@NonNull String scheduleId, @NonNull InAppMessage message) {
-        this.eventId = createEventId(scheduleId, message);
-        this.source = message.getSource();
-        this.message = message;
-    }
-
-    // Used for legacy in-app messages
-    InAppMessageEvent(@NonNull JsonValue eventId, @NonNull @InAppMessage.Source String source) {
-        this.eventId = eventId;
+    protected InAppMessageEvent(@NonNull String scheduleId, @NonNull @InAppMessage.Source String source, @Nullable JsonValue campaigns) {
+        this.scheduleId = scheduleId;
         this.source = source;
-        this.message = null;
+        this.campaigns = campaigns;
     }
 
-    /**
-     * @hide
-     */
     @NonNull
     @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonMap getEventData() {
         boolean isAppDefined = InAppMessage.SOURCE_APP_DEFINED.equals(source);
-
-        return JsonMap.newBuilder()
-                      .put(ID, eventId)
+        JsonMap.Builder builder = JsonMap.newBuilder()
+                      .put(ID, createEventId(scheduleId, source, campaigns))
                       .put(SOURCE, isAppDefined ? SOURCE_APP_DEFINED : SOURCE_URBAN_AIRSHIP)
                       .putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
-                      .putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
-                      .putOpt(LOCALE, message != null ? message.getRenderedLocale() : null)
-                      .build();
-    }
+                      .putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata());
 
-    @Override
-    public boolean isValid() {
-        return !eventId.isNull();
+        return extendEventDataBuilder(builder).build();
     }
 
     @NonNull
-    static JsonValue createEventId(String scheduleId, InAppMessage message) {
-        switch (message.getSource()) {
+    protected abstract JsonMap.Builder extendEventDataBuilder(@NonNull JsonMap.Builder builder);
+
+    @NonNull
+    private static JsonValue createEventId(@NonNull String scheduleId, @NonNull @InAppMessage.Source String source, @Nullable JsonValue campaigns) {
+        switch (source) {
             case InAppMessage.SOURCE_LEGACY_PUSH:
                 return JsonValue.wrap(scheduleId);
 
             case InAppMessage.SOURCE_REMOTE_DATA:
                 return JsonMap.newBuilder()
                               .put(MESSAGE_ID, scheduleId)
-                              .put(CAMPAIGNS, message.getCampaigns())
+                              .put(CAMPAIGNS, campaigns)
                               .build()
                               .toJsonValue();
 

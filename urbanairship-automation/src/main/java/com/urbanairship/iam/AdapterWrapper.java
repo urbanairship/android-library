@@ -8,9 +8,11 @@ import android.os.Looper;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.assets.Assets;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
@@ -22,6 +24,8 @@ import androidx.annotation.WorkerThread;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 final class AdapterWrapper {
+
+
 
     static class DisplayException extends Exception {
 
@@ -41,14 +45,16 @@ final class AdapterWrapper {
     public final InAppMessage message;
     public final InAppMessageAdapter adapter;
     public final DisplayCoordinator coordinator;
-
     public boolean displayed = false;
+    public final JsonValue campaigns;
 
     AdapterWrapper(@NonNull String scheduleId,
+                   @Nullable JsonValue campaigns,
                    @NonNull InAppMessage message,
                    @NonNull InAppMessageAdapter adapter,
                    @NonNull DisplayCoordinator coordinator) {
         this.scheduleId = scheduleId;
+        this.campaigns = campaigns;
         this.message = message;
         this.adapter = adapter;
         this.coordinator = coordinator;
