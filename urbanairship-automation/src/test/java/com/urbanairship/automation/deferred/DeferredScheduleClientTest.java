@@ -2,6 +2,9 @@
 
 package com.urbanairship.automation.deferred;
 
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -10,6 +13,7 @@ import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.http.Request;
@@ -30,9 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.util.Locale;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
@@ -51,6 +53,7 @@ public class DeferredScheduleClientTest {
 
     private DeferredScheduleClient client;
     private AuthManager mockAuthManager;
+    private Supplier<StateOverrides> mockSupplier;
     private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
 
@@ -60,13 +63,20 @@ public class DeferredScheduleClientTest {
 
         testRequest = new TestRequest();
         mockAuthManager = mock(AuthManager.class);
-        client = new DeferredScheduleClient(runtimeConfig, mockAuthManager, new RequestFactory() {
-            @NonNull
-            @Override
-            public Request createRequest() {
-                return testRequest;
-            }
-        });
+        mockSupplier = mock(Supplier.class);
+        client = new DeferredScheduleClient(
+                runtimeConfig,
+                mockAuthManager,
+                new RequestFactory() {
+                    @NonNull
+                    @Override
+                    public Request createRequest() {
+                        return testRequest;
+                    }
+                },
+                mockSupplier);
+
+        when(mockSupplier.get()).thenReturn(null);
     }
 
     @Test(expected = AuthException.class)
@@ -168,6 +178,32 @@ public class DeferredScheduleClientTest {
                                   .put("channel_id", "channel")
                                   .put("attribute_overrides", JsonValue.wrapOpt(attributeOverrides))
                                   .build();
+
+        assertEquals(expected.toString(), testRequest.getRequestBody());
+    }
+
+    @Test
+    public void testStateOverrides() throws AuthException, MalformedURLException, RequestException {
+        when(mockAuthManager.getToken()).thenReturn("some token");
+
+        when(mockSupplier.get()).thenReturn(new StateOverrides(1,"1.0.0", true, new Locale("en", "US")));
+
+        client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
+
+        JsonValue jsonStateOverrides = JsonMap.newBuilder()
+                .put("app_version", 1)
+                .put("sdk_version", "1.0.0")
+                .put("notification_opt_in", true)
+                .put("locale_language", "en")
+                .put("locale_country", "US")
+                .build()
+                .toJsonValue();
+
+        JsonMap expected = JsonMap.newBuilder()
+                .put("platform", "android")
+                .put("channel_id", "channel")
+                .put("state_overrides", jsonStateOverrides)
+                .build();
 
         assertEquals(expected.toString(), testRequest.getRequestBody());
     }

@@ -3,6 +3,9 @@ package com.urbanairship.automation;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -46,9 +49,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;

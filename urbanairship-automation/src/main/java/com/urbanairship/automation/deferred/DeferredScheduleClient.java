@@ -2,6 +2,12 @@
 
 package com.urbanairship.automation.deferred;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
+import com.urbanairship.base.Supplier;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.auth.AuthException;
@@ -25,11 +31,6 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 /**
  * Client to handle deferred schedules.
  * @hide
@@ -51,11 +52,14 @@ public class DeferredScheduleClient {
     private static final String TRIGGER_EVENT_KEY = "event";
     private static final String TAG_OVERRIDES_KEY = "tag_overrides";
     private static final String ATTRIBUTE_OVERRIDES_KEY = "attribute_overrides";
+    private static final String STATE_OVERRIDES_KEY = "state_overrides";
 
     private static final String AUDIENCE_MATCH_KEY = "audience_match";
     private static final String RESPONSE_TYPE_KEY = "type";
     private static final String MESSAGE_KEY = "message";
     private static final String IN_APP_MESSAGE_TYPE = "in_app_message";
+
+    private final Supplier<StateOverrides> stateOverridesSupplier;
 
     /**
      * Default constructor.
@@ -64,16 +68,23 @@ public class DeferredScheduleClient {
      * @param authManager The auth manager.
      */
     public DeferredScheduleClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull AuthManager authManager) {
-        this(runtimeConfig, authManager, RequestFactory.DEFAULT_REQUEST_FACTORY);
+        this(runtimeConfig, authManager, RequestFactory.DEFAULT_REQUEST_FACTORY, new Supplier<StateOverrides>() {
+            @Override
+            public StateOverrides get() {
+                return StateOverrides.defaultOverrides();
+            }
+        });
     }
 
     @VisibleForTesting
     DeferredScheduleClient(@NonNull AirshipRuntimeConfig runtimeConfig,
                            @NonNull AuthManager authManager,
-                           @NonNull RequestFactory requestFactory) {
+                           @NonNull RequestFactory requestFactory,
+                           @NonNull Supplier<StateOverrides> stateOverridesSupplier) {
         this.runtimeConfig = runtimeConfig;
         this.authManager = authManager;
         this.requestFactory = requestFactory;
+        this.stateOverridesSupplier = stateOverridesSupplier;
     }
 
     /**
@@ -111,6 +122,8 @@ public class DeferredScheduleClient {
         if (!attributeOverrides.isEmpty()) {
             requestBodyBuilder.put(ATTRIBUTE_OVERRIDES_KEY, JsonValue.wrapOpt(attributeOverrides));
         }
+
+        requestBodyBuilder.put(STATE_OVERRIDES_KEY, stateOverridesSupplier.get());
 
         JsonMap requestBody = requestBodyBuilder.build();
         Response<Result> response = performRequest(url, token, requestBody);
