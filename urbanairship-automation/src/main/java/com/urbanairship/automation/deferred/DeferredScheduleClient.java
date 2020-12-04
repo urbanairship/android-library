@@ -149,8 +149,8 @@ public class DeferredScheduleClient {
         boolean audienceMatch = response.opt(AUDIENCE_MATCH_KEY).getBoolean(false);
 
         InAppMessage message = null;
-        if (response.opt(RESPONSE_TYPE_KEY).optString().equals(IN_APP_MESSAGE_TYPE)) {
-            message = InAppMessage.fromJson(response.opt(MESSAGE_KEY));
+        if (audienceMatch && response.opt(RESPONSE_TYPE_KEY).optString().equals(IN_APP_MESSAGE_TYPE)) {
+            message = InAppMessage.fromJson(response.opt(MESSAGE_KEY), InAppMessage.SOURCE_REMOTE_DATA);
         }
 
         return new Result(audienceMatch, message);

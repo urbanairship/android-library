@@ -178,6 +178,7 @@ public class DeferredScheduleClientTest {
 
         testRequest.responseStatus = 200;
         testRequest.responseBody = JsonMap.newBuilder()
+                                          .put("type", "in_app_message")
                                           .put("audience_match", false)
                                           .build()
                                           .toString();
@@ -208,25 +209,29 @@ public class DeferredScheduleClientTest {
 
     @Test
     public void testMessage() throws AuthException, MalformedURLException, RequestException {
-        InAppMessage message = InAppMessage.newBuilder()
-                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .build();
-
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
         testRequest.responseStatus = 200;
         testRequest.responseBody = JsonMap.newBuilder()
                                           .put("audience_match", true)
                                           .put("type", "in_app_message")
-                                          .put("message", message)
+                                          .put("message", JsonMap.newBuilder()
+                                                                 .put("display_type", "custom")
+                                                                 .put("display", JsonMap.EMPTY_MAP)
+                                                                 .build())
                                           .build()
                                           .toString();
+
+        InAppMessage expected = InAppMessage.newBuilder()
+                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                            .setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                            .build();
 
         Response<DeferredScheduleClient.Result> response = client.performRequest(new URL("https://airship.com"),
                 "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         assertTrue(response.getResult().isAudienceMatch());
-        assertEquals(message, response.getResult().getMessage());
+        assertEquals(expected, response.getResult().getMessage());
     }
 
     @Test
@@ -242,4 +247,5 @@ public class DeferredScheduleClientTest {
 
         verify(mockAuthManager).tokenExpired("expired");
     }
+
 }
