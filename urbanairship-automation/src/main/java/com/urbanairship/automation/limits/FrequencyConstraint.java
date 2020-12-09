@@ -56,6 +56,35 @@ public class FrequencyConstraint {
         return count;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FrequencyConstraint that = (FrequencyConstraint) o;
+
+        if (range != that.range) return false;
+        if (count != that.count) return false;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + (int) (range ^ (range >>> 32));
+        result = 31 * result + count;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FrequencyConstraint{" +
+                "id='" + id + '\'' +
+                ", range=" + range +
+                ", count=" + count +
+                '}';
+    }
+
     /**
      * Creates a new builder.
      *

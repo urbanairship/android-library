@@ -6,13 +6,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipLoopers;
@@ -26,6 +19,8 @@ import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
+import com.urbanairship.automation.limits.FrequencyConstraint;
+import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagGroupUtils;
@@ -49,6 +44,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-app automation.
@@ -74,6 +76,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final AudienceManager audienceManager;
     private final RetryingExecutor retryingExecutor;
     private final DeferredScheduleClient deferredScheduleClient;
+    private final FrequencyLimitManager frequencyLimitManager;
 
     private ActionsScheduleDelegate actionScheduleDelegate;
     private InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
@@ -150,6 +153,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig, new AuthManager(runtimeConfig, airshipChannel));
         this.actionScheduleDelegate = new ActionsScheduleDelegate();
         this.inAppMessageScheduleDelegate = new InAppMessageScheduleDelegate(inAppMessageManager);
+        this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
     }
 
     @VisibleForTesting
@@ -163,7 +167,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull RetryingExecutor retryingExecutor,
                     @NonNull DeferredScheduleClient deferredScheduleClient,
                     @NonNull ActionsScheduleDelegate actionsScheduleDelegate,
-                    @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate) {
+                    @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate,
+                    @NonNull FrequencyLimitManager frequencyLimitManager) {
         super(context, preferenceDataStore);
         this.automationEngine = engine;
         this.airshipChannel = airshipChannel;
@@ -175,6 +180,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.actionScheduleDelegate = actionsScheduleDelegate;
         this.inAppMessageScheduleDelegate = inAppMessageScheduleDelegate;
+        this.frequencyLimitManager = frequencyLimitManager;
     }
 
     /**
@@ -266,7 +272,32 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     public void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
-        remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), this);
+        remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), new InAppRemoteDataObserver.Delegate() {
+            @Override
+            @NonNull
+            public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
+                return InAppAutomation.this.getSchedules();
+            }
+
+            @Override
+            @NonNull
+            public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
+                return InAppAutomation.this.editSchedule(scheduleId, edits);
+            }
+
+            @NonNull
+            @Override
+            public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
+                return InAppAutomation.this.schedule(schedules);
+            }
+
+            @NonNull
+            @Override
+            public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
+                frequencyLimitManager.updateConstraints(constraints);
+            }
+
+        });
         automationEngine.checkPendingSchedules();
         inAppMessageManager.onAirshipReady();
     }

@@ -3,9 +3,6 @@ package com.urbanairship.automation;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -14,6 +11,8 @@ import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
+import com.urbanairship.automation.limits.FrequencyConstraint;
+import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.automation.tags.TagGroupLookupResponseCache;
 import com.urbanairship.automation.tags.TagGroupResult;
@@ -50,6 +49,9 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,6 +86,8 @@ public class InAppAutomationTest {
     private DeferredScheduleClient mockDeferredScheduleClient;
     private InAppMessageScheduleDelegate mockMessageScheduleDelegate;
     private ActionsScheduleDelegate mockActionsScheduleDelegate;
+    private FrequencyLimitManager mockFrequencyLimitManager;
+    private InAppRemoteDataObserver.Delegate remoteDataObserverDelegate;
 
     @Before
     public void setup() {
@@ -119,13 +123,18 @@ public class InAppAutomationTest {
 
         mockMessageScheduleDelegate = mock(InAppMessageScheduleDelegate.class);
         mockActionsScheduleDelegate = mock(ActionsScheduleDelegate.class);
+        mockFrequencyLimitManager = mock(FrequencyLimitManager.class);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
-                mockActionsScheduleDelegate, mockMessageScheduleDelegate);
+                mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
+
+        ArgumentCaptor<InAppRemoteDataObserver.Delegate> argument = ArgumentCaptor.forClass(InAppRemoteDataObserver.Delegate.class);
+        verify(mockObserver).subscribe(any(Looper.class), argument.capture());
+        remoteDataObserverDelegate = argument.getValue();
 
         runLooperTasks();
     }
@@ -312,7 +321,6 @@ public class InAppAutomationTest {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                              .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                              .build();
-
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(false);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
@@ -705,8 +713,8 @@ public class InAppAutomationTest {
     @Test
     public void testExecuteActions() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
-                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                                  .build();
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .build();
 
         // Prepare schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -719,6 +727,19 @@ public class InAppAutomationTest {
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
         verify(mockActionsScheduleDelegate).onExecute(schedule, executionCallback);
+    }
+
+    @Test
+    public void testUpdateConstraints() {
+        List<FrequencyConstraint> constraints = new ArrayList<>();
+        constraints.add(FrequencyConstraint.newBuilder()
+                                           .setRange(TimeUnit.DAYS, 10)
+                                           .setId("ID")
+                                           .setCount(10)
+                                           .build());
+
+        remoteDataObserverDelegate.updateConstraints(constraints);
+        verify(mockFrequencyLimitManager).updateConstraints(constraints);
     }
 
     /**

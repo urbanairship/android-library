@@ -6,12 +6,13 @@ import android.content.Context;
 import android.os.Looper;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
-import com.urbanairship.iam.InAppAutomationScheduler;
+import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -49,6 +50,13 @@ class InAppRemoteDataObserver {
 
     // JSON keys
     private static final String MESSAGES_JSON_KEY = "in_app_messages";
+    private static final String CONSTRAINTS_JSON_KEY = "frequency_constraints";
+
+    private static final String CONSTRAINTS_PERIOD_KEY = "period";
+    private static final String CONSTRAINT_ID_KEY = "id";
+    private static final String CONSTRAINT_RANGE_KEY = "range";
+    private static final String CONSTRAINT_BOUNDARY_KEY = "boundary";
+
     private static final String CREATED_JSON_KEY = "created";
     private static final String UPDATED_JSON_KEY = "last_updated";
 
@@ -90,6 +98,22 @@ class InAppRemoteDataObserver {
 
     }
 
+    interface Delegate {
+
+        @NonNull
+        PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules();
+
+        @NonNull
+        PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits);
+
+        @NonNull
+        PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules);
+
+        @NonNull
+        void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints);
+
+    }
+
     /**
      * Default constructor.
      *
@@ -106,7 +130,7 @@ class InAppRemoteDataObserver {
      * Adds a listener.
      * <p>
      * Updates will be called on the looper provided in
-     * {@link #subscribe(Looper, InAppAutomationScheduler)}.
+     * {@link #subscribe(Looper, Delegate)}.
      *
      * @param listener The listener to add.
      */
@@ -131,9 +155,9 @@ class InAppRemoteDataObserver {
      * Subscribes to remote data.
      *
      * @param looper The looper to process updates and callbacks on.
-     * @param scheduler The scheduler.
+     * @param delegate The delegate.
      */
-    void subscribe(@NonNull Looper looper, @NonNull final InAppAutomationScheduler scheduler) {
+    void subscribe(@NonNull Looper looper, @NonNull final Delegate delegate) {
         cancel();
 
         this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
@@ -152,7 +176,7 @@ class InAppRemoteDataObserver {
                                           @Override
                                           public void onNext(@NonNull RemoteDataPayload payload) {
                                               try {
-                                                  processPayload(payload, scheduler);
+                                                  processPayload(payload, delegate);
                                                   Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
                                               } catch (Exception e) {
                                                   Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
@@ -174,9 +198,9 @@ class InAppRemoteDataObserver {
      * Processes a payload.
      *
      * @param payload The remote data payload.
-     * @param scheduler The scheduler.
+     * @param delegate The delegate.
      */
-    private void processPayload(@NonNull RemoteDataPayload payload, @NonNull InAppAutomationScheduler scheduler) throws ExecutionException, InterruptedException {
+    private void processPayload(@NonNull RemoteDataPayload payload, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
         long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
         JsonMap lastPayloadMetadata = getLastPayloadMetadata();
 
@@ -185,13 +209,15 @@ class InAppRemoteDataObserver {
                                           .build();
 
         boolean isMetadataUpToDate = payload.getMetadata().equals(lastPayloadMetadata);
-
         List<Schedule<? extends ScheduleData>> newSchedules = new ArrayList<>();
-
-        Set<String> scheduledRemoteIds = filterRemoteSchedules(scheduler.getSchedules().get());
-
         List<String> incomingScheduleIds = new ArrayList<>();
+        Set<String> scheduledRemoteIds = filterRemoteSchedules(delegate.getSchedules().get());
+        Collection<FrequencyConstraint> constraints = parseConstraints(payload.getData().opt(CONSTRAINTS_JSON_KEY).optList());
 
+        // Update constraints
+        delegate.updateConstraints(constraints);
+
+        // Parse messages
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
             long createdTimeStamp, lastUpdatedTimeStamp;
 
@@ -229,7 +255,7 @@ class InAppRemoteDataObserver {
             } else if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
                     ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
-                    Boolean edited = scheduler.editSchedule(scheduleId, edits).get();
+                    Boolean edited = delegate.editSchedule(scheduleId, edits).get();
                     if (edited != null && edited) {
                         Logger.debug("Updated in-app automation: %s with edits: %s", scheduleId, edits);
                     }
@@ -241,7 +267,7 @@ class InAppRemoteDataObserver {
 
         // Schedule new in-app messages
         if (!newSchedules.isEmpty()) {
-            scheduler.schedule(newSchedules).get();
+            delegate.schedule(newSchedules).get();
         }
 
         // End any messages that are no longer in the listing
@@ -260,7 +286,7 @@ class InAppRemoteDataObserver {
                                                                        .build();
 
             for (String scheduleId : schedulesToRemove) {
-                scheduler.editSchedule(scheduleId, edits).get();
+                delegate.editSchedule(scheduleId, edits).get();
             }
         }
 
@@ -275,6 +301,61 @@ class InAppRemoteDataObserver {
                     listener.onSchedulesUpdated();
                 }
             }
+        }
+    }
+
+    @NonNull
+    private Collection<FrequencyConstraint> parseConstraints(@NonNull JsonList constraintsJson) {
+        List<FrequencyConstraint> constraints = new ArrayList<>();
+        for (JsonValue value : constraintsJson) {
+            try {
+                constraints.add(parseConstraint(value.optMap()));
+            } catch (JsonException e) {
+                Logger.error(e, "Invalid constraint: " + value);
+            }
+        }
+        return constraints;
+    }
+
+    @NonNull
+    private FrequencyConstraint parseConstraint(@NonNull JsonMap constraintJson) throws JsonException {
+        FrequencyConstraint.Builder builder = FrequencyConstraint.newBuilder()
+                                                                 .setId(constraintJson.opt(CONSTRAINT_ID_KEY).getString())
+                                                                 .setCount(constraintJson.opt(CONSTRAINT_BOUNDARY_KEY).getInt(0));
+
+        long range = constraintJson.opt(CONSTRAINT_RANGE_KEY).getLong(0);
+        String period = constraintJson.opt(CONSTRAINTS_PERIOD_KEY).optString();
+
+        switch (period) {
+            case "seconds":
+                builder.setRange(TimeUnit.SECONDS, range);
+                break;
+            case "minutes":
+                builder.setRange(TimeUnit.MINUTES, range);
+                break;
+            case "hours":
+                builder.setRange(TimeUnit.HOURS, range);
+                break;
+            case "days":
+                builder.setRange(TimeUnit.DAYS, range);
+                break;
+            case "weeks":
+                builder.setRange(TimeUnit.DAYS, range * 7);
+                break;
+            case "months":
+                builder.setRange(TimeUnit.DAYS, range * 30);
+                break;
+            case "years":
+                builder.setRange(TimeUnit.DAYS, range * 365);
+                break;
+            default:
+                throw new JsonException("Invalid period: " + period);
+        }
+
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Invalid constraint: " + constraintJson, e);
         }
     }
 

@@ -8,10 +8,11 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
-import com.urbanairship.iam.InAppAutomationScheduler;
+import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.remotedata.RemoteData;
@@ -35,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,7 +48,7 @@ import static org.mockito.Mockito.when;
 public class InAppRemoteDataObserverTest {
 
     private InAppRemoteDataObserver observer;
-    private TestScheduler scheduler;
+    private TestDelegate delegate;
     private RemoteData remoteData;
     private Subject<RemoteDataPayload> updates;
 
@@ -56,10 +58,10 @@ public class InAppRemoteDataObserverTest {
         updates = Subject.create();
         when(remoteData.payloadsForType(anyString())).thenReturn(updates);
 
-        scheduler = new TestScheduler();
+        delegate = new TestDelegate();
 
         observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData);
-        observer.subscribe(Looper.getMainLooper(), scheduler);
+        observer.subscribe(Looper.getMainLooper(), delegate);
     }
 
     @Test
@@ -130,8 +132,8 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are scheduled
-        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
-        assertEquals(barSchedule, scheduler.schedules.get("bar"));
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
+        assertEquals(barSchedule, delegate.schedules.get("bar"));
 
         // Create another payload with added baz
         payload = new TestPayloadBuilder()
@@ -146,11 +148,11 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "baz" is scheduled
-        assertEquals(bazSchedule, scheduler.schedules.get("baz"));
+        assertEquals(bazSchedule, delegate.schedules.get("baz"));
 
         // Verify "foo" and "bar" are still scheduled
-        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
-        assertEquals(barSchedule, scheduler.schedules.get("bar"));
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
+        assertEquals(barSchedule, delegate.schedules.get("bar"));
     }
 
     @Test
@@ -192,7 +194,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are scheduled
-        assertEquals(legacySchedule, scheduler.schedules.get("legacy"));
+        assertEquals(legacySchedule, delegate.schedules.get("legacy"));
     }
 
     @Test
@@ -233,8 +235,8 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are scheduled
-        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
-        assertEquals(barSchedule, scheduler.schedules.get("bar"));
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
+        assertEquals(barSchedule, delegate.schedules.get("bar"));
 
         // Update the message without bar
         payload = new TestPayloadBuilder()
@@ -245,11 +247,11 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" and "bar" are still scheduled
-        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
-        assertEquals(barSchedule, scheduler.schedules.get("bar"));
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
+        assertEquals(barSchedule, delegate.schedules.get("bar"));
 
         // Verify "bar" was edited with updated end and start time
-        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("bar");
+        ScheduleEdits<? extends ScheduleData> edits = delegate.getScheduleEdits("bar");
         assertEquals(Long.valueOf(payload.getTimestamp()), edits.getEnd());
         assertEquals(Long.valueOf(payload.getTimestamp()), edits.getStart());
     }
@@ -285,7 +287,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" is scheduled
-        assertEquals(fooSchedule, scheduler.schedules.get("foo"));
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
 
         List<String> constraintIds = new ArrayList<>();
         constraintIds.add("foo");
@@ -317,7 +319,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" was edited with the updated message
-        ScheduleEdits<? extends ScheduleData> edits = scheduler.scheduleEdits.get("foo");
+        ScheduleEdits<? extends ScheduleData> edits = delegate.scheduleEdits.get("foo");
         assertEquals(Schedule.TYPE_ACTION, edits.getType());
         assertEquals(constraintIds, edits.getFrequencyConstraintIds());
         assertEquals(campaigns, edits.getCampaigns());
@@ -365,7 +367,7 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
 
         // Verify "foo" was edited with the updated message
-        ScheduleEdits<? extends ScheduleData> edits = scheduler.getScheduleEdits("foo");
+        ScheduleEdits<? extends ScheduleData> edits = delegate.getScheduleEdits("foo");
         JsonMap expected = JsonMap.newBuilder()
                                   .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", updatedMetadata)
                                   .build();
@@ -377,10 +379,103 @@ public class InAppRemoteDataObserverTest {
         assertEquals(-1, observer.getScheduleNewUserCutOffTime());
     }
 
+    @Test
+    public void testEmptyConstraints() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata)
+                .build();
+
+        updates.onNext(payload);
+
+        assertTrue(delegate.constraintUpdates.get(0).isEmpty());
+        assertEquals(1, delegate.constraintUpdates.size());
+    }
+
+    @Test
+    public void testConstraints() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        Map<String, Long> rangeMap = new HashMap<>();
+        rangeMap.put("seconds", TimeUnit.SECONDS.toMillis(1));
+        rangeMap.put("minutes", TimeUnit.MINUTES.toMillis(1));
+        rangeMap.put("hours", TimeUnit.HOURS.toMillis(1));
+        rangeMap.put("days", TimeUnit.DAYS.toMillis(1));
+        rangeMap.put("weeks", 7 * TimeUnit.DAYS.toMillis(1));
+        rangeMap.put("months", 30 * TimeUnit.DAYS.toMillis(1));
+        rangeMap.put("years", 365 * TimeUnit.DAYS.toMillis(1));
+
+        TestPayloadBuilder builder = new TestPayloadBuilder()
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata);
+
+        List<FrequencyConstraint> expected = new ArrayList<>();
+
+        for (Map.Entry<String, Long> value : rangeMap.entrySet()) {
+            builder.addConstraint(JsonMap.newBuilder()
+                                         .put("id", value.getKey() + " id")
+                                         .put("range", 1)
+                                         .put("boundary", 10)
+                                         .put("period", value.getKey())
+                                         .build());
+
+            expected.add(FrequencyConstraint.newBuilder()
+                                            .setCount(10)
+                                            .setId(value.getKey() + " id")
+                                            .setRange(TimeUnit.MILLISECONDS, value.getValue())
+                                            .build());
+        }
+
+        updates.onNext(builder.build());
+
+        assertEquals(expected, delegate.constraintUpdates.get(0));
+        assertEquals(1, delegate.constraintUpdates.size());
+    }
+
+    @Test
+    public void testInvalidConstraint() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("meta", "data").build();
+
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .setMetadata(metadata)
+                .addConstraint(JsonMap.newBuilder()
+                                      .put("id", "invalid")
+                                      .put("range", 1)
+                                      .put("boundary", 10)
+                                      .put("period", "lunar cycles")
+                                      .build())
+                .addConstraint(JsonMap.newBuilder()
+                                      .put("id", "valid")
+                                      .put("range", 20)
+                                      .put("boundary", 10)
+                                      .put("period", "days")
+                                      .build())
+                .build();
+
+        updates.onNext(payload);
+
+        List<FrequencyConstraint> expected = new ArrayList<>();
+        expected.add(FrequencyConstraint.newBuilder().setRange(TimeUnit.DAYS, 20)
+                                        .setId("valid")
+                                        .setCount(10)
+                                        .build());
+
+        assertEquals(expected, delegate.constraintUpdates.get(0));
+        assertEquals(1, delegate.constraintUpdates.size());
+    }
+
     /**
      * Helper class to generate a in-app message remote data payload.
      */
     private static class TestPayloadBuilder {
+
+        List<JsonSerializable> constraints = new ArrayList<>();
 
         List<JsonValue> schedules = new ArrayList<>();
         long timeStamp = System.currentTimeMillis();
@@ -388,6 +483,11 @@ public class InAppRemoteDataObserverTest {
 
         public TestPayloadBuilder setTimeStamp(long timeStamp) {
             this.timeStamp = timeStamp;
+            return this;
+        }
+
+        public TestPayloadBuilder addConstraint(JsonSerializable constraint) {
+            constraints.add(constraint);
             return this;
         }
 
@@ -461,7 +561,11 @@ public class InAppRemoteDataObserverTest {
         }
 
         public RemoteDataPayload build() {
-            JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
+            JsonMap data = JsonMap.newBuilder()
+                                  .putOpt("frequency_constraints", JsonValue.wrapOpt(constraints))
+                                  .putOpt("in_app_messages", JsonValue.wrapOpt(schedules))
+                                  .build();
+
             return RemoteDataPayload.newBuilder()
                                     .setType("in_app_messages")
                                     .setTimeStamp(timeStamp)
@@ -472,71 +576,11 @@ public class InAppRemoteDataObserverTest {
 
     }
 
-    private static class TestScheduler implements InAppAutomationScheduler {
+    private static class TestDelegate implements InAppRemoteDataObserver.Delegate {
 
         private final Map<String, Schedule<? extends ScheduleData>> schedules = new HashMap<>();
         private final Map<String, ScheduleEdits<? extends ScheduleData>> scheduleEdits = new HashMap<>();
-
-        @NonNull
-        @Override
-        public PendingResult<Boolean> schedule(@NonNull Schedule<? extends ScheduleData> schedule) {
-            schedules.put(schedule.getId(), schedule);
-
-            PendingResult<Boolean> scheduleResult = new PendingResult<>();
-            scheduleResult.setResult(true);
-            return scheduleResult;
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Boolean> cancelSchedule(@NonNull String scheduleId) {
-            PendingResult<Boolean> cancelResult = new PendingResult<>();
-            Schedule<? extends ScheduleData> schedule = this.schedules.remove(scheduleId);
-            cancelResult.setResult(schedule != null);
-            return cancelResult;
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Boolean> cancelScheduleGroup(@NonNull String group) {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Collection<Schedule<Actions>>> getActionScheduleGroup(@NonNull String group) {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Schedule<Actions>> getActionSchedule(@NonNull String scheduleId) {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Collection<Schedule<Actions>>> getActionSchedules() {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Collection<Schedule<InAppMessage>>> getMessageScheduleGroup(@NonNull String group) {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Schedule<InAppMessage>> getMessageSchedule(@NonNull String scheduleId) {
-            throw new IllegalArgumentException();
-        }
-
-        @NonNull
-        @Override
-        public PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules() {
-            throw new IllegalArgumentException();
-        }
+        private final List<Collection<FrequencyConstraint>> constraintUpdates = new ArrayList<>();
 
         @NonNull
         @Override
@@ -551,8 +595,9 @@ public class InAppRemoteDataObserverTest {
         }
 
         @NonNull
-        public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull String scheduleId) {
-            throw new IllegalArgumentException();
+        @Override
+        public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
+            constraintUpdates.add(constraints);
         }
 
         @NonNull
@@ -577,11 +622,6 @@ public class InAppRemoteDataObserverTest {
             }
 
             return result;
-        }
-
-        public boolean isScheduled(@NonNull Schedule<? extends ScheduleData> schedule) {
-            Schedule<? extends ScheduleData> found = schedules.get(schedule.getId());
-            return found != null && found.equals(schedule);
         }
 
         public ScheduleEdits<? extends ScheduleData> getScheduleEdits(@NonNull String scheduleId) {
