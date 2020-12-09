@@ -2,14 +2,10 @@
 
 package com.urbanairship;
 
-import android.os.Build;
-
 import com.urbanairship.http.Request;
 import com.urbanairship.http.Response;
-import com.urbanairship.locale.LocaleManager;
 
 import java.net.URL;
-import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.NonNull;

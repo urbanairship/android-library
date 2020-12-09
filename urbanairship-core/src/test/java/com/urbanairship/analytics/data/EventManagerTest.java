@@ -4,9 +4,14 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestRequest;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -16,9 +21,14 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.Nullable;
 
 import static com.urbanairship.analytics.data.EventManager.MIN_BATCH_INTERVAL_KEY;
 import static junit.framework.Assert.assertEquals;
@@ -44,11 +54,13 @@ public class EventManagerTest extends BaseTestCase {
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
         mockEventResolver = mock(EventResolver.class);
+
+        testAirshipRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+
         mockClient = mock(EventApiClient.class);
         mockActivityMonitor = mock(ActivityMonitor.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        testAirshipRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         eventManager = new EventManager(dataStore, testAirshipRuntimeConfig, mockDispatcher,
                 mockActivityMonitor, mockEventResolver, mockClient);
@@ -101,7 +113,7 @@ public class EventManagerTest extends BaseTestCase {
      * Tests sending events
      */
     @Test
-    public void testSendingEvents() {
+    public void testSendingEvents() throws RequestException {
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
 
@@ -124,14 +136,16 @@ public class EventManagerTest extends BaseTestCase {
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
 
         // Set up the response
-        EventResponse response = mock(EventResponse.class);
-        when(response.getStatus()).thenReturn(200);
-        when(response.getMaxTotalSize()).thenReturn(200);
-        when(response.getMaxBatchSize()).thenReturn(300);
-        when(response.getMinBatchInterval()).thenReturn(100);
+        EventResponse eventResponse = mock(EventResponse.class);
+        when(eventResponse.getMaxTotalSize()).thenReturn(200);
+        when(eventResponse.getMaxBatchSize()).thenReturn(300);
+        when(eventResponse.getMinBatchInterval()).thenReturn(100);
 
         // Return the response
-        when(mockClient.sendEvents(events.values(), headers)).thenReturn(response);
+        when(mockClient.sendEvents(events.values(), headers))
+                .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_OK)
+                        .setResult(eventResponse)
+                        .build());
 
         // Start the upload process
         assertTrue(eventManager.uploadEvents(headers));
@@ -160,7 +174,7 @@ public class EventManagerTest extends BaseTestCase {
      * Test event batching only sends a max of 500 events.
      */
     @Test
-    public void testSendEventMaxCount() {
+    public void testSendEventMaxCount() throws RequestException {
         // Make the match batch size greater than 500
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000);
 
@@ -178,7 +192,7 @@ public class EventManagerTest extends BaseTestCase {
      * Test sending events when the upload fails.
      */
     @Test
-    public void testSendEventsFails() {
+    public void testSendEventsFails() throws RequestException {
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
 
@@ -191,8 +205,12 @@ public class EventManagerTest extends BaseTestCase {
 
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
 
-        // Start the upload process
-        when(mockClient.sendEvents(events.values(), headers)).thenReturn(null);
+        EventResponse eventResponse = mock(EventResponse.class);
+
+        when(mockClient.sendEvents(events.values(), headers))
+                .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_BAD_REQUEST)
+                        .setResult(null)
+                        .build());
 
         assertFalse(eventManager.uploadEvents(headers));
 

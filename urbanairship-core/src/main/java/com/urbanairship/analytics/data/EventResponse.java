@@ -2,10 +2,10 @@
 
 package com.urbanairship.analytics.data;
 
-import com.urbanairship.http.Response;
 import com.urbanairship.util.UAMathUtil;
 
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 
@@ -24,19 +24,10 @@ class EventResponse {
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
 
     @NonNull
-    private final Response<Void> response;
+    private Map<String, List<String>> headers;
 
-    public EventResponse(@NonNull Response<Void> response) {
-        this.response = response;
-    }
-
-    /**
-     * Returns the response status code.
-     *
-     * @return The response status code as an int.
-     */
-    public int getStatus() {
-        return response.getStatus();
+    public EventResponse(@NonNull Map<String, List<String>> headers) {
+        this.headers = headers;
     }
 
     /**
@@ -45,13 +36,11 @@ class EventResponse {
      * @return The maximum total size as an Integer
      */
     int getMaxTotalSize() {
-        if (response.getResponseHeaders() != null) {
-            List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Total");
-            if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
-                        MIN_TOTAL_DB_SIZE_BYTES,
-                        MAX_TOTAL_DB_SIZE_BYTES);
-            }
+        List<String> headerList = headers.get("X-UA-Max-Total");
+        if (headerList != null && headerList.size() > 0) {
+            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
+                    MIN_TOTAL_DB_SIZE_BYTES,
+                    MAX_TOTAL_DB_SIZE_BYTES);
         }
         return MIN_TOTAL_DB_SIZE_BYTES;
     }
@@ -62,13 +51,11 @@ class EventResponse {
      * @return The maximum batch size as an Integer.
      */
     int getMaxBatchSize() {
-        if (response.getResponseHeaders() != null) {
-            List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Batch");
-            if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
-                        MIN_BATCH_SIZE_BYTES,
-                        MAX_BATCH_SIZE_BYTES);
-            }
+        List<String> headerList = headers.get("X-UA-Max-Batch");
+        if (headerList != null && headerList.size() > 0) {
+            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
+                    MIN_BATCH_SIZE_BYTES,
+                    MAX_BATCH_SIZE_BYTES);
         }
         return MIN_BATCH_SIZE_BYTES;
     }
@@ -79,13 +66,11 @@ class EventResponse {
      * @return The minimum batch interval as an Integer.
      */
     int getMinBatchInterval() {
-        if (response.getResponseHeaders() != null) {
-            List<String> headerList = response.getResponseHeaders().get("X-UA-Min-Batch-Interval");
-            if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
-                        MIN_BATCH_INTERVAL_MS,
-                        MAX_BATCH_INTERVAL_MS);
-            }
+        List<String> headerList = headers.get("X-UA-Min-Batch-Interval");
+        if (headerList != null && headerList.size() > 0) {
+            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                    MIN_BATCH_INTERVAL_MS,
+                    MAX_BATCH_INTERVAL_MS);
         }
         return MIN_BATCH_INTERVAL_MS;
     }

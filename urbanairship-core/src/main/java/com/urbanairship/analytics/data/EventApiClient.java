@@ -5,8 +5,10 @@ package com.urbanairship.analytics.data;
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
@@ -14,6 +16,7 @@ import com.urbanairship.json.JsonValue;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,6 +24,7 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
 import androidx.annotation.VisibleForTesting;
 
 /**
@@ -57,26 +61,16 @@ public class EventApiClient {
      *
      * @param events Specified events
      * @param headers Headers
-     * @return eventResponse or null if an error occurred
+     * @return eventResponse
      */
-    @Nullable
-    EventResponse sendEvents(@NonNull Collection<String> events,
-                             @NonNull Map<String, String> headers) {
-
-        if (events.isEmpty()) {
-            Logger.verbose("EventApiClient - No analytics events to send.");
-            return null;
-        }
+    @NonNull
+    Response<EventResponse> sendEvents(@NonNull Collection<String> events,
+                                       @NonNull @Size(min=1) Map<String, String> headers) throws RequestException {
 
         URL url = runtimeConfig.getUrlConfig()
                                .analyticsUrl()
                                .appendEncodedPath(WARP9_PATH)
                                .build();
-
-        if (url == null) {
-            Logger.debug("Analytics URL is null, unable to send events.");
-            return null;
-        }
 
         List<JsonValue> eventJSON = new ArrayList<>();
 
@@ -91,17 +85,23 @@ public class EventApiClient {
         String payload = new JsonList(eventJSON).toString();
         double sentAt = System.currentTimeMillis() / 1000.0;
 
-        Request request = requestFactory.createRequest("POST", url)
+        Request request = requestFactory.createRequest()
+                                        .setOperation("POST", url)
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
                                         .setHeader("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt))
                                         .addHeaders(headers);
 
         Logger.debug("EventApiClient - Sending analytics events. Request: %s Events: %s", request, events);
-        Response<Void> response = request.safeExecute();
+        Response<EventResponse> response = request.execute(new ResponseParser<EventResponse>() {
+            @Override
+            public EventResponse parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) {
+                headers = headers == null ? Collections.<String, List<String>>emptyMap() : headers;
+                return new EventResponse(headers);
+            }
+        });
 
         Logger.debug("EventApiClient - Analytics event response: %s", response);
-        return response == null ? null : new EventResponse(response);
+        return response;
     }
-
 }

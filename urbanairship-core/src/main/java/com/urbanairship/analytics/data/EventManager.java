@@ -9,6 +9,8 @@ import com.urbanairship.analytics.Event;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -74,19 +76,19 @@ public class EventManager {
     private boolean isScheduled;
 
     public EventManager(@NonNull Context context,
-                 @NonNull PreferenceDataStore preferenceDataStore,
-                 @NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(preferenceDataStore, runtimeConfig, JobDispatcher.shared(context),GlobalActivityMonitor.shared(context),
+                        @NonNull PreferenceDataStore preferenceDataStore,
+                        @NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(preferenceDataStore, runtimeConfig, JobDispatcher.shared(context), GlobalActivityMonitor.shared(context),
                 new EventResolver(context), new EventApiClient(runtimeConfig));
     }
 
     @VisibleForTesting
     EventManager(@NonNull PreferenceDataStore preferenceDataStore,
-                        @NonNull AirshipRuntimeConfig runtimeConfig,
-                        @NonNull JobDispatcher jobDispatcher,
-                        @NonNull ActivityMonitor activityMonitor,
-                        @NonNull EventResolver eventResolver,
-                        @NonNull EventApiClient apiClient) {
+                 @NonNull AirshipRuntimeConfig runtimeConfig,
+                 @NonNull JobDispatcher jobDispatcher,
+                 @NonNull ActivityMonitor activityMonitor,
+                 @NonNull EventResolver eventResolver,
+                 @NonNull EventApiClient apiClient) {
 
         this.preferenceDataStore = preferenceDataStore;
         this.runtimeConfig = runtimeConfig;
@@ -225,32 +227,38 @@ public class EventManager {
         }
 
         if (events.isEmpty()) {
-            return true;
-        }
-
-        EventResponse response = apiClient.sendEvents(events.values(), headers);
-
-        if (response == null || response.getStatus() != 200) {
-            Logger.debug("EventManager - Analytic upload failed.");
+            Logger.verbose("EventApiClient - No analytics events to send.");
             return false;
         }
 
-        Logger.debug("EventManager - Analytic events uploaded.");
+        try {
+            Response<EventResponse> response = apiClient.sendEvents(events.values(), headers);
+            if (!response.isSuccessful()) {
+                Logger.debug("EventManager - Analytic upload failed.");
+                return false;
+            }
 
-        synchronized (eventLock) {
-            eventResolver.deleteEvents(events.keySet());
+            Logger.debug("EventManager - Analytic events uploaded.");
+            synchronized (eventLock) {
+                eventResolver.deleteEvents(events.keySet());
+            }
+
+            // Update preferences
+            preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getResult().getMaxTotalSize());
+            preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.getResult().getMaxBatchSize());
+            preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.getResult().getMinBatchInterval());
+
+            // If there are still events left, schedule the next send
+            if (eventCount - events.size() > 0) {
+                scheduleEventUpload(MULTIPLE_BATCH_DELAY, TimeUnit.MILLISECONDS);
+            }
+
+            return true;
+
+        } catch (RequestException e) {
+            Logger.error(e, "EventManager - Failed to upload events");
+            return false;
         }
-
-        // Update preferences
-        preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getMaxTotalSize());
-        preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.getMaxBatchSize());
-        preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.getMinBatchInterval());
-
-        // If there are still events left, schedule the next send
-        if (eventCount - events.size() > 0) {
-            scheduleEventUpload(MULTIPLE_BATCH_DELAY, TimeUnit.MILLISECONDS);
-        }
-
-        return true;
     }
+
 }
