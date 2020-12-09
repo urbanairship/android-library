@@ -1700,6 +1700,8 @@ public class AutomationEngine {
         scheduleEntity.metadata = edits.getMetadata() == null ? scheduleEntity.metadata : edits.getMetadata();
         scheduleEntity.scheduleType = edits.getType() == null ? scheduleEntity.scheduleType : edits.getType();
         scheduleEntity.audience = edits.getAudience() == null ? scheduleEntity.audience : edits.getAudience();
+        scheduleEntity.campaigns = edits.getCampaigns() == null ? scheduleEntity.campaigns : edits.getCampaigns();
+        scheduleEntity.frequencyConstraintIds = edits.getFrequencyConstraintIds() == null ? scheduleEntity.frequencyConstraintIds : edits.getFrequencyConstraintIds();
     }
 
     private boolean isExpired(@NonNull FullSchedule entry) {

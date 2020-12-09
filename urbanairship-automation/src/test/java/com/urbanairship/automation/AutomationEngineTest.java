@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -86,7 +87,6 @@ public class AutomationEngineTest {
         }
     };
 
-
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
@@ -108,7 +108,6 @@ public class AutomationEngineTest {
 
         mockMetrics = mock(ApplicationMetrics.class);
         TestApplication.getApplication().setApplicationMetrics(mockMetrics);
-
 
         driver = new TestDriver();
         mockDataMigrator = mock(LegacyDataMigrator.class);
@@ -617,6 +616,11 @@ public class AutomationEngineTest {
 
         // Update the schedule with a end time set to the next day
         long end = System.currentTimeMillis() + 1000 * 60 * 60 * 24;
+
+        List<String> constraintIds = new ArrayList<>();
+        constraintIds.add("foo");
+        constraintIds.add("bar");
+
         final ScheduleEdits<Actions> edits = ScheduleEdits.newBuilder(new Actions(JsonMap.newBuilder()
                                                                                          .put("another_action", "COOL")
                                                                                          .build()))
@@ -624,6 +628,8 @@ public class AutomationEngineTest {
                                                           .setStart(10)
                                                           .setEnd(end)
                                                           .setPriority(300)
+                                                          .setCampaigns(JsonValue.wrapOpt("campaigns"))
+                                                          .setFrequencyConstraintIds(constraintIds)
                                                           .build();
 
         Future<Boolean> future = automationEngine.editSchedule(schedule.getId(), edits);
@@ -644,13 +650,15 @@ public class AutomationEngineTest {
         assertEquals(edits.getEnd().longValue(), updated.getEnd());
         assertEquals(edits.getPriority().intValue(), updated.getPriority());
         assertEquals("COOL", updated.getData().getActionsMap().get("another_action").getString());
+        assertEquals(constraintIds, updated.getFrequencyConstraintIds());
+        assertEquals(JsonValue.wrapOpt("campaigns"), updated.getCampaigns());
     }
 
     @Test
     public void testEditScheduleEndZero() throws Exception {
         final Schedule<Actions> scheduleInfo = Schedule.newBuilder(this.schedule)
-                                              .setEditGracePeriod(100, TimeUnit.SECONDS)
-                                              .build();
+                                                       .setEditGracePeriod(100, TimeUnit.SECONDS)
+                                                       .build();
 
         schedule(scheduleInfo);
 

@@ -14,6 +14,7 @@ import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Schedulers;
@@ -68,7 +69,8 @@ class InAppRemoteDataObserver {
     private static final String MESSAGE_KEY = "message";
     private static final String DEFERRED_KEY = "deferred";
     private static final String ACTIONS_KEY = "actions";
-    private static final String CAMPAIGNS = "campaigns";
+    private static final String CAMPAIGNS_KEY = "campaigns";
+    private static final String FREQUENCY_CONSTRAINT_IDS_KEY = "frequency_constraint_ids";
 
     // Data store keys
     private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -226,15 +228,7 @@ class InAppRemoteDataObserver {
                 }
             } else if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
-                    ScheduleEdits<?> originalEdits = parseEdits(messageJson);
-                    ScheduleEdits<?> edits = ScheduleEdits.newBuilder(originalEdits)
-                                                          .setMetadata(scheduleMetadata)
-                                                          // Since we cancel a schedule by setting the end and start time to the payload,
-                                                          // clear them (-1) if the edits are null.
-                                                          .setEnd(originalEdits.getEnd() == null ? -1 : originalEdits.getEnd())
-                                                          .setStart(originalEdits.getStart() == null ? -1 : originalEdits.getStart())
-                                                          .build();
-
+                    ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
                     Boolean edited = scheduler.editSchedule(scheduleId, edits).get();
                     if (edited != null && edited) {
                         Logger.debug("Updated in-app automation: %s with edits: %s", scheduleId, edits);
@@ -406,24 +400,13 @@ class InAppRemoteDataObserver {
                .setGroup(jsonMap.opt(GROUP_KEY).getString())
                .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
-               .setCampaigns(jsonMap.get(CAMPAIGNS))
-               .setAudience(parseAudience(value));
-
-        if (jsonMap.containsKey(END_KEY)) {
-            try {
-                builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString()));
-            } catch (ParseException e) {
-                throw new JsonException("Invalid schedule end time", e);
-            }
-        }
-
-        if (jsonMap.containsKey(START_KEY)) {
-            try {
-                builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString()));
-            } catch (ParseException e) {
-                throw new JsonException("Invalid schedule start time", e);
-            }
-        }
+               .setCampaigns(jsonMap.opt(CAMPAIGNS_KEY))
+               .setAudience(parseAudience(value))
+               .setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD_KEY).getLong(0), TimeUnit.DAYS)
+               .setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS)
+               .setStart(parseTimeStamp(jsonMap.opt(START_KEY).getString()))
+               .setEnd(parseTimeStamp(jsonMap.opt(END_KEY).getString()))
+               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()));
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
             builder.addTrigger(Trigger.fromJson(triggerJson));
@@ -431,14 +414,6 @@ class InAppRemoteDataObserver {
 
         if (jsonMap.containsKey(DELAY_KEY)) {
             builder.setDelay(ScheduleDelay.fromJson(jsonMap.opt(DELAY_KEY)));
-        }
-
-        if (jsonMap.containsKey(EDIT_GRACE_PERIOD_KEY)) {
-            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD_KEY).getLong(0), TimeUnit.DAYS);
-        }
-
-        if (jsonMap.containsKey(INTERVAL_KEY)) {
-            builder.setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS);
         }
 
         try {
@@ -452,11 +427,12 @@ class InAppRemoteDataObserver {
      * Parses a json value for schedule edits.
      *
      * @param value The json value.
+     * @param scheduleMetadata The metadata.
      * @return The edit info.
      * @throws JsonException If the json is invalid.
      */
     @NonNull
-    public static ScheduleEdits<? extends ScheduleData> parseEdits(@NonNull JsonValue value) throws JsonException {
+    public static ScheduleEdits<? extends ScheduleData> parseEdits(@NonNull JsonValue value, @Nullable JsonMap scheduleMetadata) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         // Fallback to in-app message to support legacy messages
@@ -482,41 +458,42 @@ class InAppRemoteDataObserver {
                 throw new JsonException("Unexpected schedule type: " + type);
         }
 
-        if (jsonMap.containsKey(LIMIT_KEY)) {
-            builder.setLimit(jsonMap.opt(LIMIT_KEY).getInt(1));
-        }
-
-        if (jsonMap.containsKey(PRIORITY_KEY)) {
-            builder.setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
-        }
-
-        if (jsonMap.containsKey(END_KEY)) {
-            try {
-                builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString()));
-            } catch (ParseException e) {
-                throw new JsonException("Invalid schedule end time", e);
-            }
-        }
-
-        if (jsonMap.containsKey(START_KEY)) {
-            try {
-                builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString()));
-            } catch (ParseException e) {
-                throw new JsonException("Invalid schedule start time", e);
-            }
-        }
-
-        if (jsonMap.containsKey(EDIT_GRACE_PERIOD_KEY)) {
-            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD_KEY).getLong(0), TimeUnit.DAYS);
-        }
-
-        if (jsonMap.containsKey(INTERVAL_KEY)) {
-            builder.setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS);
-        }
-
-        builder.setAudience(parseAudience(value));
+        builder.setMetadata(scheduleMetadata)
+               .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+               .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
+               .setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD_KEY).getLong(0), TimeUnit.DAYS)
+               .setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS)
+               .setAudience(parseAudience(value))
+               .setCampaigns(jsonMap.opt(CAMPAIGNS_KEY))
+               .setStart(parseTimeStamp(jsonMap.opt(START_KEY).getString()))
+               .setEnd(parseTimeStamp(jsonMap.opt(END_KEY).getString()))
+               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()));
 
         return builder.build();
+    }
+
+    private static long parseTimeStamp(@Nullable String timeStamp) throws JsonException {
+        if (timeStamp == null) {
+            return -1;
+        }
+
+        try {
+            return DateUtils.parseIso8601(timeStamp);
+        } catch (ParseException e) {
+            throw new JsonException("Invalid timestamp: " + timeStamp, e);
+        }
+    }
+
+    @NonNull
+    private static List<String> parseConstraintIds(@NonNull JsonList optList) throws JsonException {
+        List<String> constraintIds = new ArrayList<>();
+        for (JsonValue value : optList) {
+            if (!value.isString()) {
+                throw new JsonException("Invalid constraint ID: " + value);
+            }
+            constraintIds.add(value.optString());
+        }
+        return constraintIds;
     }
 
     /**

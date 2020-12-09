@@ -71,6 +71,15 @@ public class InAppRemoteDataObserverTest {
                                           .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", metadata)
                                           .build();
 
+        List<String> constraintIds = new ArrayList<>();
+        constraintIds.add("foo");
+        constraintIds.add("bar");
+
+        JsonValue campaigns = JsonMap.newBuilder()
+                                     .put("neat", "campaign")
+                                     .build()
+                                     .toJsonValue();
+
         Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
                                                                              .setName("foo")
                                                                              .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
@@ -88,6 +97,8 @@ public class InAppRemoteDataObserverTest {
                                                      .setDelay(ScheduleDelay.newBuilder()
                                                                             .setSeconds(100)
                                                                             .build())
+                                                     .setCampaigns(campaigns)
+                                                     .setFrequencyConstraintIds(constraintIds)
                                                      .setId("foo")
                                                      .build();
 
@@ -152,24 +163,24 @@ public class InAppRemoteDataObserverTest {
                                           .build();
 
         Schedule<InAppMessage> legacySchedule = Schedule.newBuilder(InAppMessage.newBuilder()
-                                                                             .setName("foo")
-                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                                                             .build())
-                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
-                                                                         .setGoal(1)
-                                                                         .build())
-                                                     .setMetadata(expectedMetadata)
-                                                     .setStart(1000)
-                                                     .setEnd(3000)
-                                                     .setInterval(10, TimeUnit.SECONDS)
-                                                     .setAudience(Audience.newBuilder()
-                                                                          .setLocationOptIn(true)
-                                                                          .build())
-                                                     .setDelay(ScheduleDelay.newBuilder()
-                                                                            .setSeconds(100)
+                                                                                .setName("foo")
+                                                                                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                .build())
+                                                        .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                            .setGoal(1)
                                                                             .build())
-                                                     .setId("legacy")
-                                                     .build();
+                                                        .setMetadata(expectedMetadata)
+                                                        .setStart(1000)
+                                                        .setEnd(3000)
+                                                        .setInterval(10, TimeUnit.SECONDS)
+                                                        .setAudience(Audience.newBuilder()
+                                                                             .setLocationOptIn(true)
+                                                                             .build())
+                                                        .setDelay(ScheduleDelay.newBuilder()
+                                                                               .setSeconds(100)
+                                                                               .build())
+                                                        .setId("legacy")
+                                                        .build();
 
         RemoteDataPayload payload = new TestPayloadBuilder()
                 .addLegacySchedule(legacySchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
@@ -276,6 +287,15 @@ public class InAppRemoteDataObserverTest {
         // Verify "foo" is scheduled
         assertEquals(fooSchedule, scheduler.schedules.get("foo"));
 
+        List<String> constraintIds = new ArrayList<>();
+        constraintIds.add("foo");
+        constraintIds.add("bar");
+
+        JsonValue campaigns = JsonMap.newBuilder()
+                                     .put("neat", "campaign")
+                                     .build()
+                                     .toJsonValue();
+
         // Update "foo" as a different type
         Schedule<Actions> newFooSchedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                                    .addTrigger(Triggers.newAppInitTriggerBuilder()
@@ -283,6 +303,8 @@ public class InAppRemoteDataObserverTest {
                                                                        .build())
                                                    .setId("foo")
                                                    .setMetadata(expectedMetadata)
+                                                   .setCampaigns(campaigns)
+                                                   .setFrequencyConstraintIds(constraintIds)
                                                    .build();
 
         payload = new TestPayloadBuilder()
@@ -297,6 +319,8 @@ public class InAppRemoteDataObserverTest {
         // Verify "foo" was edited with the updated message
         ScheduleEdits<? extends ScheduleData> edits = scheduler.scheduleEdits.get("foo");
         assertEquals(Schedule.TYPE_ACTION, edits.getType());
+        assertEquals(constraintIds, edits.getFrequencyConstraintIds());
+        assertEquals(campaigns, edits.getCampaigns());
     }
 
     @Test
@@ -321,7 +345,7 @@ public class InAppRemoteDataObserverTest {
 
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
-                .addSchedule(fooSchedule,  TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .setMetadata(metadata)
                 .build();
@@ -406,7 +430,9 @@ public class InAppRemoteDataObserverTest {
                                                          .put("end", schedule.getEnd() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getEnd()) : null)
                                                          .put("audience", schedule.getAudience())
                                                          .put("group", schedule.getGroup())
-                                                         .put("delay", schedule.getDelay());
+                                                         .put("delay", schedule.getDelay())
+                                                         .put("campaigns", schedule.getCampaigns())
+                                                         .putOpt("frequency_constraint_ids", schedule.getFrequencyConstraintIds());
 
             switch (schedule.getType()) {
                 case Schedule.TYPE_ACTION:

@@ -24,7 +24,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 2, exportSchema = false)
+@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 3, exportSchema = false)
 @TypeConverters({ Converters.class })
 public abstract class AutomationDatabase extends RoomDatabase {
 
@@ -39,12 +39,19 @@ public abstract class AutomationDatabase extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE schedules "
+                    + " ADD COLUMN frequencyConstraintIds TEXT");
+        }
+    };
 
     public static AutomationDatabase createDatabase(@NonNull Context context, @NonNull AirshipRuntimeConfig config) {
         String name = config.getConfigOptions().appKey + "_in-app-automation";
         String path = new File(ContextCompat.getNoBackupFilesDir(context), name).getAbsolutePath();
         return Room.databaseBuilder(context, AutomationDatabase.class, path)
-                   .addMigrations(MIGRATION_1_2)
+                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                    .build();
 
     }

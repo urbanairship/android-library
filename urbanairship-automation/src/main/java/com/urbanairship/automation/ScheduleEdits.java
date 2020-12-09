@@ -6,7 +6,10 @@ import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntRange;
@@ -30,6 +33,8 @@ public class ScheduleEdits<T extends ScheduleData> {
     private final Audience audience;
     @Schedule.Type
     private final String type;
+    private final JsonValue campaigns;
+    private final List<String> frequencyConstraintIds;
 
     private ScheduleEdits(@NonNull Builder<T> builder) {
         this.limit = builder.limit;
@@ -42,6 +47,8 @@ public class ScheduleEdits<T extends ScheduleData> {
         this.editGracePeriod = builder.editGracePeriod;
         this.metadata = builder.metadata;
         this.audience = builder.audience;
+        this.frequencyConstraintIds = builder.frequencyConstraintIds;
+        this.campaigns = builder.campaigns;
     }
 
     /**
@@ -148,6 +155,31 @@ public class ScheduleEdits<T extends ScheduleData> {
         return audience;
     }
 
+
+    /**
+     * The campaigns info.
+     *
+     * @return The campaigns info.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getCampaigns() {
+        return campaigns;
+    }
+
+    /**
+     * The frequency constraint Ids.
+     *
+     * @return The constraint Ids.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<String> getFrequencyConstraintIds() {
+        return frequencyConstraintIds;
+    }
+
     /**
      * Create a new builder that extends an edits instance.
      *
@@ -218,6 +250,8 @@ public class ScheduleEdits<T extends ScheduleData> {
         private Long interval;
         private JsonMap metadata;
         private T data;
+        private JsonValue campaigns;
+        private List<String> frequencyConstraintIds;
 
         @Schedule.Type
         private String type;
@@ -238,6 +272,11 @@ public class ScheduleEdits<T extends ScheduleData> {
             this.data = edits.data;
             this.priority = edits.priority;
             this.type = edits.type;
+            this.editGracePeriod = edits.editGracePeriod;
+            this.interval = edits.interval;
+            this.metadata = edits.metadata;
+            this.campaigns = edits.campaigns;
+            this.frequencyConstraintIds = edits.frequencyConstraintIds;
         }
 
         /**
@@ -334,6 +373,34 @@ public class ScheduleEdits<T extends ScheduleData> {
          */
         public Builder<T> setAudience(@Nullable Audience audience) {
             this.audience = audience;
+            return this;
+        }
+
+        /**
+         * Sets the campaigns info.
+         *
+         * @param campaigns The campaigns info.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setCampaigns(@Nullable JsonValue campaigns) {
+            this.campaigns = campaigns;
+            return this;
+        }
+
+        /**
+         * Sets the frequency constraint Ids.
+         *
+         * @param frequencyConstraintIds The constraint Ids.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setFrequencyConstraintIds(@Nullable List<String> frequencyConstraintIds) {
+            this.frequencyConstraintIds = frequencyConstraintIds == null ? null : new ArrayList<>(frequencyConstraintIds);
             return this;
         }
 

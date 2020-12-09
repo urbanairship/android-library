@@ -84,6 +84,7 @@ public final class Schedule<T extends ScheduleData> {
     private final String group;
     private final Audience audience;
     private final JsonValue campaigns;
+    private final List<String> frequencyConstraintIds;
 
     @Type
     private final String type;
@@ -109,7 +110,8 @@ public final class Schedule<T extends ScheduleData> {
         this.type = builder.type;
         this.group = builder.group;
         this.audience = builder.audience;
-        this.campaigns = builder.campaigns;
+        this.campaigns = builder.campaigns == null ? JsonValue.NULL : builder.campaigns;
+        this.frequencyConstraintIds = builder.frequencyConstraintIds == null ? Collections.<String>emptyList() : Collections.unmodifiableList(builder.frequencyConstraintIds);
     }
 
     /**
@@ -177,10 +179,22 @@ public final class Schedule<T extends ScheduleData> {
      * @return The campaigns info.
      * @hide
      */
-    @Nullable
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getCampaigns() {
         return campaigns;
+    }
+
+    /**
+     * The frequency constraint Ids.
+     *
+     * @return The constraint Ids.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<String> getFrequencyConstraintIds() {
+        return frequencyConstraintIds;
     }
 
     /**
@@ -356,6 +370,8 @@ public final class Schedule<T extends ScheduleData> {
             return false;
         if (campaigns != null ? !campaigns.equals(schedule.campaigns) : schedule.campaigns != null)
             return false;
+        if (frequencyConstraintIds != null ? !frequencyConstraintIds.equals(schedule.frequencyConstraintIds) : schedule.frequencyConstraintIds != null)
+            return false;
         if (!type.equals(schedule.type)) return false;
         return data.equals(schedule.data);
     }
@@ -375,6 +391,7 @@ public final class Schedule<T extends ScheduleData> {
         result = 31 * result + (group != null ? group.hashCode() : 0);
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
+        result = 31 * result + (frequencyConstraintIds != null ? frequencyConstraintIds.hashCode() : 0);
         result = 31 * result + type.hashCode();
         result = 31 * result + data.hashCode();
         return result;
@@ -399,6 +416,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", type='" + type + '\'' +
                 ", data=" + data +
                 ", campaigns=" + campaigns +
+                ", frequencyConstraintIds=" + frequencyConstraintIds +
                 '}';
     }
 
@@ -423,6 +441,7 @@ public final class Schedule<T extends ScheduleData> {
         private String id;
         private Audience audience;
         private JsonValue campaigns;
+        private List<String> frequencyConstraintIds;
 
         private Builder(@NonNull Schedule<T> info) {
             this.id = info.id;
@@ -440,6 +459,7 @@ public final class Schedule<T extends ScheduleData> {
             this.audience = info.audience;
             this.group = info.group;
             this.campaigns = info.campaigns;
+            this.frequencyConstraintIds = info.frequencyConstraintIds;
         }
 
         private Builder(@NonNull @Type String type, @NonNull T data) {
@@ -635,6 +655,20 @@ public final class Schedule<T extends ScheduleData> {
         }
 
         /**
+         * Sets the frequency constraint Ids.
+         *
+         * @param frequencyConstraintIds The constraint Ids.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setFrequencyConstraintIds(@Nullable List<String> frequencyConstraintIds) {
+            this.frequencyConstraintIds = frequencyConstraintIds;
+            return this;
+        }
+
+        /**
          * Builds the in-app message schedule.
          *
          * @return The new in-app message schedule.
@@ -650,7 +684,5 @@ public final class Schedule<T extends ScheduleData> {
             Checks.checkArgument(triggers.size() <= TRIGGER_LIMIT, "No more than " + TRIGGER_LIMIT + " triggers allowed.");
             return new Schedule<T>(this);
         }
-
     }
-
 }

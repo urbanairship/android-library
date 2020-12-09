@@ -11,7 +11,6 @@ import java.util.List;
 
 import androidx.annotation.RestrictTo;
 import androidx.room.Entity;
-import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -46,8 +45,8 @@ public class ScheduleEntity {
     public String regionId;
     public Audience audience;
     public JsonValue campaigns;
+    public List<String> frequencyConstraintIds;
 
-    @Ignore
     @Override
     public String toString() {
         return "ScheduleEntity{" +
@@ -73,6 +72,7 @@ public class ScheduleEntity {
                 ", regionId='" + regionId + '\'' +
                 ", audience=" + audience +
                 ", campaigns=" + campaigns +
+                ", frequencyConstraintIds=" + frequencyConstraintIds +
                 '}';
     }
 
