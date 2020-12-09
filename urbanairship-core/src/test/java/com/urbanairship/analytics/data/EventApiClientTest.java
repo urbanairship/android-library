@@ -5,8 +5,13 @@ package com.urbanairship.analytics.data;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.LegacyTestRequest;
+import com.urbanairship.TestRequest;
+import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.http.ResponseParser;
+import com.urbanairship.json.JsonException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,12 +19,15 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.Nullable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,74 +40,119 @@ public class EventApiClientTest extends BaseTestCase {
 
     private List<String> events;
     private EventApiClient client;
-    private LegacyTestRequest testRequest;
+    private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
+    private RequestFactory mockRequestFactory;
 
     @Before
     public void setUp() {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
+                                                   .setAnalyticsUrl("http://example.com")
+                                                   .build());
+
 
         events = new ArrayList<>();
         events.add("{\"some\":\"json\"}");
 
-        testRequest = new LegacyTestRequest();
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
+        testRequest = new TestRequest();
+        mockRequestFactory = Mockito.mock(RequestFactory.class);
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
 
         client = new EventApiClient(runtimeConfig, mockRequestFactory);
     }
 
     /**
-     * Test sending null or empty events returns a null response.
+     * Test sending a correct request that succeeds
      */
     @Test
-    public void testSendEmptyEvents() {
-        assertNull(client.sendEvents(new ArrayList<String>(), Collections.<String, String>emptyMap()));
+    public void testSendEventsSucceed() throws RequestException {
+        testRequest.responseBody = "";
+        testRequest.responseStatus = 200;
+        testRequest.responseLastModifiedTime = 0;
+
+        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+
+        assertEquals(200, response.getStatus());
+        assertEquals("", response.getResponseBody());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(0, response.getLastModifiedTime());
+        assertNull(response.getResponseHeaders());
     }
 
     /**
-     * Test the request body contains the passed in events.
+     * Test sending a request with a null URL will return an exception
      */
-    @Test
-    public void testSendBody() throws IOException {
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody(events.toString())
-                                       .build();
-
-        EventResponse response = client.sendEvents(events, Collections.<String, String>emptyMap());
-
-        assertEquals("Event request body should match", testRequest.getRequestBody(), events.toString());
-        assertNotNull("Event response should not be null", response);
-        assertEquals("Event response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+    @Test(expected = RequestException.class)
+    public void testNullUrl() throws RequestException {
+        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        client.sendEvents(events, Collections.<String, String>emptyMap());
     }
 
+    /**
+     * Test sending null or empty events returns an empty response.
+     */
+    @Test
+    public void testSendEmptyEvents() throws RequestException {
+        testRequest.responseBody = "";
+        testRequest.responseStatus = 200;
+        testRequest.responseLastModifiedTime = 0;
+
+        events = new ArrayList<>();
+
+        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+
+        assertEquals(200, response.getStatus());
+        assertEquals("", response.getResponseBody());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(0, response.getLastModifiedTime());
+        assertNull(response.getResponseHeaders());
+
+    }
 
     /**
      * This verifies all required and most optional headers.
      */
     @Test
-    public void testRequestHeaders() {
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseBody(events.toString())
-                                       .build();
+    public void testRequestHeaders() throws RequestException {
+        testRequest.responseBody = "";
+        testRequest.responseStatus = 200;
+        testRequest.responseLastModifiedTime = 0;
 
         Map<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
 
-        client.sendEvents(events, headers);
+        Response<EventResponse> response = client.sendEvents(events, headers);
+
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
 
+        assertEquals(200, response.getStatus());
+        assertEquals("", response.getResponseBody());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(0, response.getLastModifiedTime());
         assertEquals("bar", requestHeaders.get("foo"));
     }
 
     /**
-     * Verify we return a null event response when the request responds with null.
+     * Verify we return a response even if the Json is malformated
      */
     @Test
-    public void testNullResponse() {
-        testRequest.response = null;
-        EventResponse response = client.sendEvents(events, Collections.<String, String>emptyMap());
-        assertNull(response);
+    public void testWrongJson() throws RequestException {
+        testRequest.responseBody = "";
+        testRequest.responseStatus = 200;
+        testRequest.responseLastModifiedTime = 0;
+
+        events = new ArrayList<>();
+        events.add("{{null2:\"some\":}");
+        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+        assertEquals(200, response.getStatus());
+        assertEquals("", response.getResponseBody());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(0, response.getLastModifiedTime());
     }
 
 }

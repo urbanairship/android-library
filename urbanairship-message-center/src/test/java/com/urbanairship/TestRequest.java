@@ -2,9 +2,6 @@
 
 package com.urbanairship;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -14,6 +11,9 @@ import com.urbanairship.util.Checks;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Request class used for testing.
@@ -51,7 +51,8 @@ public class TestRequest extends Request {
      *
      * @return The Airship User Agent.
      */
-    @Override @NonNull
+    @Override
+    @NonNull
     public String getUrbanAirshipUserAgent() {
         return "";
     }
@@ -87,4 +88,5 @@ public class TestRequest extends Request {
     public URL getUrl() {
         return url;
     }
+
 }

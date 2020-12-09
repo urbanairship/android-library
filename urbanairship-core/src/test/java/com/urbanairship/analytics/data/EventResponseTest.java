@@ -28,7 +28,7 @@ public class EventResponseTest extends BaseTestCase {
         responseHeaders = new HashMap<>();
         when(response.getResponseHeaders()).thenReturn(responseHeaders);
 
-        eventResponse = new EventResponse(response);
+        eventResponse = new EventResponse(responseHeaders);
     }
 
     /**

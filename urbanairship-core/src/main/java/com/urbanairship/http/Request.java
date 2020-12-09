@@ -8,7 +8,6 @@ import android.util.Base64;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonSerializable;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.ConnectionUtils;
 import com.urbanairship.util.UAStringUtil;
 
