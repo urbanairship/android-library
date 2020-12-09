@@ -2,10 +2,6 @@
 
 package com.urbanairship.automation.deferred;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.BuildConfig;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
@@ -14,6 +10,10 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * A model defining state overrides.
@@ -29,7 +29,7 @@ class StateOverrides implements JsonSerializable {
     private static final String STATE_LOCALE_LANGUAGE_KEY = "locale_language";
     private static final String STATE_LOCALE_COUNTRY_KEY = "locale_country";
 
-    private final int appVersion;
+    private final long appVersion;
     private final String sdkVersion;
     private final boolean notificationOptIn;
     private final String localeLanguage;
@@ -39,7 +39,7 @@ class StateOverrides implements JsonSerializable {
      * Default state overrides constructor.
      */
     @VisibleForTesting
-    StateOverrides(int appVersion, @NonNull String sdkVersion, boolean notificationOptIn, @NonNull Locale locale) {
+    StateOverrides(long appVersion, @NonNull String sdkVersion, boolean notificationOptIn, @NonNull Locale locale) {
         this.appVersion = appVersion;
         this.sdkVersion = sdkVersion;
         this.notificationOptIn = notificationOptIn;
@@ -56,7 +56,7 @@ class StateOverrides implements JsonSerializable {
     public static StateOverrides defaultOverrides() {
         PushManager pushManager = UAirship.shared().getPushManager();
         Locale locale = UAirship.shared().getLocale();
-        return new StateOverrides(BuildConfig.VERSION_CODE, BuildConfig.SDK_VERSION, pushManager.isOptIn(), locale);
+        return new StateOverrides(UAirship.shared().getApplicationMetrics().getCurrentAppVersion(), BuildConfig.SDK_VERSION, pushManager.isOptIn(), locale);
     }
 
     @NonNull
