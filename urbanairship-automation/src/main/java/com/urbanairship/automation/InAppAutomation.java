@@ -19,6 +19,7 @@ import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
+import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
@@ -78,10 +79,11 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final DeferredScheduleClient deferredScheduleClient;
     private final FrequencyLimitManager frequencyLimitManager;
 
-    private ActionsScheduleDelegate actionScheduleDelegate;
-    private InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
+    private final ActionsScheduleDelegate actionScheduleDelegate;
+    private final InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
 
-    private Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
+    private final Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
+    private final Map<String, FrequencyChecker> frequencyCheckerMap = new HashMap<>();
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -527,6 +529,14 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return;
         }
 
+        // Constraint checks
+        final FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
+        if (frequencyChecker != null && frequencyChecker.isOverLimit()) {
+            // The frequency constraint is exceeded, skip
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+            return;
+        }
+
         // Audience checks
         RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
             @Override
@@ -556,17 +566,27 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             }
         };
 
+        final AutomationDriver.PrepareScheduleCallback callbackWrapper = new AutomationDriver.PrepareScheduleCallback() {
+            @Override
+            public void onFinish(int result) {
+                if (result == AutomationDriver.PREPARE_RESULT_CONTINUE && frequencyChecker != null) {
+                    frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
+                }
+                callback.onFinish(result);
+            }
+        };
+
         RetryingExecutor.Operation prepareSchedule = new RetryingExecutor.Operation() {
             @Override
             public int run() {
                 switch (schedule.getType()) {
                     case Schedule.TYPE_DEFERRED:
-                        return resolveDeferred(schedule, triggerContext, callback);
+                        return resolveDeferred(schedule, triggerContext, callbackWrapper);
                     case Schedule.TYPE_ACTION:
-                        prepareSchedule(schedule, (Actions) schedule.coerceType(), actionScheduleDelegate, callback);
+                        prepareSchedule(schedule, (Actions) schedule.coerceType(), actionScheduleDelegate, callbackWrapper);
                         break;
                     case Schedule.TYPE_IN_APP_MESSAGE:
-                        prepareSchedule(schedule, (InAppMessage) schedule.coerceType(), inAppMessageScheduleDelegate, callback);
+                        prepareSchedule(schedule, (InAppMessage) schedule.coerceType(), inAppMessageScheduleDelegate, callbackWrapper);
                         break;
                 }
 
@@ -659,6 +679,15 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
+        FrequencyChecker frequencyChecker = frequencyCheckerMap.remove(schedule.getId());
+        if (frequencyChecker != null && !frequencyChecker.checkAndIncrement()) {
+            ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
+            if (delegate != null) {
+                delegate.onExecutionInvalidated(schedule);
+            }
+            return AutomationDriver.READY_RESULT_SKIP;
+        }
+
         ScheduleDelegate<?> delegate = scheduleDelegateMap.get(schedule.getId());
         return delegate == null ? AutomationDriver.READY_RESULT_NOT_READY : delegate.onCheckExecutionReadiness(schedule);
     }
@@ -700,6 +729,28 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     private boolean isScheduleInvalid(@NonNull Schedule<? extends ScheduleData> schedule) {
         return remoteDataSubscriber.isRemoteSchedule(schedule) && !remoteDataSubscriber.isScheduleValid(schedule);
+    }
+
+    /**
+     * Gets the Frequency Checker
+     *
+     * @param schedule The in-app schedule.
+     * @return a FrequencyChecker
+     */
+    @Nullable
+    private FrequencyChecker getFrequencyChecker(@NonNull Schedule<? extends ScheduleData> schedule) {
+        if (schedule.getFrequencyConstraintIds().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return frequencyLimitManager.getFrequencyChecker(schedule.getFrequencyConstraintIds()).get();
+        } catch (ExecutionException e) {
+            Logger.error("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
+        } catch (InterruptedException e) {
+            Logger.error("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
+        }
+        return null;
     }
 
     @AutomationDriver.PrepareResult

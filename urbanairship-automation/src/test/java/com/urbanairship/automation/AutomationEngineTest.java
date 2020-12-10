@@ -889,6 +889,29 @@ public class AutomationEngineTest {
         verifyState(schedule, ScheduleState.IDLE);
     }
 
+    @Test
+    public void testSkipReadyResult() throws ExecutionException, InterruptedException {
+        schedule(schedule);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        driver.onCheckExecutionReadinessResult = AutomationDriver.READY_RESULT_SKIP;
+
+        // Preparing schedule
+        verifyState(schedule, ScheduleState.PREPARING_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        runLooperTasks();
+
+        // Verify it's idle
+        verifyState(schedule, ScheduleState.IDLE);
+        assertEquals(dao.getSchedule(schedule.getId()).schedule.count, 0);
+    }
+
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final Schedule<Actions> schedule = Schedule.newBuilder(this.schedule)
                                                    .setDelay(delay)
@@ -1031,8 +1054,9 @@ public class AutomationEngineTest {
         Map<String, Schedule> preparedSchedulesMap = new HashMap<>();
         Map<String, TriggerContext> preparedTriggerContextMap = new HashMap<>();
         Map<String, Schedule> interrupted = new HashMap<>();
-
         ArrayList<Integer> priorityList = new ArrayList<>();
+
+        int onCheckExecutionReadinessResult = READY_RESULT_CONTINUE;
 
         @Override
         public void onExecuteTriggeredSchedule(@NonNull Schedule schedule, @NonNull ExecutionCallback finishCallback) {
@@ -1049,7 +1073,7 @@ public class AutomationEngineTest {
 
         @Override
         public int onCheckExecutionReadiness(@NonNull Schedule schedule) {
-            return READY_RESULT_CONTINUE;
+            return onCheckExecutionReadinessResult;
         }
 
         @Override

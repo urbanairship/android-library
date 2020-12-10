@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.AirshipLoopers;
+import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
@@ -11,6 +12,7 @@ import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
+import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
@@ -740,6 +742,45 @@ public class InAppAutomationTest {
 
         remoteDataObserverDelegate.updateConstraints(constraints);
         verify(mockFrequencyLimitManager).updateConstraints(constraints);
+    }
+
+    @Test
+    public void testConstraintsIsOverLimit() {
+        List<String> constraintIds = new ArrayList<>();
+        constraintIds.add("foo");
+
+        FrequencyChecker mockFrequencyChecker = mock(FrequencyChecker.class);
+        PendingResult<FrequencyChecker> pendingResult = new PendingResult<>();
+        pendingResult.setResult(mockFrequencyChecker);
+        when(mockFrequencyLimitManager.getFrequencyChecker(constraintIds)).thenReturn(pendingResult);
+
+        when(mockFrequencyChecker.isOverLimit()).thenReturn(true);
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+
+
+        List<FrequencyConstraint> constraints = new ArrayList<>();
+        constraints.add(FrequencyConstraint.newBuilder()
+                                           .setRange(TimeUnit.MINUTES, 10)
+                                           .setId("foo")
+                                           .setCount(1)
+                                           .build());
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setFrequencyConstraintIds(constraintIds)
+                                                  .build();
+
+        // Start preparing
+        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        remoteDataObserverDelegate.updateConstraints(constraints);
+        driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
+
+        // Verify the miss behavior
+        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
     }
 
     /**

@@ -25,7 +25,7 @@ public interface AutomationDriver {
     @Retention(RetentionPolicy.SOURCE)
     @interface PrepareResult {}
 
-    @IntDef({ READY_RESULT_CONTINUE, READY_RESULT_NOT_READY, READY_RESULT_INVALIDATE })
+    @IntDef({ READY_RESULT_CONTINUE, READY_RESULT_NOT_READY, READY_RESULT_INVALIDATE, READY_RESULT_SKIP })
     @Retention(RetentionPolicy.SOURCE)
     @interface ReadyResult {}
 
@@ -69,6 +69,11 @@ public interface AutomationDriver {
      * Schedule is out of date and should be prepared again before it is able to be ready for execution.
      */
     int READY_RESULT_INVALIDATE = -1;
+
+    /**
+     * Schedule's limit is exceeded, so it should be skipped
+     */
+    int READY_RESULT_SKIP = 2;
 
     /**
      * The execution callback.

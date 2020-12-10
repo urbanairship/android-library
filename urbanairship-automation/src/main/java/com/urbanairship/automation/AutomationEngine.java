@@ -1339,6 +1339,12 @@ public class AutomationEngine {
                 case AutomationDriver.READY_RESULT_NOT_READY:
                     Logger.verbose("AutomationEngine - Schedule not ready for execution: %s", entry.schedule.scheduleId);
                     break;
+
+                case AutomationDriver.READY_RESULT_SKIP:
+                    Logger.verbose("AutomationEngine - Schedule execution skipped: %s", entry.schedule.scheduleId);
+                    updateExecutionState(entry, ScheduleState.IDLE);
+                    dao.update(entry);
+                    break;
             }
         }
     }
