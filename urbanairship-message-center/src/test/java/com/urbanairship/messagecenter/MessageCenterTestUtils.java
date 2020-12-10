@@ -14,7 +14,7 @@ import androidx.test.core.app.ApplicationProvider;
 public class MessageCenterTestUtils {
 
     public static void insertMessage(String messageId) {
-        insertMessage(messageId, null);
+        insertMessage(messageId,null);
     }
 
     public static void insertMessage(String messageId, Map<String, String> extras) {
@@ -30,6 +30,7 @@ public class MessageCenterTestUtils {
     public static Message createMessage(String messageId, Map<String, String> extras, boolean expired) {
         Map<String, Object> payload = new HashMap<>();
         payload.put(Message.MESSAGE_ID_KEY, messageId);
+        payload.put(Message.MESSAGE_REPORTING_KEY, JsonValue.wrap(messageId));
         payload.put(Message.MESSAGE_BODY_URL_KEY, String.format("https://go.urbanairship.com/api/user/tests/messages/%s/body/", messageId));
         payload.put(Message.MESSAGE_READ_URL_KEY, String.format("https://go.urbanairship.com/api/user/tests/messages/%s/read/", messageId));
         payload.put(Message.MESSAGE_URL_KEY, String.format("https://go.urbanairship.com/api/user/tests/messages/%s", messageId));

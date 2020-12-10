@@ -2,9 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -22,12 +19,13 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * A high level abstraction for performing Inbox API requests.
@@ -39,10 +37,8 @@ public class InboxApiClient {
     private static final String DELETE_MESSAGES_PATH = "messages/delete/";
     private static final String MARK_READ_MESSAGES_PATH = "messages/unread/";
     private static final String MESSAGES_PATH = "messages/";
-    private static final String MESSAGE_PATH = "messages/message/";
 
-    private static final String DELETE_MESSAGES_KEY = "delete";
-    private static final String MARK_READ_MESSAGES_KEY = "mark_as_read";
+    private static final String MESSAGES_REPORTINGS_KEY = "messages";
     private static final String CHANNEL_ID_HEADER = "X-UA-Channel-ID";
 
     private static final String PAYLOAD_AMAZON_CHANNELS_KEY = "amazon_channels";
@@ -66,64 +62,62 @@ public class InboxApiClient {
         URL url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId(), MESSAGES_PATH);
 
         return requestFactory.createRequest()
-                .setOperation("GET", url)
-                .setCredentials(user.getId(), user.getPassword())
-                .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                .setHeader(CHANNEL_ID_HEADER, channelId)
-                .setIfModifiedSince(lastMessageRefreshTime)
-                .execute(new ResponseParser<JsonList>() {
-                    @Override
-                    public JsonList parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                            return null;
-                        }
-                        JsonList messageJson =  JsonValue.parseString(responseBody).optMap().opt("messages").getList();
-                        if (messageJson == null) {
-                            throw new JsonException("Invalid response, missing messages.");
-                        }
-                        return messageJson;
-                    }
-                });
+                             .setOperation("GET", url)
+                             .setCredentials(user.getId(), user.getPassword())
+                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .setHeader(CHANNEL_ID_HEADER, channelId)
+                             .setIfModifiedSince(lastMessageRefreshTime)
+                             .execute(new ResponseParser<JsonList>() {
+                                 @Override
+                                 public JsonList parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                                     if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                                         return null;
+                                     }
+                                     JsonList messageJson = JsonValue.parseString(responseBody).optMap().opt("messages").getList();
+                                     if (messageJson == null) {
+                                         throw new JsonException("Invalid response, missing messages.");
+                                     }
+                                     return messageJson;
+                                 }
+                             });
     }
 
-    Response<Void> syncDeletedMessageState(@NonNull User user, @NonNull String channelId, @NonNull Set<String> idsToDelete) throws RequestException {
+    Response<Void> syncDeletedMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToDelete) throws RequestException {
         AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
         URL url = getUserApiUrl(urlConfig, user.getId(), DELETE_MESSAGES_PATH);
 
-        /*
-         * Note: If we can't delete the messages on the server, leave them untouched
-         * and we'll get them next time.
-         */
-        JsonMap payload = buildMessagesPayload(user.getId(), urlConfig, DELETE_MESSAGES_KEY, idsToDelete);
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToDelete))
+                                 .build();
+
         Logger.verbose("InboxApiClient - Deleting inbox messages with payload: %s", payload);
 
         return requestFactory.createRequest()
-                .setOperation("POST", url)
-                .setCredentials(user.getId(), user.getPassword())
-                .setRequestBody(payload.toString(), "application/json")
-                .setHeader(CHANNEL_ID_HEADER, channelId)
-                .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                .execute();
+                             .setOperation("POST", url)
+                             .setCredentials(user.getId(), user.getPassword())
+                             .setRequestBody(payload.toString(), "application/json")
+                             .setHeader(CHANNEL_ID_HEADER, channelId)
+                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .execute();
     }
 
-    Response<Void> syncReadMessageState(@NonNull User user, @NonNull String channelId, @NonNull Set<String> idsToUpdate) throws RequestException {
+    Response<Void> syncReadMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToUpdate) throws RequestException {
         AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
         URL url = getUserApiUrl(urlConfig, user.getId(), MARK_READ_MESSAGES_PATH);
 
-        /*
-         * Note: If we can't mark the messages read on the server, leave them untouched
-         * and we'll get them next time.
-         */
-        JsonMap payload = buildMessagesPayload(user.getId(), urlConfig, MARK_READ_MESSAGES_KEY, idsToUpdate);
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToUpdate))
+                                 .build();
+
         Logger.verbose("InboxApiClient - Marking inbox messages read request with payload: %s", payload);
 
         return requestFactory.createRequest()
-                .setOperation("POST", url)
-                .setCredentials(user.getId(), user.getPassword())
-                .setRequestBody(payload.toString(), "application/json")
-                .setHeader(CHANNEL_ID_HEADER, channelId)
-                .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                .execute();
+                             .setOperation("POST", url)
+                             .setCredentials(user.getId(), user.getPassword())
+                             .setRequestBody(payload.toString(), "application/json")
+                             .setHeader(CHANNEL_ID_HEADER, channelId)
+                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .execute();
     }
 
     Response<UserCredentials> createUser(@NonNull String channelId) throws RequestException {
@@ -132,30 +126,30 @@ public class InboxApiClient {
         String payload = createNewUserPayload(channelId);
         Logger.verbose("InboxApiClient - Creating Rich Push user with payload: %s", payload);
         return requestFactory.createRequest()
-                .setOperation("POST", url)
-                .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                .setRequestBody(payload, "application/json")
-                .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                .execute(new ResponseParser<UserCredentials>() {
-                    @Override
-                    public UserCredentials parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                            return null;
-                        }
-                        JsonMap credentials = JsonValue.parseString(responseBody).getMap();
-                        if (credentials == null) {
-                            throw new JsonException("InboxApiClient - Invalid response, missing credentials.");
-                        }
-                        String userId = credentials.opt("user_id").getString();
-                        String userToken = credentials.opt("password").getString();
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload, "application/json")
+                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .execute(new ResponseParser<UserCredentials>() {
+                                 @Override
+                                 public UserCredentials parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                                     if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                                         return null;
+                                     }
+                                     JsonMap credentials = JsonValue.parseString(responseBody).getMap();
+                                     if (credentials == null) {
+                                         throw new JsonException("InboxApiClient - Invalid response, missing credentials.");
+                                     }
+                                     String userId = credentials.opt("user_id").getString();
+                                     String userToken = credentials.opt("password").getString();
 
-                        if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
-                            throw new JsonException("InboxApiClient - Invalid response, missing credentials.");
-                        }
+                                     if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
+                                         throw new JsonException("InboxApiClient - Invalid response, missing credentials.");
+                                     }
 
-                        return new UserCredentials(userId, userToken);
-                    }
-                });
+                                     return new UserCredentials(userId, userToken);
+                                 }
+                             });
     }
 
     Response<Void> updateUser(@NonNull User user, @NonNull String channelId) throws RequestException {
@@ -164,38 +158,11 @@ public class InboxApiClient {
         String payload = createUpdateUserPayload(channelId);
         Logger.verbose("InboxApiClient - Updating user with payload: %s", payload);
         return requestFactory.createRequest()
-                .setOperation("POST", url)
-                .setCredentials(user.getId(), user.getPassword())
-                .setRequestBody(payload, "application/json")
-                .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                .execute();
-    }
-
-    /**
-     * Builds the message payload.
-     *
-     * @param urlConfig The url config.
-     * @param root String root of payload.
-     * @param ids Set of message ID strings.
-     * @return A message payload as a JsonMap.
-     */
-    @NonNull
-    private JsonMap buildMessagesPayload(String userId, @NonNull AirshipUrlConfig urlConfig, @NonNull String root, @NonNull Set<String> ids) {
-        List<String> urls = new ArrayList<>();
-
-        for (String id : ids) {
-            URL url = getUserApiUrl(urlConfig, userId, MESSAGE_PATH, id);
-            if (url != null) {
-                urls.add(url.toString());
-            }
-        }
-
-        JsonMap payload = JsonMap.newBuilder()
-                .put(root, JsonValue.wrapOpt(urls))
-                .build();
-
-        Logger.verbose(payload.toString());
-        return payload;
+                             .setOperation("POST", url)
+                             .setCredentials(user.getId(), user.getPassword())
+                             .setRequestBody(payload, "application/json")
+                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .execute();
     }
 
     /**

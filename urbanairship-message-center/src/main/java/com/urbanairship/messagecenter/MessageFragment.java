@@ -33,9 +33,9 @@ import androidx.fragment.app.Fragment;
 public class MessageFragment extends Fragment {
 
     /**
-     * Argument key to specify the message Id
+     * Argument key to specify the message Reporting
      */
-    public static final String MESSAGE_ID = "messageId";
+    public static final String MESSAGE_ID = "messageReporting";
 
     @IntDef({ ERROR_DISPLAYING_MESSAGE, ERROR_FETCHING_MESSAGES, ERROR_MESSAGE_UNAVAILABLE })
     @Retention(RetentionPolicy.SOURCE)

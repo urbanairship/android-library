@@ -4,9 +4,6 @@ package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
@@ -26,9 +23,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.when;
@@ -106,19 +105,15 @@ public class InboxApiClientTest {
     public void testSyncDeletedMessageStateSucceeds() throws JsonException, RequestException {
         testRequest.responseStatus = 200;
 
-        Set<String> idsToDelete = new HashSet<>();
-        idsToDelete.add("testId1");
-        idsToDelete.add("testId2");
+        List<JsonValue> reportings = new ArrayList<>();
+        reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
+        reportings.add(JsonValue.parseString("{\"message_id\":\"testId2\"}"));
 
-        List<String> urls = new ArrayList<>();
-        for (String id : idsToDelete) {
-            urls.add("https://example.com/api/user/fakeUserId/messages/message/" + id + "/");
-        }
         JsonMap expectedJsonMap = JsonMap.newBuilder()
-                .put("delete", JsonValue.wrapOpt(urls))
+                .put("messages", JsonValue.wrapOpt(reportings))
                 .build();
 
-        Response<Void> response = inboxApiClient.syncDeletedMessageState(user, "channelId", idsToDelete);
+        Response<Void> response = inboxApiClient.syncDeletedMessageState(user, "channelId", reportings);
 
         assertEquals(200, response.getStatus());
         assertEquals("POST", testRequest.getRequestMethod());
@@ -131,26 +126,22 @@ public class InboxApiClientTest {
     @Test(expected = RequestException.class)
     public void testNullUrlSyncDeletedMessageState() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        inboxApiClient.syncDeletedMessageState(user, "channelId", new HashSet<String>());
+        inboxApiClient.syncDeletedMessageState(user, "channelId", Collections.emptyList());
     }
 
     @Test
     public void testSyncReadMessageStateSucceeds() throws JsonException, RequestException {
         testRequest.responseStatus = 200;
 
-        Set<String> idsToUpdate = new HashSet<>();
-        idsToUpdate.add("testId1");
-        idsToUpdate.add("testId2");
+        List<JsonValue> reportings = new ArrayList<>();
+        reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
+        reportings.add(JsonValue.parseString("{\"message_id\":\"testId2\"}"));
 
-        List<String> urls = new ArrayList<>();
-        for (String id : idsToUpdate) {
-            urls.add("https://example.com/api/user/fakeUserId/messages/message/" + id + "/");
-        }
         JsonMap expectedJsonMap = JsonMap.newBuilder()
-                .put("mark_as_read", JsonValue.wrapOpt(urls))
-                .build();
+                                         .put("messages", JsonValue.wrapOpt(reportings))
+                                         .build();
 
-        Response<Void> response = inboxApiClient.syncReadMessageState(user, "channelId", idsToUpdate);
+        Response<Void> response = inboxApiClient.syncReadMessageState(user, "channelId", reportings);
 
         assertEquals(200, response.getStatus());
         assertEquals("POST", testRequest.getRequestMethod());
@@ -163,7 +154,7 @@ public class InboxApiClientTest {
     @Test(expected = RequestException.class)
     public void testNullUrlSyncReadMessageState() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        inboxApiClient.syncReadMessageState(user, "channelId", new HashSet<String>());
+        inboxApiClient.syncReadMessageState(user, "channelId", Collections.emptyList());
     }
 
     @Test

@@ -145,5 +145,4 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
         return messageIds;
     }
-
 }

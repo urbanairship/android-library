@@ -16,6 +16,7 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * The primary data structure for messages.
@@ -29,6 +30,7 @@ public class Message implements Comparable<Message> {
     final static String MESSAGE_BODY_URL_KEY = "message_body_url";
     final static String MESSAGE_READ_URL_KEY = "message_read_url";
     final static String MESSAGE_SENT_KEY = "message_sent";
+    final static String MESSAGE_REPORTING_KEY = "message_reporting";
     final static String EXTRA_KEY = "extra";
     final static String TITLE_KEY = "title";
     final static String UNREAD_KEY = "unread";
@@ -42,6 +44,7 @@ public class Message implements Comparable<Message> {
     private String messageUrl;
     private String messageBodyUrl;
     private String messageReadUrl;
+    private JsonValue messageReporting;
     private String title;
     private JsonValue rawJson;
 
@@ -87,11 +90,14 @@ public class Message implements Comparable<Message> {
             return null;
         }
 
+        JsonValue messageReporting = messageMap.get(MESSAGE_REPORTING_KEY);
+
         Message message = new Message();
         message.messageId = messageId;
         message.messageUrl = messageUrl;
         message.messageBodyUrl = messageBodyUrl;
         message.messageReadUrl = messageReadUrl;
+        message.messageReporting = messageReporting;
 
         message.title = messageMap.opt(TITLE_KEY).optString();
         message.unreadOrigin = messageMap.opt(UNREAD_KEY).getBoolean(true);
@@ -165,6 +171,18 @@ public class Message implements Comparable<Message> {
     @NonNull
     public String getMessageReadUrl() {
         return this.messageReadUrl;
+    }
+
+    /**
+     * Get the message reporting.
+     *
+     * @return The message reporting.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getMessageReporting() {
+        return this.messageReporting;
     }
 
     /**

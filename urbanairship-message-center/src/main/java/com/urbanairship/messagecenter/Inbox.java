@@ -607,7 +607,7 @@ public class Inbox {
      */
     void refresh(boolean notify) {
 
-        List<Message> messageList = messageCenterResolver.getMessages();
+        Collection<Message> messageList = messageCenterResolver.getMessages();
 
         // Sync the messages
         synchronized (inboxLock) {

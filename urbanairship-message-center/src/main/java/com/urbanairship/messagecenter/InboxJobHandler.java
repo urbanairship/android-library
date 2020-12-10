@@ -4,9 +4,6 @@ package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -21,9 +18,13 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Job handler for {@link Inbox} component.
@@ -239,7 +240,6 @@ class InboxJobHandler {
             resolver.insertMessages(messagesToInsert);
         }
 
-        // Delete any messages that did not come down with the message list
         Set<String> deletedMessageIds = resolver.getMessageIds();
         deletedMessageIds.removeAll(serverMessageIds);
         resolver.deleteMessages(deletedMessageIds);
@@ -249,23 +249,30 @@ class InboxJobHandler {
      * Synchronizes local deleted message state with the server.
      */
     private void syncDeletedMessageState() {
-        Set<String> idsToDelete = resolver.getDeletedMessageIds();
+        String channelId = channel.getId();
+        if (UAStringUtil.isEmpty(channelId)) {
+            return;
+        }
+
+        Collection<Message> messagesToUpdate = resolver.getLocallyDeletedMessages();
+        Set<String> idsToDelete = new HashSet<>();
+        List<JsonValue> reportings = new ArrayList<>();
+        for (Message message : messagesToUpdate) {
+            if (message.getMessageReporting() != null) {
+                reportings.add(message.getMessageReporting());
+                idsToDelete.add(message.getMessageId());
+            }
+        }
 
         if (idsToDelete.size() == 0) {
             // nothing to do
             return;
         }
 
-        String channelId = channel.getId();
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.verbose("InboxJobHandler - The channel ID does not exist.");
-            return;
-        }
-
         Logger.verbose("InboxJobHandler - Found %s messages to delete.", idsToDelete.size());
 
         try {
-            Response<Void> response = inboxApiClient.syncDeletedMessageState(user, channelId, idsToDelete);
+            Response<Void> response = inboxApiClient.syncDeletedMessageState(user, channelId, reportings);
             Logger.verbose("InboxJobHandler - Delete inbox messages response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
@@ -273,7 +280,6 @@ class InboxJobHandler {
             }
         } catch (RequestException e) {
             Logger.debug(e, "InboxJobHandler - Deleted message state synchronize failed.");
-            return;
         }
     }
 
@@ -281,23 +287,29 @@ class InboxJobHandler {
      * Synchronizes local read messages state with the server.
      */
     private void syncReadMessageState() {
-        Set<String> idsToUpdate = resolver.getReadUpdatedMessageIds();
-
-        if (idsToUpdate.size() == 0) {
-            // nothing to do
+        String channelId = channel.getId();
+        if (UAStringUtil.isEmpty(channelId)) {
             return;
         }
 
-        String channelId = channel.getId();
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.verbose("InboxJobHandler - The channel ID does not exist.");
+        Collection<Message> messagesToUpdate = resolver.getLocallyReadMessages();
+        Set<String> idsToUpdate = new HashSet<>();
+        List<JsonValue> reportings = new ArrayList<>();
+        for (Message message : messagesToUpdate) {
+            if (message.getMessageReporting() != null) {
+                reportings.add(message.getMessageReporting());
+                idsToUpdate.add(message.getMessageId());
+            }
+        }
+
+        if (idsToUpdate.isEmpty()) {
             return;
         }
 
         Logger.verbose("InboxJobHandler - Found %s messages to mark read.", idsToUpdate.size());
 
         try {
-            Response<Void> response = inboxApiClient.syncReadMessageState(user, channelId, idsToUpdate);
+            Response<Void> response = inboxApiClient.syncReadMessageState(user, channelId, reportings);
             Logger.verbose("InboxJobHandler - Mark inbox messages read response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
@@ -305,7 +317,6 @@ class InboxJobHandler {
             }
         } catch (RequestException e) {
             Logger.debug(e, "InboxJobHandler - Read message state synchronize failed.");
-            return;
         }
     }
 

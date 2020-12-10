@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -166,7 +167,7 @@ public class MessageCenterResolverTest {
         int updated = resolver.markMessagesDeleted(keys);
         assertEquals(keys.size(), updated);
 
-        assertEquals(keys, resolver.getDeletedMessageIds());
+        assertEquals(keys, messageIdsFromMessages(resolver.getLocallyDeletedMessages()));
         assertEquals(10, resolver.getMessages().size());
     }
 
@@ -184,8 +185,16 @@ public class MessageCenterResolverTest {
         int updated = resolver.markMessagesRead(keys);
         assertEquals(keys.size(), updated);
 
-        assertEquals(keys, resolver.getReadUpdatedMessageIds());
+        assertEquals(keys, messageIdsFromMessages(resolver.getLocallyReadMessages()));
         assertEquals(10, resolver.getMessages().size());
+    }
+
+    private Set<String> messageIdsFromMessages(Collection<Message> messages) {
+        Set<String> ids = new HashSet<>();
+        for (Message message : messages) {
+            ids.add(message.getMessageId());
+        }
+        return ids;
     }
 
 }

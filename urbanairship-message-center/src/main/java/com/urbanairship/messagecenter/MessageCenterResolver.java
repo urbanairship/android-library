@@ -17,6 +17,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,36 +51,12 @@ class MessageCenterResolver extends UrbanAirshipResolver {
     /**
      * Gets all the {@link Message} instances from the database.
      *
-     * @return A list of {@link Message}.
+     * @return A collection of {@link Message}.
      */
     @NonNull
-    List<Message> getMessages() {
-        List<Message> messages = new ArrayList<>();
-
+    Collection<Message> getMessages() {
         Cursor cursor = this.query(this.uri, null, null, null, null);
-        if (cursor == null) {
-            return messages;
-        }
-
-        // Read all the messages from the database
-        while (cursor.moveToNext()) {
-            try {
-                String messageJson = cursor.getString(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
-                boolean unreadClient = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD)) == 1;
-                boolean deleted = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED)) == 1;
-
-                Message message = Message.create(JsonValue.parseString(messageJson), unreadClient, deleted);
-                if (message != null) {
-                    messages.add(message);
-                }
-            } catch (JsonException e) {
-                Logger.error(e, "RichPushResolver - Failed to parse message from the database.");
-            }
-        }
-
-        cursor.close();
-
-        return messages;
+        return getMessagesFromCursor(cursor);
     }
 
     /**
@@ -94,29 +71,29 @@ class MessageCenterResolver extends UrbanAirshipResolver {
     }
 
     /**
-     * Gets the IDs of {@link Message} in the database where the message is marked read on the
+     * Gets the messages in the database where the message is marked read on the
      * client, but not the origin.
      *
-     * @return A set of message IDs.
+     * @return A collection of messages.
      */
     @NonNull
-    Set<String> getReadUpdatedMessageIds() {
+    Collection<Message> getLocallyReadMessages() {
         Cursor cursor = this.query(this.uri, null,
                 WHERE_CLAUSE_READ + " AND " + WHERE_CLAUSE_CHANGED, new String[] { FALSE_VALUE }, null);
-        return getMessageIdsFromCursor(cursor);
+        return getMessagesFromCursor(cursor);
     }
 
     /**
-     * Gets the deleted {@link Message} IDs in the database.
+     * Gets the deleted messages in the database.
      *
-     * @return A set of message IDs.
+     * @return A collection of messages.
      */
     @NonNull
-    Set<String> getDeletedMessageIds() {
+    Collection<Message> getLocallyDeletedMessages() {
         Cursor cursor = this.query(this.uri, null,
                 MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED + " = ?", new String[] { TRUE_VALUE },
                 null);
-        return getMessageIdsFromCursor(cursor);
+        return getMessagesFromCursor(cursor);
     }
 
     /**
@@ -263,6 +240,42 @@ class MessageCenterResolver extends UrbanAirshipResolver {
         return ids;
     }
 
+
+    /**
+     * Get the message reportings.
+     *
+     * @param cursor The cursor to get the message reportings from.
+     * @return The message reportings as a set of strings.
+     */
+    @NonNull
+    private Collection<Message> getMessagesFromCursor(@Nullable Cursor cursor) {
+        List<Message> messages = new ArrayList<>();
+
+        if (cursor == null) {
+            return messages;
+        }
+
+        // Read all the messages from the database
+        while (cursor.moveToNext()) {
+            try {
+                String messageJson = cursor.getString(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
+                boolean unreadClient = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD)) == 1;
+                boolean deleted = cursor.getInt(cursor.getColumnIndex(MessageCenterDataManager.MessageTable.COLUMN_NAME_DELETED)) == 1;
+
+                Message message = Message.create(JsonValue.parseString(messageJson), unreadClient, deleted);
+                if (message != null) {
+                    messages.add(message);
+                }
+            } catch (JsonException e) {
+                Logger.error(e, "RichPushResolver - Failed to parse message from the database.");
+            }
+        }
+
+        cursor.close();
+
+        return messages;
+    }
+
     /**
      * Parses a raw message payload into content values.
      *
@@ -292,7 +305,6 @@ class MessageCenterResolver extends UrbanAirshipResolver {
         values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_READ_URL, messageMap.opt(Message.MESSAGE_READ_URL_KEY).getString());
         values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_TITLE, messageMap.opt(Message.TITLE_KEY).getString());
         values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_UNREAD_ORIG, messageMap.opt(Message.UNREAD_KEY).getBoolean(true));
-
         values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_EXTRA, messageMap.opt(Message.EXTRA_KEY).toString());
         values.put(MessageCenterDataManager.MessageTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageMap.toString());
 

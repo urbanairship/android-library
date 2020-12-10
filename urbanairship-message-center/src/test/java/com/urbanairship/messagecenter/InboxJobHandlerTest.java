@@ -2,40 +2,43 @@
 
 package com.urbanairship.messagecenter;
 
-import android.content.Context;
+        import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+        import androidx.test.core.app.ApplicationProvider;
+        import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.UAirship;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonValue;
+        import com.urbanairship.PreferenceDataStore;
+        import com.urbanairship.TestAirshipRuntimeConfig;
+        import com.urbanairship.UAirship;
+        import com.urbanairship.channel.AirshipChannel;
+        import com.urbanairship.http.RequestException;
+        import com.urbanairship.http.Response;
+        import com.urbanairship.job.JobInfo;
+        import com.urbanairship.json.JsonException;
+        import com.urbanairship.json.JsonList;
+        import com.urbanairship.json.JsonValue;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+        import org.junit.Before;
+        import org.junit.Test;
+        import org.junit.runner.RunWith;
+        import org.mockito.Mockito;
 
-import java.net.HttpURLConnection;
-import java.util.HashSet;
-import java.util.Set;
+        import java.net.HttpURLConnection;
+        import java.util.ArrayList;
+        import java.util.Collection;
+        import java.util.HashSet;
+        import java.util.List;
+        import java.util.Set;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+        import static junit.framework.Assert.assertFalse;
+        import static junit.framework.TestCase.assertEquals;
+        import static junit.framework.TestCase.assertNull;
+        import static junit.framework.TestCase.assertTrue;
+        import static org.mockito.ArgumentMatchers.anyString;
+        import static org.mockito.Mockito.mock;
+        import static org.mockito.Mockito.never;
+        import static org.mockito.Mockito.verify;
+        import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class InboxJobHandlerTest {
@@ -273,19 +276,29 @@ public class InboxJobHandlerTest {
                         .build());
 
         Set<String> idsToDelete = new HashSet<>();
-        idsToDelete.add("id1");
-        idsToDelete.add("id2");
-        when(mockResolver.getDeletedMessageIds()).thenReturn(idsToDelete);
+        Message messageToDelete = createFakeMessage("id1", false, true);
+        Message messageToDelete2 = createFakeMessage("id2", false, true);
+        Collection<Message> messageCollection = new ArrayList<>();
+        List<JsonValue> reportingsToDelete = new ArrayList<>();
+        messageCollection.add(messageToDelete);
+        messageCollection.add(messageToDelete2);
+
+        for (Message message : messageCollection) {
+            reportingsToDelete.add(message.getMessageReporting());
+            idsToDelete.add(message.getMessageId());
+        }
+
+        when(mockResolver.getLocallyDeletedMessages()).thenReturn(messageCollection);
 
         // Return a 500 internal server error
-        when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", idsToDelete))
+        when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete))
                 .thenReturn(new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
                         .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .build();
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                                 .build();
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
@@ -317,19 +330,28 @@ public class InboxJobHandlerTest {
                         .build());
 
         Set<String> idsToDelete = new HashSet<>();
-        idsToDelete.add("id1");
-        idsToDelete.add("id2");
-        when(mockResolver.getDeletedMessageIds()).thenReturn(idsToDelete);
+        List<JsonValue> reportingsToDelete = new ArrayList<>();
+        Message messageToDelete = createFakeMessage("id1", false, true);
+        Message messageToDelete2 = createFakeMessage("id2", false, true);
+        Collection<Message> messagesToDelete = new ArrayList<>();
+        messagesToDelete.add(messageToDelete);
+        messagesToDelete.add(messageToDelete2);
+
+        for (Message message : messagesToDelete) {
+            reportingsToDelete.add(message.getMessageReporting());
+            idsToDelete.add(message.getMessageId());
+        }
+        when(mockResolver.getLocallyDeletedMessages()).thenReturn(messagesToDelete);
 
         // Return a 200 message list response with messages
-        when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", idsToDelete))
+        when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete))
                 .thenReturn(new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setResponseBody(responseBody)
                         .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .build();
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                                 .build();
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
@@ -361,12 +383,21 @@ public class InboxJobHandlerTest {
                         .build());
 
         Set<String> idsToUpdate = new HashSet<>();
-        idsToUpdate.add("id1");
-        idsToUpdate.add("id2");
-        when(mockResolver.getReadUpdatedMessageIds()).thenReturn(idsToUpdate);
+        List<JsonValue> reportingsToUpdate = new ArrayList<>();
+        Message messageToUpdate = createFakeMessage("id1", false, false);
+        Message messageToUpdate2 = createFakeMessage("id2", false, false);
+        Collection<Message> messagesToUpdate = new ArrayList<>();
+        messagesToUpdate.add(messageToUpdate);
+        messagesToUpdate.add(messageToUpdate2);
+
+        for (Message message : messagesToUpdate) {
+            reportingsToUpdate.add(message.getMessageReporting());
+            idsToUpdate.add(message.getMessageId());
+        }
+        when(mockResolver.getLocallyReadMessages()).thenReturn(messagesToUpdate);
 
         // Return a 500 internal server error
-        when(mockInboxApiClient.syncReadMessageState(user, "channelId", idsToUpdate))
+        when(mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate))
                 .thenReturn(new Response.Builder<Void>(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
                         .build());
@@ -405,19 +436,27 @@ public class InboxJobHandlerTest {
                         .build());
 
         Set<String> idsToUpdate = new HashSet<>();
-        idsToUpdate.add("id1");
-        idsToUpdate.add("id2");
-        when(mockResolver.getReadUpdatedMessageIds()).thenReturn(idsToUpdate);
+        List<JsonValue> reportingsToUpdate = new ArrayList<>();
+        Message messageToUpdate = createFakeMessage("id1", false, false);
+        Message messageToUpdate2 = createFakeMessage("id2", false, false);
+        Collection<Message> messagesToUpdate = new ArrayList<>();
+        messagesToUpdate.add(messageToUpdate);
+
+        for (Message message : messagesToUpdate) {
+            reportingsToUpdate.add(message.getMessageReporting());
+            idsToUpdate.add(message.getMessageId());
+        }
+        when(mockResolver.getLocallyReadMessages()).thenReturn(messagesToUpdate);
 
         // Return a 200 message list response with messages
-        when(mockInboxApiClient.syncReadMessageState(user, "channelId", idsToUpdate))
+        when(mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate))
                 .thenReturn(new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
                         .setResponseBody("{ \"messages\": []}")
                         .build());
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .build();
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                                 .build();
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
@@ -431,7 +470,7 @@ public class InboxJobHandlerTest {
      * Test create user when PushManager has a amazon channel.
      */
     @Test
-    public void testCreateUserWithAmazonChannel() throws RequestException, JsonException {
+    public void testCreateUserWithAmazonChannel() throws RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockChannel.getId()).thenReturn("channelId");
 
@@ -614,6 +653,20 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
+    }
+
+    private Message createFakeMessage(String messageId, boolean unread, boolean deleted) throws JsonException {
+        JsonValue messageJson = JsonValue.parseString("{\"message_id\": \"" + messageId + "\"," +
+                "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
+                "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," +
+                "\"message_read_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/\"," +
+                "\"message_reporting\": {\n" +
+                "                 \"message_id\": \"" + messageId + "\"" +
+                "               }," +
+                "\"unread\": true, \"message_sent\": \"2010-09-05 12:13 -0000\"," +
+                "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," +
+                "\"content_type\": \"text/html\", \"content_size\": \"128\"}");
+        return Message.create(messageJson, unread, deleted);
     }
 
     /**
