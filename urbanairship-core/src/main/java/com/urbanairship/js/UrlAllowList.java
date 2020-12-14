@@ -295,8 +295,9 @@ public class UrlAllowList {
         urlAllowList.addEntry("https://*.urbanairship.com");
         urlAllowList.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
         urlAllowList.addEntry("https://*.asnapieu.com");
-        urlAllowList.addEntry("sms:*", SCOPE_OPEN_URL);
-        urlAllowList.addEntry("mailto:*", SCOPE_OPEN_URL);
+        urlAllowList.addEntry("sms:", SCOPE_OPEN_URL);
+        urlAllowList.addEntry("mailto:", SCOPE_OPEN_URL);
+        urlAllowList.addEntry("tel:", SCOPE_OPEN_URL);
 
         for (String entry : airshipConfigOptions.urlAllowList) {
             urlAllowList.addEntry(entry, SCOPE_ALL);

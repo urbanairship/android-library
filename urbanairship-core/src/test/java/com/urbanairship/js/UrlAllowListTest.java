@@ -75,6 +75,9 @@ public class UrlAllowListTest extends BaseTestCase {
         assertTrue(urlAllowList.isAllowed("sms:+18675309?body=Hi%20you", UrlAllowList.SCOPE_OPEN_URL));
         assertTrue(urlAllowList.isAllowed("sms:8675309", UrlAllowList.SCOPE_OPEN_URL));
 
+        // tel
+        assertTrue(urlAllowList.isAllowed("tel:+18675309", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("tel:867-5309", UrlAllowList.SCOPE_OPEN_URL));
 
         // email
         assertTrue(urlAllowList.isAllowed("mailto:name@example.com?subject=The%20subject%20of%20the%20mail", UrlAllowList.SCOPE_OPEN_URL));
