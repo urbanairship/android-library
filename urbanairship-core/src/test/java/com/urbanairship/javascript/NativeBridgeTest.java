@@ -458,4 +458,25 @@ public class NativeBridgeTest extends BaseTestCase {
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
         verify(commandDelegate).onAirshipCommand("foo", Uri.parse(url));
     }
+
+    /**
+     * Test run multi actions command
+     */
+    @Test
+    public void testMultiCommand() {
+        NativeBridge spyNativeBridge = Mockito.spy(nativeBridge);
+
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("add_tags_action")).thenReturn(actionRunRequest);
+
+        ActionRunRequest secondActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("remove_tags_action")).thenReturn(secondActionRunRequest);
+
+        String url = "uairship://multi?uairship%3A%2F%2Frun-basic-actions%3Fadd_tags_action%3Dcoffee%26remove_tags_action%3Dtea&uairship%3A%2F%2Frun-actions%3Fadd_tags_action%3D%255B%2522foo%2522%252C%2522bar%2522%255D&uairship%3A%2F%2Fclose";
+        assertTrue(spyNativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+
+        verify(spyNativeBridge).onHandleCommand("uairship://run-basic-actions?add_tags_action=coffee&remove_tags_action=tea", javaScriptExecutor, runRequestExtender, commandDelegate);
+        verify(spyNativeBridge).onHandleCommand("uairship://run-actions?add_tags_action=%5B%22foo%22%2C%22bar%22%5D", javaScriptExecutor, runRequestExtender, commandDelegate);
+        verify(spyNativeBridge).onHandleCommand("uairship://close", javaScriptExecutor, runRequestExtender, commandDelegate);
+    }
 }
