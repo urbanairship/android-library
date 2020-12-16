@@ -2,8 +2,20 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 14.1.0 December 16, 2020
+Minor release adding support for frequency limits and advanced segmentation to In-App Automation, as well as new custom event templates.
+
+### Changes
+- Added frequency limits support to IAA
+- Added support for advanced IAA segmentation
+- Added a new search event template
+- Added wishlist options to retail event template
+- Added sms:, tel:, and mailto: to default allow list settings
+- IAA messages no longer redisplay if interrupted due to app termination
+
 ## Version 14.0.3 - November 30, 2020
-Patch release that fixes crashes related to In-App Automation SQL exceptions if the database is unable to be accessed due to low storage or permission issues.  
+Patch release that fixes crashes related to In-App Automation SQL exceptions if the database is unable to be accessed due to low storage or permission issues.
 
 ## Version 14.0.2 - October 29, 2020
 Patch release optimizing named user tag group cache usage in In-App Automation.
