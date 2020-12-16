@@ -28,6 +28,7 @@ public abstract class FrequencyLimitDatabase extends RoomDatabase {
         String name = config.getConfigOptions().appKey + "_frequency_limits";
         String path = new File(ContextCompat.getNoBackupFilesDir(context), name).getAbsolutePath();
         return Room.databaseBuilder(context, FrequencyLimitDatabase.class, path)
+                   .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }
 

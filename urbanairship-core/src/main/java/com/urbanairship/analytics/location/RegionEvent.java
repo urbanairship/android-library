@@ -111,12 +111,12 @@ public class RegionEvent extends Event implements JsonSerializable {
     /**
      * A circular region with a radius, latitude and longitude.
      */
-    private CircularRegion circularRegion;
+    private final CircularRegion circularRegion;
 
     /**
      * A proximity region with an identifier, major and minor.
      */
-    private ProximityRegion proximityRegion;
+    private final ProximityRegion proximityRegion;
 
 
     private RegionEvent(@NonNull RegionEvent.Builder builder) {

@@ -128,16 +128,15 @@ public class ImageUtils {
                 } else {
 
                     ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
-                    Bitmap bitmap = ImageDecoder.decodeBitmap(source, new ImageDecoder.OnHeaderDecodedListener() {
+
+                    return ImageDecoder.decodeBitmap(source, new ImageDecoder.OnHeaderDecodedListener() {
                         @RequiresApi(api = Build.VERSION_CODES.P)
                         @Override
-                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
+                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source1) {
                             decoder.setTargetSize(reqWidth, reqHeight);
                             decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
                         }
                     });
-
-                    return bitmap;
                 }
             }
         });

@@ -2,9 +2,6 @@
 
 package com.urbanairship.messagecenter.actions;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
@@ -16,6 +13,9 @@ import com.urbanairship.util.AirshipComponentUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Callable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Starts an activity to display either the {@link Inbox} or a {@link Message} using

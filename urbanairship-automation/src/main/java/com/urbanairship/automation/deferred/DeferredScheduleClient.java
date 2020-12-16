@@ -2,16 +2,11 @@
 
 package com.urbanairship.automation.deferred;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
-import com.urbanairship.base.Supplier;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.auth.AuthManager;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -30,6 +25,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Client to handle deferred schedules.

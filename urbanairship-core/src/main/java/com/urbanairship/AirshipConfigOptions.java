@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ConfigParser;
@@ -863,7 +864,7 @@ public class AirshipConfigOptions {
         /**
          * Sets the default notification channel.
          * <p>
-         * See {@link com.urbanairship.push.notifications.NotificationFactory#setNotificationChannel(String)}.
+         * See {@link com.urbanairship.push.notifications.NotificationProvider#onCreateNotificationArguments(Context, PushMessage)}
          *
          * @param channel The notification channel.
          * @return The config options builder.

@@ -24,7 +24,7 @@ class EventResponse {
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
 
     @NonNull
-    private Map<String, List<String>> headers;
+    private final Map<String, List<String>> headers;
 
     public EventResponse(@NonNull Map<String, List<String>> headers) {
         this.headers = headers;

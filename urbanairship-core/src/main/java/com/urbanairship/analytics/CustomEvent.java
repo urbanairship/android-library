@@ -2,11 +2,6 @@
 
 package com.urbanairship.analytics;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
@@ -18,6 +13,11 @@ import com.urbanairship.util.UAStringUtil;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
 
 /**
  * A class that represents a custom event for the application.

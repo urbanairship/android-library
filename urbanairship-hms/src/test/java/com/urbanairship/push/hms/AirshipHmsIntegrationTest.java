@@ -9,7 +9,8 @@ import org.robolectric.annotation.Config;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)

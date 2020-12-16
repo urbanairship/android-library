@@ -2,43 +2,43 @@
 
 package com.urbanairship.messagecenter;
 
-        import android.content.Context;
+import android.content.Context;
 
-        import androidx.test.core.app.ApplicationProvider;
-        import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.TestAirshipRuntimeConfig;
+import com.urbanairship.UAirship;
+import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
+import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonValue;
 
-        import com.urbanairship.PreferenceDataStore;
-        import com.urbanairship.TestAirshipRuntimeConfig;
-        import com.urbanairship.UAirship;
-        import com.urbanairship.channel.AirshipChannel;
-        import com.urbanairship.http.RequestException;
-        import com.urbanairship.http.Response;
-        import com.urbanairship.job.JobInfo;
-        import com.urbanairship.json.JsonException;
-        import com.urbanairship.json.JsonList;
-        import com.urbanairship.json.JsonValue;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
-        import org.junit.Before;
-        import org.junit.Test;
-        import org.junit.runner.RunWith;
-        import org.mockito.Mockito;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-        import java.net.HttpURLConnection;
-        import java.util.ArrayList;
-        import java.util.Collection;
-        import java.util.HashSet;
-        import java.util.List;
-        import java.util.Set;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-        import static junit.framework.Assert.assertFalse;
-        import static junit.framework.TestCase.assertEquals;
-        import static junit.framework.TestCase.assertNull;
-        import static junit.framework.TestCase.assertTrue;
-        import static org.mockito.ArgumentMatchers.anyString;
-        import static org.mockito.Mockito.mock;
-        import static org.mockito.Mockito.never;
-        import static org.mockito.Mockito.verify;
-        import static org.mockito.Mockito.when;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class InboxJobHandlerTest {

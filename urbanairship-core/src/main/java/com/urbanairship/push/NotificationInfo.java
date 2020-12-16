@@ -11,9 +11,9 @@ import androidx.annotation.RestrictTo;
  */
 public class NotificationInfo {
 
-    private PushMessage message;
-    private int notificationId;
-    private String notificationTag;
+    private final PushMessage message;
+    private final int notificationId;
+    private final String notificationTag;
 
     /**
      * Default constructor.

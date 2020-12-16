@@ -594,7 +594,6 @@ public class InAppRemoteDataObserverTest {
             return scheduleResult;
         }
 
-        @NonNull
         @Override
         public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
             constraintUpdates.add(constraints);

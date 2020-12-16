@@ -6,8 +6,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.SimpleApplicationListener;
@@ -15,6 +13,8 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Calendar;
+
+import androidx.annotation.NonNull;
 
 /**
  * ChannelCapture detects a knock when the application is foregrounded 6 times in 30 seconds.

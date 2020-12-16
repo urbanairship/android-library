@@ -512,9 +512,8 @@ public class Analytics extends AirshipComponent {
                     }
 
                     AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
-                    AssociatedIdentifiers prev = associatedIdentifiers;
 
-                    if (prev.getIds().equals(identifiers.getIds())) {
+                    if (associatedIdentifiers.getIds().equals(identifiers.getIds())) {
                         Logger.info("Skipping analytics event addition for duplicate associated identifiers.");
                         return;
                     }

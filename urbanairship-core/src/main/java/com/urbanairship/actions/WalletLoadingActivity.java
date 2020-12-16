@@ -2,11 +2,6 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +20,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 public class WalletLoadingActivity extends ThemedActivity {
 

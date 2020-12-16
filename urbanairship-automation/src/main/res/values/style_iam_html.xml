@@ -27,7 +27,7 @@
         <item name="android:fitsSystemWindows">true</item>
     </style>
 
-    <style name="UrbanAirship.InAppHtml.Layout.Fullscreen"></style>
+    <style name="UrbanAirship.InAppHtml.Layout.Fullscreen" />
 
     <style name="UrbanAirship.InAppHtml.Content">
         <item name="android:elevation" tools:ignore="NewApi">24dp</item>

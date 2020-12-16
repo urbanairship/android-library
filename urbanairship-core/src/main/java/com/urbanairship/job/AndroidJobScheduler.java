@@ -28,7 +28,7 @@ class AndroidJobScheduler implements Scheduler {
     private JobScheduler scheduler;
 
     @Override
-    public void cancel(@NonNull Context context, int schedulerId) throws SchedulerException {
+    public void cancel(@NonNull Context context, int schedulerId) {
         JobScheduler scheduler = getScheduler(context);
         if (scheduler != null) {
             scheduler.cancel(schedulerId);

@@ -52,6 +52,7 @@ public abstract class AutomationDatabase extends RoomDatabase {
         String path = new File(ContextCompat.getNoBackupFilesDir(context), name).getAbsolutePath();
         return Room.databaseBuilder(context, AutomationDatabase.class, path)
                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                   .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
 
     }

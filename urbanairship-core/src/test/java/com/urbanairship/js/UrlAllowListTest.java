@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import androidx.annotation.NonNull;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;

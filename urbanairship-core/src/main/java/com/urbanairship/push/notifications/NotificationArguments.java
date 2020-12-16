@@ -10,12 +10,12 @@ import androidx.annotation.Nullable;
  */
 public class NotificationArguments {
 
-    private int notificationId;
-    private boolean longRunningTask;
-    private String notificationChannelId;
-    private String notificationTag;
+    private final int notificationId;
+    private final boolean longRunningTask;
+    private final String notificationChannelId;
+    private final String notificationTag;
 
-    private PushMessage message;
+    private final PushMessage message;
 
     private NotificationArguments(@NonNull Builder builder) {
         this.notificationId = builder.notificationId;
@@ -92,7 +92,7 @@ public class NotificationArguments {
         private boolean longRunningTask;
         private String notificationChannelId = NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL;
         private String notificationTag;
-        private PushMessage message;
+        private final PushMessage message;
 
         private Builder(@NonNull PushMessage message) {
             this.message = message;

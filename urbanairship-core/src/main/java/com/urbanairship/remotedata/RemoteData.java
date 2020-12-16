@@ -91,7 +91,7 @@ public class RemoteData extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
     private final ActivityMonitor activityMonitor;
-    private LocaleManager localeManager;
+    private final LocaleManager localeManager;
     private final PushManager pushManager;
     private final Clock clock;
 

@@ -6,8 +6,8 @@ import android.content.Context;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.automation.tags.TagSelector;
+import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;

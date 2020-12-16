@@ -2,8 +2,6 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.push.PushManager;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
- * Channel tag editor. See {@link PushManager#editTags()}.
+ * Channel tag editor. See {@link AirshipChannel#editTags()}.
  */
 public abstract class TagEditor {
 

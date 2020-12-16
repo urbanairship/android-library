@@ -4,14 +4,14 @@ package com.urbanairship.push.hms;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-
 import com.huawei.hms.push.RemoteMessage;
 import com.urbanairship.PendingResult;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
 
 import java.util.concurrent.Future;
+
+import androidx.annotation.NonNull;
 
 /**
  * Airship HMS integration.

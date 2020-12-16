@@ -6,9 +6,9 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.PushProviders;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;

@@ -582,7 +582,6 @@ public final class PreferenceDataStore {
                         return true;
                     }
 
-                    return false;
                 } else {
                     Logger.verbose("PreferenceDataStore - Saving preference: %s value: %s", key, value);
                     ContentValues values = new ContentValues();
@@ -594,8 +593,8 @@ public final class PreferenceDataStore {
                         return true;
                     }
 
-                    return false;
                 }
+                return false;
             }
         }
 

@@ -51,10 +51,10 @@ public class RemoteConfigManager extends AirshipComponent {
     // Airship config key
     private static final String AIRSHIP_CONFIG_KEY = "airship_config";
 
-    private Collection<RemoteAirshipConfigListener> listeners = new CopyOnWriteArraySet<>();
+    private final Collection<RemoteAirshipConfigListener> listeners = new CopyOnWriteArraySet<>();
 
     // comparator for remote config payload sorting
-    private static Comparator<RemoteDataPayload> COMPARE_BY_PAYLOAD_TYPE = new Comparator<RemoteDataPayload>() {
+    private static final Comparator<RemoteDataPayload> COMPARE_BY_PAYLOAD_TYPE = new Comparator<RemoteDataPayload>() {
         @Override
         public int compare(RemoteDataPayload o1, RemoteDataPayload o2) {
             if (o1.getType().equals(o2.getType())) {

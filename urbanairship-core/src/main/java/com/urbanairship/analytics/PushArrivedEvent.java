@@ -58,7 +58,7 @@ public class PushArrivedEvent extends Event {
     private static final String NOTIFICATION_CHANNEL_GROUP_BLOCKED = "blocked";
 
     private final PushMessage message;
-    private NotificationChannelCompat notificationChannel;
+    private final NotificationChannelCompat notificationChannel;
 
     /**
      * Constructor for PushArrivedEvent. You should not instantiate this class directly.

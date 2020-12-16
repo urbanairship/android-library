@@ -293,7 +293,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 return InAppAutomation.this.schedule(schedules);
             }
 
-            @NonNull
             @Override
             public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
                 frequencyLimitManager.updateConstraints(constraints);

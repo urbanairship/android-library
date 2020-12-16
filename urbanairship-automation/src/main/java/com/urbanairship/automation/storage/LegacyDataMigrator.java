@@ -51,7 +51,6 @@ public class LegacyDataMigrator {
 
     interface Migrator {
 
-        @NonNull
         void onMigrate(@NonNull ScheduleEntity entity, @NonNull List<TriggerEntity> triggerEntities);
 
     }
@@ -61,7 +60,6 @@ public class LegacyDataMigrator {
         if (actionDataManager.databaseExists(context)) {
             Logger.verbose("Migrating actions automation database.");
             migrateDatabase(actionDataManager, new Migrator() {
-                @NonNull
                 @Override
                 public void onMigrate(@NonNull ScheduleEntity scheduleEntity, @NonNull List<TriggerEntity> triggerEntities) {
                     scheduleEntity.scheduleType = Schedule.TYPE_ACTION;
@@ -230,7 +228,6 @@ public class LegacyDataMigrator {
             return uniqueId;
         }
 
-        @NonNull
         @Override
         public void onMigrate(@NonNull ScheduleEntity scheduleEntity, @NonNull List<TriggerEntity> triggerEntities) {
             scheduleEntity.scheduleType = Schedule.TYPE_IN_APP_MESSAGE;

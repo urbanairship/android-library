@@ -14,10 +14,10 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AirshipUrlConfig {
 
-    private String deviceUrl;
-    private String analyticsUrl;
-    private String walletUrl;
-    private String remoteDataUrl;
+    private final String deviceUrl;
+    private final String analyticsUrl;
+    private final String walletUrl;
+    private final String remoteDataUrl;
 
     private AirshipUrlConfig(Builder builder) {
         this.deviceUrl = builder.deviceUrl;

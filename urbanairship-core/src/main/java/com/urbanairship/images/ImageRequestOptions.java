@@ -56,7 +56,7 @@ public class ImageRequestOptions {
     public static class Builder {
 
         private int placeHolder;
-        private String url;
+        private final String url;
 
         private Builder(@Nullable String url) {
             this.url = url;

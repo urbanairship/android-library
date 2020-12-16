@@ -217,14 +217,14 @@ public class PushManager extends AirshipComponent {
 
     private final JobDispatcher jobDispatcher;
     private final PushProvider pushProvider;
-    private NotificationChannelRegistry notificationChannelRegistry;
+    private final NotificationChannelRegistry notificationChannelRegistry;
 
     private NotificationListener notificationListener;
-    private List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
+    private final List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
 
-    private List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
-    private List<PushListener> internalPushListeners = new CopyOnWriteArrayList<>();
-    private List<InternalNotificationListener> internalNotificationListeners = new CopyOnWriteArrayList<>();
+    private final List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
+    private final List<PushListener> internalPushListeners = new CopyOnWriteArrayList<>();
+    private final List<InternalNotificationListener> internalNotificationListeners = new CopyOnWriteArrayList<>();
 
     private final Object uniqueIdLock = new Object();
 

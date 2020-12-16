@@ -35,7 +35,7 @@ class ImageCache {
 
     private final LruCache<String, CacheEntry> memoryCache;
 
-    private Context context;
+    private final Context context;
 
     ImageCache(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -92,8 +92,8 @@ class ImageCache {
 
     private static class CacheEntry {
 
-        private long byteCount;
-        private Drawable drawable;
+        private final long byteCount;
+        private final Drawable drawable;
 
         CacheEntry(@NonNull Drawable drawable, long byteCount) {
             this.drawable = drawable;

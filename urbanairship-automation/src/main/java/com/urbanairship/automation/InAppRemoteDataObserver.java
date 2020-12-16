@@ -109,7 +109,6 @@ class InAppRemoteDataObserver {
         @NonNull
         PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules);
 
-        @NonNull
         void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints);
 
     }

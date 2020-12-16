@@ -2,10 +2,10 @@
 
 package com.urbanairship.analytics;
 
+import java.math.BigDecimal;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import java.math.BigDecimal;
 
 /**
  * A class that represents a custom search event template for the application.

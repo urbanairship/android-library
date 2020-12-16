@@ -263,16 +263,14 @@ public class ActionRegistry {
          */
         @NonNull
         public Action getDefaultAction() {
-            if (defaultAction != null) {
-                return defaultAction;
-            } else {
+            if (defaultAction == null) {
                 try {
                     defaultAction = (Action) defaultActionClass.newInstance();
                 } catch (Exception e) {
                     throw new IllegalArgumentException("Unable to instantiate action class.");
                 }
-                return defaultAction;
             }
+            return defaultAction;
         }
 
         /**

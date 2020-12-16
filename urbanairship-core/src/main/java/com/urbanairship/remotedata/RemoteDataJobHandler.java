@@ -71,9 +71,8 @@ public class RemoteDataJobHandler {
      */
     @JobInfo.JobResult
     protected int performJob(@NonNull JobInfo jobInfo) {
-        switch (jobInfo.getAction()) {
-            case ACTION_REFRESH:
-                return onRefresh();
+        if (ACTION_REFRESH.equals(jobInfo.getAction())) {
+            return onRefresh();
         }
 
         return JobInfo.JOB_FINISHED;

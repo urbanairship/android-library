@@ -96,7 +96,7 @@ public class JavaScriptEnvironment {
 
     public static class Builder {
 
-        private List<String> getters = new ArrayList<>();
+        private final List<String> getters = new ArrayList<>();
 
         private Builder() {}
 

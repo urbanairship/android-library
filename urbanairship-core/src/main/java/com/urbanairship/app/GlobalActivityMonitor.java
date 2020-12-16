@@ -35,7 +35,7 @@ public class GlobalActivityMonitor implements ActivityMonitor {
     private int startedActivities = 0;
     private long backgroundTime;
     private boolean isForeground;
-    private List<Activity> resumedActivities = new ArrayList<>();
+    private final List<Activity> resumedActivities = new ArrayList<>();
 
     @NonNull
     private final ForwardingApplicationListener forwardingApplicationListener = new ForwardingApplicationListener();

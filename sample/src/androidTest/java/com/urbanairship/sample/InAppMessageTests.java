@@ -73,7 +73,7 @@ public class InAppMessageTests {
 
                     @NonNull
                     @Override
-                    protected BannerView onCreateView(@NonNull Activity activity, ViewGroup viewGroup) {
+                    protected BannerView onCreateView(@NonNull Activity activity, @NonNull ViewGroup viewGroup) {
                         BannerView bannerView = super.onCreateView(activity, viewGroup);
                         bannerView.setAnimations(0, 0);
                         return bannerView;

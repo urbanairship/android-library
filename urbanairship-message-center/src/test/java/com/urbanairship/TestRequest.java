@@ -29,8 +29,9 @@ public class TestRequest extends Request {
         super();
     }
 
+    @NonNull
     @Override
-    public <T> Response<T> execute(ResponseParser<T> parser) throws RequestException {
+    public <T> Response<T> execute(@NonNull ResponseParser<T> parser) throws RequestException {
 
         try {
             Checks.checkNotNull(url, "missing url");

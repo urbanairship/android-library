@@ -4,7 +4,6 @@ package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonList;

@@ -4,13 +4,6 @@ package com.urbanairship.iam.modal;
 
 import android.graphics.Color;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-import androidx.annotation.StringDef;
-
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.MediaInfo;
@@ -26,6 +19,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+import androidx.annotation.StringDef;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_MODAL} in-app message.

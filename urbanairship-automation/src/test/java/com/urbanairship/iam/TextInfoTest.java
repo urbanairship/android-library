@@ -4,13 +4,13 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
 

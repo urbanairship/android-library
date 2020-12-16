@@ -2,9 +2,6 @@
 
 package com.urbanairship.automation.deferred;
 
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -35,6 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;

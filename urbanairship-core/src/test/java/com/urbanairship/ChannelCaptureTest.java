@@ -7,8 +7,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.urbanairship.channel.AirshipChannel;
 
 import org.junit.After;
@@ -17,9 +15,10 @@ import org.junit.Test;
 
 import java.util.Calendar;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

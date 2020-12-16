@@ -12,12 +12,6 @@ import android.os.Build;
 import android.provider.Settings;
 import android.util.Xml;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.XmlRes;
-
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -34,6 +28,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.XmlRes;
 
 /**
  * Compatibility class for supporting NotificationChannel functionality across Android OS versions.
@@ -65,7 +65,7 @@ public class NotificationChannelCompat implements JsonSerializable {
     private String description = null;
     private String group = null;
 
-    private String identifier;
+    private final String identifier;
     private CharSequence name;
     private Uri sound = Settings.System.DEFAULT_NOTIFICATION_URI;
 
@@ -322,7 +322,6 @@ public class NotificationChannelCompat implements JsonSerializable {
      *
      * @param name The name.
      */
-    @NonNull
     public void setName(@NonNull CharSequence name) {
         this.name = name;
     }

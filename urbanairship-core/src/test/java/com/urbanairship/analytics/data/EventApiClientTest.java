@@ -4,36 +4,24 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.TestRequest;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
-import com.urbanairship.json.JsonException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import androidx.annotation.Nullable;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class EventApiClientTest extends BaseTestCase {

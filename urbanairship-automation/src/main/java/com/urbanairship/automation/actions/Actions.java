@@ -105,7 +105,7 @@ public class Actions implements ScheduleData {
          * @return The builder.
          */
         @NonNull
-        public Builder addAction(@NonNull String action, @NonNull long actionValue) {
+        public Builder addAction(@NonNull String action, long actionValue) {
             actions.put(action, JsonValue.wrap(actionValue));
             return this;
         }
@@ -117,7 +117,7 @@ public class Actions implements ScheduleData {
          * @return The builder.
          */
         @NonNull
-        public Builder addAction(@NonNull String action, @NonNull double actionValue) {
+        public Builder addAction(@NonNull String action, double actionValue) {
             actions.put(action, JsonValue.wrap(actionValue));
             return this;
         }
@@ -129,7 +129,7 @@ public class Actions implements ScheduleData {
          * @return The builder.
          */
         @NonNull
-        public Builder addAction(@NonNull String action, @NonNull boolean actionValue) {
+        public Builder addAction(@NonNull String action, boolean actionValue) {
             actions.put(action, JsonValue.wrap(actionValue));
             return this;
         }

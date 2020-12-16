@@ -208,9 +208,9 @@ public final class Schedule<T extends ScheduleData> {
     @NonNull
     @SuppressWarnings("unchecked")
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public <R extends ScheduleData> R coerceType() {
+    public <S extends ScheduleData> S coerceType() {
         try {
-            return (R) data;
+            return (S) data;
         } catch (ClassCastException e) {
             throw new IllegalArgumentException("Unexpected data", e);
         }

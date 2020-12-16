@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.os.ConfigurationCompat;
-import androidx.core.os.LocaleListCompat;
 
 /**
  * Locale manager. Handles listening for locale changes.
@@ -25,8 +24,8 @@ public class LocaleManager {
 
     private final Context context;
     private volatile Locale deviceLocale;
-    private List<LocaleChangedListener> localeChangedListeners = new CopyOnWriteArrayList<>();
-    private PreferenceDataStore preferenceDataStore;
+    private final List<LocaleChangedListener> localeChangedListeners = new CopyOnWriteArrayList<>();
+    private final PreferenceDataStore preferenceDataStore;
 
     public static final String LOCALE_OVERRIDE_LANGUAGE_KEY = "com.urbanairship.LOCALE_OVERRIDE_LANGUAGE";
     public static final String LOCALE_OVERRIDE_COUNTRY_KEY = "com.urbanairship.LOCALE_OVERRIDE_COUNTRY";

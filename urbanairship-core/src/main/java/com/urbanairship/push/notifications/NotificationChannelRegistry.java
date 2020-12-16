@@ -37,7 +37,7 @@ public class NotificationChannelRegistry {
     private final NotificationChannelRegistryDataManager dataManager;
     private final Executor executor;
     private final Context context;
-    private NotificationManager notificationManager;
+    private final NotificationManager notificationManager;
 
     /**
      * NotificationChannelRegistry constructor.

@@ -18,7 +18,7 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class WebViewJavaScriptExecutor implements JavaScriptExecutor {
 
-    private WeakReference<WebView> weakReference;
+    private final WeakReference<WebView> weakReference;
 
     public WebViewJavaScriptExecutor(@NonNull WebView webView) {
         this.weakReference = new WeakReference<>(webView);

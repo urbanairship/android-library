@@ -1,7 +1,5 @@
 package com.urbanairship.automation.deferred;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
@@ -9,6 +7,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Locale;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
 

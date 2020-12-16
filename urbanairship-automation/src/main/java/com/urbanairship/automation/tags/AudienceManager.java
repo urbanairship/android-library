@@ -10,7 +10,6 @@ import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.NamedUserListener;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;

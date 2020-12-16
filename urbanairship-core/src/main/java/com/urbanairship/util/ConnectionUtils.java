@@ -106,7 +106,7 @@ public class ConnectionUtils {
 
         private static final String[] PROTOCOLS = { "TLSv1.2" };
 
-        private SSLSocketFactory baseFactory;
+        private final SSLSocketFactory baseFactory;
 
         private TlsSocketFactory(SSLSocketFactory baseFactory) {
             this.baseFactory = baseFactory;

@@ -26,7 +26,7 @@ public class AirshipComponentUtils {
     public static <T extends AirshipComponent> Callable<T> callableForComponent(@NonNull final Class<T> clazz) {
         return new Callable<T>() {
             @Override
-            public T call() throws Exception {
+            public T call() {
                 return UAirship.shared().requireComponent(clazz);
             }
         };

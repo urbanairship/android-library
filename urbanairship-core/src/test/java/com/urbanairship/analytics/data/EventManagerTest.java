@@ -4,13 +4,10 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestRequest;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityMonitor;
-import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
@@ -22,13 +19,9 @@ import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.Nullable;
 
 import static com.urbanairship.analytics.data.EventManager.MIN_BATCH_INTERVAL_KEY;
 import static junit.framework.Assert.assertEquals;

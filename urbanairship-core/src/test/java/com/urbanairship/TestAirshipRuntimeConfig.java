@@ -45,6 +45,7 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
         return platform;
     }
 
+    @NonNull
     @Override
     public AirshipConfigOptions getConfigOptions() {
         return configOptions;

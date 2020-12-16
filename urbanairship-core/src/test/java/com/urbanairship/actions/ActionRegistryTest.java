@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.Nullable;
-
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -12,6 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
