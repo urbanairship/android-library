@@ -7,7 +7,9 @@ import android.webkit.WebView;
 
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.iam.html.HtmlWebViewClient;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -46,10 +48,22 @@ public class HtmlWebViewClientTest {
         });
         when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
+        HtmlDisplayContent content = HtmlDisplayContent.newBuilder()
+                                                       .setUrl("www.cool.story")
+                                                       .setAllowFullscreenDisplay(true)
+                                                       .setRequireConnectivity(false)
+                                                       .build();
+
+        JsonMap extrasMap = JsonMap.newBuilder().put("coolkey", "coolvalue").build();
+
+        InAppMessage inAppMessage = InAppMessage.newBuilder().setDisplayContent(content)
+                                                .setExtras(extrasMap)
+                                                .build();
+
         UAirship.shared().getUrlAllowList().addEntry("http://test-client");
 
         passedValue = new ArrayList<>();
-        client = new HtmlWebViewClient() {
+        client = new HtmlWebViewClient(inAppMessage) {
             @Override
             public void onMessageDismissed(@NonNull JsonValue argument) {
                 passedValue.add(0, argument);
@@ -81,4 +95,5 @@ public class HtmlWebViewClientTest {
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
         assertTrue(passedValue.get(0).equals(jsonValue));
     }
+
 }

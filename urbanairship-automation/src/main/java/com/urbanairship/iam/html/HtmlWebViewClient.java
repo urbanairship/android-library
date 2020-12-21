@@ -7,11 +7,18 @@ import android.webkit.WebView;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
+import androidx.annotation.CallSuper;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -26,11 +33,14 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
      */
     private static final String DISMISS_COMMAND = "dismiss";
 
+    private InAppMessage inAppMessage;
+
     /**
      * Default constructor.
      */
-    public HtmlWebViewClient() {
+    public HtmlWebViewClient(InAppMessage message) {
         super();
+        this.inAppMessage = message;
     }
 
     /**
@@ -38,8 +48,9 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
      *
      * @param actionRunRequestFactory The action run request factory.
      */
-    protected HtmlWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
+    protected HtmlWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory, @NonNull InAppMessage message) {
         super(actionRunRequestFactory);
+        this.inAppMessage = message;
     }
 
     /**
@@ -72,5 +83,22 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
         } else {
             Logger.error("Unable to decode message resolution, missing path");
         }
+    }
+
+    /**
+     * @hide
+     */
+    @CallSuper
+    @NonNull
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected JavaScriptEnvironment.Builder extendJavascriptEnvironment(@NonNull JavaScriptEnvironment.Builder builder, @NonNull WebView webView) {
+        JsonMap extras = JsonMap.EMPTY_MAP;
+        if (inAppMessage != null) {
+            extras = inAppMessage.getExtras();
+        }
+
+        return super.extendJavascriptEnvironment(builder,webView)
+                    .addGetter("getMessageExtras", extras);
     }
 }
