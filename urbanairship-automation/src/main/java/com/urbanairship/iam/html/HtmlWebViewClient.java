@@ -7,7 +7,6 @@ import android.webkit.WebView;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionRunRequestFactory;
-import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.json.JsonException;
@@ -16,9 +15,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
 import androidx.annotation.CallSuper;
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -38,7 +35,7 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
     /**
      * Default constructor.
      */
-    public HtmlWebViewClient(InAppMessage message) {
+    public HtmlWebViewClient(@NonNull InAppMessage message) {
         super();
         this.inAppMessage = message;
     }
@@ -93,12 +90,10 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected JavaScriptEnvironment.Builder extendJavascriptEnvironment(@NonNull JavaScriptEnvironment.Builder builder, @NonNull WebView webView) {
-        JsonMap extras = JsonMap.EMPTY_MAP;
-        if (inAppMessage != null) {
-            extras = inAppMessage.getExtras();
-        }
+        JsonMap extras = inAppMessage.getExtras();
 
-        return super.extendJavascriptEnvironment(builder,webView)
+        return super.extendJavascriptEnvironment(builder, webView)
                     .addGetter("getMessageExtras", extras);
     }
+
 }
