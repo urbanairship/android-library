@@ -25,6 +25,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -37,15 +38,12 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class HtmlWebViewClientTest {
 
-    private NativeBridge nativeBridge;
-    private HtmlWebViewClient client;
     private WebView webView;
     private String webViewUrl;
-    private ArrayList<JsonValue> passedValue;
+    private InAppMessage message;
 
     @Before
     public void setup() {
-        nativeBridge = Mockito.mock(NativeBridge.class);
         webView = Mockito.mock(WebView.class);
 
         webViewUrl = "http://test-client";
@@ -65,19 +63,12 @@ public class HtmlWebViewClientTest {
 
         JsonMap extrasMap = JsonMap.newBuilder().put("coolkey", "coolvalue").build();
 
-        InAppMessage inAppMessage = InAppMessage.newBuilder().setDisplayContent(content)
-                                                .setExtras(extrasMap)
-                                                .build();
+        this.message = InAppMessage.newBuilder().setDisplayContent(content)
+                                   .setExtras(extrasMap)
+                                   .build();
 
         UAirship.shared().getUrlAllowList().addEntry("http://test-client");
 
-        passedValue = new ArrayList<>();
-        client = new HtmlWebViewClient(nativeBridge, inAppMessage) {
-            @Override
-            public void onMessageDismissed(@NonNull JsonValue argument) {
-                passedValue.add(0, argument);
-            }
-        };
     }
 
     /**
@@ -85,6 +76,14 @@ public class HtmlWebViewClientTest {
      */
     @Test
     public void testDismissCommand() {
+        final List<JsonValue> passedValue = new ArrayList<>();
+        HtmlWebViewClient client = new HtmlWebViewClient(message) {
+            @Override
+            public void onMessageDismissed(@NonNull JsonValue argument) {
+                passedValue.add(0, argument);
+            }
+        };
+
         String url = "uairship://dismiss/";
 
         ButtonInfo button = ButtonInfo.newBuilder()
@@ -107,6 +106,12 @@ public class HtmlWebViewClientTest {
 
     @Test
     public void testJavaScriptEnvironment() {
+        NativeBridge nativeBridge = Mockito.mock(NativeBridge.class);
+        HtmlWebViewClient client = new HtmlWebViewClient(nativeBridge, message) {
+            @Override
+            public void onMessageDismissed(@NonNull JsonValue argument) {
+            }
+        };
         client.onPageFinished(webView, webViewUrl);
 
         ArgumentCaptor<JavaScriptEnvironment> argument = ArgumentCaptor.forClass(JavaScriptEnvironment.class);
@@ -122,4 +127,5 @@ public class HtmlWebViewClientTest {
 
         assertTrue(environment.contains(expected));
     }
+
 }
