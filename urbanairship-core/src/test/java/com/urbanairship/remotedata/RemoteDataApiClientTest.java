@@ -11,6 +11,7 @@ import com.urbanairship.PushProviders;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonList;
@@ -75,7 +76,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test fetch remote data request on success
      */
     @Test
-    public void testFetchRemoteDataRequestSuccess() {
+    public void testFetchRemoteDataRequestSuccess() throws RequestException {
         String responseTimestamp = DateUtils.createIso8601TimeStamp(System.currentTimeMillis());
 
         Map<String, List<String>> headers = new HashMap<>();
@@ -104,7 +105,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test the SDK version is sent as a query parameter.
      */
     @Test
-    public void testSdkVersion() {
+    public void testSdkVersion() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
@@ -115,7 +116,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test the push providers are sent as a query parameter.
      */
     @Test
-    public void testPushProviders() {
+    public void testPushProviders() throws RequestException {
         availableProviders.add(new TestPushProvider(PushProvider.FCM_DELIVERY_TYPE));
         availableProviders.add(new TestPushProvider(PushProvider.FCM_DELIVERY_TYPE));
         availableProviders.add(new TestPushProvider(PushProvider.ADM_DELIVERY_TYPE));
@@ -130,7 +131,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test the push providers is not added if the available providers is empty.
      */
     @Test
-    public void testEmptyPushProviders() {
+    public void testEmptyPushProviders() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
         Uri uri = Uri.parse(testRequest.getURL().toString());
         assertNull(uri.getQueryParameter("push_providers"));
@@ -140,7 +141,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test the manufacturer is included if on the "should include" list.
      */
     @Test
-    public void testManufacturer() {
+    public void testManufacturer() throws RequestException {
         ShadowBuild.setManufacturer("huawei");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
         Uri uri = Uri.parse(testRequest.getURL().toString());
@@ -151,7 +152,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test the manufacturer is not included if not on the "should include" list.
      */
     @Test
-    public void testManufacturerNotIncluded() {
+    public void testManufacturerNotIncluded() throws RequestException {
         ShadowBuild.setManufacturer("google");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
         Uri uri = Uri.parse(testRequest.getURL().toString());
@@ -162,7 +163,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test locale info is sent as query parameters.
      */
     @Test
-    public void testLocale() {
+    public void testLocale() throws RequestException {
         Locale locale = new Locale("en", "US");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
@@ -175,7 +176,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test country is not sent as a query parameter if it's not defined.
      */
     @Test
-    public void testLocaleMissingCountry() {
+    public void testLocaleMissingCountry() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("de"));
 
         Uri uri = Uri.parse(testRequest.getURL().toString());
@@ -187,7 +188,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test language is not sent as a query parameter if it's not defined.
      */
     @Test
-    public void testLocaleMissingLanguage() {
+    public void testLocaleMissingLanguage() throws RequestException {
         Locale locale = new Locale("", "US");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
@@ -200,7 +201,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test fetch remote data request on success with no timestamp
      */
     @Test
-    public void testFetchRemoteDataRequestNoTimestamp() {
+    public void testFetchRemoteDataRequestNoTimestamp() throws RequestException {
         String responseTimestamp = DateUtils.createIso8601TimeStamp(System.currentTimeMillis());
 
         Map<String, List<String>> headers = new HashMap<>();
@@ -228,7 +229,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
      * Test fetch remote data request on failure
      */
     @Test
-    public void testFetchRemoteDataRequestFailure() {
+    public void testFetchRemoteDataRequestFailure() throws RequestException {
         Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_NOT_IMPLEMENTED)

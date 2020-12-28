@@ -10,8 +10,13 @@ import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.http.ResponseParser;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
@@ -20,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -89,7 +95,7 @@ public class RemoteDataApiClient {
      * @return A Response.
      */
     @Nullable
-    Response fetchRemoteData(@Nullable String lastModified, @NonNull Locale locale) {
+    Response<Set<RemoteDataPayload>> fetchRemoteData(@Nullable String lastModified, @NonNull final Locale locale) throws RequestException {
         URL url = getRemoteDataURL(locale);
 
         if (url == null) {
@@ -104,7 +110,27 @@ public class RemoteDataApiClient {
             request.setHeader("If-Modified-Since", lastModified);
         }
 
-        return request.safeExecute();
+        return request.execute(new ResponseParser<Set<RemoteDataPayload>>() {
+            @Override
+            public Set<RemoteDataPayload> parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                if (status == 200) {
+                    JsonMap metadata = RemoteData.createMetadata(locale);
+                    try {
+                        JsonValue json = JsonValue.parseString(responseBody);
+                        JsonMap map = json.optMap();
+                        if (map.containsKey("payloads")) {
+                            return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
+                        }
+                    } catch (JsonException e) {
+                        Logger.error("Unable to parse body: %s", responseBody);
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+                return null;
+            }
+        });
     }
 
     /**

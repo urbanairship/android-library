@@ -4,10 +4,13 @@ package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.DateUtils;
 
@@ -18,6 +21,7 @@ import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Set;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.reset;
@@ -53,7 +57,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
      * Test that fetching remote data succeeds if the status is 200 or 304
      */
     @Test
-    public void testRefreshRemoteDataSuccess() {
+    public void testRefreshRemoteDataSuccess() throws RequestException, JsonException {
         validateRemoteDataSuccess(200);
         validateRemoteDataSuccess(304);
     }
@@ -66,32 +70,35 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
         validateRemoteDataFailure(501);
     }
 
-    private Response responseWithStatus(int status) {
-        Response response = Mockito.mock(Response.class);
+    private Response<Set<RemoteDataPayload>> responseWithStatus(int status) {
+        Response<Set<RemoteDataPayload>> response = Mockito.mock(Response.class);
         when(response.getStatus()).thenReturn(status);
 
         return response;
     }
 
-    private Response refreshSuccessResponse(int status) {
-        Response response = responseWithStatus(status);
+    private Response<Set<RemoteDataPayload>> refreshSuccessResponse(int status) throws JsonException {
+        Response<Set<RemoteDataPayload>> response = responseWithStatus(status);
 
+        //JsonValue json = JsonValue.parseString("{\"payloads\":[{\"data\":{\"foo\":\"bar\"},\"type\":\"test\",\"timestamp\":\"2020-12-28T15:09:36\"}]}");
+        Set<RemoteDataPayload> remoteDataPayloadSet = RemoteDataPayload.parsePayloads(JsonValue.wrapOpt(responsePayload), RemoteData.createMetadata(new Locale("de")));
         if (status == 200) {
             when(response.getResponseHeader("Last-Modified")).thenReturn("lastModifiedResponse");
             when(response.getResponseBody()).thenReturn(responsePayload.toString());
+            when(response.getResult()).thenReturn(remoteDataPayloadSet);
         }
 
         return response;
     }
 
-    private void validateRemoteDataSuccess(int status) {
+    private void validateRemoteDataSuccess(int status) throws RequestException, JsonException {
         Locale locale = new Locale("de");
         localeManager.setLocaleOverride(locale);
         JsonMap metadata = RemoteData.createMetadata(locale);
 
         clearInvocations(remoteData);
 
-        Response response = refreshSuccessResponse(status);
+        Response<Set<RemoteDataPayload>> response = refreshSuccessResponse(status);
 
         when(client.fetchRemoteData("lastModifiedRequest", locale)).thenReturn(response);
 
@@ -103,7 +110,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
         verify(client).fetchRemoteData("lastModifiedRequest", locale);
 
         if (status == 200) {
-            verify(remoteData).onNewData(RemoteDataPayload.parsePayloads(responsePayload.get("payloads"), metadata), "lastModifiedResponse", metadata);
+            verify(remoteData).onNewData(response.getResult(), "lastModifiedResponse", metadata);
         }
 
         verify(remoteData).onRefreshFinished();

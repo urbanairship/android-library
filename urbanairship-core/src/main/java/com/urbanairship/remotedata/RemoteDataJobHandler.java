@@ -6,11 +6,10 @@ import android.content.Context;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.UAStringUtil;
 
@@ -88,7 +87,13 @@ public class RemoteDataJobHandler {
     private int onRefresh() {
         String lastModified = remoteData.getLastModified();
         Locale locale = localeManager.getLocale();
-        Response response = apiClient.fetchRemoteData(lastModified, locale);
+        Response<Set<RemoteDataPayload>> response;
+        try {
+            response = apiClient.fetchRemoteData(lastModified, locale);
+        } catch (RequestException e) {
+            Logger.error(e, "RemoteDataJobHandler - Failed to refresh data");
+            return JobInfo.JOB_FINISHED;
+        }
 
         if (response == null) {
             Logger.debug("Unable to connect to remote data server, retrying later");
@@ -105,25 +110,11 @@ public class RemoteDataJobHandler {
                 return JobInfo.JOB_FINISHED;
             }
 
-            Logger.debug("Received remote data response: %s", body);
-
             lastModified = response.getResponseHeader("Last-Modified");
             JsonMap metadata = RemoteData.createMetadata(locale);
-
-            try {
-                JsonValue json = JsonValue.parseString(body);
-                JsonMap map = json.optMap();
-                if (map.containsKey("payloads")) {
-                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
-                    remoteData.onNewData(payloads, lastModified, metadata);
-                    remoteData.onRefreshFinished();
-                    return JobInfo.JOB_FINISHED;
-                }
-            } catch (JsonException e) {
-                Logger.error("Unable to parse body: %s", body);
-                return JobInfo.JOB_FINISHED;
-            }
-
+            remoteData.onNewData((Set<RemoteDataPayload>) response.getResult(), lastModified, metadata);
+            remoteData.onRefreshFinished();
+            Logger.debug("Received remote data response: %s", body);
         } else if (status == 304) {
             // Not modified
             Logger.debug("Remote data not modified since last refresh");
@@ -134,7 +125,6 @@ public class RemoteDataJobHandler {
             Logger.debug("Error fetching remote data: %s", String.valueOf(status));
             return JobInfo.JOB_RETRY;
         }
-
         return JobInfo.JOB_FINISHED;
     }
 
