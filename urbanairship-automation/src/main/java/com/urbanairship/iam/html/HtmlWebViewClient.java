@@ -30,7 +30,7 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
      */
     private static final String DISMISS_COMMAND = "dismiss";
 
-    private InAppMessage inAppMessage;
+    private final InAppMessage inAppMessage;
 
     /**
      * Default constructor.
