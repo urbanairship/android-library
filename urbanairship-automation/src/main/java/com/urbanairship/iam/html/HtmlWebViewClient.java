@@ -6,13 +6,18 @@ import android.net.Uri;
 import android.webkit.WebView;
 
 import com.urbanairship.Logger;
-import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.javascript.JavaScriptEnvironment;
+import com.urbanairship.javascript.NativeBridge;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * A version of the {@link AirshipWebViewClient} for HTML in-app messages, which adds a command
@@ -26,20 +31,20 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
      */
     private static final String DISMISS_COMMAND = "dismiss";
 
+    private final InAppMessage inAppMessage;
+
     /**
      * Default constructor.
      */
-    public HtmlWebViewClient() {
+    public HtmlWebViewClient(@NonNull InAppMessage message) {
         super();
+        this.inAppMessage = message;
     }
 
-    /**
-     * Constructs an HtmlWebViewClient with the specified ActionRunRequestFactory.
-     *
-     * @param actionRunRequestFactory The action run request factory.
-     */
-    protected HtmlWebViewClient(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
-        super(actionRunRequestFactory);
+    @VisibleForTesting
+    protected HtmlWebViewClient(@NonNull NativeBridge nativeBridge, @NonNull InAppMessage message) {
+        super(nativeBridge);
+        this.inAppMessage = message;
     }
 
     /**
@@ -73,4 +78,19 @@ public abstract class HtmlWebViewClient extends AirshipWebViewClient {
             Logger.error("Unable to decode message resolution, missing path");
         }
     }
+
+    /**
+     * @hide
+     */
+    @CallSuper
+    @NonNull
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected JavaScriptEnvironment.Builder extendJavascriptEnvironment(@NonNull JavaScriptEnvironment.Builder builder, @NonNull WebView webView) {
+        JsonMap extras = inAppMessage.getExtras();
+
+        return super.extendJavascriptEnvironment(builder, webView)
+                    .addGetter("getMessageExtras", extras);
+    }
+
 }

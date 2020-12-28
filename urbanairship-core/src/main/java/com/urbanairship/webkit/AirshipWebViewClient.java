@@ -63,7 +63,7 @@ public class AirshipWebViewClient extends WebViewClient {
      * @hide
      */
     @VisibleForTesting
-    AirshipWebViewClient(@NonNull NativeBridge nativeBridge) {
+    protected AirshipWebViewClient(@NonNull NativeBridge nativeBridge) {
         this.nativeBridge = nativeBridge;
     }
 
