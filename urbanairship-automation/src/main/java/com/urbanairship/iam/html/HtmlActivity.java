@@ -105,7 +105,7 @@ public class HtmlActivity extends InAppMessageActivity {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        webView.setWebViewClient(new HtmlWebViewClient() {
+        webView.setWebViewClient(new HtmlWebViewClient(getMessage()) {
             @Override
             public void onMessageDismissed(@NonNull JsonValue argument) {
                 try {

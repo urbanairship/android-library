@@ -41,7 +41,7 @@ public class JavaScriptEnvironment {
     }
 
     @WorkerThread
-    String getJavaScript(@NonNull Context context) {
+    public String getJavaScript(@NonNull Context context) {
 
         /*
          * The native bridge will prototype _UAirship, so inject any additional

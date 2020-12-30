@@ -7,6 +7,7 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.NamedUser;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.location.AirshipLocationClient;
@@ -54,6 +55,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel,  UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, null, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
+        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel);
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);

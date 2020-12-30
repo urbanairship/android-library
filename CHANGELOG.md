@@ -2,6 +2,8 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.1.1 December 30, 2020
+Patch release to fix In-App Automations not displaying in the same session when the message is triggered on an activity that has been excluded from showing the IAA by using `com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW` metadata entry in the `AndroidManifest.xml`.
 
 ## Version 14.1.0 December 16, 2020
 Minor release adding support for frequency limits and advanced segmentation to In-App Automation, as well as new custom event templates.
