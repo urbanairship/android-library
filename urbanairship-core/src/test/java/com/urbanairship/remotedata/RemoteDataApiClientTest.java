@@ -6,11 +6,10 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.PushProviders;
 import com.urbanairship.TestAirshipRuntimeConfig;
+import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -21,16 +20,17 @@ import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.robolectric.shadows.ShadowBuild;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,9 +43,10 @@ import static org.mockito.Mockito.when;
 
 public class RemoteDataApiClientTest extends BaseTestCase {
 
-    private LegacyTestRequest testRequest;
+    private TestRequest testRequest;
     private RemoteDataApiClient client;
     private PushProviders pushProviders;
+    private RequestFactory mockRequestFactory;
 
     private List<PushProvider> availableProviders;
     private TestAirshipRuntimeConfig runtimeConfig;
@@ -54,22 +55,15 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void setUp() {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        testRequest = new LegacyTestRequest();
-        RequestFactory requestFactory = new RequestFactory() {
-            @NonNull
-            @Override
-            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
-                testRequest.setRequestMethod(requestMethod);
-                testRequest.setURL(url);
-                return testRequest;
-            }
-        };
+        testRequest = new TestRequest();
+        mockRequestFactory = Mockito.mock(RequestFactory.class);
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
 
         availableProviders = new ArrayList<>();
         pushProviders = mock(PushProviders.class);
         when(pushProviders.getAvailableProviders()).thenReturn(availableProviders);
 
-        client = new RemoteDataApiClient(runtimeConfig, pushProviders, requestFactory);
+        client = new RemoteDataApiClient(runtimeConfig, pushProviders, mockRequestFactory);
     }
 
     /**
@@ -86,13 +80,12 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseHeaders(headers)
-                                       .setResponseBody(list.toString())
-                                       .build();
+        testRequest.responseHeaders = headers;
+        testRequest.responseBody = list.toString();
+        testRequest.responseStatus = 200;
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
-        Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
+        Response<Set<RemoteDataPayload>> response = client.fetchRemoteData(requestTimestamp, new Locale("en"));
 
         assertEquals("Headers should contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"), requestTimestamp);
         assertNotNull("Response should not be null", response);
@@ -108,7 +101,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testSdkVersion() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
 
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertEquals(uri.getQueryParameter("sdk_version"), UAirship.getVersion());
     }
 
@@ -123,7 +116,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
 
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
 
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertEquals(uri.getQueryParameter("push_providers"), "fcm,adm");
     }
 
@@ -133,7 +126,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     @Test
     public void testEmptyPushProviders() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertNull(uri.getQueryParameter("push_providers"));
     }
 
@@ -144,7 +137,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testManufacturer() throws RequestException {
         ShadowBuild.setManufacturer("huawei");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertEquals(uri.getQueryParameter("manufacturer"), "huawei");
     }
 
@@ -155,7 +148,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testManufacturerNotIncluded() throws RequestException {
         ShadowBuild.setManufacturer("google");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("en"));
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertNull(uri.getQueryParameter("manufacturer"));
     }
 
@@ -167,7 +160,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         Locale locale = new Locale("en", "US");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertEquals(uri.getQueryParameter("language"), "en");
         assertEquals(uri.getQueryParameter("country"), "US");
     }
@@ -179,7 +172,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testLocaleMissingCountry() throws RequestException {
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), new Locale("de"));
 
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertEquals(uri.getQueryParameter("language"), "de");
         assertNull(uri.getQueryParameter("country"));
     }
@@ -192,7 +185,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         Locale locale = new Locale("", "US");
         client.fetchRemoteData(DateUtils.createIso8601TimeStamp(System.currentTimeMillis()), locale);
 
-        Uri uri = Uri.parse(testRequest.getURL().toString());
+        Uri uri = Uri.parse(testRequest.getUrl().toString());
         assertNull(uri.getQueryParameter("language"));
         assertEquals(uri.getQueryParameter("country"), "US");
     }
@@ -211,10 +204,9 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
         JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
 
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                                       .setResponseHeaders(headers)
-                                       .setResponseBody(list.toString())
-                                       .build();
+        testRequest.responseStatus = 200;
+        testRequest.responseHeaders = headers;
+        testRequest.responseBody = list.toString();
 
         Response response = client.fetchRemoteData(null, new Locale("en"));
 
@@ -232,9 +224,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
     public void testFetchRemoteDataRequestFailure() throws RequestException {
         Map<String, List<String>> headers = new HashMap<>();
 
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
-                                       .setResponseHeaders(headers)
-                                       .build();
+        testRequest.responseStatus = 501;
+        testRequest.responseHeaders = headers;
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp, new Locale("en"));

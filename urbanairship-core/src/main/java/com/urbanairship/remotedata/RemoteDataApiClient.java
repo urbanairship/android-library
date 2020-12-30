@@ -103,7 +103,8 @@ public class RemoteDataApiClient {
             return null;
         }
 
-        Request request = requestFactory.createRequest("GET", url)
+        Request request = requestFactory.createRequest()
+                                        .setOperation("GET", url)
                                         .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret);
 
         if (lastModified != null) {
