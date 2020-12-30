@@ -14,7 +14,6 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.http.ResponseParser;
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
@@ -116,15 +115,10 @@ public class RemoteDataApiClient {
             public Set<RemoteDataPayload> parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
                 if (status == 200) {
                     JsonMap metadata = RemoteData.createMetadata(locale);
-                    try {
-                        JsonValue json = JsonValue.parseString(responseBody);
-                        JsonMap map = json.optMap();
-                        if (map.containsKey("payloads")) {
-                            return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
-                        }
-                    } catch (JsonException e) {
-                        Logger.error("Unable to parse body: %s", responseBody);
-                        return null;
+                    JsonValue json = JsonValue.parseString(responseBody);
+                    JsonMap map = json.optMap();
+                    if (map.containsKey("payloads")) {
+                        return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
                     }
                 } else {
                     return null;
