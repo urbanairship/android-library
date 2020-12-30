@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -17,8 +18,10 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.location.RegionEvent;
+import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
+import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.automation.alarms.AlarmOperationScheduler;
 import com.urbanairship.automation.alarms.OperationScheduler;
 import com.urbanairship.automation.storage.AutomationDao;
@@ -123,6 +126,13 @@ public class AutomationEngine {
         @Override
         public void onBackground(long time) {
             AutomationEngine.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_BACKGROUND, 1.00);
+            onScheduleConditionsChanged();
+        }
+    };
+
+    private final ActivityListener activityListener = new SimpleActivityListener() {
+        @Override
+        public void onActivityResumed(@NonNull Activity activity) {
             onScheduleConditionsChanged();
         }
     };
@@ -234,6 +244,7 @@ public class AutomationEngine {
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
 
         activityMonitor.addApplicationListener(applicationListener);
+        activityMonitor.addActivityListener(activityListener);
         analytics.addAnalyticsListener(analyticsListener);
 
         backgroundHandler.post(new Runnable() {

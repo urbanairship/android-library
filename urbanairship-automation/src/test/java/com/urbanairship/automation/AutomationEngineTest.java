@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -357,6 +358,7 @@ public class AutomationEngineTest {
             }
         });
     }
+
 
     @Test
     public void testScreenDelay() throws Exception {
@@ -910,6 +912,37 @@ public class AutomationEngineTest {
         // Verify it's idle
         verifyState(schedule, ScheduleState.IDLE);
         assertEquals(dao.getSchedule(schedule.getId()).schedule.count, 0);
+    }
+
+    @Test
+    public void testResumedActivitiesCheckExecutionReadiness() throws ExecutionException, InterruptedException {
+        schedule(schedule);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        driver.onCheckExecutionReadinessResult = AutomationDriver.READY_RESULT_NOT_READY;
+
+        // Preparing schedule
+        verifyState(schedule, ScheduleState.PREPARING_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        runLooperTasks();
+
+        // Verify it's waiting
+        verifyState(schedule, ScheduleState.WAITING_SCHEDULE_CONDITIONS);
+
+        // Resume an activity to verify schedules get checked again
+        driver.onCheckExecutionReadinessResult = AutomationDriver.READY_RESULT_CONTINUE;
+        Activity activity = new Activity();
+        activityMonitor.resumeActivity(activity);
+        runLooperTasks();
+
+        // Verify it's now executing
+        verifyState(schedule, ScheduleState.EXECUTING);
     }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
