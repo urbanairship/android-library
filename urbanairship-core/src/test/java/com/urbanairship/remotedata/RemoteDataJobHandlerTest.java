@@ -66,7 +66,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
      * Test that fetching remote data retries on error
      */
     @Test
-    public void testRefreshRemoteDataFailure() {
+    public void testRefreshRemoteDataFailure() throws RequestException {
         validateRemoteDataFailure(501);
     }
 
@@ -77,7 +77,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
         return response;
     }
 
-    private Response<Set<RemoteDataPayload>> refreshSuccessResponse(int status) throws JsonException {
+    private Response<Set<RemoteDataPayload>> refreshSuccessResponse(int status) {
         Response<Set<RemoteDataPayload>> response = responseWithStatus(status);
 
         //JsonValue json = JsonValue.parseString("{\"payloads\":[{\"data\":{\"foo\":\"bar\"},\"type\":\"test\",\"timestamp\":\"2020-12-28T15:09:36\"}]}");
@@ -117,7 +117,12 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
         reset(client);
     }
 
-    private void validateRemoteDataFailure(int status) {
+    private void validateRemoteDataFailure(int status) throws RequestException {
+        Locale locale = new Locale("de");
+        localeManager.setLocaleOverride(locale);
+        Response<Set<RemoteDataPayload>> response = responseWithStatus(501);
+        when(client.fetchRemoteData("lastModifiedRequest", locale)).thenReturn(response);
+
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteDataJobHandler.ACTION_REFRESH).build();
         Assert.assertEquals("Job should retry", JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));

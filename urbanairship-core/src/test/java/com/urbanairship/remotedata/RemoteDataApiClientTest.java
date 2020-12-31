@@ -13,7 +13,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.DateUtils;
@@ -77,11 +76,10 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         headers.put("Last-Modified", Collections.singletonList(responseTimestamp));
 
         JsonMap map = JsonMap.newBuilder().put("foo", "bar").build();
-        JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
-        JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
+        JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("payloads", map).build();
 
         testRequest.responseHeaders = headers;
-        testRequest.responseBody = list.toString();
+        testRequest.responseBody = payload.toString();
         testRequest.responseStatus = 200;
 
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
@@ -90,7 +88,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         assertEquals("Headers should contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"), requestTimestamp);
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
-        assertEquals("Response should be the JSON list", response.getResponseBody(), list.toString());
+        assertEquals("Response should be the JSONMap", response.getResponseBody(), payload.toString());
         assertEquals("Last-Modified should match with timestamp", responseTimestamp, response.getResponseHeader("Last-Modified"));
     }
 
@@ -201,19 +199,18 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         headers.put("Last-Modified", Collections.singletonList(responseTimestamp));
 
         JsonMap map = JsonMap.newBuilder().put("foo", "bar").build();
-        JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("data", map).build();
-        JsonList list = new JsonList(Collections.singletonList(payload.toJsonValue()));
+        JsonMap payload = JsonMap.newBuilder().put("type", "test").put("timestamp", responseTimestamp).put("payloads", map).build();
 
         testRequest.responseStatus = 200;
         testRequest.responseHeaders = headers;
-        testRequest.responseBody = list.toString();
+        testRequest.responseBody = payload.toString();
 
         Response response = client.fetchRemoteData(null, new Locale("en"));
 
         assertNull("Headers should not contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"));
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
-        assertEquals("Response should be the JSON list", response.getResponseBody(), list.toString());
+        assertEquals("Response should be the JSONMap", response.getResponseBody(), payload.toString());
         assertEquals("Last-Modified should match with timestamp", responseTimestamp, response.getResponseHeader("Last-Modified"));
     }
 

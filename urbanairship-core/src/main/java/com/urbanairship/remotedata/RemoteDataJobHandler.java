@@ -95,11 +95,6 @@ public class RemoteDataJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        if (response == null) {
-            Logger.debug("Unable to connect to remote data server, retrying later");
-            return JobInfo.JOB_RETRY;
-        }
-
         int status = response.getStatus();
 
         // Success

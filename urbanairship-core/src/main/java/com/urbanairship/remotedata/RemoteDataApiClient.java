@@ -4,7 +4,6 @@ package com.urbanairship.remotedata;
 
 import android.os.Build;
 
-import com.urbanairship.Logger;
 import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -14,6 +13,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.http.ResponseParser;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
@@ -93,14 +93,9 @@ public class RemoteDataApiClient {
      * @param locale The current locale.
      * @return A Response.
      */
-    @Nullable
+    @NonNull
     Response<Set<RemoteDataPayload>> fetchRemoteData(@Nullable String lastModified, @NonNull final Locale locale) throws RequestException {
         URL url = getRemoteDataURL(locale);
-
-        if (url == null) {
-            Logger.debug("Remote Data URL null. Unable to update tagGroups.");
-            return null;
-        }
 
         Request request = requestFactory.createRequest()
                                         .setOperation("GET", url)
@@ -119,11 +114,12 @@ public class RemoteDataApiClient {
                     JsonMap map = json.optMap();
                     if (map.containsKey("payloads")) {
                         return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
+                    } else {
+                        throw new JsonException("Response does not contain payloads");
                     }
                 } else {
                     return null;
                 }
-                return null;
             }
         });
     }
