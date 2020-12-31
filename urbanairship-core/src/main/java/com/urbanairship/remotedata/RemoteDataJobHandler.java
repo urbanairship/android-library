@@ -11,7 +11,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.locale.LocaleManager;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.Locale;
 import java.util.Set;
@@ -100,11 +99,6 @@ public class RemoteDataJobHandler {
         // Success
         if (status == 200) {
             String body = response.getResponseBody();
-            if (UAStringUtil.isEmpty(body)) {
-                Logger.error("Remote data missing response body");
-                return JobInfo.JOB_FINISHED;
-            }
-
             lastModified = response.getResponseHeader("Last-Modified");
             JsonMap metadata = RemoteData.createMetadata(locale);
             remoteData.onNewData((Set<RemoteDataPayload>) response.getResult(), lastModified, metadata);
