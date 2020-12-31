@@ -11,17 +11,19 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonException;
+import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
@@ -158,7 +160,8 @@ public class PassRequest {
                                       .putOpt(EXTERNAL_ID_KEY, externalId)
                                       .build();
 
-                Request httpRequest = requestFactory.createRequest("POST", url)
+                Request httpRequest = requestFactory.createRequest()
+                                                    .setOperation("POST", url)
                                                     .setHeader(API_REVISION_HEADER_NAME, API_REVISION)
                                                     .setRequestBody(body.toString(), "application/json");
 
@@ -167,28 +170,22 @@ public class PassRequest {
                 }
 
                 Logger.debug("PassRequest - Requesting pass %s with payload: %s", url, body);
-                Response response = httpRequest.safeExecute();
-
-                if (response == null) {
-                    Logger.error("PassRequest - Failed to get a response.");
+                try {
+                    Response<Pass> response = httpRequest.execute(new ResponseParser<Pass>() {
+                        @Override
+                        public Pass parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                                JsonValue json = JsonValue.parseString(responseBody);
+                                return Pass.parsePass(json);
+                            }
+                            return null;
+                        }
+                    });
+                    Logger.debug("PassRequest - Pass %s request finished with status %s", templateId, response.getStatus());
+                    requestCallback.setResult(response.getStatus(), response.getResult());
+                } catch (RequestException e) {
+                    Logger.error(e, "PassRequest - Request failed");
                     requestCallback.setResult(-1, null);
-                    return;
-                }
-
-                if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-                    JsonValue json;
-                    try {
-                        json = JsonValue.parseString(response.getResponseBody());
-                    } catch (JsonException e) {
-                        Logger.error("PassRequest - Failed to parse response body %s", response.getResponseBody());
-                        return;
-                    }
-
-                    Logger.debug("PassRequest - Received pass response: %s for pass %s", json, url);
-                    requestCallback.setResult(response.getStatus(), Pass.parsePass(json));
-                } else {
-                    Logger.debug("PassRequest - Pass %s request failed with status %s", templateId, response.getStatus());
-                    requestCallback.setResult(response.getStatus(), null);
                 }
 
                 // Notify the result
