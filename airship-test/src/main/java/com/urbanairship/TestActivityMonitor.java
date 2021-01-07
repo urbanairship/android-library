@@ -1,5 +1,3 @@
-/* Copyright Airship and Contributors */
-
 package com.urbanairship;
 
 import android.app.Activity;
@@ -15,9 +13,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 
-/**
- * Test Activity Monitor.
- */
 public class TestActivityMonitor implements ActivityMonitor {
 
     private int startedActivities = 0;

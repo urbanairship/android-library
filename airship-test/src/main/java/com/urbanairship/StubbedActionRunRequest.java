@@ -1,5 +1,3 @@
-/* Copyright Airship and Contributors */
-
 package com.urbanairship;
 
 import android.os.Bundle;

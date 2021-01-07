@@ -54,9 +54,7 @@ public class TestRequest extends Request {
      */
     @Override
     @NonNull
-    public String getUrbanAirshipUserAgent() {
-        return "";
-    }
+    public String getUrbanAirshipUserAgent() { return ""; }
 
     /**
      * Get the request body.
@@ -89,5 +87,5 @@ public class TestRequest extends Request {
     public URL getUrl() {
         return url;
     }
-
 }
+
