@@ -10,5 +10,5 @@ include ':urbanairship-core',
         ':urbanairship-location',
         ':urbanairship-message-center',
         ':urbanairship-automation',
-        ':airship-test'
+        ':urbanairship-test'
         ":sample"
