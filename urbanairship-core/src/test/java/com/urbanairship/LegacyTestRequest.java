@@ -23,11 +23,6 @@ public class LegacyTestRequest extends Request {
     }
 
     @Override
-    public Response safeExecute() {
-        return response;
-    }
-
-    @Override
     public Response execute() {
         return response;
     }
