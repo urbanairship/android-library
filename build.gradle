@@ -122,7 +122,7 @@ task javadoc(type: Javadoc) {
         addStringOption "templatedir", "docs/template"
     }
 
-    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") }.each { proj ->
+    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") && it.name.equals("urbanairship-test")}.each { proj ->
         proj.afterEvaluate { evaluated ->
             source += evaluated.android.sourceSets.main.java.sourceFiles
             if (proj.name != 'urbanairship-fcm') {

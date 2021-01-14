@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship;
 
 import android.content.Context;
