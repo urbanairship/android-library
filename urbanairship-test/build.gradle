@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+group = "com.urbanairship.android"
 description = "Airship Android SDK Test Utils library, for internal use only"
 
 android {
