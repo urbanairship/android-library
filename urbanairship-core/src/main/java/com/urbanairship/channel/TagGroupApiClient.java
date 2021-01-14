@@ -82,7 +82,8 @@ class TagGroupApiClient {
                                  .build();
 
         Logger.verbose("Updating tag groups with path: %s, payload: %s", path, payload);
-        Response<Void> response = requestFactory.createRequest("POST", url)
+        Response<Void> response = requestFactory.createRequest()
+                                                .setOperation("POST", url)
                                                 .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                                 .setRequestBody(payload)
                                                 .setAirshipJsonAcceptsHeader()

@@ -4,11 +4,10 @@ package com.urbanairship.channel;
 
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.LegacyTestRequest;
 import com.urbanairship.TestAirshipRuntimeConfig;
+import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipUrlConfig;
-import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -18,18 +17,16 @@ import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashSet;
 
-import androidx.annotation.NonNull;
-
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 public class TagGroupApiClientTest extends BaseTestCase {
 
-    private LegacyTestRequest testRequest;
+    private TestRequest testRequest;
     private RequestFactory requestFactory;
     private TagGroupsMutation mutation;
     private TestAirshipRuntimeConfig runtimeConfig;
@@ -41,21 +38,12 @@ public class TagGroupApiClientTest extends BaseTestCase {
                                                    .setDeviceUrl("https://test.urbanairship.com")
                                                    .build());
 
-        testRequest = new LegacyTestRequest();
-        testRequest.response = new Response.Builder<Void>(HttpURLConnection.HTTP_OK)
-                .setResponseBody("{ \"ok\": true}")
-                .build();
+        testRequest = new TestRequest();
+        testRequest.responseStatus = 200;
+        testRequest.responseBody = "{ \"ok\": true}";
 
-        requestFactory = new RequestFactory() {
-            @NonNull
-            @Override
-            public Request createRequest(@NonNull String requestMethod, @NonNull URL url) {
-                testRequest.setURL(url);
-                testRequest.setRequestMethod(requestMethod);
-
-                return testRequest;
-            }
-        };
+        requestFactory = Mockito.mock(RequestFactory.class);
+        when(requestFactory.createRequest()).thenReturn(testRequest);
 
         mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
     }
@@ -65,8 +53,8 @@ public class TagGroupApiClientTest extends BaseTestCase {
         TagGroupApiClient client = new TagGroupApiClient(runtimeConfig, requestFactory, "some-audience", "some-path");
 
         Response<Void> response = client.updateTags("identifier", mutation);
-        assertEquals(testRequest.response, response);
-        assertEquals("https://test.urbanairship.com/some-path", testRequest.getURL().toString());
+        assertEquals(testRequest.responseBody, response.getResponseBody());
+        assertEquals("https://test.urbanairship.com/some-path", testRequest.getUrl().toString());
         assertEquals("POST", testRequest.getRequestMethod());
 
         JsonMap expectedBody = JsonMap.newBuilder()
