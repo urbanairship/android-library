@@ -218,21 +218,6 @@ public class Request {
         return this;
     }
 
-    /**
-     * Executes the request.
-     *
-     * @return The request response.
-     */
-    @Nullable
-    public Response<Void> safeExecute() {
-        try {
-            return execute(EMPTY_RESPONSE_PARSER);
-        } catch (RequestException e) {
-            Logger.debug(e, "Request failed.");
-            return null;
-        }
-    }
-
     public Response<Void> execute() throws RequestException {
         return execute(EMPTY_RESPONSE_PARSER);
     }

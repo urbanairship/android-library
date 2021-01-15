@@ -4,14 +4,18 @@ package com.urbanairship.remotedata;
 
 import android.os.Build;
 
-import com.urbanairship.Logger;
 import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.http.ResponseParser;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
@@ -20,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -88,23 +93,35 @@ public class RemoteDataApiClient {
      * @param locale The current locale.
      * @return A Response.
      */
-    @Nullable
-    Response fetchRemoteData(@Nullable String lastModified, @NonNull Locale locale) {
+    @NonNull
+    Response<Set<RemoteDataPayload>> fetchRemoteData(@Nullable String lastModified, @NonNull final Locale locale) throws RequestException {
         URL url = getRemoteDataURL(locale);
 
-        if (url == null) {
-            Logger.debug("Remote Data URL null. Unable to update tagGroups.");
-            return null;
-        }
-
-        Request request = requestFactory.createRequest("GET", url)
+        Request request = requestFactory.createRequest()
+                                        .setOperation("GET", url)
                                         .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret);
 
         if (lastModified != null) {
             request.setHeader("If-Modified-Since", lastModified);
         }
 
-        return request.safeExecute();
+        return request.execute(new ResponseParser<Set<RemoteDataPayload>>() {
+            @Override
+            public Set<RemoteDataPayload> parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+                if (status == 200) {
+                    JsonMap metadata = RemoteData.createMetadata(locale);
+                    JsonValue json = JsonValue.parseString(responseBody);
+                    JsonMap map = json.optMap();
+                    if (map.containsKey("payloads")) {
+                        return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
+                    } else {
+                        throw new JsonException("Response does not contain payloads");
+                    }
+                } else {
+                    return null;
+                }
+            }
+        });
     }
 
     /**
