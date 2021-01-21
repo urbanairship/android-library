@@ -2,6 +2,11 @@
 
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
@@ -11,10 +16,6 @@ import com.urbanairship.util.UAStringUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
 
 /**
  * Interface used for modifying attributes.
@@ -30,8 +31,11 @@ abstract public class AttributeEditor {
      * Attribute editor constructor.
      *
      * @param clock The clock.
+     *
+     * @hide
      */
-    AttributeEditor(@NonNull Clock clock) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected AttributeEditor(@NonNull Clock clock) {
         this.clock = clock;
     }
 
@@ -203,7 +207,12 @@ abstract public class AttributeEditor {
         onApply(mutations);
     }
 
-    abstract void onApply(@NonNull List<AttributeMutation> collapsedMutations);
+    /**
+     * @param collapsedMutations
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected abstract void onApply(@NonNull List<AttributeMutation> collapsedMutations);
 
     private class PartialAttributeMutation {
 

@@ -47,6 +47,13 @@
         <name>^-t</name>
     </ActionEntry>
 
+    <ActionEntry
+        class="com.urbanairship.actions.SetAttributesAction"
+        predicate="com.urbanairship.actions.SetAttributesAction$SetAttributesPredicate">
+        <name>set_attributes_action</name>
+        <name>^a</name>
+    </ActionEntry>
+
     <ActionEntry class="com.urbanairship.actions.ShareAction">
         <name>share_action</name>
         <name>^s</name>
