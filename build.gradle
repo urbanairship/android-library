@@ -122,17 +122,21 @@ task javadoc(type: Javadoc) {
         addStringOption "templatedir", "docs/template"
     }
 
-    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") && it.name.equals("urbanairship-test")}.each { proj ->
+    subprojects.findAll { it.name.equals("urbanairship-core") ||
+            it.name.equals("urbanairship-accengage") ||
+            it.name.equals("urbanairship-ads-identifier") ||
+            it.name.equals("urbanairship-automation") ||
+            it.name.equals("urbanairship-location") ||
+            it.name.equals("urbanairship-message-center") ||
+            it.name.equals("urbanairship-preference")}.each { proj ->
         proj.afterEvaluate { evaluated ->
             source += evaluated.android.sourceSets.main.java.sourceFiles
-            if (proj.name != 'urbanairship-fcm') {
-                classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
+            classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
 
-                evaluated.android.libraryVariants.all { variant ->
-                    if (variant.name == 'release') {
-                        classpath += variant.getJavaCompileProvider().get().classpath
-                        classpath += project.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
-                    }
+            evaluated.android.libraryVariants.all { variant ->
+                if (variant.name == 'release') {
+                    classpath += variant.getJavaCompileProvider().get().classpath
+                    classpath += project.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
                 }
             }
         }
