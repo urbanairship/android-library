@@ -67,11 +67,13 @@ public class NativeBridge {
     /**
      * Run actions command with a callback.
      */
+    @NonNull
     private static final String RUN_ACTIONS_COMMAND_CALLBACK = "run-action-cb";
 
     /**
      * Run actions command with a callback.
      */
+    @NonNull
     private static final String SET_NAMED_USER_COMMAND = "named_user";
 
     /**
@@ -161,10 +163,10 @@ public class NativeBridge {
                 break;
 
             case SET_NAMED_USER_COMMAND:
-                Logger.info("Running set Named User command for URL: %s", decodeActionArguments(uri, true));
-                Map<String, List<ActionValue>> args = decodeActionArguments(uri, true);
-                if (args != null && args.get(NAMED_USER_ARGUMENT_KEY) != null) {
-                    String namedUser = args.get(NAMED_USER_ARGUMENT_KEY).get(0).getString();
+                Logger.info("Running set Named User command for URL: %s", uri) ;
+                Map<String, List<String>> args = UriUtils.getQueryParameters(uri);
+                if (args.get(NAMED_USER_ARGUMENT_KEY) != null) {
+                    String namedUser = args.get(NAMED_USER_ARGUMENT_KEY).get(0);
                     setNamedUserCommand(namedUser);
                 } else if (args.get(NAMED_USER_ARGUMENT_KEY).get(0) == null) {
                     setNamedUserCommand(null);

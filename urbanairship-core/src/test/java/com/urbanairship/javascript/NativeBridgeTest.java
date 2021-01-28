@@ -488,4 +488,11 @@ public class NativeBridgeTest extends BaseTestCase {
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
         assertEquals("cool", UAirship.shared().getNamedUser().getId());
     }
+
+    @Test
+    public void testNamedUserNullCommand() {
+        String url = "uairship://named_user?id=";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        assertEquals(null, UAirship.shared().getNamedUser().getId());
+    }
 }
