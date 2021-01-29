@@ -122,10 +122,16 @@ task javadoc(type: Javadoc) {
         addStringOption "templatedir", "docs/template"
     }
 
-    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") }.each { proj ->
+    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") && !it.name.contains("test")}.each { proj ->
         proj.afterEvaluate { evaluated ->
             source += evaluated.android.sourceSets.main.java.sourceFiles
-            if (proj.name != 'urbanairship-fcm') {
+            if (proj.name.equals("urbanairship-core") ||
+                proj.name.equals("urbanairship-accengage") ||
+                proj.name.equals("urbanairship-ads-identifier") ||
+                proj.name.equals("urbanairship-automation") ||
+                proj.name.equals("urbanairship-location") ||
+                proj.name.equals("urbanairship-message-center") ||
+                proj.name.equals("urbanairship-preference")) {
                 classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
 
                 evaluated.android.libraryVariants.all { variant ->

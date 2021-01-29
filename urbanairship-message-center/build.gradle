@@ -7,6 +7,7 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
 
     // Tests
+    testImplementation project(':urbanairship-test')
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
