@@ -6,6 +6,7 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
+import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
@@ -16,7 +17,6 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
-import com.urbanairship.actions.StubbedActionRunRequest;
 
 import org.junit.Before;
 import org.junit.Test;

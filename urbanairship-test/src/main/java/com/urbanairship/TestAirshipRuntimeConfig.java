@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship;
 
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -23,11 +25,11 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
                 .build();
 
         AirshipUrlConfig urlConfig = AirshipUrlConfig.newBuilder()
-                .setAnalyticsUrl(configOptions.analyticsUrl)
-                .setDeviceUrl(configOptions.deviceUrl)
-                .setWalletUrl(configOptions.walletUrl)
-                .setRemoteDataUrl(configOptions.remoteDataUrl)
-                .build();
+                                                     .setAnalyticsUrl(configOptions.analyticsUrl)
+                                                     .setDeviceUrl(configOptions.deviceUrl)
+                                                     .setWalletUrl(configOptions.walletUrl)
+                                                     .setRemoteDataUrl(configOptions.remoteDataUrl)
+                                                     .build();
 
         return new TestAirshipRuntimeConfig(new SettableConfigProvider(urlConfig), configOptions, UAirship.ANDROID_PLATFORM);
     }
