@@ -490,6 +490,13 @@ public class NativeBridgeTest extends BaseTestCase {
     }
 
     @Test
+    public void testEncodedNamedUserCommand() {
+        String url = "uairship://named_user?id=my%2Fname%26%20user";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        assertEquals("my/name& user", UAirship.shared().getNamedUser().getId());
+    }
+
+    @Test
     public void testNamedUserNullCommand() {
         String url = "uairship://named_user?id=";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
