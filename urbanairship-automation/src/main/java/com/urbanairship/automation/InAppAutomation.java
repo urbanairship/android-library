@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.MainThread;
@@ -294,8 +295,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             }
 
             @Override
-            public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
-                frequencyLimitManager.updateConstraints(constraints);
+            public Future<Boolean> updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
+                return frequencyLimitManager.updateConstraints(constraints);
             }
 
         });
@@ -506,19 +507,29 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         Logger.verbose("InAppAutomation - onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
 
+        final AutomationDriver.PrepareScheduleCallback callbackWrapper = new AutomationDriver.PrepareScheduleCallback() {
+            @Override
+            public void onFinish(int result) {
+                if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
+                    frequencyCheckerMap.remove(schedule.getId());
+                }
+                callback.onFinish(result);
+            }
+        };
+
         if (isScheduleInvalid(schedule)) {
             backgroundHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     // If the subscriber is already up to date, invalidate immediately
                     if (remoteDataSubscriber.isUpToDate()) {
-                        callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                        callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                     } else {
                         // Otherwise wait to invalidate
                         remoteDataSubscriber.addListener(new InAppRemoteDataObserver.Listener() {
                             @Override
                             public void onSchedulesUpdated() {
-                                callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                                callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                                 remoteDataSubscriber.removeListener(this);
                             }
                         });
@@ -528,13 +539,24 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return;
         }
 
-        // Constraint checks
-        final FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
-        if (frequencyChecker != null && frequencyChecker.isOverLimit()) {
-            // The frequency constraint is exceeded, skip
-            callback.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
-            return;
-        }
+        RetryingExecutor.Operation getFrequencyChecker = new RetryingExecutor.Operation() {
+            @Override
+            public int run() {
+                if (!schedule.getFrequencyConstraintIds().isEmpty()) {
+                    FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
+                    if (frequencyChecker == null) {
+                        return RetryingExecutor.RESULT_RETRY;
+                    }
+                    frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
+                    if (frequencyChecker.isOverLimit()) {
+                        // The frequency constraint is exceeded, skip
+                        callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+                    }
+                }
+
+                return RetryingExecutor.RESULT_FINISHED;
+            }
+        };
 
         // Audience checks
         RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
@@ -560,18 +582,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
-                callback.onFinish(getPrepareResultMissedAudience(schedule));
+                callbackWrapper.onFinish(getPrepareResultMissedAudience(schedule));
                 return RetryingExecutor.RESULT_CANCEL;
-            }
-        };
-
-        final AutomationDriver.PrepareScheduleCallback callbackWrapper = new AutomationDriver.PrepareScheduleCallback() {
-            @Override
-            public void onFinish(int result) {
-                if (result == AutomationDriver.PREPARE_RESULT_CONTINUE && frequencyChecker != null) {
-                    frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
-                }
-                callback.onFinish(result);
             }
         };
 
@@ -593,7 +605,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             }
         };
 
-        retryingExecutor.execute(checkAudience, prepareSchedule);
+        retryingExecutor.execute(getFrequencyChecker, checkAudience, prepareSchedule);
     }
 
     private <T extends ScheduleData> void prepareSchedule(final Schedule<? extends ScheduleData> schedule, T scheduleData, final ScheduleDelegate<T> delegate, final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
@@ -738,10 +750,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @Nullable
     private FrequencyChecker getFrequencyChecker(@NonNull Schedule<? extends ScheduleData> schedule) {
-        if (schedule.getFrequencyConstraintIds().isEmpty()) {
-            return null;
-        }
-
         try {
             return frequencyLimitManager.getFrequencyChecker(schedule.getFrequencyConstraintIds()).get();
         } catch (ExecutionException e) {
