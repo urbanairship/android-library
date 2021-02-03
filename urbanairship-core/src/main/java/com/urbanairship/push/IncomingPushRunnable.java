@@ -1,6 +1,5 @@
 package com.urbanairship.push;
 
-import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -25,7 +24,6 @@ import com.urbanairship.push.notifications.NotificationChannelUtils;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
 import com.urbanairship.util.Checks;
-import com.urbanairship.util.ManifestUtils;
 
 import java.util.Map;
 import java.util.UUID;
@@ -380,15 +378,10 @@ class IncomingPushRunnable implements Runnable {
      * @param message The push message.
      */
     private void reschedulePush(@NonNull PushMessage message) {
-        if (!ManifestUtils.isPermissionGranted(Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
-            Logger.error("Notification factory requested long running task but the application does not define RECEIVE_BOOT_COMPLETED in the manifest. Notification will be lost if the device reboots before the notification is processed.");
-        }
-
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(PushManager.ACTION_DISPLAY_NOTIFICATION)
-                                 .generateUniqueId(context)
+                                 .setConflictStrategy(JobInfo.APPEND)
                                  .setAirshipComponent(PushManager.class)
-                                 .setPersistent(true)
                                  .setExtras(JsonMap.newBuilder()
                                                    .putOpt(EXTRA_PUSH, message)
                                                    .put(EXTRA_PROVIDER_CLASS, providerClass)

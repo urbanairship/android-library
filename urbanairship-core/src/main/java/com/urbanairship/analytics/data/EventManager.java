@@ -72,7 +72,6 @@ public class EventManager {
     private final AirshipRuntimeConfig runtimeConfig;
 
     private final Object eventLock = new Object();
-
     private boolean isScheduled;
 
     public EventManager(@NonNull Context context,
@@ -107,31 +106,35 @@ public class EventManager {
      */
     public void scheduleEventUpload(final long delay, @NonNull TimeUnit timeUnit) {
         long milliseconds = timeUnit.toMillis(delay);
+
         Logger.verbose("EventManager - Requesting to schedule event upload with delay %s ms.", milliseconds);
 
-        long sendTime = System.currentTimeMillis() + milliseconds;
-        long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
+        int conflictStrategy = JobInfo.REPLACE;
 
         // If its currently scheduled at an earlier time then skip rescheduling
         if (isScheduled) {
-            if (previousScheduledTime <= sendTime && previousScheduledTime >= System.currentTimeMillis()) {
+            long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
+            long currentDelay = Math.max(System.currentTimeMillis() - previousScheduledTime, 0);
+
+            if (currentDelay < milliseconds) {
                 Logger.verbose("EventManager - Event upload already scheduled for an earlier time.");
-                return;
+                conflictStrategy = JobInfo.KEEP;
+                milliseconds = currentDelay;
             }
         }
 
         Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setId(JobInfo.ANALYTICS_EVENT_UPLOAD)
                                  .setAction(ACTION_SEND)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(Analytics.class)
                                  .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
+                                 .setConflictStrategy(conflictStrategy)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
 
-        preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
+        preferenceDataStore.put(SCHEDULED_SEND_TIME, System.currentTimeMillis() + milliseconds);
         isScheduled = true;
     }
 

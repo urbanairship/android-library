@@ -791,7 +791,6 @@ public class AirshipChannel extends AirshipComponent {
     private void dispatchUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_CHANNEL)
-                                 .setId(JobInfo.CHANNEL_UPDATE)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(AirshipChannel.class)
                                  .build();

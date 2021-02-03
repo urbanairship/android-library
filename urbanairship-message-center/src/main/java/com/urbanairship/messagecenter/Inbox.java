@@ -132,7 +132,6 @@ public class Inbox {
             public void onBackground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                                         .setId(JobInfo.RICH_PUSH_SYNC_MESSAGE_STATE)
                                          .setAirshipComponent(MessageCenter.class)
                                          .build();
 
@@ -294,7 +293,6 @@ public class Inbox {
             if (!isFetchingMessages) {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                                         .setId(JobInfo.RICH_PUSH_UPDATE_MESSAGES)
                                          .setAirshipComponent(MessageCenter.class)
                                          .build();
 
@@ -688,7 +686,6 @@ public class Inbox {
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                                 .setId(JobInfo.RICH_PUSH_UPDATE_USER)
                                  .setAirshipComponent(MessageCenter.class)
                                  .setExtras(JsonMap.newBuilder()
                                                    .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)

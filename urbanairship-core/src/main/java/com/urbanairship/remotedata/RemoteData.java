@@ -233,7 +233,6 @@ public class RemoteData extends AirshipComponent {
     public void refresh() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(RemoteDataJobHandler.ACTION_REFRESH)
-                                 .setId(JobInfo.REMOTE_DATA_REFRESH)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(RemoteData.class)
                                  .build();

@@ -49,11 +49,6 @@
             android:exported="false">
         </activity>
 
-        <service android:name="com.urbanairship.job.AirshipService" />
-        <service
-            android:name="com.urbanairship.job.AndroidJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
         <receiver
             android:name="com.urbanairship.push.NotificationProxyReceiver"
             android:exported="false">

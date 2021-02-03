@@ -953,7 +953,6 @@ public class PushManager extends AirshipComponent {
     private void dispatchUpdatePushTokenJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
                                  .setAirshipComponent(PushManager.class)
                                  .build();
 

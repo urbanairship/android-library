@@ -585,7 +585,13 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
+            }
+        });
+
     }
 
     /**

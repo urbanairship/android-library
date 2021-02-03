@@ -4,12 +4,17 @@ package com.urbanairship;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.content.Context;
 import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.Scheduler;
+import com.urbanairship.job.SchedulerException;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
@@ -25,6 +30,7 @@ import org.robolectric.TestLifecycleApplication;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 public class TestApplication extends Application implements TestLifecycleApplication {
@@ -46,6 +52,15 @@ public class TestApplication extends Application implements TestLifecycleApplica
             }
         };
 
+        JobDispatcher dispatcher = new JobDispatcher(this, new Scheduler() {
+            @Override
+            public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+
+            }
+        });
+
+        JobDispatcher.setInstance(dispatcher);
+
 
         testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
@@ -60,6 +75,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
 
         UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, UAirship.sharedAirship.localeManager);
+
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);

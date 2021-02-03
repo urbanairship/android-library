@@ -18,7 +18,7 @@ import androidx.annotation.WorkerThread;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class Job implements Runnable {
+class JobRunnable implements Runnable {
 
     static final Executor EXECUTOR = AirshipExecutors.newSerialExecutor();
 
@@ -35,7 +35,7 @@ class Job implements Runnable {
          * @param job The job.
          * @param result The job's result.
          */
-        void onFinish(@NonNull Job job, @JobInfo.JobResult int result);
+        void onFinish(@NonNull JobRunnable job, @JobInfo.JobResult int result);
 
     }
 
@@ -47,7 +47,7 @@ class Job implements Runnable {
      *
      * @param builder The job builder.
      */
-    private Job(@NonNull Builder builder) {
+    private JobRunnable(@NonNull Builder builder) {
         this.jobInfo = builder.jobInfo;
         this.callback = builder.callback;
     }
@@ -91,7 +91,7 @@ class Job implements Runnable {
                 Logger.verbose("Job - Finished: %s with result: %s", jobInfo, result);
 
                 if (callback != null) {
-                    callback.onFinish(Job.this, result);
+                    callback.onFinish(JobRunnable.this, result);
                 }
             }
         });
@@ -164,8 +164,8 @@ class Job implements Runnable {
          * @return The job.
          */
         @NonNull
-        Job build() {
-            return new Job(this);
+        JobRunnable build() {
+            return new JobRunnable(this);
         }
 
     }

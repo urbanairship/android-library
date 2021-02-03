@@ -2,10 +2,10 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '14.1.1'
+        airshipVersion = '14.2.0'
 
         // Airship Version Qualifier beta, release, etc...
-        // airshipVersionQualifier = "beta"
+        airshipVersionQualifier = "beta"
 
         // Android SDK Versions
         compileSdkVersion = 29

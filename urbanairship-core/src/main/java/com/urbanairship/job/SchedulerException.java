@@ -2,10 +2,14 @@
 
 package com.urbanairship.job;
 
+import androidx.annotation.RestrictTo;
+
 /**
  * Exceptions thrown by the Schedulers.
+ * @hide
  */
-class SchedulerException extends Exception {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class SchedulerException extends Exception {
 
     /**
      * Default constructor.

@@ -387,7 +387,6 @@ public class NamedUser extends AirshipComponent {
     void dispatchNamedUserUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_NAMED_USER)
-                                 .setId(JobInfo.NAMED_USER_UPDATE_ID)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(NamedUser.class)
                                  .build();
