@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
@@ -109,7 +110,7 @@ class InAppRemoteDataObserver {
         @NonNull
         PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules);
 
-        void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints);
+        Future<Boolean> updateConstraints(@NonNull Collection<FrequencyConstraint> constraints);
 
     }
 
@@ -214,7 +215,9 @@ class InAppRemoteDataObserver {
         Collection<FrequencyConstraint> constraints = parseConstraints(payload.getData().opt(CONSTRAINTS_JSON_KEY).optList());
 
         // Update constraints
-        delegate.updateConstraints(constraints);
+        if (!delegate.updateConstraints(constraints).get()) {
+            return;
+        }
 
         // Parse messages
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {

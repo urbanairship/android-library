@@ -82,20 +82,24 @@ public class FrequencyLimitManager {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                final Collection<ConstraintEntity> constraints = fetchConstraints(constraintIds);
-                FrequencyChecker checker = new FrequencyChecker() {
-                    @Override
-                    public boolean isOverLimit() {
-                        return FrequencyLimitManager.this.isOverLimit(constraints);
-                    }
+                try {
+                    final Collection<ConstraintEntity> constraints = fetchConstraints(constraintIds);
+                    FrequencyChecker checker = new FrequencyChecker() {
+                        @Override
+                        public boolean isOverLimit() {
+                            return FrequencyLimitManager.this.isOverLimit(constraints);
+                        }
 
-                    @Override
-                    public boolean checkAndIncrement() {
-                        return FrequencyLimitManager.this.checkAndIncrement(constraints);
-                    }
-                };
-
-                pendingResult.setResult(checker);
+                        @Override
+                        public boolean checkAndIncrement() {
+                            return FrequencyLimitManager.this.checkAndIncrement(constraints);
+                        }
+                    };
+                    pendingResult.setResult(checker);
+                } catch (Exception e) {
+                    Logger.error("Failed to fetch constraints.");
+                    pendingResult.setResult(null);
+                }
             }
         });
 
@@ -107,38 +111,48 @@ public class FrequencyLimitManager {
      *
      * @param constraints The constraints.
      */
-    public void updateConstraints(@NonNull final Collection<FrequencyConstraint> constraints) {
+    public Future<Boolean> updateConstraints(@NonNull final Collection<FrequencyConstraint> constraints) {
+        final PendingResult<Boolean> pendingResult = new PendingResult<>();
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                Collection<ConstraintEntity> constraintEntities = dao.getConstraints();
-                Map<String, ConstraintEntity> constraintEntityMap = new HashMap<>();
-                for (ConstraintEntity entity : constraintEntities) {
-                    constraintEntityMap.put(entity.constraintId, entity);
-                }
+                try {
+                    Collection<ConstraintEntity> constraintEntities = dao.getConstraints();
 
-                for (FrequencyConstraint constraint : constraints) {
-                    ConstraintEntity entity = new ConstraintEntity();
-                    entity.constraintId = constraint.getId();
-                    entity.count = constraint.getCount();
-                    entity.range = constraint.getRange();
-
-                    ConstraintEntity existing = constraintEntityMap.remove(constraint.getId());
-                    if (existing != null) {
-                        if (existing.range != entity.range) {
-                            dao.delete(existing);
-                            dao.insert(entity);
-                        } else {
-                            dao.update(entity);
-                        }
-                    } else {
-                        dao.insert(entity);
+                    Map<String, ConstraintEntity> constraintEntityMap = new HashMap<>();
+                    for (ConstraintEntity entity : constraintEntities) {
+                        constraintEntityMap.put(entity.constraintId, entity);
                     }
-                }
 
-                dao.delete(constraintEntityMap.keySet());
+                    for (FrequencyConstraint constraint : constraints) {
+                        ConstraintEntity entity = new ConstraintEntity();
+                        entity.constraintId = constraint.getId();
+                        entity.count = constraint.getCount();
+                        entity.range = constraint.getRange();
+
+                        ConstraintEntity existing = constraintEntityMap.remove(constraint.getId());
+                        if (existing != null) {
+                            if (existing.range != entity.range) {
+                                dao.delete(existing);
+                                dao.insert(entity);
+                            } else {
+                                dao.update(entity);
+                            }
+                        } else {
+                            dao.insert(entity);
+                        }
+                    }
+
+                    dao.delete(constraintEntityMap.keySet());
+                    pendingResult.setResult(true);
+                } catch (Exception e) {
+                    Logger.error(e, "Failed to update constraints");
+                    pendingResult.setResult(false);
+                }
             }
         });
+
+        return pendingResult;
     }
 
     private boolean checkAndIncrement(@NonNull Collection<ConstraintEntity> constraints) {

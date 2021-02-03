@@ -6,12 +6,15 @@ import android.content.Context;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,10 +43,33 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         try {
-            return Tasks.await(FirebaseMessaging.getInstance().getToken());
+            String senderIdOverride = getSenderIdOverride();
+            if (senderIdOverride != null) {
+                // Google does not currently provide a replacement API
+                // https://github.com/firebase/firebase-android-sdk/issues/2285
+                FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance();
+                return instanceId.getToken(senderIdOverride, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            } else {
+                return Tasks.await(FirebaseMessaging.getInstance().getToken());
+            }
         } catch (Exception e) {
             throw new RegistrationException("FCM error " + e.getMessage(), true, e);
         }
+    }
+
+    @Nullable
+    private String getSenderIdOverride() {
+        String senderId = UAirship.shared().getAirshipConfigOptions().fcmSenderId;
+        if (UAStringUtil.isEmpty(senderId)) {
+            return null;
+        }
+
+        // If its the same as the default project, return null so we use the new APIs.
+        if (senderId.equals(FirebaseApp.getInstance().getOptions().getGcmSenderId())) {
+            return null;
+        }
+
+        return senderId;
     }
 
     @Override

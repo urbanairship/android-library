@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
@@ -595,8 +596,10 @@ public class InAppRemoteDataObserverTest {
         }
 
         @Override
-        public void updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
-            constraintUpdates.add(constraints);
+        public Future<Boolean> updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
+            PendingResult pendingResult = new PendingResult();
+            pendingResult.setResult(constraintUpdates.add(constraints));
+            return pendingResult;
         }
 
         @NonNull
