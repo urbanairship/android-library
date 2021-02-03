@@ -47,14 +47,14 @@ class WorkManagerScheduler implements Scheduler {
         ExistingWorkPolicy policy;
         switch (conflictStrategy) {
             case JobInfo.APPEND:
-                policy = ExistingWorkPolicy.APPEND;
+                policy = ExistingWorkPolicy.APPEND_OR_REPLACE;
                 break;
             case JobInfo.REPLACE:
                 policy = ExistingWorkPolicy.REPLACE;
                 break;
             case JobInfo.KEEP:
             default:
-                policy = ExistingWorkPolicy.APPEND_OR_REPLACE;
+                policy = ExistingWorkPolicy.KEEP;
                 break;
         }
 
