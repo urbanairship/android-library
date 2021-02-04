@@ -5,11 +5,11 @@ package com.urbanairship.analytics;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.telephony.TelephonyManager;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.util.Network;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -226,8 +226,7 @@ public abstract class Event {
      */
     @Nullable
     protected String getCarrier() {
-        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        return tm == null ? null : tm.getNetworkOperatorName();
+        return Network.getCarrier();
     }
 
     /**

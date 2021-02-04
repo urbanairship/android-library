@@ -5,7 +5,6 @@ package com.urbanairship.channel;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
@@ -23,6 +22,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.Clock;
+import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
@@ -501,11 +501,7 @@ public class AirshipChannel extends AirshipComponent {
         builder.setSdkVersion(UAirship.getVersion());
 
         if (isDataCollectionEnabled()) {
-            TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-            if (tm != null) {
-                builder.setCarrier(tm.getNetworkOperatorName());
-            }
-
+            builder.setCarrier(Network.getCarrier());
             builder.setDeviceModel(Build.MODEL);
             builder.setApiVersion(Build.VERSION.SDK_INT);
         }
