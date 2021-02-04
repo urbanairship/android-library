@@ -5,10 +5,12 @@ package com.urbanairship.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.telephony.TelephonyManager;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -39,4 +41,19 @@ public class Network {
         return info != null && info.isConnected();
     }
 
+    /**
+     * Returns the current carrier.
+     *
+     * @return The carrier as a String.
+     */
+    @Nullable
+    public static String getCarrier() {
+        try {
+            TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            return tm == null ? null : tm.getNetworkOperatorName();
+        } catch (Exception e) {
+            Logger.warn("Unable to get network operator name", e);
+            return null;
+        }
+    }
 }

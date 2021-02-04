@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.1.2 February 4, 2021
+Patch release improving SDK stability and to fix FCM config overrides.
+
+### Changes
+ - Fixed not using FCM sender ID override in Airship Config
+ - Fixed SQLException crashes in the Automation module.
+ - Fixed SecurityException when accessing the TelephonyManager.
+ - Added error log if the URL Allow list is unmodified for SCOPE_OPEN.
+
 ## Version 14.1.1 December 30, 2020
 Patch release to fix In-App Automations not displaying in the same session when the message is triggered on an activity that has been excluded from showing the IAA by using `com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW` metadata entry in the `AndroidManifest.xml`.
 

@@ -525,6 +525,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_SITE = "site";
         private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
+        private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
 
         private String appKey;
         private String appSecret;
@@ -562,6 +563,8 @@ public class AirshipConfigOptions {
         private boolean extendedBroadcastsEnabled;
         private @Site
         String site = SITE_US;
+
+        private boolean suppressAllowListError = false;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -848,6 +851,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_EXTENDED_BROADCASTS_ENABLED:
                             this.setExtendedBroadcastsEnabled(configParser.getBoolean(name, false));
+                            break;
+
+                        case FIELD_SUPPRESS_ALLOW_LIST_ERROR:
+                            this.setSuppressAllowListError(configParser.getBoolean(name, false));
                             break;
                     }
                 } catch (Exception e) {
@@ -1364,6 +1371,16 @@ public class AirshipConfigOptions {
             return this;
         }
 
+        /**
+         * Sets the flag suppressing the error normally generated when no allow list entries have been added to allowList or allowListScopeOpenUrl.
+         * @param suppressAllowListError {@code true} to supress the allow list warning, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setSuppressAllowListError(boolean suppressAllowListError) {
+            this.suppressAllowListError = suppressAllowListError;
+            return this;
+        }
 
         /**
          * Builds the config options.
@@ -1372,6 +1389,16 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public AirshipConfigOptions build() {
+            if (urlAllowList.isEmpty() && urlAllowListScopeOpenUrl.isEmpty() && !suppressAllowListError) {
+                Logger.error(
+                        "The airship config options is missing URL allow list rules for SCOPE_OPEN. " +
+                        "By default only Airship, YouTube, mailto, sms, and tel URLs will be allowed." +
+                        "To suppress this error, specify allow list rules by providing rules for " +
+                        "urlAllowListScopeOpenUrl or urlAllowList. Alternatively you can suppress " +
+                        "this error and keep the default rules by using the flag suppressAllowListError. " +
+                        "For more information, see https://docs.airship.com/platform/android/getting-started/#url-allow-list.");
+            }
+
             if (inProduction == null) {
                 inProduction = false;
             }
