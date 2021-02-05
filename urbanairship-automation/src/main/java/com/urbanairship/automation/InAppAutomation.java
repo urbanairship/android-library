@@ -652,7 +652,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
 
         if (!response.isSuccessful()) {
-            Logger.debug("Failed to resolve deferred schedule, will retry. Schedule: %s, Response: %", schedule.getId(), response);
+            Logger.debug("Failed to resolve deferred schedule, will retry. Schedule: %s, Response: %s", schedule.getId(), response);
             return RetryingExecutor.RESULT_RETRY;
         }
 
