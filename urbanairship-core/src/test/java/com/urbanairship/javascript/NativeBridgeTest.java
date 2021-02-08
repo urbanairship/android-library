@@ -5,6 +5,7 @@ package com.urbanairship.javascript;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
 import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -478,5 +480,26 @@ public class NativeBridgeTest extends BaseTestCase {
         verify(spyNativeBridge).onHandleCommand("uairship://run-basic-actions?add_tags_action=coffee&remove_tags_action=tea", javaScriptExecutor, runRequestExtender, commandDelegate);
         verify(spyNativeBridge).onHandleCommand("uairship://run-actions?add_tags_action=%5B%22foo%22%2C%22bar%22%5D", javaScriptExecutor, runRequestExtender, commandDelegate);
         verify(spyNativeBridge).onHandleCommand("uairship://close", javaScriptExecutor, runRequestExtender, commandDelegate);
+    }
+
+    @Test
+    public void testNamedUserCommand() {
+        String url = "uairship://named_user?id=cool";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        assertEquals("cool", UAirship.shared().getNamedUser().getId());
+    }
+
+    @Test
+    public void testEncodedNamedUserCommand() {
+        String url = "uairship://named_user?id=my%2Fname%26%20user";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        assertEquals("my/name& user", UAirship.shared().getNamedUser().getId());
+    }
+
+    @Test
+    public void testNamedUserNullCommand() {
+        String url = "uairship://named_user?id=";
+        assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
+        assertEquals(null, UAirship.shared().getNamedUser().getId());
     }
 }

@@ -10,6 +10,7 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.ResultCallback;
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
@@ -66,7 +67,20 @@ public class NativeBridge {
     /**
      * Run actions command with a callback.
      */
+    @NonNull
     private static final String RUN_ACTIONS_COMMAND_CALLBACK = "run-action-cb";
+
+    /**
+     * Run actions command with a callback.
+     */
+    @NonNull
+    private static final String SET_NAMED_USER_COMMAND = "named_user";
+
+    /**
+     * Key of the ActionValue list for setting a Named User.
+     */
+    @NonNull
+    private static final String NAMED_USER_ARGUMENT_KEY = "id";
 
     /**
      * Close command to handle close method in the Javascript Interface.
@@ -145,6 +159,17 @@ public class NativeBridge {
                     runAction(actionRunRequestExtender, javaScriptExecutor, paths.get(0), paths.get(1), paths.get(2));
                 } else {
                     Logger.error("Unable to run action, invalid number of arguments.");
+                }
+                break;
+
+            case SET_NAMED_USER_COMMAND:
+                Logger.info("Running set Named User command for URL: %s", uri) ;
+                Map<String, List<String>> args = UriUtils.getQueryParameters(uri);
+                if (args.get(NAMED_USER_ARGUMENT_KEY) != null) {
+                    String namedUser = args.get(NAMED_USER_ARGUMENT_KEY).get(0);
+                    setNamedUserCommand(namedUser);
+                } else if (args.get(NAMED_USER_ARGUMENT_KEY).get(0) == null) {
+                    setNamedUserCommand(null);
                 }
                 break;
 
@@ -379,6 +404,14 @@ public class NativeBridge {
         }
 
         return decodedActions;
+    }
+
+    /**
+     * Helper method to set the named user through a Native Bridge command
+     * @param namedUser
+     */
+    private void setNamedUserCommand(String namedUser) {
+        UAirship.shared().getNamedUser().setId(namedUser);
     }
 
 }
