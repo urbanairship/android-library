@@ -496,8 +496,33 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(analytics).addEvent(any(PushArrivedEvent.class));
     }
 
+    @Test
+    public void testNullNotificationChannel() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        notificationProvider.notification = new NotificationCompat.Builder(TestApplication.getApplication())
+                .setContentTitle("Test NotificationBuilder Title")
+                .setContentText("Test NotificationBuilder Text")
+                .setAutoCancel(true)
+                .build();
+
+        notificationProvider.tag = "testNotificationTag";
+
+        pushRunnable.run();
+
+        verifyZeroInteractions(mockChannelRegistry);
+        verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification);
+        verify(analytics).addEvent(any(PushArrivedEvent.class));
+
+        verify(pushManager).onPushReceived(message, true);
+        verify(pushManager).onNotificationPosted(message, TEST_NOTIFICATION_ID, "testNotificationTag");
+    }
+
     private Notification createNotification() {
-        return new NotificationCompat.Builder(RuntimeEnvironment.application, "some-channel")
+        return new NotificationCompat.Builder(TestApplication.getApplication(),"some-channel")
                 .setContentTitle("Test NotificationBuilder Title")
                 .setContentText("Test NotificationBuilder Text")
                 .setAutoCancel(true)

@@ -202,6 +202,8 @@ class IncomingPushRunnable implements Runnable {
                     } else {
                         applyDeprecatedSettings(airship, notification);
                     }
+                } else if (notificationChannel == null) {
+                    Logger.error("Missing required notification channel. Notification will most likely not display.");
                 }
 
                 // Notify the provider the notification was created
@@ -274,9 +276,13 @@ class IncomingPushRunnable implements Runnable {
             channelId = arguments.getNotificationChannelId();
         }
 
-        return airship.getPushManager()
-                      .getNotificationChannelRegistry()
-                      .getNotificationChannelSync(channelId);
+        if (channelId != null) {
+            return airship.getPushManager()
+                          .getNotificationChannelRegistry()
+                          .getNotificationChannelSync(channelId);
+        } else {
+            return null;
+        }
     }
 
     /**
