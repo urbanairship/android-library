@@ -104,7 +104,13 @@ public class LoggingCore {
             formattedMessage = "";
         } else {
             // Format the message if we have arguments
-            formattedMessage = (args == null || args.length == 0) ? message : String.format(Locale.ROOT, message, args);
+            try {
+                formattedMessage = (args == null || args.length == 0) ? message : String.format(Locale.ROOT, message, args);
+            } catch (Exception e) {
+                formattedMessage = "Unable to format log message: " + message;
+                priority = Log.ERROR;
+                throwable = e;
+            }
         }
 
         for (LoggerListener listener : listeners) {

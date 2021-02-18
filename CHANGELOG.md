@@ -10,6 +10,13 @@ Minor release that uses WorkManager for more reliable task management and better
 - Added tag editor methods to the NativeBridge.
 - Added ability to set NamedUser through the NativeBridge.
 
+## Version 14.1.3 February 12, 2021
+Patch release fixing a crash related to deferred IAA schedule logging. This issue only affects log levels debug and below, which by default are not enabled in production.
+
+### Changes
+ - Fixed misformatted log message in IAA
+ - Additional safety in LoggingCore
+
 ## Version 14.1.2 February 4, 2021
 Patch release improving SDK stability and to fix FCM config overrides.
 
