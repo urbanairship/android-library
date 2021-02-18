@@ -30,7 +30,7 @@ android {
     }
 
     lintOptions {
-        check 'Interoperability'
+        checkOnly 'Interoperability'
     }
 
     testOptions.unitTests.includeAndroidResources = true

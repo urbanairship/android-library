@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.2.0 February 18, 2021
+Minor release that uses WorkManager for more reliable task management and better support for Instant Apps.
+
+### Changes
+- Replaced JobScheduler with WorkManager.
+- Added tag editor methods to the NativeBridge.
+- Added ability to set NamedUser through the NativeBridge.
+
 ## Version 14.1.2 February 4, 2021
 Patch release improving SDK stability and to fix FCM config overrides.
 

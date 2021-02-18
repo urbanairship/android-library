@@ -11,8 +11,8 @@ dependencies {
     compileOnly "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 
-    implementation "androidx.work:work-runtime:2.5.0"
-    implementation "androidx.concurrent:concurrent-futures:1.1.0"
+    implementation "androidx.work:work-runtime:$rootProject.androidXWork"
+    implementation "androidx.concurrent:concurrent-futures:$rootProject.androidXConcurrentFutures"
 
     // Tests
     testImplementation project(':urbanairship-test')

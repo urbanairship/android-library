@@ -39,6 +39,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return PushProvider.FCM_DELIVERY_TYPE;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {

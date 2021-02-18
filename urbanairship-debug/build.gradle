@@ -58,9 +58,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     // Navigation
-    implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-fragment-ktx:$rootProject.androidxNavigationVersion"
-    implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$rootProject.androidxNavigationVersion"
 
     // Constraint layout
@@ -68,16 +66,15 @@ dependencies {
 
     // Lifecycle
     implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.androidxLifeCycleVersion"
 
     // Paging
-    implementation "androidx.paging:paging-runtime:$rootProject.androidxPagingVersion"
+    implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"
 
     // Support libraries
     implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     implementation "com.google.android.material:material:$rootProject.materialVersion"
     implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
-    implementation "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
+    implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
 
     // Urban Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')
