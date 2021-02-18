@@ -30,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 
@@ -131,6 +132,12 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify that a job to add a background event is dispatched
         verify(mockEventManager).addEvent(Mockito.any(AppBackgroundEvent.class), Mockito.anyString());
+    }
+
+    @Test
+    public void testOnBackgroundSchedulesEventUpload() {
+        analytics.onBackground(0);
+        verify(mockEventManager).scheduleEventUpload(0, TimeUnit.MILLISECONDS);
     }
 
     /**

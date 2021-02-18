@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.urbanairship.sample">
+    package="com.urbanairship.sample"
+    xmlns:dist="http://schemas.android.com/apk/distribution">
+
+    <dist:module dist:instant="true" />
 
     <!-- Optional: Needed if using location in Airship. -->
     <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->

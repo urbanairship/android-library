@@ -420,6 +420,8 @@ public class Analytics extends AirshipComponent {
         addEvent(new AppBackgroundEvent(timeMS));
         setConversionSendId(null);
         setConversionMetadata(null);
+
+        eventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -585,13 +587,7 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
-            }
-        });
-
+        eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
     }
 
     /**

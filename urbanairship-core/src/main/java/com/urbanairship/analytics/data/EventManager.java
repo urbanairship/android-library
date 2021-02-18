@@ -72,6 +72,8 @@ public class EventManager {
     private final AirshipRuntimeConfig runtimeConfig;
 
     private final Object eventLock = new Object();
+    private final Object scheduleLock = new Object();
+
     private boolean isScheduled;
 
     public EventManager(@NonNull Context context,
@@ -111,31 +113,34 @@ public class EventManager {
 
         int conflictStrategy = JobInfo.REPLACE;
 
-        // If its currently scheduled at an earlier time then skip rescheduling
-        if (isScheduled) {
-            long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
-            long currentDelay = Math.max(System.currentTimeMillis() - previousScheduledTime, 0);
+        synchronized (scheduleLock) {
 
-            if (currentDelay < milliseconds) {
-                Logger.verbose("EventManager - Event upload already scheduled for an earlier time.");
-                conflictStrategy = JobInfo.KEEP;
-                milliseconds = currentDelay;
+            // If its currently scheduled at an earlier time then skip rescheduling
+            if (isScheduled) {
+                long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
+                long currentDelay = Math.max(System.currentTimeMillis() - previousScheduledTime, 0);
+
+                if (currentDelay < milliseconds) {
+                    Logger.verbose("EventManager - Event upload already scheduled for an earlier time.");
+                    conflictStrategy = JobInfo.KEEP;
+                    milliseconds = currentDelay;
+                }
             }
+
+            Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
+            JobInfo jobInfo = JobInfo.newBuilder()
+                                     .setAction(ACTION_SEND)
+                                     .setNetworkAccessRequired(true)
+                                     .setAirshipComponent(Analytics.class)
+                                     .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
+                                     .setConflictStrategy(conflictStrategy)
+                                     .build();
+
+            jobDispatcher.dispatch(jobInfo);
+
+            preferenceDataStore.put(SCHEDULED_SEND_TIME, System.currentTimeMillis() + milliseconds);
+            isScheduled = true;
         }
-
-        Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_SEND)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(Analytics.class)
-                                 .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
-                                 .setConflictStrategy(conflictStrategy)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-
-        preferenceDataStore.put(SCHEDULED_SEND_TIME, System.currentTimeMillis() + milliseconds);
-        isScheduled = true;
     }
 
     /**
@@ -208,8 +213,10 @@ public class EventManager {
      */
     @WorkerThread
     public boolean uploadEvents(@NonNull Map<String, String> headers) {
-        isScheduled = false;
-        preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
+        synchronized (scheduleLock) {
+            isScheduled = false;
+            preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
+        }
 
         int eventCount;
         Map<String, String> events;
