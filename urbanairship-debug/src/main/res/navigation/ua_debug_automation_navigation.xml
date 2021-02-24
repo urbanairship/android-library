@@ -28,7 +28,7 @@
             app:destination="@id/inAppAudienceDetailsFragment" />
         <action
             android:id="@+id/action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment"
-            app:destination="@id/inAppDisplayContentDetailsFragment" />
+            app:destination="@id/inAppDisplayContentDetailsFragment" />urbanairship-debug/src/main/java/com/urbanairship/debug/automation/ActionsScheduleDetailsFragment.kt
     </fragment>
 
     <fragment

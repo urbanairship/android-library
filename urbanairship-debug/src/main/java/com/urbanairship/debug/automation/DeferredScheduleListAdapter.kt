@@ -6,9 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.automation.Schedule
-import com.urbanairship.automation.actions.Actions
 import com.urbanairship.automation.deferred.Deferred
-import com.urbanairship.debug.databinding.UaItemScheduleActionsBinding
 import com.urbanairship.debug.databinding.UaItemScheduleDeferredBinding
 
 class DeferredScheduleListAdapter(private val callback: ((schedule: Schedule<Deferred>) -> Unit)) : ListAdapter<Schedule<Deferred>, DeferredScheduleListAdapter.ViewHolder>(diffCallback) {

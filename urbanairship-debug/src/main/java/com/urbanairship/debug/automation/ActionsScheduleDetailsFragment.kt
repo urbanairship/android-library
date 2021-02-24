@@ -14,8 +14,6 @@ import com.urbanairship.automation.actions.Actions
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.debug.utils.PendingResultLiveData
-import com.urbanairship.iam.InAppMessage
-import com.urbanairship.json.JsonMap
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -75,7 +73,6 @@ class ActionsScheduleDetailsFragment : AutomationDetailsFragment() {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_edit_grace_period_key), schedule.editGracePeriod.formatDuration(requireContext(), TimeUnit.MILLISECONDS)))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_interval_key), schedule.interval.formatDuration(requireContext(), TimeUnit.MILLISECONDS)))
 
-
             schedule.triggers.forEach {
                 add(AutomationDetail(it.triggerTitle(requireContext())) {
                     navigateToTrigger(it)
@@ -83,5 +80,4 @@ class ActionsScheduleDetailsFragment : AutomationDetailsFragment() {
             }
         }
     }
-
 }

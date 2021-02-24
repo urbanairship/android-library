@@ -10,12 +10,9 @@ import com.urbanairship.automation.Audience
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.Trigger
-import com.urbanairship.automation.actions.Actions
 import com.urbanairship.automation.deferred.Deferred
 import com.urbanairship.debug.R
-import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.debug.utils.PendingResultLiveData
-import com.urbanairship.json.JsonMap
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -82,5 +79,4 @@ class DeferredScheduleDetailsFragment : AutomationDetailsFragment() {
             }
         }
     }
-
 }

@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.actions.Actions
 import com.urbanairship.debug.databinding.UaItemScheduleActionsBinding
-import com.urbanairship.iam.InAppMessage
 
 internal class ActionsScheduleListAdapter(private val callback: ((schedule: Schedule<Actions>) -> Unit)) : ListAdapter<Schedule<Actions>, ActionsScheduleListAdapter.ViewHolder>(diffCallback) {
 
