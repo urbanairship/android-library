@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ua_debug_actions_schedules_navigation"
+    app:startDestination="@id/actionsSchedulesFragment">
+
+    <fragment
+        android:id="@+id/actionsSchedulesFragment"
+        android:name="com.urbanairship.debug.automation.ActionsScheduleListFragment"
+        android:label="@string/ua_actions_schedules">
+        <action
+            android:id="@+id/action_actionsScheduleListFragment_to_actionsScheduleDetailsFragment"
+            app:destination="@id/actionsScheduleDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/actionsScheduleDetailsFragment"
+        android:name="com.urbanairship.debug.automation.ActionsScheduleDetailsFragment"
+        android:label="Actions Details">
+        <argument
+            android:name="id"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_actionsScheduleDetailsFragment_to_audienceDetailsFragment"
+            app:destination="@id/inAppAudienceDetailsFragment" />
+        <action
+            android:id="@+id/action_actionsScheduleDetailsFragment_to_triggersDetailsFragment"
+            app:destination="@id/inAppTriggersDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@id/inAppAudienceDetailsFragment"
+        android:name="com.urbanairship.debug.automation.AudienceDetailsFragment"
+        android:label="@string/ua_audience_details_view_title">
+        <argument
+            android:name="audience"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@id/inAppTriggersDetailsFragment"
+        android:name="com.urbanairship.debug.automation.TriggersDetailsFragment"
+        android:label="@string/ua_debug_iaa_trigger_details">
+    <argument
+        android:name="trigger"
+        app:argType="com.urbanairship.automation.Trigger" />
+    </fragment>
+</navigation>

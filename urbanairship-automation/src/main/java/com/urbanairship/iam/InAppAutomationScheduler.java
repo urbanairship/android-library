@@ -7,6 +7,7 @@ import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.automation.ScheduleEdits;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.Deferred;
 
 import java.util.Collection;
 import java.util.List;
@@ -110,6 +111,23 @@ public interface InAppAutomationScheduler {
      */
     @NonNull
     PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules();
+
+    /**
+     * Gets a deferred message schedule by ID
+     *
+     * @param scheduleId The schedule ID
+     * @return A pending result
+     */
+    @NonNull
+    PendingResult<Schedule<Deferred>> getDeferredMessageSchedule(@NonNull String scheduleId);
+
+    /**
+     * Gets all deferred message schedules.
+     *
+     * @return A pending result
+     */
+    @NonNull
+    PendingResult<Collection<Schedule<Deferred>>> getDeferredMessageSchedules();
 
     /**
      * Gets all the schedules.
