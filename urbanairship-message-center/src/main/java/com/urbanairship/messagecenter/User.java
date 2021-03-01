@@ -129,7 +129,7 @@ public class User {
      * @param userToken The user token from the response
      */
     void setUser(@NonNull String userId, @NonNull String userToken) {
-        Logger.debug("RichPushUser - Setting Rich Push user: %s", userId);
+        Logger.debug("Setting Rich Push user: %s", userId);
         preferences.put(USER_ID_KEY, userId);
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
     }

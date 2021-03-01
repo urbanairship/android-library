@@ -177,7 +177,7 @@ class InAppRemoteDataObserver {
                                           public void onNext(@NonNull RemoteDataPayload payload) {
                                               try {
                                                   processPayload(payload, delegate);
-                                                  Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
+                                                  Logger.debug("Finished processing messages.");
                                               } catch (Exception e) {
                                                   Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
                                               }

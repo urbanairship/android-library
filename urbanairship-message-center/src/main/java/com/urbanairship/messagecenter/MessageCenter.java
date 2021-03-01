@@ -123,7 +123,7 @@ public class MessageCenter extends AirshipComponent {
             @Override
             public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
                 if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
-                    Logger.debug("MessageCenter - Received a Rich Push.");
+                    Logger.debug("Received a Rich Push.");
                     getInbox().fetchMessages();
                 }
             }

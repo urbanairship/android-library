@@ -103,17 +103,17 @@ public class NotificationIdGenerator {
         //store a new next id: increment by one, unless we're already at the maximum
         int nextId = ++id;
         if (nextId < start + range) {
-            Logger.verbose("NotificationIdGenerator - Incrementing notification ID count");
+            Logger.verbose("Incrementing notification ID count");
             putInt(NEXT_ID_KEY, nextId);
         }
 
         //in which case, cycle
         else {
-            Logger.verbose("NotificationIdGenerator - Resetting notification ID count");
+            Logger.verbose("Resetting notification ID count");
             putInt(NEXT_ID_KEY, start);
         }
 
-        Logger.verbose("NotificationIdGenerator - Notification ID: %s", id);
+        Logger.verbose("Notification ID: %s", id);
 
         return id;
     }

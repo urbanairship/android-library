@@ -59,13 +59,13 @@ public abstract class DataManager {
 
             @Override
             public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Upgrading database %s from version %s to %s", db, oldVersion, newVersion);
+                Logger.debug("Upgrading database %s from version %s to %s", db, oldVersion, newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
             public void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Downgrading database %s from version %s to %s", db, oldVersion, newVersion);
+                Logger.debug("Downgrading database %s from version %s to %s", db, oldVersion, newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
 
@@ -160,7 +160,7 @@ public abstract class DataManager {
      * @param newVersion Version of the new database
      */
     protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        Logger.debug("DataManager - onUpgrade not implemented yet.");
+        Logger.debug("onUpgrade not implemented yet.");
     }
 
     /**

@@ -505,7 +505,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private void onPrepareSchedule(final @NonNull Schedule<? extends ScheduleData> schedule,
                                    final @Nullable TriggerContext triggerContext,
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        Logger.verbose("InAppAutomation - onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
+        Logger.verbose("onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
 
         final AutomationDriver.PrepareScheduleCallback callbackWrapper = new AutomationDriver.PrepareScheduleCallback() {
             @Override
@@ -675,7 +675,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @MainThread
     @AutomationDriver.ReadyResult
     private int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
-        Logger.verbose("InAppAutomation - onCheckExecutionReadiness schedule: %s", schedule.getId());
+        Logger.verbose("onCheckExecutionReadiness schedule: %s", schedule.getId());
 
         // Prevent display on pause.
         if (isPaused()) {
@@ -706,7 +706,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @MainThread
     private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends
             ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
-        Logger.verbose("InAppAutomation - onExecuteTriggeredSchedule schedule: %s", schedule.getId());
+        Logger.verbose("onExecuteTriggeredSchedule schedule: %s", schedule.getId());
         ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
         if (delegate != null) {
             delegate.onExecute(schedule, callback);
@@ -717,7 +717,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     private void onScheduleExecutionInterrupted(Schedule<? extends ScheduleData> schedule) {
-        Logger.verbose("InAppAutomation - onScheduleExecutionInterrupted schedule: %s", schedule.getId());
+        Logger.verbose("onScheduleExecutionInterrupted schedule: %s", schedule.getId());
         ScheduleDelegate<? extends ScheduleData> delegate = delegateForSchedule(schedule);
         if (delegate != null) {
             delegate.onExecutionInterrupted(schedule);

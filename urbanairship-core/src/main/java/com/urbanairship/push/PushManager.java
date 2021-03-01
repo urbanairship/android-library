@@ -924,7 +924,7 @@ public class PushManager extends AirshipComponent {
             try {
                 jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
             } catch (JsonException e) {
-                Logger.debug(e, "PushJobHandler - Unable to parse canonical Ids.");
+                Logger.debug(e, "Unable to parse canonical Ids.");
             }
 
             List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
@@ -985,7 +985,7 @@ public class PushManager extends AirshipComponent {
                 token = pushProvider.getRegistrationToken(context);
             } catch (PushProvider.RegistrationException e) {
                 if (e.isRecoverable()) {
-                    Logger.debug("PushManager - Push registration failed with error: %s. Will retry.", e.getMessage());
+                    Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
                     Logger.verbose(e);
                     return JobInfo.JOB_RETRY;
                 } else {

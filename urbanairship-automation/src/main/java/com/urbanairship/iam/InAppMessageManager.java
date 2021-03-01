@@ -248,16 +248,16 @@ public class InAppMessageManager {
 
                 switch (result) {
                     case AssetManager.PREPARE_RESULT_OK:
-                        Logger.debug("InAppMessageManager - Assets prepared for schedule %s.", scheduleId);
+                        Logger.debug("Assets prepared for schedule %s.", scheduleId);
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case AssetManager.PREPARE_RESULT_RETRY:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare for schedule %s. Will retry.", scheduleId);
+                        Logger.debug("Assets failed to prepare for schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case AssetManager.PREPARE_RESULT_CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                        Logger.debug("Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
                         assetManager.onDisplayFinished(scheduleId, adapter.message);
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
@@ -273,7 +273,7 @@ public class InAppMessageManager {
 
                 switch (result) {
                     case InAppMessageAdapter.OK:
-                        Logger.debug("InAppMessageManager - Adapter prepared schedule %s.", scheduleId);
+                        Logger.debug("Adapter prepared schedule %s.", scheduleId);
 
                         // Store the adapter
                         adapterWrappers.put(scheduleId, adapter);
@@ -281,12 +281,12 @@ public class InAppMessageManager {
                         return RetryingExecutor.RESULT_FINISHED;
 
                     case InAppMessageAdapter.RETRY:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare schedule %s. Will retry.", scheduleId);
+                        Logger.debug("Adapter failed to prepare schedule %s. Will retry.", scheduleId);
                         return RetryingExecutor.RESULT_RETRY;
 
                     case InAppMessageAdapter.CANCEL:
                     default:
-                        Logger.debug("InAppMessageManager - Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                        Logger.debug("Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
                         callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
@@ -358,7 +358,7 @@ public class InAppMessageManager {
             }
         }
 
-        Logger.verbose("InAppMessagingManager - Message displayed for schedule %s.", scheduleId);
+        Logger.verbose("Message displayed for schedule %s.", scheduleId);
     }
 
     /**
@@ -413,7 +413,7 @@ public class InAppMessageManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
-        Logger.verbose("InAppMessagingManager - Message finished for schedule %s.", scheduleId);
+        Logger.verbose("Message finished for schedule %s.", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 

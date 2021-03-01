@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -19,6 +20,12 @@ import androidx.annotation.Nullable;
  * single location.
  */
 public class LoggingCore {
+
+    /** List of classes to ignore when prepending names to debug and verbose log messages. */
+    private static final List<String> IGNORED_CALLING_CLASS_NAMES = Arrays.asList(
+            LoggingCore.class.getName(),
+            Logger.class.getName()
+    );
 
     private String logTag;
     private int logLevel;
@@ -97,6 +104,10 @@ public class LoggingCore {
             return;
         }
 
+        if (priority == Log.DEBUG || priority == Log.VERBOSE) {
+            message = prependCallingClassName(message);
+        }
+
         String formattedMessage;
 
         if (UAStringUtil.isEmpty(message)) {
@@ -170,4 +181,35 @@ public class LoggingCore {
         return logLevel;
     }
 
+    private static String prependCallingClassName(String message) {
+        if (message == null) {
+            return "";
+        }
+
+        String callingClassName = getCallingClassName();
+        if (callingClassName == null || message.startsWith(callingClassName)) {
+            // If the caller's name is somehow null or the message already starts with the name,
+            // return the original message.
+            return message;
+        } else {
+            // Otherwise, prepend the caller's name and a dash to the message.
+            return callingClassName + " - " + message;
+        }
+    }
+
+    @Nullable
+    private static String getCallingClassName() {
+        // Grab a stack trace and look through it until we find an element outside of this class.
+        StackTraceElement[] trace = new Throwable().getStackTrace();
+        for (int i = 1; i < trace.length; i++) {
+            String className = trace[i].getClassName();
+            if (!IGNORED_CALLING_CLASS_NAMES.contains(className)) {
+                // Get the simple name from the last part of the fully-qualified class name,
+                // dropping any anonymous or inner class suffixes.
+                String[] parts = className.split("\\.");
+                return parts[parts.length - 1].replaceAll("(\\$.+)+$", "");
+            }
+        }
+        return null;
+    }
 }

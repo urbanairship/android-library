@@ -85,7 +85,7 @@ class ModuleAdapter {
                 return getComponentsByGroup(AirshipComponentGroups.CHANNEL);
         }
 
-        Logger.verbose("ModuleAdapter - Unable to find module: %s", module);
+        Logger.verbose("Unable to find module: %s", module);
         return Collections.emptyList();
     }
 

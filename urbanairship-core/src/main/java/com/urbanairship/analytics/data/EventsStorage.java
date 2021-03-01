@@ -74,7 +74,7 @@ public class EventsStorage extends DataManager {
     @Override
     protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being upgraded
-        Logger.debug("EventsStorage - Upgrading analytics database from version %s to %s, which will destroy all old data", oldVersion, newVersion);
+        Logger.debug("Upgrading analytics database from version %s to %s, which will destroy all old data", oldVersion, newVersion);
 
         // Kills the table and existing data
         db.execSQL("DROP TABLE IF EXISTS " + Events.TABLE_NAME);
@@ -98,7 +98,7 @@ public class EventsStorage extends DataManager {
 
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        Logger.debug("EventsStorage - Downgrading analytics database from version %s to %s, which will destroy all data.", oldVersion, newVersion);
+        Logger.debug("Downgrading analytics database from version %s to %s, which will destroy all data.", oldVersion, newVersion);
 
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + Events.TABLE_NAME);

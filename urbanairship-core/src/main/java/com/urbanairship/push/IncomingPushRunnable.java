@@ -186,7 +186,7 @@ class IncomingPushRunnable implements Runnable {
             result = NotificationResult.cancel();
         }
 
-        Logger.debug("IncomingPushRunnable - Received result status %s for push message: %s", result.getStatus(), message);
+        Logger.debug("Received result status %s for push message: %s", result.getStatus(), message);
 
         switch (result.getStatus()) {
             case NotificationResult.OK:

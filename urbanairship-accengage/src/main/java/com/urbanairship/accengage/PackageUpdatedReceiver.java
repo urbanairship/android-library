@@ -16,11 +16,9 @@ import androidx.annotation.Nullable;
  */
 public class PackageUpdatedReceiver extends BroadcastReceiver {
 
-    private static final String TAG = PackageUpdatedReceiver.class.getSimpleName();
-
     @Override
     public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
-        Logger.debug(TAG + " - Application has been updated");
+        Logger.debug("Application has been updated");
     }
 
 }

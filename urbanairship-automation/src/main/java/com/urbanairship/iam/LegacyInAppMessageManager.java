@@ -171,7 +171,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
                 final String messageId = schedule.getId();
 
-                Logger.debug("LegacyInAppMessageManager - Received a Push with an in-app message.");
+                Logger.debug("Received a Push with an in-app message.");
 
                 final String pendingMessageId = preferenceDataStore.getString(PENDING_MESSAGE_ID, null);
 
@@ -181,7 +181,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         @Override
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
-                                Logger.debug("LegacyInAppMessageManager - Pending in-app message replaced.");
+                                Logger.debug("Pending in-app message replaced.");
                                 InAppMessageEvent resolutionEvent = ResolutionEvent.newLegacyMessageReplacedEvent(pendingMessageId, messageId);
                                 analytics.addEvent(resolutionEvent);
                             }

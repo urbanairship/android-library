@@ -92,7 +92,7 @@ public class EventResolver extends UrbanAirshipResolver {
      */
     boolean deleteEvents(@Nullable Set<String> eventIds) {
         if (eventIds == null || eventIds.size() == 0) {
-            Logger.verbose("EventsStorage - Nothing to delete. Returning.");
+            Logger.verbose("Nothing to delete. Returning.");
             return false;
         }
 
@@ -228,7 +228,7 @@ public class EventResolver extends UrbanAirshipResolver {
             int deleted = delete(uri, EventsStorage.Events.COLUMN_NAME_SESSION_ID + " = ?", new String[] { sessionId });
 
             if (deleted > 0) {
-                Logger.debug("EventsStorage - Deleted %s rows with session ID %s", deleted, sessionId);
+                Logger.debug("Deleted %s rows with session ID %s", deleted, sessionId);
             } else {
                 break;
             }

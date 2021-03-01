@@ -353,7 +353,7 @@ public class MessageFragment extends Fragment {
         message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
         if (message == null) {
-            Logger.debug("MessageFragment - Fetching messages.");
+            Logger.debug("Fetching messages.");
             fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new Inbox.FetchMessagesCallback() {
                 @Override
                 public void onFinished(boolean success) {

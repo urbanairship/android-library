@@ -44,7 +44,7 @@ public class AdmPushReceiver extends BroadcastReceiver {
         final PendingResult result = goAsync();
         final PushMessage message = new PushMessage(intent.getExtras());
 
-        Logger.verbose("AdmPushReceiver - Received push.");
+        Logger.verbose("Received push.");
 
         PushProviderBridge.processPush(AdmPushProvider.class, message)
                           .setMaxCallbackWaitTime(BROADCAST_INTENT_TIME_MS)

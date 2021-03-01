@@ -149,13 +149,13 @@ public class Accengage extends AirshipComponent {
     protected void init() {
         super.init();
 
-        Logger.debug("Accengage - Accengage Init");
+        Logger.debug("Accengage Init");
 
         // Retrieve Accengage Device ID
         JsonMap accengageDeviceInfo = this.settingsLoader.load(getContext(), DEVICE_INFO_FILE);
         final String deviceId = accengageDeviceInfo.opt(DEVICE_ID_KEY).getString();
         if (deviceId != null) {
-            Logger.debug("Accengage - Accengage Device ID retrieved : " + deviceId);
+            Logger.debug("Accengage Device ID retrieved : " + deviceId);
             // Add Accengage Device ID to Channel Registration Payload
             airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
                 @NonNull
@@ -179,7 +179,7 @@ public class Accengage extends AirshipComponent {
     protected void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
 
-        Logger.debug("Accengage - Airship ready");
+        Logger.debug("Airship ready");
 
         // Migrate Accengage Settings
         if (!getDataStore().getBoolean(IS_ALREADY_MIGRATED_PREFERENCE_KEY, false)) {
@@ -209,7 +209,7 @@ public class Accengage extends AirshipComponent {
 
         // Migrate Accengage Push Opt-in Setting
         boolean accengagePushOptinStatus = accengageSettings.opt(IS_ENABLED_SETTING_KEY).getBoolean(true);
-        Logger.debug("Accengage - Migrating Accengage Push Opt-in status : " + accengagePushOptinStatus);
+        Logger.debug("Migrating Accengage Push Opt-in status : " + accengagePushOptinStatus);
         pushManager.setUserNotificationsEnabled(accengagePushOptinStatus);
 
         // Migrate Accengage Data Opt-in Setting
@@ -217,7 +217,7 @@ public class Accengage extends AirshipComponent {
         String accengageDataOptinStatus = accengageOptinSettings.opt(OPTIN_DATA_KEY).getString();
 
         if (accengageDataOptinStatus != null) {
-            Logger.debug("Accengage - Migrating Accengage Data Opt-In status : " + accengageDataOptinStatus);
+            Logger.debug("Migrating Accengage Data Opt-In status : " + accengageDataOptinStatus);
 
             if (accengageDataOptinStatus.equals(DATA_OPT_IN)) {
                 optinEnabled = true;
@@ -231,7 +231,7 @@ public class Accengage extends AirshipComponent {
         // Migrate Accengage Disabled Tracking Setting
         final SharedPreferences prefs = getContext().getSharedPreferences(ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
         boolean accengageTrackingDisabledStatus = prefs.getBoolean(DO_NOT_TRACK_SETTING_KEY, false);
-        Logger.debug("Accengage - Migrating Accengage Tracking Disabled status : " + accengageTrackingDisabledStatus);
+        Logger.debug("Migrating Accengage Tracking Disabled status : " + accengageTrackingDisabledStatus);
         analytics.setEnabled(!accengageTrackingDisabledStatus);
     }
 
@@ -277,7 +277,7 @@ public class Accengage extends AirshipComponent {
         }
 
         if (TextUtils.isEmpty(accengageUrl)) {
-            Logger.debug("Accengage - Notification URL is empty.");
+            Logger.debug("Notification URL is empty.");
             return;
         }
 

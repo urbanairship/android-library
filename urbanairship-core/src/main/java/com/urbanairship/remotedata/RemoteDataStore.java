@@ -65,7 +65,7 @@ public class RemoteDataStore extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("RemoteDataStore - Creating database");
+        Logger.debug("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME_TYPE + " TEXT,"

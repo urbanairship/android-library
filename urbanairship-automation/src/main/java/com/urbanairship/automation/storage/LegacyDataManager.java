@@ -85,7 +85,7 @@ public class LegacyDataManager extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("LegacyDataManager - Creating automation database");
+        Logger.debug("Creating automation database");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + ScheduleTable.TABLE_NAME + " ("
                 + ScheduleTable.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -121,7 +121,7 @@ public class LegacyDataManager extends DataManager {
                 + "FOREIGN KEY(" + TriggerTable.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ScheduleTable.TABLE_NAME + "(" + ScheduleTable.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
                 + ");");
 
-        Logger.debug("LegacyDataManager - Automation database created");
+        Logger.debug("Automation database created");
     }
 
     @Override
@@ -342,7 +342,7 @@ public class LegacyDataManager extends DataManager {
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being downgraded
-        Logger.debug("AutomationDataManager - Dropping automation database. Downgrading from version %s to %s", oldVersion, newVersion);
+        Logger.debug("Dropping automation database. Downgrading from version %s to %s", oldVersion, newVersion);
 
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TriggerTable.TABLE_NAME);

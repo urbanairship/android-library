@@ -1,3 +1,4 @@
+
 package com.urbanairship.location;
 
 import android.annotation.SuppressLint;
@@ -44,7 +45,7 @@ class FusedLocationAdapter implements LocationAdapter {
 
     @Override
     public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
-        Logger.verbose("FusedLocationAdapter - Canceling updates.");
+        Logger.verbose("Canceling updates.");
         client.removeLocationUpdates(pendingIntent);
         pendingIntent.cancel();
     }
@@ -52,7 +53,7 @@ class FusedLocationAdapter implements LocationAdapter {
     @SuppressLint("MissingPermission")
     @Override
     public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
-        Logger.verbose("FusedLocationAdapter - Requesting updates: %s", options);
+        Logger.verbose("Requesting updates: %s", options);
         LocationRequest locationRequest = createLocationRequest(options);
 
         client.requestLocationUpdates(locationRequest, pendingIntent);
@@ -63,12 +64,12 @@ class FusedLocationAdapter implements LocationAdapter {
         try {
             int playServicesStatus = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
-                Logger.debug("FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location.");
+                Logger.debug("Google Play services is currently unavailable, unable to connect for fused location.");
                 return false;
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.debug(e, "FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location.");
+            Logger.debug(e, "Google Play services is currently unavailable, unable to connect for fused location.");
             return false;
         }
 
@@ -147,7 +148,7 @@ class FusedLocationAdapter implements LocationAdapter {
 
         @Override
         protected void onCancel() {
-            Logger.verbose("FusedLocationAdapter - Canceling single location request.");
+            Logger.verbose("Canceling single location request.");
             client.removeLocationUpdates(locationCallback);
 
         }
@@ -155,7 +156,7 @@ class FusedLocationAdapter implements LocationAdapter {
         @SuppressLint("MissingPermission")
         @Override
         protected void onRun() {
-            Logger.verbose("FusedLocationAdapter - Starting single location request.");
+            Logger.verbose("Starting single location request.");
             client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         }
 

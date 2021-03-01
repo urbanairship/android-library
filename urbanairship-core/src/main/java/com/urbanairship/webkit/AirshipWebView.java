@@ -125,7 +125,7 @@ public class AirshipWebView extends WebView {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         if (ManifestUtils.shouldEnableLocalStorage()) {
-            Logger.verbose("AirshipWebView - Application contains metadata to enable local storage");
+            Logger.verbose("Application contains metadata to enable local storage");
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
 

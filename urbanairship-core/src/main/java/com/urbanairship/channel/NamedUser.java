@@ -214,7 +214,7 @@ public class NamedUser extends AirshipComponent {
      * Forces a named user update.
      */
     public void forceUpdate() {
-        Logger.debug("NamedUser - force named user update.");
+        Logger.debug("force named user update.");
         updateChangeToken();
         dispatchNamedUserUpdateJob();
     }
@@ -229,7 +229,7 @@ public class NamedUser extends AirshipComponent {
      */
     public void setId(@Nullable @Size(max = MAX_NAMED_USER_ID_LENGTH) String namedUserId) {
         if (namedUserId != null && !isDataCollectionEnabled()) {
-            Logger.debug("NamedUser - Data collection is disabled, ignoring named user association.");
+            Logger.debug("Data collection is disabled, ignoring named user association.");
             return;
         }
 
@@ -265,7 +265,7 @@ public class NamedUser extends AirshipComponent {
                     listener.onNamedUserIdChanged(id);
                 }
             } else {
-                Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
+                Logger.debug("Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
             }
         }
     }
@@ -413,7 +413,7 @@ public class NamedUser extends AirshipComponent {
     private int onUpdateNamedUser() {
         String channelId = airshipChannel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.verbose("NamedUser - The channel ID does not exist. Will retry when channel ID is available.");
+            Logger.verbose("The channel ID does not exist. Will retry when channel ID is available.");
             return JobInfo.JOB_FINISHED;
         }
 
@@ -459,7 +459,7 @@ public class NamedUser extends AirshipComponent {
                     : namedUserApiClient.associate(namedUserId, channelId);
         } catch (RequestException e) {
             // Server error occurred, so retry later.
-            Logger.debug(e, "NamedUser - Update named user failed, will retry.");
+            Logger.debug(e, "Update named user failed, will retry.");
             return JobInfo.JOB_RETRY;
         }
 

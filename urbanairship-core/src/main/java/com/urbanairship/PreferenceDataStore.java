@@ -480,7 +480,7 @@ public final class PreferenceDataStore {
 
             @Override
             public void onChange(boolean selfChange) {
-                Logger.verbose("PreferenceDataStore - Preference updated: %s", key);
+                Logger.verbose("Preference updated: %s", key);
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -575,7 +575,7 @@ public final class PreferenceDataStore {
         private boolean writeValue(@Nullable String value) {
             synchronized (this) {
                 if (value == null) {
-                    Logger.verbose("PreferenceDataStore - Removing preference: %s", key);
+                    Logger.verbose("Removing preference: %s", key);
 
                     if (resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), WHERE_CLAUSE_KEY, new String[] { key }) == 1) {
                         resolver.notifyChange(this.uri, observer);
@@ -583,7 +583,7 @@ public final class PreferenceDataStore {
                     }
 
                 } else {
-                    Logger.verbose("PreferenceDataStore - Saving preference: %s value: %s", key, value);
+                    Logger.verbose("Saving preference: %s value: %s", key, value);
                     ContentValues values = new ContentValues();
                     values.put(PreferencesDataManager.COLUMN_NAME_KEY, key);
                     values.put(PreferencesDataManager.COLUMN_NAME_VALUE, value);
@@ -617,7 +617,7 @@ public final class PreferenceDataStore {
                         Logger.error(e, "Unable to sync preference %s from database", key);
                     }
                 } else {
-                    Logger.debug("PreferenceDataStore - Unable to get preference %s from database. Falling back to cached value.", key);
+                    Logger.debug("Unable to get preference %s from database. Falling back to cached value.", key);
                 }
             } finally {
                 if (cursor != null) {

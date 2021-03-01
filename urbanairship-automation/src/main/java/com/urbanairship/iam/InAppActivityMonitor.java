@@ -147,7 +147,7 @@ public class InAppActivityMonitor implements ActivityMonitor {
     private boolean shouldIgnoreActivity(Activity activity) {
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
         if (info != null && info.metaData != null && info.metaData.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
-            Logger.verbose("InAppActivityMonitor - Activity contains metadata to exclude it from auto showing an in-app message");
+            Logger.verbose("Activity contains metadata to exclude it from auto showing an in-app message");
             return true;
         }
 

@@ -59,7 +59,7 @@ class ChannelApiClient {
      */
     @NonNull
     Response<String> createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
-        Logger.verbose("ChannelApiClient - Creating channel with payload: %s", channelPayload);
+        Logger.verbose("Creating channel with payload: %s", channelPayload);
         return requestFactory.createRequest()
                              .setOperation("POST", getDeviceUrl(null))
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
@@ -84,7 +84,7 @@ class ChannelApiClient {
      */
     @NonNull
     Response<Void> updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
-        Logger.verbose("ChannelApiClient - Updating channel with payload: %s", channelPayload);
+        Logger.verbose("Updating channel with payload: %s", channelPayload);
 
         return requestFactory.createRequest()
                              .setOperation("PUT", getDeviceUrl(channelId))

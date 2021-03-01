@@ -102,11 +102,11 @@ public class LocationReceiver extends BroadcastReceiver {
         }
 
         if (!ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
-            Logger.verbose("LocationReceiver - Received intent with invalid action: %s", intent.getAction());
+            Logger.verbose("Received intent with invalid action: %s", intent.getAction());
             return;
         }
 
-        Logger.verbose("LocationReceiver - Received location update");
+        Logger.verbose("Received location update");
 
         AirshipLocationManager locationManager;
         try {
@@ -131,7 +131,7 @@ public class LocationReceiver extends BroadcastReceiver {
         try {
             // If a provider is enabled or disabled notify the adapters so they can update providers.
             if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
-                Logger.debug("LocationReceiver - One of the location providers was enabled or disabled.");
+                Logger.debug("One of the location providers was enabled or disabled.");
                 locationManager.onSystemLocationProvidersChanged();
                 return;
             }

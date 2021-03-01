@@ -56,7 +56,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("NotificationChannelRegistryDataManager - Creating database");
+        Logger.debug("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME_CHANNEL_ID + " TEXT,"

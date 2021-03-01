@@ -56,7 +56,7 @@ public class AirshipWorker extends ListenableWorker {
                                              })
                                              .build();
 
-                Logger.verbose("AirshipWorker - Running job: %s", jobInfo);
+                Logger.verbose("Running job: %s", jobInfo);
 
                 JobRunnable.EXECUTOR.execute(job);
                 return jobInfo;

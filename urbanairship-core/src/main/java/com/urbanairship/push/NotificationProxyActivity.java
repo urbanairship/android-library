@@ -39,14 +39,14 @@ public class NotificationProxyActivity extends Activity {
             return;
         }
 
-        Logger.verbose("NotificationProxyActivity - Received intent: %s", intent.getAction());
+        Logger.verbose("Received intent: %s", intent.getAction());
 
         new NotificationIntentProcessor(this, intent)
                 .process()
                 .addResultCallback(new ResultCallback<Boolean>() {
                     @Override
                     public void onResult(@Nullable Boolean result) {
-                        Logger.verbose("NotificationProxyActivity - Finished processing notification intent with result %s.", result);
+                        Logger.verbose("Finished processing notification intent with result %s.", result);
                     }
                 });
 

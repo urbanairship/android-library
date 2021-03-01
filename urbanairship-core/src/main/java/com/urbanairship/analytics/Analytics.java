@@ -280,7 +280,7 @@ public class Analytics extends AirshipComponent {
             }
 
             if (airshipChannel.getId() == null) {
-                Logger.debug("AnalyticsJobHandler - No channel ID, skipping analytics send.");
+                Logger.debug("No channel ID, skipping analytics send.");
                 return JobInfo.JOB_FINISHED;
             }
 
@@ -317,11 +317,11 @@ public class Analytics extends AirshipComponent {
         }
 
         if (!isEnabled() || !isDataCollectionEnabled()) {
-            Logger.debug("Analytics - Disabled ignoring event: %s", event.getType());
+            Logger.debug("Disabled ignoring event: %s", event.getType());
             return;
         }
 
-        Logger.verbose("Analytics - Adding event: %s", event.getType());
+        Logger.verbose("Adding event: %s", event.getType());
 
         executor.execute(new Runnable() {
             @Override
@@ -352,7 +352,7 @@ public class Analytics extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void setConversionSendId(@Nullable String sendId) {
-        Logger.debug("Analytics - Setting conversion send ID: %s", sendId);
+        Logger.debug("Setting conversion send ID: %s", sendId);
         this.conversionSendId = sendId;
     }
 
@@ -376,7 +376,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     public void setConversionMetadata(@Nullable String metadata) {
-        Logger.debug("Analytics - Setting conversion metadata: %s", metadata);
+        Logger.debug("Setting conversion metadata: %s", metadata);
         this.conversionMetadata = metadata;
     }
 
@@ -398,7 +398,7 @@ public class Analytics extends AirshipComponent {
     void onForeground(long timeMS) {
         // Start a new environment when the app enters the foreground
         sessionId = UUID.randomUUID().toString();
-        Logger.debug("Analytics - New session: %s", sessionId);
+        Logger.debug("New session: %s", sessionId);
 
         // If the app backgrounded, there should be no current screen
         if (currentScreen == null) {

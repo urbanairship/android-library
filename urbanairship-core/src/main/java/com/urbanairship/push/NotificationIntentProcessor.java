@@ -83,7 +83,7 @@ class NotificationIntentProcessor {
             return pendingResult;
         }
 
-        Logger.verbose("NotificationIntentProcessor - Processing intent: %s", intent.getAction());
+        Logger.verbose("Processing intent: %s", intent.getAction());
         switch (intent.getAction()) {
             case PushManager.ACTION_NOTIFICATION_RESPONSE:
                 onNotificationResponse(new Runnable() {

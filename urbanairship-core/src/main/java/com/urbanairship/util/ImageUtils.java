@@ -142,8 +142,7 @@ public class ImageUtils {
         });
 
         if (bitmap != null) {
-            Logger.debug("ImageUtils - Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d.",
-                    url, reqWidth, reqHeight, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight());
+            Logger.debug("Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d.", url, reqWidth, reqHeight, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight());
         }
 
         return bitmap;
@@ -209,7 +208,7 @@ public class ImageUtils {
      * @throws IOException
      */
     private static <T> T fetchImage(@NonNull Context context, @NonNull URL url, ImageProcessor<T> imageProcessor) throws IOException {
-        Logger.verbose("ImageUtils - Fetching image from: %s", url);
+        Logger.verbose("Fetching image from: %s", url);
 
         boolean deleteFile = false;
         File imageFile = null;
@@ -222,7 +221,7 @@ public class ImageUtils {
                 deleteFile = true;
 
                 if (!FileUtils.downloadFile(url, imageFile).isSuccess) {
-                    Logger.verbose("ImageUtils - Failed to fetch image from: %s", url);
+                    Logger.verbose("Failed to fetch image from: %s", url);
                     return null;
                 }
             }
@@ -234,9 +233,9 @@ public class ImageUtils {
         } finally {
             if (deleteFile && imageFile != null) {
                 if (imageFile.delete()) {
-                    Logger.verbose("ImageUtils - Deleted temp file: %s", imageFile);
+                    Logger.verbose("Deleted temp file: %s", imageFile);
                 } else {
-                    Logger.verbose("ImageUtils - Failed to delete temp file: %s", imageFile);
+                    Logger.verbose("Failed to delete temp file: %s", imageFile);
                 }
             }
         }

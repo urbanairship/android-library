@@ -133,7 +133,7 @@ public class ChannelCapture extends AirshipComponent {
 
         ClipData clipData = ClipData.newPlainText("UA Channel ID", channelIdForClipboard);
         clipboardManager.setPrimaryClip(clipData);
-        Logger.debug("ChannelCapture - Channel ID copied to clipboard");
+        Logger.debug("Channel ID copied to clipboard");
     }
 
     /**

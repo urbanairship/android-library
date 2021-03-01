@@ -217,7 +217,7 @@ public class AirshipChannel extends AirshipComponent {
             String channelId = getId();
 
             if (channelId == null && channelCreationDelayEnabled) {
-                Logger.debug("AirshipChannel - Channel registration is currently disabled.");
+                Logger.debug("Channel registration is currently disabled.");
                 return JobInfo.JOB_FINISHED;
             }
             return onUpdateChannel();
@@ -578,18 +578,18 @@ public class AirshipChannel extends AirshipComponent {
         // check time and payload
         ChannelRegistrationPayload lastSuccessPayload = getLastRegistrationPayload();
         if (lastSuccessPayload == null) {
-            Logger.verbose("AirshipChannel - Should update registration. Last payload is null.");
+            Logger.verbose("Should update registration. Last payload is null.");
             return true;
         }
 
         long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
         if (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
-            Logger.verbose("AirshipChannel - Should update registration. Time since last registration time is greater than 24 hours.");
+            Logger.verbose("Should update registration. Time since last registration time is greater than 24 hours.");
             return true;
         }
 
         if (!payload.equals(lastSuccessPayload)) {
-            Logger.verbose("AirshipChannel - Should update registration. Channel registration payload has changed.");
+            Logger.verbose("Should update registration. Channel registration payload has changed.");
             return true;
         }
 
@@ -736,11 +736,11 @@ public class AirshipChannel extends AirshipComponent {
     private int updateChannelRegistration(@NonNull String channelId) {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("AirshipChannel - Channel already up to date.");
+            Logger.verbose("Channel already up to date.");
             return JobInfo.JOB_FINISHED;
         }
 
-        Logger.verbose("AirshipChannel - Performing channel registration.");
+        Logger.verbose("Performing channel registration.");
 
         Response<Void> response;
         try {

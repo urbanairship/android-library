@@ -92,7 +92,7 @@ public class EventApiClient {
                                         .setHeader("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt))
                                         .addHeaders(headers);
 
-        Logger.debug("EventApiClient - Sending analytics events. Request: %s Events: %s", request, events);
+        Logger.debug("Sending analytics events. Request: %s Events: %s", request, events);
         Response<EventResponse> response = request.execute(new ResponseParser<EventResponse>() {
             @Override
             public EventResponse parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) {
@@ -101,7 +101,7 @@ public class EventApiClient {
             }
         });
 
-        Logger.debug("EventApiClient - Analytics event response: %s", response);
+        Logger.debug("Analytics event response: %s", response);
         return response;
     }
 }

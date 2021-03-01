@@ -73,7 +73,7 @@ public class PropertiesConfigParser implements ConfigParser {
                 try {
                     inStream.close();
                 } catch (IOException e) {
-                    Logger.debug(e, "PropertiesConfigParser - Failed to close input stream.");
+                    Logger.debug(e, "Failed to close input stream.");
                 }
             }
         }

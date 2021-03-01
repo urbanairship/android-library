@@ -803,7 +803,7 @@ public class UAirship {
         // Check if dataCollection has never been loaded
         if (!this.preferenceDataStore.isSet(DATA_COLLECTION_ENABLED_KEY)) {
             boolean enabled = !airshipConfigOptions.dataCollectionOptInEnabled;
-            Logger.debug("Airship - Setting data collection enabled to %s", enabled);
+            Logger.debug("Setting data collection enabled to %s", enabled);
             setDataCollectionEnabled(enabled);
         }
     }

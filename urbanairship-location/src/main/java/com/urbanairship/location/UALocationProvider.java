@@ -65,11 +65,11 @@ class UALocationProvider {
      */
     @WorkerThread
     void cancelRequests() {
-        Logger.verbose("UALocationProvider - Canceling location requests.");
+        Logger.verbose("Canceling location requests.");
         connect();
 
         if (availableAdapter == null) {
-            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
+            Logger.debug("Ignoring request, connected adapter unavailable.");
             return;
         }
 
@@ -93,11 +93,11 @@ class UALocationProvider {
         connect();
 
         if (availableAdapter == null) {
-            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
+            Logger.debug("Ignoring request, connected adapter unavailable.");
             return;
         }
 
-        Logger.verbose("UALocationProvider - Requesting location updates: %s", options);
+        Logger.verbose("Requesting location updates: %s", options);
         try {
             PendingIntent pendingIntent = getPendingIntent(availableAdapter, PendingIntent.FLAG_UPDATE_CURRENT);
             if (pendingIntent != null) {
@@ -122,10 +122,10 @@ class UALocationProvider {
         connect();
 
         if (availableAdapter == null) {
-            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
+            Logger.debug("Ignoring request, connected adapter unavailable.");
         }
 
-        Logger.verbose("UALocationProvider - Requesting single location update: %s", options);
+        Logger.verbose("Requesting single location update: %s", options);
 
         try {
             return availableAdapter.requestSingleLocation(context, options, resultCallback);
@@ -146,12 +146,12 @@ class UALocationProvider {
         }
 
         for (LocationAdapter adapter : adapters) {
-            Logger.verbose("UALocationProvider - Attempting to connect to location adapter: %s", adapter);
+            Logger.verbose("Attempting to connect to location adapter: %s", adapter);
 
             if (adapter.isAvailable(context)) {
 
                 if (availableAdapter == null) {
-                    Logger.verbose("UALocationProvider - Using adapter: %s", adapter);
+                    Logger.verbose("Using adapter: %s", adapter);
                     availableAdapter = adapter;
                 }
 
@@ -169,7 +169,7 @@ class UALocationProvider {
                     Logger.error(e, "Unable to cancel location updates.");
                 }
             } else {
-                Logger.verbose("UALocationProvider - Adapter unavailable: %s", adapter);
+                Logger.verbose("Adapter unavailable: %s", adapter);
             }
         }
 
@@ -183,7 +183,7 @@ class UALocationProvider {
      */
     @WorkerThread
     void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
-        Logger.verbose("UALocationProvider - Available location providers changed.");
+        Logger.verbose("Available location providers changed.");
 
         connect();
 

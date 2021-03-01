@@ -42,7 +42,7 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
             return;
         }
 
-        Logger.verbose("NotificationProxyReceiver - Received intent: %s", intent.getAction());
+        Logger.verbose("Received intent: %s", intent.getAction());
 
         final PendingResult pendingResult = goAsync();
         final Future<Boolean> future = new NotificationIntentProcessor(context, intent).process();
@@ -52,7 +52,7 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
             public void run() {
                 try {
                     Boolean result = future.get(ACTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                    Logger.verbose("NotificationProxyReceiver - Finished processing notification intent with result %s.", result);
+                    Logger.verbose("Finished processing notification intent with result %s.", result);
                 } catch (InterruptedException | ExecutionException  e) {
                     Logger.error(e, "NotificationProxyReceiver - Exception when processing notification intent.");
                     Thread.currentThread().interrupt();

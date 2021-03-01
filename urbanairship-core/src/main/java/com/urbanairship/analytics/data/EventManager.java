@@ -109,7 +109,7 @@ public class EventManager {
     public void scheduleEventUpload(final long delay, @NonNull TimeUnit timeUnit) {
         long milliseconds = timeUnit.toMillis(delay);
 
-        Logger.verbose("EventManager - Requesting to schedule event upload with delay %s ms.", milliseconds);
+        Logger.verbose("Requesting to schedule event upload with delay %s ms.", milliseconds);
 
         int conflictStrategy = JobInfo.REPLACE;
 
@@ -121,13 +121,13 @@ public class EventManager {
                 long currentDelay = Math.max(System.currentTimeMillis() - previousScheduledTime, 0);
 
                 if (currentDelay < milliseconds) {
-                    Logger.verbose("EventManager - Event upload already scheduled for an earlier time.");
+                    Logger.verbose("Event upload already scheduled for an earlier time.");
                     conflictStrategy = JobInfo.KEEP;
                     milliseconds = currentDelay;
                 }
             }
 
-            Logger.verbose("EventManager - Scheduling upload in %s ms.", milliseconds);
+            Logger.verbose("Scheduling upload in %s ms.", milliseconds);
             JobInfo jobInfo = JobInfo.newBuilder()
                                      .setAction(ACTION_SEND)
                                      .setNetworkAccessRequired(true)
@@ -225,7 +225,7 @@ public class EventManager {
             eventCount = eventResolver.getEventCount();
 
             if (eventCount <= 0) {
-                Logger.debug("EventManager - No events to send.");
+                Logger.debug("No events to send.");
                 return true;
             }
 
@@ -237,18 +237,18 @@ public class EventManager {
         }
 
         if (events.isEmpty()) {
-            Logger.verbose("EventApiClient - No analytics events to send.");
+            Logger.verbose("No analytics events to send.");
             return false;
         }
 
         try {
             Response<EventResponse> response = apiClient.sendEvents(events.values(), headers);
             if (!response.isSuccessful()) {
-                Logger.debug("EventManager - Analytic upload failed.");
+                Logger.debug("Analytic upload failed.");
                 return false;
             }
 
-            Logger.debug("EventManager - Analytic events uploaded.");
+            Logger.debug("Analytic events uploaded.");
             synchronized (eventLock) {
                 eventResolver.deleteEvents(events.keySet());
             }

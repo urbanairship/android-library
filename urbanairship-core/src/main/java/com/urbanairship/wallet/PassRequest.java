@@ -169,7 +169,7 @@ public class PassRequest {
                     httpRequest.setCredentials(userName, apiKey);
                 }
 
-                Logger.debug("PassRequest - Requesting pass %s with payload: %s", url, body);
+                Logger.debug("Requesting pass %s with payload: %s", url, body);
                 try {
                     Response<Pass> response = httpRequest.execute(new ResponseParser<Pass>() {
                         @Override
@@ -181,7 +181,7 @@ public class PassRequest {
                             return null;
                         }
                     });
-                    Logger.debug("PassRequest - Pass %s request finished with status %s", templateId, response.getStatus());
+                    Logger.debug("Pass %s request finished with status %s", templateId, response.getStatus());
                     requestCallback.setResult(response.getStatus(), response.getResult());
                 } catch (RequestException e) {
                     Logger.error(e, "PassRequest - Request failed");

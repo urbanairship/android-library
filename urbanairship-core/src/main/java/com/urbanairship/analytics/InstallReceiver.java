@@ -59,7 +59,7 @@ public class InstallReceiver extends BroadcastReceiver {
 
         String referrer = intent.getStringExtra(EXTRA_INSTALL_REFERRER);
         if (UAStringUtil.isEmpty(referrer) || !ACTION_INSTALL_REFERRER.equals(intent.getAction())) {
-            Logger.debug("InstallReceiver - missing referrer or invalid action.");
+            Logger.debug("missing referrer or invalid action.");
             return;
         }
 

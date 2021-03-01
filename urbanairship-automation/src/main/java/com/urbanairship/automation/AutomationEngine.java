@@ -326,7 +326,7 @@ public class AutomationEngine {
 
                 notifyNewSchedule(Collections.<Schedule<? extends ScheduleData>>singletonList(schedule));
 
-                Logger.verbose("AutomationEngine - Scheduled entries: %s", schedule);
+                Logger.verbose("Scheduled entries: %s", schedule);
                 pendingResult.setResult(true);
             }
         });
@@ -367,7 +367,7 @@ public class AutomationEngine {
                 Collection<Schedule<? extends ScheduleData>> result = convertSchedulesUnknownTypes(entries);
                 notifyNewSchedule(result);
 
-                Logger.verbose("AutomationEngine - Scheduled entries: %s", result);
+                Logger.verbose("Scheduled entries: %s", result);
                 pendingResult.setResult(true);
             }
         });
@@ -394,7 +394,7 @@ public class AutomationEngine {
                     return;
                 }
 
-                Logger.verbose("AutomationEngine - Cancelled schedules: %s", ids);
+                Logger.verbose("Cancelled schedules: %s", ids);
 
                 dao.deleteSchedules(entries);
                 notifyCancelledSchedule(entries);
@@ -424,7 +424,7 @@ public class AutomationEngine {
                     ids.add(entry.schedule.scheduleId);
                 }
 
-                Logger.verbose("AutomationEngine - Cancelled schedules: %s", ids);
+                Logger.verbose("Cancelled schedules: %s", ids);
                 dao.deleteSchedules(entries);
                 notifyCancelledSchedule(entries);
                 cancelScheduleAlarms(ids);
@@ -451,7 +451,7 @@ public class AutomationEngine {
                 List<FullSchedule> entries = dao.getSchedulesWithGroup(group);
 
                 if (entries.isEmpty()) {
-                    Logger.verbose("AutomationEngine - Failed to cancel schedule group: %s", group);
+                    Logger.verbose("Failed to cancel schedule group: %s", group);
                     pendingResult.setResult(false);
                 } else {
                     dao.deleteSchedules(entries);
@@ -605,7 +605,7 @@ public class AutomationEngine {
                     subscribeStateObservables(entry, stateChangeTimeStamp);
                 }
 
-                Logger.verbose("AutomationEngine - Updated schedule: %s", scheduleId);
+                Logger.verbose("Updated schedule: %s", scheduleId);
                 pendingResult.setResult(true);
             }
         });
@@ -881,7 +881,7 @@ public class AutomationEngine {
         }
 
         if (!schedulesToDelete.isEmpty()) {
-            Logger.verbose("AutomationEngine - Deleting finished schedules: %s", schedulesToDelete);
+            Logger.verbose("Deleting finished schedules: %s", schedulesToDelete);
             dao.deleteSchedules(schedulesToDelete);
         }
     }
@@ -1019,7 +1019,7 @@ public class AutomationEngine {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                Logger.debug("Automation - Updating triggers with type: %s", type);
+                Logger.debug("Updating triggers with type: %s", type);
                 List<TriggerEntity> triggerEntities = dao.getActiveTriggers(type);
                 if (triggerEntities.isEmpty()) {
                     return;
@@ -1335,24 +1335,24 @@ public class AutomationEngine {
             int result = runnable.result == null ? AutomationDriver.READY_RESULT_NOT_READY : runnable.result;
             switch (result) {
                 case AutomationDriver.READY_RESULT_INVALIDATE:
-                    Logger.verbose("AutomationEngine - Schedule invalidated: %s", entry.schedule.scheduleId);
+                    Logger.verbose("Schedule invalidated: %s", entry.schedule.scheduleId);
                     updateExecutionState(entry, ScheduleState.PREPARING_SCHEDULE);
                     dao.update(entry);
                     prepareSchedules(Collections.singletonList(dao.getSchedule(entry.schedule.scheduleId)));
                     break;
 
                 case AutomationDriver.READY_RESULT_CONTINUE:
-                    Logger.verbose("AutomationEngine - Schedule executing: %s", entry.schedule.scheduleId);
+                    Logger.verbose("Schedule executing: %s", entry.schedule.scheduleId);
                     updateExecutionState(entry, ScheduleState.EXECUTING);
                     dao.update(entry);
                     break;
 
                 case AutomationDriver.READY_RESULT_NOT_READY:
-                    Logger.verbose("AutomationEngine - Schedule not ready for execution: %s", entry.schedule.scheduleId);
+                    Logger.verbose("Schedule not ready for execution: %s", entry.schedule.scheduleId);
                     break;
 
                 case AutomationDriver.READY_RESULT_SKIP:
-                    Logger.verbose("AutomationEngine - Schedule execution skipped: %s", entry.schedule.scheduleId);
+                    Logger.verbose("Schedule execution skipped: %s", entry.schedule.scheduleId);
                     updateExecutionState(entry, ScheduleState.IDLE);
                     dao.update(entry);
                     break;
@@ -1464,7 +1464,7 @@ public class AutomationEngine {
             return;
         }
 
-        Logger.verbose("AutomationEngine - Schedule finished: %s", entry.schedule.scheduleId);
+        Logger.verbose("Schedule finished: %s", entry.schedule.scheduleId);
 
         entry.schedule.count++;
         boolean isOverLimit = isOverLimit(entry);

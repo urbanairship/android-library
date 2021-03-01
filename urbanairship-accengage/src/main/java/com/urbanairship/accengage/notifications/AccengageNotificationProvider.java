@@ -42,11 +42,11 @@ public class AccengageNotificationProvider implements NotificationProvider {
         AccengageMessage message = AccengageMessage.fromAirshipPushMessage(arguments.getMessage());
 
         if (!message.getAccengageForeground() && GlobalActivityMonitor.shared(context).isAppForegrounded()) {
-            Logger.debug("AccengageNotificationProvider - Received Accengage Push message but application was in foreground, skip it...");
+            Logger.debug("Received Accengage Push message but application was in foreground, skip it...");
             return NotificationResult.cancel();
         }
 
-        Logger.debug("AccengageNotificationProvider - Push message received from Accengage, displaying notification...");
+        Logger.debug("Push message received from Accengage, displaying notification...");
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, arguments.getNotificationChannelId())
                 .extend(new AccengageNotificationExtender(context, message, arguments));

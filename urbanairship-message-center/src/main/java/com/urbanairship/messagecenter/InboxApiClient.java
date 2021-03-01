@@ -90,7 +90,7 @@ public class InboxApiClient {
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToDelete))
                                  .build();
 
-        Logger.verbose("InboxApiClient - Deleting inbox messages with payload: %s", payload);
+        Logger.verbose("Deleting inbox messages with payload: %s", payload);
 
         return requestFactory.createRequest()
                              .setOperation("POST", url)
@@ -109,7 +109,7 @@ public class InboxApiClient {
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToUpdate))
                                  .build();
 
-        Logger.verbose("InboxApiClient - Marking inbox messages read request with payload: %s", payload);
+        Logger.verbose("Marking inbox messages read request with payload: %s", payload);
 
         return requestFactory.createRequest()
                              .setOperation("POST", url)
@@ -124,7 +124,7 @@ public class InboxApiClient {
         URL url = getUserApiUrl(runtimeConfig.getUrlConfig());
 
         String payload = createNewUserPayload(channelId);
-        Logger.verbose("InboxApiClient - Creating Rich Push user with payload: %s", payload);
+        Logger.verbose("Creating Rich Push user with payload: %s", payload);
         return requestFactory.createRequest()
                              .setOperation("POST", url)
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
@@ -156,7 +156,7 @@ public class InboxApiClient {
         URL url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId());
 
         String payload = createUpdateUserPayload(channelId);
-        Logger.verbose("InboxApiClient - Updating user with payload: %s", payload);
+        Logger.verbose("Updating user with payload: %s", payload);
         return requestFactory.createRequest()
                              .setOperation("POST", url)
                              .setCredentials(user.getId(), user.getPassword())

@@ -269,7 +269,7 @@ public class AirshipWebViewClient extends WebViewClient {
         }
 
         if (!isAllowed(url)) {
-            Logger.debug("AirshipWebViewClient - %s is not an allowed URL. Airship Javascript interface will not be accessible.", url);
+            Logger.debug("%s is not an allowed URL. Airship Javascript interface will not be accessible.", url);
             return;
         }
 

@@ -42,14 +42,14 @@ class StandardLocationAdapter implements LocationAdapter {
 
         List<String> providers = locationManager.getProviders(criteria, false);
         for (String provider : providers) {
-            Logger.verbose("StandardLocationAdapter - Update listening provider enable/disabled for: %s", provider);
+            Logger.verbose("Update listening provider enable/disabled for: %s", provider);
             //noinspection MissingPermission
             locationManager.requestLocationUpdates(provider, Long.MAX_VALUE, Float.MAX_VALUE, pendingIntent);
         }
 
         String bestProvider = getBestProvider(context, criteria, options);
         if (!UAStringUtil.isEmpty(bestProvider)) {
-            Logger.verbose("StandardLocationAdapter - Requesting location updates from provider: %s", bestProvider);
+            Logger.verbose("Requesting location updates from provider: %s", bestProvider);
 
             currentProvider = bestProvider;
 
@@ -73,11 +73,11 @@ class StandardLocationAdapter implements LocationAdapter {
         String bestProvider = getBestProvider(context, criteria, options);
 
         if (!UAStringUtil.isEmpty(currentProvider) && currentProvider.equals(bestProvider)) {
-            Logger.verbose("StandardLocationAdapter - Already listening for updates from the best provider: %s", currentProvider);
+            Logger.verbose("Already listening for updates from the best provider: %s", currentProvider);
             return;
         }
 
-        Logger.verbose("StandardLocationAdapter - Refreshing updates, best provider might of changed.");
+        Logger.verbose("Refreshing updates, best provider might of changed.");
         requestLocationUpdates(context, options, pendingIntent);
     }
 
@@ -91,7 +91,7 @@ class StandardLocationAdapter implements LocationAdapter {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         locationManager.removeUpdates(pendingIntent);
 
-        Logger.verbose("StandardLocationAdapter - Canceling location updates.");
+        Logger.verbose("Canceling location updates.");
         currentProvider = null;
     }
 
@@ -194,7 +194,7 @@ class StandardLocationAdapter implements LocationAdapter {
 
                 @Override
                 public void onProviderDisabled(String provider) {
-                    Logger.verbose("StandardLocationAdapter - Provider disabled: %s", provider);
+                    Logger.verbose("Provider disabled: %s", provider);
                     synchronized (SingleLocationRequest.this) {
                         if (!isDone()) {
                             listenForLocationChanges(context);
@@ -206,7 +206,7 @@ class StandardLocationAdapter implements LocationAdapter {
             providerEnabledListeners = new AndroidLocationListener() {
                 @Override
                 public void onProviderEnabled(String provider) {
-                    Logger.verbose("StandardLocationAdapter - Provider enabled: %s", provider);
+                    Logger.verbose("Provider enabled: %s", provider);
                     synchronized (SingleLocationRequest.this) {
                         if (!isDone()) {
                             String bestProvider = getBestProvider(context, criteria, options);
@@ -240,7 +240,7 @@ class StandardLocationAdapter implements LocationAdapter {
             currentProvider = bestProvider;
 
             if (bestProvider != null) {
-                Logger.verbose("StandardLocationAdapter - Single request using provider: %s", bestProvider);
+                Logger.verbose("Single request using provider: %s", bestProvider);
                 //noinspection MissingPermission
                 locationManager.requestLocationUpdates(bestProvider, 0, 0, currentProviderListener);
             }
@@ -254,7 +254,7 @@ class StandardLocationAdapter implements LocationAdapter {
         private void listenForProvidersEnabled() {
             List<String> providers = locationManager.getProviders(criteria, false);
             for (String provider : providers) {
-                Logger.verbose("StandardLocationAdapter - Single location request listening provider enable/disabled for: %s", provider);
+                Logger.verbose("Single location request listening provider enable/disabled for: %s", provider);
 
                 //noinspection MissingPermission
                 locationManager.requestLocationUpdates(provider,
@@ -266,7 +266,7 @@ class StandardLocationAdapter implements LocationAdapter {
 
         @Override
         protected void onCancel() {
-            Logger.verbose("StandardLocationAdapter - Canceling single request.");
+            Logger.verbose("Canceling single request.");
             stopUpdates();
         }
 

@@ -118,7 +118,7 @@ class InboxJobHandler {
      */
     private void onUpdateMessages() {
         if (!user.isUserCreated()) {
-            Logger.debug("InboxJobHandler - User has not been created, canceling messages update");
+            Logger.debug("User has not been created, canceling messages update");
             inbox.onUpdateMessagesFinished(false);
         } else {
             boolean success = this.updateMessages();
@@ -172,16 +172,16 @@ class InboxJobHandler {
 
         String channelId = channel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.verbose("InboxJobHandler - The channel ID does not exist.");
+            Logger.verbose("The channel ID does not exist.");
             return false;
         }
 
-        Logger.verbose("InboxJobHandler - Fetching inbox messages.");
+        Logger.verbose("Fetching inbox messages.");
 
         try {
             Response<JsonList> response = inboxApiClient.fetchMessages(user, channelId, dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0));
 
-            Logger.verbose("InboxJobHandler - Fetch inbox messages response: %s", response);
+            Logger.verbose("Fetch inbox messages response: %s", response);
 
             // 200-299
             if (response.isSuccessful()) {
@@ -194,15 +194,15 @@ class InboxJobHandler {
 
             // 304
             if (response.getStatus() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                Logger.debug("InboxJobHandler - Inbox messages already up-to-date. ");
+                Logger.debug("Inbox messages already up-to-date. ");
                 return true;
             }
 
-            Logger.debug("InboxJobHandler - Unable to update inbox messages %s.", response);
+            Logger.debug("Unable to update inbox messages %s.", response);
             return false;
 
         } catch (RequestException e) {
-            Logger.debug(e, "InboxJobHandler - Update Messages failed.");
+            Logger.debug(e, "Update Messages failed.");
             return false;
         }
     }
@@ -269,17 +269,17 @@ class InboxJobHandler {
             return;
         }
 
-        Logger.verbose("InboxJobHandler - Found %s messages to delete.", idsToDelete.size());
+        Logger.verbose("Found %s messages to delete.", idsToDelete.size());
 
         try {
             Response<Void> response = inboxApiClient.syncDeletedMessageState(user, channelId, reportings);
-            Logger.verbose("InboxJobHandler - Delete inbox messages response: %s", response);
+            Logger.verbose("Delete inbox messages response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                 resolver.deleteMessages(idsToDelete);
             }
         } catch (RequestException e) {
-            Logger.debug(e, "InboxJobHandler - Deleted message state synchronize failed.");
+            Logger.debug(e, "Deleted message state synchronize failed.");
         }
     }
 
@@ -306,17 +306,17 @@ class InboxJobHandler {
             return;
         }
 
-        Logger.verbose("InboxJobHandler - Found %s messages to mark read.", idsToUpdate.size());
+        Logger.verbose("Found %s messages to mark read.", idsToUpdate.size());
 
         try {
             Response<Void> response = inboxApiClient.syncReadMessageState(user, channelId, reportings);
-            Logger.verbose("InboxJobHandler - Mark inbox messages read response: %s", response);
+            Logger.verbose("Mark inbox messages read response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                 resolver.markMessagesReadOrigin(idsToUpdate);
             }
         } catch (RequestException e) {
-            Logger.debug(e, "InboxJobHandler - Read message state synchronize failed.");
+            Logger.debug(e, "Read message state synchronize failed.");
         }
     }
 
@@ -328,7 +328,7 @@ class InboxJobHandler {
     private boolean createUser() {
         String channelId = channel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("InboxJobHandler - No Channel. User will be created after channel registrations finishes.");
+            Logger.debug("No Channel. User will be created after channel registrations finishes.");
             return false;
         }
 
@@ -346,11 +346,11 @@ class InboxJobHandler {
                 return true;
             }
 
-            Logger.debug("InboxJobHandler - Rich Push user creation failed: %s", response);
+            Logger.debug("Rich Push user creation failed: %s", response);
             return false;
 
         } catch (RequestException e) {
-            Logger.debug(e, "InboxJobHandler - User creation failed.");
+            Logger.debug(e, "User creation failed.");
             return false;
         }
     }
@@ -364,13 +364,13 @@ class InboxJobHandler {
         String channelId = channel.getId();
 
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("InboxJobHandler - No Channel. Skipping Rich Push user update.");
+            Logger.debug("No Channel. Skipping Rich Push user update.");
             return false;
         }
 
         try {
             Response<Void> response = inboxApiClient.updateUser(user, channelId);
-            Logger.verbose("InboxJobHandler - Update Rich Push user response: %s", response);
+            Logger.verbose("Update Rich Push user response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                 Logger.info("Rich Push user updated.");
@@ -383,7 +383,7 @@ class InboxJobHandler {
             return false;
 
         } catch (RequestException e) {
-            Logger.debug(e, "InboxJobHandler - User update failed.");
+            Logger.debug(e, "User update failed.");
             return false;
         }
     }

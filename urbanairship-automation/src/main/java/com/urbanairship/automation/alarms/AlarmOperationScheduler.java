@@ -104,7 +104,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
         long time = clock.elapsedRealtime() + delay;
         PendingOperation pendingOperation = new PendingOperation(time, operation);
 
-        Logger.verbose("AlarmOperationScheduler - Operation scheduled with %d delay", delay);
+        Logger.verbose("Operation scheduled with %d delay", delay);
 
         synchronized (pendingOperations) {
             pendingOperations.add(pendingOperation);
@@ -117,7 +117,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
      * Called by {@link AlarmOperationReceiver}.
      */
     void onAlarmFired() {
-        Logger.verbose("AlarmOperationScheduler - Alarm fired");
+        Logger.verbose("Alarm fired");
 
         long time = clock.elapsedRealtime();
 
@@ -149,7 +149,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
 
         try {
             delegate.onSchedule(nextScheduleTime, pendingIntent);
-            Logger.verbose("AlarmOperationScheduler - Next alarm set %d", nextScheduleTime - clock.elapsedRealtime());
+            Logger.verbose("Next alarm set %d", nextScheduleTime - clock.elapsedRealtime());
         } catch (Exception e) {
             Logger.error(e, "AlarmOperationScheduler - Failed to schedule alarm.");
         }

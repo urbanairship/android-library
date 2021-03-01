@@ -682,7 +682,7 @@ public class Inbox {
     }
 
     private void dispatchUpdateUserJob(boolean forcefully) {
-        Logger.debug("RichPushInbox - Updating user.");
+        Logger.debug("Updating user.");
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
