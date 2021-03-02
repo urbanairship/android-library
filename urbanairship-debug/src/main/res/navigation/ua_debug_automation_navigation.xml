@@ -91,5 +91,33 @@
             android:name="mediaInfo"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/actionsScheduleDetailsFragment"
+        android:name="com.urbanairship.debug.automation.ActionsScheduleDetailsFragment"
+        android:label="Actions Details">
+        <argument
+            android:name="id"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_actionsScheduleDetailsFragment_to_audienceDetailsFragment"
+            app:destination="@id/inAppAudienceDetailsFragment" />
+        <action
+            android:id="@+id/action_actionsScheduleDetailsFragment_to_triggersDetailsFragment"
+            app:destination="@id/inAppTriggersDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deferredScheduleDetailsFragment"
+        android:name="com.urbanairship.debug.automation.DeferredScheduleDetailsFragment"
+        android:label="Deferred Schedule Details">
+        <argument
+            android:name="id"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_deferredScheduleDetailsFragment_to_audienceDetailsFragment"
+            app:destination="@id/inAppAudienceDetailsFragment" />
+        <action
+            android:id="@+id/action_deferredScheduleDetailsFragment_to_triggersDetailsFragment"
+            app:destination="@id/inAppTriggersDetailsFragment" />
+    </fragment>
 
 </navigation>

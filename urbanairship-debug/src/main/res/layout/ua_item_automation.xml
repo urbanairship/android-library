@@ -7,8 +7,6 @@
     <data>
         <import type="android.view.View" />
 
-        <import type="com.urbanairship.debug.automation.ScheduleUtils" />
-
         <variable
             name="viewModel"
             type="com.urbanairship.debug.automation.ScheduleListItem" />
@@ -30,7 +28,7 @@
             android:layout_gravity="center_vertical"
             android:layout_margin="8dp"
             android:background="@drawable/ua_oval_background"
-            app:backgroundTint="@{ScheduleUtils.getColor(context, viewModel.type)}">
+            app:backgroundTint="@{viewModel.getColor(context)}">
 
             <TextView
                 android:id="@+id/icon_text"
@@ -61,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:text="@{viewModel.message.name}"
+                android:text="@{viewModel.name}"
                 android:textAppearance="@style/AirshipDebug.ItemTitle"
                 tools:text="@tools:sample/lorem[3]" />
 

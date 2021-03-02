@@ -5,4 +5,6 @@
     <color name="ua_fullscreen_iaa">#2196f3</color>
     <color name="ua_modal_iaa">#009688</color>
     <color name="ua_html_iaa">#4caf50</color>
+    <color name="ua_deferred_iaa">#9C27B0</color>
+    <color name="ua_action_schedule">#CDDC39</color>
 </resources>

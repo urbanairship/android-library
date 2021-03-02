@@ -122,14 +122,6 @@ public interface InAppAutomationScheduler {
     PendingResult<Schedule<Deferred>> getDeferredMessageSchedule(@NonNull String scheduleId);
 
     /**
-     * Gets all deferred message schedules.
-     *
-     * @return A pending result
-     */
-    @NonNull
-    PendingResult<Collection<Schedule<Deferred>>> getDeferredMessageSchedules();
-
-    /**
      * Gets all the schedules.
      *
      * @return A pending result.

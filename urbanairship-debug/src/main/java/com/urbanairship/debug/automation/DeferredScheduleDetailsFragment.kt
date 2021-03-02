@@ -19,25 +19,24 @@ import java.util.concurrent.TimeUnit
 class DeferredScheduleDetailsFragment : AutomationDetailsFragment() {
 
     companion object {
-        const val ARGUMENT_SCHEDULE_ID = "id"
+        const val ARGUMENT_SCHEDULE_ID = "scheduleId"
     }
 
     private fun navigateToAudience(audience: Audience) {
         val args = Bundle()
         args.putString(AudienceDetailsFragment.ARGUMENT_AUDIENCE, audience.toJsonValue().toString())
         Navigation.findNavController(requireView())
-                .navigate(R.id.action_deferredScheduleDetailsFragment_to_audienceDetailsFragment, args)
+                .navigate(R.id.inAppAudienceDetailsFragment, args)
     }
 
     private fun navigateToTrigger(trigger: Trigger) {
         val args = Bundle()
         args.putParcelable(TriggersDetailsFragment.ARGUMENT_TRIGGER, trigger)
         Navigation.findNavController(requireView())
-                .navigate(R.id.action_deferredScheduleDetailsFragment_to_triggersDetailsFragment, args)
+                .navigate(R.id.inAppTriggersDetailsFragment, args)
     }
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
-        Log.d("FormattedJson", requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!)
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
         val scheduleLiveData = PendingResultLiveData<Schedule<Deferred>>(InAppAutomation.shared().getDeferredMessageSchedule(scheduleId))
         return Transformations.map(scheduleLiveData) { schedule ->
