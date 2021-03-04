@@ -1,20 +1,12 @@
 package com.urbanairship.debug.automation
 
-import android.os.Bundle
-import android.text.format.DateFormat
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
-import androidx.navigation.Navigation
-import com.urbanairship.automation.Audience
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
-import com.urbanairship.automation.Trigger
 import com.urbanairship.automation.deferred.Deferred
 import com.urbanairship.debug.R
 import com.urbanairship.debug.utils.PendingResultLiveData
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 class DeferredScheduleDetailsFragment : AutomationDetailsFragment() {
 

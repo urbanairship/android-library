@@ -11,8 +11,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.urbanairship.automation.Schedule
-import com.urbanairship.automation.ScheduleData
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentAutomationListBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController

@@ -9,7 +9,6 @@ import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.ScheduleData
 import com.urbanairship.debug.utils.PendingResultLiveData
-import com.urbanairship.iam.InAppMessage
 
 @Suppress("UNCHECKED_CAST")
 class ScheduleListViewModel : ViewModel() {

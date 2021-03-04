@@ -26,7 +26,7 @@ class ScheduleListItem(schedule: Schedule<out ScheduleData>) {
     val type: String? = {
         if (schedule.type == Schedule.TYPE_IN_APP_MESSAGE) {
             (schedule.data as InAppMessage).type
-        }  else {
+        } else {
             schedule.type
         }
     }.invoke()
