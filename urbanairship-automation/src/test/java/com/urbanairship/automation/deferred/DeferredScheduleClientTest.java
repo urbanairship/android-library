@@ -186,12 +186,12 @@ public class DeferredScheduleClientTest {
     public void testStateOverrides() throws AuthException, MalformedURLException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some token");
 
-        when(mockSupplier.get()).thenReturn(new StateOverrides(1,"1.0.0", true, new Locale("en", "US")));
+        when(mockSupplier.get()).thenReturn(new StateOverrides("1","1.0.0", true, new Locale("en", "US")));
 
         client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         JsonValue jsonStateOverrides = JsonMap.newBuilder()
-                .put("app_version", 1)
+                .put("app_version", "1")
                 .put("sdk_version", "1.0.0")
                 .put("notification_opt_in", true)
                 .put("locale_language", "en")

@@ -2,7 +2,8 @@
 
 package com.urbanairship.automation.deferred;
 
-import com.urbanairship.BuildConfig;
+import android.content.pm.PackageInfo;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -29,7 +30,7 @@ class StateOverrides implements JsonSerializable {
     private static final String STATE_LOCALE_LANGUAGE_KEY = "locale_language";
     private static final String STATE_LOCALE_COUNTRY_KEY = "locale_country";
 
-    private final long appVersion;
+    private final String appVersionName;
     private final String sdkVersion;
     private final boolean notificationOptIn;
     private final String localeLanguage;
@@ -39,8 +40,8 @@ class StateOverrides implements JsonSerializable {
      * Default state overrides constructor.
      */
     @VisibleForTesting
-    StateOverrides(long appVersion, @NonNull String sdkVersion, boolean notificationOptIn, @NonNull Locale locale) {
-        this.appVersion = appVersion;
+    StateOverrides(String appVersionName, @NonNull String sdkVersion, boolean notificationOptIn, @NonNull Locale locale) {
+        this.appVersionName = appVersionName;
         this.sdkVersion = sdkVersion;
         this.notificationOptIn = notificationOptIn;
         localeLanguage = locale.getLanguage();
@@ -56,14 +57,17 @@ class StateOverrides implements JsonSerializable {
     public static StateOverrides defaultOverrides() {
         PushManager pushManager = UAirship.shared().getPushManager();
         Locale locale = UAirship.shared().getLocale();
-        return new StateOverrides(UAirship.shared().getApplicationMetrics().getCurrentAppVersion(), BuildConfig.SDK_VERSION, pushManager.isOptIn(), locale);
+        PackageInfo packageInfo = UAirship.getPackageInfo();
+        String versionName = packageInfo != null ? packageInfo.versionName : "";
+
+        return new StateOverrides(versionName, UAirship.getVersion(), pushManager.isOptIn(), locale);
     }
 
     @NonNull
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                .put(STATE_APP_VERSION_KEY, appVersion)
+                .put(STATE_APP_VERSION_KEY, appVersionName)
                 .put(STATE_SDK_VERSION_KEY, sdkVersion)
                 .put(STATE_NOTIFICATION_OPT_IN_KEY, notificationOptIn)
                 .put(STATE_LOCALE_LANGUAGE_KEY, localeLanguage)
