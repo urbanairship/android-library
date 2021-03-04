@@ -3,13 +3,13 @@
 package com.urbanairship.remotedata;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonMap;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -22,7 +22,8 @@ public class RemoteDataStoreTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        dataStore = new RemoteDataStore(RuntimeEnvironment.application, "appKey", "test");
+        dataStore = new RemoteDataStore(TestApplication.getApplication(), "appKey", "test");
+
         RemoteDataPayload payload = RemoteDataPayload.newBuilder()
                                                      .setType("type")
                                                      .setTimeStamp(123)

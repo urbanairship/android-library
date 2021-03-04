@@ -109,14 +109,12 @@ public class RemoteDataPayload {
     /**
      * Parses remote data payloads from JSON.
      *
-     * @param value The JSON.
+     * @param list The JSON list of payloads.
      * @param metadata The metadata used to fetch the payloads.
      * @return A List of RemoteDataPayloads.
      */
     @NonNull
-    static Set<RemoteDataPayload> parsePayloads(@NonNull JsonValue value, @NonNull JsonMap metadata) {
-        JsonList list = value.optList();
-
+    static Set<RemoteDataPayload> parsePayloads(@NonNull JsonList list, @NonNull JsonMap metadata) {
         try {
             Set<RemoteDataPayload> payloads = new HashSet<>();
 
@@ -125,7 +123,7 @@ public class RemoteDataPayload {
             }
             return payloads;
         } catch (JsonException e) {
-            Logger.error("Unable to parse remote data payloads: %s", value.toString());
+            Logger.error("Unable to parse remote data payloads: %s", list);
         }
 
         return Collections.emptySet();

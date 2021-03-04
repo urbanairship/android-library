@@ -741,8 +741,7 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions,
-                GlobalActivityMonitor.shared(application), pushManager, localeManager);
+        this.remoteData = new RemoteData(application, preferenceDataStore, runtimeConfig, pushManager, localeManager);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);

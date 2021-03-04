@@ -6,6 +6,7 @@ import android.os.Build;
 
 import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
@@ -14,7 +15,7 @@ import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
@@ -56,33 +57,54 @@ public class RemoteDataApiClient {
     private static final String ANDROID = "android";
 
     private final AirshipRuntimeConfig runtimeConfig;
-    private final PushProviders pushProviders;
     private final RequestFactory requestFactory;
+    private final Supplier<PushProviders> pushProvidersSupplier;
 
-    /**
-     * RemoteDataApiClient constructor.
-     *
-     * @param runtimeConfig The runtime config.
-     * @param pushProviders The push providers
-     */
-    RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                        @NonNull PushProviders pushProviders) {
-        this(runtimeConfig, pushProviders, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    public static class Result {
+        @NonNull
+        final URL url;
+
+        @NonNull
+        final Set<RemoteDataPayload> payloads;
+
+        Result(@NonNull URL url, @NonNull Set<RemoteDataPayload> payloads) {
+            this.url = url;
+            this.payloads = payloads;
+        }
+    }
+
+    public interface PayloadParser {
+        Set<RemoteDataPayload> parse(URL url, JsonList payloads);
     }
 
     /**
      * RemoteDataApiClient constructor.
      *
      * @param runtimeConfig The runtime config.
-     * @param pushProviders The push providers
+     */
+    RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
+        this(runtimeConfig, new Supplier<PushProviders>() {
+            @Nullable
+            @Override
+            public PushProviders get() {
+                return UAirship.shared().getPushProviders();
+            }
+        }, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    }
+
+    /**
+     * RemoteDataApiClient constructor.
+     *
+     * @param runtimeConfig The runtime config.
+     * @param providersSupplier The push providers
      * @param requestFactory A RequestFactory.
      */
     @VisibleForTesting
     RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                        @NonNull PushProviders pushProviders,
+                        @NonNull Supplier<PushProviders> providersSupplier,
                         @NonNull RequestFactory requestFactory) {
         this.runtimeConfig = runtimeConfig;
-        this.pushProviders = pushProviders;
+        this.pushProvidersSupplier = providersSupplier;
         this.requestFactory = requestFactory;
     }
 
@@ -91,11 +113,11 @@ public class RemoteDataApiClient {
      *
      * @param lastModified An optional last-modified timestamp in ISO-8601 format.
      * @param locale The current locale.
-     * @return A Response.
+     * @return The fetch payload response.
      */
     @NonNull
-    Response<Set<RemoteDataPayload>> fetchRemoteData(@Nullable String lastModified, @NonNull final Locale locale) throws RequestException {
-        URL url = getRemoteDataURL(locale);
+    Response<Result> fetchRemoteDataPayloads(@Nullable String lastModified, @NonNull final Locale locale, @NonNull final PayloadParser payloadParser) throws RequestException {
+        final URL url = getRemoteDataUrl(locale);
 
         Request request = requestFactory.createRequest()
                                         .setOperation("GET", url)
@@ -105,18 +127,16 @@ public class RemoteDataApiClient {
             request.setHeader("If-Modified-Since", lastModified);
         }
 
-        return request.execute(new ResponseParser<Set<RemoteDataPayload>>() {
+        return request.execute(new ResponseParser<Result>() {
             @Override
-            public Set<RemoteDataPayload> parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
+            public Result parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
                 if (status == 200) {
-                    JsonMap metadata = RemoteData.createMetadata(locale);
-                    JsonValue json = JsonValue.parseString(responseBody);
-                    JsonMap map = json.optMap();
-                    if (map.containsKey("payloads")) {
-                        return RemoteDataPayload.parsePayloads(map.opt("payloads"), metadata);
-                    } else {
+                    JsonList payloads = JsonValue.parseString(responseBody).optMap().opt("payloads").getList();
+                    if (payloads == null) {
                         throw new JsonException("Response does not contain payloads");
                     }
+
+                    return new Result(url, payloadParser.parse(url, payloads));
                 } else {
                     return null;
                 }
@@ -131,15 +151,14 @@ public class RemoteDataApiClient {
      * @return The device URL or {@code null} if the URL is invalid.
      */
     @Nullable
-    private URL getRemoteDataURL(@NonNull Locale locale) {
+    public URL getRemoteDataUrl(@NonNull Locale locale) {
         // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
-
         UrlBuilder builder = runtimeConfig.getUrlConfig()
-                                              .remoteDataUrl()
-                                              .appendEncodedPath(REMOTE_DATA_PATH)
-                                              .appendPath(runtimeConfig.getConfigOptions().appKey)
-                                              .appendPath(runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
-                                              .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
+                                          .remoteDataUrl()
+                                          .appendEncodedPath(REMOTE_DATA_PATH)
+                                          .appendPath(runtimeConfig.getConfigOptions().appKey)
+                                          .appendPath(runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
+                                          .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
 
         String manufacturer = getManufacturer();
         if (shouldIncludeManufacturer(manufacturer)) {
@@ -178,7 +197,7 @@ public class RemoteDataApiClient {
     @Nullable
     private String getPushProviderCsv() {
         Set<String> deliveryTypes = new HashSet<>();
-        for (PushProvider provider : pushProviders.getAvailableProviders()) {
+        for (PushProvider provider : pushProvidersSupplier.get().getAvailableProviders()) {
             deliveryTypes.add(provider.getDeliveryType());
         }
 

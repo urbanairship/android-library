@@ -3,17 +3,22 @@
 package com.urbanairship.remotedata;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestActivityMonitor;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
@@ -22,7 +27,6 @@ import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,9 +35,12 @@ import org.mockito.Mockito;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,32 +48,36 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class RemoteDataTest extends BaseTestCase {
 
     private RemoteData remoteData;
     private PreferenceDataStore preferenceDataStore;
-    private AirshipConfigOptions options;
     private JobDispatcher mockDispatcher;
     private TestActivityMonitor activityMonitor;
-    private RemoteDataPayload payload;
-    private RemoteDataPayload otherPayload;
-    private RemoteDataPayload emptyPayload;
     private LocaleManager localeManager;
     private PushManager pushManager;
     private PushListener pushListener;
     private TestClock clock;
+    private RemoteDataApiClient mockClient;
+    private RemoteDataPayload payload;
+    private RemoteDataPayload otherPayload;
+    private RemoteDataPayload emptyPayload;
+
 
     @Before
-    public void setup() {
+    public void setup() throws MalformedURLException {
         activityMonitor = new TestActivityMonitor();
 
         mockDispatcher = mock(JobDispatcher.class);
@@ -74,17 +85,21 @@ public class RemoteDataTest extends BaseTestCase {
 
         localeManager = new LocaleManager(getApplication(), preferenceDataStore);
 
-        options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .build();
-
         pushManager = mock(PushManager.class);
 
         clock = new TestClock();
 
-        remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, options,
-                activityMonitor, mockDispatcher, localeManager, pushManager, clock);
+        mockClient = mock(RemoteDataApiClient.class);
+        when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(new URL("https://airship.com"));
+
+        remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, TestAirshipRuntimeConfig.newTestConfig(),
+                activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient);
+
+        ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
+        remoteData.init();
+        verify(pushManager).addInternalPushListener(pushListenerArgumentCaptor.capture());
+        pushListener = pushListenerArgumentCaptor.getValue();
+
         payload = RemoteDataPayload.newBuilder()
                                    .setType("type")
                                    .setTimeStamp(123)
@@ -100,11 +115,6 @@ public class RemoteDataTest extends BaseTestCase {
                                                         .build())
                                         .build();
         emptyPayload = RemoteDataPayload.emptyPayload("type");
-
-        ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
-        remoteData.init();
-        verify(pushManager).addInternalPushListener(pushListenerArgumentCaptor.capture());
-        pushListener = pushListenerArgumentCaptor.getValue();
     }
 
     @After
@@ -125,7 +135,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
             }
         }));
 
@@ -143,7 +153,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
             }
         }));
 
@@ -163,7 +173,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
             }
         }));
 
@@ -175,12 +185,11 @@ public class RemoteDataTest extends BaseTestCase {
      * interval.
      */
     @Test
-    public void testRefreshInterval() {
+    public void testRefreshInterval() throws MalformedURLException, RequestException {
         // Refresh
         clock.currentTimeMillis = 100;
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
-        remoteData.onRefreshFinished();
-        runLooperTasks();
+
+        updatePayloads();
 
         // Set foreground refresh interval to 10 ms
         remoteData.setForegroundRefreshInterval(10);
@@ -191,7 +200,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher, never()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
             }
         }));
 
@@ -201,7 +210,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
             }
         }));
     }
@@ -210,7 +219,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that an empty cache will result in empty model objects in the initial callback.
      */
     @Test
-    public void testPayloadsForTypeWithEmptyCache() {
+    public void testPayloadsForTypeWithEmptyCache() throws MalformedURLException, RequestException {
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
@@ -225,29 +234,24 @@ public class RemoteDataTest extends BaseTestCase {
         runLooperTasks();
 
         // The first callback should be an empty placeholder
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), emptyPayload);
+        assertEquals(1, subscribedPayloads.size());
+        assertEquals(RemoteDataPayload.emptyPayload("type"), subscribedPayloads.get(0));
 
         subscribedPayloads.clear();
 
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
+        updatePayloads(payload);
 
         // The second callback should be the refreshed data
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), payload);
+        assertEquals(1, subscribedPayloads.size());
+        assertEquals(payload, subscribedPayloads.get(0));
     }
 
     /**
      * Test that a type missing in the response will result in an empty model object in the callback.
      */
     @Test
-    public void testPayloadsForTypeWithMissingTypeInResponse() {
-        remoteData.dataStore.savePayloads(asSet(payload));
-
-        Assert.assertEquals(remoteData.dataStore.getPayloads().size(), 1);
-
-        runLooperTasks();
+    public void testPayloadsForTypeWithMissingTypeInResponse() throws MalformedURLException, RequestException {
+        updatePayloads(payload);
 
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
@@ -261,31 +265,22 @@ public class RemoteDataTest extends BaseTestCase {
         });
 
         runLooperTasks();
-
-        // The first callback should be the cached payload
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), payload);
-
         subscribedPayloads.clear();
 
-        remoteData.onNewData(asSet(otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-
+        updatePayloads(otherPayload);
         runLooperTasks();
 
-        // The second callback should be an empty placeholder
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), emptyPayload);
+        assertEquals(1, subscribedPayloads.size());
+        assertEquals(emptyPayload, subscribedPayloads.get(0));
     }
 
     /**
      * Test that a single type will only produce a callback if the payload has changed
      */
     @Test
-    public void testPayloadsForTypeDistinctness() {
+    public void testPayloadsForTypeDistinctness() throws MalformedURLException, RequestException {
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
-
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
-
         payloadsObservable.subscribe(new Subscriber<RemoteDataPayload>() {
             @Override
             public void onNext(@NonNull RemoteDataPayload value) {
@@ -294,75 +289,15 @@ public class RemoteDataTest extends BaseTestCase {
         });
 
         runLooperTasks();
-
-        // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
+        updatePayloads(payload);
 
-        // We should get a second callback with the refreshed data
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), payload);
-
+        assertEquals(1, subscribedPayloads.size(), 1);
         subscribedPayloads.clear();
 
-        // Replaying the response should not result in another callback because the data hasn't changed
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-        Assert.assertEquals(subscribedPayloads.size(), 0);
-
-        // Sending a fresh payload with an updated timestamp should result in a new callback
-        RemoteDataPayload freshPayload = RemoteDataPayload.newBuilder()
-                                                          .setType(payload.getType())
-                                                          .setTimeStamp(payload.getTimestamp() + 100000)
-                                                          .setData(payload.getData())
-                                                          .build();
-
-        remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Assert.assertEquals(subscribedPayloads.get(0), freshPayload);
-    }
-
-    /**
-     * Test that an empty cache will result in empty model objects in the initial callback.
-     */
-    @Test
-    public void testPayloadsForTypesWithEmptyCache() {
-        final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
-
-        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
-
-        payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
-            @Override
-            public void onNext(@NonNull Collection<RemoteDataPayload> value) {
-                subscribedPayloads.add(value);
-            }
-        });
-
-        runLooperTasks();
-
-        // The first callback should be an empty placeholder
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Collection<RemoteDataPayload> collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection.size(), 2);
-
-        for (RemoteDataPayload payload : collection) {
-            Assert.assertEquals(payload.getTimestamp(), 0);
-        }
-
-        subscribedPayloads.clear();
-
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        // The second callback should be the refreshed data
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection.size(), 2);
-        Assert.assertEquals(collection, asSet(payload, otherPayload));
+        updatePayloads(payload);
+        assertEquals(0, subscribedPayloads.size());
     }
 
     /**
@@ -370,14 +305,11 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesWithMissingTypeInResponse() throws Exception {
-        remoteData.dataStore.savePayloads(asSet(payload, otherPayload));
 
-        Assert.assertEquals(remoteData.dataStore.getPayloads().size(), 2);
-
+        updatePayloads(payload, otherPayload);
         runLooperTasks();
 
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
-
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
 
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
@@ -389,33 +321,23 @@ public class RemoteDataTest extends BaseTestCase {
 
         runLooperTasks();
 
-        // The first callback should be the cached payload
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        Collection<RemoteDataPayload> collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection, asSet(payload, otherPayload));
+        assertEquals(subscribedPayloads.size(), 1);
+        assertEquals(asSet(payload, otherPayload), subscribedPayloads.get(0));
 
         subscribedPayloads.clear();
 
-        RemoteDataPayload freshOtherPayload = RemoteDataPayload.newBuilder()
-                                                               .setType(otherPayload.getType())
-                                                               .setTimeStamp(otherPayload.getTimestamp() + 100000)
-                                                               .setData(otherPayload.getData())
-                                                               .build();
+        // Remove the payload
+        updatePayloads(otherPayload);
 
-        remoteData.onNewData(asSet(freshOtherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        // The second callback should have an empty placeholder for the first payload
-        Assert.assertEquals(subscribedPayloads.size(), 1);
-        collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection, asSet(emptyPayload, freshOtherPayload));
+        assertEquals(1, subscribedPayloads.size());
+        assertEquals(asSet(otherPayload, emptyPayload), subscribedPayloads.get(0));
     }
 
     /**
      * Test that a multiple types will only produce a callback if at least one of the payloads has changed
      */
     @Test
-    public void testPayloadsForTypesDistinctness() {
+    public void testPayloadsForTypesDistinctness() throws MalformedURLException, RequestException {
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
@@ -431,15 +353,12 @@ public class RemoteDataTest extends BaseTestCase {
         // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
+        updatePayloads(payload, otherPayload);
+        assertEquals(asSet(payload, otherPayload), subscribedPayloads.get(0));
 
         // Replaying the response should not result in another callback because the timestamp hasn't changed
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
+        updatePayloads(payload, otherPayload);
+        assertEquals(1, subscribedPayloads.size());
 
         subscribedPayloads.clear();
 
@@ -450,67 +369,169 @@ public class RemoteDataTest extends BaseTestCase {
                                                           .setData(payload.getData())
                                                           .build();
 
-        remoteData.onNewData(asSet(freshPayload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(freshPayload, otherPayload)));
+        updatePayloads(freshPayload, otherPayload);
+        assertEquals(asSet(freshPayload, otherPayload), subscribedPayloads.get(0));
     }
 
-    /**
-     * Test last modified is updating when onNewData is called.
-     */
     @Test
-    public void testLastModified() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
+    public void testLastModified() throws MalformedURLException, RequestException {
+        Locale locale = Locale.forLanguageTag("en-US");
+        localeManager.setLocaleOverride(locale);
+
+        Map<String, List<String>> headers = new HashMap<>();
+        headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResponseHeaders(headers)
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), eq(locale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
-        Assert.assertEquals(remoteData.getLastModified(), "lastModified");
+        // Perform the update
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        runLooperTasks();
+
+        verify(mockClient).fetchRemoteDataPayloads(eq("lastModifiedResponse"), eq(locale), any(RemoteDataApiClient.PayloadParser.class));
     }
 
     /**
      * Test last modified is ignored if the metadata changes.
      */
     @Test
-    public void testLastModifiedMetadataChanges() {
-        remoteData.onNewData(asSet(otherPayload), "lastModified", RemoteData.createMetadata(localeManager.getLocale()));
+    public void testLastModifiedMetadataChanges() throws RequestException, MalformedURLException {
+        Locale locale = Locale.forLanguageTag("en-US");
+        Locale otherLocale = Locale.forLanguageTag("de-de");
+        when(mockClient.getRemoteDataUrl(otherLocale)).thenReturn(new URL("https://airship.com/some-locale"));
+        when(mockClient.getRemoteDataUrl(locale)).thenReturn(new URL("https://airship.com/some-locale"));
+
+        localeManager.setLocaleOverride(locale);
+
+        Map<String, List<String>> headers = new HashMap<>();
+        headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.COM"), asSet(payload)))
+                .setResponseHeaders(headers)
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(locale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
-        Assert.assertEquals("lastModified", remoteData.getLastModified());
+        localeManager.setLocaleOverride(otherLocale);
 
-        UAirship.shared().setLocaleOverride(new Locale("de"));
-        Assert.assertNull(remoteData.getLastModified());
+        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(otherLocale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        runLooperTasks();
+    }
+
+
+    /**
+     * Test parsing remote-data responses.
+     */
+    @Test
+    public void testParseRemoteDataResponse() throws RequestException, MalformedURLException {
+        ArgumentCaptor<RemoteDataApiClient.PayloadParser> parserArgumentCaptor = ArgumentCaptor.forClass(RemoteDataApiClient.PayloadParser.class);
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        remoteData.onPerformJob(UAirship.shared(), jobInfo);
+
+        verify(mockClient).fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), parserArgumentCaptor.capture());
+
+        RemoteDataApiClient.PayloadParser parser = parserArgumentCaptor.getValue();
+
+        JsonValue payload = JsonMap.newBuilder()
+                                   .put("type", "test")
+                                   .put("timestamp", "2017-01-01T12:00:00")
+                                   .put("data", JsonMap.newBuilder().put("foo", "bar").build())
+                                   .build()
+                                   .toJsonValue();
+
+        JsonList payloads = new JsonList(Collections.singletonList(payload));
+        URL url = new URL("http://some-url.com");
+        Set<RemoteDataPayload> parsed = parser.parse(url, payloads);
+
+        JsonMap metadata = JsonMap.newBuilder().put("url", url.toString()).build();
+        assertEquals(RemoteDataPayload.parsePayloads(payloads, metadata), parsed);
+    }
+
+
+    /**
+     * Test that fetching remote data succeeds if the status is 200
+     */
+    @Test
+    public void testRefreshRemoteData200() throws RequestException, MalformedURLException {
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
-     * Test the refresh response callback from the job runner.
+     * Test that fetching remote data succeeds if the status is 304
      */
     @Test
-    public void testHandleRefreshResponse() {
-        final Set<RemoteDataPayload> subscribedPayloads = new HashSet<>();
+    public void testRefreshRemoteData304() throws RequestException, MalformedURLException {
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .build();
 
-        remoteData.payloadUpdates.subscribe(new Subscriber<Set<RemoteDataPayload>>() {
-            @Override
-            public void onNext(@NonNull Set<RemoteDataPayload> payloads) {
-                subscribedPayloads.addAll(payloads);
-            }
-        });
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
-        remoteData.onNewData(asSet(payload, otherPayload), "lastModified", JsonMap.EMPTY_MAP);
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test that fetching remote data succeeds if the status is 5xx
+     */
+    @Test
+    public void testRefreshRemoteData500() throws RequestException, MalformedURLException {
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(500)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_RETRY, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    private void updatePayloads(RemoteDataPayload... payloads) throws RequestException {
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(mockClient.getRemoteDataUrl(localeManager.getLocale()), asSet(payloads)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
         runLooperTasks();
-
-        Assert.assertEquals(asSet(payload, otherPayload), subscribedPayloads);
-        Assert.assertEquals(remoteData.dataStore.getPayloads(), asSet(payload, otherPayload));
-
-        subscribedPayloads.clear();
-
-        // Subsequent refresh response missing previously known types
-        remoteData.onNewData(asSet(otherPayload), "lastModified", JsonMap.EMPTY_MAP);
-        runLooperTasks();
-
-        Assert.assertEquals(asSet(otherPayload), subscribedPayloads);
-
-        // "Deleted" payload types should not persist in the cache
-        Assert.assertEquals(remoteData.dataStore.getPayloads(), asSet(otherPayload));
     }
 
     /**
@@ -528,7 +549,7 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     private static <T> Set<T> asSet(T... items) {
-        return new HashSet<T>(Arrays.asList(items));
+        return new HashSet<>(Arrays.asList(items));
     }
 
 }
