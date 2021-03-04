@@ -80,7 +80,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
 
         return mutableListOf<AutomationDetail>().apply {
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
-            add(AutomationDetail("Schedule Data") {
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_data_key)) {
                 navigateToScheduleData(schedule.data, schedule.id)
             })
 
