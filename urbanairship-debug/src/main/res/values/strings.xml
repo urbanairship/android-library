@@ -267,5 +267,6 @@
     <string name="ua_actions_schedules">Actions Schedules</string>
     <string name="ua_iaa_debug_schedule_url_key">URL</string>
     <string name="ua_deferred_message_schedules">Deferred Message Schedules</string>
+    <string name="ua_debug_iaa_message_details">In-App Message Details</string>
 
 </resources>

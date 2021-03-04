@@ -49,8 +49,8 @@
     </fragment>
     <fragment
         android:id="@+id/inAppDisplayContentDetailsFragment"
-        android:name="com.urbanairship.debug.automation.DisplayContentDetailsFragment"
-        android:label="@string/ua_debug_iaa_display_details">
+        android:name="com.urbanairship.debug.automation.MessageDetailsFragment"
+        android:label="@string/ua_debug_iaa_message_details">
         <argument
             android:name="message"
             app:argType="com.urbanairship.iam.InAppMessage" />

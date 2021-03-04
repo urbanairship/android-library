@@ -29,11 +29,7 @@ class ScheduleListFragment : Fragment() {
             if (isResumed) {
                 val args = Bundle()
                 args.putString(ScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID, it.id)
-                when (it.type) {
-                    Schedule.TYPE_IN_APP_MESSAGE -> Navigation.findNavController(binding.root).navigate(R.id.inAppScheduleDetailsFragment, args)
-                    Schedule.TYPE_ACTION -> Navigation.findNavController(binding.root).navigate(R.id.actionsScheduleDetailsFragment, args)
-                    Schedule.TYPE_DEFERRED -> Navigation.findNavController(binding.root).navigate(R.id.deferredScheduleDetailsFragment, args)
-                }
+                Navigation.findNavController(binding.root).navigate(R.id.inAppScheduleDetailsFragment, args)
             }
         }
 

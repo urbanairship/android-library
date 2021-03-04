@@ -491,6 +491,27 @@ public class AutomationEngine {
      * Gets a schedule for the given schedule ID.
      *
      * @param scheduleId The schedule ID.
+     * @return A pending result.
+     */
+    @NonNull
+    public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull final String scheduleId) {
+        final PendingResult<Schedule<? extends ScheduleData>> pendingResult = new PendingResult<>();
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                cleanSchedules();
+                Schedule<? extends ScheduleData> result = convert(dao.getSchedule(scheduleId));
+                pendingResult.setResult(result);
+            }
+        });
+
+        return pendingResult;
+    }
+
+    /**
+     * Gets a schedule for the given schedule ID.
+     *
+     * @param scheduleId The schedule ID.
      * @param type The type.
      * @return A pending result.
      */
