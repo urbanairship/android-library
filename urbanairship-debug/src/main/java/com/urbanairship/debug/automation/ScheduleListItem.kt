@@ -14,22 +14,18 @@ import com.urbanairship.iam.InAppMessage
 
 class ScheduleListItem(schedule: Schedule<out ScheduleData>) {
 
-    val name: String? = {
-        when (schedule.type) {
+    val name: String? = when (schedule.type) {
             Schedule.TYPE_IN_APP_MESSAGE -> (schedule.data as InAppMessage).name
             Schedule.TYPE_ACTION -> (schedule.data as Actions).actionsMap.toFormattedJsonString()
             Schedule.TYPE_DEFERRED -> (schedule.data as Deferred).url.toString()
             else -> ""
         }
-    }.invoke()
 
-    val type: String? = {
-        if (schedule.type == Schedule.TYPE_IN_APP_MESSAGE) {
+    val type: String? = if (schedule.type == Schedule.TYPE_IN_APP_MESSAGE) {
             (schedule.data as InAppMessage).type
         } else {
             schedule.type
         }
-    }.invoke()
 
     val id = schedule.id
 

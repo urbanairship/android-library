@@ -4,6 +4,7 @@ package com.urbanairship.debug.automation
 
 import android.os.Bundle
 import android.text.format.DateFormat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.navigation.Navigation
@@ -33,13 +34,6 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppTriggersDetailsFragment, args)
     }
 
-    private fun navigateToDisplayContent(message: InAppMessage) {
-        val args = Bundle()
-        args.putParcelable(MessageDetailsFragment.ARGUMENT_SCHEDULE, message)
-        Navigation.findNavController(requireView())
-                .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
-    }
-
     private fun navigateToAudience(audience: Audience) {
         val args = Bundle()
         args.putString(AudienceDetailsFragment.ARGUMENT_AUDIENCE, audience.toJsonValue().toString())
@@ -50,18 +44,15 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
     private fun navigateToScheduleData(scheduleData: ScheduleData, scheduleId: String) {
         when (scheduleData) {
             is InAppMessage -> {
-                val args = Bundle()
-                args.putParcelable(MessageDetailsFragment.ARGUMENT_SCHEDULE, scheduleData)
+                val args = bundleOf(MessageDetailsFragment.ARGUMENT_SCHEDULE to scheduleData)
                 Navigation.findNavController(requireView()).navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
             }
             is Deferred -> {
-                val args = Bundle()
-                args.putString(DeferredScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID, scheduleId)
+                val args = bundleOf(DeferredScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID to scheduleId)
                 Navigation.findNavController(requireView()).navigate(R.id.deferredScheduleDetailsFragment, args)
             }
             is Actions -> {
-                val args = Bundle()
-                args.putString(ActionsScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID, scheduleId)
+                val args = bundleOf(ActionsScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID to scheduleId)
                 Navigation.findNavController(requireView()).navigate(R.id.actionsScheduleDetailsFragment, args)
             }
         }
