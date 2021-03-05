@@ -21,10 +21,10 @@ import com.urbanairship.iam.modal.ModalDisplayContent
 import com.urbanairship.json.JsonMap
 import java.util.concurrent.TimeUnit
 
-class DisplayContentDetailsFragment : AutomationDetailsFragment() {
+class MessageDetailsFragment : AutomationDetailsFragment() {
 
     companion object {
-        const val ARGUMENT_MESSAGE = "message"
+        const val ARGUMENT_SCHEDULE = "schedule"
     }
 
     private fun navigate(textInfo: TextInfo) {
@@ -49,7 +49,7 @@ class DisplayContentDetailsFragment : AutomationDetailsFragment() {
     }
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
-        var message = requireArguments().getParcelable<InAppMessage>(ARGUMENT_MESSAGE)!!
+        var message = requireArguments().getParcelable<InAppMessage>(ARGUMENT_SCHEDULE)!!
 
         var details = when (message.getDisplayContent<DisplayContent>()) {
             is BannerDisplayContent -> bannerDetails(message.getDisplayContent()!!)
@@ -61,6 +61,7 @@ class DisplayContentDetailsFragment : AutomationDetailsFragment() {
         }
 
         val list = mutableListOf<AutomationDetail>()
+        list.add(AutomationDetail(getString(R.string.ua_iaa_debug_message_name_key), message.name.orEmpty()))
         list.add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()))
         list.addAll(details)
         return MutableLiveData(list)

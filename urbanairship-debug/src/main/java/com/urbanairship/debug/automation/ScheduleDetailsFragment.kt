@@ -4,13 +4,17 @@ package com.urbanairship.debug.automation
 
 import android.os.Bundle
 import android.text.format.DateFormat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.navigation.Navigation
 import com.urbanairship.automation.Audience
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
+import com.urbanairship.automation.ScheduleData
 import com.urbanairship.automation.Trigger
+import com.urbanairship.automation.actions.Actions
+import com.urbanairship.automation.deferred.Deferred
 import com.urbanairship.debug.R
 import com.urbanairship.debug.utils.PendingResultLiveData
 import com.urbanairship.iam.InAppMessage
@@ -30,13 +34,6 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppTriggersDetailsFragment, args)
     }
 
-    private fun navigateToDisplayContent(message: InAppMessage) {
-        val args = Bundle()
-        args.putParcelable(DisplayContentDetailsFragment.ARGUMENT_MESSAGE, message)
-        Navigation.findNavController(requireView())
-                .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
-    }
-
     private fun navigateToAudience(audience: Audience) {
         val args = Bundle()
         args.putString(AudienceDetailsFragment.ARGUMENT_AUDIENCE, audience.toJsonValue().toString())
@@ -44,23 +41,38 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppAudienceDetailsFragment, args)
     }
 
+    private fun navigateToScheduleData(scheduleData: ScheduleData, scheduleId: String) {
+        when (scheduleData) {
+            is InAppMessage -> {
+                val args = bundleOf(MessageDetailsFragment.ARGUMENT_SCHEDULE to scheduleData)
+                Navigation.findNavController(requireView()).navigate(R.id.action_inAppMessageDetailsFragment_to_inAppDisplayContentDetailsFragment, args)
+            }
+            is Deferred -> {
+                val args = bundleOf(DeferredScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID to scheduleId)
+                Navigation.findNavController(requireView()).navigate(R.id.deferredScheduleDetailsFragment, args)
+            }
+            is Actions -> {
+                val args = bundleOf(ActionsScheduleDetailsFragment.ARGUMENT_SCHEDULE_ID to scheduleId)
+                Navigation.findNavController(requireView()).navigate(R.id.actionsScheduleDetailsFragment, args)
+            }
+        }
+    }
+
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
-        val scheduleLiveData = PendingResultLiveData<Schedule<InAppMessage>>(InAppAutomation.shared().getMessageSchedule(scheduleId))
+        val scheduleLiveData = PendingResultLiveData<Schedule<out ScheduleData>>(InAppAutomation.shared().getSchedule(scheduleId))
         return Transformations.map(scheduleLiveData) { schedule ->
             detailsForSchedule(schedule)
         }
     }
 
-    private fun detailsForSchedule(schedule: Schedule<InAppMessage>): List<AutomationDetail> {
-        val message = schedule.data
+    private fun detailsForSchedule(schedule: Schedule<out ScheduleData>): List<AutomationDetail> {
         val dateFormat = DateFormat.getLongDateFormat(requireContext())
 
         return mutableListOf<AutomationDetail>().apply {
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_message_name_key), message.name.orEmpty()))
             add(AutomationDetail(getString(R.string.ua_iaa_debug_schedule_id_key), schedule.id))
-            add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()) {
-                navigateToDisplayContent(message)
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_data_key)) {
+                navigateToScheduleData(schedule.data, schedule.id)
             })
 
             schedule.audience?.let {

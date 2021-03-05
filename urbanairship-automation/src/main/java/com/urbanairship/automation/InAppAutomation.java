@@ -439,6 +439,24 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public PendingResult<Schedule<Deferred>> getDeferredMessageSchedule(@NonNull String scheduleId) {
+        return automationEngine.getSchedule(scheduleId, Schedule.TYPE_DEFERRED);
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull String scheduleId) {
+        return automationEngine.getSchedule(scheduleId);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @NonNull

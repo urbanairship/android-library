@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.automation.Schedule
+import com.urbanairship.automation.ScheduleData
 import com.urbanairship.debug.databinding.UaItemAutomationBinding
-import com.urbanairship.iam.InAppMessage
 
-internal class ScheduleListAdapter(private val callback: ((schedule: Schedule<InAppMessage>) -> Unit)) : ListAdapter<Schedule<InAppMessage>, ScheduleListAdapter.ViewHolder>(diffCallback) {
+internal class ScheduleListAdapter(private val callback: ((schedule: Schedule<out ScheduleData>) -> Unit)) : ListAdapter<Schedule<out ScheduleData>, ScheduleListAdapter.ViewHolder>(diffCallback) {
 
     class ViewHolder(val binding: UaItemAutomationBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -33,12 +33,12 @@ internal class ScheduleListAdapter(private val callback: ((schedule: Schedule<In
     }
 
     companion object {
-        private val diffCallback = object : DiffUtil.ItemCallback<Schedule<InAppMessage>>() {
-            override fun areItemsTheSame(oldItem: Schedule<InAppMessage>, newItem: Schedule<InAppMessage>): Boolean {
+        private val diffCallback = object : DiffUtil.ItemCallback<Schedule<out ScheduleData>>() {
+            override fun areItemsTheSame(oldItem: Schedule<out ScheduleData>, newItem: Schedule<out ScheduleData>): Boolean {
                 return oldItem == newItem
             }
 
-            override fun areContentsTheSame(oldItem: Schedule<InAppMessage>, newItem: Schedule<InAppMessage>): Boolean {
+            override fun areContentsTheSame(oldItem: Schedule<out ScheduleData>, newItem: Schedule<out ScheduleData>): Boolean {
                 return oldItem == newItem
             }
         }
