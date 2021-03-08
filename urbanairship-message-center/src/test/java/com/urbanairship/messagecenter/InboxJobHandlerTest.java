@@ -18,6 +18,7 @@ import com.urbanairship.json.JsonValue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
@@ -34,9 +35,13 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -653,6 +658,55 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
+    }
+
+    /**
+     * Test user is recreated on unauthorized response from update.
+     */
+    @Test
+    public void testUpdateUserRequestUnauthorizedRecreatesUser() throws RequestException {
+        String unauthorizedUserId = "unauthorizedUserId";
+        String unauthorizedToken = "unauthorizedToken";
+        String recreatedUserId = "recreatedUserId";
+        String recreatedToken = "recreatedToken";
+
+        String channelId = "channelId";
+
+        // Set a user
+        user.setUser(unauthorizedUserId, unauthorizedToken);
+
+        when(mockChannel.getId()).thenReturn(channelId);
+
+        // Set error response for user update
+        when(mockInboxApiClient.updateUser(user, channelId))
+                .thenReturn(new Response.Builder<Void>(HttpURLConnection.HTTP_UNAUTHORIZED).build());
+
+        // Set success response for user create
+        UserCredentials result = new UserCredentials(recreatedUserId, recreatedToken);
+        String responseBody = String.format("{ \"user_id\": \"%s\", \"password\": \"%s\" }",
+                recreatedUserId, recreatedToken);
+        when(mockInboxApiClient.createUser(channelId))
+                .thenReturn(new Response.Builder<UserCredentials>(HttpURLConnection.HTTP_CREATED)
+                        .setResponseBody(responseBody)
+                        .setResult(result)
+                        .build());
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                                 .build();
+
+        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertTrue(userListener.lastUpdateUserResult);
+
+        // Verify user name and user token was set
+        assertEquals(recreatedUserId, user.getId());
+        assertEquals(recreatedToken, user.getPassword());
+
+        // Sanity check requests were made as expected
+        InOrder inOrder = inOrder(mockInboxApiClient);
+        inOrder.verify(mockInboxApiClient, times(1)).updateUser(any(User.class), eq(channelId));
+        inOrder.verify(mockInboxApiClient, times(1)).createUser(channelId);
+        inOrder.verifyNoMoreInteractions();
     }
 
     private Message createFakeMessage(String messageId, boolean unread, boolean deleted) throws JsonException {

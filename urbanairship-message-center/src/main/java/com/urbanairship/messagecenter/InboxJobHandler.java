@@ -357,6 +357,9 @@ class InboxJobHandler {
 
     /**
      * Update the user.
+     * <p>
+     * If the update returns a {@code 401: NOT AUTHORIZED} response, re-creation of the {@link User}
+     * will be attempted via {@link #createUser()}.
      *
      * @return <code>true</code> if user was updated, otherwise <code>false</code>.
      */
@@ -372,11 +375,16 @@ class InboxJobHandler {
             Response<Void> response = inboxApiClient.updateUser(user, channelId);
             Logger.verbose("Update Rich Push user response: %s", response);
 
-            if (response.getStatus() == HttpURLConnection.HTTP_OK) {
+            int status = response.getStatus();
+            if (status == HttpURLConnection.HTTP_OK) {
                 Logger.info("Rich Push user updated.");
                 dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());
                 user.onUpdated(channelId);
                 return true;
+            } else if (status == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                Logger.debug("Re-creating Rich Push user.");
+                dataStore.put(LAST_UPDATE_TIME, 0);
+                return createUser();
             }
 
             dataStore.put(LAST_UPDATE_TIME, 0);

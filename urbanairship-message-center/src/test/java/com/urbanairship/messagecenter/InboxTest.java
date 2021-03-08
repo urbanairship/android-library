@@ -162,6 +162,30 @@ public class InboxTest {
     }
 
     /**
+     * Test user updates refresh the inbox.
+     */
+    @Test
+    public void testUserUpdateRefreshesInbox() {
+        ArgumentCaptor<User.Listener> argument = ArgumentCaptor.forClass(User.Listener.class);
+        inbox.init();
+
+        verify(mockUser).addListener(argument.capture());
+        User.Listener listener = argument.getValue();
+        assertNotNull(listener);
+
+        clearInvocations(mockDispatcher);
+
+        listener.onUserUpdated(true);
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            }
+        }));
+    }
+
+    /**
      * Tests the inbox reports the correct
      * number of messages.
      */

@@ -22,7 +22,6 @@ import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -146,19 +145,15 @@ public class Inbox {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void init() {
-        if (UAStringUtil.isEmpty(user.getId())) {
-            final User.Listener userListener = new User.Listener() {
-                @Override
-                public void onUserUpdated(boolean success) {
-                    if (success) {
-                        user.removeListener(this);
-                        fetchMessages();
-                    }
+        // Refresh the inbox whenever the user is updated.
+        user.addListener(new User.Listener() {
+            @Override
+            public void onUserUpdated(boolean success) {
+                if (success) {
+                    fetchMessages();
                 }
-            };
-
-            user.addListener(userListener);
-        }
+            }
+        });
 
         refresh(false);
 
