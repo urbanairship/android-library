@@ -129,7 +129,7 @@ public class NamedUser extends AirshipComponent {
         airshipChannel.addChannelListener(new AirshipChannelListener() {
             @Override
             public void onChannelCreated(@NonNull String channelId) {
-                dispatchNamedUserUpdateJob();
+                forceUpdate();
             }
 
             @Override

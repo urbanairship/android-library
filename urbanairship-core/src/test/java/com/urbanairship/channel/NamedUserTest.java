@@ -142,7 +142,10 @@ public class NamedUserTest extends BaseTestCase {
 
         clearInvocations(mockDispatcher);
 
+        assertTrue(namedUser.isIdUpToDate());
         listener.onChannelCreated("some-channel");
+        assertFalse(namedUser.isIdUpToDate());
+
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
@@ -305,7 +308,9 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testForceUpdate() {
+        assertTrue(namedUser.isIdUpToDate());
         namedUser.forceUpdate();
+        assertFalse(namedUser.isIdUpToDate());
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
