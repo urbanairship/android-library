@@ -47,7 +47,7 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
 
     private void updateConfig(@NonNull RemoteAirshipConfig remoteAirshipConfig) {
         AirshipUrlConfig config;
-        if (preferenceDataStore.getBoolean(DISABLE_URL_FALLBACK_KEY, false)) {
+        if (preferenceDataStore.getBoolean(DISABLE_URL_FALLBACK_KEY, configOptions.requireInitialRemoteConfigEnabled)) {
             // Only allow remote-data URL as a fallback
             config = AirshipUrlConfig.newBuilder()
                                      .setRemoteDataUrl(firstOrNull(remoteAirshipConfig.getRemoteDataUrl(), configOptions.remoteDataUrl))

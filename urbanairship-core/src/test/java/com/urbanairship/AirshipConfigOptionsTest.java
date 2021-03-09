@@ -12,8 +12,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
 
+import androidx.core.app.NotificationCompat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -63,6 +66,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://play.google.com/store/apps/topic?id=editors_choice", production.appStoreUri.toString());
         assertTrue(production.dataCollectionOptInEnabled);
         assertTrue(production.extendedBroadcastsEnabled);
+        assertTrue(production.requireInitialRemoteConfigEnabled);
     }
 
     /**
@@ -132,6 +136,48 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
                 .build();
 
         assertEquals("fcm sender ID", aco.fcmSenderId);
+    }
+
+    @Test
+    public void testDefaultConfig() {
+        AirshipConfigOptions defaultConfig = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
+        assertEquals("appKey", defaultConfig.appKey);
+        assertEquals("appSecret", defaultConfig.appSecret);
+        assertEquals("https://device-api.urbanairship.com/", defaultConfig.deviceUrl);
+        assertEquals("https://combine.urbanairship.com/", defaultConfig.analyticsUrl);
+        assertEquals("https://remote-data.urbanairship.com/", defaultConfig.remoteDataUrl);
+        assertEquals("https://wallet-api.urbanairship.com", defaultConfig.walletUrl);
+
+        assertNull(defaultConfig.notificationChannel);
+        assertNull(defaultConfig.appStoreUri);
+
+        assertNull(defaultConfig.fcmSenderId);
+        assertNull(defaultConfig.customPushProvider);
+
+        assertTrue(defaultConfig.urlAllowList.isEmpty());
+        assertTrue(defaultConfig.urlAllowListScopeJavaScriptInterface.isEmpty());
+        assertTrue(defaultConfig.urlAllowListScopeOpenUrl.isEmpty());
+
+        assertEquals(24 * 60 * 60 * 1000, defaultConfig.backgroundReportingIntervalMS);
+
+        assertEquals(0, defaultConfig.notificationIcon);
+        assertEquals(0, defaultConfig.notificationLargeIcon);
+        assertEquals(NotificationCompat.COLOR_DEFAULT, defaultConfig.notificationAccentColor);
+
+        assertTrue(defaultConfig.autoLaunchApplication);
+        assertTrue(defaultConfig.channelCaptureEnabled);
+        assertTrue(defaultConfig.analyticsEnabled);
+        assertFalse(defaultConfig.inProduction);
+        assertFalse(defaultConfig.channelCreationDelayEnabled);
+        assertFalse(defaultConfig.dataCollectionOptInEnabled);
+        assertFalse(defaultConfig.extendedBroadcastsEnabled);
+        assertFalse(defaultConfig.requireInitialRemoteConfigEnabled);
+
+
     }
 
     @Test

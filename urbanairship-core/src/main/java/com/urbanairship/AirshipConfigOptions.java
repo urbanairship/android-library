@@ -322,6 +322,13 @@ public class AirshipConfigOptions {
      */
     public final boolean inProduction;
 
+    /**
+     * Flag indicating whether the SDK will wait for an initial remote config instead of falling back on default API URLs.
+     * <p>
+     * Defaults to <code>false</code>.
+     */
+    public final boolean requireInitialRemoteConfigEnabled;
+
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
@@ -370,6 +377,7 @@ public class AirshipConfigOptions {
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
+        this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
     }
 
     /**
@@ -519,13 +527,13 @@ public class AirshipConfigOptions {
         private static final String FIELD_FCM_SENDER_ID = "fcmSenderId";
         private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
-        private static final String FIELD_ENABLE_URL_ALLOW_LIST = "enableUrlAllowList";
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
         private static final String FIELD_SITE = "site";
         private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
         private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
+        private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
 
         private String appKey;
         private String appSecret;
@@ -565,6 +573,7 @@ public class AirshipConfigOptions {
         String site = SITE_US;
 
         private boolean suppressAllowListError = false;
+        private boolean requireInitialRemoteConfigEnabled = false;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -855,6 +864,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_SUPPRESS_ALLOW_LIST_ERROR:
                             this.setSuppressAllowListError(configParser.getBoolean(name, false));
+                            break;
+
+                        case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
+                            this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
                             break;
                     }
                 } catch (Exception e) {
@@ -1373,12 +1386,25 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the flag suppressing the error normally generated when no allow list entries have been added to allowList or allowListScopeOpenUrl.
+         *
          * @param suppressAllowListError {@code true} to supress the allow list warning, otherwise {@code false}.
          * @return The config options builder.
          */
         @NonNull
         public Builder setSuppressAllowListError(boolean suppressAllowListError) {
             this.suppressAllowListError = suppressAllowListError;
+            return this;
+        }
+
+        /**
+         * Sets the flag to require initial remote-config for device URLs.
+         *
+         * @param requireInitialRemoteConfigEnabled {@code true} to require initial remote-config, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setRequireInitialRemoteConfigEnabled(boolean requireInitialRemoteConfigEnabled) {
+            this.requireInitialRemoteConfigEnabled = requireInitialRemoteConfigEnabled;
             return this;
         }
 
@@ -1392,11 +1418,11 @@ public class AirshipConfigOptions {
             if (urlAllowList.isEmpty() && urlAllowListScopeOpenUrl.isEmpty() && !suppressAllowListError) {
                 Logger.error(
                         "The airship config options is missing URL allow list rules for SCOPE_OPEN. " +
-                        "By default only Airship, YouTube, mailto, sms, and tel URLs will be allowed." +
-                        "To suppress this error, specify allow list rules by providing rules for " +
-                        "urlAllowListScopeOpenUrl or urlAllowList. Alternatively you can suppress " +
-                        "this error and keep the default rules by using the flag suppressAllowListError. " +
-                        "For more information, see https://docs.airship.com/platform/android/getting-started/#url-allow-list.");
+                                "By default only Airship, YouTube, mailto, sms, and tel URLs will be allowed." +
+                                "To suppress this error, specify allow list rules by providing rules for " +
+                                "urlAllowListScopeOpenUrl or urlAllowList. Alternatively you can suppress " +
+                                "this error and keep the default rules by using the flag suppressAllowListError. " +
+                                "For more information, see https://docs.airship.com/platform/android/getting-started/#url-allow-list.");
             }
 
             if (inProduction == null) {

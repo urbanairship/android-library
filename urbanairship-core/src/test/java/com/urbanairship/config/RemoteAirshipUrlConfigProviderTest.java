@@ -80,6 +80,28 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
     }
 
     @Test
+    public void testRequireInitialRemoteConfig() {
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
+                                                                 .setRequireInitialRemoteConfigEnabled(true)
+                                                                 .build();
+
+        RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
+
+        assertNull(provider.getConfig().deviceUrl().build());
+        assertNull(provider.getConfig().analyticsUrl().build());
+        assertNull(provider.getConfig().walletUrl().build());
+        assertEquals(configOptions.remoteDataUrl, provider.getConfig().remoteDataUrl().build().toString());
+
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        provider.onRemoteConfigUpdated(remoteConfig);
+
+        assertEquals("http://device", provider.getConfig().deviceUrl().build().toString());
+        assertEquals("http://remote", provider.getConfig().remoteDataUrl().build().toString());
+        assertEquals("http://analytics", provider.getConfig().analyticsUrl().build().toString());
+        assertEquals("http://wallet", provider.getConfig().walletUrl().build().toString());
+    }
+
+    @Test
     public void testCacheRemoteAirshipConfig() {
         RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
