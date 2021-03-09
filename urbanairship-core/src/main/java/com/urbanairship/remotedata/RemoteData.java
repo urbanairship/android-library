@@ -421,15 +421,14 @@ public class RemoteData extends AirshipComponent {
             return JobInfo.JOB_FINISHED;
         }
 
-        int status = response.getStatus();
         Logger.debug("Received remote data response: %s", response);
 
-        if (status == 304) {
+        if (response.getStatus() == 304) {
             onRefreshFinished();
             return JobInfo.JOB_FINISHED;
         }
 
-        if (status == 200) {
+        if (response.isSuccessful()) {
             JsonMap metadata = createMetadata(response.getResult().url);
             Set<RemoteDataPayload> remoteDataPayloads = response.getResult().payloads;
             if (saveNewPayloads(remoteDataPayloads)) {
@@ -439,10 +438,11 @@ public class RemoteData extends AirshipComponent {
                 onRefreshFinished();
                 return JobInfo.JOB_FINISHED;
             }
+            return JobInfo.JOB_RETRY;
         }
 
         // Error
-        return JobInfo.JOB_RETRY;
+        return response.isServerError() ? JobInfo.JOB_RETRY : JobInfo.JOB_FINISHED;
     }
 
     private void onRefreshFinished() {

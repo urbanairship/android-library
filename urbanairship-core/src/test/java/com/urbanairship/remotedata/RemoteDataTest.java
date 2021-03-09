@@ -75,7 +75,6 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
 
-
     @Before
     public void setup() throws MalformedURLException {
         activityMonitor = new TestActivityMonitor();
@@ -505,10 +504,10 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     /**
-     * Test that fetching remote data succeeds if the status is 5xx
+     * Test that fetching remote data job retries if the status is 5xx
      */
     @Test
-    public void testRefreshRemoteData500() throws RequestException, MalformedURLException {
+    public void testRefreshRemoteDataServerError() throws RequestException, MalformedURLException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(500)
                 .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
                 .build();
@@ -518,6 +517,22 @@ public class RemoteDataTest extends BaseTestCase {
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
         assertEquals(JobInfo.JOB_RETRY, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    /**
+     * Test that fetching remote data job finishes if the status is 4xx
+     */
+    @Test
+    public void testRefreshRemoteDataClientError() throws RequestException, MalformedURLException {
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
+                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     private void updatePayloads(RemoteDataPayload... payloads) throws RequestException {
