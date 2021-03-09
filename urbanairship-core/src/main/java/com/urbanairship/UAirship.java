@@ -20,6 +20,7 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
@@ -34,8 +35,6 @@ import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
-import com.urbanairship.remoteconfig.RemoteAirshipConfig;
-import com.urbanairship.remoteconfig.RemoteAirshipConfigListener;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.PlatformUtils;
@@ -712,6 +711,14 @@ public class UAirship {
 
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
+        remoteAirshipUrlConfigProvider.addUrlConfigListener(new AirshipUrlConfig.Listener() {
+            @Override
+            public void onUrlConfigUpdated() {
+                for (AirshipComponent component : components) {
+                    component.onUrlConfigUpdated();
+                }
+            }
+        });
 
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, localeManager);
 
@@ -746,15 +753,6 @@ public class UAirship {
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
-        this.remoteConfigManager.addRemoteAirshipConfigListener(new RemoteAirshipConfigListener() {
-            @Override
-            public void onRemoteConfigUpdated(@NonNull RemoteAirshipConfig remoteAirshipConfig) {
-                if (channel.getId() == null) {
-                    channel.updateRegistration();
-                }
-            }
-        });
-
         components.add(this.remoteConfigManager);
 
         // Debug

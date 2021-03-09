@@ -11,6 +11,9 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
     private PreferenceDataStore dataStore;
@@ -55,7 +58,13 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
 
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
+
+        AirshipUrlConfig.Listener listener = mock(AirshipUrlConfig.Listener.class);
+        provider.addUrlConfigListener(listener);
+
         provider.onRemoteConfigUpdated(remoteConfig);
+
+        verify(listener).onUrlConfigUpdated();
 
         AirshipUrlConfig urlConfig = provider.getConfig();
 
@@ -63,6 +72,24 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", urlConfig.remoteDataUrl().build().toString());
         assertEquals("http://analytics", urlConfig.analyticsUrl().build().toString());
         assertEquals("http://wallet", urlConfig.walletUrl().build().toString());
+    }
+
+    @Test
+    public void testUrlConfigListenerIgnoresUnchangedUpdates() {
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
+
+        RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
+        // Update before attaching the listener.
+        provider.onRemoteConfigUpdated(remoteConfig);
+
+        AirshipUrlConfig.Listener listener = mock(AirshipUrlConfig.Listener.class);
+        provider.addUrlConfigListener(listener);
+
+        // Update with the same remote config now that the listener is attached.
+        provider.onRemoteConfigUpdated(remoteConfig);
+
+        verify(listener, never()).onUrlConfigUpdated();
     }
 
     @Test

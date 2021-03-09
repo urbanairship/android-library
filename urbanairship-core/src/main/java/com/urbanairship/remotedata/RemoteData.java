@@ -258,6 +258,18 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onUrlConfigUpdated() {
+        // Update remote data when notified of new URL config.
+        refresh();
+    }
+
+    /**
      * Produces an Observable of RemoteDataPayload tied to a specific type.
      * Subscribers will be notified of any cached data upon subscription, as well as any subsequent changes
      * following refresh updates, provided the timestamp is fresh.

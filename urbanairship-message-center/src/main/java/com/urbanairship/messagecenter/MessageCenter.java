@@ -153,6 +153,18 @@ public class MessageCenter extends AirshipComponent {
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onUrlConfigUpdated() {
+        // Update inbox user when notified of new URL config.
+        getInbox().dispatchUpdateUserJob(true);
+    }
+
+    /**
      * @hide
      */
     @WorkerThread

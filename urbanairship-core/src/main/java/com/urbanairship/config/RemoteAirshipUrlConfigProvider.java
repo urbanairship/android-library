@@ -8,6 +8,9 @@ import com.urbanairship.remoteconfig.RemoteAirshipConfig;
 import com.urbanairship.remoteconfig.RemoteAirshipConfigListener;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
@@ -26,6 +29,8 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
     private final AirshipConfigOptions configOptions;
 
     private final Object lock = new Object();
+    private final List<AirshipUrlConfig.Listener> airshipUrlConfigListeners = new CopyOnWriteArrayList<>();
+
     private AirshipUrlConfig urlConfig;
 
     public RemoteAirshipUrlConfigProvider(@NonNull AirshipConfigOptions configOptions,
@@ -64,8 +69,16 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
                                      .build();
         }
 
+        boolean isConfigUpdate;
         synchronized (lock) {
+            isConfigUpdate = !config.equals(urlConfig);
             urlConfig = config;
+        }
+
+        if (isConfigUpdate) {
+            for (AirshipUrlConfig.Listener listener : airshipUrlConfigListeners) {
+                listener.onUrlConfigUpdated();
+            }
         }
     }
 
@@ -85,6 +98,24 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
     public void onRemoteConfigUpdated(@NonNull RemoteAirshipConfig remoteAirshipConfig) {
         updateConfig(remoteAirshipConfig);
         preferenceDataStore.put(REMOTE_CONFIG_KEY, remoteAirshipConfig);
+    }
+
+    /**
+     * Adds a URL config listener.
+     *
+     * @param listener The listener.
+     */
+    public void addUrlConfigListener(AirshipUrlConfig.Listener listener) {
+        airshipUrlConfigListeners.add(listener);
+    }
+
+    /**
+     * Removes a URL config listener.
+     *
+     * @param listener The listener.
+     */
+    public void removeUrlConfigListener(AirshipUrlConfig.Listener listener) {
+        airshipUrlConfigListeners.remove(listener);
     }
 
     private static String firstOrNull(@NonNull String... args) {

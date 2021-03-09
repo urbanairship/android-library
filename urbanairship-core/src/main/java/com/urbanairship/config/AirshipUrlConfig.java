@@ -5,6 +5,7 @@ package com.urbanairship.config;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Airship URL config.
@@ -24,6 +25,16 @@ public class AirshipUrlConfig {
         this.analyticsUrl = builder.analyticsUrl;
         this.walletUrl = builder.walletUrl;
         this.remoteDataUrl = builder.remoteDataUrl;
+    }
+
+    /**
+     * Listener interface for receiving URL config updates.
+     */
+    public interface Listener {
+        /**
+         * Called when the URL configuration is updated.
+         */
+        void onUrlConfigUpdated();
     }
 
     /**
@@ -114,5 +125,26 @@ public class AirshipUrlConfig {
         public AirshipUrlConfig build() {
             return new AirshipUrlConfig(this);
         }
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AirshipUrlConfig that = (AirshipUrlConfig) o;
+        return ObjectsCompat.equals(analyticsUrl, that.analyticsUrl) &&
+                ObjectsCompat.equals(deviceUrl, that.deviceUrl) &&
+                ObjectsCompat.equals(remoteDataUrl, that.remoteDataUrl) &&
+                ObjectsCompat.equals(walletUrl, that.walletUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(analyticsUrl, deviceUrl, remoteDataUrl, walletUrl);
     }
 }

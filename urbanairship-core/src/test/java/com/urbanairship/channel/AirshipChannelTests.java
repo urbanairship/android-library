@@ -986,6 +986,23 @@ public class AirshipChannelTests extends BaseTestCase {
         }));
     }
 
+    @Test
+    public void testNewUrlConfigUpdatesRegistrationFully() {
+        clearInvocations(mockDispatcher);
+
+        airshipChannel.onUrlConfigUpdated();
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                JsonValue extraForceFullUpdate = jobInfo.getExtras().get("EXTRA_FORCE_FULL_UPDATE");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") &&
+                        extraForceFullUpdate != null &&
+                        extraForceFullUpdate.getBoolean(false);
+            }
+        }));
+    }
+
     private static <T> Response<T> createResponse(T result, int status) {
         return new Response.Builder<T>(status)
                 .setResponseBody("test")

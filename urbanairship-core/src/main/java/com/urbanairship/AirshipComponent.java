@@ -183,6 +183,15 @@ public abstract class AirshipComponent {
     }
 
     /**
+     * Called when a component gets a new remote url config.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onUrlConfigUpdated() {
+    }
+
+    /**
      * Check if data collection is enabled.
      *
      * @return {@code true} if enabled, otherwise {@code false}

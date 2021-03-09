@@ -676,7 +676,8 @@ public class Inbox {
         });
     }
 
-    private void dispatchUpdateUserJob(boolean forcefully) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void dispatchUpdateUserJob(boolean forcefully) {
         Logger.debug("Updating user.");
 
         JobInfo jobInfo = JobInfo.newBuilder()

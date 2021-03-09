@@ -394,6 +394,21 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onUrlConfigUpdated() {
+        boolean isChannelCreated = airshipChannel.getId() != null;
+        boolean isNamedUserSet = getId() != null;
+        if (isChannelCreated && isNamedUserSet) {
+            forceUpdate();
+        }
+    }
+
     @Override
     protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
         if (!isDataCollectionEnabled) {

@@ -155,6 +155,26 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     /**
+     * Test url config update dispatches a job to update the named user.
+     */
+    @Test
+    public void testUrlConfigUpdatesNamedUser() {
+        namedUser.setId("namedUserID");
+        when(mockChannel.getId()).thenReturn("channelID");
+
+        clearInvocations(mockDispatcher);
+
+        namedUser.onUrlConfigUpdated();
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUser.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+    }
+
+    /**
      * Test set valid ID (associate).
      */
     @Test

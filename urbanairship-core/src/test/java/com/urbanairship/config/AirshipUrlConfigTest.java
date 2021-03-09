@@ -50,7 +50,7 @@ public class AirshipUrlConfigTest extends BaseTestCase {
     }
 
     @Test
-    public void testRemoetDataUrl() throws MalformedURLException {
+    public void testRemoteDataUrl() throws MalformedURLException {
         AirshipUrlConfig urlConfig = AirshipUrlConfig.newBuilder()
                                                      .setRemoteDataUrl("https://test.example.com")
                                                      .build();

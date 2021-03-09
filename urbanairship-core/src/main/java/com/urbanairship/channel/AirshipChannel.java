@@ -18,6 +18,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
@@ -54,6 +55,11 @@ public class AirshipChannel extends AirshipComponent {
      * Action to update channel registration.
      */
     private static final String ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL";
+
+    /**
+     * Extra to force a full channel registration update.
+     */
+    private static final String EXTRA_FORCE_FULL_UPDATE = "EXTRA_FORCE_FULL_UPDATE";
 
     /**
      * Max time between channel registration updates.
@@ -220,7 +226,11 @@ public class AirshipChannel extends AirshipComponent {
                 Logger.debug("Channel registration is currently disabled.");
                 return JobInfo.JOB_FINISHED;
             }
-            return onUpdateChannel();
+
+            JsonValue extraForceFullUpdate = jobInfo.getExtras().get(EXTRA_FORCE_FULL_UPDATE);
+            boolean forceFullUpdate = extraForceFullUpdate != null && extraForceFullUpdate.getBoolean(false);
+
+            return onUpdateChannel(forceFullUpdate);
         }
 
         return JobInfo.JOB_FINISHED;
@@ -247,6 +257,17 @@ public class AirshipChannel extends AirshipComponent {
         if (isEnabled) {
             dispatchUpdateJob();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @hide
+     */
+    @Override
+    public void onUrlConfigUpdated() {
+        // If the channel already exists, perform a full update. Otherwise create it.
+        dispatchUpdateJob(true);
     }
 
     /**
@@ -705,10 +726,10 @@ public class AirshipChannel extends AirshipComponent {
      */
     @WorkerThread
     @JobInfo.JobResult
-    private int onUpdateChannel() {
+    private int onUpdateChannel(boolean forceFullUpdate) {
         String channelId = getId();
         // Create or Update Channel Registration
-        int result = channelId == null ? onCreateChannel() : updateChannelRegistration(channelId);
+        int result = channelId == null ? onCreateChannel() : updateChannelRegistration(channelId, forceFullUpdate);
         if (result != JobInfo.JOB_FINISHED) {
             return result;
         } else {
@@ -729,11 +750,12 @@ public class AirshipChannel extends AirshipComponent {
      * Handles Channel Registration update.
      *
      * @param channelId The channel ID.
+     * @param forceFullUpdate {@code true} to perform a full update, {@code false} to minimize the update payload.
      * @return The job result.
      */
     @WorkerThread
     @JobInfo.JobResult
-    private int updateChannelRegistration(@NonNull String channelId) {
+    private int updateChannelRegistration(@NonNull String channelId, boolean forceFullUpdate) {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("Channel already up to date.");
@@ -744,8 +766,9 @@ public class AirshipChannel extends AirshipComponent {
 
         Response<Void> response;
         try {
-            ChannelRegistrationPayload minimizedPayload = payload.minimizedPayload(getLastRegistrationPayload());
-            response = channelApiClient.updateChannelWithPayload(channelId, minimizedPayload);
+            ChannelRegistrationPayload updatePayload = forceFullUpdate ?
+                    payload : payload.minimizedPayload(getLastRegistrationPayload());
+            response = channelApiClient.updateChannelWithPayload(channelId, updatePayload);
         } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
             return JobInfo.JOB_RETRY;
@@ -785,8 +808,20 @@ public class AirshipChannel extends AirshipComponent {
      * Dispatches a job to update registration.
      */
     private void dispatchUpdateJob() {
+        dispatchUpdateJob(false);
+    }
+
+    /**
+     * Dispatches a job to update registration.
+     *
+     * @param forceFullUpdate {@code true} to perform a full update, {@code false} to minimize the update payload.
+     */
+    private void dispatchUpdateJob(boolean forceFullUpdate) {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_CHANNEL)
+                                 .setExtras(JsonMap.newBuilder()
+                                                   .put(EXTRA_FORCE_FULL_UPDATE, forceFullUpdate)
+                                                   .build())
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(AirshipChannel.class)
                                  .build();

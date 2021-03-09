@@ -180,6 +180,25 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     /**
+     * Test that a url config update results in a refresh.
+     */
+    @Test
+    public void testUrlConfigUpdateRefresh() {
+        clearInvocations(mockDispatcher);
+
+        remoteData.onUrlConfigUpdated();
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
+            }
+        }));
+
+        verifyNoMoreInteractions(mockDispatcher);
+    }
+
+    /**
      * Test a foreground transition will not trigger a refresh if its before the foreground refresh
      * interval.
      */

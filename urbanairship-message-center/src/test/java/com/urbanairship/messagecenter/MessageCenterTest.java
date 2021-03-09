@@ -167,4 +167,11 @@ public class MessageCenterTest {
 
         verify(inbox).fetchMessages();
     }
+
+    @Test
+    public void testUrlConfigUpdateCallback() {
+        messageCenter.onUrlConfigUpdated();
+
+        verify(inbox).dispatchUpdateUserJob(true);
+    }
 }
