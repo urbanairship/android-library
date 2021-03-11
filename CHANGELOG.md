@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.3.0 March 11, 2021
+Minor release that drops support for uploading historic location data to Airship. The location
+module can still be used to listen for location updates within the app and will be deprecated in
+a future release.
+
+### Changes
+- AirshipLocationManager will no longer upload lat/longs to Airship.
+- Removed max border radius validation to allow more than 20dps for in-app automations.
+
 ## Version 14.2.0 February 18, 2021
 Minor release that uses WorkManager for more reliable task management and better support for Instant Apps.
 
