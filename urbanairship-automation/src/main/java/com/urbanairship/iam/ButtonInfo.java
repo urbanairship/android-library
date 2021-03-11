@@ -417,7 +417,7 @@ public class ButtonInfo implements JsonSerializable {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+        public Builder setBorderRadius(@FloatRange(from = 0.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
         }
@@ -485,6 +485,7 @@ public class ButtonInfo implements JsonSerializable {
          */
         @NonNull
         public ButtonInfo build() {
+            Checks.checkArgument(borderRadius >= 0, "Border radius must be >= 0");
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
             Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkArgument(label != null, "Missing label.");

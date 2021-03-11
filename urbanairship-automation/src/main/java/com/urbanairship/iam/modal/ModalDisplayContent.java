@@ -598,7 +598,7 @@ public class ModalDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+        public Builder setBorderRadius(@FloatRange(from = 0.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
         }
@@ -626,7 +626,7 @@ public class ModalDisplayContent implements DisplayContent {
          */
         @NonNull
         public ModalDisplayContent build() {
-            Checks.checkArgument(borderRadius >= 0 && borderRadius <= 20.0, "Border radius must be between 0 and 20.");
+            Checks.checkArgument(borderRadius >= 0, "Border radius must be >= 0");
             Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Modal allows a max of " + MAX_BUTTONS + " buttons");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             return new ModalDisplayContent(this);

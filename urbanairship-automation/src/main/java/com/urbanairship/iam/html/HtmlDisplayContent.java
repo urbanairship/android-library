@@ -428,7 +428,7 @@ public class HtmlDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+        public Builder setBorderRadius(@FloatRange(from = 0.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
         }
@@ -485,6 +485,7 @@ public class HtmlDisplayContent implements DisplayContent {
          */
         @NonNull
         public HtmlDisplayContent build() {
+            Checks.checkArgument(borderRadius >= 0, "Border radius must be >= 0");
             Checks.checkArgument(url != null, "Missing URL");
             return new HtmlDisplayContent(this);
         }

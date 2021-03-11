@@ -62,4 +62,15 @@ public class ButtonInfoTest {
                   .build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidBorderRadius() {
+        ButtonInfo.newBuilder()
+                  .setId(UAStringUtil.repeat("a", 100, ""))
+                  .setLabel(TextInfo.newBuilder()
+                                    .setText("hi")
+                                    .build())
+                  .addAction("cool", JsonValue.wrap("story"))
+                  .setBorderRadius(-1.0f)
+                  .build();
+    }
 }

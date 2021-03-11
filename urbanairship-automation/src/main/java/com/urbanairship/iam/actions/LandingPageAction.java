@@ -115,7 +115,7 @@ public class LandingPageAction extends Action {
      *
      * @param borderRadius The border radius.
      */
-    public void setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+    public void setBorderRadius(@FloatRange(from = 0.0) float borderRadius) {
         this.borderRadius = borderRadius;
     }
 

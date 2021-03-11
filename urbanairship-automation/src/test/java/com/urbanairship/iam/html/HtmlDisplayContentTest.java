@@ -4,7 +4,6 @@ package com.urbanairship.iam.html;
 
 import android.graphics.Color;
 
-import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
@@ -39,8 +38,15 @@ public class HtmlDisplayContentTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingUrl() {
-        ModalDisplayContent.newBuilder()
-                           .build();
+        HtmlDisplayContent.newBuilder()
+                          .build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidBorderRadius() {
+        HtmlDisplayContent.newBuilder()
+                          .setUrl("www.cool.story")
+                          .setBorderRadius(-1.0f)
+                          .build();
+    }
 }

@@ -116,4 +116,20 @@ public class BannerDisplayContentTest {
                             .build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidBorderRadius() {
+        BannerDisplayContent.newBuilder()
+                            .setBody(TextInfo.newBuilder()
+                                             .setText("oh hi")
+                                             .build())
+                            .addButton(ButtonInfo.newBuilder()
+                                                 .setLabel(TextInfo.newBuilder()
+                                                                   .setText("Oh hi")
+                                                                   .build())
+                                                 .setId("id")
+                                                 .build())
+                            .setBorderRadius(-1.0f)
+                            .build();
+    }
+
 }

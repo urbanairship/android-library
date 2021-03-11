@@ -104,4 +104,21 @@ public class ModalDisplayContentTest {
                            .build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidBorderRadius() {
+        ModalDisplayContent.newBuilder()
+                           .setBody(TextInfo.newBuilder()
+                                            .setText("oh hi")
+                                            .build())
+                           .addButton(ButtonInfo.newBuilder()
+                                                .setLabel(TextInfo.newBuilder()
+                                                                  .setText("Oh hi")
+                                                                  .build())
+                                                .setId("id")
+                                                .build())
+                           .setBorderRadius(-1.0f)
+                           .build();
+    }
+
+
 }
