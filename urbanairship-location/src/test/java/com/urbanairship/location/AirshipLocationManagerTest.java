@@ -8,7 +8,6 @@ import android.location.Location;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.location.LocationEvent;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -29,9 +28,7 @@ import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @Config(sdk = 28)
@@ -89,20 +86,6 @@ public class AirshipLocationManagerTest {
         assertEquals("LocationRequestOptions not being restored properly.", options, locationManager.getLocationRequestOptions());
     }
 
-    /**
-     * Test location updates generate events.
-     */
-    @Test
-    public void testLocationUpdates() {
-        locationManager.setLocationRequestOptions(options);
-        locationManager.setLocationUpdatesEnabled(true);
-        locationManager.setBackgroundLocationAllowed(true);
-
-        final Location location = new Location("provider");
-        locationManager.onLocationUpdate(location);
-
-        verify(mockAnalytics).addEvent(any(LocationEvent.class));
-    }
 
     @Test
     public void testLocationUpdatesDataCollectionDisabled() {
@@ -114,8 +97,6 @@ public class AirshipLocationManagerTest {
 
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
-
-        verify(mockAnalytics, never()).addEvent(any(LocationEvent.class));
     }
 
     /**

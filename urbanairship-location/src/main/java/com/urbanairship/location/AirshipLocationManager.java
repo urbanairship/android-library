@@ -5,7 +5,6 @@ package com.urbanairship.location;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Handler;
@@ -325,7 +324,6 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
             public void onResult(@Nullable Location result) {
                 if (result != null) {
                     Logger.info("Received single location update: %s", result);
-                    recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
                 }
             }
         });
@@ -454,9 +452,6 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
                 }
             });
         }
-
-        // Record the location
-        recordLocation(location, getLocationRequestOptions(), LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     /**
@@ -514,25 +509,11 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      * @param location The new location.
      * @param options The location request options.
      * @param updateType The update type.
+     * @deprecated Airship no longer provides historic location support.
      */
+    @Deprecated
     public void recordLocation(@NonNull Location location, @Nullable LocationRequestOptions options, @LocationEvent.UpdateType int updateType) {
-        int requestedAccuracy;
-        int distance;
-
-        if (options == null) {
-            requestedAccuracy = -1;
-            distance = -1;
-        } else {
-            distance = (int) options.getMinDistance();
-            if (options.getPriority() == LocationRequestOptions.PRIORITY_HIGH_ACCURACY) {
-                requestedAccuracy = Criteria.ACCURACY_FINE;
-            } else {
-                requestedAccuracy = Criteria.ACCURACY_COARSE;
-            }
-        }
-
-        LocationEvent event = new LocationEvent(location, updateType, requestedAccuracy, distance, activityMonitor.isAppForegrounded());
-        analytics.addEvent(event);
+        // no-op
     }
 
     private boolean isSystemLocationServicesEnabled() {
