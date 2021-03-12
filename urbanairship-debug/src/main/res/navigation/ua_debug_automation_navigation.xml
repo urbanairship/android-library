@@ -63,6 +63,9 @@
         <action
             android:id="@+id/action_inAppDisplayContentDetailsFragment_to_mediaInfoDetailsFragment"
             app:destination="@id/inAppMediaInfoDetailsFragment" />
+        <action
+            android:id="@+id/action_inAppDisplayContentDetailsFragment_to_extrasDetailsFragment"
+            app:destination="@id/inAppExtrasDetailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/inAppButtonDetailsFragment"
@@ -89,6 +92,14 @@
         android:label="@string/ua_debug_iaa_media_details">
         <argument
             android:name="mediaInfo"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/inAppExtrasDetailsFragment"
+        android:name="com.urbanairship.debug.automation.ExtrasDetailsFragment"
+        android:label="@string/ua_debug_iaa_extras_details">
+        <argument
+            android:name="extras"
             app:argType="string" />
     </fragment>
     <fragment

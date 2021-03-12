@@ -167,6 +167,7 @@
     <string name="ua_debug_iaa_media_details">Media Details</string>
     <string name="ua_debug_iaa_button_details">Button Details</string>
     <string name="ua_debug_iaa_trigger_details">Trigger Details</string>
+    <string name="ua_debug_iaa_extras_details">Custom Keys Details</string>
 
     <string name="ua_schedule_category">Schedule</string>
     <string name="ua_iaa_debug_buttons_separated">Separated</string>
@@ -199,6 +200,11 @@
     <plurals name="ua_debug_seconds_quantity">
         <item quantity="one">%s second</item>
         <item quantity="other">%s seconds</item>
+    </plurals>
+
+    <plurals name="ua_debug_extras_quantity">
+        <item quantity="one">%s custom key</item>
+        <item quantity="other">%s custom keys</item>
     </plurals>
 
     <string name="ua_debug_type">Type</string>
@@ -240,6 +246,7 @@
     <string name="ua_iaa_debug_interval_key">Schedule Interval</string>
     <string name="ua_iaa_debug_message_name_key">Message Name</string>
     <string name="ua_iaa_debug_message_display_type_key">Message Display Type</string>
+    <string name="ua_iaa_debug_message_extras_key">Custom Keys</string>
     <string name="ua_iaa_debug_audience_key">Message Audience</string>
     <string name="ua_triggers_details_view_title">Triggers Details</string>
     <string name="ua_display_details_view_title">Display Details</string>

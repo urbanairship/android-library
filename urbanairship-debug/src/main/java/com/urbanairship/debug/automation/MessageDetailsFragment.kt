@@ -2,11 +2,12 @@
 
 package com.urbanairship.debug.automation
 
-import android.os.Bundle
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.Navigation
 import com.urbanairship.debug.R
+import com.urbanairship.debug.extensions.getQuantityString
 import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.iam.ButtonInfo
 import com.urbanairship.iam.DisplayContent
@@ -28,30 +29,33 @@ class MessageDetailsFragment : AutomationDetailsFragment() {
     }
 
     private fun navigate(textInfo: TextInfo) {
-        val args = Bundle()
-        args.putString(TextInfoDetailsFragment.ARGUMENT_TEXT_INFO, textInfo.toJsonValue().toString())
+        val args = bundleOf(TextInfoDetailsFragment.ARGUMENT_TEXT_INFO to textInfo.toJsonValue().toString())
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_inAppDisplayContentDetailsFragment_to_textInfoDetailsFragment, args)
     }
 
     private fun navigate(buttonInfo: ButtonInfo) {
-        val args = Bundle()
-        args.putString(ButtonInfoDetailsFragment.ARGUMENT_BUTTON_INFO, buttonInfo.toJsonValue().toString())
+        val args = bundleOf(ButtonInfoDetailsFragment.ARGUMENT_BUTTON_INFO to buttonInfo.toJsonValue().toString())
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_inAppDisplayContentDetailsFragment_to_buttonDetailsFragment, args)
     }
 
     private fun navigate(mediaInfo: MediaInfo) {
-        val args = Bundle()
-        args.putString(MediaInfoDetailsFragment.ARGUMENT_MEDIA_INFO, mediaInfo.toJsonValue().toString())
+        val args = bundleOf(MediaInfoDetailsFragment.ARGUMENT_MEDIA_INFO to mediaInfo.toJsonValue().toString())
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_inAppDisplayContentDetailsFragment_to_mediaInfoDetailsFragment, args)
     }
 
-    override fun createDetails(): LiveData<List<AutomationDetail>> {
-        var message = requireArguments().getParcelable<InAppMessage>(ARGUMENT_SCHEDULE)!!
+    private fun navigate(extras: JsonMap) {
+        val args = bundleOf(ExtrasDetailsFragment.ARGUMENT_EXTRAS to extras.toString())
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_inAppDisplayContentDetailsFragment_to_extrasDetailsFragment, args)
+    }
 
-        var details = when (message.getDisplayContent<DisplayContent>()) {
+    override fun createDetails(): LiveData<List<AutomationDetail>> {
+        val message = requireArguments().getParcelable<InAppMessage>(ARGUMENT_SCHEDULE)!!
+
+        val details = when (message.getDisplayContent<DisplayContent>()) {
             is BannerDisplayContent -> bannerDetails(message.getDisplayContent()!!)
             is FullScreenDisplayContent -> fullScreenDetails(message.getDisplayContent()!!)
             is ModalDisplayContent -> modalDetails(message.getDisplayContent()!!)
@@ -63,6 +67,7 @@ class MessageDetailsFragment : AutomationDetailsFragment() {
         val list = mutableListOf<AutomationDetail>()
         list.add(AutomationDetail(getString(R.string.ua_iaa_debug_message_name_key), message.name.orEmpty()))
         list.add(AutomationDetail(getString(R.string.ua_iaa_debug_message_display_type_key), message.type.capitalize()))
+        list.add(extrasDetails(message))
         list.addAll(details)
         return MutableLiveData(list)
     }
@@ -209,5 +214,14 @@ class MessageDetailsFragment : AutomationDetailsFragment() {
                 })
             }
         }
+    }
+
+    private fun extrasDetails(message: InAppMessage): AutomationDetail = with(message) {
+        val callback: (() -> Unit)? = if (extras.isEmpty) { null } else { { navigate(extras) } }
+        AutomationDetail(
+            title = getString(R.string.ua_iaa_debug_message_extras_key),
+            body = getQuantityString(R.plurals.ua_debug_extras_quantity, extras.size(), extras.size()),
+            callback = callback
+        )
     }
 }
