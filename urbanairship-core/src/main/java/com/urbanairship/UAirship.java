@@ -782,6 +782,10 @@ public class UAirship {
         Module adIdModule = Modules.adId(application, preferenceDataStore);
         processModule(adIdModule);
 
+        // Chat
+        Module chat = Modules.chat(application, preferenceDataStore, channel,namedUser);
+        processModule(chat);
+
         for (AirshipComponent component : components) {
             component.init();
         }

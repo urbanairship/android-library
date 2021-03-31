@@ -132,7 +132,8 @@ task javadoc(type: Javadoc) {
                 proj.name.equals("urbanairship-automation") ||
                 proj.name.equals("urbanairship-location") ||
                 proj.name.equals("urbanairship-message-center") ||
-                proj.name.equals("urbanairship-preference")) {
+                proj.name.equals("urbanairship-preference") ||
+                proj.name.equals("urbanairship-chat")) {
                 classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
 
                 evaluated.android.libraryVariants.all { variant ->

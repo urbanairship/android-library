@@ -79,6 +79,7 @@ jobs:
           ./gradlew urbanairship-fcm:bintrayUpload --stacktrace
           ./gradlew urbanairship-adm:bintrayUpload --stacktrace
           ./gradlew urbanairship-hms:bintrayUpload --stacktrace
+          ./gradlew urbanairship-chat:bintrayUpload --stacktrace
 
       - name: Sync to maven central
         env:
@@ -97,3 +98,4 @@ jobs:
           ./gradlew urbanairship-fcm:syncToMavenCentral --stacktrace
           ./gradlew urbanairship-adm:syncToMavenCentral --stacktrace
           ./gradlew urbanairship-hms:syncToMavenCentral --stacktrace
+          ./gradlew urbanairship-chat:syncToMavenCentral --stacktrace

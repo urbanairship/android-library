@@ -16,6 +16,7 @@ import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
+import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
@@ -41,6 +42,7 @@ public class Modules {
     private static final String AUTOMATION_MODULE_FACTORY = "com.urbanairship.automation.AutomationModuleFactoryImpl";
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
+    private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
@@ -137,6 +139,22 @@ public class Modules {
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Ad Id module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module chat(@NonNull Context context,
+                              @NonNull PreferenceDataStore dataStore,
+                              @NonNull AirshipChannel airshipChannel,
+                              @NonNull NamedUser namedUser) {
+        try {
+            ChatModuleFactory moduleFactory = createFactory(CHAT_FACTORY, ChatModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, airshipChannel, namedUser);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Chat module");
         }
         return null;
     }

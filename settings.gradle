@@ -10,5 +10,6 @@ include ':urbanairship-core',
         ':urbanairship-location',
         ':urbanairship-message-center',
         ':urbanairship-automation',
+        ':urbanairship-chat',
         ':urbanairship-test',
         ":sample"
