@@ -135,7 +135,7 @@ public class AccengageMessage {
      */
     @NonNull
     public static AccengageMessage fromAirshipPushMessage(@NonNull PushMessage message) {
-        if (!message.isAccengagePush()) {
+        if (!message.isAccengageVisiblePush()) {
             throw new IllegalArgumentException("PushMessage is not an Accengage push.");
         }
 

@@ -255,7 +255,7 @@ public class Accengage extends AirshipComponent {
     }
 
     private void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
-        if (!notificationInfo.getMessage().isAccengagePush()) {
+        if (!notificationInfo.getMessage().isAccengageVisiblePush()) {
             return;
         }
 

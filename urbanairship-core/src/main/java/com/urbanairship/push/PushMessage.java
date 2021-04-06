@@ -240,10 +240,16 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String PRIORITY_HIGH = "high";
 
     /**
-     * Accengage constant used to determine if the push is Accengage or not.
+     * Accengage constant used to determine if the push has Accengage content or not.
      */
     @NonNull
     private static final String ACCENGAGE_CONTENT_KEY = "a4scontent";
+
+    /**
+     * Accengage constant used to determine if the push is Accengage or not.
+     */
+    @NonNull
+    private static final String ACCENGAGE_ID_KEY = "a4sid";
 
     /**
      * The Push key indicating that a remote data update is required.
@@ -430,12 +436,21 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Checks if the push is from Accengage and has content or not.
+     *
+     * @return {@code true} if its from Accengage and has content, otherwise {@code false}.
+     */
+    public boolean isAccengageVisiblePush() {
+        return data.containsKey(ACCENGAGE_CONTENT_KEY);
+    }
+
+    /**
      * Checks if the push is from Accengage or not.
      *
      * @return {@code true} if its from Accengage, otherwise {@code false}.
      */
     public boolean isAccengagePush() {
-        return data.containsKey(ACCENGAGE_CONTENT_KEY);
+        return data.containsKey(ACCENGAGE_ID_KEY);
     }
 
     /**

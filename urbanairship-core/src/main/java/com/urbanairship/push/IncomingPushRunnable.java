@@ -79,7 +79,7 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        if (!message.isAccengagePush() && !message.isAirshipPush()) {
+        if (!message.isAccengageVisiblePush() && !message.isAirshipPush()) {
             Logger.debug("Ignoring push: %s", message);
             return;
         }
@@ -235,7 +235,7 @@ class IncomingPushRunnable implements Runnable {
 
     @Nullable
     private NotificationProvider getNotificationProvider(UAirship airship) {
-        if (message.isAccengagePush()) {
+        if (message.isAccengageVisiblePush()) {
             if (airship.getAccengageNotificationHandler() != null) {
                 return airship.getAccengageNotificationHandler().getNotificationProvider();
             }

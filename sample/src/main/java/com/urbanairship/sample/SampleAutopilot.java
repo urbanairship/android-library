@@ -9,6 +9,7 @@ import android.net.Uri;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.messagecenter.MessageCenter;
 
@@ -55,7 +56,17 @@ public class SampleAutopilot extends Autopilot {
         });
 
         AirshipListener airshipListener = new AirshipListener();
-        airship.getPushManager().addPushListener(airshipListener);
+//        airship.getPushManager().addPushListener(airshipListener);
+
+        airship.getPushManager().addPushListener(((message, notificationPosted) -> {
+            Logger.debug("Message received :" + message.getTitle());
+            if (message.isAccengagePush()) {
+                Logger.debug("Message is Accengage push");
+            } else {
+                Logger.debug("Message isn't Accengage Push");
+            }
+        }));
+
         airship.getPushManager().addPushTokenListener(airshipListener);
         airship.getPushManager().setNotificationListener(airshipListener);
         airship.getChannel().addChannelListener(airshipListener);
