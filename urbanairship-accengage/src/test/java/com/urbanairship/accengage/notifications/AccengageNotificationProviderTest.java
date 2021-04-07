@@ -31,6 +31,7 @@ public class AccengageNotificationProviderTest {
         Bundle extras = new Bundle();
         extras.putString("a4scontent", "accengageContent");
         extras.putInt("a4ssysid", 77);
+        extras.putInt("a4sid", 77);
         extras.putString("a4stitle", "title test");
 
         PushMessage pushMessage = new PushMessage(extras);
@@ -52,6 +53,7 @@ public class AccengageNotificationProviderTest {
         Bundle extras = new Bundle();
         extras.putString("a4scontent", "accengageContent");
         extras.putInt("a4ssysid", 77);
+        extras.putInt("a4sid", 77);
         extras.putString("a4stitle", "title test");
         extras.putString("a4sforeground", "true");
 
