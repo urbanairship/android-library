@@ -79,7 +79,7 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        if (!message.isAccengageVisiblePush() && !message.isAirshipPush()) {
+        if (!message.isAccengagePush() && !message.isAirshipPush()) {
             Logger.debug("Ignoring push: %s", message);
             return;
         }
