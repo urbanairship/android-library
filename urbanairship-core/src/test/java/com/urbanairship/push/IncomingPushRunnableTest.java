@@ -83,6 +83,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         Bundle bundle = new Bundle();
         bundle.putString("a4scontent", "neat");
+        bundle.putInt("a4sid", 77);
         accengageMessage = new PushMessage(bundle);
 
         pushManager = mock(PushManager.class);
