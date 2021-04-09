@@ -7,7 +7,6 @@ import android.content.Context;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.modules.Module;
 
 import androidx.annotation.NonNull;
@@ -23,6 +22,5 @@ public interface ChatModuleFactory extends AirshipVersionInfo {
     @NonNull
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipChannel airshipChannel,
-                 @NonNull NamedUser namedUser);
+                 @NonNull AirshipChannel airshipChannel);
 }

@@ -349,6 +349,17 @@ public class NamedUser extends AirshipComponent {
         namedUserListeners.add(listener);
     }
 
+    /**
+     * Removes a named user listener.
+     *
+     * @param listener The named user listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeNamedUserListener(@NonNull NamedUserListener listener) {
+        namedUserListeners.remove(listener);
+    }
+
     @VisibleForTesting
     boolean isIdUpToDate() {
         synchronized (idLock) {

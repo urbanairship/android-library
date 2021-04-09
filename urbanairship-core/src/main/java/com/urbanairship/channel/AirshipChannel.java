@@ -10,6 +10,7 @@ import android.util.Log;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -297,6 +298,40 @@ public class AirshipChannel extends AirshipComponent {
      */
     public void removeChannelListener(@NonNull AirshipChannelListener listener) {
         this.airshipChannelListeners.remove(listener);
+    }
+
+    /**
+     * Gets the channel identifier as a {@link PendingResult}.
+     *
+     * @return A {@code PendingResult} containing the Channel ID.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public PendingResult<String> getChannelId() {
+        final PendingResult<String> pendingResult = new PendingResult<>();
+
+        AirshipChannelListener listener = new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                pendingResult.setResult(channelId);
+                removeChannelListener(this);
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+                pendingResult.setResult(channelId);
+                removeChannelListener(this);
+            }
+        };
+        addChannelListener(listener);
+
+        String id = getId();
+        if (id != null) {
+            pendingResult.setResult(id);
+            removeChannelListener(listener);
+        }
+
+        return pendingResult;
     }
 
     /**

@@ -1,0 +1,29 @@
+/* Copyright Airship and Contributors */
+package com.urbanairship.chat
+
+import android.content.Context
+import androidx.annotation.RestrictTo
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.modules.Module
+import com.urbanairship.modules.chat.ChatModuleFactory
+
+/**
+ * Chat module factory implementation.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+class ChatModuleFactoryImpl : ChatModuleFactory {
+
+    override fun build(
+        context: Context,
+        dataStore: PreferenceDataStore,
+        airshipChannel: AirshipChannel
+    ): Module =
+            Module.singleComponent(AirshipChat(context, dataStore, airshipChannel), 0)
+
+    override fun getAirshipVersion(): String = BuildConfig.AIRSHIP_VERSION
+
+    override fun getPackageVersion(): String = BuildConfig.SDK_VERSION
+}

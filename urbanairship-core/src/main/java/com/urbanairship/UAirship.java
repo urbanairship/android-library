@@ -783,7 +783,7 @@ public class UAirship {
         processModule(adIdModule);
 
         // Chat
-        Module chat = Modules.chat(application, preferenceDataStore, channel,namedUser);
+        Module chat = Modules.chat(application, preferenceDataStore, channel);
         processModule(chat);
 
         for (AirshipComponent component : components) {

@@ -1,7 +1,78 @@
 description = "Airship Android Chat extension."
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$rootProject.kotlinVersion"
+    }
+}
+
 apply from: "../common-build.gradle"
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlinx-serialization'
+
+android {
+    buildFeatures {
+        dataBinding = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs += [
+            "-Xopt-in=kotlin.RequiresOptIn",
+            "-Xopt-in=kotlin.OptIn"
+        ]
+    }
+
+    defaultConfig {
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ "room.incremental":"true" ]
+            }
+        }
+    }
+}
 
 dependencies {
     api project(':urbanairship-core')
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$rootProject.kotlinSerializationVersion"
+
+    // AndroidX
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"
+    implementation "androidx.core:core-ktx:$rootProject.androidxCoreVersion"
+    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
+    implementation "androidx.room:room-ktx:$rootProject.androidxRoomVersion"
+    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+
+    // OkHttp
+    implementation "com.squareup.okhttp3:okhttp:$rootProject.okHttpVersion"
+
+    // Support libraries
+    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
+
+    // Tests
+    testImplementation project(':urbanairship-test')
+    testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
 }
