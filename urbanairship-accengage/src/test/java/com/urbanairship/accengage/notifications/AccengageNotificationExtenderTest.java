@@ -40,6 +40,7 @@ public class AccengageNotificationExtenderTest {
         extras.putString("a4sbigtemplate", "BigTextStyle");
         extras.putInt("a4spriority", 3);
         extras.putBoolean("a4smultiplelines", true);
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage message = AccengageMessage.fromAirshipPushMessage(pushMessage);
