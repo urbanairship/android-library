@@ -32,4 +32,11 @@ class AirshipChatTest {
         airshipChat.isEnabled = false
         verify(mockConversation).isEnabled = false
     }
+
+    @Test
+    fun testComponentDisabled() {
+        airshipChat.init()
+        airshipChat.isComponentEnabled = false
+        verify(mockConversation).isEnabled = false
+    }
 }

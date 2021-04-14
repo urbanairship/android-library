@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
+import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
@@ -68,14 +69,33 @@ class AirshipChat
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    override fun getComponentGroup(): Int = AirshipComponentGroups.CHAT
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public override fun init() {
         super.init()
         dataStore.addListener { key ->
             if (key == ENABLED_KEY) {
-                conversation.isEnabled = this@AirshipChat.isEnabled
+                updateConversationEnablement()
             }
         }
 
-        conversation.isEnabled = isEnabled
+        updateConversationEnablement()
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    override fun onComponentEnableChange(isEnabled: Boolean) {
+        super.onComponentEnableChange(isEnabled)
+        updateConversationEnablement()
+    }
+
+    private fun updateConversationEnablement() {
+        conversation.isEnabled = this.isEnabled && this.isComponentEnabled
     }
 }
