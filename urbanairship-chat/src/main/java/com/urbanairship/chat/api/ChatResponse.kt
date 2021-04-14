@@ -1,4 +1,6 @@
-package com.urbanairship.chat
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.chat.api
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.Logger
@@ -23,8 +25,7 @@ internal sealed class ChatResponse {
          * Attempts to parse the raw [text] received over the WebSocket into a `ChatResponse` type.
          *
          * This uses the `type` field and `@SerialName` annotations on the data classes below to
-         * determine the correct class to parse into. If parsing fails due to an unknown type or
-         * unexpected response, the text will be parsed as a [ServerError]. If [text] is blank or
+         * determine the correct class to parse into. If [text] is blank or
          * both parsing attempts fail, `null` will be returned.
          */
         internal fun parse(text: String): ChatResponse? {
@@ -33,13 +34,8 @@ internal sealed class ChatResponse {
             return try {
                 format.decodeFromString<ChatResponse>(text)
             } catch (e1: Exception) {
-                Logger.debug(e1, "Failed to parse chat response payload: '$text'")
-                try {
-                    format.decodeFromString<ServerError>(text)
-                } catch (e2: Exception) {
-                    Logger.warn(e2, "Failed to parse chat error payload: '$text'")
-                    null
-                }
+                Logger.error(e1, "Failed to parse chat response payload: '$text'")
+                null
             }
         }
     }
@@ -81,11 +77,20 @@ internal sealed class ChatResponse {
         )
     }
 
-    /** Payload for errors returned over the WebSocket. */
+    /** A message. */
     @Serializable
-    internal data class ServerError(
-        val message: String?,
-        val connectionId: String?,
-        val requestId: String?
-    ) : ChatResponse()
+    data class Message(
+        /** ID of the message. */
+        @SerialName("message_id") val messageId: String,
+        /** When the message was created. */
+        @SerialName("created_on") val createdOn: String,
+        /** Whether this message was sent (0) or received (1). */
+        val direction: Int,
+        /** Message text. */
+        val text: String? = null,
+        /** An attachment URL. */
+        val attachment: String? = null,
+        /** Request ID. */
+        @SerialName("request_id") val requestId: String? = null
+    )
 }

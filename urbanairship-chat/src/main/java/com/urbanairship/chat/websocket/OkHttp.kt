@@ -1,7 +1,8 @@
-package com.urbanairship.chat
+package com.urbanairship.chat.websocket
 
 import android.net.TrafficStats
 import androidx.annotation.RestrictTo
+import com.urbanairship.chat.BuildConfig
 import java.net.InetAddress
 import java.net.Socket
 import java.util.concurrent.TimeUnit

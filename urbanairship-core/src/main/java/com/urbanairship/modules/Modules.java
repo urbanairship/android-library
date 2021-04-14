@@ -146,11 +146,12 @@ public class Modules {
     @Nullable
     public static Module chat(@NonNull Context context,
                               @NonNull PreferenceDataStore dataStore,
+                              @NonNull AirshipRuntimeConfig config,
                               @NonNull AirshipChannel airshipChannel) {
         try {
             ChatModuleFactory moduleFactory = createFactory(CHAT_FACTORY, ChatModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, airshipChannel);
+                return moduleFactory.build(context, dataStore, config, airshipChannel);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Chat module");

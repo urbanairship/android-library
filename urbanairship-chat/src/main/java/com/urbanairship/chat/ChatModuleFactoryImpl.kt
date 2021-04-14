@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.chat
 
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.chat.ChatModuleFactory
 
@@ -19,9 +21,10 @@ class ChatModuleFactoryImpl : ChatModuleFactory {
     override fun build(
         context: Context,
         dataStore: PreferenceDataStore,
+        config: AirshipRuntimeConfig,
         airshipChannel: AirshipChannel
     ): Module =
-            Module.singleComponent(AirshipChat(context, dataStore, airshipChannel), 0)
+            Module.singleComponent(AirshipChat(context, dataStore, config, airshipChannel), 0)
 
     override fun getAirshipVersion(): String = BuildConfig.AIRSHIP_VERSION
 
