@@ -44,6 +44,19 @@ class AirshipChat
     }
 
     /**
+     * Listener to override open chat behavior.
+     */
+    interface OnShowChatListener {
+
+        /**
+         * Called when chat should be opened.
+         * @param message Optional message to prefill the chat input box.
+         * @return true if the chat was shown, otherwise false to trigger the default behavior.
+         */
+        fun onOpenChat(message: String?): Boolean
+    }
+
+    /**
      * "Default" convenience constructor.
      *
      * @hide
@@ -57,6 +70,11 @@ class AirshipChat
     ) : this(context, dataStore, Conversation(context, dataStore, config, channel))
 
     /**
+     * Chat open listener.
+     */
+    var openChatListener: AirshipChat.OnShowChatListener? = null
+
+    /**
      * Enables or disables Airship Chat.
      *
      * The value is persisted in shared preferences.
@@ -64,6 +82,17 @@ class AirshipChat
     var isEnabled: Boolean
         get() = dataStore.getBoolean(ENABLED_KEY, true)
         set(isEnabled) = dataStore.put(ENABLED_KEY, isEnabled)
+
+    /**
+     * Opens the chat.
+     * @param message The prefilled chat message.
+     */
+    @JvmOverloads
+    fun openChat(message: String? = null) {
+        if (openChatListener?.onOpenChat(message) == false) {
+            // Launch OOTB chat
+        }
+    }
 
     /**
      * @hide
