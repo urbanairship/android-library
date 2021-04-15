@@ -34,7 +34,7 @@ public class AccengageMessageTest {
     public void setup() {
         defaultConfig = AirshipConfigOptions.newBuilder().build();
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testFromAirshipPushMessage() {
         Bundle extras = new Bundle();
