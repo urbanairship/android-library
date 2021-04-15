@@ -5,9 +5,11 @@ package com.urbanairship.accengage.notifications;
 import android.app.Notification;
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
@@ -21,11 +23,16 @@ import androidx.core.app.NotificationCompat;
  * Accengage notification provider.
  */
 public class AccengageNotificationProvider implements NotificationProvider {
+    private final AirshipConfigOptions configOptions;
+
+    public AccengageNotificationProvider(AirshipConfigOptions configOptions) {
+        this.configOptions = configOptions;
+    }
 
     @NonNull
     @Override
     public NotificationArguments onCreateNotificationArguments(@NonNull Context context, @NonNull PushMessage message) {
-        AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(message);
+        AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(message, configOptions);
 
         String requestedChannelId = accengageMessage.getAccengageChannel();
         String activeChannelId = NotificationChannelUtils.getActiveChannel(requestedChannelId, DEFAULT_NOTIFICATION_CHANNEL);
@@ -39,7 +46,7 @@ public class AccengageNotificationProvider implements NotificationProvider {
     @NonNull
     @Override
     public NotificationResult onCreateNotification(@NonNull Context context, @NonNull NotificationArguments arguments) {
-        AccengageMessage message = AccengageMessage.fromAirshipPushMessage(arguments.getMessage());
+        AccengageMessage message = AccengageMessage.fromAirshipPushMessage(arguments.getMessage(), configOptions);
 
         if (!message.getAccengageForeground() && GlobalActivityMonitor.shared(context).isAppForegrounded()) {
             Logger.debug("Received Accengage Push message but application was in foreground, skip it...");

@@ -4,6 +4,7 @@ package com.urbanairship.accengage;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -26,11 +27,11 @@ public class AccengageModuleFactoryImpl implements AccengageModuleFactory {
 
     @NonNull
     @Override
-    public AccengageModule build(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+    public AccengageModule build(@NonNull Context context, @NonNull AirshipConfigOptions configOptions, @NonNull PreferenceDataStore dataStore,
                                  @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
                                  @NonNull Analytics analytics) {
 
-        final Accengage accengage = new Accengage(context, dataStore, airshipChannel, pushManager, analytics);
+        final Accengage accengage = new Accengage(context, configOptions, dataStore, airshipChannel, pushManager, analytics);
         return new AccengageModule(accengage, new AccengageNotificationHandler() {
             @NonNull
             @Override

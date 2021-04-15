@@ -4,6 +4,7 @@ package com.urbanairship.modules;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -44,6 +45,7 @@ public class Modules {
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
+                                            @NonNull AirshipConfigOptions configOptions,
                                             @NonNull PreferenceDataStore preferenceDataStore,
                                             @NonNull AirshipChannel channel,
                                             @NonNull PushManager pushManager,
@@ -51,7 +53,7 @@ public class Modules {
         try {
             AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, channel, pushManager, analytics);
+                return moduleFactory.build(context, configOptions, preferenceDataStore, channel, pushManager, analytics);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Accengage module");

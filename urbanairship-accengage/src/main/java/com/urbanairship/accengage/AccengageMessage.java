@@ -7,9 +7,11 @@ import android.graphics.Color;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 
 import java.lang.annotation.Retention;
@@ -121,9 +123,11 @@ public class AccengageMessage {
     private static final String EXTRA_ACC_CHANNEL = "acc_channel";
 
     private final PushMessage message;
+    private final AirshipConfigOptions configOptions;
 
-    private AccengageMessage(@NonNull PushMessage message) {
+    private AccengageMessage(@NonNull PushMessage message, @NonNull AirshipConfigOptions configOptions) {
         this.message = message;
+        this.configOptions = configOptions;
     }
 
     /**
@@ -134,12 +138,12 @@ public class AccengageMessage {
      * @throws IllegalArgumentException if the push message is not an Accengage push.
      */
     @NonNull
-    public static AccengageMessage fromAirshipPushMessage(@NonNull PushMessage message) {
+    public static AccengageMessage fromAirshipPushMessage(@NonNull PushMessage message, @NonNull AirshipConfigOptions configOptions) {
         if (!message.isAccengagePush()) {
             throw new IllegalArgumentException("PushMessage is not an Accengage push.");
         }
 
-        return new AccengageMessage(message);
+        return new AccengageMessage(message, configOptions);
     }
 
     /**
@@ -207,23 +211,27 @@ public class AccengageMessage {
     /**
      * Gets Accengage push accent color
      *
-     * @return Accengage push accent color or default value 0
+     * @return Accengage push accent color or default value from configuration
      */
     public int getAccengageAccentColor() {
+        int accentColor = configOptions.notificationAccentColor;
         try {
-            return Color.parseColor(getExtra(EXTRA_A4S_ACCENT_COLOR));
-        } catch (IllegalArgumentException e) {
-            return 0;
-        } catch (NullPointerException e) {
-            return 0;
+            String a4sAccentColorString = getExtra(EXTRA_A4S_ACCENT_COLOR);
+            if(!TextUtils.isEmpty(a4sAccentColorString)){
+                accentColor = Color.parseColor(a4sAccentColorString);
+            }
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // nop
         }
+
+        return accentColor;
     }
 
     /**
      * Gets Accengage push small icon
      *
      * @param context A context
-     * @return Accengage push small icon or default application icon
+     * @return Accengage push small icon or configured notification icon #AirshipConfigOptions
      */
     public int getAccengageSmallIcon(@NonNull Context context) {
         int smallIconId = 0;
@@ -237,9 +245,9 @@ public class AccengageMessage {
             }
         }
 
-        // No icon found, use the application icon
+        // No icon found, use the configured icon as fallback
         if (smallIconId == 0) {
-            smallIconId = context.getApplicationInfo().icon;
+            smallIconId = configOptions.notificationIcon;
         }
 
         return smallIconId;

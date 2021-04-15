@@ -6,11 +6,13 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationArguments;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -20,10 +22,17 @@ import androidx.core.app.NotificationCompat;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import static org.mockito.Mockito.mock;
+
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
 public class AccengageNotificationExtenderTest {
+    private AirshipConfigOptions mockConfig;
 
+    @Before
+    public void setup() {
+        mockConfig = mock(AirshipConfigOptions.class);
+    }
     @Test
     public void testExtend() {
         Application application = ApplicationProvider.getApplicationContext();
@@ -42,7 +51,7 @@ public class AccengageNotificationExtenderTest {
         extras.putBoolean("a4smultiplelines", true);
 
         PushMessage pushMessage = new PushMessage(extras);
-        AccengageMessage message = AccengageMessage.fromAirshipPushMessage(pushMessage);
+        AccengageMessage message = AccengageMessage.fromAirshipPushMessage(pushMessage, mockConfig);
 
         // Setup the NotificationsExtender
         NotificationArguments.Builder naBuilder = NotificationArguments.newBuilder(pushMessage);

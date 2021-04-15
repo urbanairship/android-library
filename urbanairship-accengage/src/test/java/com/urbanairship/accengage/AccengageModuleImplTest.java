@@ -2,6 +2,7 @@ package com.urbanairship.accengage;
 
 import android.app.Application;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.mock;
 public class AccengageModuleImplTest {
 
     private AccengageModule accengageModuleLoader;
+    private AirshipConfigOptions mockConfig;
 
     @Before
     public void setup() {
@@ -36,7 +38,8 @@ public class AccengageModuleImplTest {
         PushManager mockPush = mock(PushManager.class);
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
 
-        accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics);
+        mockConfig = mock(AirshipConfigOptions.class);
+        accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, mockConfig, preferenceDataStore, mockChannel, mockPush, mockAnalytics);
     }
 
     @Test
@@ -48,7 +51,7 @@ public class AccengageModuleImplTest {
 
         assertEquals(accengage.getNotificationProvider(), accengageModuleLoader.getAccengageNotificationHandler().getNotificationProvider());
 
-        NotificationProvider notificationProvider = new AccengageNotificationProvider();
+        NotificationProvider notificationProvider = new AccengageNotificationProvider(mockConfig);
 
         accengage.setNotificationProvider(notificationProvider);
 

@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 @RunWith(AndroidJUnit4.class)
 public class AccengageTest {
 
+    private AirshipConfigOptions mockConfig;
     private AirshipChannel mockChannel;
     private PushManager mockPush;
     private Analytics mockAnalytics;
@@ -48,6 +50,7 @@ public class AccengageTest {
         Application application = ApplicationProvider.getApplicationContext();
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
 
+        mockConfig = mock(AirshipConfigOptions.class);
         mockChannel = mock(AirshipChannel.class);
         mockAnalytics = mock(Analytics.class);
         mockPush = mock(PushManager.class);
@@ -63,7 +66,7 @@ public class AccengageTest {
             }
         };
 
-        accengage = new Accengage(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
+        accengage = new Accengage(application, mockConfig, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
     }
 
     /**
