@@ -146,7 +146,7 @@ public class AudienceChecksTest {
         final Set<String> tags = new HashSet<>();
         when(airshipChannel.getTags()).then(new Answer<Set<String>>() {
             @Override
-            public Set<String> answer(InvocationOnMock invocation) throws Throwable {
+            public Set<String> answer(InvocationOnMock invocation) {
                 return tags;
             }
         });
@@ -166,7 +166,7 @@ public class AudienceChecksTest {
         final Set<String> tags = new HashSet<>();
         when(airshipChannel.getTags()).then(new Answer<Set<String>>() {
             @Override
-            public Set<String> answer(InvocationOnMock invocation) throws Throwable {
+            public Set<String> answer(InvocationOnMock invocation) {
                 return tags;
             }
         });

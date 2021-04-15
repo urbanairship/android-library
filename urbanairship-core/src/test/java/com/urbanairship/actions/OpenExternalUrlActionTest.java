@@ -35,7 +35,7 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      * Test accepts arguments
      */
     @Test
-    public void testAcceptsArguments() throws MalformedURLException {
+    public void testAcceptsArguments() {
         urlAllowList.addEntry("*");
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "http://example.com");
         assertTrue("Should accept valid url string", action.acceptsArguments(args));
@@ -65,7 +65,7 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      * Test perform tries to start an activity with the URL
      */
     @Test
-    public void testPerform() throws MalformedURLException {
+    public void testPerform() {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "http://example.com");
         ActionResult result = action.perform(args);
 

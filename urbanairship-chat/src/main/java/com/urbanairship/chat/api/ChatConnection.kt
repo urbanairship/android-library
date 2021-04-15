@@ -3,19 +3,15 @@
 package com.urbanairship.chat.api
 
 import androidx.annotation.RestrictTo
-import androidx.core.net.toUri
 import com.urbanairship.Logger
 import com.urbanairship.chat.websocket.DefaultWebSocketFactory
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
+import com.urbanairship.config.AirshipRuntimeConfig
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ChatConnection(private val socketFactory: WebSocketFactory = DefaultWebSocketFactory()) {
-
-    companion object {
-        private val BASE_URL = "wss://rb2socketscontactstest.replybuy.net".toUri()
-    }
+internal class ChatConnection(private val config: AirshipRuntimeConfig, private val socketFactory: WebSocketFactory = DefaultWebSocketFactory()) {
 
     private val webSocketListener = SocketListener()
     private val lock = Any()
@@ -80,7 +76,7 @@ internal class ChatConnection(private val socketFactory: WebSocketFactory = Defa
     }
 
     private fun createUrl(uvp: String): String {
-        return BASE_URL.buildUpon()
+        return config.urlConfig.chatSocketUrl()
             .appendQueryParameter("uvp", uvp)
             .build()
             .toString()

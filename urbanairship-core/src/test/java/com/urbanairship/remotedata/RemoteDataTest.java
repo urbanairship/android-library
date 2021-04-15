@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata;
 
+import android.net.Uri;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
@@ -36,7 +37,6 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,7 +76,7 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload emptyPayload;
 
     @Before
-    public void setup() throws MalformedURLException {
+    public void setup() {
         activityMonitor = new TestActivityMonitor();
 
         mockDispatcher = mock(JobDispatcher.class);
@@ -89,7 +89,7 @@ public class RemoteDataTest extends BaseTestCase {
         clock = new TestClock();
 
         mockClient = mock(RemoteDataApiClient.class);
-        when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(new URL("https://airship.com"));
+        when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(Uri.parse("https://airship.com"));
 
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, TestAirshipRuntimeConfig.newTestConfig(),
                 activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient);
@@ -203,7 +203,7 @@ public class RemoteDataTest extends BaseTestCase {
      * interval.
      */
     @Test
-    public void testRefreshInterval() throws MalformedURLException, RequestException {
+    public void testRefreshInterval() throws RequestException {
         // Refresh
         clock.currentTimeMillis = 100;
 
@@ -237,7 +237,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that an empty cache will result in empty model objects in the initial callback.
      */
     @Test
-    public void testPayloadsForTypeWithEmptyCache() throws MalformedURLException, RequestException {
+    public void testPayloadsForTypeWithEmptyCache() throws RequestException {
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
@@ -268,7 +268,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that a type missing in the response will result in an empty model object in the callback.
      */
     @Test
-    public void testPayloadsForTypeWithMissingTypeInResponse() throws MalformedURLException, RequestException {
+    public void testPayloadsForTypeWithMissingTypeInResponse() throws RequestException {
         updatePayloads(payload);
 
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
@@ -296,7 +296,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that a single type will only produce a callback if the payload has changed
      */
     @Test
-    public void testPayloadsForTypeDistinctness() throws MalformedURLException, RequestException {
+    public void testPayloadsForTypeDistinctness() throws RequestException {
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
         payloadsObservable.subscribe(new Subscriber<RemoteDataPayload>() {
@@ -355,7 +355,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that a multiple types will only produce a callback if at least one of the payloads has changed
      */
     @Test
-    public void testPayloadsForTypesDistinctness() throws MalformedURLException, RequestException {
+    public void testPayloadsForTypesDistinctness() throws RequestException {
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
@@ -392,7 +392,7 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     @Test
-    public void testLastModified() throws MalformedURLException, RequestException {
+    public void testLastModified() throws RequestException {
         Locale locale = Locale.forLanguageTag("en-US");
         localeManager.setLocaleOverride(locale);
 
@@ -400,7 +400,7 @@ public class RemoteDataTest extends BaseTestCase {
         headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
 
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .setResponseHeaders(headers)
                 .build();
 
@@ -422,11 +422,11 @@ public class RemoteDataTest extends BaseTestCase {
      * Test last modified is ignored if the metadata changes.
      */
     @Test
-    public void testLastModifiedMetadataChanges() throws RequestException, MalformedURLException {
+    public void testLastModifiedMetadataChanges() throws RequestException {
         Locale locale = Locale.forLanguageTag("en-US");
         Locale otherLocale = Locale.forLanguageTag("de-de");
-        when(mockClient.getRemoteDataUrl(otherLocale)).thenReturn(new URL("https://airship.com/some-locale"));
-        when(mockClient.getRemoteDataUrl(locale)).thenReturn(new URL("https://airship.com/some-locale"));
+        when(mockClient.getRemoteDataUrl(otherLocale)).thenReturn(Uri.parse("https://airship.com/some-locale"));
+        when(mockClient.getRemoteDataUrl(locale)).thenReturn(Uri.parse("https://airship.com/some-locale"));
 
         localeManager.setLocaleOverride(locale);
 
@@ -434,7 +434,7 @@ public class RemoteDataTest extends BaseTestCase {
         headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
 
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.COM"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.COM"), asSet(payload)))
                 .setResponseHeaders(headers)
                 .build();
 
@@ -459,7 +459,7 @@ public class RemoteDataTest extends BaseTestCase {
      * Test parsing remote-data responses.
      */
     @Test
-    public void testParseRemoteDataResponse() throws RequestException, MalformedURLException {
+    public void testParseRemoteDataResponse() throws RequestException {
         ArgumentCaptor<RemoteDataApiClient.PayloadParser> parserArgumentCaptor = ArgumentCaptor.forClass(RemoteDataApiClient.PayloadParser.class);
 
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
@@ -482,7 +482,7 @@ public class RemoteDataTest extends BaseTestCase {
                                    .toJsonValue();
 
         JsonList payloads = new JsonList(Collections.singletonList(payload));
-        URL url = new URL("http://some-url.com");
+        Uri url = Uri.parse("http://some-url.com");
         Set<RemoteDataPayload> parsed = parser.parse(url, payloads);
 
         JsonMap metadata = JsonMap.newBuilder().put("url", url.toString()).build();
@@ -494,9 +494,9 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that fetching remote data succeeds if the status is 200
      */
     @Test
-    public void testRefreshRemoteData200() throws RequestException, MalformedURLException {
+    public void testRefreshRemoteData200() throws RequestException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
@@ -510,9 +510,9 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that fetching remote data succeeds if the status is 304
      */
     @Test
-    public void testRefreshRemoteData304() throws RequestException, MalformedURLException {
+    public void testRefreshRemoteData304() throws RequestException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
@@ -526,9 +526,9 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that fetching remote data job retries if the status is 5xx
      */
     @Test
-    public void testRefreshRemoteDataServerError() throws RequestException, MalformedURLException {
+    public void testRefreshRemoteDataServerError() throws RequestException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(500)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
@@ -542,9 +542,9 @@ public class RemoteDataTest extends BaseTestCase {
      * Test that fetching remote data job finishes if the status is 4xx
      */
     @Test
-    public void testRefreshRemoteDataClientError() throws RequestException, MalformedURLException {
+    public void testRefreshRemoteDataClientError() throws RequestException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
-                .setResult(new RemoteDataApiClient.Result(new URL("https://airship.com"), asSet(payload)))
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);

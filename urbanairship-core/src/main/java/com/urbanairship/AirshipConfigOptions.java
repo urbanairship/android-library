@@ -52,6 +52,9 @@ public class AirshipConfigOptions {
     private static final String US_REMOTE_DATA_URL = "https://remote-data.urbanairship.com/";
     private static final String US_WALLET_URL = "https://wallet-api.urbanairship.com";
 
+    private static final String US_CHAT_URL = "https://ny4uaaegbg.execute-api.us-west-1.amazonaws.com/Prod/";
+    private static final String US_CHAT_SOCKET_URL = "wss://rb2socketscontactstest.replybuy.net";
+
     private final static long MIN_BG_REPORTING_INTERVAL_MS = 60 * 1000; // 1 minute
     private final static long MAX_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -150,6 +153,25 @@ public class AirshipConfigOptions {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public final String walletUrl;
+
+
+    /**
+     * The chat url.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String chatUrl;
+
+    /**
+     * The chat socket URL.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String chatSocketUrl;
 
     /**
      * Optional app store link when using the rate app action. If not set,
@@ -348,6 +370,8 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, EU_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
+                this.chatUrl = firstOrEmpty(builder.chatUrl);
+                this.chatSocketUrl = firstOrEmpty(builder.chatUrl);
                 break;
 
             case SITE_US:
@@ -356,6 +380,8 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
+                this.chatUrl = firstOrEmpty(builder.chatUrl, US_CHAT_URL);
+                this.chatSocketUrl = firstOrEmpty(builder.chatUrl, US_CHAT_SOCKET_URL);
                 break;
         }
 
@@ -505,6 +531,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_ANALYTICS_URL = "analyticsUrl";
         private static final String FIELD_LEGACY_REMOTE_DATA_URL = "remoteDataURL";
         private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
+        private static final String FIELD_CHAT_URL = "chatUrl";
+        private static final String FIELD_CHAT_SOCKET_URL = "chatSocketUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
@@ -544,6 +572,8 @@ public class AirshipConfigOptions {
         private String deviceUrl;
         private String analyticsUrl;
         private String remoteDataUrl;
+        private String chatSocketUrl;
+        private String chatUrl;
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
@@ -739,6 +769,14 @@ public class AirshipConfigOptions {
                         case FIELD_LEGACY_REMOTE_DATA_URL:
                         case FIELD_REMOTE_DATA_URL:
                             this.setRemoteDataUrl(configParser.getString(name, remoteDataUrl));
+                            break;
+
+                        case FIELD_CHAT_URL:
+                            this.setChatUrl(configParser.getString(name, chatUrl));
+                            break;
+
+                        case FIELD_CHAT_SOCKET_URL:
+                            this.setChatSocketUrl(configParser.getString(name, chatSocketUrl));
                             break;
 
                         case FIELD_GCM_SENDER:
@@ -1308,6 +1346,34 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setWalletUrl(@NonNull String walletUrl) {
             this.walletUrl = walletUrl;
+            return this;
+        }
+
+        /**
+         * Set the chat URL.
+         *
+         * @param chatUrl The chat URL.
+         * @return The config options builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        @NonNull
+        public Builder setChatUrl(@NonNull String chatUrl) {
+            this.chatUrl = chatUrl;
+            return this;
+        }
+
+        /**
+         * Set the chat socket URL.
+         *
+         * @param chatSocketUrl The chat socket URL.
+         * @return The config options builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        @NonNull
+        public Builder setChatSocketUrl(@NonNull String chatSocketUrl) {
+            this.chatSocketUrl = chatSocketUrl;
             return this;
         }
 

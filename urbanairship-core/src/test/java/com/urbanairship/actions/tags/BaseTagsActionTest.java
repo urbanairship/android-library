@@ -80,7 +80,7 @@ public class BaseTagsActionTest extends BaseTestCase {
      * Test get tags parses the arguments correctly
      */
     @Test
-    public void testGetTags() throws Exception {
+    public void testGetTags() {
         ActionArguments singleTagArg = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "tag1");
         action.perform(singleTagArg);
 

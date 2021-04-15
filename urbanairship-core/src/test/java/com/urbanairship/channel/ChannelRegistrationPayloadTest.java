@@ -43,7 +43,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private ChannelRegistrationPayload payload;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testTags = new HashSet<>();
         testTags.add("tagOne");
         testTags.add("tagTwo");
@@ -208,7 +208,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that the json has the full expected payload when analytics is enabled.
      */
     @Test
-    public void testAsJsonFullPayloadAnalyticsEnabled() throws JSONException {
+    public void testAsJsonFullPayloadAnalyticsEnabled() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
                 .setBackgroundEnabled(testBackgroundEnabled)
@@ -294,7 +294,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test when tags are empty.
      */
     @Test
-    public void testAsJsonEmptyTags() throws JSONException {
+    public void testAsJsonEmptyTags() {
         // Create payload with empty tags
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(testSetTags, new HashSet<String>()).build();
         JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
@@ -314,7 +314,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that tags are not sent when setTags is false.
      */
     @Test
-    public void testAsJsonNoTags() throws JSONException {
+    public void testAsJsonNoTags() {
         // Create payload with setTags is false
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(false, testTags).build();
         JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
@@ -331,7 +331,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that an empty identity hints section is not included.
      */
     @Test
-    public void testAsJsonEmptyIdentityHints() throws JSONException {
+    public void testAsJsonEmptyIdentityHints() {
         // Create empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -344,7 +344,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that an empty user ID is not included in the identity hints.
      */
     @Test
-    public void testAsJsonEmptyUserId() throws JSONException {
+    public void testAsJsonEmptyUserId() {
         // Create payload with empty userId
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setUserId("").build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -357,7 +357,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test an empty builder.
      */
     @Test
-    public void testEmptyBuilder() throws JSONException {
+    public void testEmptyBuilder() {
         // Create an empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -562,7 +562,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     }
 
     @Test
-    public void testDeliveryTypeAndroid() throws JsonException {
+    public void testDeliveryTypeAndroid() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
                 .setDeliveryType(PushProvider.HMS_DELIVERY_TYPE)

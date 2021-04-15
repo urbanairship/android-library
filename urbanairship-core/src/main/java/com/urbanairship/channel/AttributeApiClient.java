@@ -2,6 +2,8 @@
 
 package com.urbanairship.channel;
 
+import android.net.Uri;
+
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -9,7 +11,6 @@ import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
 
-import java.net.URL;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -43,7 +44,7 @@ class AttributeApiClient {
     interface UrlFactory {
 
         @Nullable
-        URL createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier);
+        Uri createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier);
 
     }
 
@@ -51,7 +52,7 @@ class AttributeApiClient {
     static final UrlFactory NAMED_USER_URL_FACTORY = new UrlFactory() {
         @Nullable
         @Override
-        public URL createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier) {
+        public Uri createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier) {
             return config.getUrlConfig()
                          .deviceUrl()
                          .appendEncodedPath(NAMED_USER_API_PATH)
@@ -66,7 +67,7 @@ class AttributeApiClient {
     static final UrlFactory CHANNEL_URL_FACTORY = new UrlFactory() {
         @Nullable
         @Override
-        public URL createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier) {
+        public Uri createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier) {
             String platform = config.getPlatform() == AMAZON_PLATFORM ? ATTRIBUTE_PLATFORM_AMAZON : ATTRIBUTE_PLATFORM_ANDROID;
             return config.getUrlConfig()
                          .deviceUrl()
@@ -106,7 +107,7 @@ class AttributeApiClient {
      */
     @NonNull
     Response<Void> updateAttributes(@NonNull String identifier, @NonNull List<AttributeMutation> mutations) throws RequestException {
-        URL url = urlFactory.createUrl(runtimeConfig, identifier);
+        Uri url = urlFactory.createUrl(runtimeConfig, identifier);
 
         JsonMap attributePayload = JsonMap.newBuilder()
                                           .putOpt(ATTRIBUTE_PAYLOAD_KEY, mutations)

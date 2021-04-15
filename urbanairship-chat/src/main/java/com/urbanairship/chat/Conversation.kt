@@ -64,7 +64,7 @@ internal constructor(
         dataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         channel: AirshipChannel
-    ) : this(dataStore, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(),
+    ) : this(dataStore, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(config),
             ChatApiClient(config), GlobalActivityMonitor.shared(context), CoroutineScope(AirshipDispatchers.newSingleThreadDispatcher()),
             AirshipDispatchers.IO)
 
@@ -149,7 +149,7 @@ internal constructor(
         }
     }
 
-    private fun updateConnection(forceOpen: Boolean = false) {
+    internal fun updateConnection(forceOpen: Boolean = false) {
         scope.launch {
             val uvp = getUvp()
             val isForeground = withContext(Dispatchers.Main) {

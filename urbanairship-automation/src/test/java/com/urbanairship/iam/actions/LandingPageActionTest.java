@@ -45,7 +45,7 @@ public class LandingPageActionTest {
         inAppAutomation = mock(InAppAutomation.class);
         action = new LandingPageAction(new Callable<InAppAutomation>() {
             @Override
-            public InAppAutomation call() throws Exception {
+            public InAppAutomation call() {
                 return inAppAutomation;
             }
         });

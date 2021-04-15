@@ -3,6 +3,7 @@
 package com.urbanairship.wallet;
 
 import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.os.Looper;
 import android.text.TextUtils;
 
@@ -19,7 +20,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -129,7 +129,7 @@ public class PassRequest {
             @Override
             public void run() {
                 Logger.info("Requesting pass %s", templateId);
-                URL url = getPassUrl();
+                Uri url = getPassUrl();
 
                 if (url == null) {
                     Logger.error( "PassRequest - Invalid pass URL");
@@ -211,8 +211,7 @@ public class PassRequest {
      * @return The pass request URL.
      */
     @Nullable
-    URL getPassUrl() {
-
+    Uri getPassUrl() {
         UrlBuilder urlBuilder = UAirship.shared()
                                         .getRuntimeConfig()
                                         .getUrlConfig()

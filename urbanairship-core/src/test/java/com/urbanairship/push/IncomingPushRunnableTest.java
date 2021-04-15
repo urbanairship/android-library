@@ -102,7 +102,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         when(pushManager.getNotificationProvider()).thenAnswer(new Answer<Object>() {
             @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
+            public Object answer(InvocationOnMock invocation) {
                 return notificationProvider;
             }
         });

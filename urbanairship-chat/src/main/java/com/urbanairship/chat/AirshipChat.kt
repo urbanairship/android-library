@@ -127,4 +127,8 @@ class AirshipChat
     private fun updateConversationEnablement() {
         conversation.isEnabled = this.isEnabled && this.isComponentEnabled
     }
+
+    override fun onUrlConfigUpdated() {
+        conversation.updateConnection()
+    }
 }

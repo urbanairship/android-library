@@ -55,7 +55,7 @@ public class AirshipWebViewClientTest extends BaseTestCase {
         webViewUrl = "http://test-client";
         when(webView.getUrl()).then(new Answer<Object>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Object answer(InvocationOnMock invocationOnMock) {
                 return webViewUrl;
             }
         });

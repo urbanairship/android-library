@@ -503,7 +503,7 @@ public class InboxJobHandlerTest {
      * Test create user when PushManager has a android channel.
      */
     @Test
-    public void testCreateUserWithAndroidChannel() throws RequestException, JsonException {
+    public void testCreateUserWithAndroidChannel() throws RequestException {
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
         when(mockChannel.getId()).thenReturn("channelId");
 
@@ -531,7 +531,7 @@ public class InboxJobHandlerTest {
      * Test create user when PushManager when a channel has not been created.
      */
     @Test
-    public void testCreateUserNoChannel() throws RequestException {
+    public void testCreateUserNoChannel() {
         when(mockChannel.getId()).thenReturn(null);
 
         JobInfo jobInfo = JobInfo.newBuilder()

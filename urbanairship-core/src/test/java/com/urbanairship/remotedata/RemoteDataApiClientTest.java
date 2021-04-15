@@ -78,7 +78,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
 
         payloadParser = new RemoteDataApiClient.PayloadParser() {
             @Override
-            public Set<RemoteDataPayload> parse(URL url, JsonList payloads) {
+            public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
                 return RemoteDataPayload.parsePayloads(payloads, JsonMap.EMPTY_MAP);
             }
         };
@@ -138,7 +138,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
 
         Response<RemoteDataApiClient.Result> response = client.fetchRemoteDataPayloads(null, new Locale("en"), new RemoteDataApiClient.PayloadParser() {
             @Override
-            public Set<RemoteDataPayload> parse(URL url, JsonList payloads) {
+            public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
                 assertEquals(testRequest.getUrl(), url);
                 assertEquals(responseJson.opt("payloads").optList(), payloads);
                return parsedResponse;
@@ -309,7 +309,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
 
         @Nullable
         @Override
-        public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
+        public String getRegistrationToken(@NonNull Context context) {
             throw new RuntimeException("Not implemented");
         }
 

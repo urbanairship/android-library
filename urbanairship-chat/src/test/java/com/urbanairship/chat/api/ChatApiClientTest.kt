@@ -5,6 +5,7 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
 import com.urbanairship.TestRequest
 import com.urbanairship.UAirship
+import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestFactory
@@ -23,6 +24,7 @@ class ChatApiClientTest {
 
     @Before
     fun setUp() {
+
         testRequest = TestRequest()
         requestFactory = object : RequestFactory() {
             override fun createRequest(): Request {
@@ -30,6 +32,7 @@ class ChatApiClientTest {
             }
         }
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder().setChatUrl("https://test.urbanairship.com").build()
 
         client = ChatApiClient(runtimeConfig, requestFactory)
     }
@@ -47,7 +50,7 @@ class ChatApiClientTest {
         Assert.assertEquals("neat", uvp)
         Assert.assertEquals("GET", testRequest.requestMethod)
 
-        val expectedUrl = "https://ny4uaaegbg.execute-api.us-west-1.amazonaws.com/Prod/api/UVP?appKey=appKey&channelId=some-channel&platform=Android"
+        val expectedUrl = "https://test.urbanairship.com/api/UVP?appKey=appKey&channelId=some-channel&platform=Android"
         Assert.assertEquals(expectedUrl, testRequest.url.toString())
     }
 
@@ -66,7 +69,7 @@ class ChatApiClientTest {
         Assert.assertEquals("neat", uvp)
         Assert.assertEquals("GET", testRequest.requestMethod)
 
-        val expectedUrl = "https://ny4uaaegbg.execute-api.us-west-1.amazonaws.com/Prod/api/UVP?appKey=appKey&channelId=some-channel&platform=Amazon"
+        val expectedUrl = "https://test.urbanairship.com/api/UVP?appKey=appKey&channelId=some-channel&platform=Amazon"
         Assert.assertEquals(expectedUrl, testRequest.url.toString())
     }
 

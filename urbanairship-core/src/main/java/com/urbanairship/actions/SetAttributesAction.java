@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AttributeEditor;
@@ -11,6 +9,8 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.Date;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 /**
  * An action that sets attributes.

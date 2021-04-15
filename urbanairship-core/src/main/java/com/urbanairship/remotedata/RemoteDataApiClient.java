@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata;
 
+import android.net.Uri;
 import android.os.Build;
 
 import com.urbanairship.PushProviders;
@@ -20,7 +21,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -62,19 +62,19 @@ public class RemoteDataApiClient {
 
     public static class Result {
         @NonNull
-        final URL url;
+        final Uri url;
 
         @NonNull
         final Set<RemoteDataPayload> payloads;
 
-        Result(@NonNull URL url, @NonNull Set<RemoteDataPayload> payloads) {
+        Result(@NonNull Uri url, @NonNull Set<RemoteDataPayload> payloads) {
             this.url = url;
             this.payloads = payloads;
         }
     }
 
     public interface PayloadParser {
-        Set<RemoteDataPayload> parse(URL url, JsonList payloads);
+        Set<RemoteDataPayload> parse(Uri url, JsonList payloads);
     }
 
     /**
@@ -117,7 +117,7 @@ public class RemoteDataApiClient {
      */
     @NonNull
     Response<Result> fetchRemoteDataPayloads(@Nullable String lastModified, @NonNull final Locale locale, @NonNull final PayloadParser payloadParser) throws RequestException {
-        final URL url = getRemoteDataUrl(locale);
+        final Uri url = getRemoteDataUrl(locale);
 
         Request request = requestFactory.createRequest()
                                         .setOperation("GET", url)
@@ -151,7 +151,7 @@ public class RemoteDataApiClient {
      * @return The device URL or {@code null} if the URL is invalid.
      */
     @Nullable
-    public URL getRemoteDataUrl(@NonNull Locale locale) {
+    public Uri getRemoteDataUrl(@NonNull Locale locale) {
         // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
         UrlBuilder builder = runtimeConfig.getUrlConfig()
                                           .remoteDataUrl()

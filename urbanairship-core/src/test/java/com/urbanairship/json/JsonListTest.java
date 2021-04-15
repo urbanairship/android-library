@@ -26,7 +26,7 @@ public class JsonListTest extends BaseTestCase {
      * Test creating a new JsonList with a null list.
      */
     @Test
-    public void testCreateNull() throws JsonException, JSONException {
+    public void testCreateNull() {
         JsonList emptyList = new JsonList(null);
         assertEquals(0, emptyList.size());
         assertTrue(emptyList.isEmpty());

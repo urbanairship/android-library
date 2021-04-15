@@ -2,14 +2,14 @@
 
 package com.urbanairship.channel;
 
+import android.net.Uri;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
-
-import java.net.URL;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -48,7 +48,7 @@ class NamedUserApiClient {
      */
     @NonNull
     Response<Void> associate(@NonNull String id, @NonNull String channelId) throws RequestException {
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(ASSOCIATE_PATH)
                                .build();
@@ -75,7 +75,7 @@ class NamedUserApiClient {
      */
     @NonNull
     Response<Void> disassociate(@NonNull String channelId) throws RequestException {
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(DISASSOCIATE_PATH)
                                .build();

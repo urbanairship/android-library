@@ -1,5 +1,7 @@
 package com.urbanairship.config;
 
+import android.net.Uri;
+
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
@@ -14,13 +16,13 @@ public class UrlBuilderTest extends BaseTestCase {
 
     @Test
     public void testNullUrl() {
-        URL url = new UrlBuilder(null).build();
+        Uri url = new UrlBuilder(null).build();
         assertNull(url);
     }
 
     @Test
     public void testNullUrlAppended() {
-        URL url = new UrlBuilder(null)
+        Uri url = new UrlBuilder(null)
                 .appendPath("neat")
                 .appendEncodedPath("rad/story")
                 .appendQueryParameter("cool", "story")
@@ -30,20 +32,20 @@ public class UrlBuilderTest extends BaseTestCase {
 
     @Test
     public void testMalformedUrl() {
-        URL url = new UrlBuilder("notaurl")
+        Uri url = new UrlBuilder("notaurl")
                 .build();
-        assertNull(url);
+        assertEquals("notaurl", url.toString());
     }
 
     @Test
-    public void testUrl() throws MalformedURLException {
-        URL url = new UrlBuilder("https://neat.com")
+    public void testUrl() {
+        Uri url = new UrlBuilder("https://neat.com")
                 .appendPath("neat")
                 .appendEncodedPath("rad/story")
                 .appendQueryParameter("cool", "story")
                 .build();
 
 
-        assertEquals(new URL("https://neat.com/neat/rad/story?cool=story"), url);
+        assertEquals(Uri.parse("https://neat.com/neat/rad/story?cool=story"), url);
     }
 }

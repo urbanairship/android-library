@@ -47,12 +47,12 @@ public class PassTest extends BaseTestCase {
     }
 
     @Test
-    public void testRequestToSavePass() throws Exception {
+    public void testRequestToSavePass() {
         final Pass pass = new Pass(Uri.parse("https://goo.gl/app/pay?link=https://www.android.com/payapp/savetoandroidpay/555"), "5");
         Context context = Mockito.mock(Context.class);
         Mockito.doAnswer(new Answer() {
             @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
+            public Object answer(InvocationOnMock invocation) {
                 Intent intent = (Intent) invocation.getArguments()[0];
                 assertEquals(pass.getPublicUri(), intent.getData());
                 assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.getFlags());

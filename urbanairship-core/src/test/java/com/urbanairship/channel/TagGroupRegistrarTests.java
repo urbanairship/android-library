@@ -127,7 +127,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
 
         when(mockClient.updateTags("identifier", mutation)).thenAnswer(new Answer<Response>() {
             @Override
-            public Response answer(InvocationOnMock invocation) throws Throwable {
+            public Response answer(InvocationOnMock invocation) {
                 registrar.clearPendingMutations();
                 return response;
             }

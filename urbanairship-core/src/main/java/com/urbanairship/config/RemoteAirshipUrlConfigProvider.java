@@ -51,24 +51,22 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
     }
 
     private void updateConfig(@NonNull RemoteAirshipConfig remoteAirshipConfig) {
-        AirshipUrlConfig config;
+        AirshipUrlConfig.Builder urlConfigBuilder = AirshipUrlConfig.newBuilder()
+                                                                    .setRemoteDataUrl(firstOrNull(remoteAirshipConfig.getRemoteDataUrl(), configOptions.remoteDataUrl))
+                                                                    .setChatUrl(firstOrNull(remoteAirshipConfig.getChatUrl(), configOptions.chatUrl))
+                                                                    .setChatSocketUrl(firstOrNull(remoteAirshipConfig.getChatSocketUrl(), configOptions.chatSocketUrl));
+
         if (preferenceDataStore.getBoolean(DISABLE_URL_FALLBACK_KEY, configOptions.requireInitialRemoteConfigEnabled)) {
-            // Only allow remote-data URL as a fallback
-            config = AirshipUrlConfig.newBuilder()
-                                     .setRemoteDataUrl(firstOrNull(remoteAirshipConfig.getRemoteDataUrl(), configOptions.remoteDataUrl))
-                                     .setWalletUrl(remoteAirshipConfig.getWalletUrl())
-                                     .setAnalyticsUrl(remoteAirshipConfig.getAnalyticsUrl())
-                                     .setDeviceUrl(remoteAirshipConfig.getDeviceApiUrl())
-                                     .build();
+            urlConfigBuilder.setWalletUrl(remoteAirshipConfig.getWalletUrl())
+                            .setAnalyticsUrl(remoteAirshipConfig.getAnalyticsUrl())
+                            .setDeviceUrl(remoteAirshipConfig.getDeviceApiUrl());
         } else {
-            config = AirshipUrlConfig.newBuilder()
-                                     .setRemoteDataUrl(firstOrNull(remoteAirshipConfig.getRemoteDataUrl(), configOptions.remoteDataUrl))
-                                     .setWalletUrl(firstOrNull(remoteAirshipConfig.getWalletUrl(), configOptions.walletUrl))
-                                     .setAnalyticsUrl(firstOrNull(remoteAirshipConfig.getAnalyticsUrl(), configOptions.analyticsUrl))
-                                     .setDeviceUrl(firstOrNull(remoteAirshipConfig.getDeviceApiUrl(), configOptions.deviceUrl))
-                                     .build();
+            urlConfigBuilder.setWalletUrl(firstOrNull(remoteAirshipConfig.getWalletUrl(), configOptions.walletUrl))
+                            .setAnalyticsUrl(firstOrNull(remoteAirshipConfig.getAnalyticsUrl(), configOptions.analyticsUrl))
+                            .setDeviceUrl(firstOrNull(remoteAirshipConfig.getDeviceApiUrl(), configOptions.deviceUrl));
         }
 
+        AirshipUrlConfig config = urlConfigBuilder.build();
         boolean isConfigUpdate;
         synchronized (lock) {
             isConfigUpdate = !config.equals(urlConfig);

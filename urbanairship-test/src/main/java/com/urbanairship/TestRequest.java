@@ -2,6 +2,8 @@
 
 package com.urbanairship;
 
+import android.net.Uri;
+
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -34,7 +36,7 @@ public class TestRequest extends Request {
     public <T> Response<T> execute(@NonNull ResponseParser<T> parser) throws RequestException {
 
         try {
-            Checks.checkNotNull(url, "missing url");
+            Checks.checkNotNull(uri, "missing url");
             Checks.checkNotNull(requestMethod, "missing request method");
             return new Response.Builder<T>(responseStatus)
                     .setLastModified(responseLastModifiedTime)
@@ -84,7 +86,7 @@ public class TestRequest extends Request {
     }
 
     @Nullable
-    public URL getUrl() {
-        return url;
+    public Uri getUrl() {
+        return uri;
     }
 }

@@ -135,7 +135,7 @@ public class PreferenceDataStoreTest extends BaseTestCase {
      * Test saving json serializable when toJson returns null.
      */
     @Test
-    public void testJsonSerializableNullJsonValue() throws JsonException {
+    public void testJsonSerializableNullJsonValue() {
         JsonSerializable testObject = new JsonSerializable() {
             @NonNull
             @Override

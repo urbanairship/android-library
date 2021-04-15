@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation.deferred;
 
+import android.net.Uri;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.auth.AuthException;
@@ -97,7 +99,7 @@ public class DeferredScheduleClient {
      * @param attributeOverrides Attribute overrides.
      * @return The deferred response.
      */
-    public Response<Result> performRequest(@NonNull URL url,
+    public Response<Result> performRequest(@NonNull Uri url,
                                            @NonNull String channelId,
                                            @Nullable TriggerContext triggerContext,
                                            @NonNull List<TagGroupsMutation> tagOverrides,
@@ -137,7 +139,7 @@ public class DeferredScheduleClient {
         }
     }
 
-    private Response<Result> performRequest(@NonNull URL url, @NonNull String token, @NonNull JsonMap requestBody) throws RequestException {
+    private Response<Result> performRequest(@NonNull Uri url, @NonNull String token, @NonNull JsonMap requestBody) throws RequestException {
         return requestFactory.createRequest()
                              .setOperation("POST", url)
                              .setHeader("Authorization", "Bearer " + token)

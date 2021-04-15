@@ -157,7 +157,7 @@ public class TagGroupsMutationTest extends BaseTestCase {
     }
 
     @Test
-    public void testCollapseEmptyMutations() throws JsonException {
+    public void testCollapseEmptyMutations() {
         List<TagGroupsMutation> mutations = new ArrayList<>();
         List<TagGroupsMutation> collapsed = TagGroupsMutation.collapseMutations(mutations);
         assertEquals(0, collapsed.size());

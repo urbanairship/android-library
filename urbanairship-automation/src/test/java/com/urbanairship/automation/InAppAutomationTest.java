@@ -1,5 +1,6 @@
 package com.urbanairship.automation;
 
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -102,7 +103,7 @@ public class InAppAutomationTest {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 driver = invocation.getArgument(0);
                 return null;
             }
@@ -110,7 +111,7 @@ public class InAppAutomationTest {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 scheduleListener = invocation.getArgument(0);
                 return null;
             }
@@ -196,12 +197,12 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testDeferredSchedules() throws MalformedURLException, AuthException, RequestException {
+    public void testDeferredSchedules() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
@@ -220,7 +221,7 @@ public class InAppAutomationTest {
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("bar", 100));
         when(mockAudienceManager.getAttributeOverrides()).thenReturn(attributeOverrides);
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext, tagOverrides, attributeOverrides))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, tagOverrides, attributeOverrides))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, message))
                         .build());
@@ -247,13 +248,13 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleMissedAudience() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleMissedAudience() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setAudience(Audience.newBuilder()
@@ -261,7 +262,7 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", triggerContext, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(false, null))
                         .build());
@@ -296,10 +297,10 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoMessage() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoMessage() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setAudience(Audience.newBuilder()
@@ -307,7 +308,7 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
                         .build());
@@ -340,15 +341,15 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleFailedResponse() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleFailedResponse() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(400).build());
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -356,7 +357,7 @@ public class InAppAutomationTest {
 
         verifyZeroInteractions(callback);
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
                         .build());
@@ -366,15 +367,15 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoResponse() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoResponse() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenThrow(new RequestException("neat"))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
@@ -389,15 +390,15 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoResponseNoRetry() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoResponseNoRetry() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenThrow(new RequestException("neat"));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -406,15 +407,15 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleAuthException() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleAuthException() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<Deferred> schedule = Schedule.newBuilder(deferredScheduleData)
                                               .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                               .build();
 
-        when(mockDeferredScheduleClient.performRequest(new URL("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenThrow(new AuthException("neat"))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
                         .setResult(new DeferredScheduleClient.Result(true, null))
@@ -429,10 +430,10 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoChannel() throws MalformedURLException, AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoChannel() {
         when(mockChannel.getId()).thenReturn(null);
 
-        Deferred deferredScheduleData = new Deferred(new URL("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();

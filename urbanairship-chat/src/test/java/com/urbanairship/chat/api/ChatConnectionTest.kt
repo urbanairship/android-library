@@ -1,10 +1,11 @@
 package com.urbanairship.chat.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
-import java.lang.Exception
+import com.urbanairship.config.AirshipUrlConfig
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
@@ -34,13 +35,17 @@ class ChatConnectionTest {
     private lateinit var mockChatConnectionListener: ChatConnection.ChatListener
     private lateinit var socketFactory: TestSocketFactory
     private lateinit var chatConnection: ChatConnection
+    private lateinit var runtimeConfig: TestAirshipRuntimeConfig
 
     @Before
     fun setUp() {
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder().setChatSocketUrl("wss://test.urbanairship.com").build()
+
         mockWebSocket = mock()
         mockChatConnectionListener = mock()
         socketFactory = TestSocketFactory(mockWebSocket)
-        chatConnection = ChatConnection(socketFactory)
+        chatConnection = ChatConnection(runtimeConfig, socketFactory)
         chatConnection.chatListener = mockChatConnectionListener
     }
 
@@ -53,7 +58,7 @@ class ChatConnectionTest {
     fun testOpen() {
         chatConnection.open("some-uvp")
         verify(mockWebSocket).open()
-        Assert.assertEquals("wss://rb2socketscontactstest.replybuy.net?uvp=some-uvp", socketFactory.lastUrl)
+        Assert.assertEquals("wss://test.urbanairship.com?uvp=some-uvp", socketFactory.lastUrl)
         Assert.assertNotNull(socketFactory.lastListener)
     }
 

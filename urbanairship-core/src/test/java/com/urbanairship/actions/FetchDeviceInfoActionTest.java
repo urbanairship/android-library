@@ -100,7 +100,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
      * Test perform with valid JSON.
      */
     @Test
-    public void testPerformWithoutTags() throws JsonException {
+    public void testPerformWithoutTags() {
         String channelId = "channel_id";
         String namedUserId = "named_user";
 

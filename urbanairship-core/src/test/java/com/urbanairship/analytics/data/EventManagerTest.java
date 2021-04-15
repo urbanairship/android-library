@@ -167,7 +167,7 @@ public class EventManagerTest extends BaseTestCase {
      * Test event batching only sends a max of 500 events.
      */
     @Test
-    public void testSendEventMaxCount() throws RequestException {
+    public void testSendEventMaxCount() {
         // Make the match batch size greater than 500
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000);
 
