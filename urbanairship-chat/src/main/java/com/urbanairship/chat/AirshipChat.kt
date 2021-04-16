@@ -10,11 +10,16 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
+import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.ui.ChatActivity
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.job.JobDispatcher
+import com.urbanairship.job.JobInfo
+import com.urbanairship.push.PushManager
+import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Chat.
@@ -29,12 +34,17 @@ class AirshipChat
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTesting internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
-    val conversation: Conversation
+    private val pushManager: PushManager,
+    val conversation: Conversation,
+    private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
         // PreferenceDataStore keys
         private const val ENABLED_KEY = "com.urbanairship.chat.CHAT"
+
+        private const val REFRESH_MESSAGES_ACTION = "REFRESH_MESSAGES_ACTION"
+        private const val REFRESH_MESSAGE_PUSH_KEY = "com.urbanairship.refresh_chat"
 
         /**
          * Gets the shared `AirshipChat` instance.
@@ -70,9 +80,9 @@ class AirshipChat
         context: Context,
         dataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
-        channel: AirshipChannel
-    ) : this(context, dataStore, Conversation(context, dataStore, config, channel))
-
+        channel: AirshipChannel,
+        pushManager: PushManager
+    ) : this(context, dataStore, pushManager, Conversation(context, dataStore, config, channel))
     /**
      * Chat open listener.
      */
@@ -121,6 +131,17 @@ class AirshipChat
             }
         }
 
+        pushManager.addPushListener { message, _ ->
+            if (message.containsKey(REFRESH_MESSAGE_PUSH_KEY)) {
+                val jobInfo = JobInfo.newBuilder()
+                        .setAction(REFRESH_MESSAGES_ACTION)
+                        .setAirshipComponent(AirshipChat::class.java)
+                        .build()
+
+                jobDispatcher.dispatch(jobInfo)
+            }
+        }
+
         updateConversationEnablement()
     }
 
@@ -144,6 +165,22 @@ class AirshipChat
     }
 
     override fun onUrlConfigUpdated() {
-        conversation.updateConnection()
+        conversation.launchConnectionUpdate()
+    }
+
+    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): Int {
+        if (jobInfo.action == REFRESH_MESSAGES_ACTION) {
+            val result = runBlocking {
+                conversation.refreshMessages()
+            }
+            return if (result) {
+                JobInfo.JOB_FINISHED
+            } else {
+                JobInfo.JOB_RETRY
+            }
+        } else {
+            Logger.error("Unexpected job $jobInfo")
+            return JobInfo.JOB_FINISHED
+        }
     }
 }

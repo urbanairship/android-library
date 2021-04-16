@@ -32,8 +32,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Airship Chat.
@@ -49,7 +52,7 @@ internal constructor(
     private val connection: ChatConnection,
     private val apiClient: ChatApiClient,
     private val activityMonitor: ActivityMonitor,
-    private val scope: CoroutineScope,
+    private val connectionDispatcher: CoroutineDispatcher,
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
@@ -65,17 +68,19 @@ internal constructor(
         config: AirshipRuntimeConfig,
         channel: AirshipChannel
     ) : this(dataStore, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(config),
-            ChatApiClient(config), GlobalActivityMonitor.shared(context), CoroutineScope(AirshipDispatchers.newSingleThreadDispatcher()),
+            ChatApiClient(config), GlobalActivityMonitor.shared(context), AirshipDispatchers.newSingleThreadDispatcher(),
             AirshipDispatchers.IO)
 
     companion object {
         private const val UVP_KEY = "com.urbanairship.chat.UVP"
-        private const val RECONNECT_DELAY_MS = 3000L
+        private const val RECONNECT_DELAY_MS = 10000L
+        private const val REFRESH_TIMEOUT_MS = 30000L
     }
 
     private var retryConnectionJob: Job? = null
-    private var isPendingSent = false
+    private var isPendingSent: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val scope = CoroutineScope(connectionDispatcher)
 
     internal var isEnabled: Boolean
         get() = enabledState.value
@@ -99,13 +104,13 @@ internal constructor(
     init {
         connection.chatListener = ChatListener()
         activityMonitor.addApplicationListener(object : ApplicationListener {
-            override fun onForeground(milliseconds: Long) = updateConnection()
-            override fun onBackground(milliseconds: Long) = updateConnection()
+            override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
+            override fun onBackground(milliseconds: Long) = launchConnectionUpdate()
         })
 
         channel.addChannelListener(object : AirshipChannelListener {
-            override fun onChannelCreated(channelId: String) = updateConnection()
-            override fun onChannelUpdated(channelId: String) = updateConnection()
+            override fun onChannelCreated(channelId: String) = launchConnectionUpdate()
+            override fun onChannelUpdated(channelId: String) = launchConnectionUpdate()
         })
 
         scope.launch {
@@ -145,7 +150,7 @@ internal constructor(
 
             chatDao.upsert(pending)
 
-            if (connection.isOpenOrOpening && isPendingSent) {
+            if (connection.isOpenOrOpening && isPendingSent.value) {
                 connection.sendMessage(text, attachmentUrl, requestId)
             } else {
                 updateConnection()
@@ -161,8 +166,30 @@ internal constructor(
         }
     }
 
-    internal fun updateConnection(forceOpen: Boolean = false) {
+    suspend fun refreshMessages(timeOut: Long = REFRESH_TIMEOUT_MS): Boolean {
+        return withContext(connectionDispatcher) {
+            withTimeoutOrNull(timeOut) {
+                if (updateConnection(true)) {
+                    if (!isPendingSent.value) {
+                        isPendingSent.drop(1).first()
+                    } else {
+                        true
+                    }
+                } else {
+                    false
+                }
+            } ?: false
+        }
+    }
+
+    internal fun launchConnectionUpdate(forceOpen: Boolean = false) {
         scope.launch {
+            updateConnection(forceOpen)
+        }
+    }
+
+    private suspend fun updateConnection(forceOpen: Boolean = false): Boolean {
+        return withContext(connectionDispatcher) {
             val uvp = getUvp()
             val isForeground = withContext(Dispatchers.Main) {
                 activityMonitor.isAppForegrounded
@@ -170,23 +197,28 @@ internal constructor(
 
             if (uvp == null || !enabledState.value) {
                 connection.close()
-                return@launch
+                return@withContext false
             }
 
-            if (enabledState.value && (!isPendingSent || forceOpen || isForeground || chatDao.hasPendingMessages())) {
+            if (enabledState.value && (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages())) {
                 if (!connection.isOpenOrOpening) {
                     try {
                         connection.open(uvp)
-                        isPendingSent = false
+                        isPendingSent.value = false
                         connection.fetchConversation()
+                        return@withContext true
                     } catch (e: Exception) {
                         Logger.error(e, "Failed to establish chat WebSocket connection!")
                         retryConnectionUpdate()
+                        return@withContext false
                     }
+                } else {
+                    return@withContext true
                 }
             } else {
                 retryConnectionJob?.cancel()
                 connection.close()
+                return@withContext false
             }
         }
     }
@@ -243,8 +275,7 @@ internal constructor(
                             chatDao.getPendingMessages().forEach { message ->
                                 connection.sendMessage(message.text, message.attachment, message.messageId)
                             }
-
-                            isPendingSent = true
+                            isPendingSent.value = true
                         }
                         updateConnection()
                     }

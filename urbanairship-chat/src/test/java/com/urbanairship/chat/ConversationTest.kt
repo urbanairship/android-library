@@ -12,11 +12,9 @@ import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.util.DateUtils
-import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
@@ -25,6 +23,7 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,7 +49,6 @@ class ConversationTest {
     private lateinit var conversation: Conversation
     private lateinit var chatListener: ChatConnection.ChatListener
 
-    private lateinit var testScope: TestCoroutineScope
     private lateinit var testDispatcher: TestCoroutineDispatcher
 
     @Before
@@ -63,7 +61,6 @@ class ConversationTest {
         chatDao = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java).allowMainThreadQueries().build().chatDao()
 
         testDispatcher = TestCoroutineDispatcher()
-        testScope = TestCoroutineScope(testDispatcher)
 
         Dispatchers.setMain(testDispatcher)
 
@@ -72,7 +69,9 @@ class ConversationTest {
         dataStore = PreferenceDataStore(TestApplication.getApplication())
 
         val captor = ArgumentCaptor.forClass(ChatConnection.ChatListener::class.java)
-        conversation = Conversation(dataStore, mockChannel, chatDao, mockConnection, mockApiClient, testActivityMonitor, testScope, testDispatcher)
+
+        conversation = Conversation(dataStore, mockChannel, chatDao, mockConnection, mockApiClient,
+                testActivityMonitor, testDispatcher, testDispatcher)
 
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
@@ -244,6 +243,23 @@ class ConversationTest {
         conversation.clearData()
 
         assertNull(dataStore.getString("com.urbanairship.chat.UVP", null))
+    }
+
+    fun testRefresh() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        whenever(mockConnection.open("some-uvp")).then {
+            whenever(mockConnection.isOpenOrOpening).thenReturn(true)
+            mockChannel
+        }
+
+        whenever(mockConnection.fetchConversation()).then {
+            val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+            chatListener.onChatResponse(response)
+            true
+        }
+
+        assertTrue(conversation.refreshMessages(300000))
     }
 
     private fun connect() {
