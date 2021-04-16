@@ -11,12 +11,14 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.js.TestActivity;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
@@ -45,6 +47,7 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -65,15 +68,16 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private TestNotificationProvider notificationProvider;
     private TestNotificationProvider accengageNotificationProvider;
 
-
     private IncomingPushRunnable pushRunnable;
     private IncomingPushRunnable displayRunnable;
     private TestPushProvider testPushProvider;
 
     private JobDispatcher jobDispatcher;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
+        activityMonitor = new TestActivityMonitor();
         pushBundle = new Bundle();
         pushBundle.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
         pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
@@ -120,6 +124,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .setNotificationManager(notificationManager)
                 .setLongRunning(true)
                 .setJobDispatcher(jobDispatcher)
+                .setActivityMonitor(activityMonitor)
                 .build();
 
         displayRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
@@ -129,6 +134,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .setLongRunning(true)
                 .setJobDispatcher(jobDispatcher)
                 .setProcessed(true)
+                .setActivityMonitor(activityMonitor)
                 .build();
 
         TestApplication.getApplication().setAccengageNotificationHandler(new AccengageNotificationHandler() {
@@ -180,6 +186,9 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
+        notificationProvider.notification = createNotification();
+        notificationProvider.tag = "testNotificationTag";
+
         pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
                 .setProviderClass("wrong  class")
                 .setMessage(new PushMessage(pushBundle))
@@ -228,6 +237,71 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         verify(pushManager).onPushReceived(message, false);
     }
+
+    /**
+     * Test suppress message in foreground when isForegroundDisplayable is false.
+     */
+    @Test
+    public void testNotForegroundDisplayable() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        activityMonitor.foreground();
+
+        notificationProvider.notification = createNotification();
+        notificationProvider.tag = "testNotificationTag";
+
+        pushBundle.putString("com.urbanairship.foreground_display", "false");
+        message = new PushMessage(pushBundle);
+
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(message)
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .setActivityMonitor(activityMonitor)
+                .build();
+
+        pushRunnable.run();
+
+        verify(pushManager).onPushReceived(message, false);
+    }
+
+    /**
+     * Test message in foreground when isForegroundDisplayable is true.
+     */
+    @Test
+    public void testForegroundDisplayable() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        activityMonitor.foreground();
+
+        notificationProvider.notification = createNotification();
+        notificationProvider.tag = "testNotificationTag";
+
+        pushBundle.putString("com.urbanairship.foreground_display", "true");
+        message = new PushMessage(pushBundle);
+
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(message)
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .setActivityMonitor(activityMonitor)
+                .build();
+
+        pushRunnable.run();
+
+        verify(pushManager).onPushReceived(message, true);
+    }
+
 
     /**
      * Test handling a background push.

@@ -240,6 +240,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String PRIORITY_HIGH = "high";
 
     /**
+     * The extra key to control the notification display in the foreground.
+     */
+    @NonNull
+    public static final String EXTRA_FOREGROUND_DISPLAY = "com.urbanairship.foreground_display";
+
+    /**
      * Accengage constant used to determine if the push has Accengage content or not.
      */
     @NonNull
@@ -705,6 +711,22 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public String getNotificationChannel() {
         return data.get(EXTRA_NOTIFICATION_CHANNEL);
     }
+
+    /**
+     * Returns if the notification should be displayed or suppressed in the foreground.
+     *
+     * @return {@code true} if the notification should display in the foreground, otherwise {@code false}.
+     */
+    @Nullable
+    public boolean isForegroundDisplayable() {
+        String value = data.get(EXTRA_FOREGROUND_DISPLAY);
+        if (value != null) {
+            return Boolean.parseBoolean(value);
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * Returns the notification channel that should be used when posting the notification or the
