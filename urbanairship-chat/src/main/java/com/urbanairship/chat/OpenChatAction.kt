@@ -12,7 +12,7 @@ import java.util.concurrent.Callable
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p>
- * Accepted argument values: {@code null} or a JsonObject with the prefilled message under `message` key.
+ * Accepted argument values: {@code null} or a JsonObject with the prefilled message under `chat_input` key.
  * <p>
  * Result value: <code>null</code>
  * <p>
@@ -29,7 +29,7 @@ class OpenChatAction(private val chatCallable: Callable<AirshipChat> = AirshipCo
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val message = arguments.value.map?.opt("message")?.string
+        val message = arguments.value.map?.opt("chat_input")?.string
         chatCallable.call().openChat(message)
         return ActionResult.newEmptyResult()
     }

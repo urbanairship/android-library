@@ -38,7 +38,7 @@ class OpenChatActionTest {
         @Situation val rejectSituations = intArrayOf(Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON, Action.SITUATION_PUSH_RECEIVED)
 
         acceptSituations.forEach {
-            val messageArgs: ActionArguments = ActionArguments(it, ActionValue.wrap(JsonMap.newBuilder().put("message", "neat").build()), Bundle.EMPTY)
+            val messageArgs: ActionArguments = ActionArguments(it, ActionValue.wrap(JsonMap.newBuilder().put("chat_input", "neat").build()), Bundle.EMPTY)
             val nullArgs: ActionArguments = ActionArguments(it, null, Bundle.EMPTY)
             assertTrue("Should accept arguments in situation $it", action.acceptsArguments(nullArgs))
             assertTrue("Should accept arguments in situation $it", action.acceptsArguments(messageArgs))
@@ -59,7 +59,7 @@ class OpenChatActionTest {
 
     @Test
     fun testPerformWithMessage() {
-        val args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(JsonMap.newBuilder().put("message", "neat").build()), Bundle.EMPTY)
+        val args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(JsonMap.newBuilder().put("chat_input", "neat").build()), Bundle.EMPTY)
         action.perform(args)
         verify(mockChat).openChat("neat")
     }
