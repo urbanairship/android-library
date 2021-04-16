@@ -29,4 +29,7 @@ internal interface ChatDao {
 
     @Query("SELECT EXISTS(SELECT * FROM messages WHERE isPending == 1)")
     fun hasPendingMessages(): Boolean
+
+    @Query("DELETE FROM messages")
+    fun deleteMessages()
 }

@@ -119,13 +119,19 @@ class AirshipChat
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onComponentEnableChange(isEnabled: Boolean) {
-        super.onComponentEnableChange(isEnabled)
-        updateConversationEnablement()
-    }
+    override fun onComponentEnableChange(isEnabled: Boolean) = updateConversationEnablement()
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    override fun onDataCollectionEnabledChanged(isDataCollectionEnabled: Boolean) = updateConversationEnablement()
 
     private fun updateConversationEnablement() {
-        conversation.isEnabled = this.isEnabled && this.isComponentEnabled
+        conversation.isEnabled = this.isEnabled && this.isComponentEnabled && this.isDataCollectionEnabled
+        if (!isDataCollectionEnabled) {
+            conversation.clearData()
+        }
     }
 
     override fun onUrlConfigUpdated() {

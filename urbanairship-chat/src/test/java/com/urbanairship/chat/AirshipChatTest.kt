@@ -1,11 +1,14 @@
 package com.urbanairship.chat
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
+import com.urbanairship.UAirship
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -15,11 +18,13 @@ class AirshipChatTest {
 
     private lateinit var mockConversation: Conversation
     private lateinit var airshipChat: AirshipChat
+    private lateinit var dataStore: PreferenceDataStore
 
     @Before
     fun setUp() {
         mockConversation = mock()
-        airshipChat = AirshipChat(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockConversation)
+        dataStore = PreferenceDataStore(TestApplication.getApplication())
+        airshipChat = AirshipChat(TestApplication.getApplication(), dataStore, mockConversation)
     }
 
     @Test
@@ -40,6 +45,19 @@ class AirshipChatTest {
         airshipChat.init()
         airshipChat.isComponentEnabled = false
         verify(mockConversation).isEnabled = false
+    }
+
+    @Test
+    fun testDataCollection() {
+        airshipChat.init()
+        clearInvocations(mockConversation)
+
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false)
+        verify(mockConversation).isEnabled = false
+        verify(mockConversation).clearData()
+
+        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true)
+        verify(mockConversation).isEnabled = true
     }
 
     @Test

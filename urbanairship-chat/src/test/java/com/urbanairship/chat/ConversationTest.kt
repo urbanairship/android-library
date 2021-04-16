@@ -2,6 +2,7 @@ package com.urbanairship.chat
 
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestApplication
 import com.urbanairship.channel.AirshipChannel
@@ -11,6 +12,7 @@ import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.util.DateUtils
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -20,6 +22,9 @@ import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +46,7 @@ class ConversationTest {
     private lateinit var chatDao: ChatDao
     private lateinit var testActivityMonitor: TestActivityMonitor
 
+    private lateinit var dataStore: PreferenceDataStore
     private lateinit var conversation: Conversation
     private lateinit var chatListener: ChatConnection.ChatListener
 
@@ -63,8 +69,10 @@ class ConversationTest {
 
         testActivityMonitor = TestActivityMonitor()
 
+        dataStore = PreferenceDataStore(TestApplication.getApplication())
+
         val captor = ArgumentCaptor.forClass(ChatConnection.ChatListener::class.java)
-        conversation = Conversation(TestApplication.getApplication().preferenceDataStore, mockChannel, chatDao, mockConnection, mockApiClient, testActivityMonitor, testScope, testDispatcher)
+        conversation = Conversation(dataStore, mockChannel, chatDao, mockConnection, mockApiClient, testActivityMonitor, testScope, testDispatcher)
 
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
@@ -208,6 +216,34 @@ class ConversationTest {
         connect()
         conversation.isEnabled = false
         verify(mockConnection).close()
+    }
+
+    @Test
+    fun testWipeDataClosesConnection() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.clearData()
+        verify(mockConnection).close()
+    }
+
+    @Test
+    fun testClearDataDeletesMessages() = testDispatcher.runBlockingTest {
+        conversation.sendMessage("some-message")
+        assertTrue(chatDao.hasPendingMessages())
+
+        conversation.clearData()
+        assertFalse(chatDao.hasPendingMessages())
+    }
+
+    @Test
+    fun testClearDataDeletesUvp() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        testActivityMonitor.foreground()
+
+        assertEquals("some-uvp", dataStore.getString("com.urbanairship.chat.UVP", null))
+        conversation.clearData()
+
+        assertNull(dataStore.getString("com.urbanairship.chat.UVP", null))
     }
 
     private fun connect() {

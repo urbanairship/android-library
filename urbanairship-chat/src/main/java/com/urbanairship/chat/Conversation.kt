@@ -123,6 +123,10 @@ internal constructor(
      */
     @JvmOverloads
     fun sendMessage(text: String?, attachmentUrl: String? = null) {
+        if (!isEnabled) {
+            Logger.error("AirshipChat disabled. Unable to send message.")
+        }
+
         require(text != null || attachmentUrl != null) {
             "Missing text and attachmentUrl"
         }
@@ -146,6 +150,14 @@ internal constructor(
             } else {
                 updateConnection()
             }
+        }
+    }
+
+    internal fun clearData() {
+        scope.launch {
+            connection.close()
+            dataStore.remove(UVP_KEY)
+            chatDao.deleteMessages()
         }
     }
 
