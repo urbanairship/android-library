@@ -1,3 +1,4 @@
+
 package com.urbanairship.chat.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -6,16 +7,21 @@ import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
 import com.urbanairship.config.AirshipUrlConfig
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class ChatConnectionTest {
 
@@ -36,17 +42,25 @@ class ChatConnectionTest {
     private lateinit var socketFactory: TestSocketFactory
     private lateinit var chatConnection: ChatConnection
     private lateinit var runtimeConfig: TestAirshipRuntimeConfig
+    private lateinit var testScope: TestCoroutineScope
 
     @Before
     fun setUp() {
+        testScope = TestCoroutineScope()
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
         runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder().setChatSocketUrl("wss://test.urbanairship.com").build()
 
         mockWebSocket = mock()
         mockChatConnectionListener = mock()
         socketFactory = TestSocketFactory(mockWebSocket)
-        chatConnection = ChatConnection(runtimeConfig, socketFactory)
+        chatConnection = ChatConnection(runtimeConfig, socketFactory, testScope)
         chatConnection.chatListener = mockChatConnectionListener
+    }
+
+    @After
+    fun cleanup() {
+        chatConnection.close()
+        testScope.cleanupTestCoroutines()
     }
 
     @Test
@@ -80,6 +94,9 @@ class ChatConnectionTest {
 
     @Test
     fun testRequestConversation() {
+        // Prevent heartbeats
+        testScope.pauseDispatcher()
+
         chatConnection.open("some-uvp")
         chatConnection.fetchConversation()
 
@@ -93,6 +110,9 @@ class ChatConnectionTest {
 
     @Test
     fun testSendMessage() {
+        // Prevent heartbeats
+        testScope.pauseDispatcher()
+
         chatConnection.open("some-uvp")
         chatConnection.sendMessage("hi", "some attachment", "request id")
 
@@ -215,6 +235,31 @@ class ChatConnectionTest {
         socketFactory.lastListener?.onError(exception)
         verify(mockWebSocket).close()
         verify(mockChatConnectionListener).onClose(ChatConnection.CloseReason.Error(exception))
+    }
+
+    @Test
+    fun testHeartbeat() {
+        chatConnection.open("some-uvp")
+        val heartbeat = ChatRequest.Heartbeat("some-uvp")
+
+        testScope.advanceTimeBy(120000)
+        verify(mockWebSocket, times(3)).send(argThat {
+            val parsed = parse<ChatRequest.Heartbeat>(this)
+            heartbeat == parsed
+        })
+    }
+
+    @Test
+    fun testHeartbeatStopsOnClose() {
+        chatConnection.open("some-uvp")
+        chatConnection.close()
+        testScope.advanceTimeBy(120000)
+
+        val heartbeat = ChatRequest.Heartbeat("some-uvp")
+        verify(mockWebSocket, times(1)).send(argThat {
+            val parsed = parse<ChatRequest.Heartbeat>(this)
+            heartbeat == parsed
+        })
     }
 
     private inline fun <reified T> parse(string: String): T {

@@ -14,6 +14,8 @@ internal sealed class ChatRequest(val action: String, val origin: String = ORIGI
     companion object {
         private const val ACTION_FETCH_CONVERSATION = "fetch_conversation"
         private const val ACTION_SEND_MESSAGE = "send_message"
+        private const val ACTION_HEARTBEAT = "heartbeat"
+
         private const val ORIGIN = "mobile_android"
 
         private val format = Json {
@@ -24,6 +26,16 @@ internal sealed class ChatRequest(val action: String, val origin: String = ORIGI
 
     abstract val uvp: String
     internal abstract fun toJsonString(): String
+
+    /**
+     * Heartbeat request.
+     */
+    @Serializable
+    internal data class Heartbeat(
+        override val uvp: String
+    ) : ChatRequest(ACTION_HEARTBEAT) {
+        override fun toJsonString(): String = format.encodeToString(serializer(), this)
+    }
 
     /**
      * Requests the current conversation for the given [uvp] from the server.

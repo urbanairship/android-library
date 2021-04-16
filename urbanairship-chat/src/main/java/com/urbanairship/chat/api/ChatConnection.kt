@@ -4,19 +4,35 @@ package com.urbanairship.chat.api
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.Logger
+import com.urbanairship.chat.AirshipDispatchers
 import com.urbanairship.chat.websocket.DefaultWebSocketFactory
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
 import com.urbanairship.config.AirshipRuntimeConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ChatConnection(private val config: AirshipRuntimeConfig, private val socketFactory: WebSocketFactory = DefaultWebSocketFactory()) {
+internal class ChatConnection(
+    private val config: AirshipRuntimeConfig,
+    private val socketFactory: WebSocketFactory = DefaultWebSocketFactory(),
+    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO)
+) {
+
+    companion object {
+        private const val HEARTBEAT_MS = 60000L
+    }
 
     private val webSocketListener = SocketListener()
     private val lock = Any()
     private var uvp: String? = null
     private var socket: WebSocket? = null
+    private var heartbeatJob: Job? = null
 
     internal val isOpenOrOpening: Boolean
         get() = socket != null
@@ -33,6 +49,13 @@ internal class ChatConnection(private val config: AirshipRuntimeConfig, private 
             socket = socketFactory.create(createUrl(uvp), webSocketListener).apply {
                 open()
             }
+
+            heartbeatJob = scope.launch {
+                do {
+                    send(ChatRequest.Heartbeat(uvp))
+                    delay(HEARTBEAT_MS)
+                } while (isActive)
+            }
         }
     }
 
@@ -42,7 +65,10 @@ internal class ChatConnection(private val config: AirshipRuntimeConfig, private 
 
     private fun close(reason: CloseReason) {
         synchronized(lock) {
+
             if (isOpenOrOpening) {
+                heartbeatJob?.cancel()
+                heartbeatJob = null
                 socket?.close()
                 socket = null
                 chatListener?.onClose(reason)
