@@ -3,6 +3,9 @@
 package com.urbanairship.chat
 
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
@@ -10,6 +13,7 @@ import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.chat.ui.ChatActivity
 import com.urbanairship.config.AirshipRuntimeConfig
 
 /**
@@ -72,7 +76,7 @@ class AirshipChat
     /**
      * Chat open listener.
      */
-    var openChatListener: AirshipChat.OnShowChatListener? = null
+    var openChatListener: OnShowChatListener? = null
 
     /**
      * Enables or disables Airship Chat.
@@ -85,12 +89,17 @@ class AirshipChat
 
     /**
      * Opens the chat.
-     * @param message The prefilled chat message.
+     * @param message The pre-filled chat message.
      */
     @JvmOverloads
     fun openChat(message: String? = null) {
-        if (openChatListener?.onOpenChat(message) == false) {
-            // Launch OOTB chat
+        if (openChatListener?.onOpenChat(message) != true) {
+            context.startActivity(
+                    Intent(context, ChatActivity::class.java).apply {
+                        message?.let { putExtra(ChatActivity.EXTRA_DRAFT, it) }
+                        addFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_SINGLE_TOP)
+                    }
+            )
         }
     }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="airship_chat_item_decoration_top_padding">8dp</dimen>
+    <dimen name="airship_chat_item_decoration_bottom_padding">80dp</dimen>
+    <dimen name="airship_chat_item_decoration_header_height">56dp</dimen>
+</resources>

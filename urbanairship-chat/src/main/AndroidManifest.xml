@@ -5,6 +5,11 @@
 
     <application>
 
+        <activity android:name="com.urbanairship.chat.ui.ChatActivity"
+            android:exported="false"
+            android:theme="@style/UrbanAirship.Chat.Activity"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:label="@string/ua_chat_title" />
 
     </application>
 </manifest>

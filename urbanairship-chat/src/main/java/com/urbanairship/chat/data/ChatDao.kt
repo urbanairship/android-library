@@ -18,7 +18,7 @@ internal interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsert(message: MessageEntity)
 
-    @Query("SELECT * FROM messages ORDER BY isPending DESC, createdOn DESC")
+    @Query("SELECT * FROM messages ORDER BY isPending ASC, createdOn ASC")
     fun getMessageDataSourceFactory(): DataSource.Factory<Int, MessageEntity>
 
     @Query("SELECT * FROM messages WHERE isPending == 1 ORDER BY createdOn DESC")

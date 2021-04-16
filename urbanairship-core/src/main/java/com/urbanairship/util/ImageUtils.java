@@ -21,6 +21,7 @@ import java.net.URL;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * A class containing utility methods related to bitmaps.
@@ -60,7 +61,7 @@ public class ImageUtils {
      * @throws IOException if file fails to be created.
      */
     @Nullable
-    public static DrawableResult fetchScaledDrawable(@NonNull Context context, @NonNull URL url, final int reqWidth, final int reqHeight) throws IOException {
+    public static DrawableResult fetchScaledDrawable(@NonNull Context context, final @NonNull URL url, final int reqWidth, final int reqHeight) throws IOException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             Bitmap bitmap = ImageUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
 
@@ -79,8 +80,13 @@ public class ImageUtils {
                         @RequiresApi(api = Build.VERSION_CODES.P)
                         @Override
                         public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
-                            decoder.setTargetSize(reqWidth, reqHeight);
-                            decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
+                            int sourceWidth = info.getSize().getWidth();
+                            int sourceHeight = info.getSize().getHeight();
+                            ImageUtils.Size target = calculateTargetSize(
+                                    sourceWidth, sourceHeight, reqWidth, reqHeight);
+
+                            decoder.setTargetSize(target.width, target.height);
+                            decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
                         }
                     });
 
@@ -118,10 +124,12 @@ public class ImageUtils {
 
                     BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
-                    int width = options.outWidth;
-                    int height = options.outHeight;
+                    int sourceWidth = options.outWidth;
+                    int sourceHeight = options.outHeight;
+                    ImageUtils.Size target = calculateTargetSize(
+                            sourceWidth, sourceHeight, reqWidth, reqHeight);
 
-                    options.inSampleSize = calculateInSampleSize(width, height, reqWidth, reqHeight);
+                    options.inSampleSize = calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height);
                     options.inJustDecodeBounds = false;
 
                     return BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
@@ -133,8 +141,13 @@ public class ImageUtils {
                         @RequiresApi(api = Build.VERSION_CODES.P)
                         @Override
                         public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source1) {
-                            decoder.setTargetSize(reqWidth, reqHeight);
-                            decoder.setTargetSampleSize(calculateInSampleSize(info.getSize().getWidth(), info.getSize().getHeight(), reqWidth, reqHeight));
+                            int sourceWidth = info.getSize().getWidth();
+                            int sourceHeight = info.getSize().getHeight();
+                            ImageUtils.Size target = calculateTargetSize(
+                                    sourceWidth, sourceHeight, reqWidth, reqHeight);
+
+                            decoder.setTargetSize(target.width, target.height);
+                            decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
                         }
                     });
                 }
@@ -177,6 +190,43 @@ public class ImageUtils {
         }
 
         return inSampleSize;
+    }
+
+    /**
+     * Calculates a target size based on the original image aspect ratio if either the request width
+     * or request height are 0, otherwise returns the request size.
+     *
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @param reqWidth The requested width of the image.
+     * @param reqHeight The requested height of the image.
+     * @return The target Size.
+     */
+    @NonNull
+    public static Size calculateTargetSize(int width, int height, int reqWidth, int reqHeight) {
+        if (width == 0 || height == 0) {
+            throw new IllegalArgumentException("Failed to calculate target size! width and height must be greater than zero.");
+        }
+        if (reqWidth == 0 && reqHeight == 0) {
+            throw new IllegalArgumentException("Failed to calculate target size! reqWidth and reqHeight may not both be zero.");
+        }
+
+        int targetWidth;
+        int targetHeight;
+
+        if (reqWidth == 0) {
+            targetWidth = (int) (reqHeight * (width / (double) height));
+        } else {
+            targetWidth = reqWidth;
+        }
+
+        if (reqHeight == 0) {
+            targetHeight = (int) (reqWidth * (height / (double) width));
+        } else {
+            targetHeight = reqHeight;
+        }
+
+        return new Size(targetWidth, targetHeight);
     }
 
     /**
@@ -241,4 +291,30 @@ public class ImageUtils {
         }
     }
 
+    /**
+     * Immutable wrapper for a width and height, used as a stand-in for android.util.Size which is
+     * only supported on API 21+.
+     */
+    static class Size {
+        final int width;
+        final int height;
+
+        Size(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Size size = (Size) o;
+            return width == size.width && height == size.height;
+        }
+
+        @Override
+        public int hashCode() {
+            return ObjectsCompat.hash(width, height);
+        }
+    }
 }
