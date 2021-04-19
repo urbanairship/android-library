@@ -75,9 +75,7 @@ internal class MessageAdapter : PagedListAdapter<ChatMessage, MessageAdapter.Vie
                 oldItem.messageId == newItem.messageId
 
             override fun areContentsTheSame(oldItem: ChatMessage, newItem: ChatMessage) =
-                // IDs and pending field can change, so we only consider what gets displayed here
-                // in order to avoid unnecessary list updates.
-                oldItem.direction == newItem.direction && oldItem.text == newItem.text
+                oldItem == newItem
         }
     }
 }

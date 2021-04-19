@@ -371,7 +371,7 @@ public class AirshipConfigOptions {
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
                 this.chatUrl = firstOrEmpty(builder.chatUrl);
-                this.chatSocketUrl = firstOrEmpty(builder.chatUrl);
+                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
 
             case SITE_US:
@@ -381,7 +381,7 @@ public class AirshipConfigOptions {
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
                 this.chatUrl = firstOrEmpty(builder.chatUrl, US_CHAT_URL);
-                this.chatSocketUrl = firstOrEmpty(builder.chatUrl, US_CHAT_SOCKET_URL);
+                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl, US_CHAT_SOCKET_URL);
                 break;
         }
 
