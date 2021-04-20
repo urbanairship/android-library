@@ -1,5 +1,7 @@
 package com.urbanairship.chat.ui
 
+import android.animation.Animator
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -10,6 +12,7 @@ import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.inputmethod.InputConnectionCompat
+import androidx.core.widget.addTextChangedListener
 import com.urbanairship.chat.R
 
 /** Custom `EditText` that supports image input via URI. */
@@ -24,6 +27,9 @@ internal class ChatInputEditText @JvmOverloads constructor(
         fun onActionDone()
     }
 
+    private val animationDuration = resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
+    private var bkgAnimator: Animator? = null
+
     private var listener: ChatInputListener? = null
 
     init {
@@ -35,11 +41,23 @@ internal class ChatInputEditText @JvmOverloads constructor(
                 false
             }
         }
+
+        addTextChangedListener { text ->
+            updateBackgroundDrawable(isVisible = text.isNullOrEmpty())
+        }
     }
 
     override fun onCreateInputConnection(editorInfo: EditorInfo): InputConnection {
         val ic: InputConnection = super.onCreateInputConnection(editorInfo)
-        EditorInfoCompat.setContentMimeTypes(editorInfo, arrayOf("image/png", "image/gif", "image/jpeg"))
+
+        // Exclude GIFs if on API 27 and below, since we aren't able to animate them (yet).
+        val mimeTypes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            arrayOf("image/png", "image/gif", "image/jpeg")
+        } else {
+            arrayOf("image/png", "image/jpeg")
+        }
+
+        EditorInfoCompat.setContentMimeTypes(editorInfo, mimeTypes)
 
         val callback =
                 InputConnectionCompat.OnCommitContentListener { inputContentInfo, flags, _ ->
@@ -77,6 +95,27 @@ internal class ChatInputEditText @JvmOverloads constructor(
             true
         } ?: false
     }
+
+    /**
+     * Fades the background drawable in and out for API 19+, falling back to setting visibility on
+     * older versions.
+     */
+    private fun updateBackgroundDrawable(isVisible: Boolean) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            val (start, end) = if (isVisible) {
+                (background?.alpha ?: 0) to 255
+            } else {
+                (background?.alpha ?: 255) to 0
+            }
+
+            bkgAnimator?.cancel()
+            bkgAnimator = ObjectAnimator.ofInt(background, "alpha", start, end).apply {
+                duration = animationDuration
+                start()
+            }
+        } else {
+            background.alpha = if (isVisible) 255 else 0
+        }
 
     private fun isEditorActionDone(actionId: Int, event: KeyEvent?): Boolean =
         when (actionId) {

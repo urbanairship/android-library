@@ -23,7 +23,6 @@ import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.DateUtils
-import java.lang.IllegalArgumentException
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

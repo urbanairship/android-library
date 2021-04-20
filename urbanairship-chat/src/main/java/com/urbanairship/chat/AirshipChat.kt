@@ -100,13 +100,15 @@ class AirshipChat
     /**
      * Opens the chat.
      * @param message The pre-filled chat message.
+     * @param title The toolbar title.
      */
     @JvmOverloads
-    fun openChat(message: String? = null) {
+    fun openChat(message: String? = null, title: String? = null) {
         if (openChatListener?.onOpenChat(message) != true) {
             context.startActivity(
                     Intent(context, ChatActivity::class.java).apply {
                         message?.let { putExtra(ChatActivity.EXTRA_DRAFT, it) }
+                        title?.let { putExtra(ChatActivity.EXTRA_TITLE, it) }
                         addFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_SINGLE_TOP)
                     }
             )

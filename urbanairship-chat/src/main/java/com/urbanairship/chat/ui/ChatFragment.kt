@@ -18,8 +18,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UAirship
+import com.urbanairship.chat.ChatDirection
 import com.urbanairship.chat.R
 import com.urbanairship.chat.databinding.UaFragmentChatBinding
+import com.urbanairship.images.ImageLoader.ImageLoadedCallback
 import com.urbanairship.images.ImageRequestOptions
 import java.util.Calendar
 import java.util.TimeZone
@@ -27,8 +29,18 @@ import kotlin.math.roundToInt
 
 class ChatFragment : Fragment() {
 
+    companion object {
+        /**
+         * Optional `String` argument specifying a message to pre-fill the message input box on launch.
+         */
+        const val ARG_DRAFT = "message_draft"
+    }
+
     private val viewModel: ChatViewModel by lazy {
-        ViewModelProvider(this).get(ChatViewModel::class.java)
+        ViewModelProvider(this, ChatViewModel.ChatViewModelFactory(
+                application = requireActivity().application,
+                messageDraft = requireArguments().getString(ARG_DRAFT)
+        )).get(ChatViewModel::class.java)
     }
 
     override fun onCreateView(
@@ -53,8 +65,10 @@ class ChatFragment : Fragment() {
         with(binding.chatMessageInput) {
             setListener(object : ChatInputEditText.ChatInputListener {
                 override fun onImageSelected(imageUri: String) {
-                    viewModel.image.value = imageUri
-                    binding.attachmentThumbnail.loadAttachment(imageUri)
+                    viewModel.setImage(imageUri)
+                    binding.attachmentThumbnail.loadAttachment(imageUri) {
+                        viewModel.onAttachmentThumbnailLoaded()
+                    }
                 }
 
                 override fun onActionDone() = viewModel.send()
@@ -72,25 +86,20 @@ class ChatFragment : Fragment() {
 
             val res = requireContext().resources
             addItemDecoration(BottomPaddingDecoration(res.getDimension(
-                    R.dimen.airship_chat_item_decoration_bottom_padding).roundToInt()))
-            addItemDecoration(TopPaddingDecoration(res.getDimension(
-                    R.dimen.airship_chat_item_decoration_top_padding).roundToInt()))
+                    R.dimen.ua_chat_item_decoration_bottom_padding).roundToInt()))
             addItemDecoration(DateHeaderDecoration(res.getDimension(
-                    R.dimen.airship_chat_item_decoration_header_height).roundToInt()))
+                    R.dimen.ua_chat_item_decoration_header_height).roundToInt()))
 
             adapter = messageAdapter
             layoutManager = linearLayoutManager
 
-            // Scroll to the bottom of the list when the keyboard is shown/hidden
-            addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                scrollToPosition(messageAdapter.itemCount - 1)
-            }
-
-            // Scroll to show the latest message when data is initially inserted
+            // Scroll to end when a message is sent.
             messageAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                    if (positionStart == 0) {
-                        scrollToPosition(messageAdapter.itemCount - 1)
+                    val last = messageAdapter.itemCount - 1
+                    val lastDirection = messageAdapter.getChatMessage(last)?.direction
+                    if (positionStart == last && lastDirection == ChatDirection.OUTGOING) {
+                        scrollToPosition(last)
                     }
                 }
             })
@@ -100,20 +109,17 @@ class ChatFragment : Fragment() {
     }
 }
 
-internal fun ImageView.loadAttachment(url: String?) {
+internal fun ImageView.loadAttachment(url: String?, callback: ImageLoadedCallback? = null) {
     if (url == null) return
 
-    UAirship.shared().imageLoader
-            .load(context, this, ImageRequestOptions.newBuilder(url).build())
-}
-
-internal class TopPaddingDecoration(private val topPadding: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-        val position = (view.layoutParams as RecyclerView.LayoutParams).viewLayoutPosition
-        if (position == 0) {
-            outRect.set(0, topPadding, 0, 0)
+    val options = ImageRequestOptions.newBuilder(url).apply {
+            if (callback != null) {
+                setImageLoadedCallback(callback)
+            }
         }
-    }
+        .build()
+
+    UAirship.shared().imageLoader.load(context, this, options)
 }
 
 internal class BottomPaddingDecoration(private val bottomPadding: Int) : RecyclerView.ItemDecoration() {

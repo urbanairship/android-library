@@ -6,6 +6,6 @@
         android:radius="40dp" />
 
     <stroke
-        android:width="0.5dp"
+        android:width="1dp"
         android:color="@color/material_on_surface_stroke" />
 </shape>

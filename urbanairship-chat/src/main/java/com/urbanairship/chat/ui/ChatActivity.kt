@@ -2,6 +2,7 @@ package com.urbanairship.chat.ui
 
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.core.os.bundleOf
 import com.urbanairship.Autopilot
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
@@ -11,11 +12,16 @@ class ChatActivity : ThemedActivity() {
 
     companion object {
 
-        // TODO: make this actually work
         /**
          * Optional `String` extra specifying a message to pre-fill the message input box on launch.
          */
         const val EXTRA_DRAFT = "com.urbanairship.chat.EXTRA_DRAFT"
+
+        /**
+         * Optional `String` extra specifying the title shown in the {@code Toolbar}. Defaults to
+         * R.string.ua_chat_title (en = "Chat") if unset.
+         */
+        const val EXTRA_TITLE = "com.urbanairship.chat.EXTRA_TITLE"
 
         private const val FRAGMENT_TAG = "CHAT_FRAGMENT"
     }
@@ -33,13 +39,16 @@ class ChatActivity : ThemedActivity() {
         }
 
         setDisplayHomeAsUpEnabled(true)
+        intent.getStringExtra(EXTRA_TITLE)?.let { title = it }
 
         if (savedInstanceState != null) {
             fragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as ChatFragment
         }
 
         if (!this::fragment.isInitialized) {
-            fragment = ChatFragment()
+            fragment = ChatFragment().apply {
+                arguments = bundleOf(ChatFragment.ARG_DRAFT to intent.getStringExtra(EXTRA_DRAFT))
+            }
             supportFragmentManager.beginTransaction()
                     .add(android.R.id.content, fragment, FRAGMENT_TAG)
                     .commitNow()

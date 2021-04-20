@@ -13,104 +13,105 @@
             type="com.urbanairship.chat.ui.ChatViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <androidx.constraintlayout.helper.widget.Flow
-            android:layout_width="0dp"
+        <FrameLayout
+            android:id="@+id/messages_list_container"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:orientation="vertical"
-            app:constraint_referenced_ids="messages_list,chat_box"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_weight="1">
 
-        <!-- TODO: add empty view -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/messages_list"
-            style="@style/UrbanAirship.Chat.MessagesList"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            tools:itemCount="4"
-            tools:listitem="@layout/ua_item_chat_sent" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/messages_list"
+                style="@style/UrbanAirship.Chat.MessagesList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="@{viewModel.listViewVisibility ? View.VISIBLE : View.INVISIBLE}"
+                tools:itemCount="4"
+                tools:listitem="@layout/ua_item_chat_received"
+                tools:visibility="visible" />
+
+            <include
+                android:id="@+id/messages_empty"
+                layout="@layout/ua_include_chat_empty"
+                android:visibility="@{viewModel.emptyViewVisibility ? View.VISIBLE : View.INVISIBLE}"
+                tools:visibility="invisible" />
+        </FrameLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/chat_box"
-            style="@style/UrbanAirship.Chat.MessageInputLayout"
-            android:layout_width="0dp"
+            style="@style/UrbanAirship.Chat.MessageInput.Layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="?listPreferredItemHeight">
+            android:layout_weight="0">
 
             <ImageView
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
-                android:layout_height="0.5dp"
+                android:layout_height="1dp"
                 android:background="?android:listDivider"
                 android:contentDescription="@null"
                 android:importantForAccessibility="no"
+                android:visibility="@{viewModel.hasText ? View.VISIBLE : View.INVISIBLE}"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <FrameLayout
                 android:id="@+id/image_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
+                android:animateLayoutChanges="true"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
                 android:onClick="@{() -> viewModel.clearImage()}"
-                android:visibility="@{viewModel.image == null ? View.GONE : View.VISIBLE}"
+                android:paddingTop="4dp"
+                android:visibility="@{viewModel.hasImage ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="60dp"
+                tools:visibility="visible">
 
                 <ImageView
                     android:id="@+id/attachment_thumbnail"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginLeft="4dp"
+                    android:adjustViewBounds="true"
                     android:contentDescription="@string/ua_chat_attachment_content_description"
                     android:padding="8dp"
+                    android:scaleType="fitStart"
                     tools:src="@drawable/ua_ic_image_placeholder" />
 
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:id="@+id/attachment_remove_button"
+                    style="@style/UrbanAirship.Chat.MessageInput.AttachmentRemoveButton"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_gravity="top|start"
+                    android:layout_marginTop="-4dp"
                     android:contentDescription="@string/ua_chat_attachment_remove_content_description"
-                    android:padding="0dp"
-                    android:src="@drawable/ua_ic_close" />
+                    android:padding="2dp"
+                    android:visibility="@{viewModel.isAttachmentLoaded ? View.VISIBLE : View.GONE}" />
             </FrameLayout>
-
-            <!-- TODO: keyboard collapsed state for chat box -->
-            <!--            <ImageButton-->
-            <!--                android:id="@+id/chat_box_expand_button"-->
-            <!--                android:layout_width="48dp"-->
-            <!--                android:layout_height="48dp"-->
-            <!--                android:contentDescription="@string/ua_chat_box_expand_button_content_description"-->
-            <!--                android:onClick="@{() -> viewModel.send()}"-->
-            <!--                android:src="@drawable/ic_send"-->
-            <!--                android:tint="?colorOnPrimary"-->
-            <!--                app:layout_constraintEnd_toEndOf="parent"-->
-            <!--                app:layout_constraintTop_toBottomOf="@id/divider"-->
-            <!--                app:layout_constraintBottom_toBottomOf="parent" />-->
 
             <com.urbanairship.chat.ui.ChatInputEditText
                 android:id="@+id/chat_message_input"
+                style="@style/UrbanAirship.Chat.MessageInput.EditText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
                 android:autofillHints="@null"
-                android:background="@drawable/background_edittext_rounded_corners"
+                android:fadeScrollbars="true"
                 android:gravity="center_vertical"
-                android:hint="@string/ua_chat_message_input_hint"
                 android:imeOptions="actionSend"
                 android:importantForAutofill="no"
-                android:inputType="textLongMessage"
-                android:maxHeight="150dp"
-                android:minHeight="40dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
+                android:inputType="text|textAutoCorrect|textCapSentences|textLongMessage|textMultiLine"
                 android:text="@={viewModel.text}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/chat_send_button"
@@ -119,21 +120,17 @@
 
             <TextView
                 android:id="@+id/chat_send_button"
+                style="@style/UrbanAirship.Chat.MessageInput.SendButton"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:background="?selectableItemBackground"
                 android:clickable="true"
+                android:enabled="@{viewModel.hasText || viewModel.hasImage}"
                 android:focusable="true"
                 android:gravity="center"
                 android:onClick="@{() -> viewModel.send()}"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:text="@string/ua_chat_message_send_button"
-                android:textAllCaps="false"
-                android:textAppearance="?textAppearanceBody1"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/divider" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </layout>
