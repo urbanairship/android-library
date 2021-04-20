@@ -39,7 +39,7 @@ class ChatFragment : Fragment() {
     private val viewModel: ChatViewModel by lazy {
         ViewModelProvider(this, ChatViewModel.ChatViewModelFactory(
                 application = requireActivity().application,
-                messageDraft = requireArguments().getString(ARG_DRAFT)
+                messageDraft = arguments?.getString(ARG_DRAFT)
         )).get(ChatViewModel::class.java)
     }
 
