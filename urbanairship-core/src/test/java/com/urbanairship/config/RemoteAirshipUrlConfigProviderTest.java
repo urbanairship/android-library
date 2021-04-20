@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,8 +35,8 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals(configOptions.remoteDataUrl, urlConfig.remoteDataUrl().build().toString());
         assertEquals(configOptions.analyticsUrl, urlConfig.analyticsUrl().build().toString());
         assertEquals(configOptions.walletUrl, urlConfig.walletUrl().build().toString());
-        assertEquals(configOptions.chatUrl, urlConfig.chatUrl().build().toString());
-        assertEquals(configOptions.chatSocketUrl, urlConfig.chatSocketUrl().build().toString());
+        assertTrue(configOptions.chatUrl.isEmpty());
+        assertTrue(configOptions.chatSocketUrl.isEmpty());
     }
 
     @Test
@@ -126,9 +127,9 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertNull(provider.getConfig().deviceUrl().build());
         assertNull(provider.getConfig().analyticsUrl().build());
         assertNull(provider.getConfig().walletUrl().build());
+        assertNull(provider.getConfig().chatUrl().build());
+        assertNull(provider.getConfig().chatSocketUrl().build());
         assertEquals(configOptions.remoteDataUrl, provider.getConfig().remoteDataUrl().build().toString());
-        assertEquals(configOptions.chatUrl, provider.getConfig().chatUrl().build().toString());
-        assertEquals(configOptions.chatSocketUrl, provider.getConfig().chatSocketUrl().build().toString());
 
         RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
                 "http://device", "http://wallet", "http://analytics",

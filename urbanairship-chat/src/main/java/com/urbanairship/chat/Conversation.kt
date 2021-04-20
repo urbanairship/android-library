@@ -46,6 +46,7 @@ class Conversation
 @VisibleForTesting
 internal constructor(
     private val dataStore: PreferenceDataStore,
+    private val config: AirshipRuntimeConfig,
     private val channel: AirshipChannel,
     private val chatDao: ChatDao,
     private val connection: ChatConnection,
@@ -66,7 +67,7 @@ internal constructor(
         dataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         channel: AirshipChannel
-    ) : this(dataStore, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(config),
+    ) : this(dataStore, config, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(config),
             ChatApiClient(config), GlobalActivityMonitor.shared(context), AirshipDispatchers.newSingleThreadDispatcher(),
             AirshipDispatchers.IO)
 
@@ -189,17 +190,25 @@ internal constructor(
 
     private suspend fun updateConnection(forceOpen: Boolean = false): Boolean {
         return withContext(connectionDispatcher) {
-            val uvp = getUvp()
-            val isForeground = withContext(Dispatchers.Main) {
-                activityMonitor.isAppForegrounded
-            }
+            retryConnectionJob?.cancel()
 
-            if (uvp == null || !enabledState.value) {
+            if (!(enabledState.value && isConfigured())) {
                 connection.close()
                 return@withContext false
             }
 
-            if (enabledState.value && (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages())) {
+            val uvp = getUvp()
+            if (uvp == null) {
+                connection.close()
+                retryConnectionUpdate()
+                return@withContext false
+            }
+
+            val isForeground = withContext(Dispatchers.Main) {
+                activityMonitor.isAppForegrounded
+            }
+
+            if (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages()) {
                 if (!connection.isOpenOrOpening) {
                     try {
                         connection.open(uvp)
@@ -215,7 +224,6 @@ internal constructor(
                     return@withContext true
                 }
             } else {
-                retryConnectionJob?.cancel()
                 connection.close()
                 return@withContext false
             }
@@ -227,19 +235,19 @@ internal constructor(
         retryConnectionJob?.cancel()
         retryConnectionJob = scope.launch {
             delay(RECONNECT_DELAY_MS)
-            updateConnection()
+            launchConnectionUpdate()
         }
     }
 
     private suspend fun getUvp(): String? = withContext(ioDispatcher) {
-        if (enabledState.value) {
-            dataStore.getString(UVP_KEY, null)?.let {
-                Logger.verbose("Loaded uvp from data store")
-                it
-            } ?: createUvp()
-        } else {
-            null
-        }
+        dataStore.getString(UVP_KEY, null)?.let {
+            Logger.verbose("Loaded uvp from data store")
+            it
+        } ?: createUvp()
+    }
+
+    private fun isConfigured(): Boolean {
+        return config.urlConfig.isChatUrlAvailable && config.urlConfig.isChatSocketUrlAvailable
     }
 
     @WorkerThread

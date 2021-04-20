@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestActivityMonitor
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.api.ChatApiClient
@@ -11,6 +12,7 @@ import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
+import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,7 +21,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -50,6 +51,7 @@ class ConversationTest {
     private lateinit var chatListener: ChatConnection.ChatListener
 
     private lateinit var testDispatcher: TestCoroutineDispatcher
+    private lateinit var runtimeConfig: TestAirshipRuntimeConfig
 
     @Before
     fun setUp() {
@@ -70,7 +72,13 @@ class ConversationTest {
 
         val captor = ArgumentCaptor.forClass(ChatConnection.ChatListener::class.java)
 
-        conversation = Conversation(dataStore, mockChannel, chatDao, mockConnection, mockApiClient,
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder()
+                .setChatSocketUrl("wss://test.urbanairship.com")
+                .setChatUrl("https://test.urbanairship.com")
+                .build()
+
+        conversation = Conversation(dataStore, runtimeConfig, mockChannel, chatDao, mockConnection, mockApiClient,
                 testActivityMonitor, testDispatcher, testDispatcher)
 
         verify(mockConnection).chatListener = captor.capture()
@@ -89,6 +97,7 @@ class ConversationTest {
     @Test
     fun testConnectionCreatesUvp() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
 
@@ -194,18 +203,25 @@ class ConversationTest {
     @Test
     fun testConnectionStatus() = testDispatcher.runBlockingTest {
         connect()
-        Assert.assertFalse(conversation.isConnected)
+        assertFalse(conversation.isConnected)
 
         chatListener.onOpen()
-        Assert.assertTrue(conversation.isConnected)
+        assertTrue(conversation.isConnected)
 
         chatListener.onClose(ChatConnection.CloseReason.Manual)
-        Assert.assertFalse(conversation.isConnected)
+        assertFalse(conversation.isConnected)
     }
 
     @Test
     fun testConnectWhileDisabled() = testDispatcher.runBlockingTest {
         conversation.isEnabled = false
+        connect()
+        verify(mockConnection, never()).open(any())
+    }
+
+    @Test
+    fun testConnectWhenNotConfigured() = testDispatcher.runBlockingTest {
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder().build()
         connect()
         verify(mockConnection, never()).open(any())
     }
@@ -226,6 +242,9 @@ class ConversationTest {
 
     @Test
     fun testClearDataDeletesMessages() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
         conversation.sendMessage("some-message")
         assertTrue(chatDao.hasPendingMessages())
 

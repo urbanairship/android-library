@@ -52,9 +52,6 @@ public class AirshipConfigOptions {
     private static final String US_REMOTE_DATA_URL = "https://remote-data.urbanairship.com/";
     private static final String US_WALLET_URL = "https://wallet-api.urbanairship.com";
 
-    private static final String US_CHAT_URL = "https://ny4uaaegbg.execute-api.us-west-1.amazonaws.com/Prod/";
-    private static final String US_CHAT_SOCKET_URL = "wss://rb2socketscontactstest.replybuy.net";
-
     private final static long MIN_BG_REPORTING_INTERVAL_MS = 60 * 1000; // 1 minute
     private final static long MAX_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -380,8 +377,8 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
-                this.chatUrl = firstOrEmpty(builder.chatUrl, US_CHAT_URL);
-                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl, US_CHAT_SOCKET_URL);
+                this.chatUrl = firstOrEmpty(builder.chatUrl);
+                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
         }
 
@@ -1354,9 +1351,7 @@ public class AirshipConfigOptions {
          *
          * @param chatUrl The chat URL.
          * @return The config options builder.
-         * @hide
          */
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @NonNull
         public Builder setChatUrl(@NonNull String chatUrl) {
             this.chatUrl = chatUrl;
@@ -1368,9 +1363,7 @@ public class AirshipConfigOptions {
          *
          * @param chatSocketUrl The chat socket URL.
          * @return The config options builder.
-         * @hide
          */
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @NonNull
         public Builder setChatSocketUrl(@NonNull String chatSocketUrl) {
             this.chatSocketUrl = chatSocketUrl;

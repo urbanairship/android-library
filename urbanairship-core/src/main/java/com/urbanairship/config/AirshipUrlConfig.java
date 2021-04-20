@@ -102,6 +102,14 @@ public class AirshipUrlConfig {
     }
 
     /**
+     * Checks if the chatUrl is configured or not.
+     * @return {@code true} if configured, otherwise {@code false}.
+     */
+    public boolean isChatUrlAvailable() {
+        return chatUrl != null;
+    }
+
+    /**
      * Returns a new chat socket URL builder.
      *
      * @return A URL builder.
@@ -109,6 +117,14 @@ public class AirshipUrlConfig {
     @NonNull
     public UrlBuilder chatSocketUrl() {
         return new UrlBuilder(chatSocketUrl);
+    }
+
+    /**
+     * Checks if the chatSocketUrl is configured or not.
+     * @return {@code true} if configured, otherwise {@code false}.
+     */
+    public boolean isChatSocketUrlAvailable() {
+        return chatSocketUrl != null;
     }
 
     /**
