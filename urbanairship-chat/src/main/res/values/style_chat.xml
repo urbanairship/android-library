@@ -17,8 +17,7 @@
 
     <!-- Default Activity -->
     <style name="UrbanAirship.Chat.Activity">
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_chat_status_bar
-        </item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_chat_status_bar</item>
     </style>
 
     <!-- Toolbar -->
@@ -33,7 +32,7 @@
 
     <!-- Message list empty view -->
     <style name="UrbanAirship.Chat.MessageListEmpty">
-        <item name="background">?android:colorBackground</item>
+        <item name="android:background">?android:colorBackground</item>
     </style>
 
     <!-- Message list empty view icon -->
@@ -133,21 +132,21 @@
     <!-- Message input layout: contains the EditText, send button, and attachment thumbnail -->
     <style name="UrbanAirship.Chat.MessageInput.Layout">
         <item name="android:elevation" tools:targetApi="lollipop">8dp</item>
-        <item name="background">?colorSurface</item>
-        <item name="minHeight">@dimen/ua_chat_input_min_height</item>
+        <item name="android:background">?colorSurface</item>
+        <item name="android:minHeight">@dimen/ua_chat_input_min_height</item>
         <item name="android:animateLayoutChanges">true</item>
     </style>
 
     <!-- Message input EditText -->
     <style name="UrbanAirship.Chat.MessageInput.EditText">
         <item name="android:src">@drawable/ua_ic_close</item>
-        <item name="layout_goneMarginStart">8dp</item>
-        <item name="layout_goneMarginLeft">8dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
         <item name="android:layout_marginTop">4dp</item>
         <item name="android:layout_marginBottom">4dp</item>
         <item name="android:background">@drawable/background_edittext_rounded_corners</item>
         <item name="android:hint">@string/ua_chat_message_input_hint</item>
-        <item name="maxLines">5</item>
+        <item name="android:maxLines">5</item>
         <item name="android:minHeight">@dimen/ua_chat_input_edit_text_min_height</item>
         <item name="android:paddingTop">4dp</item>
         <item name="android:paddingLeft">16dp</item>
@@ -161,9 +160,9 @@
     <!-- Message input send button -->
     <style name="UrbanAirship.Chat.MessageInput.SendButton">
         <item name="android:background">?selectableItemBackground</item>
-        <item name="android:hint">@string/ua_chat_message_input_hint</item>
         <item name="android:text">@string/ua_chat_message_send_button</item>
-        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:padding">16dp</item>
         <item name="android:textAppearance">?textAppearanceBody1</item>
     </style>
 

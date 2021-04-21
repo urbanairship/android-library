@@ -5,6 +5,7 @@ import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.text.HtmlCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -47,6 +48,9 @@ internal class MessageAdapter : PagedListAdapter<ChatMessage, MessageAdapter.Vie
             ViewHolder(binding.root) {
                 binding.message = it
                 binding.createdOn = it.createdOnDisplayString(context)
+                it.text?.let { text ->
+                    binding.messageText.text = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)
+                }
                 binding.messageAttachment.loadAttachment(it.attachmentUrl)
                 binding.executePendingBindings()
             }
@@ -55,6 +59,9 @@ internal class MessageAdapter : PagedListAdapter<ChatMessage, MessageAdapter.Vie
             ViewHolder(binding.root) {
                 binding.message = it
                 binding.createdOn = it.createdOnDisplayString(context)
+                it.text?.let { text ->
+                    binding.messageText.text = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)
+                }
                 binding.messageAttachment.loadAttachment(it.attachmentUrl)
                 binding.executePendingBindings()
             }

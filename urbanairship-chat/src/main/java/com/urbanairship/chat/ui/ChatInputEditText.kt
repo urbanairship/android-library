@@ -50,6 +50,11 @@ internal class ChatInputEditText @JvmOverloads constructor(
     override fun onCreateInputConnection(editorInfo: EditorInfo): InputConnection {
         val ic: InputConnection = super.onCreateInputConnection(editorInfo)
 
+        // Force Android to show actionSend instead of enter on the on-screen keyboard. This is
+        // needed because the inputType set in the layout includes textMultiLine, which shows the
+        // enter button regardless of the imeOptions for this view.
+        editorInfo.imeOptions = editorInfo.imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION.inv()
+
         // Exclude GIFs if on API 27 and below, since we aren't able to animate them (yet).
         val mimeTypes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             arrayOf("image/png", "image/gif", "image/jpeg")

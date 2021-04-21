@@ -52,7 +52,7 @@
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="?android:listDivider"
+                android:background="@color/ua_chat_divider_color"
                 android:contentDescription="@null"
                 android:importantForAccessibility="no"
                 android:visibility="@{viewModel.hasText ? View.VISIBLE : View.INVISIBLE}"
