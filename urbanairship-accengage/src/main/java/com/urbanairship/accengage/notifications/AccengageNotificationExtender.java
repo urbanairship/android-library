@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.accengage.AccengagePushButton;
@@ -41,11 +42,14 @@ import androidx.core.text.HtmlCompat;
 class AccengageNotificationExtender implements NotificationCompat.Extender {
 
     protected final Context context;
+    protected final AirshipConfigOptions configOptions;
     protected final AccengageMessage message;
     protected final NotificationArguments arguments;
 
-    AccengageNotificationExtender(@NonNull Context context, @NonNull AccengageMessage message, @NonNull NotificationArguments arguments) {
+    AccengageNotificationExtender(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
+                                  @NonNull AccengageMessage message, @NonNull NotificationArguments arguments) {
         this.context = context;
+        this.configOptions = configOptions;
         this.message = message;
         this.arguments = arguments;
     }
@@ -118,8 +122,8 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         Logger.debug("Setting Accengage push collapsed fields");
 
         builder.setContentTitle(HtmlCompat.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context), HtmlCompat.FROM_HTML_MODE_LEGACY))
-               .setColor(message.getAccengageAccentColor())
-               .setSmallIcon(message.getAccengageSmallIcon(context));
+               .setColor(getAccentColor())
+               .setSmallIcon(getNotificationIcon());
 
         if (message.getAccengageContent() != null) {
             builder.setContentText(HtmlCompat.fromHtml(message.getAccengageContent(), HtmlCompat.FROM_HTML_MODE_LEGACY))
@@ -171,7 +175,7 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
     }
 
     private RemoteViews fillCustomTemplate(@NonNull NotificationCompat.Builder builder, @NonNull RemoteViews views) {
-        builder.setSmallIcon(message.getAccengageSmallIcon(context));
+        builder.setSmallIcon(getNotificationIcon());
         Spanned title = HtmlCompat.fromHtml(!message.getAccengageTitle().isEmpty() ? message.getAccengageTitle() : getAppName(context), HtmlCompat.FROM_HTML_MODE_LEGACY);
         views.setTextViewText(R.id.title, title);
 
@@ -208,16 +212,16 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
             }
             // Set small icon
             views.setViewVisibility(R.id.right_icon, View.VISIBLE);
-            views.setImageViewResource(R.id.right_icon, message.getAccengageSmallIcon(context));
+            views.setImageViewResource(R.id.right_icon, getNotificationIcon());
             setDrawableParameters(views, R.id.right_icon, false, -1, 0xFFFFFFFF, PorterDuff.Mode.SRC_ATOP, -1);
             views.setInt(R.id.right_icon, "setBackgroundResource", R.drawable.accengage_notification_icon_legacy_bg);
-            setDrawableParameters(views, R.id.right_icon, true, -1, message.getAccengageAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
+            setDrawableParameters(views, R.id.right_icon, true, -1, getAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
         } else {
             // Use small icon as a large icon
             Logger.verbose("Large icon is not set, use default one");
-            views.setImageViewResource(R.id.icon, message.getAccengageSmallIcon(context));
+            views.setImageViewResource(R.id.icon, getNotificationIcon());
             views.setInt(R.id.icon, "setBackgroundResource", R.drawable.accengage_notification_icon_legacy_bg);
-            setDrawableParameters(views, R.id.icon, true, -1, message.getAccengageAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
+            setDrawableParameters(views, R.id.icon, true, -1, getAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
             int padding = context.getResources().getDimensionPixelSize(R.dimen.accengage_notification_large_icon_circle_padding);
             views.setViewPadding(R.id.icon, padding, padding, padding, padding);
         }
@@ -226,9 +230,9 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
     @TargetApi(Build.VERSION_CODES.N)
     private void fillCustomTemplateAndroidN(@NonNull RemoteViews views) {
         // Header
-        views.setImageViewResource(R.id.icon, message.getAccengageSmallIcon(context));
+        views.setImageViewResource(R.id.icon, getNotificationIcon());
         setDrawableParameters(views, R.id.icon, true, -1, 0xFFFFFFFF, PorterDuff.Mode.SRC_ATOP, -1);
-        setDrawableParameters(views, R.id.icon, false, -1, message.getAccengageAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
+        setDrawableParameters(views, R.id.icon, false, -1, getAccentColor(), PorterDuff.Mode.SRC_ATOP, -1);
 
         String appName = message.getAccengageAppName();
         if (!TextUtils.isEmpty(appName)) {
@@ -424,6 +428,18 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
         }
 
         return message.getAccengageIsDecorated();
+    }
+
+    private int getAccentColor() {
+        return message.getAccengageAccentColor(configOptions.notificationAccentColor);
+    }
+
+    private int getNotificationIcon() {
+        if (configOptions.notificationIcon != 0) {
+            return message.getAccengageSmallIcon(context, configOptions.notificationIcon);
+        } else {
+            return message.getAccengageSmallIcon(context, context.getApplicationInfo().icon);
+        }
     }
 
 }

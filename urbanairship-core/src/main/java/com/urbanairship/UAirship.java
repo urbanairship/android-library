@@ -760,7 +760,7 @@ public class UAirship {
         processModule(debugModule);
 
         // Accengage
-        AccengageModule accengageModule = Modules.accengage(application, preferenceDataStore, channel, pushManager, analytics);
+        AccengageModule accengageModule = Modules.accengage(application, airshipConfigOptions, preferenceDataStore, channel, pushManager, analytics);
         processModule(accengageModule);
         this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
 

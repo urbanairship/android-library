@@ -5,7 +5,9 @@ package com.urbanairship.accengage.notifications;
 import android.app.Notification;
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.push.PushMessage;
@@ -21,6 +23,20 @@ import androidx.core.app.NotificationCompat;
  * Accengage notification provider.
  */
 public class AccengageNotificationProvider implements NotificationProvider {
+
+    private final AirshipConfigOptions configOptions;
+
+    public AccengageNotificationProvider(@NonNull AirshipConfigOptions configOptions) {
+        this.configOptions = configOptions;
+    }
+
+    /**
+     * Deprecated. Use {@link AccengageNotificationProvider(AirshipConfigOptions)} instead.
+     */
+    @Deprecated
+    public AccengageNotificationProvider() {
+        this.configOptions = UAirship.shared().getAirshipConfigOptions();
+    }
 
     @NonNull
     @Override
@@ -49,7 +65,7 @@ public class AccengageNotificationProvider implements NotificationProvider {
         Logger.debug("Push message received from Accengage, displaying notification...");
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, arguments.getNotificationChannelId())
-                .extend(new AccengageNotificationExtender(context, message, arguments));
+                .extend(new AccengageNotificationExtender(context, configOptions, message, arguments));
 
         builder = onExtendBuilder(context, builder, message, arguments);
 
@@ -62,7 +78,7 @@ public class AccengageNotificationProvider implements NotificationProvider {
      *
      * @param context The context.
      * @param builder The builder.
-     * @param message The Accengage messsage.
+     * @param message The Accengage message.
      * @param arguments The notification arguments.
      * @return The notification builder.
      */

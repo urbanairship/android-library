@@ -20,6 +20,7 @@ import java.util.List;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 import androidx.core.app.NotificationCompat;
 
@@ -210,23 +211,38 @@ public class AccengageMessage {
      * @return Accengage push accent color or default value 0
      */
     public int getAccengageAccentColor() {
+        return getAccengageAccentColor(0);
+    }
+
+    /**
+     * Gets Accengage push accent color
+     *
+     * @param defaultValue The default value.
+     * @return Accengage push accent color or default value.
+     */
+    public int getAccengageAccentColor(int defaultValue) {
+        if (getExtra(EXTRA_A4S_ACCENT_COLOR) == null) {
+            return defaultValue;
+        }
+
         try {
             return Color.parseColor(getExtra(EXTRA_A4S_ACCENT_COLOR));
-        } catch (IllegalArgumentException e) {
-            return 0;
-        } catch (NullPointerException e) {
-            return 0;
+        } catch (Exception e) {
+            return defaultValue;
         }
     }
 
     /**
      * Gets Accengage push small icon
      *
-     * @param context A context
-     * @return Accengage push small icon or default application icon
+     * @param context The context.
+     * @param defaultValue The default value.
+     * @return Accengage push small icon or 0.
+     * @hide
      */
-    public int getAccengageSmallIcon(@NonNull Context context) {
-        int smallIconId = 0;
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int getAccengageSmallIcon(@NonNull Context context, int defaultValue) {
+        int smallIconId = defaultValue;
 
         String smallIconName = getExtra(EXTRA_A4S_SMALL_ICON_NAME);
         // We have a small icon from push, check if icon exists in drawable
@@ -236,13 +252,19 @@ public class AccengageMessage {
                 smallIconId = smallIconIdFromPush;
             }
         }
-
-        // No icon found, use the application icon
-        if (smallIconId == 0) {
-            smallIconId = context.getApplicationInfo().icon;
-        }
-
         return smallIconId;
+    }
+
+    /**
+     * Gets Accengage push small icon
+     *
+     * @param context A context
+     * @return Accengage push small icon or default application icon
+     * @deprecated Use {@link #getAccengageSmallIcon(Context, int)} instead.
+     */
+    @Deprecated
+    public int getAccengageSmallIcon(@NonNull Context context) {
+        return getAccengageSmallIcon(context, context.getApplicationInfo().icon);
     }
 
     /**

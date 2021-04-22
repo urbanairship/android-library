@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.content.Context;
 import android.os.Bundle;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.accengage.AccengageMessage;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationArguments;
@@ -19,12 +20,16 @@ import org.robolectric.annotation.Config;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import static org.mockito.Mockito.mock;
+
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
 public class AccengageNotificationProviderTest {
 
     @Test
     public void testOnCreateNotificationArguments() {
+        AirshipConfigOptions configOptions = mock(AirshipConfigOptions.class);
+
         Application application = ApplicationProvider.getApplicationContext();
         Context context = Mockito.spy(application);
 
@@ -37,7 +42,7 @@ public class AccengageNotificationProviderTest {
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage message = AccengageMessage.fromAirshipPushMessage(pushMessage);
 
-        AccengageNotificationProvider accengageNotificationProvider = new AccengageNotificationProvider();
+        AccengageNotificationProvider accengageNotificationProvider = new AccengageNotificationProvider(configOptions);
 
         NotificationArguments arguments = accengageNotificationProvider.onCreateNotificationArguments(context, pushMessage);
 
@@ -47,6 +52,8 @@ public class AccengageNotificationProviderTest {
 
     @Test
     public void testOnCreateNotification() {
+        AirshipConfigOptions configOptions = mock(AirshipConfigOptions.class);
+
         Application application = ApplicationProvider.getApplicationContext();
         Context context = Mockito.spy(application);
 
@@ -60,7 +67,7 @@ public class AccengageNotificationProviderTest {
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage message = AccengageMessage.fromAirshipPushMessage(pushMessage);
 
-        AccengageNotificationProvider accengageNotificationProvider = new AccengageNotificationProvider();
+        AccengageNotificationProvider accengageNotificationProvider = new AccengageNotificationProvider(configOptions);
 
         NotificationArguments arguments = accengageNotificationProvider.onCreateNotificationArguments(context, pushMessage);
         NotificationResult result = accengageNotificationProvider.onCreateNotification(context, arguments);
