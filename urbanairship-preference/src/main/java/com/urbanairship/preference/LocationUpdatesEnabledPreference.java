@@ -84,7 +84,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
      * @return {@code true} if permissions should be requested, otherwise {@code false}.
      */
     private boolean shouldRequestPermissions() {
-        if (Build.VERSION.SDK_INT < 23) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return false;
         }
 

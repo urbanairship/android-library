@@ -108,15 +108,13 @@ public class AirshipWebView extends WebView {
         settings.setAppCachePath(getCachePath());
         settings.setDomStorageEnabled(true);
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            if (attrs != null) {
-                TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.AirshipWebView, defStyle, defResStyle);
-                try {
-                    int mixedContentMode = a.getInteger(R.styleable.AirshipWebView_mixed_content_mode, WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-                    settings.setMixedContentMode(mixedContentMode);
-                } finally {
-                    a.recycle();
-                }
+        if (attrs != null) {
+            TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.AirshipWebView, defStyle, defResStyle);
+            try {
+                int mixedContentMode = a.getInteger(R.styleable.AirshipWebView_mixed_content_mode, WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+                settings.setMixedContentMode(mixedContentMode);
+            } finally {
+                a.recycle();
             }
         }
 
@@ -128,13 +126,6 @@ public class AirshipWebView extends WebView {
             Logger.verbose("Application contains metadata to enable local storage");
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
-
-            if (Build.VERSION.SDK_INT < 19) {
-                String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
-                String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
-                //noinspection deprecation
-                settings.setDatabasePath(path);
-            }
         }
 
         initializeView();

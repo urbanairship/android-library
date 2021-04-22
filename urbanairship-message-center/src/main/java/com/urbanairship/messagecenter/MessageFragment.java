@@ -161,23 +161,7 @@ public class MessageFragment extends Fragment {
         });
 
         webView.getSettings().setSupportMultipleWindows(true);
-        webView.setWebChromeClient(new AirshipWebChromeClient(getActivity()) {
-            @Override
-            public Bitmap getDefaultVideoPoster() {
-
-                // Re-enable hardware rending if we detect a video in the message
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                }
-
-                return super.getDefaultVideoPoster();
-            }
-        });
-
-        // Workaround render issue with older android devices
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
+        webView.setWebChromeClient(new AirshipWebChromeClient(getActivity()));
 
         retryButton = view.findViewById(R.id.retry_button);
         if (retryButton != null) {

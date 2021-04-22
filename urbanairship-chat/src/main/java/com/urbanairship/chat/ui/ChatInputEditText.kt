@@ -105,22 +105,19 @@ internal class ChatInputEditText @JvmOverloads constructor(
      * Fades the background drawable in and out for API 19+, falling back to setting visibility on
      * older versions.
      */
-    private fun updateBackgroundDrawable(isVisible: Boolean) =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            val (start, end) = if (isVisible) {
-                (background?.alpha ?: 0) to 255
-            } else {
-                (background?.alpha ?: 255) to 0
-            }
-
-            bkgAnimator?.cancel()
-            bkgAnimator = ObjectAnimator.ofInt(background, "alpha", start, end).apply {
-                duration = animationDuration
-                start()
-            }
+    private fun updateBackgroundDrawable(isVisible: Boolean) {
+        val (start, end) = if (isVisible) {
+            (background?.alpha ?: 0) to 255
         } else {
-            background.alpha = if (isVisible) 255 else 0
+            (background?.alpha ?: 255) to 0
         }
+
+        bkgAnimator?.cancel()
+        bkgAnimator = ObjectAnimator.ofInt(background, "alpha", start, end).apply {
+            duration = animationDuration
+            start()
+        }
+    }
 
     private fun isEditorActionDone(actionId: Int, event: KeyEvent?): Boolean =
         when (actionId) {

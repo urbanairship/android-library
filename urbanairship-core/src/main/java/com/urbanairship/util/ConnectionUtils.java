@@ -39,7 +39,7 @@ public class ConnectionUtils {
 
     /**
      * Opens a URL connection but tries to first install the network provider through Google Play
-     * services, and if that fails falls back to a TLS socket factory on Jellybean - Kitkat devices.
+     * services.
      *
      * @param context The application context.
      * @param url The URL.
@@ -49,22 +49,8 @@ public class ConnectionUtils {
     @WorkerThread
     @NonNull
     public static URLConnection openSecureConnection(@NonNull Context context, @NonNull URL url) throws IOException {
-        boolean providerInstalled = installProvider(context);
-        URLConnection connection = url.openConnection();
-
-        // Fallback to applying the TlsSocketFactory
-        if (!providerInstalled && Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT && connection instanceof HttpsURLConnection) {
-            HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
-
-            try {
-                httpsURLConnection.setSSLSocketFactory(TlsSocketFactory.newFactory());
-                Logger.debug("TlsSocketFactory set for HttpsURLConnection");
-            } catch (Exception e) {
-                Logger.error(e, "Failed to create TLS SSLSocketFactory.");
-            }
-        }
-
-        return connection;
+        installProvider(context);
+        return url.openConnection();
     }
 
     @WorkerThread
@@ -96,72 +82,4 @@ public class ConnectionUtils {
 
         return isInstalled;
     }
-
-    /**
-     * TLS 1.2 socket factory for Jellybean - Kitkat devices.
-     *
-     * Based on http://blog.dev-area.net/2015/08/13/android-4-1-enable-tls-1-1-and-tls-1-2/
-     */
-    private static class TlsSocketFactory extends SSLSocketFactory {
-
-        private static final String[] PROTOCOLS = { "TLSv1.2" };
-
-        private final SSLSocketFactory baseFactory;
-
-        private TlsSocketFactory(SSLSocketFactory baseFactory) {
-            this.baseFactory = baseFactory;
-        }
-
-        static TlsSocketFactory newFactory() throws KeyManagementException, NoSuchAlgorithmException {
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, null, null);
-            return new TlsSocketFactory(sslContext.getSocketFactory());
-        }
-
-        public String[] getDefaultCipherSuites() {
-            return baseFactory.getDefaultCipherSuites();
-        }
-
-        public String[] getSupportedCipherSuites() {
-            return baseFactory.getSupportedCipherSuites();
-        }
-
-        public Socket createSocket() throws IOException {
-            return onSocketCreated(baseFactory.createSocket());
-        }
-
-        public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException {
-            return onSocketCreated(baseFactory.createSocket(socket, host, port, autoClose));
-        }
-
-        public Socket createSocket(String host, int port) throws IOException {
-            return onSocketCreated(baseFactory.createSocket(host, port));
-        }
-
-        @Override
-        public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-            return onSocketCreated(baseFactory.createSocket(host, port, localHost, localPort));
-        }
-
-        @Override
-        public Socket createSocket(InetAddress host, int port) throws IOException {
-            return onSocketCreated(baseFactory.createSocket(host, port));
-        }
-
-        @Override
-        public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-            return onSocketCreated(baseFactory.createSocket(address, port, localAddress, localPort));
-        }
-
-        private Socket onSocketCreated(@Nullable Socket socket) {
-            if (socket instanceof SSLSocket) {
-                SSLSocket sslSocket = (SSLSocket) socket;
-                sslSocket.setEnabledProtocols(PROTOCOLS);
-            }
-
-            return socket;
-        }
-
-    }
-
 }

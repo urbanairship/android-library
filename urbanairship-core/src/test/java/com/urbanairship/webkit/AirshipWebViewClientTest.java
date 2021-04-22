@@ -96,12 +96,7 @@ public class AirshipWebViewClientTest extends BaseTestCase {
                 argument.capture());
 
         argument.getValue().executeJavaScript("test");
-
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            verify(webView).loadUrl("javascript:test");
-        } else {
-            verify(webView).evaluateJavascript("test", null);
-        }
+        verify(webView).evaluateJavascript("test", null);
     }
 
     /**
@@ -203,11 +198,6 @@ public class AirshipWebViewClientTest extends BaseTestCase {
 
         // Call close
         argument.getValue().executeJavaScript("cool");
-
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            verify(webView).loadUrl("javascript:cool");
-        } else {
-            verify(webView).evaluateJavascript("cool", null);
-        }
+        verify(webView).evaluateJavascript("cool", null);
     }
 }

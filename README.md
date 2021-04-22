@@ -9,7 +9,7 @@ Airship SDK for Android.
 - [Migration Guides](documentation/migration)
 
 ## Requirements
-- minSdkVersion 16
+- minSdkVersion 21
 - compileSdkVersion 29
 
 ## Quickstart

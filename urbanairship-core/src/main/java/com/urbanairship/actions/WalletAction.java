@@ -58,11 +58,6 @@ public class WalletAction extends OpenExternalUrlAction {
             return false;
         }
 
-        // Android pay is only available for KitKat+
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return false;
-        }
-
         return super.acceptsArguments(arguments);
     }
 

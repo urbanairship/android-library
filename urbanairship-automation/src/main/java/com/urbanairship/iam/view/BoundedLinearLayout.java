@@ -77,18 +77,6 @@ public class BoundedLinearLayout extends LinearLayout {
         super.onMeasure(boundedViewDelegate.getWidthMeasureSpec(widthMeasureSpec), boundedViewDelegate.getHeightMeasureSpec(heightMeasureSpec));
     }
 
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
-        clippableViewDelegate.onLayout(changed, l, t, r, b);
-    }
-
-    @Override
-    protected void onDraw(@NonNull Canvas canvas) {
-        clippableViewDelegate.onDraw(canvas);
-        super.onDraw(canvas);
-    }
-
     /**
      * Clips the view to the border radius.
      *

@@ -255,11 +255,8 @@ public class AutomationEngine {
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.networkMonitor = new NetworkMonitor();
-            networkMonitor.setConnectionListener(connectionListener);
-        }
-
+        this.networkMonitor = new NetworkMonitor();
+        networkMonitor.setConnectionListener(connectionListener);
 
         activityMonitor.addApplicationListener(applicationListener);
         activityMonitor.addActivityListener(activityListener);
@@ -311,9 +308,7 @@ public class AutomationEngine {
         compoundTriggerSubscription.cancel();
         activityMonitor.removeApplicationListener(applicationListener);
         analytics.removeAnalyticsListener(analyticsListener);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            networkMonitor.teardown();
-        }
+        networkMonitor.teardown();
         cancelAlarms();
         backgroundThread.quit();
         backgroundThread = null;

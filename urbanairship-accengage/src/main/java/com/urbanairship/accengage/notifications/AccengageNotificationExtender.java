@@ -186,10 +186,8 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             fillCustomTemplateAndroidN(views);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            fillCustomTemplateAndroidL(views);
         } else {
-            fillCustomTemplateAndroidJB(views);
+            fillCustomTemplateAndroidL(views);
         }
 
         return views;
@@ -261,25 +259,6 @@ class AccengageNotificationExtender implements NotificationCompat.Extender {
             }
         } else {
             Logger.verbose("Large icon is not set");
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private void fillCustomTemplateAndroidJB(@NonNull RemoteViews views) {
-        String largeIconUrl = message.getAccengageLargeIcon();
-        if (largeIconUrl != null) {
-            try {
-                URL url = new URL(largeIconUrl);
-                Bitmap largeIcon = NotificationUtils.fetchBigImage(context, url);
-                views.setImageViewBitmap(R.id.icon, largeIcon);
-            } catch (MalformedURLException e) {
-                Logger.error(e, "AccengageNotificationExtender - Malformed large icon URL.");
-            }
-            views.setViewVisibility(R.id.right_icon, View.VISIBLE);
-            views.setImageViewResource(R.id.right_icon, message.getAccengageSmallIcon(context));
-        } else {
-            Logger.verbose("Large icon is not set, use default one");
-            views.setImageViewResource(R.id.icon, message.getAccengageSmallIcon(context));
         }
     }
 
