@@ -12,8 +12,12 @@ import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
+import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -281,11 +285,93 @@ class ConversationTest {
         assertTrue(conversation.refreshMessages(300000))
     }
 
+    fun testGetMessages() = testDispatcher.runBlockingTest {
+        assertEquals(emptyList<ChatMessage>(), conversation.getMessages())
+
+        val message = randomMessageEntity()
+        chatDao.upsert(message)
+
+        assertEquals(listOf(message), conversation.getMessages())
+    }
+
+    fun testGetMessagesSortAndLimit() = testDispatcher.runBlockingTest {
+        val allMessages = List(100) { randomMessageEntity() }
+        allMessages.forEach { message -> chatDao.upsert(message) }
+
+        val expected = allMessages
+                .sortedWith(compareBy(MessageEntity::isPending, MessageEntity::createdOn))
+                .take(50)
+
+        conversation.getMessages().addResultCallback { messages ->
+            assertEquals(50, messages?.size)
+            assertEquals(expected, messages)
+        }
+    }
+
+    fun testConversationListener() = testDispatcher.runBlockingTest {
+        val listener = TestListener()
+        conversation.addConversationListener(listener)
+
+        // Sanity check.
+        assertEquals(0, listener.callCount)
+
+        // Verify listener is notified when the conversation is loaded.
+        chatListener.onChatResponse(ChatResponse.ConversationLoaded(
+                ChatResponse.ConversationLoaded.ConversationPayload(null)))
+
+        assertEquals(1, listener.callCount)
+
+        val message = ChatResponse.Message("id", "0", 0, "text", requestId = "req-id")
+
+        // Verify listener is notified when a message is sent successfully.
+        chatListener.onChatResponse(ChatResponse.MessageReceived(
+                ChatResponse.MessageReceived.MessageReceivedPayload(true, message)))
+
+        assertEquals(2, listener.callCount)
+
+        // Verify listener is notified when a new message is received.
+        chatListener.onChatResponse(ChatResponse.NewMessage(
+                ChatResponse.NewMessage.NewMessagePayload(message)))
+
+        assertEquals(3, listener.callCount)
+
+        // Verify listener is no longer called after removal.
+        conversation.removeConversationListener(listener)
+
+        chatListener.onChatResponse(ChatResponse.ConversationLoaded(
+                ChatResponse.ConversationLoaded.ConversationPayload(null)))
+
+        assertEquals(3, listener.callCount)
+    }
+
     private fun connect() {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
         whenever(mockConnection.isOpenOrOpening).thenReturn(true)
+    }
+
+    private fun randomMessageEntity(): MessageEntity {
+        val isAttachment = listOf(true, false).random()
+        return MessageEntity(
+                messageId = UUID.randomUUID().toString(),
+                text = if (isAttachment) null else UUID.randomUUID().toString(),
+                attachment = if (isAttachment) "https://example.com/some.gif" else null,
+                createdOn = Random.nextLong(28800, 1924934400),
+                direction = listOf(ChatDirection.INCOMING, ChatDirection.OUTGOING).random(),
+                isPending = listOf(true, false).random()
+        )
+    }
+
+    private class TestListener : ConversationListener {
+        private val updateCallCount = AtomicInteger(0)
+
+        val callCount: Int
+            get() = updateCallCount.get()
+
+        override fun onConversationUpdated() {
+            updateCallCount.incrementAndGet()
+        }
     }
 }

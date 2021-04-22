@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.paging.DataSource
 import com.urbanairship.Logger
+import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
@@ -24,6 +25,7 @@ import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.DateUtils
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,6 +83,7 @@ internal constructor(
     private var isPendingSent: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val scope = CoroutineScope(connectionDispatcher)
+    private val conversationListeners = CopyOnWriteArrayList<ConversationListener>()
 
     internal var isEnabled: Boolean
         get() = enabledState.value
@@ -156,6 +159,35 @@ internal constructor(
                 updateConnection()
             }
         }
+    }
+
+    /**
+     * Returns a list of up to 50 of the most recent messages in the conversation.
+     *
+     * @return A {@code PendingResult} containing a list of messages.
+     */
+    fun getMessages(): PendingResult<List<ChatMessage>> {
+        val pendingResult = PendingResult<List<ChatMessage>>()
+        scope.launch(ioDispatcher) {
+            pendingResult.result = chatDao.getMessages().map { it.toChatMessage() }
+        }
+        return pendingResult
+    }
+
+    /**
+     * Adds a conversation listener.
+     * @param listener The listener.
+     */
+    fun addConversationListener(listener: ConversationListener) {
+        conversationListeners.add(listener)
+    }
+
+    /**
+     * Removes a conversation listener.
+     * @param listener The listener.
+     */
+    fun removeConversationListener(listener: ConversationListener) {
+        conversationListeners.remove(listener)
     }
 
     internal fun clearData() {
@@ -265,6 +297,12 @@ internal constructor(
         }
     }
 
+    private fun notifyConversationUpdated() {
+        conversationListeners.forEach { listener ->
+            listener.onConversationUpdated()
+        }
+    }
+
     private inner class ChatListener : ChatConnection.ChatListener {
         override fun onChatResponse(response: ChatResponse) {
             when (response) {
@@ -285,6 +323,7 @@ internal constructor(
                             isPendingSent.value = true
                         }
                         updateConnection()
+                        notifyConversationUpdated()
                     }
                 }
 
@@ -296,12 +335,14 @@ internal constructor(
                         }
                         chatDao.upsert(message.toMessageEntity())
                         updateConnection()
+                        notifyConversationUpdated()
                     }
                 }
                 is ChatResponse.NewMessage -> with(response.message) {
                     Logger.verbose("New message received: %s", message)
                     scope.launch {
                         chatDao.upsert(message.toMessageEntity())
+                        notifyConversationUpdated()
                     }
                 }
             }
