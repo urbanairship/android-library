@@ -26,7 +26,7 @@ class ChatModuleFactoryImpl : ChatModuleFactory {
         airshipChannel: AirshipChannel,
         pushManager: PushManager
     ): Module =
-            Module.singleComponent(AirshipChat(context, dataStore, config, airshipChannel, pushManager), R.xml.ua_chat_actions)
+            Module.singleComponent(Chat(context, dataStore, config, airshipChannel, pushManager), R.xml.ua_chat_actions)
     override fun getAirshipVersion(): String = BuildConfig.AIRSHIP_VERSION
 
     override fun getPackageVersion(): String = BuildConfig.SDK_VERSION

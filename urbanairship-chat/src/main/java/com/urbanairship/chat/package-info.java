@@ -1,7 +1,7 @@
 /* Copyright Airship and Contributors */
 
 /**
- * Contains classes for interacting with the Airship Chat.
+ * Contains classes for interacting with Airship Chat.
  * Requires {@code urbanairship-chat} module.
  */
 

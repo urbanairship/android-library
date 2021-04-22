@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Airship Chat.
+ * Chat Conversation.
  */
 class Conversation
 

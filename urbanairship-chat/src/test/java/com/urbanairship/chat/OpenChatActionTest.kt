@@ -18,7 +18,7 @@ import org.mockito.kotlin.verify
 @RunWith(AndroidJUnit4::class)
 class OpenChatActionTest {
 
-    private lateinit var mockChat: AirshipChat
+    private lateinit var mockChat: Chat
     private lateinit var action: OpenChatAction
 
     @Before

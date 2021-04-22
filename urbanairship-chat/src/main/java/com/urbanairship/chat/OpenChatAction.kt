@@ -18,7 +18,7 @@ import java.util.concurrent.Callable
  * <p>
  * Default Registration Names: open_chat_action
  */
-class OpenChatAction(private val chatCallable: Callable<AirshipChat> = AirshipComponentUtils.callableForComponent(AirshipChat::class.java)) : Action() {
+class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponentUtils.callableForComponent(Chat::class.java)) : Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when (arguments.situation) {

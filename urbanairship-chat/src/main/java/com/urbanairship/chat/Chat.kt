@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * Airship Chat.
  */
-class AirshipChat
+class Chat
 
 /**
  * Full constructor (for tests).
@@ -52,8 +52,8 @@ class AirshipChat
          * @return an instance of `AirshipChat`.
          */
         @JvmStatic
-        fun shared(): AirshipChat {
-            return UAirship.shared().requireComponent(AirshipChat::class.java)
+        fun shared(): Chat {
+            return UAirship.shared().requireComponent(Chat::class.java)
         }
     }
 
@@ -89,7 +89,7 @@ class AirshipChat
     var openChatListener: OnShowChatListener? = null
 
     /**
-     * Enables or disables Airship Chat.
+     * Enables or disables Chat.
      *
      * The value is persisted in shared preferences.
      */
@@ -137,7 +137,7 @@ class AirshipChat
             if (message.containsKey(REFRESH_MESSAGE_PUSH_KEY)) {
                 val jobInfo = JobInfo.newBuilder()
                         .setAction(REFRESH_MESSAGES_ACTION)
-                        .setAirshipComponent(AirshipChat::class.java)
+                        .setAirshipComponent(Chat::class.java)
                         .build()
 
                 jobDispatcher.dispatch(jobInfo)

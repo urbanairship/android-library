@@ -25,12 +25,12 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @RunWith(AndroidJUnit4::class)
-class AirshipChatTest {
+class ChatTest {
 
     private lateinit var mockConversation: Conversation
     private lateinit var mockPush: PushManager
     private lateinit var mockJobDispatcher: JobDispatcher
-    private lateinit var airshipChat: AirshipChat
+    private lateinit var chat: Chat
     private lateinit var dataStore: PreferenceDataStore
 
     @Before
@@ -40,33 +40,33 @@ class AirshipChatTest {
         dataStore = PreferenceDataStore(TestApplication.getApplication())
         mockPush = mock()
         mockJobDispatcher = mock()
-        airshipChat = AirshipChat(TestApplication.getApplication(), dataStore,
+        chat = Chat(TestApplication.getApplication(), dataStore,
                 mockPush, mockConversation, mockJobDispatcher)
     }
 
     @Test
     fun testEnableOnInit() {
-        airshipChat.init()
+        chat.init()
         verify(mockConversation).isEnabled = true
     }
 
     @Test
     fun testDisable() {
-        airshipChat.init()
-        airshipChat.isEnabled = false
+        chat.init()
+        chat.isEnabled = false
         verify(mockConversation).isEnabled = false
     }
 
     @Test
     fun testComponentDisabled() {
-        airshipChat.init()
-        airshipChat.isComponentEnabled = false
+        chat.init()
+        chat.isComponentEnabled = false
         verify(mockConversation).isEnabled = false
     }
 
     @Test
     fun testDataCollection() {
-        airshipChat.init()
+        chat.init()
         clearInvocations(mockConversation)
 
         dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false)
@@ -79,22 +79,22 @@ class AirshipChatTest {
 
     @Test
     fun testOpenChatListener() {
-        val listener = mock<AirshipChat.OnShowChatListener>()
+        val listener = mock<Chat.OnShowChatListener>()
         whenever(listener.onOpenChat(anyOrNull())).thenReturn(true)
 
-        airshipChat.openChatListener = listener
+        chat.openChatListener = listener
 
-        airshipChat.openChat()
+        chat.openChat()
         verify(listener).onOpenChat(null)
 
-        airshipChat.openChat("sup")
+        chat.openChat("sup")
         verify(listener).onOpenChat("sup")
     }
 
     @Test
     fun testRefreshPushReceived() {
         val captor = argumentCaptor<PushListener>()
-        airshipChat.init()
+        chat.init()
         verify(mockPush).addPushListener(captor.capture())
 
         assertNotNull(captor.firstValue)
@@ -112,9 +112,9 @@ class AirshipChatTest {
     fun testRefreshMessages() {
         runBlockingTest {
             whenever(mockConversation.refreshMessages()).thenReturn(true)
-            val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(AirshipChat::class.java).build()
+            val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(Chat::class.java).build()
 
-            val result = airshipChat.onPerformJob(mock(), job)
+            val result = chat.onPerformJob(mock(), job)
             assertEquals(JobInfo.JOB_FINISHED, result)
             verify(mockConversation).refreshMessages()
         }
@@ -125,9 +125,9 @@ class AirshipChatTest {
     fun testRefreshMessagesFailed() {
         runBlockingTest {
             whenever(mockConversation.refreshMessages()).thenReturn(false)
-            val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(AirshipChat::class.java).build()
+            val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(Chat::class.java).build()
 
-            val result = airshipChat.onPerformJob(mock(), job)
+            val result = chat.onPerformJob(mock(), job)
             assertEquals(JobInfo.JOB_RETRY, result)
             verify(mockConversation).refreshMessages()
         }

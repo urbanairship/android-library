@@ -9,13 +9,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
-import com.urbanairship.chat.AirshipChat
+import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatMessage
 
 internal class ChatViewModel @JvmOverloads constructor(
     application: Application,
     messageDraft: String? = null,
-    private val chat: AirshipChat = AirshipChat.shared()
+    private val chat: Chat = Chat.shared()
 ) : AndroidViewModel(application) {
 
     class ChatViewModelFactory(
