@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.4.0 April 26, 2021
+Minor release that adds support for Airship Live Chat and drops support for Android KitKat and Jelly Bean.
+
+### Changes
+- Added new `urbanairship-chat` module.
+- Updated `minSdkLevel` to API 21.
+- Added `isAccengageVisiblePush()` and updated `isAccengagePush()` to support checking if an Accengage push is a message with content or a silent push.
+- Updated Accengage module to fall back to Airship accent color and notification icon.
+
 ## Version 14.3.0 March 11, 2021
 Minor release that drops support for uploading historic location data to Airship. The location
 module can still be used to listen for location updates within the app and will be deprecated in
