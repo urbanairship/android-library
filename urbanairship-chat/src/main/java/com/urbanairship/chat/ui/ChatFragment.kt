@@ -7,6 +7,7 @@ import android.text.format.DateUtils
 import android.text.format.DateUtils.FORMAT_ABBREV_ALL
 import android.text.format.DateUtils.FORMAT_SHOW_DATE
 import android.text.format.DateUtils.FORMAT_SHOW_YEAR
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.MeasureSpec
@@ -48,7 +49,10 @@ class ChatFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = UaFragmentChatBinding.inflate(inflater, container, false)
+        val themedContext = ContextThemeWrapper(requireContext(), R.style.UrbanAirship_Chat)
+        val themedInflater = inflater.cloneInContext(themedContext)
+        val binding = UaFragmentChatBinding.inflate(themedInflater, container, false)
+
         val messageAdapter = MessageAdapter()
 
         viewModel.messages.observe(viewLifecycleOwner, {
