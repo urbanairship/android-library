@@ -697,7 +697,7 @@ public class UAirship {
 
         // Create and init the preference data store first
         this.preferenceDataStore = new PreferenceDataStore(application);
-        this.preferenceDataStore.init();
+        this.preferenceDataStore.init(airshipConfigOptions);
 
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 

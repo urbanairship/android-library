@@ -63,6 +63,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
     private DatabaseModel richPushDataModel;
     private DatabaseModel preferencesDataModel;
+    private PreferenceDataDao preferenceDataDao;
     private DatabaseModel eventsDataModel;
 
     private static String authorityString;
@@ -272,15 +273,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 }
 
                 return richPushDataModel;
-
-            case PREFERENCE_URI_TYPE:
-            case PREFERENCES_URI_TYPE:
-                if (preferencesDataModel == null) {
-                    preferencesDataModel = DatabaseModel.createPreferencesModel(getContext(), appKey);
-                }
-
-                return preferencesDataModel;
-
             case EVENT_URI_TYPE:
             case EVENTS_URI_TYPE:
                 if (eventsDataModel == null) {
@@ -325,18 +317,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
         static DatabaseModel createRichPushModel(@NonNull Context context, @NonNull String appKey) {
             DataManager model = new MessageCenterDataManager(context, appKey);
             return new DatabaseModel(model, MessageCenterDataManager.MessageTable.TABLE_NAME, MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID);
-        }
-
-        /**
-         * Creates a preferences database model.
-         *
-         * @param context The application context
-         * @param appKey The current appKey.
-         * @return DatabaseModel.
-         */
-        static DatabaseModel createPreferencesModel(@NonNull Context context, @NonNull String appKey) {
-            DataManager model = new PreferencesDataManager(context, appKey);
-            return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, PreferencesDataManager.COLUMN_NAME_KEY);
         }
 
         static DatabaseModel createEventsDataModel(@NonNull Context context, @NonNull String appKey) {

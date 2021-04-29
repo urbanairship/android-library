@@ -49,7 +49,7 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
     @Test
     public void testInsertRow() {
         ContentValues values = new ContentValues();
-        values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
+        values.put(PreferenceDataStore.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
 
         Uri newUri = this.resolver.insert(this.preferenceUri, values);

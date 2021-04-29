@@ -3,11 +3,8 @@
 package com.urbanairship;
 
 import android.annotation.SuppressLint;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
-import android.database.Cursor;
-import android.net.Uri;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -24,6 +21,7 @@ import java.util.concurrent.Executor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.lifecycle.Observer;
 
 /**
  * PreferenceDataStore stores and retrieves all the Airship preferences through the
@@ -34,11 +32,16 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class PreferenceDataStore {
 
+
+    static final String COLUMN_NAME_KEY = "_id";
+    static final String COLUMN_NAME_VALUE = "value";
+    static final String TABLE_NAME = "preferences";
+    static final String DATABASE_NAME = "ua_preferences.db";
+
     private static final String[] OBSOLETE_KEYS = new String[] {
             "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS"
     };
 
-    private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
     Executor executor = AirshipExecutors.newSerialExecutor();
 
@@ -46,6 +49,8 @@ public final class PreferenceDataStore {
     private final UrbanAirshipResolver resolver;
     @NonNull
     private final Context context;
+    private PreferenceDataDao dao;
+    private AirshipConfigOptions airshipConfigOptions;
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
 
@@ -104,41 +109,27 @@ public final class PreferenceDataStore {
     /**
      * Initializes the preference data store.
      */
-    protected void init() {
-        loadPreferences();
+    protected void init(AirshipConfigOptions airshipConfigOptions) {
+        loadPreferences(airshipConfigOptions);
     }
 
-    private void loadPreferences() {
-        Cursor cursor = null;
+    private void loadPreferences(AirshipConfigOptions airshipConfigOptions) {
+        dao = PreferenceDataDatabase.createDatabase(context, airshipConfigOptions).getDao();
 
         try {
             List<Preference> fromStore = new ArrayList<>();
+            List<PreferenceData> preferencesFromDao;
 
-            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), null, null, null, null);
-            if (cursor == null) {
-                Logger.error("Failed to load preferences. Retrying with fallback loading.");
-                fallbackLoad();
-                return;
+            preferencesFromDao = dao.getPreferences();
+
+            for (PreferenceData preferenceData : preferencesFromDao) {
+                fromStore.add(new Preference(preferenceData.getKey(), preferenceData.getValue()));
             }
 
-            int keyIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_KEY);
-            int valueIndex = cursor.getColumnIndex(PreferencesDataManager.COLUMN_NAME_VALUE);
-
-            while (cursor.moveToNext()) {
-                String key = cursor.getString(keyIndex);
-                String value = cursor.getString(valueIndex);
-                fromStore.add(new Preference(key, value));
-            }
-
-            cursor.close();
             finishLoad(fromStore);
         } catch (Exception e) {
-            if (cursor != null) {
-                cursor.close();
-            }
-
             Logger.error(e, "Failed to load preferences. Retrying with fallback loading.");
-            fallbackLoad();
+            //fallbackLoad();
         }
     }
 
@@ -146,7 +137,7 @@ public final class PreferenceDataStore {
         List<String> keys = queryKeys();
         if (keys.isEmpty()) {
             Logger.error("Unable to load keys, deleting preference store.");
-            resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), null, null);
+            dao.deleteAll();
             return;
         }
 
@@ -156,70 +147,43 @@ public final class PreferenceDataStore {
             String value = queryValue(key);
             if (value == null) {
                 Logger.error("Unable to fetch preference value. Deleting: %s", key);
-                resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), "_id == ?", new String[] { key });
+                PreferenceData preferenceToDelete = new PreferenceData(key, null);
+                dao.delete(preferenceToDelete);
             } else {
                 fromStore.add(new Preference(key, value));
             }
         }
 
-        finishLoad(fromStore);
+//        finishLoad(fromStore);
     }
 
     private String queryValue(String key) {
-        String[] columns = new String[] {
-                PreferencesDataManager.COLUMN_NAME_VALUE
-        };
-
-        Cursor cursor = null;
-        String value = null;
-
-        try {
-            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), columns, "_id == ?", new String[] { key }, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                value = cursor.getString(0);
-            }
-        } catch (Exception e) {
-            Logger.error(e, "Failed to query preference: %s", key);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-
-        return value;
+        return dao.queryValue(key).value;
     }
 
     @NonNull
     private List<String> queryKeys() {
-        String[] columns = new String[] {
-                PreferencesDataManager.COLUMN_NAME_KEY
-        };
+        List<String> preferences = dao.queryKeys();
 
-        Cursor cursor = null;
-        try {
-            cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), columns, null, null, null);
-            if (cursor == null) {
-                resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), null, null);
-            }
-            List<String> keys = new ArrayList<>();
-            while (cursor.moveToNext()) {
-                keys.add(cursor.getString(0));
-            }
-            return keys;
-        } catch (Exception e) {
-            Logger.error(e, "Failed to query keys.");
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+        if (preferences == null) {
+            return Collections.emptyList();
+        } else {
+            return preferences;
         }
-        return Collections.emptyList();
     }
 
+    //TODO attach observer
     private void finishLoad(@NonNull List<Preference> preferences) {
+
+        dao.getLiveDataPreferences().observeForever(new Observer<List<PreferenceData>>() {
+            @Override
+            public void onChanged(List<PreferenceData> preferences) {
+                Logger.debug("APKTEST, preferences changed !!");
+            }
+        });
+
         for (Preference preference : preferences) {
             this.preferences.put(preference.key, preference);
-            preference.registerObserver();
         }
 
         for (String key : OBSOLETE_KEYS) {
@@ -492,12 +456,10 @@ public final class PreferenceDataStore {
 
         private final String key;
         private String value;
-        private final Uri uri;
 
         Preference(String key, String value) {
             this.key = key;
             this.value = value;
-            this.uri = Uri.withAppendedPath(UrbanAirshipProvider.getPreferencesContentUri(context), key);
         }
 
         /**
@@ -576,25 +538,14 @@ public final class PreferenceDataStore {
             synchronized (this) {
                 if (value == null) {
                     Logger.verbose("Removing preference: %s", key);
-
-                    if (resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), WHERE_CLAUSE_KEY, new String[] { key }) == 1) {
-                        resolver.notifyChange(this.uri, observer);
-                        return true;
-                    }
+                    dao.delete(new PreferenceData(key, value));
+                    return true;
 
                 } else {
                     Logger.verbose("Saving preference: %s value: %s", key, value);
-                    ContentValues values = new ContentValues();
-                    values.put(PreferencesDataManager.COLUMN_NAME_KEY, key);
-                    values.put(PreferencesDataManager.COLUMN_NAME_VALUE, value);
-
-                    if (resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(context), values) != null) {
-                        resolver.notifyChange(this.uri, observer);
-                        return true;
-                    }
-
+                    dao.insert(new PreferenceData(key, value));
+                    return true;
                 }
-                return false;
             }
         }
 
@@ -602,32 +553,24 @@ public final class PreferenceDataStore {
          * Syncs the value from the database to the preference.
          */
         void syncValue() {
-            Cursor cursor = null;
-            try {
-                synchronized (this) {
-                    cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context),
-                            new String[] { PreferencesDataManager.COLUMN_NAME_VALUE }, WHERE_CLAUSE_KEY,
-                            new String[] { key }, null);
-                }
+            PreferenceData preferenceData = null;
+            synchronized (this) {
+                preferenceData = dao.queryValue(key);
+            }
 
-                if (cursor != null) {
-                    try {
-                        setValue(cursor.moveToFirst() ? cursor.getString(0) : null);
-                    } catch (Exception e) {
-                        Logger.error(e, "Unable to sync preference %s from database", key);
-                    }
-                } else {
-                    Logger.debug("Unable to get preference %s from database. Falling back to cached value.", key);
+            if (preferenceData != null) {
+                try {
+                    setValue(preferenceData.value);
+                } catch (Exception e) {
+                    Logger.error(e, "Unable to sync preference %s from database", key);
                 }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
+            } else {
+                Logger.debug("Unable to get preference %s from database. Falling back to cached value.", key);
             }
         }
 
         void registerObserver() {
-            resolver.registerContentObserver(this.uri, true, observer);
+            //TODO maybe register observer here
         }
 
         void unregisterObserver() {

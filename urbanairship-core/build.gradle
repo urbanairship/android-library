@@ -7,6 +7,8 @@ dependencies {
     api "androidx.core:core:$rootProject.androidxCoreVersion"
     api "androidx.fragment:fragment:$rootProject.androidxFragmentVersion"
     api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
+    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
+    annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     compileOnly "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
