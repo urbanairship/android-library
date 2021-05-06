@@ -77,12 +77,11 @@ buildscript {
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayPluginVersion"
+        classpath "com.android.tools.build:gradle:${gradlePluginVersion}"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
         classpath "com.pinterest:ktlint:$ktlintPluginVersion"
@@ -90,10 +89,14 @@ buildscript {
     }
 }
 
+plugins {
+    id('airship-publish')
+}
+
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -105,7 +108,6 @@ dependencies {
     // Docs
     doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")
 }
-
 
 task javadoc(type: Javadoc) {
     destinationDir = file("$buildDir/docs/javadoc")
@@ -161,8 +163,8 @@ task packageDocs(type: Tar, dependsOn: 'javadoc') {
     archiveFileName = "${rootProject.airshipVersion}.tar.gz"
     compression = Compression.GZIP
 
-    destinationDir file('build/docs')
-    extension 'tar.gz'
+    destinationDirectory.set(file('build/docs'))
+    archiveExtension.set('tar.gz')
     compression = Compression.GZIP
 }
 

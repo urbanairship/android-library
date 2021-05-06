@@ -1,3 +1,11 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 include ':urbanairship-core',
         ':urbanairship-adm',
         ':urbanairship-fcm',
