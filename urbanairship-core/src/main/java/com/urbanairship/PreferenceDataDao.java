@@ -22,7 +22,7 @@ import androidx.room.Update;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
 public abstract class PreferenceDataDao {
-    
+
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insert(@NonNull PreferenceData entity);
@@ -48,11 +48,6 @@ public abstract class PreferenceDataDao {
     @Query("SELECT * FROM preferences")
     @NonNull
     public abstract List<PreferenceData> getPreferences();
-
-    @Transaction
-    @Query("SELECT * FROM preferences")
-    @NonNull
-    public abstract LiveData<List<PreferenceData>> getLiveDataPreferences();
 
     @Transaction
     @Query("SELECT * FROM preferences WHERE (`_id` == :key)")
