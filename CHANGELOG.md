@@ -2,6 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.4.1 May 7, 2021
+Patch release to fix full screen In-App Automation reporting events when a user taps a button.
+
+We are no longer able to deploy to JCenter. Updates will only be available through Maven Central
+going forward.
+
+### Changes
+- Fixed IAA full screen reporting events reporting as dismissed instead of button click
+- Remove JCenter deploys
+
 ## Version 14.4.0 April 26, 2021
 Minor release that adds support for Airship Live Chat and drops support for Android KitKat and Jelly Bean.
 
