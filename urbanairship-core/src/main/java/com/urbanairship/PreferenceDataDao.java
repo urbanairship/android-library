@@ -60,6 +60,11 @@ public abstract class PreferenceDataDao {
     public abstract PreferenceData queryValue(@NonNull String key);
 
     @Transaction
+    @Query("SELECT * FROM preferences WHERE (`_id` == :key)")
+    @NonNull
+    public abstract LiveData<PreferenceData> queryLiveDataValue(@NonNull String key);
+
+    @Transaction
     @Query("SELECT _id FROM preferences")
     @NonNull
     public abstract List<String> queryKeys();
