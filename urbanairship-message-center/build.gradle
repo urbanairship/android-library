@@ -1,3 +1,7 @@
+plugins {
+    id("airship-publish")
+}
+
 description = "Airship Android SDK Message Center module"
 
 apply from: "../common-build.gradle"
