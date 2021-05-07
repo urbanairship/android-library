@@ -194,7 +194,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
             JSONStringer stringer = new JSONStringer();
             write(stringer);
             return stringer.toString();
-        } catch (JSONException e) {
+        } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
             Logger.error(e, "JsonMap - Failed to create JSON String.");
             return "";
