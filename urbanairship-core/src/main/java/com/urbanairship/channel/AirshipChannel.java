@@ -12,6 +12,7 @@ import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -28,6 +29,7 @@ import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -73,7 +75,6 @@ public class AirshipChannel extends AirshipComponent {
     private final String DEFAULT_TAG_GROUP = "device";
 
     // PreferenceDataStore keys
-    private static final String APID_KEY = "com.urbanairship.push.APID";
     private static final String CHANNEL_ID_KEY = "com.urbanairship.push.CHANNEL_ID";
     private static final String TAGS_KEY = "com.urbanairship.push.TAGS";
     private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
@@ -86,6 +87,7 @@ public class AirshipChannel extends AirshipComponent {
     private final JobDispatcher jobDispatcher;
     private final LocaleManager localeManager;
     private final Clock clock;
+    private final PrivacyManager privacyManager;
 
     private final List<AirshipChannelListener> airshipChannelListeners = new CopyOnWriteArrayList<>();
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
@@ -125,6 +127,7 @@ public class AirshipChannel extends AirshipComponent {
      * @param context The application context.
      * @param dataStore The preference data store.
      * @param runtimeConfig The runtime config.
+     * @param privacyManager The privacy manager.
      * @param localeManager Locale manager.
      * @hide
      */
@@ -132,9 +135,10 @@ public class AirshipChannel extends AirshipComponent {
     public AirshipChannel(@NonNull Context context,
                           @NonNull PreferenceDataStore dataStore,
                           @NonNull AirshipRuntimeConfig runtimeConfig,
+                          @NonNull PrivacyManager privacyManager,
                           @NonNull LocaleManager localeManager) {
 
-        this(context, dataStore, runtimeConfig, localeManager,
+        this(context, dataStore, runtimeConfig, privacyManager, localeManager,
                 JobDispatcher.shared(context), Clock.DEFAULT_CLOCK,
                 new ChannelApiClient(runtimeConfig),
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
@@ -145,6 +149,7 @@ public class AirshipChannel extends AirshipComponent {
     AirshipChannel(@NonNull Context context,
                    @NonNull PreferenceDataStore dataStore,
                    @NonNull AirshipRuntimeConfig runtimeConfig,
+                   @NonNull PrivacyManager privacyManager,
                    @NonNull LocaleManager localeManager,
                    @NonNull JobDispatcher jobDispatcher,
                    @NonNull Clock clock,
@@ -155,6 +160,7 @@ public class AirshipChannel extends AirshipComponent {
 
         this.runtimeConfig = runtimeConfig;
         this.localeManager = localeManager;
+        this.privacyManager = privacyManager;
         this.jobDispatcher = jobDispatcher;
         this.channelApiClient = channelApiClient;
         this.attributeRegistrar = attributeRegistrar;
@@ -179,6 +185,21 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         channelCreationDelayEnabled = getId() == null && runtimeConfig.getConfigOptions().channelCreationDelayEnabled;
+
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    synchronized (tagLock) {
+                        getDataStore().remove(TAGS_KEY);
+                    }
+                    tagGroupRegistrar.clearPendingMutations();
+                    attributeRegistrar.clearPendingMutations();
+                }
+
+                updateRegistration();
+            }
+        });
     }
 
     /**
@@ -223,7 +244,7 @@ public class AirshipChannel extends AirshipComponent {
         if (ACTION_UPDATE_CHANNEL.equals(jobInfo.getAction())) {
             String channelId = getId();
 
-            if (channelId == null && channelCreationDelayEnabled) {
+            if (channelId == null && (channelCreationDelayEnabled || !privacyManager.isAnyFeatureEnabled())) {
                 Logger.debug("Channel registration is currently disabled.");
                 return JobInfo.JOB_FINISHED;
             }
@@ -255,7 +276,7 @@ public class AirshipChannel extends AirshipComponent {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
-        if (isEnabled) {
+        if (isEnabled && privacyManager.isAnyFeatureEnabled()) {
             dispatchUpdateJob();
         }
     }
@@ -267,8 +288,10 @@ public class AirshipChannel extends AirshipComponent {
      */
     @Override
     public void onUrlConfigUpdated() {
-        // If the channel already exists, perform a full update. Otherwise create it.
-        dispatchUpdateJob(true);
+        if (privacyManager.isAnyFeatureEnabled()) {
+            // If the channel already exists, perform a full update. Otherwise create it.
+            dispatchUpdateJob(true);
+        }
     }
 
     /**
@@ -366,15 +389,15 @@ public class AirshipChannel extends AirshipComponent {
         return new TagEditor() {
             @Override
             protected void onApply(boolean clear, @NonNull Set<String> tagsToAdd, @NonNull Set<String> tagsToRemove) {
-                if (isDataCollectionEnabled()) {
-                    synchronized (tagLock) {
-                        Set<String> tags = clear ? new HashSet<String>() : getTags();
-                        tags.addAll(tagsToAdd);
-                        tags.removeAll(tagsToRemove);
-                        setTags(tags);
+                synchronized (tagLock) {
+                    if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                        Logger.warn("AirshipChannel - Unable to apply tag group edits when opted out of tags and attributes.");
+                        return;
                     }
-                } else {
-                    Logger.warn("AirshipChannel - Unable to apply tag edits when opted out of data collection.");
+                    Set<String> tags = clear ? new HashSet<String>() : getTags();
+                    tags.addAll(tagsToAdd);
+                    tags.removeAll(tagsToRemove);
+                    setTags(tags);
                 }
             }
         };
@@ -400,8 +423,8 @@ public class AirshipChannel extends AirshipComponent {
 
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-                if (!isDataCollectionEnabled()) {
-                    Logger.warn("AirshipChannel - Unable to apply tag group edits when opted out of data collection.");
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    Logger.warn("AirshipChannel - Unable to apply tag edits when opted out of tags and attributes.");
                     return;
                 }
 
@@ -423,8 +446,8 @@ public class AirshipChannel extends AirshipComponent {
         return new AttributeEditor(clock) {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
-                if (!isDataCollectionEnabled()) {
-                    Logger.info("Ignore attributes, data opted out.");
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    Logger.warn("AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes.");
                     return;
                 }
 
@@ -447,16 +470,17 @@ public class AirshipChannel extends AirshipComponent {
      * @param tags A set of tag strings.
      */
     public void setTags(@NonNull Set<String> tags) {
-        if (isDataCollectionEnabled()) {
-            synchronized (tagLock) {
-                Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-                getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
+        synchronized (tagLock) {
+            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                Logger.warn("AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes.");
+                return;
             }
 
-            dispatchUpdateJob();
-        } else {
-            Logger.warn("AirshipChannel - Unable to set tags when opted out of data collection.");
+            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
+            getDataStore().put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
         }
+
+        dispatchUpdateJob();
     }
 
     /**
@@ -469,6 +493,10 @@ public class AirshipChannel extends AirshipComponent {
     @NonNull
     public Set<String> getTags() {
         synchronized (tagLock) {
+            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                return Collections.emptySet();
+            }
+
             Set<String> tags = new HashSet<>();
             JsonValue jsonValue = getDataStore().getJsonValue(TAGS_KEY);
 
@@ -512,7 +540,9 @@ public class AirshipChannel extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void updateRegistration() {
-        dispatchUpdateJob();
+        if (getId() != null || privacyManager.isAnyFeatureEnabled()) {
+            dispatchUpdateJob();
+        }
     }
 
     /**
@@ -526,8 +556,7 @@ public class AirshipChannel extends AirshipComponent {
         boolean shouldSetTags = getChannelTagRegistrationEnabled();
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
-                .setApid(getDataStore().getString(APID_KEY, null));
+                .setTags(shouldSetTags, shouldSetTags ? getTags() : null);
 
         switch (runtimeConfig.getPlatform()) {
             case UAirship.ANDROID_PLATFORM:
@@ -550,13 +579,13 @@ public class AirshipChannel extends AirshipComponent {
             builder.setLanguage(locale.getLanguage());
         }
 
-        if (UAirship.getPackageInfo() != null) {
-            builder.setAppVersion(UAirship.getPackageInfo().versionName);
-        }
-
         builder.setSdkVersion(UAirship.getVersion());
 
-        if (isDataCollectionEnabled()) {
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+            if (UAirship.getPackageInfo() != null) {
+                builder.setAppVersion(UAirship.getPackageInfo().versionName);
+            }
+
             builder.setCarrier(Network.getCarrier());
             builder.setDeviceModel(Build.MODEL);
             builder.setApiVersion(Build.VERSION.SDK_INT);
@@ -639,7 +668,7 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
-        if (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
+        if (privacyManager.isAnyFeatureEnabled() && timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
             Logger.verbose("Should update registration. Time since last registration time is greater than 24 hours.");
             return true;
         }
@@ -769,7 +798,7 @@ public class AirshipChannel extends AirshipComponent {
             return result;
         } else {
             channelId = getId();
-            if (channelId != null) {
+            if (channelId != null && privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
                 // Update tag groups and attributes
                 boolean attributeResult = attributeRegistrar.uploadPendingMutations();
                 boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
@@ -843,7 +872,9 @@ public class AirshipChannel extends AirshipComponent {
      * Dispatches a job to update registration.
      */
     private void dispatchUpdateJob() {
-        dispatchUpdateJob(false);
+        if (getId() != null || privacyManager.isAnyFeatureEnabled()) {
+            dispatchUpdateJob(false);
+        }
     }
 
     /**
@@ -862,18 +893,5 @@ public class AirshipChannel extends AirshipComponent {
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
-    }
-
-    @Override
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
-        if (!isDataCollectionEnabled) {
-            synchronized (tagLock) {
-                getDataStore().remove(TAGS_KEY);
-            }
-            tagGroupRegistrar.clearPendingMutations();
-            attributeRegistrar.clearPendingMutations();
-        }
-
-        updateRegistration();
     }
 }

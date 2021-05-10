@@ -17,6 +17,7 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -32,6 +33,7 @@ import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +67,8 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     private final List<LocationListener> locationListeners = new ArrayList<>();
     private final AirshipChannel airshipChannel;
     private final Analytics analytics;
+    private final PrivacyManager privacyManager;
+
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -104,6 +108,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      *
      * @param context The context.
      * @param preferenceDataStore The data store.
+     * @param privacyManager The privacy manager.
      * @param airshipChannel The channel instance.
      * @param analytics The analytics instance.
      * @hide
@@ -111,14 +116,16 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AirshipLocationManager(@NonNull Context context,
                                   @NonNull PreferenceDataStore preferenceDataStore,
+                                  @NonNull PrivacyManager privacyManager,
                                   @NonNull AirshipChannel airshipChannel,
                                   @NonNull Analytics analytics) {
-        this(context, preferenceDataStore, airshipChannel, analytics, GlobalActivityMonitor.shared(context));
+        this(context, preferenceDataStore, privacyManager, airshipChannel, analytics, GlobalActivityMonitor.shared(context));
     }
 
     @VisibleForTesting
     AirshipLocationManager(@NonNull final Context context,
                            @NonNull PreferenceDataStore preferenceDataStore,
+                           @NonNull PrivacyManager privacyManager,
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull Analytics analytics,
                            @NonNull ActivityMonitor activityMonitor) {
@@ -126,6 +133,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
 
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
+        this.privacyManager = privacyManager;
         this.listener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
@@ -161,7 +169,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (isDataCollectionEnabled()) {
+                if (privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
                     return builder.setLocationSettings(isLocationUpdatesEnabled());
                 }
 
@@ -174,6 +182,13 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
             @Override
             public Map<String, String> onCreateAnalyticsHeaders() {
                 return createAnalyticsHeaders();
+            }
+        });
+
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                updateServiceConnection();
             }
         });
     }
@@ -314,7 +329,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
 
         final PendingResult<Location> pendingResult = new PendingResult<>();
 
-        if (!isLocationPermitted() || !isDataCollectionEnabled()) {
+        if (!isLocationPermitted() || !privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
             pendingResult.cancel();
             return pendingResult;
         }
@@ -363,7 +378,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (isDataCollectionEnabled() && isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
+                if (isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
                     LocationRequestOptions options = getLocationRequestOptions();
                     LocationRequestOptions lastLocationOptions = getLastUpdateOptions();
 
@@ -409,7 +424,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      * otherwise <code>false</code>.
      */
     boolean isContinuousLocationUpdatesAllowed() {
-        return isDataCollectionEnabled() && isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
+        return privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION) && isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
     }
 
     /**
@@ -471,12 +486,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      */
     @Override
     public boolean isOptIn() {
-        return isLocationPermitted() && isLocationUpdatesEnabled() && isDataCollectionEnabled();
-    }
-
-    @Override
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
-        updateServiceConnection();
+        return isLocationPermitted() && isLocationUpdatesEnabled() && privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION);
     }
 
     /**
@@ -525,6 +535,10 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     }
 
     private Map<String, String> createAnalyticsHeaders() {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
+            return Collections.emptyMap();
+        }
+
         Map<String, String> headers = new HashMap<>();
 
         String locationPermission;

@@ -2,8 +2,8 @@ package com.urbanairship.chat
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.push.PushListener
@@ -32,16 +32,18 @@ class ChatTest {
     private lateinit var mockJobDispatcher: JobDispatcher
     private lateinit var chat: Chat
     private lateinit var dataStore: PreferenceDataStore
+    private lateinit var privacyManager: PrivacyManager
 
     @Before
     fun setUp() {
         mockConversation = mock()
 
         dataStore = PreferenceDataStore(TestApplication.getApplication())
+        privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
         mockPush = mock()
         mockJobDispatcher = mock()
         chat = Chat(TestApplication.getApplication(), dataStore,
-                mockPush, mockConversation, mockJobDispatcher)
+                privacyManager, mockPush, mockConversation, mockJobDispatcher)
     }
 
     @Test
@@ -69,11 +71,11 @@ class ChatTest {
         chat.init()
         clearInvocations(mockConversation)
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false)
+        privacyManager.disable(PrivacyManager.FEATURE_CHAT)
         verify(mockConversation).isEnabled = false
         verify(mockConversation).clearData()
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true)
+        privacyManager.enable(PrivacyManager.FEATURE_CHAT)
         verify(mockConversation).isEnabled = true
     }
 

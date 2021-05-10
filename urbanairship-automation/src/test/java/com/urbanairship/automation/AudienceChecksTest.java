@@ -6,6 +6,8 @@ import android.content.Context;
 import android.util.Base64;
 
 import com.urbanairship.ApplicationMetrics;
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
@@ -46,6 +48,7 @@ public class AudienceChecksTest {
     private AirshipLocationClient locationClient;
     private Context context;
     private ApplicationMetrics applicationMetrics;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setup() {
@@ -55,10 +58,14 @@ public class AudienceChecksTest {
         applicationMetrics = mock(ApplicationMetrics.class);
         context = TestApplication.getApplication();
 
+        PreferenceDataStore dataStore = new PreferenceDataStore(TestApplication.getApplication());
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
+
         TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setLocationClient(locationClient);
         TestApplication.getApplication().setApplicationMetrics(applicationMetrics);
+        TestApplication.getApplication().setPrivacyManager(privacyManager);
     }
 
     @Test

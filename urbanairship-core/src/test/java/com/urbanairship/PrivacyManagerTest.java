@@ -95,7 +95,7 @@ public class PrivacyManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testIsAnyEnabled() {
+    public void testIsAnyFeatureEnabled() {
         assertFalse(privacyManager.isAnyFeatureEnabled());
 
         privacyManager.enable(PrivacyManager.FEATURE_CHAT);
@@ -103,6 +103,87 @@ public class PrivacyManagerTest extends BaseTestCase {
 
         privacyManager.disable(PrivacyManager.FEATURE_CHAT);
         assertFalse(privacyManager.isAnyFeatureEnabled());
+    }
+
+    @Test
+    public void testIsAnyEnabled() {
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS));
+
+        privacyManager.enable(PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_PUSH);
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS));
+        assertTrue(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_PUSH));
+    }
+
+    @Test
+    public void testMigrateDataCollectionEnabled() {
+        assertEquals(PrivacyManager.FEATURE_NONE, privacyManager.getEnabledFeatures());
+        dataStore.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, true);
+
+        privacyManager.migrateData();
+        assertEquals(PrivacyManager.FEATURE_ALL, privacyManager.getEnabledFeatures());
+
+        assertFalse(dataStore.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY));
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        privacyManager.migrateData();
+        assertEquals(PrivacyManager.FEATURE_NONE, privacyManager.getEnabledFeatures());
+    }
+
+    @Test
+    public void testMigrateDataCollectionDisabled() {
+        privacyManager.enable(PrivacyManager.FEATURE_ALL);
+        dataStore.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, false);
+
+        privacyManager.migrateData();
+        assertEquals(PrivacyManager.FEATURE_NONE, privacyManager.getEnabledFeatures());
+
+        assertFalse(dataStore.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY));
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        privacyManager.migrateData();
+        assertEquals(PrivacyManager.FEATURE_NONE, privacyManager.getEnabledFeatures());
+    }
+
+    @Test
+    public void testMigrateModuleEnableFlagsWhenDisabled() {
+        dataStore.put(PrivacyManager.CHAT_ENABLED_KEY, false);
+        dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, false);
+        dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, false);
+        dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, false);
+
+        privacyManager.enable(PrivacyManager.FEATURE_ALL);
+        privacyManager.migrateData();
+
+        assertFalse(dataStore.isSet(PrivacyManager.CHAT_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
+
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+
+        privacyManager.enable(PrivacyManager.FEATURE_ALL);
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+    }
+
+    @Test
+    public void testMigrateModuleEnableFlagsWhenEnabled() {
+        dataStore.put(PrivacyManager.CHAT_ENABLED_KEY, true);
+        dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, true);
+        dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, true);
+        dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
+
+        privacyManager.enable(PrivacyManager.FEATURE_NONE);
+        privacyManager.migrateData();
+
+        assertFalse(dataStore.isSet(PrivacyManager.CHAT_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
+
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+
+        privacyManager.enable(PrivacyManager.FEATURE_ALL);
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
     }
 
     @Test
@@ -114,7 +195,6 @@ public class PrivacyManagerTest extends BaseTestCase {
         privacyManager.enable(PrivacyManager.FEATURE_CHAT);
         privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
-
 
         verify(listener, times(3)).onEnabledFeaturesChanged();
     }

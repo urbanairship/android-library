@@ -32,7 +32,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private final String testDeviceType = "android";
     private final String testPushAddress = "gcmRegistrationId";
     private final String testUserId = "fakeUserId";
-    private final String testApid = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String testAccengageDeviceId = "accengage-device-id";
     private final boolean testSetTags = true;
     private Set<String> testTags;
@@ -56,14 +55,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testMinimizedPayloadIgnoresCreationSpecificData() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload).build();
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
 
-        assertNull(minPayload.apid);
         assertNull(minPayload.userId);
         assertNull(minPayload.accengageDeviceId);
     }
@@ -186,7 +183,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
@@ -216,7 +212,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
@@ -241,9 +236,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         // Identity items
         assertTrue("User ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.USER_ID_KEY));
         assertEquals("User ID should be fakeUserId.", identityHints.get(ChannelRegistrationPayload.USER_ID_KEY).getString(), testUserId);
-
-        assertTrue("APID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.APID_KEY));
-        assertEquals("APID should match.", identityHints.get(ChannelRegistrationPayload.APID_KEY).getString(), testApid);
 
         assertTrue("Accengage Device ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID));
         assertEquals("Accengage Device ID should match.", identityHints.get(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID).getString(), testAccengageDeviceId);
@@ -389,7 +381,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setLocationSettings(true)
                 .setAppVersion("123")
                 .setApiVersion(123)
@@ -412,7 +403,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -428,7 +418,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -453,7 +442,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -469,7 +457,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(null)
                 .setTags(false, null)
                 .setUserId(null)
-                .setApid(null)
                 .setLocationSettings(false)
                 .setAppVersion("234")
                 .setApiVersion(234)
@@ -505,7 +492,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -536,7 +522,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
@@ -552,7 +537,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
@@ -656,7 +640,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceModel("Device model")
                 .setCarrier("Carrier")
                 .setNamedUserId("named user")
-                .setApid("some-apid")
                 .setUserId("some-user")
                 .build();
 
@@ -681,7 +664,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceModel(null)
                 .setCarrier(null)
                 .setUserId(null)
-                .setApid(null)
                 .build();
 
         assertEquals(expected, minPayload);

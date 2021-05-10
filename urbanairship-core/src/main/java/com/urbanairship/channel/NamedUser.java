@@ -8,6 +8,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -76,6 +77,7 @@ public class NamedUser extends AirshipComponent {
     private final Object idLock = new Object();
     private final JobDispatcher jobDispatcher;
     private final Clock clock;
+    private final PrivacyManager privacyManager;
 
     private final AirshipChannel airshipChannel;
     private final NamedUserApiClient namedUserApiClient;
@@ -92,10 +94,12 @@ public class NamedUser extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      * @param runtimeConfig The airship runtime config.
      * @param airshipChannel The airship channel.
+     * @[param privacyManager The privacy manager.
      */
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                     @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull AirshipChannel airshipChannel) {
-        this(context, preferenceDataStore, airshipChannel, JobDispatcher.shared(context),
+                     @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull PrivacyManager privacyManager,
+                     @NonNull AirshipChannel airshipChannel) {
+        this(context, preferenceDataStore, privacyManager, airshipChannel, JobDispatcher.shared(context),
                 Clock.DEFAULT_CLOCK, new NamedUserApiClient(runtimeConfig),
                 new AttributeRegistrar(AttributeApiClient.namedUserClient(runtimeConfig), new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.namedUserClient(runtimeConfig), new PendingTagGroupMutationStore(preferenceDataStore, TAG_GROUP_MUTATIONS_KEY)));
@@ -106,11 +110,13 @@ public class NamedUser extends AirshipComponent {
      */
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-              @NonNull AirshipChannel airshipChannel, @NonNull JobDispatcher dispatcher,
-              @NonNull Clock clock, @NonNull NamedUserApiClient namedUserApiClient,
-              @NonNull AttributeRegistrar attributeRegistrar, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+              @NonNull PrivacyManager privacyManager, @NonNull AirshipChannel airshipChannel,
+              @NonNull JobDispatcher dispatcher, @NonNull Clock clock,
+              @NonNull NamedUserApiClient namedUserApiClient, @NonNull AttributeRegistrar attributeRegistrar,
+              @NonNull TagGroupRegistrar tagGroupRegistrar) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
+        this.privacyManager = privacyManager;
         this.airshipChannel = airshipChannel;
         this.jobDispatcher = dispatcher;
         this.clock = clock;
@@ -129,7 +135,9 @@ public class NamedUser extends AirshipComponent {
         airshipChannel.addChannelListener(new AirshipChannelListener() {
             @Override
             public void onChannelCreated(@NonNull String channelId) {
-                forceUpdate();
+                if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+                    forceUpdate();
+                }
             }
 
             @Override
@@ -147,8 +155,24 @@ public class NamedUser extends AirshipComponent {
         });
 
         if (airshipChannel.getId() != null && (!isIdUpToDate() || getId() != null)) {
-            dispatchNamedUserUpdateJob();
+            if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+                dispatchNamedUserUpdateJob();
+            }
         }
+
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+                    setId(null);
+                }
+
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    tagGroupRegistrar.clearPendingMutations();
+                    attributeRegistrar.clearPendingMutations();
+                }
+            }
+        });
     }
 
     /**
@@ -228,8 +252,8 @@ public class NamedUser extends AirshipComponent {
      * @param namedUserId The named user ID string.
      */
     public void setId(@Nullable @Size(max = MAX_NAMED_USER_ID_LENGTH) String namedUserId) {
-        if (namedUserId != null && !isDataCollectionEnabled()) {
-            Logger.debug("Data collection is disabled, ignoring named user association.");
+        if (namedUserId != null && !privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            Logger.debug("NamedUser - Contacts is disabled, ignoring named user association.");
             return;
         }
 
@@ -280,8 +304,8 @@ public class NamedUser extends AirshipComponent {
         return new TagGroupsEditor() {
             @Override
             protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-                if (!isDataCollectionEnabled()) {
-                    Logger.warn("NamedUser - Unable to apply tag group edits when data collection is disabled.");
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    Logger.warn("NamedUser - Ignoring tag edits while contacts and/or tags and attributes are disabled.");
                     return;
                 }
 
@@ -303,8 +327,8 @@ public class NamedUser extends AirshipComponent {
         return new AttributeEditor(clock) {
             @Override
             protected void onApply(@NonNull List<AttributeMutation> mutations) {
-                if (!isDataCollectionEnabled()) {
-                    Logger.info("Ignore attributes, data opted out.");
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    Logger.warn("NamedUser - Ignoring attributes edits while contacts and/or tags and attributes are disabled.");
                     return;
                 }
 
@@ -417,15 +441,6 @@ public class NamedUser extends AirshipComponent {
         boolean isNamedUserSet = getId() != null;
         if (isChannelCreated && isNamedUserSet) {
             forceUpdate();
-        }
-    }
-
-    @Override
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
-        if (!isDataCollectionEnabled) {
-            attributeRegistrar.clearPendingMutations();
-            tagGroupRegistrar.clearPendingMutations();
-            setId(null);
         }
     }
 

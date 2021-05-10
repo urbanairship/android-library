@@ -83,6 +83,12 @@ public class AirshipConfigOptions {
     public static final String FEATURE_CONTACTS = "contacts";
 
     /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_LOCATION} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_LOCATION = "location";
+
+    /**
      * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
      */
     @NonNull
@@ -1048,6 +1054,9 @@ public class AirshipConfigOptions {
                         break;
                     case FEATURE_TAGS_AND_ATTRIBUTES:
                         enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
+                        break;
+                    case FEATURE_LOCATION:
+                        enabledFeatures |= PrivacyManager.FEATURE_LOCATION;
                         break;
                     case FEATURE_ALL:
                         enabledFeatures |= PrivacyManager.FEATURE_ALL;

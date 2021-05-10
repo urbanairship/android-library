@@ -12,6 +12,7 @@ import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.ui.ChatActivity
@@ -34,15 +35,13 @@ class Chat
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTesting internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
+    private val privacyManager: PrivacyManager,
     private val pushManager: PushManager,
     val conversation: Conversation,
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
-        // PreferenceDataStore keys
-        private const val ENABLED_KEY = "com.urbanairship.chat.CHAT"
-
         private const val REFRESH_MESSAGES_ACTION = "REFRESH_MESSAGES_ACTION"
         private const val REFRESH_MESSAGE_PUSH_KEY = "com.urbanairship.refresh_chat"
 
@@ -80,9 +79,10 @@ class Chat
         context: Context,
         dataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
+        privacyManager: PrivacyManager,
         channel: AirshipChannel,
         pushManager: PushManager
-    ) : this(context, dataStore, pushManager, Conversation(context, dataStore, config, channel))
+    ) : this(context, dataStore, privacyManager, pushManager, Conversation(context, dataStore, config, channel))
     /**
      * Chat open listener.
      */
@@ -93,9 +93,16 @@ class Chat
      *
      * The value is persisted in shared preferences.
      */
+    @Deprecated("Enable/disable by enabling {@link PrivacyManager#FEATURE_CHAT} in {@link PrivacyManager}. This will call through to the privacy manager.")
     var isEnabled: Boolean
-        get() = dataStore.getBoolean(ENABLED_KEY, true)
-        set(isEnabled) = dataStore.put(ENABLED_KEY, isEnabled)
+        get() = privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT)
+        set(isEnabled) {
+            if (isEnabled) {
+                privacyManager.enable(PrivacyManager.FEATURE_CHAT)
+            } else {
+                privacyManager.disable(PrivacyManager.FEATURE_CHAT)
+            }
+        }
 
     /**
      * Opens the chat.
@@ -127,10 +134,8 @@ class Chat
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public override fun init() {
         super.init()
-        dataStore.addListener { key ->
-            if (key == ENABLED_KEY) {
-                updateConversationEnablement()
-            }
+        privacyManager.addListener {
+            updateConversationEnablement()
         }
 
         pushManager.addPushListener { message, _ ->
@@ -153,15 +158,9 @@ class Chat
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onComponentEnableChange(isEnabled: Boolean) = updateConversationEnablement()
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onDataCollectionEnabledChanged(isDataCollectionEnabled: Boolean) = updateConversationEnablement()
-
     private fun updateConversationEnablement() {
-        conversation.isEnabled = this.isEnabled && this.isComponentEnabled && this.isDataCollectionEnabled
-        if (!isDataCollectionEnabled) {
+        conversation.isEnabled = this.isComponentEnabled && this.privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT)
+        if (!this.privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT)) {
             conversation.clearData()
         }
     }

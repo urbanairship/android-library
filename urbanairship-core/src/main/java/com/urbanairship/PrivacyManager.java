@@ -10,9 +10,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
- * The privacy manager allows enabling/disabling features in the SDK that require user data.
+ * The privacy manager allow enabling/disabling features in the SDK that require user data.
  * The SDK will not make any network requests or collect data if all features our disabled, with
  * a few exceptions when going from enabled -> disabled. To have the SDK opt-out of all features on startup,
  * set the default enabled features in the AirshipConfig to {@link #FEATURE_NONE}, or in the
@@ -54,11 +55,12 @@ public class PrivacyManager {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { FEATURE_NONE, FEATURE_IN_APP_AUTOMATION, FEATURE_MESSAGE_CENTER, FEATURE_PUSH,
-                    FEATURE_CHAT, FEATURE_ANALYTICS, FEATURE_TAGS_AND_ATTRIBUTES, FEATURE_CONTACTS, FEATURE_ALL })
+                    FEATURE_CHAT, FEATURE_ANALYTICS, FEATURE_TAGS_AND_ATTRIBUTES, FEATURE_CONTACTS,
+                    FEATURE_LOCATION, FEATURE_ALL })
     public @interface Feature {}
 
     /**
-     * Enables In-App Automation.
+     * Enables In-App Automation (with Automation module).
      *
      * In addition to the default data collection, In-App Automation will collect:
      * - App Version (App update triggers)
@@ -68,7 +70,7 @@ public class PrivacyManager {
     public final static int FEATURE_IN_APP_AUTOMATION = 1;
 
     /**
-     * Enables Message Center.
+     * Enables Message Center (with MessageCenter module).
      *
      * In addition to the default data collection, Message Center will collect:
      * - Message Center User
@@ -87,7 +89,7 @@ public class PrivacyManager {
     public final static int FEATURE_PUSH = 1 << 2;
 
     /**
-     * Enables Airship Chat.
+     * Enables Airship Chat (with AirshipChat module).
      *
      * In addition to the default data collection, Airship Chat will collect:
      * - User messages
@@ -109,8 +111,6 @@ public class PrivacyManager {
      * - Carrier
      * - Connection type
      * - Framework usage
-     * - Location (Allows collecting location using the deprecated Airship Location module. Location still needs to be enabled)
-     * - Location Permissions (With deprecated Airship Location module)
      */
     public final static int FEATURE_ANALYTICS = 1 << 4;
 
@@ -132,6 +132,18 @@ public class PrivacyManager {
     public final static int FEATURE_CONTACTS = 1 << 6;
 
     /**
+     * Enables location (with Location module).
+     *
+     * Enabling location still requires requesting permissions, and either requesting a single location
+     * or enabling continuous location updates.
+     *
+     * In addition to the default data collection, location will collect:
+     * - Location permissions
+     * - Collect location for the app (Airship no longer supports uploading location as events)
+     */
+    public final static int FEATURE_LOCATION = 1 << 7;
+
+    /**
      * Helper flag that can be used to set enabled features to none.
      */
     public final static int FEATURE_NONE = 0;
@@ -140,16 +152,26 @@ public class PrivacyManager {
      * Helper flag that is all features.
      */
     public final static int FEATURE_ALL = FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
-            | FEATURE_CHAT | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS;
+            | FEATURE_CHAT | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS | FEATURE_LOCATION;
 
     private final String ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures";
 
     // legacy keys for migration
-    private static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
-    private static final String ANALYTICS_ENABLED_KEY = "com.urbanairship.analytics.ANALYTICS_ENABLED";
-    private static final String PUSH_TOKEN_REGISTRATION_ENABLED_KEY = "com.urbanairship.push.PUSH_TOKEN_REGISTRATION_ENABLED";
-    private static final String PUSH_ENABLED_KEY = "com.urbanairship.push.PUSH_ENABLED";
-    private static final String CHAT_ENABLED_KEY = "com.urbanairship.chat.CHAT";
+    @VisibleForTesting
+    @NonNull
+    static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
+    @VisibleForTesting
+    @NonNull
+    static final String ANALYTICS_ENABLED_KEY = "com.urbanairship.analytics.ANALYTICS_ENABLED";
+    @VisibleForTesting
+    @NonNull
+    static final String PUSH_TOKEN_REGISTRATION_ENABLED_KEY = "com.urbanairship.push.PUSH_TOKEN_REGISTRATION_ENABLED";
+    @VisibleForTesting
+    @NonNull
+    static final String PUSH_ENABLED_KEY = "com.urbanairship.push.PUSH_ENABLED";
+    @VisibleForTesting
+    @NonNull
+    static final String CHAT_ENABLED_KEY = "com.urbanairship.chat.CHAT";
 
     private final Object lock = new Object();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -158,7 +180,7 @@ public class PrivacyManager {
     private final int defaultEnabledFeatures;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    PrivacyManager(@NonNull PreferenceDataStore dataStore, @Feature int defaultEnabledFeatures) {
+    public PrivacyManager(@NonNull PreferenceDataStore dataStore, @Feature int defaultEnabledFeatures) {
         this.dataStore = dataStore;
         this.defaultEnabledFeatures = defaultEnabledFeatures;
     }
@@ -199,9 +221,9 @@ public class PrivacyManager {
     }
 
     /**
-     * Disables features.
+     * Enables features.
      *
-     * @param features The features to disable.
+     * @param features The features to enable.
      */
     public void disable(@Feature int... features) {
         synchronized (lock) {
@@ -232,12 +254,14 @@ public class PrivacyManager {
         int enabledFeatures = getEnabledFeatures();
 
         for (int feature : features) {
-            if (feature == FEATURE_NONE) {
-                return enabledFeatures == FEATURE_NONE;
-            } else {
-                return (enabledFeatures & feature) == feature;
+            if (feature == FEATURE_NONE && enabledFeatures == FEATURE_NONE) {
+                return true;
+            }
+            if ((enabledFeatures & feature) == feature) {
+                return true;
             }
         }
+
 
         return false;
     }
@@ -284,23 +308,31 @@ public class PrivacyManager {
             this.dataStore.remove(DATA_COLLECTION_ENABLED_KEY);
         }
 
-        if (!this.dataStore.getBoolean(ANALYTICS_ENABLED_KEY, true)) {
-            this.disable(FEATURE_ANALYTICS);
+        if (this.dataStore.isSet(ANALYTICS_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(ANALYTICS_ENABLED_KEY, true)) {
+                this.disable(FEATURE_ANALYTICS);
+            }
             this.dataStore.remove(ANALYTICS_ENABLED_KEY);
         }
 
-        if (!this.dataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)) {
-            this.disable(FEATURE_PUSH);
+        if (this.dataStore.isSet(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)) {
+                this.disable(FEATURE_PUSH);
+            }
             this.dataStore.remove(PUSH_TOKEN_REGISTRATION_ENABLED_KEY);
         }
 
-        if (!this.dataStore.getBoolean(PUSH_ENABLED_KEY, true)) {
-            this.disable(FEATURE_PUSH);
+        if (this.dataStore.isSet(PUSH_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(PUSH_ENABLED_KEY, true)) {
+                this.disable(FEATURE_PUSH);
+            }
             this.dataStore.remove(PUSH_ENABLED_KEY);
         }
 
-        if (!this.dataStore.getBoolean(CHAT_ENABLED_KEY, true)) {
-            this.disable(FEATURE_CHAT);
+        if (this.dataStore.isSet(CHAT_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(CHAT_ENABLED_KEY, true)) {
+                this.disable(FEATURE_CHAT);
+            }
             this.dataStore.remove(CHAT_ENABLED_KEY);
         }
     }

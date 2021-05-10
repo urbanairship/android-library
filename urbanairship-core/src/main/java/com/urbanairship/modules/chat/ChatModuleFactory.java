@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.Module;
@@ -25,6 +26,7 @@ public interface ChatModuleFactory extends AirshipVersionInfo {
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipRuntimeConfig config,
+                 @NonNull PrivacyManager privacyManager,
                  @NonNull AirshipChannel airshipChannel,
                  @NonNull PushManager pushManager);
 }

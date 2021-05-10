@@ -126,19 +126,13 @@ public class UAirship {
 
     private static boolean queuePendingAirshipRequests = true;
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public static final String DATA_COLLECTION_ENABLED_KEY = "com.urbanairship.DATA_COLLECTION_ENABLED";
-
     private DeepLinkListener deepLinkListener;
     private final Map<Class, AirshipComponent> componentClassMap = new HashMap<>();
     private final List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
+    @SuppressWarnings("deprecation")
     ApplicationMetrics applicationMetrics;
     PreferenceDataStore preferenceDataStore;
     PushProvider pushProvider;
@@ -701,6 +695,8 @@ public class UAirship {
         this.preferenceDataStore.init();
 
         this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
+        this.privacyManager.migrateData();
+
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 
         this.providers = PushProviders.load(application, airshipConfigOptions);
@@ -722,7 +718,7 @@ public class UAirship {
             }
         });
 
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, localeManager);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();
@@ -735,16 +731,17 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, channel, localeManager);
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager);
         components.add(this.analytics);
 
-        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, GlobalActivityMonitor.shared(application));
+        //noinspection deprecation
+        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, privacyManager);
         components.add(this.applicationMetrics);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, channel, analytics);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, privacyManager, pushProvider, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, channel);
+        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
         components.add(this.namedUser);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -771,7 +768,7 @@ public class UAirship {
         processModule(messageCenterModule);
 
         // Location
-        LocationModule locationModule = Modules.location(application, preferenceDataStore, channel, analytics);
+        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, analytics);
         processModule(locationModule);
         this.locationClient = locationModule == null ? null : locationModule.getLocationClient();
 
@@ -781,33 +778,15 @@ public class UAirship {
         processModule(automationModule);
 
         // Ad Id
-        Module adIdModule = Modules.adId(application, preferenceDataStore);
+        Module adIdModule = Modules.adId(application, preferenceDataStore, runtimeConfig, privacyManager, analytics);
         processModule(adIdModule);
 
         // Chat
-        Module chat = Modules.chat(application, preferenceDataStore, runtimeConfig, channel, pushManager);
+        Module chat = Modules.chat(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(chat);
 
         for (AirshipComponent component : components) {
             component.init();
-        }
-
-        // Store the version
-        String currentVersion = getVersion();
-        String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
-
-        if (previousVersion != null && !previousVersion.equals(currentVersion)) {
-            Logger.info("Airship library changed from %s to %s.", previousVersion, currentVersion);
-        }
-
-        // store current version as library version once check is performed
-        this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
-
-        // Check if dataCollection has never been loaded
-        if (!this.preferenceDataStore.isSet(DATA_COLLECTION_ENABLED_KEY)) {
-            boolean enabled = !airshipConfigOptions.dataCollectionOptInEnabled;
-            Logger.debug("Setting data collection enabled to %s", enabled);
-            setDataCollectionEnabled(enabled);
         }
     }
 
@@ -1029,29 +1008,35 @@ public class UAirship {
     }
 
     /**
-     * Enables/Disables data collection. Enabled by default unless {@link AirshipConfigOptions#dataCollectionOptInEnabled}
-     * is set to {@code true} on the first run.
-     * <p>
-     * When disabled, the device will stop collecting and sending data for named user, events,
-     * tags, attributes, associated identifiers, and location from the device.
-     * <p>
-     * Push notifications will continue to work only if {@link PushManager#setPushTokenRegistrationEnabled(boolean)}
-     * has been explicitly set to {@code true}, otherwise it will default to the current state
-     * of {@link #isDataCollectionEnabled()}.
+     * Deprecated. Use {@link PrivacyManager} instead.
+     *
+     * When enabled it will enable all privacy manager features. When disabled it will disable
+     * all.
      *
      * @param enabled {@code true} to enable, {@code false} to disable.
+     * @deprecated Enable/disable by using {@link PrivacyManager}.
+     * This will enable or disable {@link PrivacyManager#FEATURE_ALL} features.
      */
     public void setDataCollectionEnabled(boolean enabled) {
-        this.preferenceDataStore.put(DATA_COLLECTION_ENABLED_KEY, enabled);
+        if (enabled) {
+            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
+        } else {
+            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        }
     }
 
     /**
-     * Checks if data collection is enabled or not.
+     * Deprecated. Use {@link PrivacyManager} instead.
      *
-     * @return {@code true} if data collection is enabled, otherwise {@code false}.
+     * Checks if any features are enabled in the privacy manager.
+     *
+     * @return {@code true} if any feature is enabled, otherwise `false`.
+     * @deprecated Enable/disable by using {@link PrivacyManager}.
+     * This will call through to the privacy manager to check if any features are enabled.
      */
+    @Deprecated
     public boolean isDataCollectionEnabled() {
-        return this.preferenceDataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, true);
+        return privacyManager.isAnyFeatureEnabled();
     }
 
     /**

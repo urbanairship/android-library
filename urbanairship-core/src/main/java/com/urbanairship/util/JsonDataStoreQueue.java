@@ -104,7 +104,11 @@ public class JsonDataStoreQueue<T> {
             }
 
             JsonValue value = jsonValues.remove(0);
-            dataStore.put(storeKey, JsonValue.wrapOpt(jsonValues));
+            if (jsonValues.isEmpty()) {
+                dataStore.remove(storeKey);
+            } else {
+                dataStore.put(storeKey, JsonValue.wrapOpt(jsonValues));
+            }
 
             return deserializer.apply(value);
         }
@@ -151,7 +155,11 @@ public class JsonDataStoreQueue<T> {
         synchronized (storeKey) {
             List<T> values = getList();
             values = listOperation.apply(values);
-            dataStore.put(storeKey, JsonValue.wrapOpt(values));
+            if (values.isEmpty()) {
+                dataStore.remove(storeKey);
+            } else {
+                dataStore.put(storeKey, JsonValue.wrapOpt(values));
+            }
         }
     }
 

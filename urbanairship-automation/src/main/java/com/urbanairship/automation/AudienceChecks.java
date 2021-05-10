@@ -5,6 +5,7 @@ package com.urbanairship.automation;
 import android.content.Context;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
@@ -106,15 +107,8 @@ public abstract class AudienceChecks {
         PushManager pushManager = airship.getPushManager();
         AirshipChannel channel = airship.getChannel();
 
-        // Data collection enabled
-        boolean isDataCollectionEnabled = airship.isDataCollectionEnabled();
-
         // Location opt-in
         if (audience.getLocationOptIn() != null) {
-            if (!isDataCollectionEnabled) {
-                return false;
-            }
-
             boolean optedIn = locationClient != null && locationClient.isOptIn();
             if (audience.getLocationOptIn() != optedIn) {
                 return false;
@@ -125,10 +119,6 @@ public abstract class AudienceChecks {
         boolean notificationsOptIn = pushManager.areNotificationsOptedIn();
 
         if (audience.getNotificationsOptIn() != null) {
-            if (!isDataCollectionEnabled) {
-                return false;
-            }
-
             if (audience.getNotificationsOptIn() != notificationsOptIn) {
                 return false;
             }
@@ -141,9 +131,10 @@ public abstract class AudienceChecks {
 
         // Tags
         if (audience.getTagSelector() != null) {
-            if (!isDataCollectionEnabled) {
+            if (!airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
                 return false;
             }
+
             if (!audience.getTagSelector().apply(channel.getTags(), tagGroups)) {
                 return false;
             }
