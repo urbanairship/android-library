@@ -155,6 +155,7 @@ public class UAirship {
     PushProviders providers;
     AirshipRuntimeConfig runtimeConfig;
     LocaleManager localeManager;
+    PrivacyManager privacyManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -699,6 +700,7 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
+        this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 
         this.providers = PushProviders.load(application, airshipConfigOptions);
@@ -1050,6 +1052,16 @@ public class UAirship {
      */
     public boolean isDataCollectionEnabled() {
         return this.preferenceDataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, true);
+    }
+
+    /**
+     * Returns the privacy manager.
+     *
+     * @return The privacy manager.
+     */
+    @NonNull
+    public PrivacyManager getPrivacyManager() {
+        return privacyManager;
     }
 
     /**

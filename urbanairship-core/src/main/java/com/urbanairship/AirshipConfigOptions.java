@@ -40,6 +40,60 @@ import androidx.core.app.NotificationCompat;
  */
 public class AirshipConfigOptions {
 
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_IN_APP_AUTOMATION = "in_app_automation";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_TAGS_AND_ATTRIBUTES} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_TAGS_AND_ATTRIBUTES = "tags_and_attributes";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_MESSAGE_CENTER} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_MESSAGE_CENTER = "message_center";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_ANALYTICS} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_ANALYTICS = "analytics";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_PUSH} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_PUSH = "push";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_CHAT} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_CHAT = "chat";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_CONTACTS} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_CONTACTS = "contacts";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_NONE = "none";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_ALL} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_ALL = "all";
+
     // EU cloud site
     private static final String EU_DEVICE_URL = "https://device-api.asnapieu.com/";
     private static final String EU_ANALYTICS_URL = "https://combine.asnapieu.com/";
@@ -150,7 +204,6 @@ public class AirshipConfigOptions {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public final String walletUrl;
-
 
     /**
      * The chat url.
@@ -296,8 +349,30 @@ public class AirshipConfigOptions {
      * Flag indicating if the data collection opt-in is enabled.
      * <p>
      * The flag defaults to false
+     *
+     * @deprecated Use {@link #enabledFeatures} instead.
      */
+    @Deprecated
     public final boolean dataCollectionOptInEnabled;
+
+    /**
+     * Default enabled Airship features for the app. For more details, see {@link PrivacyManager}.
+     * Defaults to {@link PrivacyManager#FEATURE_ALL}.
+     *
+     * When specifying the features in either xml or a properties file, use one of the
+     * names for convenience:
+     * - {@link #FEATURE_ALL}
+     * - {@link #FEATURE_NONE}
+     * - {@link #FEATURE_MESSAGE_CENTER}
+     * - {@link #FEATURE_TAGS_AND_ATTRIBUTES}
+     * - {@link #FEATURE_IN_APP_AUTOMATION}
+     * - {@link #FEATURE_CONTACTS}
+     * - {@link #FEATURE_ANALYTICS}
+     * - {@link #FEATURE_CHAT}
+     * - {@link #FEATURE_PUSH}
+     */
+    @PrivacyManager.Feature
+    public final int enabledFeatures;
 
     /**
      * Flag indicating whether or not to perform extended broadcasts.
@@ -399,6 +474,7 @@ public class AirshipConfigOptions {
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
+        this.enabledFeatures = builder.enabledFeatures;
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
     }
@@ -559,6 +635,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
         private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
+        private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
 
         private String appKey;
         private String appSecret;
@@ -598,6 +675,9 @@ public class AirshipConfigOptions {
         private boolean extendedBroadcastsEnabled;
         private @Site
         String site = SITE_US;
+
+        @PrivacyManager.Feature
+        public int enabledFeatures = PrivacyManager.FEATURE_ALL;
 
         private boolean suppressAllowListError = false;
         private boolean requireInitialRemoteConfigEnabled = false;
@@ -904,6 +984,29 @@ public class AirshipConfigOptions {
                         case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
                             this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
                             break;
+
+                        case FIELD_ENABLED_FEATURES:
+                            int value = -1;
+                            try {
+                                value = configParser.getInt(name, -1);
+                            } catch (Exception e) {
+                                // ignored
+                            }
+
+                            if (value != -1) {
+                                this.setEnabledFeatures(value);
+                            } else {
+                                String[] features = configParser.getStringArray(name);
+                                if (features == null) {
+                                    throw new IllegalArgumentException("Unable to parse enableFeatures: " + configParser.getString(name));
+                                }
+                                @PrivacyManager.Feature
+                                int converted = convertFeatureNames(features);
+                                this.setEnabledFeatures(converted);
+                            }
+
+                            break;
+
                     }
                 } catch (Exception e) {
                     Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
@@ -914,6 +1017,45 @@ public class AirshipConfigOptions {
             if (inProduction == null) {
                 detectProvisioningMode(context);
             }
+        }
+
+        @PrivacyManager.Feature
+        private int convertFeatureNames(@NonNull String[] features) {
+            int enabledFeatures = PrivacyManager.FEATURE_NONE;
+            for (String feature : features) {
+                if (feature == null || feature.isEmpty()) {
+                    continue;
+                }
+
+                switch (feature) {
+                    case FEATURE_IN_APP_AUTOMATION:
+                        enabledFeatures |= PrivacyManager.FEATURE_IN_APP_AUTOMATION;
+                        break;
+                    case FEATURE_ANALYTICS:
+                        enabledFeatures |= PrivacyManager.FEATURE_ANALYTICS;
+                        break;
+                    case FEATURE_CHAT:
+                        enabledFeatures |= PrivacyManager.FEATURE_CHAT;
+                        break;
+                    case FEATURE_CONTACTS:
+                        enabledFeatures |= PrivacyManager.FEATURE_CONTACTS;
+                        break;
+                    case FEATURE_MESSAGE_CENTER:
+                        enabledFeatures |= PrivacyManager.FEATURE_MESSAGE_CENTER;
+                        break;
+                    case FEATURE_PUSH:
+                        enabledFeatures |= PrivacyManager.FEATURE_PUSH;
+                        break;
+                    case FEATURE_TAGS_AND_ATTRIBUTES:
+                        enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
+                        break;
+                    case FEATURE_ALL:
+                        enabledFeatures |= PrivacyManager.FEATURE_ALL;
+                        break;
+                }
+            }
+
+            return enabledFeatures;
         }
 
         /**
@@ -1420,8 +1562,10 @@ public class AirshipConfigOptions {
          *
          * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
          * @return The config options builder.
+         * @deprecated Use {@link #enabledFeatures} instead.
          */
         @NonNull
+        @Deprecated
         public Builder setDataCollectionOptInEnabled(boolean dataCollectionOptInEnabled) {
             this.dataCollectionOptInEnabled = dataCollectionOptInEnabled;
             return this;
@@ -1440,6 +1584,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setExtendedBroadcastsEnabled(boolean extendedBroadcastsEnabled) {
             this.extendedBroadcastsEnabled = extendedBroadcastsEnabled;
+            return this;
+        }
+
+        /**
+         * Sets the default enabled SDK features. See {@link PrivacyManager} for more info.
+         *
+         * @param enabledFeatures The enabled features.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setEnabledFeatures(@PrivacyManager.Feature int... enabledFeatures) {
+            this.enabledFeatures = PrivacyManager.combine(enabledFeatures);
             return this;
         }
 
@@ -1494,6 +1650,13 @@ public class AirshipConfigOptions {
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
                 Logger.warn("Production App Secret matches Development App Secret");
+            }
+
+            if (dataCollectionOptInEnabled) {
+                Logger.warn("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
+                if (enabledFeatures == PrivacyManager.FEATURE_ALL) {
+                    enabledFeatures = PrivacyManager.FEATURE_NONE;
+                }
             }
 
             return new AirshipConfigOptions(this);
