@@ -11,6 +11,7 @@ import android.os.HandlerThread;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -110,6 +111,7 @@ public class RemoteData extends AirshipComponent {
     private final PushManager pushManager;
     private final Clock clock;
     private final RemoteDataApiClient apiClient;
+    private final PrivacyManager privacyManager;
 
     @VisibleForTesting
     final Subject<Set<RemoteDataPayload>> payloadUpdates;
@@ -148,41 +150,44 @@ public class RemoteData extends AirshipComponent {
         }
     };
 
-    /**
-     * RemoteData constructor.
-     *
-     * @param context The application context.
-     * @param preferenceDataStore The preference data store
-     * @param configOptions The config options.
-     * @param pushManager The push manager.
-     * @param localeManager The locale manager.
-     */
-    public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                      @NonNull AirshipRuntimeConfig configOptions, @NonNull PushManager pushManager,
-                      @NonNull LocaleManager localeManager) {
-        this(context, preferenceDataStore, configOptions, GlobalActivityMonitor.shared(context),
-                JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK,
-                new RemoteDataApiClient(configOptions));
-    }
+    private final PrivacyManager.Listener privacyListener = new PrivacyManager.Listener() {
+        @Override
+        public void onEnabledFeaturesChanged() {
+            if (shouldRefresh()) {
+                refresh();
+            }
+        }
+    };
 
     /**
      * RemoteData constructor.
      *
      * @param context The application context.
      * @param preferenceDataStore The preference data store
-     * @param activityMonitor The activity monitor.
-     * @param dispatcher The job dispatcher.
+     * @param configOptions The config options.
+     * @param privacyManager Privacy manager.
      * @param pushManager The push manager.
+     * @param localeManager The locale manager.
      */
+    public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                      @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
+                      @NonNull PushManager pushManager, @NonNull LocaleManager localeManager) {
+        this(context, preferenceDataStore, configOptions, privacyManager, GlobalActivityMonitor.shared(context),
+                JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK,
+                new RemoteDataApiClient(configOptions));
+    }
+
     @VisibleForTesting
     RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-               @NonNull AirshipRuntimeConfig configOptions, @NonNull ActivityMonitor activityMonitor,
-               @NonNull JobDispatcher dispatcher, @NonNull LocaleManager localeManager,
-               @NonNull PushManager pushManager, @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient) {
+               @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
+               @NonNull ActivityMonitor activityMonitor, @NonNull JobDispatcher dispatcher,
+               @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
+               @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getConfigOptions().appKey, DATABASE_NAME);
         this.preferenceDataStore = preferenceDataStore;
+        this.privacyManager = privacyManager;
         this.backgroundThread = new AirshipHandlerThread("remote data store");
         this.payloadUpdates = Subject.create();
         this.activityMonitor = activityMonitor;
@@ -201,6 +206,7 @@ public class RemoteData extends AirshipComponent {
         activityMonitor.addApplicationListener(applicationListener);
         pushManager.addInternalPushListener(pushListener);
         localeManager.addListener(localeChangedListener);
+        privacyManager.addListener(privacyListener);
 
         if (shouldRefresh()) {
             refresh();
@@ -212,6 +218,7 @@ public class RemoteData extends AirshipComponent {
         pushManager.removePushListener(pushListener);
         activityMonitor.removeApplicationListener(applicationListener);
         localeManager.removeListener(localeChangedListener);
+        privacyManager.removeListener(privacyListener);
         backgroundThread.quit();
     }
 
@@ -219,6 +226,10 @@ public class RemoteData extends AirshipComponent {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+        if (!privacyManager.isAnyFeatureEnabled()) {
+            return JobInfo.JOB_FINISHED;
+        }
+
         if (ACTION_REFRESH.equals(jobInfo.getAction())) {
             return onRefresh();
         }
@@ -311,6 +322,7 @@ public class RemoteData extends AirshipComponent {
      */
     @NonNull
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
+
         return Observable.concat(cachedPayloads(types), payloadUpdates)
                          .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
                              @NonNull
@@ -350,6 +362,10 @@ public class RemoteData extends AirshipComponent {
     }
 
     private boolean shouldRefresh() {
+        if (!privacyManager.isAnyFeatureEnabled()) {
+            return false;
+        }
+
         if (!activityMonitor.isAppForegrounded()) {
             return false;
         }
