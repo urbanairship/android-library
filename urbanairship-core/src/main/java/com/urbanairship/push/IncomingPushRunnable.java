@@ -15,6 +15,8 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.PushArrivedEvent;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
@@ -51,6 +53,7 @@ class IncomingPushRunnable implements Runnable {
     private final boolean isLongRunning;
     private final boolean isProcessed;
     private final JobDispatcher jobDispatcher;
+    private final ActivityMonitor activityMonitor;
 
     /**
      * Default constructor.
@@ -65,6 +68,7 @@ class IncomingPushRunnable implements Runnable {
         this.isProcessed = builder.isProcessed;
         this.notificationManager = builder.notificationManager == null ? NotificationManagerCompat.from(context) : builder.notificationManager;
         this.jobDispatcher = builder.jobDispatcher == null ? JobDispatcher.shared(context) : builder.jobDispatcher;
+        this.activityMonitor = builder.activityMonitor == null ? GlobalActivityMonitor.shared(context) : builder.activityMonitor;
     }
 
     @Override
@@ -153,6 +157,14 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
+        if (!message.isForegroundDisplayable() && activityMonitor.isAppForegrounded()) {
+            Logger.info("Notification unable to be displayed in the foreground: %s", message);
+            airship.getPushManager().onPushReceived(message, false);
+            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+            return;
+        }
+
+
         final NotificationProvider provider = getNotificationProvider(airship);
 
         if (provider == null) {
@@ -235,7 +247,7 @@ class IncomingPushRunnable implements Runnable {
 
     @Nullable
     private NotificationProvider getNotificationProvider(UAirship airship) {
-        if (message.isAccengagePush()) {
+        if (message.isAccengageVisiblePush()) {
             if (airship.getAccengageNotificationHandler() != null) {
                 return airship.getAccengageNotificationHandler().getNotificationProvider();
             }
@@ -409,6 +421,8 @@ class IncomingPushRunnable implements Runnable {
         private boolean isProcessed;
         private NotificationManagerCompat notificationManager;
         private JobDispatcher jobDispatcher;
+        private ActivityMonitor activityMonitor;
+
 
         /**
          * Default constructor.
@@ -490,6 +504,18 @@ class IncomingPushRunnable implements Runnable {
         @NonNull
         Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
             this.jobDispatcher = jobDispatcher;
+            return this;
+        }
+
+        /**
+         * Sets the activity monitor.
+         *
+         * @param activityMonitor The activity monitor.
+         * @return The builder instance.
+         */
+        @NonNull
+        Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
+            this.activityMonitor = activityMonitor;
             return this;
         }
 

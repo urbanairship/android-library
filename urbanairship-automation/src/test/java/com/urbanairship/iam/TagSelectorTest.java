@@ -42,7 +42,7 @@ public class TagSelectorTest {
     }
 
     @Test
-    public void testSelector() throws JsonException {
+    public void testSelector() {
         TagSelector selector = TagSelector.or(
                 TagSelector.and(
                         TagSelector.tag("some-tag"),
@@ -68,7 +68,7 @@ public class TagSelectorTest {
     }
 
     @Test
-    public void testSelectorWithTagGroups() throws JsonException {
+    public void testSelectorWithTagGroups() {
         TagSelector selector = TagSelector.and(
                 TagSelector.tag("some-tag", "some-group-tag"),
                 TagSelector.tag("some-tag"),
@@ -88,7 +88,7 @@ public class TagSelectorTest {
     }
 
     @Test
-    public void testContainsTagGroups() throws JsonException {
+    public void testContainsTagGroups() {
         TagSelector selector = TagSelector.or(
                 TagSelector.and(
                         TagSelector.tag("some-tag"),
@@ -110,7 +110,7 @@ public class TagSelectorTest {
     }
 
     @Test
-    public void tesGetTagGroups() throws JsonException {
+    public void tesGetTagGroups() {
         TagSelector selector = TagSelector.or(
                 TagSelector.and(
                         TagSelector.tag("another-tag"),

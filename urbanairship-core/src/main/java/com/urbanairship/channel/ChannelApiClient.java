@@ -2,6 +2,8 @@
 
 package com.urbanairship.channel;
 
+import android.net.Uri;
+
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
@@ -12,7 +14,6 @@ import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +96,7 @@ class ChannelApiClient {
     }
 
     @Nullable
-    private URL getDeviceUrl(@Nullable String channelId) {
+    private Uri getDeviceUrl(@Nullable String channelId) {
         UrlBuilder builder = runtimeConfig.getUrlConfig()
                                           .deviceUrl()
                                           .appendEncodedPath(CHANNEL_API_PATH);

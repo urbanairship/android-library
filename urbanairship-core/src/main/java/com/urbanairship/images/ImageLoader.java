@@ -14,6 +14,17 @@ import androidx.annotation.NonNull;
 public interface ImageLoader {
 
     /**
+     * Image loaded callback.
+     */
+    interface ImageLoadedCallback {
+
+        /**
+         * Called when the image has been loaded successfully.
+         */
+        void onImageLoaded();
+    }
+
+    /**
      * Loads an image into an image view.
      *
      * @param context The context.
@@ -22,5 +33,4 @@ public interface ImageLoader {
      */
     @MainThread
     void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull ImageRequestOptions imageRequestOptions);
-
 }

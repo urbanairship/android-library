@@ -50,7 +50,7 @@ public class DefaultImageLoader implements ImageLoader {
     }
 
     @Override
-    public void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull ImageRequestOptions imageRequestOptions) {
+    public void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull final ImageRequestOptions imageRequestOptions) {
         cancelRequest(imageView);
 
         ImageRequest request = new ImageRequest(context, imageCache, imageView, imageRequestOptions) {
@@ -58,6 +58,11 @@ public class DefaultImageLoader implements ImageLoader {
             void onFinish(ImageView imageView) {
                 if (imageView != null) {
                     requestMap.remove(imageView);
+
+                    ImageLoadedCallback callback = imageRequestOptions.getCallback();
+                    if (callback != null) {
+                        callback.onImageLoaded();
+                    }
                 }
             }
         };

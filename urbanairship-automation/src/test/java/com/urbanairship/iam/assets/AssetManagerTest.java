@@ -60,7 +60,7 @@ public class AssetManagerTest {
 
         assetManager.onSchedule("some-id", new Callable<InAppMessage>() {
             @Override
-            public InAppMessage call() throws Exception {
+            public InAppMessage call() {
                 return extendedMessage;
             }
         });
@@ -79,7 +79,7 @@ public class AssetManagerTest {
 
         assetManager.onSchedule("Some-id", new Callable<InAppMessage>() {
             @Override
-            public InAppMessage call() throws Exception {
+            public InAppMessage call() {
                 return MESSAGE;
             }
         });

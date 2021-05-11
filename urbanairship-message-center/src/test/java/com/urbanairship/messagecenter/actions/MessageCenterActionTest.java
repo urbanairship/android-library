@@ -36,7 +36,7 @@ public class MessageCenterActionTest {
         mockMessageCenter = mock(MessageCenter.class);
         action = new MessageCenterAction(new Callable<MessageCenter>() {
             @Override
-            public MessageCenter call() throws Exception {
+            public MessageCenter call() {
                 return mockMessageCenter;
             }
         });

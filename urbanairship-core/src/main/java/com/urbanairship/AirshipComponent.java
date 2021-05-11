@@ -58,8 +58,6 @@ public abstract class AirshipComponent {
             public void onPreferenceChange(@NonNull String key) {
                 if (key.equals(enableKey)) {
                     onComponentEnableChange(isComponentEnabled());
-                } else if (key.equals(UAirship.DATA_COLLECTION_ENABLED_KEY)) {
-                    onDataCollectionEnabledChanged(isDataCollectionEnabled());
                 }
             }
         });
@@ -133,9 +131,10 @@ public abstract class AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void setComponentEnabled(boolean enabled) {
-        dataStore.put(enableKey, enabled);
+        if (isComponentEnabled() != enabled) {
+            dataStore.put(enableKey, enabled);
+        }
     }
-
     /**
      * Checks if the component is enabled.
      *
@@ -179,7 +178,6 @@ public abstract class AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onNewConfig(@Nullable JsonMap value) {
-
     }
 
     /**
@@ -190,26 +188,6 @@ public abstract class AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onUrlConfigUpdated() {
     }
-
-    /**
-     * Check if data collection is enabled.
-     *
-     * @return {@code true} if enabled, otherwise {@code false}
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected boolean isDataCollectionEnabled() {
-        return dataStore.getBoolean(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
-    }
-
-    /**
-     * Called when the data collection enabled changes.
-     *
-     * @param isDataCollectionEnabled The enabled state.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {}
 
     /**
      * The component group.

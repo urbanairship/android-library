@@ -23,7 +23,7 @@ public class InAppMessageEventTest {
      * Test display event from a legacy in-app message.
      */
     @Test
-    public void testLegacyMessage() throws JsonException {
+    public void testLegacyMessage() {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -56,7 +56,7 @@ public class InAppMessageEventTest {
      * Test display event from an app-defined in-app message.
      */
     @Test
-    public void testAppDefinedMessage() throws JsonException {
+    public void testAppDefinedMessage() {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -91,7 +91,7 @@ public class InAppMessageEventTest {
      * Test display event from a remote-data in-app message.
      */
     @Test
-    public void testRemoteDataMessage() throws JsonException {
+    public void testRemoteDataMessage() {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
         UAirship.shared().getAnalytics().setConversionMetadata("metadata");
 
@@ -128,7 +128,7 @@ public class InAppMessageEventTest {
      * Test display event when the conversion send id is null.
      */
     @Test
-    public void testNoConversionSendId() throws JsonException {
+    public void testNoConversionSendId() {
         UAirship.shared().getAnalytics().setConversionSendId(null);
         UAirship.shared().getAnalytics().setConversionMetadata(null);
 

@@ -40,6 +40,66 @@ import androidx.core.app.NotificationCompat;
  */
 public class AirshipConfigOptions {
 
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_IN_APP_AUTOMATION = "in_app_automation";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_TAGS_AND_ATTRIBUTES} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_TAGS_AND_ATTRIBUTES = "tags_and_attributes";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_MESSAGE_CENTER} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_MESSAGE_CENTER = "message_center";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_ANALYTICS} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_ANALYTICS = "analytics";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_PUSH} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_PUSH = "push";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_CHAT} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_CHAT = "chat";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_CONTACTS} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_CONTACTS = "contacts";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_LOCATION} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_LOCATION = "location";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_NONE = "none";
+
+    /**
+     * Maps to the feature {@link PrivacyManager#FEATURE_ALL} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_ALL = "all";
+
     // EU cloud site
     private static final String EU_DEVICE_URL = "https://device-api.asnapieu.com/";
     private static final String EU_ANALYTICS_URL = "https://combine.asnapieu.com/";
@@ -150,6 +210,24 @@ public class AirshipConfigOptions {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public final String walletUrl;
+
+    /**
+     * The chat url.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String chatUrl;
+
+    /**
+     * The chat socket URL.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public final String chatSocketUrl;
 
     /**
      * Optional app store link when using the rate app action. If not set,
@@ -277,8 +355,30 @@ public class AirshipConfigOptions {
      * Flag indicating if the data collection opt-in is enabled.
      * <p>
      * The flag defaults to false
+     *
+     * @deprecated Use {@link #enabledFeatures} instead.
      */
+    @Deprecated
     public final boolean dataCollectionOptInEnabled;
+
+    /**
+     * Default enabled Airship features for the app. For more details, see {@link PrivacyManager}.
+     * Defaults to {@link PrivacyManager#FEATURE_ALL}.
+     *
+     * When specifying the features in either xml or a properties file, use one of the
+     * names for convenience:
+     * - {@link #FEATURE_ALL}
+     * - {@link #FEATURE_NONE}
+     * - {@link #FEATURE_MESSAGE_CENTER}
+     * - {@link #FEATURE_TAGS_AND_ATTRIBUTES}
+     * - {@link #FEATURE_IN_APP_AUTOMATION}
+     * - {@link #FEATURE_CONTACTS}
+     * - {@link #FEATURE_ANALYTICS}
+     * - {@link #FEATURE_CHAT}
+     * - {@link #FEATURE_PUSH}
+     */
+    @PrivacyManager.Feature
+    public final int enabledFeatures;
 
     /**
      * Flag indicating whether or not to perform extended broadcasts.
@@ -348,6 +448,8 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, EU_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
+                this.chatUrl = firstOrEmpty(builder.chatUrl);
+                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
 
             case SITE_US:
@@ -356,6 +458,8 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
+                this.chatUrl = firstOrEmpty(builder.chatUrl);
+                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
         }
 
@@ -376,6 +480,7 @@ public class AirshipConfigOptions {
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
+        this.enabledFeatures = builder.enabledFeatures;
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
     }
@@ -505,6 +610,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_ANALYTICS_URL = "analyticsUrl";
         private static final String FIELD_LEGACY_REMOTE_DATA_URL = "remoteDataURL";
         private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
+        private static final String FIELD_CHAT_URL = "chatUrl";
+        private static final String FIELD_CHAT_SOCKET_URL = "chatSocketUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
@@ -534,6 +641,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
         private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
+        private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
 
         private String appKey;
         private String appSecret;
@@ -544,6 +652,8 @@ public class AirshipConfigOptions {
         private String deviceUrl;
         private String analyticsUrl;
         private String remoteDataUrl;
+        private String chatSocketUrl;
+        private String chatUrl;
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
@@ -571,6 +681,9 @@ public class AirshipConfigOptions {
         private boolean extendedBroadcastsEnabled;
         private @Site
         String site = SITE_US;
+
+        @PrivacyManager.Feature
+        public int enabledFeatures = PrivacyManager.FEATURE_ALL;
 
         private boolean suppressAllowListError = false;
         private boolean requireInitialRemoteConfigEnabled = false;
@@ -741,6 +854,14 @@ public class AirshipConfigOptions {
                             this.setRemoteDataUrl(configParser.getString(name, remoteDataUrl));
                             break;
 
+                        case FIELD_CHAT_URL:
+                            this.setChatUrl(configParser.getString(name, chatUrl));
+                            break;
+
+                        case FIELD_CHAT_SOCKET_URL:
+                            this.setChatSocketUrl(configParser.getString(name, chatSocketUrl));
+                            break;
+
                         case FIELD_GCM_SENDER:
                             throw new IllegalArgumentException("gcmSender no longer supported. Please use " +
                                     "fcmSender or remove it to allow the Airship SDK to pull from the google-services.json.");
@@ -869,6 +990,29 @@ public class AirshipConfigOptions {
                         case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
                             this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
                             break;
+
+                        case FIELD_ENABLED_FEATURES:
+                            int value = -1;
+                            try {
+                                value = configParser.getInt(name, -1);
+                            } catch (Exception e) {
+                                // ignored
+                            }
+
+                            if (value != -1) {
+                                this.setEnabledFeatures(value);
+                            } else {
+                                String[] features = configParser.getStringArray(name);
+                                if (features == null) {
+                                    throw new IllegalArgumentException("Unable to parse enableFeatures: " + configParser.getString(name));
+                                }
+                                @PrivacyManager.Feature
+                                int converted = convertFeatureNames(features);
+                                this.setEnabledFeatures(converted);
+                            }
+
+                            break;
+
                     }
                 } catch (Exception e) {
                     Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
@@ -879,6 +1023,48 @@ public class AirshipConfigOptions {
             if (inProduction == null) {
                 detectProvisioningMode(context);
             }
+        }
+
+        @PrivacyManager.Feature
+        private int convertFeatureNames(@NonNull String[] features) {
+            int enabledFeatures = PrivacyManager.FEATURE_NONE;
+            for (String feature : features) {
+                if (feature == null || feature.isEmpty()) {
+                    continue;
+                }
+
+                switch (feature) {
+                    case FEATURE_IN_APP_AUTOMATION:
+                        enabledFeatures |= PrivacyManager.FEATURE_IN_APP_AUTOMATION;
+                        break;
+                    case FEATURE_ANALYTICS:
+                        enabledFeatures |= PrivacyManager.FEATURE_ANALYTICS;
+                        break;
+                    case FEATURE_CHAT:
+                        enabledFeatures |= PrivacyManager.FEATURE_CHAT;
+                        break;
+                    case FEATURE_CONTACTS:
+                        enabledFeatures |= PrivacyManager.FEATURE_CONTACTS;
+                        break;
+                    case FEATURE_MESSAGE_CENTER:
+                        enabledFeatures |= PrivacyManager.FEATURE_MESSAGE_CENTER;
+                        break;
+                    case FEATURE_PUSH:
+                        enabledFeatures |= PrivacyManager.FEATURE_PUSH;
+                        break;
+                    case FEATURE_TAGS_AND_ATTRIBUTES:
+                        enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
+                        break;
+                    case FEATURE_LOCATION:
+                        enabledFeatures |= PrivacyManager.FEATURE_LOCATION;
+                        break;
+                    case FEATURE_ALL:
+                        enabledFeatures |= PrivacyManager.FEATURE_ALL;
+                        break;
+                }
+            }
+
+            return enabledFeatures;
         }
 
         /**
@@ -1312,6 +1498,30 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Set the chat URL.
+         *
+         * @param chatUrl The chat URL.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setChatUrl(@NonNull String chatUrl) {
+            this.chatUrl = chatUrl;
+            return this;
+        }
+
+        /**
+         * Set the chat socket URL.
+         *
+         * @param chatSocketUrl The chat socket URL.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setChatSocketUrl(@NonNull String chatSocketUrl) {
+            this.chatSocketUrl = chatSocketUrl;
+            return this;
+        }
+
+        /**
          * Used to set a custom push provider for push registration.
          *
          * @param customPushProvider Push provider.
@@ -1361,8 +1571,10 @@ public class AirshipConfigOptions {
          *
          * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
          * @return The config options builder.
+         * @deprecated Use {@link #enabledFeatures} instead.
          */
         @NonNull
+        @Deprecated
         public Builder setDataCollectionOptInEnabled(boolean dataCollectionOptInEnabled) {
             this.dataCollectionOptInEnabled = dataCollectionOptInEnabled;
             return this;
@@ -1381,6 +1593,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setExtendedBroadcastsEnabled(boolean extendedBroadcastsEnabled) {
             this.extendedBroadcastsEnabled = extendedBroadcastsEnabled;
+            return this;
+        }
+
+        /**
+         * Sets the default enabled SDK features. See {@link PrivacyManager} for more info.
+         *
+         * @param enabledFeatures The enabled features.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setEnabledFeatures(@PrivacyManager.Feature int... enabledFeatures) {
+            this.enabledFeatures = PrivacyManager.combine(enabledFeatures);
             return this;
         }
 
@@ -1435,6 +1659,13 @@ public class AirshipConfigOptions {
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
                 Logger.warn("Production App Secret matches Development App Secret");
+            }
+
+            if (dataCollectionOptInEnabled) {
+                Logger.warn("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
+                if (enabledFeatures == PrivacyManager.FEATURE_ALL) {
+                    enabledFeatures = PrivacyManager.FEATURE_NONE;
+                }
             }
 
             return new AirshipConfigOptions(this);

@@ -582,7 +582,7 @@ public class PushMessageTest extends BaseTestCase {
     }
 
     @Test
-    public void testIsAccengagePush() {
+    public void testIsAccengageVisiblePush() {
         Bundle bundle = new Bundle();
         bundle.putString("cool", "story");
 
@@ -590,6 +590,19 @@ public class PushMessageTest extends BaseTestCase {
         assertFalse(message.containsAirshipKeys());
 
         bundle.putString("a4scontent", "value");
+        message = new PushMessage(bundle);
+        assertTrue(message.isAccengageVisiblePush());
+    }
+
+    @Test
+    public void testIsAccengagePush() {
+        Bundle bundle = new Bundle();
+        bundle.putString("cool", "story");
+
+        PushMessage message = new PushMessage(bundle);
+        assertFalse(message.containsAirshipKeys());
+
+        bundle.putString("a4sid", "value");
         message = new PushMessage(bundle);
         assertTrue(message.isAccengagePush());
     }

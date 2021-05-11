@@ -240,10 +240,22 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String PRIORITY_HIGH = "high";
 
     /**
-     * Accengage constant used to determine if the push is Accengage or not.
+     * The extra key to control the notification display in the foreground.
+     */
+    @NonNull
+    public static final String EXTRA_FOREGROUND_DISPLAY = "com.urbanairship.foreground_display";
+
+    /**
+     * Accengage constant used to determine if the push has Accengage content or not.
      */
     @NonNull
     private static final String ACCENGAGE_CONTENT_KEY = "a4scontent";
+
+    /**
+     * Accengage constant used to determine if the push is Accengage or not.
+     */
+    @NonNull
+    private static final String ACCENGAGE_ID_KEY = "a4sid";
 
     /**
      * The Push key indicating that a remote data update is required.
@@ -430,12 +442,21 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Checks if the push is from Accengage and has content or not.
+     *
+     * @return {@code true} if its from Accengage and has content, otherwise {@code false}.
+     */
+    public boolean isAccengageVisiblePush() {
+        return data.containsKey(ACCENGAGE_CONTENT_KEY);
+    }
+
+    /**
      * Checks if the push is from Accengage or not.
      *
      * @return {@code true} if its from Accengage, otherwise {@code false}.
      */
     public boolean isAccengagePush() {
-        return data.containsKey(ACCENGAGE_CONTENT_KEY);
+        return data.containsKey(ACCENGAGE_ID_KEY);
     }
 
     /**
@@ -690,6 +711,22 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public String getNotificationChannel() {
         return data.get(EXTRA_NOTIFICATION_CHANNEL);
     }
+
+    /**
+     * Returns if the notification should be displayed or suppressed in the foreground.
+     *
+     * @return {@code true} if the notification should display in the foreground, otherwise {@code false}.
+     */
+    @Nullable
+    public boolean isForegroundDisplayable() {
+        String value = data.get(EXTRA_FOREGROUND_DISPLAY);
+        if (value != null) {
+            return Boolean.parseBoolean(value);
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * Returns the notification channel that should be used when posting the notification or the

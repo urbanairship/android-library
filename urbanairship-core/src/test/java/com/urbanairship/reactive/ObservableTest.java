@@ -116,39 +116,39 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testJust() throws Exception {
+    public void testJust() {
         Observable<Integer> obs = Observable.just(3);
         validateObservable(obs, Arrays.asList(3), 1, 1, 0);
     }
 
     @Test
-    public void testEmpty() throws Exception {
+    public void testEmpty() {
         Observable<Integer> obs = Observable.empty();
         validateObservable(obs, new ArrayList<Integer>(), 0, 1, 0);
     }
 
     @Test
-    public void testNever() throws Exception {
+    public void testNever() {
         Observable<Integer> obs = Observable.never();
         validateObservable(obs, new ArrayList<Integer>(), 0, 0, 0);
     }
 
     @Test
-    public void testError() throws Exception {
+    public void testError() {
         final Exception exception = new Exception("Oh no");
         Observable<Integer> obs = Observable.error(exception);
         validateObservable(obs, exception, new ArrayList<Integer>(), 0, 0, 1);
     }
 
     @Test
-    public void testFromCollection() throws Exception {
+    public void testFromCollection() {
         List<Integer> ints = Arrays.asList(1, 2, 3, 4, 5);
         Observable<Integer> obs = Observable.from(ints);
         validateObservable(obs, ints, 5, 1, 0);
     }
 
     @Test
-    public void testMap() throws Exception {
+    public void testMap() {
         Observable<Integer> obs = Observable.from(Arrays.asList(1, 2, 3));
 
         Observable<String> mapped = obs.map(new Function<Integer, String>() {
@@ -163,7 +163,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testFilter() throws Exception {
+    public void testFilter() {
         List<Integer> ints = Arrays.asList(1, 2, 3, 4, 5, 6);
         Observable<Integer> three = Observable.from(ints);
 
@@ -180,7 +180,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testObserveOnMyLooper() throws Exception {
+    public void testObserveOnMyLooper() {
         Observable<Integer> three = Observable.just(3);
 
         Observable<Integer> myThree = three.observeOn(Schedulers.looper(Looper.myLooper()));
@@ -189,7 +189,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testObserveOnBackgroundLooper() throws Exception {
+    public void testObserveOnBackgroundLooper() {
         Observable<Integer> three = Observable.just(3);
         Observable<Integer> backgroundThree = three.observeOn(Schedulers.looper(backgroundThread.getLooper()));
 
@@ -197,7 +197,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testDefer() throws Exception {
+    public void testDefer() {
         final ArrayList<Integer> ints = new ArrayList<>(Arrays.asList(1, 2, 3));
 
         Observable<Integer> deferred = Observable.defer(new Supplier<Observable<Integer>>() {
@@ -214,7 +214,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testMerge() throws Exception {
+    public void testMerge() {
         Subject<Integer> first = Subject.create();
         Subject<Integer> second = Subject.create();
 
@@ -236,7 +236,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testConcat() throws Exception {
+    public void testConcat() {
         Subject<Integer> first = Subject.create();
         Subject<Integer> second = Subject.create();
 
@@ -263,7 +263,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testDefaultIfEmpty() throws Exception {
+    public void testDefaultIfEmpty() {
         Observable<Integer> one = Observable.just(1);
         Observable<Integer> empty = Observable.empty();
         Observable<Integer> defaultOne = one.defaultIfEmpty(2);
@@ -277,7 +277,7 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testZip() throws Exception {
+    public void testZip() {
         Subject<Integer> first = Subject.create();
         Subject<Integer> second = Subject.create();
 

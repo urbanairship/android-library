@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ua_chat_background">#FFFFFF</color>
+    <color name="ua_chat_surface">#FFFFFF</color>
+    <color name="ua_chat_accent">#004BFF</color>
+    <color name="ua_chat_status_bar">#BCBDC2</color>
+    <color name="ua_chat_ui_text_color">#000000</color>
+    <color name="ua_chat_divider_color">#FFDADCE0</color>
+
+    <color name="ua_chat_sent_text_color">#000000</color>
+    <color name="ua_chat_sent_bubble_color">#EAE9E9</color>
+
+    <color name="ua_chat_received_text_color">#FFFFFF</color>
+    <color name="ua_chat_received_bubble_color">#004BFF</color>
+</resources>

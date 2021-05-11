@@ -494,7 +494,7 @@ public class CustomEventTest extends BaseTestCase {
      * invalidates the event.
      */
     @Test
-    public void testTotalPropertiesExceedsMaxSize() throws JSONException {
+    public void testTotalPropertiesExceedsMaxSize() {
 
         // Add a property name resulting in acceptable total properties size
         CustomEvent.Builder eventBuilder = CustomEvent.newBuilder("event name")

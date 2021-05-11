@@ -5,6 +5,9 @@ package com.urbanairship.aaid;
 import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
+import com.urbanairship.analytics.Analytics;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 
@@ -19,8 +22,12 @@ public class AdIdModuleFactoryImpl implements AdIdModuleFactory {
 
     @NonNull
     @Override
-    public Module build(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
-        return Module.singleComponent(new AdvertisingIdTracker(context, dataStore), 0);
+    public Module build(@NonNull Context context,
+                        @NonNull PreferenceDataStore dataStore,
+                        @NonNull AirshipRuntimeConfig runtimeConfig,
+                        @NonNull PrivacyManager privacyManager,
+                        @NonNull Analytics analytics) {
+        return Module.singleComponent(new AdvertisingIdTracker(context, dataStore, runtimeConfig, privacyManager, analytics), 0);
     }
 
     @NonNull

@@ -38,6 +38,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4stitlehtml", "testTitle");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -51,6 +52,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4scontenthtml", "testContent");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -64,6 +66,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putInt("a4ssysid", 1002);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -77,6 +80,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putInt("a4spriority", 3);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -90,6 +94,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4scategory", NotificationCompat.CATEGORY_EVENT);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -103,6 +108,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4saccentcolor", "#FF0000");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -117,6 +123,7 @@ public class AccengageMessageTest {
         Context context = Mockito.spy(application);
         Bundle extras = new Bundle();
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -130,6 +137,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4snotifsound", "testCustomSound");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -143,6 +151,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sgroup", "testGroup");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -156,6 +165,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putBoolean("a4sgroupsummary", true);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -169,6 +179,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4scontentinfo", "testContentInfo");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -182,6 +193,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4ssubtext", "testSubText");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -195,6 +207,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4ssummarytext", "testSummaryText");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -208,6 +221,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putBoolean("a4smultiplelines", true);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -221,6 +235,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sbigtemplate", "testBigTemplate");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -234,6 +249,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4stemplate", "testTemplate");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -247,6 +263,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sbigcontenthtml", "testBigContent");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -260,6 +277,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sbigpicture", "testBigPictureUrl");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -273,6 +291,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("acc_channel", "testChannel");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -286,6 +305,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sicon", "testIcon");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -299,6 +319,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putBoolean("a4sforeground", true);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -312,6 +333,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("acc_action", "testAction");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -325,6 +347,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putBoolean("openWithSafari", true);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -338,6 +361,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putBoolean("a4sIsDecorated", true);
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -351,6 +375,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sappname", "testAppName");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -364,6 +389,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("a4sheadertext", "testHeaderText");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -377,6 +403,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("testCustomKey", "testCustomValue");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -390,6 +417,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("testCustomKey", "testCustomValue");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -403,6 +431,7 @@ public class AccengageMessageTest {
         Bundle extras = new Bundle();
         extras.putString("acc_url", "testAccUrl");
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);
@@ -439,6 +468,7 @@ public class AccengageMessageTest {
         }
 
         extras.putString("a4scontent", "accengage");
+        extras.putInt("a4sid", 77);
 
         PushMessage pushMessage = new PushMessage(extras);
         AccengageMessage accengageMessage = AccengageMessage.fromAirshipPushMessage(pushMessage);

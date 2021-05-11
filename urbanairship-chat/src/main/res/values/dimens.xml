@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ua_chat_item_decoration_bottom_padding">8dp</dimen>
+    <dimen name="ua_chat_item_decoration_header_height">56dp</dimen>
+    <dimen name="ua_chat_message_bubble_max_width">240dp</dimen>
+
+    <dimen name="ua_chat_input_min_height">64dp</dimen>
+    <dimen name="ua_chat_input_edit_text_min_height">40dp</dimen>
+
+    <dimen name="ua_chat_message_attachment_height">200dp</dimen>
+
+    <dimen name="ua_chat_bubble_corner_radius">8dp</dimen>
+</resources>

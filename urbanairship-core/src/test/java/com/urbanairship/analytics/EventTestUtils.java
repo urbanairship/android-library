@@ -17,9 +17,8 @@ public class EventTestUtils {
      * @param event The event to verify.
      * @param key The event's data field to check.
      * @param expectedValue The expected value.
-     * @throws org.json.JSONException
      */
-    public static void validateEventValue(Event event, String key, String expectedValue) throws JSONException {
+    public static void validateEventValue(Event event, String key, String expectedValue) {
         if (expectedValue == null) {
             assertNull("Event's value should not be set.", event.getEventData().get(key));
         } else {
@@ -33,9 +32,8 @@ public class EventTestUtils {
      * @param event The event to verify.
      * @param key The event's data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateEventValue(Event event, String key, long expectedValue) throws JSONException {
+    public static void validateEventValue(Event event, String key, long expectedValue) {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().get(key).getLong(expectedValue - 1));
     }
 
@@ -45,9 +43,8 @@ public class EventTestUtils {
      * @param event The event to verify.
      * @param key The event's data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateEventValue(Event event, String key, double expectedValue) throws JSONException {
+    public static void validateEventValue(Event event, String key, double expectedValue) {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().get(key).getDouble(expectedValue - 1));
     }
 
@@ -57,9 +54,8 @@ public class EventTestUtils {
      * @param event The event to verify.
      * @param key The event's data field to check.
      * @param expectedValue The expected value.
-     * @throws org.json.JSONException
      */
-    public static void validateEventValue(Event event, String key, boolean expectedValue) throws JSONException {
+    public static void validateEventValue(Event event, String key, boolean expectedValue) {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().get(key).getBoolean(!expectedValue));
     }
 
@@ -70,9 +66,8 @@ public class EventTestUtils {
      * @param key The event's data field to check.
      * @param nestedKey the nested data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateNestedEventValue(Event event, String key, String nestedKey, long expectedValue) throws JSONException {
+    public static void validateNestedEventValue(Event event, String key, String nestedKey, long expectedValue) {
         long value = event.getEventData().get(key).getMap().get(nestedKey).getLong(expectedValue - 1) == expectedValue ? event.getEventData().get(key).getMap().get(nestedKey).getLong(expectedValue - 1) : Long.valueOf(event.getEventData().get(key).getMap().get(nestedKey).getString().substring(0, event.getEventData().get(key).getMap().get(nestedKey).getString().lastIndexOf(".")));
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, value);
     }
@@ -84,9 +79,8 @@ public class EventTestUtils {
      * @param key The event's data field to check.
      * @param nestedKey the nested data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateNestedEventValue(Event event, String key, String nestedKey, String expectedValue) throws JSONException {
+    public static void validateNestedEventValue(Event event, String key, String nestedKey, String expectedValue) {
         String value = event.getEventData().get(key).getMap().get(nestedKey).getString() != null ? event.getEventData().get(key).getMap().get(nestedKey).getString() : event.getEventData().get(key).getMap().get(nestedKey).toString();
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, value);
     }
@@ -98,9 +92,8 @@ public class EventTestUtils {
      * @param key The event's data field to check.
      * @param nestedKey the nested data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateNestedEventValue(Event event, String key, String nestedKey, boolean expectedValue) throws JSONException {
+    public static void validateNestedEventValue(Event event, String key, String nestedKey, boolean expectedValue) {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().get(key).getMap().get(nestedKey).getBoolean(!expectedValue));
     }
 
@@ -111,9 +104,8 @@ public class EventTestUtils {
      * @param key The event's data field to check.
      * @param nestedKey the nested data field to check.
      * @param expectedValue The expected value.
-     * @throws JSONException
      */
-    public static void validateNestedEventValue(Event event, String key, String nestedKey, double expectedValue) throws JSONException {
+    public static void validateNestedEventValue(Event event, String key, String nestedKey, double expectedValue) {
         Double value = event.getEventData().get(key).getMap().get(nestedKey).getDouble(expectedValue - 1) == expectedValue ? event.getEventData().get(key).getMap().get(nestedKey).getDouble(expectedValue - 1) : Double.parseDouble(event.getEventData().get(key).getMap().get(nestedKey).getString());
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, value);
     }

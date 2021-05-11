@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 
@@ -23,6 +24,7 @@ public interface LocationModuleFactory extends AirshipVersionInfo {
     @NonNull
     LocationModule build(@NonNull Context context,
                          @NonNull PreferenceDataStore dataStore,
+                         @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel airshipChannel,
                          @NonNull Analytics analytics);
 

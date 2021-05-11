@@ -146,7 +146,7 @@ public class AdapterWrapperTest {
     public void testDisplayFinishedInAdapterOnDisplay() throws AdapterWrapper.DisplayException {
         doAnswer(new Answer() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 adapterWrapper.displayFinished();
                 return null;
             }

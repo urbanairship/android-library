@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation.tags;
 
+import android.net.Uri;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -75,7 +77,7 @@ class TagGroupLookupApiClient {
                                      Map<String, Set<String>> requestedTags,
                                      @Nullable TagGroupResponse cachedResponse) {
 
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(CHANNEL_TAG_LOOKUP_PATH)
                                .build();

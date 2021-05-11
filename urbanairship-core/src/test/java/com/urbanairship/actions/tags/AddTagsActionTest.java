@@ -72,7 +72,7 @@ public class AddTagsActionTest extends BaseTestCase {
     }
 
     @Test
-    public void testPerformTagGroups() throws Exception {
+    public void testPerformTagGroups() {
         final Map<String, Set<String>> added = new HashMap<>();
 
         NamedUser namedUser = mock(NamedUser.class);

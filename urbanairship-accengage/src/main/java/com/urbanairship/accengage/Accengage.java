@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -111,21 +112,23 @@ public class Accengage extends AirshipComponent {
      * Default constructor.
      *
      * @param context The context.
+     * @param configOptions The config options.
      * @param dataStore The datastore.
      * @param airshipChannel The airship channel.
      * @param pushManager The push manager.
      * @param analytics The analytics instance.
      */
-    Accengage(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-              @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
-              @NonNull Analytics analytics) {
-        this(context, dataStore, airshipChannel, pushManager, analytics, new AccengageSettingsLoader());
+    Accengage(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
+              @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel,
+              @NonNull PushManager pushManager, @NonNull Analytics analytics) {
+        this(context, configOptions, dataStore, airshipChannel, pushManager, analytics, new AccengageSettingsLoader());
     }
 
     /**
      * Default constructor.
      *
      * @param context The context.
+     * @param configOptions The config options.
      * @param dataStore The datastore.
      * @param airshipChannel The airship channel.
      * @param pushManager The push manager.
@@ -133,16 +136,18 @@ public class Accengage extends AirshipComponent {
      * @param settingsLoader The settings loader.
      */
     @VisibleForTesting
-    Accengage(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-              @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager,
-              @NonNull Analytics analytics, @NonNull AccengageSettingsLoader settingsLoader) {
+    Accengage(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
+              @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel,
+              @NonNull PushManager pushManager, @NonNull Analytics analytics,
+              @NonNull AccengageSettingsLoader settingsLoader) {
         super(context, dataStore);
+
 
         this.airshipChannel = airshipChannel;
         this.pushManager = pushManager;
         this.analytics = analytics;
         this.settingsLoader = settingsLoader;
-        this.notificationProvider = new AccengageNotificationProvider();
+        this.notificationProvider = new AccengageNotificationProvider(configOptions);
     }
 
     @Override
@@ -255,7 +260,7 @@ public class Accengage extends AirshipComponent {
     }
 
     private void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
-        if (!notificationInfo.getMessage().isAccengagePush()) {
+        if (!notificationInfo.getMessage().isAccengageVisiblePush()) {
             return;
         }
 

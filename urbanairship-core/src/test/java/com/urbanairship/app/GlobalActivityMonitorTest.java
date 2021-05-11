@@ -51,10 +51,9 @@ public class GlobalActivityMonitorTest extends BaseTestCase {
     /**
      * This test verifies adding an activity calls the onForeground delegate call
      *
-     * @throws Exception
      */
     @Test
-    public void testActivityStarted() throws Exception {
+    public void testActivityStarted() {
         Robolectric.buildActivity(Activity.class).create().start();
         Robolectric.flushForegroundThreadScheduler();
 
@@ -64,10 +63,9 @@ public class GlobalActivityMonitorTest extends BaseTestCase {
     /**
      * This test verifies removing an activity calls the onBackground delegate call
      *
-     * @throws Exception
      */
     @Test
-    public void testActivityStopped() throws Exception {
+    public void testActivityStopped() {
         Robolectric.buildActivity(Activity.class).create().start().stop();
         Robolectric.flushForegroundThreadScheduler();
         assertFalse(isForeground);

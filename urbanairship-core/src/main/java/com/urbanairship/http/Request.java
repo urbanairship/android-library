@@ -2,6 +2,7 @@
 
 package com.urbanairship.http;
 
+import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
@@ -19,6 +20,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +50,7 @@ public class Request {
     };
 
     @Nullable
-    protected URL url;
+    protected Uri uri;
 
     @Nullable
     protected String user;
@@ -80,12 +82,12 @@ public class Request {
      * Request constructor.
      *
      * @param requestMethod The string request method.
-     * @param url The request URL.
+     * @param uri The request URL.
      */
-    public Request(@Nullable String requestMethod, @Nullable URL url) {
+    public Request(@Nullable String requestMethod, @Nullable Uri uri) {
         this();
         this.requestMethod = requestMethod;
-        this.url = url;
+        this.uri = uri;
     }
 
     public Request() {
@@ -93,9 +95,9 @@ public class Request {
         responseProperties.put("User-Agent", getUrbanAirshipUserAgent());
     }
 
-    public Request setOperation(@Nullable String requestMethod, @Nullable URL url) {
+    public Request setOperation(@Nullable String requestMethod, @Nullable Uri uri) {
         this.requestMethod = requestMethod;
-        this.url = url;
+        this.uri = uri;
         return this;
     }
     /**
@@ -229,8 +231,15 @@ public class Request {
      */
     @NonNull
     public <T> Response<T> execute(@NonNull ResponseParser<T> parser) throws RequestException {
-        if (url == null) {
+        if (uri == null) {
             throw new RequestException("Unable to perform request: missing URL");
+        }
+
+        URL url;
+        try {
+            url = new URL(uri.toString());
+        } catch (MalformedURLException e) {
+            throw new RequestException("Failed to build URL", e);
         }
 
         if (requestMethod == null) {

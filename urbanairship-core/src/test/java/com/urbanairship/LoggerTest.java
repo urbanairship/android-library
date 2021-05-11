@@ -2,11 +2,8 @@ package com.urbanairship;
 
 import android.util.Log;
 
-import org.apache.tools.ant.types.LogLevel;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 

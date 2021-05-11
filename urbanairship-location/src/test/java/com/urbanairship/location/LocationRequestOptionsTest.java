@@ -97,7 +97,7 @@ public class LocationRequestOptionsTest {
      * Test saving and reading LocationRequestOptions from a parcel.
      */
     @Test
-    public void testParcelable() throws JsonException {
+    public void testParcelable() {
         LocationRequestOptions original = LocationRequestOptions.newBuilder()
                                                                 .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
                                                                 .setMinDistance(44.4f)

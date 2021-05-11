@@ -6,6 +6,7 @@ import android.content.Context;
 import android.location.Location;
 
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -40,6 +41,7 @@ public class AirshipLocationManagerTest {
     private Analytics mockAnalytics;
     private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setUp() {
@@ -47,10 +49,10 @@ public class AirshipLocationManagerTest {
         mockChannel = mock(AirshipChannel.class);
 
         dataStore = new PreferenceDataStore(ApplicationProvider.getApplicationContext());
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         Context context = ApplicationProvider.getApplicationContext();
-        locationManager = new AirshipLocationManager(context, dataStore,
+        locationManager = new AirshipLocationManager(context, dataStore, privacyManager,
                 mockChannel, mockAnalytics, GlobalActivityMonitor.shared(context));
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
     }
@@ -93,7 +95,7 @@ public class AirshipLocationManagerTest {
         locationManager.setLocationUpdatesEnabled(true);
         locationManager.setBackgroundLocationAllowed(true);
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
 
         Location location = new Location("provider");
         locationManager.onLocationUpdate(location);
@@ -128,7 +130,7 @@ public class AirshipLocationManagerTest {
      */
     @Test
     public void testChannelRegistrationPayloadExtenderDataCollectionDisabled() {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
 
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
         locationManager.init();

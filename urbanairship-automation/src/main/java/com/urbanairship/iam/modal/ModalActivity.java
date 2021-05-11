@@ -57,14 +57,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             setTheme(R.style.UrbanAirship_InAppModal_Activity_Fullscreen);
             setContentView(R.layout.ua_iam_modal_fullscreen);
         } else {
-            // Drop the border radius on pre-kitkat devices since in order to do clipping, we need to use
-            // software rendering, but media require hardware acceleration.
-            if (displayContent.getMedia() == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                borderRadius = displayContent.getBorderRadius();
-            } else {
-                borderRadius = 0;
-            }
-
+            borderRadius = displayContent.getBorderRadius();
             setContentView(R.layout.ua_iam_modal);
         }
 
@@ -142,7 +135,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
 
         ViewCompat.setBackground(modal, background);
 
-        if (borderRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (borderRadius > 0) {
             modal.setClipPathBorderRadius(borderRadius);
         }
 

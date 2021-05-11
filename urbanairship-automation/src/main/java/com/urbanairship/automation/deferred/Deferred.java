@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation.deferred;
 
+import android.net.Uri;
+
 import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -49,15 +51,15 @@ public class Deferred implements ScheduleData {
     private static final String RETRY_ON_TIMEOUT = "retry_on_timeout";
     private static final String TYPE = "type";
 
-    private final URL url;
+    private final Uri url;
     private final boolean retryOnTimeout;
     private final String type;
 
-    public Deferred(@NonNull URL url, boolean retryOnTimeout) {
+    public Deferred(@NonNull Uri url, boolean retryOnTimeout) {
         this(url, retryOnTimeout, null);
     }
 
-    public Deferred(@NonNull URL url, boolean retryOnTimeout, @Type @Nullable String type) {
+    public Deferred(@NonNull Uri url, boolean retryOnTimeout, @Type @Nullable String type) {
         this.url = url;
         this.retryOnTimeout = retryOnTimeout;
         this.type = type;
@@ -69,7 +71,7 @@ public class Deferred implements ScheduleData {
      * @return The URL.
      */
     @NonNull
-    public URL getUrl() {
+    public Uri getUrl() {
         return url;
     }
 
@@ -126,15 +128,9 @@ public class Deferred implements ScheduleData {
 
         String type = jsonValue.optMap().opt(TYPE).getString();
 
-        URL url;
-        try {
-            url = new URL(urlString);
-        } catch (MalformedURLException e) {
-            throw new JsonException("Invalid URL " + urlString, e);
-        }
-
+        Uri uri = Uri.parse(urlString);
         boolean retryOnTimeout = jsonValue.optMap().opt(RETRY_ON_TIMEOUT).getBoolean(true);
-        return new Deferred(url, retryOnTimeout, type);
+        return new Deferred(uri, retryOnTimeout, type);
     }
 
     @Override

@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.robolectric.Shadows.shadowOf;
 
 public class ApplicationMetricsTest extends BaseTestCase {
@@ -21,13 +22,15 @@ public class ApplicationMetricsTest extends BaseTestCase {
     private TestActivityMonitor activityMonitor;
     private PreferenceDataStore dataStore;
     private ShadowPackageManager packageManager;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setup() {
         dataStore = new PreferenceDataStore(ApplicationProvider.getApplicationContext());
         activityMonitor = new TestActivityMonitor();
         packageManager = shadowOf(TestApplication.getApplication().getPackageManager());
-        metrics = new ApplicationMetrics(TestApplication.getApplication(), dataStore, activityMonitor);
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
+        metrics = new ApplicationMetrics(TestApplication.getApplication(), dataStore, privacyManager, activityMonitor);
     }
 
     /**

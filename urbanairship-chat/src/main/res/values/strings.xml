@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ua_chat_title">Chat</string>
+    <string name="ua_chat_message_input_hint">Type a message</string>
+    <string name="ua_chat_message_send_button">Send</string>
+    <string name="ua_chat_message_sending">Sending</string>
+    <string name="ua_chat_message_list_empty">You have no messages</string>
+
+    <!-- Content Descriptions -->
+    <string name="ua_chat_box_expand_button_content_description">Show keyboard</string>
+    <string name="ua_chat_attachment_content_description">Attached image</string>
+    <string name="ua_chat_attachment_remove_content_description">Remove attached image</string>
+</resources>

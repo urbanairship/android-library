@@ -64,9 +64,9 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://test.wallet.url.com/", production.walletUrl);
         assertEquals("test_channel", production.notificationChannel);
         assertEquals("https://play.google.com/store/apps/topic?id=editors_choice", production.appStoreUri.toString());
-        assertTrue(production.dataCollectionOptInEnabled);
         assertTrue(production.extendedBroadcastsEnabled);
         assertTrue(production.requireInitialRemoteConfigEnabled);
+        assertEquals(PrivacyManager.FEATURE_NONE, production.enabledFeatures);
     }
 
     /**
@@ -176,8 +176,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertFalse(defaultConfig.dataCollectionOptInEnabled);
         assertFalse(defaultConfig.extendedBroadcastsEnabled);
         assertFalse(defaultConfig.requireInitialRemoteConfigEnabled);
-
-
+        assertEquals(PrivacyManager.FEATURE_ALL, defaultConfig.enabledFeatures);
     }
 
     @Test
@@ -232,7 +231,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(configOptions.walletUrl, "https://wallet-api.urbanairship.com");
     }
 
-
     @Test
     public void testUrlOverrides() {
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
@@ -247,6 +245,27 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(configOptions.deviceUrl, "some-device-url");
         assertEquals(configOptions.remoteDataUrl, "some-remote-data-url");
         assertEquals(configOptions.walletUrl, "some-wallet-url");
+    }
+
+    @Test
+    public void testEnabledFeaturesMigration() {
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
+                                                                 .setEnabledFeatures(PrivacyManager.FEATURE_CHAT)
+                                                                 .setDataCollectionOptInEnabled(true)
+                                                                 .build();
+
+        assertEquals(PrivacyManager.FEATURE_CHAT, configOptions.enabledFeatures);
+
+        configOptions = AirshipConfigOptions.newBuilder()
+                                            .setDataCollectionOptInEnabled(true)
+                                            .build();
+
+        assertEquals(PrivacyManager.FEATURE_NONE, configOptions.enabledFeatures);
+
+        configOptions = AirshipConfigOptions.newBuilder()
+                                            .build();
+
+        assertEquals(PrivacyManager.FEATURE_ALL, configOptions.enabledFeatures);
     }
 
     Properties getProperties(String file) throws IOException {

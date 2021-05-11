@@ -46,7 +46,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String TAGS_KEY = "tags";
     static final String IDENTITY_HINTS_KEY = "identity_hints";
     static final String USER_ID_KEY = "user_id";
-    static final String APID_KEY = "apid";
     static final String TIMEZONE_KEY = "timezone";
     static final String LANGUAGE_KEY = "locale_language";
     static final String COUNTRY_KEY = "locale_country";
@@ -69,7 +68,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final boolean setTags;
     public final Set<String> tags;
     public final String userId;
-    public final String apid;
     public final String timezone;
     public final String language;
     public final String country;
@@ -95,7 +93,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private boolean setTags;
         private Set<String> tags;
         private String userId;
-        private String apid;
         private String timezone;
         private String language;
         private String country;
@@ -127,7 +124,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.setTags = payload.setTags;
             this.tags = payload.tags;
             this.userId = payload.userId;
-            this.apid = payload.apid;
             this.timezone = payload.timezone;
             this.language = payload.language;
             this.country = payload.country;
@@ -265,18 +261,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         /**
-         * Set the apid
-         *
-         * @param apid A string value
-         * @return The builder with apid value set
-         */
-        @NonNull
-        public Builder setApid(@Nullable String apid) {
-            this.apid = apid;
-            return this;
-        }
-
-        /**
          * Set the location settings
          *
          * @param locationSettings The location settings
@@ -387,7 +371,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.setTags = builder.setTags;
         this.tags = builder.setTags ? builder.tags : null;
         this.userId = builder.userId;
-        this.apid = builder.apid;
         this.timezone = builder.timezone;
         this.language = builder.language;
         this.country = builder.country;
@@ -409,7 +392,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         Builder builder = new Builder(this);
-        builder.setApid(null);
         builder.setUserId(null);
         builder.setAccengageDeviceId(null);
 
@@ -502,7 +484,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         // Identity hints
         JsonMap.Builder identityHints = JsonMap.newBuilder()
                                                .put(USER_ID_KEY, userId)
-                                               .put(APID_KEY, apid)
                                                .put(ACCENGAGE_DEVICE_ID, accengageDeviceId);
 
         // Full payload
@@ -544,7 +525,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             return false;
         if (tags != null ? !tags.equals(that.tags) : that.tags != null) return false;
         if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
-        if (apid != null ? !apid.equals(that.apid) : that.apid != null) return false;
         if (timezone != null ? !timezone.equals(that.timezone) : that.timezone != null)
             return false;
         if (language != null ? !language.equals(that.language) : that.language != null)
@@ -577,7 +557,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (setTags ? 1 : 0);
         result = 31 * result + (tags != null ? tags.hashCode() : 0);
         result = 31 * result + (userId != null ? userId.hashCode() : 0);
-        result = 31 * result + (apid != null ? apid.hashCode() : 0);
         result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (country != null ? country.hashCode() : 0);
@@ -639,7 +618,6 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())
                             .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
                             .setUserId(identityHints.opt(USER_ID_KEY).getString())
-                            .setApid(identityHints.opt(APID_KEY).getString())
                             .setAccengageDeviceId(identityHints.opt(ACCENGAGE_DEVICE_ID).getString())
                             .setLocationSettings(locationSettings)
                             .setAppVersion(channelJson.opt(APP_VERSION_KEY).getString())

@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 public class PassRequestTest extends BaseTestCase {
 
     @Test
-    public void testDefaultUrl() throws MalformedURLException {
+    public void testDefaultUrl() {
         PassRequest request = PassRequest.newBuilder()
                                          .setAuth("test_user_name", "test_api_key")
                                          .setTemplateId("test_template_id")
@@ -167,7 +167,7 @@ public class PassRequestTest extends BaseTestCase {
     }
 
     @Test
-    public void testCallbackCancel() throws Exception {
+    public void testCallbackCancel() {
         String responseJson = "{\n" +
                 "   \"createdAt\":\"2016-06-09T18:07:42Z\",\n" +
                 "   \"publicUrl\":{\n" +
@@ -212,7 +212,7 @@ public class PassRequestTest extends BaseTestCase {
 
         Answer answer = new Answer() {
             @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
+            public Object answer(InvocationOnMock invocation) {
                 passRequest.cancel();
                 return testRequest;
             }

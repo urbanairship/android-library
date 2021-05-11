@@ -22,7 +22,7 @@ public class ActionTest extends BaseTestCase {
      * with the expected inputs.
      */
     @Test
-    public void testRun() throws ActionValueException {
+    public void testRun() {
         Bundle metadata = new Bundle();
         metadata.putString("metadata_key", "metadata_value");
 
@@ -88,7 +88,7 @@ public class ActionTest extends BaseTestCase {
      * accept the arguments.
      */
     @Test
-    public void testRunBadArgs() throws ActionValueException {
+    public void testRunBadArgs() {
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(false, performResult);
 
@@ -112,7 +112,7 @@ public class ActionTest extends BaseTestCase {
      * returns a result with the exception as the value.
      */
     @Test
-    public void testRunPerformException() throws ActionValueException {
+    public void testRunPerformException() {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value");
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
 

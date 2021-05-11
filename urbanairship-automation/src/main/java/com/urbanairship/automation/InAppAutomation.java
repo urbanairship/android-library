@@ -749,6 +749,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
     }
 
+    protected void checkPendingSchedules() {
+        automationEngine.checkPendingSchedules();
+    }
+
     /**
      * Checks to see if a schedule from remote-data is still valid by checking
      * the schedule metadata.

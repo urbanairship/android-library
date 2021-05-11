@@ -11,6 +11,7 @@ import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.location.RegionEvent;
@@ -57,9 +58,7 @@ public class Analytics extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface EventListener {
-
         void onEventAdded(@NonNull Event event, @NonNull String sessionId);
-
     }
 
     /**
@@ -132,15 +131,12 @@ public class Analytics extends AirshipComponent {
     @NonNull
     public static final String EXTENSION_TITANIUM = "titanum";
 
-
     /**
      * Minimum amount of delay when {@link #uploadEvents()} is called.
      */
     private static final long SCHEDULE_SEND_DELAY_SECONDS = 10;
 
-    private static final String KEY_PREFIX = "com.urbanairship.analytics";
-    private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
-    private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
+    private static final String ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS";
 
     private final ActivityMonitor activityMonitor;
     private final EventManager eventManager;
@@ -149,6 +145,7 @@ public class Analytics extends AirshipComponent {
     private final AirshipChannel airshipChannel;
     private final Executor executor;
     private final LocaleManager localeManager;
+    private final PrivacyManager privacyManager;
     private final List<AnalyticsListener> analyticsListeners = new CopyOnWriteArrayList<>();
     private final List<EventListener> eventListeners = new CopyOnWriteArrayList<>();
     private final List<AnalyticsHeaderDelegate> headerDelegates = new CopyOnWriteArrayList<>();
@@ -171,9 +168,10 @@ public class Analytics extends AirshipComponent {
     public Analytics(@NonNull Context context,
                      @NonNull PreferenceDataStore dataStore,
                      @NonNull AirshipRuntimeConfig runtimeConfig,
+                     @NonNull PrivacyManager privacyManager,
                      @NonNull AirshipChannel channel,
                      @NonNull LocaleManager localeManager) {
-        this(context, dataStore, runtimeConfig, channel, GlobalActivityMonitor.shared(context),
+        this(context, dataStore, runtimeConfig, privacyManager, channel, GlobalActivityMonitor.shared(context),
                 localeManager, AirshipExecutors.newSerialExecutor(),
                 new EventManager(context, dataStore, runtimeConfig));
     }
@@ -182,6 +180,7 @@ public class Analytics extends AirshipComponent {
     Analytics(@NonNull Context context,
               @NonNull PreferenceDataStore dataStore,
               @NonNull AirshipRuntimeConfig runtimeConfig,
+              @NonNull PrivacyManager privacyManager,
               @NonNull AirshipChannel airshipChannel,
               @NonNull ActivityMonitor activityMonitor,
               @NonNull LocaleManager localeManager,
@@ -189,6 +188,7 @@ public class Analytics extends AirshipComponent {
               @NonNull EventManager eventManager) {
         super(context, dataStore);
         this.runtimeConfig = runtimeConfig;
+        this.privacyManager = privacyManager;
         this.airshipChannel = airshipChannel;
         this.activityMonitor = activityMonitor;
         this.localeManager = localeManager;
@@ -246,8 +246,18 @@ public class Analytics extends AirshipComponent {
             }
 
             @Override
-            public void onChannelUpdated(@NonNull String channelId) {
+            public void onChannelUpdated(@NonNull String channelId) {}
+        });
 
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+                    clearPendingEvents();
+                    synchronized (associatedIdentifiersLock) {
+                        getDataStore().remove(ASSOCIATED_IDENTIFIERS_KEY);
+                    }
+                }
             }
         });
     }
@@ -316,7 +326,7 @@ public class Analytics extends AirshipComponent {
             return;
         }
 
-        if (!isEnabled() || !isDataCollectionEnabled()) {
+        if (!isEnabled()) {
             Logger.debug("Disabled ignoring event: %s", event.getType());
             return;
         }
@@ -421,7 +431,9 @@ public class Analytics extends AirshipComponent {
         setConversionSendId(null);
         setConversionMetadata(null);
 
-        eventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS);
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+            eventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -431,20 +443,16 @@ public class Analytics extends AirshipComponent {
      * region triggers, location segmentation, push to local time).
      *
      * @param enabled {@code true} to enable analytics, {@code false} to disable.
+     * @deprecated Enable/disable by enabling {@link PrivacyManager#FEATURE_ANALYTICS} in {@link PrivacyManager}.
+     * This will call through to the privacy manager.
      */
+    @Deprecated
     public void setEnabled(boolean enabled) {
-        boolean previousValue = getDataStore().getBoolean(ANALYTICS_ENABLED_KEY, true);
-
-        // When we disable analytics delete all the events
-        if (previousValue && !enabled) {
-            clearPendingEvents();
+        if (enabled) {
+            this.privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
+        } else {
+            this.privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
         }
-
-        if (enabled && !isDataCollectionEnabled()) {
-            Logger.warn("Analytics - Analytics is disabled until data collection is opted in.");
-        }
-
-        getDataStore().put(ANALYTICS_ENABLED_KEY, enabled);
     }
 
     private void clearPendingEvents() {
@@ -457,19 +465,9 @@ public class Analytics extends AirshipComponent {
         });
     }
 
-    @Override
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
-        if (!isDataCollectionEnabled) {
-            clearPendingEvents();
-            synchronized (associatedIdentifiersLock) {
-                getDataStore().remove(ASSOCIATED_IDENTIFIERS_KEY);
-            }
-        }
-    }
-
     /**
-     * Returns {@code true} if analytics is enabled, {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
-     * is set to {@code true}, and data collection is opted in, otherwise {@code false}.
+     * Returns {@code true} if {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
+     * is set to {@code true}, and {@link PrivacyManager#FEATURE_ANALYTICS} is enabled, otherwise {@code false}.
      * <p>
      * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
@@ -477,7 +475,9 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
     public boolean isEnabled() {
-        return runtimeConfig.getConfigOptions().analyticsEnabled && getDataStore().getBoolean(ANALYTICS_ENABLED_KEY, true) && isDataCollectionEnabled();
+        return isComponentEnabled() &&
+                runtimeConfig.getConfigOptions().analyticsEnabled &&
+                privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS);
     }
 
     /**
@@ -494,8 +494,8 @@ public class Analytics extends AirshipComponent {
             @Override
             void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
-                    if (!isDataCollectionEnabled()) {
-                        Logger.warn("Analytics - Unable to track associated identifiers when data collection is disabled.");
+                    if (!isEnabled()) {
+                        Logger.warn("Analytics - Unable to track associated identifiers when analytics is disabled.");
                         return;
                     }
 
@@ -587,7 +587,9 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+            eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
+        }
     }
 
     /**

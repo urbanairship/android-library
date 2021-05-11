@@ -142,23 +142,10 @@ public class BackgroundDrawableBuilder {
             return background;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ColorStateList list = ColorStateList.valueOf(pressedColor);
-            RoundRectShape rectShape = new RoundRectShape(borderRadii, null, null);
-            ShapeDrawable mask = new ShapeDrawable(rectShape);
-            return new RippleDrawable(list, background, mask);
-        } else {
-            GradientDrawable foreground = new GradientDrawable();
-            foreground.setShape(GradientDrawable.RECTANGLE);
-            foreground.setCornerRadii(borderRadii);
-            foreground.setColor(ColorUtils.compositeColors(pressedColor, backgroundColor));
-            foreground.setStroke(strokeWidthPixels, ColorUtils.compositeColors(pressedColor, strokeColor));
-
-            StateListDrawable stateListDrawable = new StateListDrawable();
-            stateListDrawable.addState(new int[] { android.R.attr.state_pressed }, foreground);
-            stateListDrawable.addState(StateSet.WILD_CARD, background);
-            return stateListDrawable;
-        }
+        ColorStateList list = ColorStateList.valueOf(pressedColor);
+        RoundRectShape rectShape = new RoundRectShape(borderRadii, null, null);
+        ShapeDrawable mask = new ShapeDrawable(rectShape);
+        return new RippleDrawable(list, background, mask);
     }
 
 }

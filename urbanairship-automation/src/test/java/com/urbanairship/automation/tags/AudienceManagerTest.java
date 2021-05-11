@@ -96,7 +96,7 @@ public class AudienceManagerTest {
         channelId = "some-channel-id";
         when(mockChannel.getId()).thenAnswer(new Answer<String>() {
             @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
+            public String answer(InvocationOnMock invocation) {
                 return channelId;
             }
         });
@@ -435,7 +435,7 @@ public class AudienceManagerTest {
 
         @NonNull
         @Override
-        public Map<String, Set<String>> getTags() throws Exception {
+        public Map<String, Set<String>> getTags() {
             return tags;
         }
 

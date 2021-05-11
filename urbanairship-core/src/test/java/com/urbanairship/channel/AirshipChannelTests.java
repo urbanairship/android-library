@@ -10,6 +10,7 @@ import android.telephony.TelephonyManager;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
@@ -71,6 +72,7 @@ public class AirshipChannelTests extends BaseTestCase {
 
     private TestAirshipRuntimeConfig runtimeConfig;
     private TestClock clock;
+    private PrivacyManager privacyManager;
 
     private static final JobInfo UPDATE_CHANNEL_JOB = JobInfo.newBuilder()
                                                                   .setAction("ACTION_UPDATE_CHANNEL")
@@ -86,14 +88,13 @@ public class AirshipChannelTests extends BaseTestCase {
         clock = new TestClock();
 
         dataStore = getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
-
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         localeManager = new LocaleManager(getApplication(), dataStore);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, localeManager, mockDispatcher, clock,
+                runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
@@ -533,11 +534,12 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     /**
-     * Test channel registration payload when isDataCollectionEnabled is disabled
+     * Test channel registration payload when attributes and tags are disabled.
      */
     @Test
     public void testChannelRegistrationPayloadDataCollectionDisabled() throws RequestException {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
 
         when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
                 .thenReturn(createResponse("channel", 200));
@@ -556,18 +558,15 @@ public class AirshipChannelTests extends BaseTestCase {
 
         airshipChannel.editTags().addTag("cool_tag").apply();
 
-        TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-
         ChannelRegistrationPayload expectedPayload = new ChannelRegistrationPayload.Builder()
                 .setLanguage("wookiee")
                 .setCountry("KASHYYYK")
                 .setDeviceType("android")
                 .setTags(true, Collections.<String>emptySet())
                 .setTimezone(TimeZone.getDefault().getID())
+                .setSdkVersion(UAirship.getVersion())
                 .setUserId("cool")
                 .setPushAddress("story")
-                .setAppVersion(UAirship.getPackageInfo().versionName)
-                .setSdkVersion(UAirship.getVersion())
                 .build();
 
         // Update registration
@@ -610,7 +609,7 @@ public class AirshipChannelTests extends BaseTestCase {
      */
     @Test
     public void testTagGroupUpdatesDataCollectionDisabled() {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
 
         airshipChannel.editTagGroups()
                       .addTag("tagGroup", "add")
@@ -630,7 +629,7 @@ public class AirshipChannelTests extends BaseTestCase {
      */
     @Test
     public void testAttributesUpdatesDataCollectionDisabled() {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
 
         airshipChannel.editAttributes()
                 .setAttribute("expected_key", "expected_value")
@@ -908,7 +907,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, localeManager, mockDispatcher, clock,
+                runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
@@ -923,7 +922,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, localeManager, mockDispatcher, clock,
+                runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
@@ -945,7 +944,7 @@ public class AirshipChannelTests extends BaseTestCase {
         runtimeConfig.setConfigOptions(configOptions);
 
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
-                runtimeConfig, localeManager, mockDispatcher, clock,
+                runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar);
 
         airshipChannel.init();
@@ -969,16 +968,10 @@ public class AirshipChannelTests extends BaseTestCase {
 
     @Test
     public void testDataCollectionUpdatesRegistration() {
-        airshipChannel.onDataCollectionEnabledChanged(true);
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
-            }
-        }));
-
-        airshipChannel.onDataCollectionEnabledChanged(false);
-        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        airshipChannel.init();
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");

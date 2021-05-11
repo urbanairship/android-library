@@ -158,7 +158,7 @@ public class InboxApiClientTest {
     }
 
     @Test
-    public void testCreateUserAndroidChannelsSucceeds() throws RequestException, JsonException {
+    public void testCreateUserAndroidChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
         runtimeConfig.setPlatform(0);
@@ -177,7 +177,7 @@ public class InboxApiClientTest {
     }
 
     @Test
-    public void testCreateUserAmazonChannelsSucceeds() throws RequestException, JsonException {
+    public void testCreateUserAmazonChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
         runtimeConfig.setPlatform(1);

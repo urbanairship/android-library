@@ -8,6 +8,7 @@ import android.os.Bundle;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.R;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -51,6 +52,7 @@ public class PushManagerTest extends BaseTestCase {
     private PushManager pushManager;
     private PreferenceDataStore preferenceDataStore;
     private AirshipConfigOptions options;
+    private PrivacyManager privacyManager;
 
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockAirshipChannel;
@@ -67,6 +69,7 @@ public class PushManagerTest extends BaseTestCase {
         mockAnalytics = mock(Analytics.class);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
+        privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -74,7 +77,7 @@ public class PushManagerTest extends BaseTestCase {
                 .build();
 
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options,
-                mockPushProvider, mockAirshipChannel, mockAnalytics, mockDispatcher);
+                privacyManager, mockPushProvider, mockAirshipChannel, mockAnalytics, mockDispatcher);
     }
 
     /**
@@ -122,9 +125,9 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testPushEnabled() {
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
         pushManager.setPushEnabled(true);
-        assertTrue(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, false));
-        verify(mockAirshipChannel).updateRegistration();
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
     }
 
     /**
@@ -132,9 +135,9 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testPushDisabled() {
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
         pushManager.setPushEnabled(false);
-        assertFalse(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, true));
-        verify(mockAirshipChannel).updateRegistration();
+        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
     }
 
     /**
@@ -300,15 +303,6 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test enabling token registration updates channel registration.
-     */
-    @Test
-    public void testEnablingTokenRegistrationUpdatesChannel() {
-        pushManager.setPushTokenRegistrationEnabled(true);
-        verify(mockAirshipChannel).updateRegistration();
-    }
-
-    /**
      * Test enabling the component updates token registration.
      */
     @Test
@@ -321,22 +315,6 @@ public class PushManagerTest extends BaseTestCase {
                 return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
             }
         }));
-    }
-
-    /**
-     * Test push token registration defaults to data collection enabled value.
-     */
-    @Test
-    public void testPushTokenRegistrationDefaultsToDataCollection() {
-        assertTrue(pushManager.isPushTokenRegistrationEnabled());
-        preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        assertFalse(pushManager.isPushTokenRegistrationEnabled());
-
-        pushManager.setPushTokenRegistrationEnabled(true);
-        assertTrue(pushManager.isPushTokenRegistrationEnabled());
-
-        preferenceDataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        assertTrue(pushManager.isPushTokenRegistrationEnabled());
     }
 
     @Test

@@ -30,6 +30,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     private ActivityListener listener;
     private Runnable applyAirshipPreferenceRunnable;
     private Handler handler;
+    private boolean isInitialValueSet = false;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public UACheckBoxPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -82,6 +83,10 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     public void setChecked(boolean value) {
         super.setChecked(value);
         isChecked = value;
+        if (!isInitialValueSet) {
+            isInitialValueSet = true;
+            return;
+        }
 
         if (listener != null) {
             GlobalActivityMonitor.shared(getContext()).addActivityListener(listener);

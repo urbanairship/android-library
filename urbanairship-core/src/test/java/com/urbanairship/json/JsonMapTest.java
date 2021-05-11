@@ -37,7 +37,7 @@ public class JsonMapTest extends BaseTestCase {
      * Test creating a new JsonMap with a null map.
      */
     @Test
-    public void testCreateNull() throws JsonException, JSONException {
+    public void testCreateNull() {
         JsonMap emptyMap = new JsonMap(null);
         assertEquals(0, emptyMap.size());
         assertTrue(emptyMap.isEmpty());
@@ -48,7 +48,7 @@ public class JsonMapTest extends BaseTestCase {
      * Test getting an optional value returns a null JsonValue instead of null.
      */
     @Test
-    public void testOpt() throws JSONException, JsonException {
+    public void testOpt() {
         // Verify it gets values that are available
         assertEquals("some-value", jsonMap.opt("some-key").getString());
 

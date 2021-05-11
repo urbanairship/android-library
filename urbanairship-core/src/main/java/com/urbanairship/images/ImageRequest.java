@@ -89,7 +89,7 @@ abstract class ImageRequest {
             return;
         }
 
-        ImageView imageView = imageViewReference.get();
+        final ImageView imageView = imageViewReference.get();
         if (imageView == null) {
             onFinish(null);
             return;
@@ -157,6 +157,7 @@ abstract class ImageRequest {
                                     }
 
                                     applyDrawable(drawable);
+                                    onFinish(imageView);
                                 }
                             });
 

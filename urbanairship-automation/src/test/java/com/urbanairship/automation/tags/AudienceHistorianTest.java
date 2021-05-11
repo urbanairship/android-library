@@ -52,7 +52,7 @@ public class AudienceHistorianTest {
         // Capture the listeners son init
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 channelTagListener = invocation.getArgument(0);
                 return null;
             }
@@ -60,7 +60,7 @@ public class AudienceHistorianTest {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 channelAttributeListener = invocation.getArgument(0);
                 return null;
             }
@@ -68,7 +68,7 @@ public class AudienceHistorianTest {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 namedUserTagListener = invocation.getArgument(0);
                 return null;
             }
@@ -76,7 +76,7 @@ public class AudienceHistorianTest {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 namedUserAttributeListener = invocation.getArgument(0);
                 return null;
             }

@@ -4,9 +4,11 @@ package com.urbanairship.modules;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -16,6 +18,7 @@ import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
+import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
@@ -41,9 +44,11 @@ public class Modules {
     private static final String AUTOMATION_MODULE_FACTORY = "com.urbanairship.automation.AutomationModuleFactoryImpl";
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
+    private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
+                                            @NonNull AirshipConfigOptions configOptions,
                                             @NonNull PreferenceDataStore preferenceDataStore,
                                             @NonNull AirshipChannel channel,
                                             @NonNull PushManager pushManager,
@@ -51,7 +56,7 @@ public class Modules {
         try {
             AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, channel, pushManager, analytics);
+                return moduleFactory.build(context, configOptions, preferenceDataStore, channel, pushManager, analytics);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Accengage module");
@@ -79,12 +84,13 @@ public class Modules {
     @Nullable
     public static LocationModule location(@NonNull Context context,
                                           @NonNull PreferenceDataStore preferenceDataStore,
+                                          @NonNull PrivacyManager privacyManager,
                                           @NonNull AirshipChannel channel,
                                           @NonNull Analytics analytics) {
         try {
             LocationModuleFactory moduleFactory = createFactory(LOCATION_MODULE_FACTORY, LocationModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, channel, analytics);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, analytics);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Location module");
@@ -129,14 +135,35 @@ public class Modules {
 
     @Nullable
     public static Module adId(@NonNull Context context,
-                              @NonNull PreferenceDataStore dataStore) {
+                              @NonNull PreferenceDataStore dataStore,
+                              @NonNull AirshipRuntimeConfig runtimeConfig,
+                              @NonNull PrivacyManager privacyManager,
+                              @NonNull Analytics analytics) {
         try {
             AdIdModuleFactory moduleFactory = createFactory(AD_ID_FACTORY, AdIdModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore);
+                return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, analytics);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Ad Id module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module chat(@NonNull Context context,
+                              @NonNull PreferenceDataStore dataStore,
+                              @NonNull AirshipRuntimeConfig config,
+                              @NonNull PrivacyManager privacyManager,
+                              @NonNull AirshipChannel airshipChannel,
+                              @NonNull PushManager pushManager) {
+        try {
+            ChatModuleFactory moduleFactory = createFactory(CHAT_FACTORY, ChatModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, config, privacyManager, airshipChannel, pushManager);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Chat module");
         }
         return null;
     }

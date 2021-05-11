@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation.deferred;
 
+import android.net.Uri;
+
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -80,17 +82,17 @@ public class DeferredScheduleClientTest {
     }
 
     @Test(expected = AuthException.class)
-    public void testAuthManagerExceptions() throws AuthException, MalformedURLException, RequestException {
+    public void testAuthManagerExceptions() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenThrow(new AuthException("neat"));
-        client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
     }
 
     @Test
-    public void testAndroidRequest() throws AuthException, MalformedURLException, RequestException {
+    public void testAndroidRequest() throws AuthException, RequestException {
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
-        URL url = new URL("https://airship.com");
+        Uri url = Uri.parse("https://airship.com");
         client.performRequest(url, "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
         assertEquals(url, testRequest.getUrl());
         assertEquals("POST", testRequest.getRequestMethod());
@@ -105,11 +107,11 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testAmazonRequest() throws AuthException, MalformedURLException, RequestException {
+    public void testAmazonRequest() throws AuthException, RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
-        URL url = new URL("https://airship.com");
+        Uri url = Uri.parse("https://airship.com");
         client.performRequest(url, "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
         assertEquals(url, testRequest.getUrl());
         assertEquals("POST", testRequest.getRequestMethod());
@@ -124,12 +126,12 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testTriggeringContext() throws AuthException, MalformedURLException, RequestException {
+    public void testTriggeringContext() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some token");
 
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
-        client.performRequest(new URL("https://airship.com"), "channel", triggerContext, EMPTY_TAGS, EMPTY_ATTRIBUTES);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", triggerContext, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         JsonMap expected = JsonMap.newBuilder()
                                   .put("platform", "android")
@@ -145,14 +147,14 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testTagOverrides() throws AuthException, MalformedURLException, RequestException {
+    public void testTagOverrides() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some token");
 
         List<TagGroupsMutation> tagOverrides = new ArrayList<>();
         tagOverrides.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
         tagOverrides.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
 
-        client.performRequest(new URL("https://airship.com"), "channel", null, tagOverrides, EMPTY_ATTRIBUTES);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", null, tagOverrides, EMPTY_ATTRIBUTES);
 
         JsonMap expected = JsonMap.newBuilder()
                                   .put("platform", "android")
@@ -164,14 +166,14 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testAttributeOverrides() throws AuthException, MalformedURLException, RequestException {
+    public void testAttributeOverrides() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some token");
 
         List<AttributeMutation> attributeOverrides = new ArrayList<>();
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("bar", 100));
 
-        client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, attributeOverrides);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, attributeOverrides);
 
         JsonMap expected = JsonMap.newBuilder()
                                   .put("platform", "android")
@@ -183,12 +185,12 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testStateOverrides() throws AuthException, MalformedURLException, RequestException {
+    public void testStateOverrides() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some token");
 
         when(mockSupplier.get()).thenReturn(new StateOverrides("1","1.0.0", true, new Locale("en", "US")));
 
-        client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         JsonValue jsonStateOverrides = JsonMap.newBuilder()
                 .put("app_version", "1")
@@ -209,7 +211,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testMissedResponse() throws AuthException, MalformedURLException, RequestException {
+    public void testMissedResponse() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
         testRequest.responseStatus = 200;
@@ -219,7 +221,7 @@ public class DeferredScheduleClientTest {
                                           .build()
                                           .toString();
 
-        Response<DeferredScheduleClient.Result> response = client.performRequest(new URL("https://airship.com"),
+        Response<DeferredScheduleClient.Result> response = client.performRequest(Uri.parse("https://airship.com"),
                 "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         assertFalse(response.getResult().isAudienceMatch());
@@ -227,7 +229,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testNoMessage() throws AuthException, MalformedURLException, RequestException {
+    public void testNoMessage() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
         testRequest.responseStatus = 200;
@@ -236,7 +238,7 @@ public class DeferredScheduleClientTest {
                                           .build()
                                           .toString();
 
-        Response<DeferredScheduleClient.Result> response = client.performRequest(new URL("https://airship.com"),
+        Response<DeferredScheduleClient.Result> response = client.performRequest(Uri.parse("https://airship.com"),
                 "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         assertTrue(response.getResult().isAudienceMatch());
@@ -244,7 +246,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testMessage() throws AuthException, MalformedURLException, RequestException {
+    public void testMessage() throws AuthException, RequestException {
         when(mockAuthManager.getToken()).thenReturn("some_token");
 
         testRequest.responseStatus = 200;
@@ -263,7 +265,7 @@ public class DeferredScheduleClientTest {
                                             .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                                             .build();
 
-        Response<DeferredScheduleClient.Result> response = client.performRequest(new URL("https://airship.com"),
+        Response<DeferredScheduleClient.Result> response = client.performRequest(Uri.parse("https://airship.com"),
                 "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         assertTrue(response.getResult().isAudienceMatch());
@@ -271,13 +273,13 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testExpiredToken() throws AuthException, MalformedURLException, RequestException {
+    public void testExpiredToken() throws AuthException, RequestException {
         when(mockAuthManager.getToken())
                 .thenReturn("expired")
                 .thenReturn("some_other_token");
 
         testRequest.responseStatus = 401;
-        client.performRequest(new URL("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
+        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         assertEquals("Bearer some_other_token", testRequest.getRequestHeaders().get("Authorization"));
 
