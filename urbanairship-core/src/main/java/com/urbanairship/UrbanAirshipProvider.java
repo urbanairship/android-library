@@ -63,7 +63,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
     private DatabaseModel richPushDataModel;
     private DatabaseModel preferencesDataModel;
-    private PreferenceDataDao preferenceDataDao;
     private DatabaseModel eventsDataModel;
 
     private static String authorityString;

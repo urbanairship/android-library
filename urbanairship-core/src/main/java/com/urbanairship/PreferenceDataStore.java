@@ -49,6 +49,7 @@ public final class PreferenceDataStore {
     @NonNull
     private final Context context;
     private PreferenceDataDao dao;
+    private PreferenceDataDatabase db;
     private Observer<PreferenceData> observer = new Observer<PreferenceData>() {
         @Override
         public void onChanged(final PreferenceData preference) {
@@ -116,12 +117,12 @@ public final class PreferenceDataStore {
      * Initializes the preference data store.
      */
     protected void init(AirshipConfigOptions airshipConfigOptions) {
+        db = PreferenceDataDatabase.createDatabase(context, airshipConfigOptions);
+        dao = db.getDao();
         loadPreferences(airshipConfigOptions);
     }
 
     private void loadPreferences(AirshipConfigOptions airshipConfigOptions) {
-        dao = PreferenceDataDatabase.createDatabase(context, airshipConfigOptions).getDao();
-
         try {
             List<PreferenceData> preferencesFromDao;
 
@@ -206,6 +207,9 @@ public final class PreferenceDataStore {
     protected void tearDown() {
         for (Preference preference : fromStore) {
             dao.queryLiveDataValue(preference.key).removeObserver(observer);
+        }
+        if (db.isOpen()) {
+            db.close();
         }
     }
 
