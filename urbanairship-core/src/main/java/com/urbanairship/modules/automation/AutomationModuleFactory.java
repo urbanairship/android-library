@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
@@ -29,6 +30,7 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
     Module build(@NonNull Context context,
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipRuntimeConfig runtimeConfig,
+                 @NonNull PrivacyManager privacyManager,
                  @NonNull AirshipChannel airshipChannel,
                  @NonNull PushManager pushManager,
                  @NonNull Analytics analytics,

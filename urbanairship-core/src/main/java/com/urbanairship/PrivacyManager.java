@@ -151,7 +151,7 @@ public class PrivacyManager {
     /**
      * Helper flag that is all features.
      */
-    public final static int FEATURE_ALL = FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
+    public final static int FEATURE_ALL = FEATURE_IN_APP_AUTOMATION | FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
             | FEATURE_CHAT | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS | FEATURE_LOCATION;
 
     private final String ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures";
@@ -172,6 +172,8 @@ public class PrivacyManager {
     @VisibleForTesting
     @NonNull
     static final String CHAT_ENABLED_KEY = "com.urbanairship.chat.CHAT";
+    @VisibleForTesting
+    static final String IAA_ENABLED_KEY = "com.urbanairship.iam.enabled";
 
     private final Object lock = new Object();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -334,6 +336,13 @@ public class PrivacyManager {
                 this.disable(FEATURE_CHAT);
             }
             this.dataStore.remove(CHAT_ENABLED_KEY);
+        }
+
+        if (this.dataStore.isSet(IAA_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(IAA_ENABLED_KEY, true)) {
+                this.disable(FEATURE_IN_APP_AUTOMATION);
+            }
+            this.dataStore.remove(IAA_ENABLED_KEY);
         }
     }
 

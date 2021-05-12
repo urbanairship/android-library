@@ -102,6 +102,7 @@ public class Modules {
     public static Module automation(@NonNull Context context,
                                     @NonNull PreferenceDataStore dataStore,
                                     @NonNull AirshipRuntimeConfig runtimeConfig,
+                                    @NonNull PrivacyManager privacyManager,
                                     @NonNull AirshipChannel airshipChannel,
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
@@ -110,7 +111,7 @@ public class Modules {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
+                return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
                         analytics, remoteData, namedUser);
             }
         } catch (Exception e) {

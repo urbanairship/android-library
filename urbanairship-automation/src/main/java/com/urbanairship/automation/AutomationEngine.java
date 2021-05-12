@@ -97,7 +97,7 @@ public class AutomationEngine {
     private AutomationDriver driver;
     private final Analytics analytics;
     private final OperationScheduler scheduler;
-    private boolean isStarted;
+    private volatile boolean isStarted;
     private Handler backgroundHandler;
     private final Handler mainHandler;
     private ScheduleListener scheduleListener;
@@ -276,9 +276,10 @@ public class AutomationEngine {
         });
 
         restoreCompoundTriggers();
-        onScheduleConditionsChanged();
         onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
+
         isStarted = true;
+        onScheduleConditionsChanged();
     }
 
 
@@ -291,7 +292,7 @@ public class AutomationEngine {
     public void setPaused(boolean isPaused) {
         this.isPaused.set(isPaused);
 
-        if (!isPaused) {
+        if (!isPaused && isStarted) {
             onScheduleConditionsChanged();
         }
     }

@@ -39,16 +39,8 @@ import androidx.annotation.WorkerThread;
  */
 public class LegacyInAppMessageManager extends AirshipComponent {
 
-    // Preference data store keys
-    private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
-
-    // OLD Storage Keys
-    private final static String PENDING_IN_APP_MESSAGE_KEY = KEY_PREFIX + "PENDING_IN_APP_MESSAGE";
-    private final static String AUTO_DISPLAY_ENABLED_KEY = KEY_PREFIX + "AUTO_DISPLAY_ENABLED";
-    private final static String LAST_DISPLAYED_ID_KEY = KEY_PREFIX + "LAST_DISPLAYED_ID";
-
     // New ID key
-    private final static String PENDING_MESSAGE_ID = KEY_PREFIX + "PENDING_MESSAGE_ID";
+    private final static String PENDING_MESSAGE_ID =  "com.urbanairship.push.iam.PENDING_MESSAGE_ID";
 
     /**
      * Default primary color.
@@ -142,11 +134,6 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-
-        // Clean up the old store
-        preferenceDataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
-        preferenceDataStore.remove(AUTO_DISPLAY_ENABLED_KEY);
-        preferenceDataStore.remove(LAST_DISPLAYED_ID_KEY);
 
         pushManager.addInternalPushListener(new PushListener() {
             @Override

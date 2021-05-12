@@ -150,6 +150,7 @@ public class PrivacyManagerTest extends BaseTestCase {
         dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, false);
         dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, false);
         dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, false);
+        dataStore.put(PrivacyManager.IAA_ENABLED_KEY, false);
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
         privacyManager.migrateData();
@@ -158,11 +159,12 @@ public class PrivacyManagerTest extends BaseTestCase {
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
 
-        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
     }
 
     @Test
@@ -171,6 +173,7 @@ public class PrivacyManagerTest extends BaseTestCase {
         dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, true);
         dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, true);
         dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
+        dataStore.put(PrivacyManager.IAA_ENABLED_KEY, true);
 
         privacyManager.enable(PrivacyManager.FEATURE_NONE);
         privacyManager.migrateData();
@@ -179,11 +182,12 @@ public class PrivacyManagerTest extends BaseTestCase {
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
+        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
 
-        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
     }
 
     @Test

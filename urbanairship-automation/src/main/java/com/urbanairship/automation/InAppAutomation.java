@@ -12,6 +12,7 @@ import com.urbanairship.AirshipLoopers;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.actions.Actions;
@@ -34,6 +35,7 @@ import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -46,6 +48,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -58,11 +61,6 @@ import androidx.annotation.WorkerThread;
  * In-app automation.
  */
 public class InAppAutomation extends AirshipComponent implements InAppAutomationScheduler {
-
-    /**
-     * Preference key for enabling/disabling in-app automation.
-     */
-    private final static String ENABLE_KEY = "com.urbanairship.iam.enabled";
 
     /**
      * Preference key for pausing/unpausing in-app automation.
@@ -79,12 +77,16 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final RetryingExecutor retryingExecutor;
     private final DeferredScheduleClient deferredScheduleClient;
     private final FrequencyLimitManager frequencyLimitManager;
+    private final PrivacyManager privacyManager;
 
     private final ActionsScheduleDelegate actionScheduleDelegate;
     private final InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
 
     private final Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
     private final Map<String, FrequencyChecker> frequencyCheckerMap = new HashMap<>();
+
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
+    private Subscription subscription;
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -108,6 +110,39 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
     };
 
+    private final InAppRemoteDataObserver.Delegate remoteDataObserverDelegate = new InAppRemoteDataObserver.Delegate() {
+        @Override
+        @NonNull
+        public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
+            return InAppAutomation.this.getSchedules();
+        }
+
+        @Override
+        @NonNull
+        public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
+            return InAppAutomation.this.editSchedule(scheduleId, edits);
+        }
+
+        @NonNull
+        @Override
+        public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
+            return InAppAutomation.this.schedule(schedules);
+        }
+
+        @Override
+        public Future<Boolean> updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
+            return frequencyLimitManager.updateConstraints(constraints);
+        }
+    };
+
+    private final PrivacyManager.Listener privacyManagerListener = new PrivacyManager.Listener() {
+        @Override
+        public void onEnabledFeaturesChanged() {
+            checkUpdatesSubscription();
+            updateEnginePauseState();
+        }
+    };
+
     /**
      * Gets the shared In-App Automation instance.
      *
@@ -123,6 +158,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      *
      * @param context The application context.
      * @param runtimeConfig The runtime config.
+     * @param privacyManager The privacy manager.
      * @param analytics Analytics instance.
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
@@ -133,12 +169,13 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     public InAppAutomation(@NonNull Context context,
                            @NonNull PreferenceDataStore preferenceDataStore,
                            @NonNull AirshipRuntimeConfig runtimeConfig,
+                           @NonNull PrivacyManager privacyManager,
                            @NonNull Analytics analytics,
                            @NonNull RemoteData remoteData,
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull NamedUser namedUser) {
         super(context, preferenceDataStore);
-
+        this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
         this.airshipChannel = airshipChannel;
         this.audienceManager = new AudienceManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
@@ -162,6 +199,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @VisibleForTesting
     InAppAutomation(@NonNull Context context,
                     @NonNull PreferenceDataStore preferenceDataStore,
+                    @NonNull PrivacyManager privacyManager,
                     @NonNull AutomationEngine engine,
                     @NonNull AirshipChannel airshipChannel,
                     @NonNull AudienceManager audienceManager,
@@ -173,6 +211,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate,
                     @NonNull FrequencyLimitManager frequencyLimitManager) {
         super(context, preferenceDataStore);
+        this.privacyManager = privacyManager;
         this.automationEngine = engine;
         this.airshipChannel = airshipChannel;
         this.audienceManager = audienceManager;
@@ -248,14 +287,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 }
             }
         });
-
-        automationEngine.start(driver);
         updateEnginePauseState();
-
-        // New user cut off time
-        if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-            remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
-        }
     }
 
     /**
@@ -275,40 +307,20 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     public void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
-        remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), new InAppRemoteDataObserver.Delegate() {
-            @Override
-            @NonNull
-            public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
-                return InAppAutomation.this.getSchedules();
-            }
-
-            @Override
-            @NonNull
-            public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
-                return InAppAutomation.this.editSchedule(scheduleId, edits);
-            }
-
-            @NonNull
-            @Override
-            public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
-                return InAppAutomation.this.schedule(schedules);
-            }
-
-            @Override
-            public Future<Boolean> updateConstraints(@NonNull Collection<FrequencyConstraint> constraints) {
-                return frequencyLimitManager.updateConstraints(constraints);
-            }
-
-        });
-        automationEngine.checkPendingSchedules();
         inAppMessageManager.onAirshipReady();
+        privacyManager.addListener(privacyManagerListener);
+        checkUpdatesSubscription();
     }
 
     @Override
     protected void tearDown() {
         super.tearDown();
-        remoteDataSubscriber.cancel();
+        if (subscription != null) {
+            subscription.cancel();
+        }
         automationEngine.stop();
+        isStarted.set(false);
+        privacyManager.removeListener(privacyManagerListener);
     }
 
     @Override
@@ -344,6 +356,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Boolean> schedule(@NonNull List<Schedule<? extends ScheduleData>> schedules) {
+        ensureStarted();
         return automationEngine.schedule(schedules);
     }
 
@@ -353,6 +366,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Boolean> schedule(@NonNull Schedule<? extends ScheduleData> schedule) {
+        ensureStarted();
         return automationEngine.schedule(schedule);
     }
 
@@ -361,6 +375,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     public PendingResult<Boolean> cancelSchedule(@NonNull String scheduleId) {
+        ensureStarted();
         return automationEngine.cancel(Collections.singletonList(scheduleId));
     }
 
@@ -373,6 +388,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public PendingResult<Boolean> cancelSchedules(@NonNull @Schedule.Type String type) {
+        ensureStarted();
         return automationEngine.cancelByType(type);
     }
 
@@ -381,6 +397,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      */
     @NonNull
     public PendingResult<Boolean> cancelScheduleGroup(@NonNull String group) {
+        ensureStarted();
         return automationEngine.cancelGroup(group);
     }
 
@@ -390,6 +407,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Collection<Schedule<Actions>>> getActionScheduleGroup(@NonNull final String group) {
+        ensureStarted();
         return automationEngine.getSchedules(group, Schedule.TYPE_ACTION);
     }
 
@@ -399,6 +417,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Schedule<Actions>> getActionSchedule(@NonNull String scheduleId) {
+        ensureStarted();
         return automationEngine.getSchedule(scheduleId, Schedule.TYPE_ACTION);
     }
 
@@ -408,6 +427,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Collection<Schedule<Actions>>> getActionSchedules() {
+        ensureStarted();
         return automationEngine.getSchedulesByType(Schedule.TYPE_ACTION);
     }
 
@@ -417,6 +437,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Collection<Schedule<InAppMessage>>> getMessageScheduleGroup(@NonNull String group) {
+        ensureStarted();
         return automationEngine.getSchedules(group, Schedule.TYPE_IN_APP_MESSAGE);
     }
 
@@ -426,6 +447,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Schedule<InAppMessage>> getMessageSchedule(@NonNull String scheduleId) {
+        ensureStarted();
         return automationEngine.getSchedule(scheduleId, Schedule.TYPE_IN_APP_MESSAGE);
     }
 
@@ -435,6 +457,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Collection<Schedule<InAppMessage>>> getMessageSchedules() {
+        ensureStarted();
         return automationEngine.getSchedulesByType(Schedule.TYPE_IN_APP_MESSAGE);
     }
 
@@ -444,6 +467,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public PendingResult<Schedule<Deferred>> getDeferredMessageSchedule(@NonNull String scheduleId) {
+        ensureStarted();
         return automationEngine.getSchedule(scheduleId, Schedule.TYPE_DEFERRED);
     }
 
@@ -453,6 +477,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public PendingResult<Schedule<? extends ScheduleData>> getSchedule(@NonNull String scheduleId) {
+        ensureStarted();
         return automationEngine.getSchedule(scheduleId);
     }
 
@@ -463,6 +488,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public PendingResult<Collection<Schedule<? extends ScheduleData>>> getSchedules() {
+        ensureStarted();
         return automationEngine.getSchedules();
     }
 
@@ -472,6 +498,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @NonNull
     @Override
     public PendingResult<Boolean> editSchedule(@NonNull String scheduleId, @NonNull ScheduleEdits<? extends ScheduleData> edits) {
+        ensureStarted();
         return automationEngine.editSchedule(scheduleId, edits);
     }
 
@@ -504,19 +531,27 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * Enables or disables automations.
      *
      * @param enabled {@code true} to enable automations, otherwise {@code false}.
+     * @deprecated Enable/disable by enabling {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} in {@link PrivacyManager}.
+     * This will call through to the privacy manager
      */
+    @Deprecated
     public void setEnabled(boolean enabled) {
-        getDataStore().put(ENABLE_KEY, enabled);
-        updateEnginePauseState();
+        if (enabled) {
+            privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        } else {
+            privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        }
     }
 
     /**
      * Returns {@code true} if in-app automation is enabled, {@code false} if its disabled.
      *
      * @return {@code true} if in-app automation is enabled, {@code false} if its disabled.
+     * @deprecated Use {@link PrivacyManager#isEnabled(int...)} to check {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION}.
      */
+    @Deprecated
     public boolean isEnabled() {
-        return getDataStore().getBoolean(ENABLE_KEY, true);
+        return privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
     }
 
     @WorkerThread
@@ -746,11 +781,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * Updates the automation engine pause state with user enable and component enable flags.
      */
     private void updateEnginePauseState() {
-        automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
-    }
-
-    protected void checkPendingSchedules() {
-        automationEngine.checkPendingSchedules();
+        boolean isEnabled = privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION) && isComponentEnabled();
+        automationEngine.setPaused(!isEnabled);
     }
 
     /**
@@ -824,6 +856,31 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
 
         return delegate;
+    }
+
+    private void ensureStarted() {
+        if (!isStarted.getAndSet(true)) {
+            Logger.verbose("Starting In-App automation");
+            automationEngine.start(driver);
+        }
+    }
+
+    private void checkUpdatesSubscription() {
+        synchronized (remoteDataObserverDelegate) {
+            if (privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION)) {
+                ensureStarted();
+                if (subscription == null) {
+                    // New user cut off time
+                    if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
+                        remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
+                    }
+                    subscription = remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), remoteDataObserverDelegate);
+                }
+            } else if (subscription != null) {
+                subscription.cancel();
+                subscription = null;
+            }
+        }
     }
 
 }
