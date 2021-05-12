@@ -23,6 +23,7 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
 /**
@@ -50,6 +51,7 @@ public final class PreferenceDataStore {
     private final Context context;
     private PreferenceDataDao dao;
     private PreferenceDataDatabase db;
+    private AirshipConfigOptions configOptions;
     private Observer<PreferenceData> observer = new Observer<PreferenceData>() {
         @Override
         public void onChanged(final PreferenceData preference) {
@@ -119,6 +121,7 @@ public final class PreferenceDataStore {
     protected void init(AirshipConfigOptions airshipConfigOptions) {
         db = PreferenceDataDatabase.createDatabase(context, airshipConfigOptions);
         dao = db.getDao();
+        configOptions = airshipConfigOptions;
         loadPreferences(airshipConfigOptions);
     }
 
@@ -143,7 +146,12 @@ public final class PreferenceDataStore {
         List<String> keys = queryKeys();
         if (keys.isEmpty()) {
             Logger.error("Unable to load keys, deleting preference store.");
-            dao.deleteAll();
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    dao.deleteAll();
+                }
+            });
             return;
         }
 
@@ -153,8 +161,13 @@ public final class PreferenceDataStore {
             String value = queryValue(key);
             if (value == null) {
                 Logger.error("Unable to fetch preference value. Deleting: %s", key);
-                PreferenceData preferenceToDelete = new PreferenceData(key, null);
-                dao.delete(preferenceToDelete);
+                final PreferenceData preferenceToDelete = new PreferenceData(key, null);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dao.delete(preferenceToDelete);
+                    }
+                });
             } else {
                 fromStore.add(new Preference(key, value));
             }
@@ -163,17 +176,17 @@ public final class PreferenceDataStore {
     }
 
     private String queryValue(String key) {
-        return dao.queryValue(key).value;
+        return dao.queryValue(key).getValue().value;
     }
 
     @NonNull
     private List<String> queryKeys() {
-        List<String> preferences = dao.queryKeys();
+        LiveData<List<String>> preferences = dao.queryKeys();
 
-        if (preferences == null) {
+        if (preferences.getValue() == null) {
             return Collections.emptyList();
         } else {
-            return preferences;
+            return preferences.getValue();
         }
     }
 
@@ -197,7 +210,7 @@ public final class PreferenceDataStore {
     @MainThread
     private void observeLiveDataPreferences(List<Preference> preferences) {
         for (Preference preference : preferences) {
-            dao.queryLiveDataValue(preference.key).observeForever(observer);
+            dao.queryValue(preference.key).observeForever(observer);
         }
     }
 
@@ -206,7 +219,7 @@ public final class PreferenceDataStore {
      */
     protected void tearDown() {
         for (Preference preference : fromStore) {
-            dao.queryLiveDataValue(preference.key).removeObserver(observer);
+            dao.queryValue(preference.key).removeObserver(observer);
         }
         if (db.isOpen()) {
             db.close();
@@ -527,18 +540,26 @@ public final class PreferenceDataStore {
          * @return <code>true</code> if the preference was successfully written to
          * the database, otherwise <code>false</code>
          */
-        private boolean writeValue(@Nullable String value) {
+        private boolean writeValue(@Nullable final String value) {
             synchronized (this) {
                 if (value == null) {
                     Logger.verbose("Removing preference: %s", key);
-                    dao.delete(new PreferenceData(key, value));
-                    return true;
-
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            dao.delete(new PreferenceData(key, value));
+                        }
+                    });
                 } else {
                     Logger.verbose("Saving preference: %s value: %s", key, value);
-                    dao.insert(new PreferenceData(key, value));
-                    return true;
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            dao.insert(new PreferenceData(key, value));
+                        }
+                    });
                 }
+                return true;
             }
         }
 
@@ -546,14 +567,14 @@ public final class PreferenceDataStore {
          * Syncs the value from the database to the preference.
          */
         void syncValue() {
-            PreferenceData preferenceData;
+            LiveData<PreferenceData> preferenceData;
             synchronized (this) {
                 preferenceData = dao.queryValue(key);
             }
 
-            if (preferenceData != null) {
+            if (preferenceData.getValue() != null) {
                 try {
-                    setValue(preferenceData.value);
+                    setValue(preferenceData.getValue().value);
                 } catch (Exception e) {
                     Logger.error(e, "Unable to sync preference %s from database", key);
                 }

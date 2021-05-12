@@ -63,7 +63,6 @@ public abstract class PreferenceDataDatabase extends RoomDatabase {
 
         return Room.databaseBuilder(context, PreferenceDataDatabase.class, path)
                    .addMigrations(MIGRATION_1_2)
-                   .allowMainThreadQueries()
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }
