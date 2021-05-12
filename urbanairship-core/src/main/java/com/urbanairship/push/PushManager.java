@@ -298,8 +298,6 @@ public class PushManager extends AirshipComponent {
             }
         });
 
-        notificationChannelRegistry.createDeferredNotificationChannels(R.xml.ua_default_channels);
-
         String pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null);
         if (pushProvider == null || !pushProvider.getDeliveryType().equals(pushDeliveryType)) {
             preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
