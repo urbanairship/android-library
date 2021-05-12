@@ -27,14 +27,8 @@ public class WebViewJavaScriptExecutor implements JavaScriptExecutor {
     @Override
     public void executeJavaScript(@NonNull String javaScript) {
         WebView webView = weakReference.get();
-        if (webView == null) {
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT >= 19) {
+        if (webView != null) {
             webView.evaluateJavascript(javaScript, null);
-        } else {
-            webView.loadUrl("javascript:" + javaScript);
         }
     }
 }

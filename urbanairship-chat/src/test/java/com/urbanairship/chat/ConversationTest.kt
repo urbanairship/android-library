@@ -1,0 +1,377 @@
+package com.urbanairship.chat
+
+import androidx.room.Room
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.TestActivityMonitor
+import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.TestApplication
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.chat.api.ChatApiClient
+import com.urbanairship.chat.api.ChatConnection
+import com.urbanairship.chat.api.ChatResponse
+import com.urbanairship.chat.data.ChatDao
+import com.urbanairship.chat.data.ChatDatabase
+import com.urbanairship.chat.data.MessageEntity
+import com.urbanairship.config.AirshipUrlConfig
+import com.urbanairship.util.DateUtils
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+
+@ExperimentalCoroutinesApi
+@RunWith(AndroidJUnit4::class)
+class ConversationTest {
+
+    private lateinit var mockChannel: AirshipChannel
+    private lateinit var mockConnection: ChatConnection
+    private lateinit var mockApiClient: ChatApiClient
+    private lateinit var chatDao: ChatDao
+    private lateinit var testActivityMonitor: TestActivityMonitor
+
+    private lateinit var dataStore: PreferenceDataStore
+    private lateinit var conversation: Conversation
+    private lateinit var chatListener: ChatConnection.ChatListener
+
+    private lateinit var testDispatcher: TestCoroutineDispatcher
+    private lateinit var runtimeConfig: TestAirshipRuntimeConfig
+
+    @Before
+    fun setUp() {
+        mockChannel = mock()
+        mockConnection = mock()
+        mockApiClient = mock()
+        mockChannel = mock()
+
+        chatDao = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java).allowMainThreadQueries().build().chatDao()
+
+        testDispatcher = TestCoroutineDispatcher()
+
+        Dispatchers.setMain(testDispatcher)
+
+        testActivityMonitor = TestActivityMonitor()
+
+        dataStore = PreferenceDataStore(TestApplication.getApplication())
+
+        val captor = ArgumentCaptor.forClass(ChatConnection.ChatListener::class.java)
+
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder()
+                .setChatSocketUrl("wss://test.urbanairship.com")
+                .setChatUrl("https://test.urbanairship.com")
+                .build()
+
+        conversation = Conversation(dataStore, runtimeConfig, mockChannel, chatDao, mockConnection, mockApiClient,
+                testActivityMonitor, testDispatcher, testDispatcher)
+
+        verify(mockConnection).chatListener = captor.capture()
+        chatListener = captor.value
+
+        conversation.isEnabled = true
+        Mockito.clearInvocations(mockConnection)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
+    }
+
+    @Test
+    fun testConnectionCreatesUvp() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
+        testActivityMonitor.foreground()
+
+        verify(mockApiClient).fetchUvp("some-channel")
+    }
+
+    @Test
+    fun testConnectionRequestsConversation() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
+        testActivityMonitor.foreground()
+
+        verify(mockConnection).open("some-uvp")
+        verify(mockConnection).fetchConversation()
+    }
+
+    @Test
+    fun testForegroundConnects() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
+        testActivityMonitor.foreground()
+
+        verify(mockConnection).open("some-uvp")
+    }
+
+    @Test
+    fun testSendMessageAfterSync() = testDispatcher.runBlockingTest {
+        connect()
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        conversation.sendMessage("hello")
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString())
+    }
+
+    @Test
+    fun testSendMessageBeforeSync() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.sendMessage("hello")
+
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString())
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString())
+    }
+
+    @Test
+    fun testSendMessageBeforeConnect() = testDispatcher.runBlockingTest {
+        conversation.sendMessage("hello")
+        connect()
+
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString())
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString())
+    }
+
+    @Test
+    fun testBackgroundClosesConnectionIfPendingSent() = testDispatcher.runBlockingTest {
+        connect()
+        verify(mockConnection).open("some-uvp")
+
+        testActivityMonitor.background()
+        verify(mockConnection, Mockito.never()).close()
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        verify(mockConnection).close()
+    }
+
+    @Test
+    fun testBackgroundPendingMessages() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.sendMessage("hello")
+        val requestId = chatDao.getPendingMessages()[0].messageId
+
+        testActivityMonitor.background()
+        verify(mockConnection, Mockito.never()).close()
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+        verify(mockConnection, Mockito.never()).close()
+
+        verify(mockConnection).sendMessage("hello", null, requestId)
+        verify(mockConnection, Mockito.never()).close()
+
+        val message = ChatResponse.Message("some-id", DateUtils.createIso8601TimeStamp(0), 1, "hello", null, requestId)
+        val messageResponsePayload = ChatResponse.MessageReceived.MessageReceivedPayload(true, message)
+        val messageResponse = ChatResponse.MessageReceived(messageResponsePayload)
+        chatListener.onChatResponse(messageResponse)
+
+        verify(mockConnection).close()
+    }
+
+    @Test
+    fun testConnectionStatus() = testDispatcher.runBlockingTest {
+        connect()
+        assertFalse(conversation.isConnected)
+
+        chatListener.onOpen()
+        assertTrue(conversation.isConnected)
+
+        chatListener.onClose(ChatConnection.CloseReason.Manual)
+        assertFalse(conversation.isConnected)
+    }
+
+    @Test
+    fun testConnectWhileDisabled() = testDispatcher.runBlockingTest {
+        conversation.isEnabled = false
+        connect()
+        verify(mockConnection, never()).open(any())
+    }
+
+    @Test
+    fun testConnectWhenNotConfigured() = testDispatcher.runBlockingTest {
+        runtimeConfig.urlConfig = AirshipUrlConfig.newBuilder().build()
+        connect()
+        verify(mockConnection, never()).open(any())
+    }
+
+    @Test
+    fun testDisableWhileConnected() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.isEnabled = false
+        verify(mockConnection).close()
+    }
+
+    @Test
+    fun testWipeDataClosesConnection() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.clearData()
+        verify(mockConnection).close()
+    }
+
+    @Test
+    fun testClearDataDeletesMessages() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
+        conversation.sendMessage("some-message")
+        assertTrue(chatDao.hasPendingMessages())
+
+        conversation.clearData()
+        assertFalse(chatDao.hasPendingMessages())
+    }
+
+    @Test
+    fun testClearDataDeletesUvp() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        testActivityMonitor.foreground()
+
+        assertEquals("some-uvp", dataStore.getString("com.urbanairship.chat.UVP", null))
+        conversation.clearData()
+
+        assertNull(dataStore.getString("com.urbanairship.chat.UVP", null))
+    }
+
+    fun testRefresh() = testDispatcher.runBlockingTest {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        whenever(mockConnection.open("some-uvp")).then {
+            whenever(mockConnection.isOpenOrOpening).thenReturn(true)
+            mockChannel
+        }
+
+        whenever(mockConnection.fetchConversation()).then {
+            val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+            chatListener.onChatResponse(response)
+            true
+        }
+
+        assertTrue(conversation.refreshMessages(300000))
+    }
+
+    fun testGetMessages() = testDispatcher.runBlockingTest {
+        assertEquals(emptyList<ChatMessage>(), conversation.getMessages())
+
+        val message = randomMessageEntity()
+        chatDao.upsert(message)
+
+        assertEquals(listOf(message), conversation.getMessages())
+    }
+
+    fun testGetMessagesSortAndLimit() = testDispatcher.runBlockingTest {
+        val allMessages = List(100) { randomMessageEntity() }
+        allMessages.forEach { message -> chatDao.upsert(message) }
+
+        val expected = allMessages
+                .sortedWith(compareBy(MessageEntity::isPending, MessageEntity::createdOn))
+                .take(50)
+
+        conversation.getMessages().addResultCallback { messages ->
+            assertEquals(50, messages?.size)
+            assertEquals(expected, messages)
+        }
+    }
+
+    fun testConversationListener() = testDispatcher.runBlockingTest {
+        val listener = TestListener()
+        conversation.addConversationListener(listener)
+
+        // Sanity check.
+        assertEquals(0, listener.callCount)
+
+        // Verify listener is notified when the conversation is loaded.
+        chatListener.onChatResponse(ChatResponse.ConversationLoaded(
+                ChatResponse.ConversationLoaded.ConversationPayload(null)))
+
+        assertEquals(1, listener.callCount)
+
+        val message = ChatResponse.Message("id", "0", 0, "text", requestId = "req-id")
+
+        // Verify listener is notified when a message is sent successfully.
+        chatListener.onChatResponse(ChatResponse.MessageReceived(
+                ChatResponse.MessageReceived.MessageReceivedPayload(true, message)))
+
+        assertEquals(2, listener.callCount)
+
+        // Verify listener is notified when a new message is received.
+        chatListener.onChatResponse(ChatResponse.NewMessage(
+                ChatResponse.NewMessage.NewMessagePayload(message)))
+
+        assertEquals(3, listener.callCount)
+
+        // Verify listener is no longer called after removal.
+        conversation.removeConversationListener(listener)
+
+        chatListener.onChatResponse(ChatResponse.ConversationLoaded(
+                ChatResponse.ConversationLoaded.ConversationPayload(null)))
+
+        assertEquals(3, listener.callCount)
+    }
+
+    private fun connect() {
+        whenever(mockChannel.id).thenReturn("some-channel")
+        whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+
+        testActivityMonitor.foreground()
+        whenever(mockConnection.isOpenOrOpening).thenReturn(true)
+    }
+
+    private fun randomMessageEntity(): MessageEntity {
+        val isAttachment = listOf(true, false).random()
+        return MessageEntity(
+                messageId = UUID.randomUUID().toString(),
+                text = if (isAttachment) null else UUID.randomUUID().toString(),
+                attachment = if (isAttachment) "https://example.com/some.gif" else null,
+                createdOn = Random.nextLong(28800, 1924934400),
+                direction = listOf(ChatDirection.INCOMING, ChatDirection.OUTGOING).random(),
+                isPending = listOf(true, false).random()
+        )
+    }
+
+    private class TestListener : ConversationListener {
+        private val updateCallCount = AtomicInteger(0)
+
+        val callCount: Int
+            get() = updateCallCount.get()
+
+        override fun onConversationUpdated() {
+            updateCallCount.incrementAndGet()
+        }
+    }
+}

@@ -75,7 +75,7 @@ public class UserTest {
      * Test setting and getting the user credentials.
      */
     @Test
-    public void testUser() throws JSONException {
+    public void testUser() {
         user.setUser(fakeUserId, fakeToken);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
@@ -86,7 +86,7 @@ public class UserTest {
      * Test setting and getting the user credentials.
      */
     @Test
-    public void testUserMissingId() throws JSONException {
+    public void testUserMissingId() {
         user.setUser(null, fakeToken);
 
         assertNull(user.getId());

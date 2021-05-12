@@ -5,8 +5,8 @@ package com.urbanairship.javascript;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.UAirship;
 import com.urbanairship.StubbedActionRunRequest;
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
@@ -63,7 +63,7 @@ public class NativeBridgeTest extends BaseTestCase {
         runRequestExtender = mock(ActionRunRequestExtender.class);
         when(runRequestExtender.extend(any(ActionRunRequest.class))).then(new Answer<ActionRunRequest>() {
             @Override
-            public ActionRunRequest answer(InvocationOnMock invocation) throws Throwable {
+            public ActionRunRequest answer(InvocationOnMock invocation) {
                 return (ActionRunRequest) invocation.getArgument(0);
             }
         });
@@ -259,7 +259,7 @@ public class NativeBridgeTest extends BaseTestCase {
 
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);
@@ -301,7 +301,7 @@ public class NativeBridgeTest extends BaseTestCase {
         // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);
@@ -330,7 +330,7 @@ public class NativeBridgeTest extends BaseTestCase {
         // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);
@@ -358,7 +358,7 @@ public class NativeBridgeTest extends BaseTestCase {
         // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);
@@ -377,7 +377,7 @@ public class NativeBridgeTest extends BaseTestCase {
      * Test running an action with a result
      */
     @Test
-    public void testActionCallAction() throws ActionValueException {
+    public void testActionCallAction() {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
@@ -387,7 +387,7 @@ public class NativeBridgeTest extends BaseTestCase {
         // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);
@@ -411,7 +411,7 @@ public class NativeBridgeTest extends BaseTestCase {
      * Test setting a action completion callback gets called for completed actions with callbacks
      */
     @Test
-    public void testRunActionCallsCompletionCallback() throws ActionValueException {
+    public void testRunActionCallsCompletionCallback() {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
@@ -424,7 +424,7 @@ public class NativeBridgeTest extends BaseTestCase {
         // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+            public Void answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(arguments, result);

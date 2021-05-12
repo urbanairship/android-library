@@ -56,7 +56,7 @@ public class TagsFragment extends Fragment {
 
     private void initTagList() {
         final TagAdapter tagAdapter = new TagAdapter();
-        viewModel.getTags().observe(this, tagAdapter::submitList);
+        viewModel.getTags().observe(getViewLifecycleOwner(), tagAdapter::submitList);
 
         recyclerView.setAdapter(tagAdapter);
         recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayout.VERTICAL));

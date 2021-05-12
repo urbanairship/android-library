@@ -1,10 +1,8 @@
-description = "Airship Android Debug Library"
-
 buildscript {
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -12,12 +10,11 @@ buildscript {
     }
 }
 
+description = "Airship Android Debug Library"
 
 apply from: "../common-build.gradle"
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-
 
 android {
     buildFeatures{

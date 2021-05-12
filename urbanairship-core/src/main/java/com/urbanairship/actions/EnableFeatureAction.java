@@ -200,21 +200,19 @@ public class EnableFeatureAction extends Action {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS")
-                    .putExtra("app_package", UAirship.getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .putExtra("app_uid", UAirship.getAppInfo().uid);
+        Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS")
+                .putExtra("app_package", UAirship.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra("app_uid", UAirship.getAppInfo().uid);
 
-            try {
-                context.startActivity(intent);
-                return;
-            } catch (ActivityNotFoundException e) {
-                Logger.debug(e, "Failed to launch notification settings.");
-            }
+        try {
+            context.startActivity(intent);
+            return;
+        } catch (ActivityNotFoundException e) {
+            Logger.debug(e, "Failed to launch notification settings.");
         }
 
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 .addCategory(Intent.CATEGORY_DEFAULT)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .setData(Uri.parse("package:" + UAirship.getPackageName()));

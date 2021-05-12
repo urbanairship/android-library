@@ -2,6 +2,8 @@
 
 package com.urbanairship.channel;
 
+import android.net.Uri;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -11,8 +13,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-
-import java.net.URL;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -69,7 +69,7 @@ class TagGroupApiClient {
      */
     @NonNull
     Response<Void> updateTags(@NonNull String identifier, @NonNull TagGroupsMutation mutation) throws RequestException {
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(path)
                                .build();

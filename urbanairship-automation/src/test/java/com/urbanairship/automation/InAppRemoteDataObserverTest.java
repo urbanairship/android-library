@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import android.net.Uri;
 import android.os.Looper;
 
 import com.urbanairship.PendingResult;
@@ -24,7 +25,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ public class InAppRemoteDataObserverTest {
     }
 
     @Test
-    public void testSchedule() throws MalformedURLException {
+    public void testSchedule() {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("meta", "data").build();
 
@@ -105,7 +105,7 @@ public class InAppRemoteDataObserverTest {
                                                      .setId("foo")
                                                      .build();
 
-        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(new URL("https://neat"), false))
+        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(Uri.parse("https://neat"), false))
                                                  .addTrigger(Triggers.newActiveSessionTriggerBuilder()
                                                                      .setGoal(1)
                                                                      .build())
@@ -157,7 +157,7 @@ public class InAppRemoteDataObserverTest {
     }
 
     @Test
-    public void testLegacy() throws MalformedURLException {
+    public void testLegacy() {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("meta", "data").build();
 
@@ -199,7 +199,7 @@ public class InAppRemoteDataObserverTest {
     }
 
     @Test
-    public void testEndMessages() throws MalformedURLException {
+    public void testEndMessages() {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("meta", "data").build();
 
@@ -218,7 +218,7 @@ public class InAppRemoteDataObserverTest {
                                                      .setMetadata(expectedMetadata)
                                                      .build();
 
-        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(new URL("https://neat"), false))
+        Schedule<Deferred> barSchedule = Schedule.newBuilder(new Deferred(Uri.parse("https://neat"), false))
                                                  .addTrigger(Triggers.newActiveSessionTriggerBuilder()
                                                                      .setGoal(1)
                                                                      .build())

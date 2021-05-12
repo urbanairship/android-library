@@ -185,23 +185,12 @@ public class MediaView extends FrameLayout {
         frameLayout.addView(progressBar, progressBarLayoutParams);
 
         WebSettings settings = webView.getSettings();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            settings.setMediaPlaybackRequiresUserGesture(true);
-        }
-
+        settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setJavaScriptEnabled(true);
 
         if (ManifestUtils.shouldEnableLocalStorage()) {
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
-
-            if (Build.VERSION.SDK_INT < 19) {
-                String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
-                String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
-                //noinspection deprecation
-                settings.setDatabasePath(path);
-            }
         }
 
         final WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);

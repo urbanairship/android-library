@@ -72,29 +72,29 @@ public class LocationEventTest extends BaseTestCase {
     }
 
     @Test
-    public void testLatitude() throws JSONException {
+    public void testLatitude() {
         assertEquals(Double.parseDouble(event.getEventData().get(LocationEvent.LATITUDE_KEY).getString()), gpsLocation.getLatitude(), 0);
     }
 
     @Test
-    public void testLongitude() throws JSONException {
+    public void testLongitude() {
         assertEquals(Double.parseDouble(event.getEventData().get(LocationEvent.LONGITUDE_KEY).getString()), gpsLocation.getLongitude(), 0);
     }
 
     @Test
-    public void testRequestedAccuracy() throws JSONException {
+    public void testRequestedAccuracy() {
         assertEquals(event.getEventData().get(LocationEvent.REQUESTED_ACCURACY_KEY).getString(), "1");
         assertEquals(noRequestedAccuracyEvent.getEventData().get(LocationEvent.REQUESTED_ACCURACY_KEY).getString(), "NONE");
     }
 
     @Test
-    public void testUpdateDistance() throws JSONException {
+    public void testUpdateDistance() {
         assertEquals(event.getEventData().get(LocationEvent.UPDATE_DISTANCE_KEY).getString(), "1");
         assertEquals(noUpdateDistanceEvent.getEventData().get(LocationEvent.UPDATE_DISTANCE_KEY).getString(), "NONE");
     }
 
     @Test
-    public void testProvider() throws JSONException {
+    public void testProvider() {
         assertEquals(event.getEventData().get(LocationEvent.PROVIDER_KEY).getString(), gpsLocation.getProvider());
         assertEquals(networkProviderEvent.getEventData().get(LocationEvent.PROVIDER_KEY).getString(), networkProviderLocation.getProvider());
         assertEquals(passiveProviderEvent.getEventData().get(LocationEvent.PROVIDER_KEY).getString(), passiveProviderLocation.getProvider());
@@ -103,33 +103,33 @@ public class LocationEventTest extends BaseTestCase {
     }
 
     @Test
-    public void testHAccuracy() throws JSONException {
+    public void testHAccuracy() {
         assertEquals(Float.parseFloat(event.getEventData().get(LocationEvent.H_ACCURACY_KEY).getString()), gpsLocation.getAccuracy(), 0);
     }
 
     @Test
-    public void testVAccuracy() throws JSONException {
+    public void testVAccuracy() {
         assertEquals(event.getEventData().get(LocationEvent.V_ACCURACY_KEY).getString(), "NONE");
     }
 
     @Test
-    public void testForeground() throws JSONException {
+    public void testForeground() {
         assertEquals(event.getEventData().get(LocationEvent.FOREGROUND_KEY).getString(), "true");
         assertEquals(backgroundEvent.getEventData().get(LocationEvent.FOREGROUND_KEY).getString(), "false");
     }
 
     @Test
-    public void testContinousUpdateType() throws JSONException {
+    public void testContinousUpdateType() {
         assertEquals(event.getEventData().get(LocationEvent.UPDATE_TYPE_KEY).getString(), "CONTINUOUS");
     }
 
     @Test
-    public void testSingleUpdateType() throws JSONException {
+    public void testSingleUpdateType() {
         assertEquals(singleUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY).getString(), "SINGLE");
     }
 
     @Test
-    public void testChangeUpdateType() throws JSONException {
+    public void testChangeUpdateType() {
         assertEquals(continuousUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY).getString(), "CONTINUOUS");
     }
 

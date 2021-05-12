@@ -358,7 +358,7 @@ public class InAppMessageTests {
      *
      * @param message The message.
      */
-    private void displayMessage(InAppMessage message) throws ExecutionException, InterruptedException {
+    private void displayMessage(InAppMessage message) {
         expectedDisplays.increment();
 
 

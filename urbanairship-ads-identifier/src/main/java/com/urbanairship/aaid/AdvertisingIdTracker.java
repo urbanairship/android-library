@@ -12,11 +12,13 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AssociatedIdentifiers;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -36,7 +38,9 @@ public class AdvertisingIdTracker extends AirshipComponent {
 
     private static final String ENABLED_KEY = "com.urbanairship.analytics.ADVERTISING_ID_TRACKING";
 
-    private UAirship airship;
+    private final AirshipRuntimeConfig runtimeConfig;
+    private final PrivacyManager privacyManager;
+    private final Analytics analytics;
 
     /**
      * Default constructor.
@@ -46,15 +50,15 @@ public class AdvertisingIdTracker extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public AdvertisingIdTracker(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
+    public AdvertisingIdTracker(@NonNull Context context,
+                                @NonNull PreferenceDataStore dataStore,
+                                @NonNull AirshipRuntimeConfig runtimeConfig,
+                                @NonNull PrivacyManager privacyManager,
+                                @NonNull Analytics analytics) {
         super(context, dataStore);
-    }
-
-    @Override
-    protected void onAirshipReady(@NonNull UAirship airship) {
-        super.onAirshipReady(airship);
-        this.airship = airship;
-        update();
+        this.runtimeConfig = runtimeConfig;
+        this.privacyManager = privacyManager;
+        this.analytics = analytics;
     }
 
     /**
@@ -76,6 +80,15 @@ public class AdvertisingIdTracker extends AirshipComponent {
                 update();
             }
         });
+
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                update();
+            }
+        });
+
+        update();
     }
 
     /**
@@ -98,8 +111,8 @@ public class AdvertisingIdTracker extends AirshipComponent {
         synchronized (this) {
             getDataStore().put(ENABLED_KEY, isEnabled);
 
-            if (!isDataCollectionEnabled()) {
-                Logger.warn("AdvertisingIdTracker - Unable to track advertising ID when opted out of data collection.");
+            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+                Logger.warn("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
                 return;
             }
 
@@ -115,27 +128,14 @@ public class AdvertisingIdTracker extends AirshipComponent {
     public void clear() {
         synchronized (this) {
             getDataStore().remove(ENABLED_KEY);
-            airship.getAnalytics()
-                   .editAssociatedIdentifiers()
+            analytics.editAssociatedIdentifiers()
                    .removeAdvertisingId()
                    .apply();
         }
     }
 
-    @Override
-    protected void onDataCollectionEnabledChanged(boolean isDataCollectionEnabled) {
-        if (isEnabled() && isDataCollectionEnabled) {
-            update();
-        }
-    }
-
     private void update() {
-        final UAirship airship = this.airship;
-        if (airship == null) {
-            return;
-        }
-
-        if (!isEnabled() || !isDataCollectionEnabled()) {
+        if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
             return;
         }
 
@@ -146,7 +146,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
                 boolean limitedAdTrackingEnabled = true;
                 Context context = getContext();
 
-                switch (airship.getPlatformType()) {
+                switch (runtimeConfig.getPlatform()) {
                     case UAirship.AMAZON_PLATFORM:
                         advertisingId = Settings.Secure.getString(context.getContentResolver(), "advertising_id");
                         limitedAdTrackingEnabled = Settings.Secure.getInt(context.getContentResolver(), "limit_ad_tracking", -1) == 0;
@@ -169,12 +169,11 @@ public class AdvertisingIdTracker extends AirshipComponent {
                         break;
                 }
 
-                if (!isEnabled() || !isDataCollectionEnabled()) {
+                if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
                     return;
                 }
 
-                AssociatedIdentifiers associatedIdentifiers = airship.getAnalytics()
-                                                                     .getAssociatedIdentifiers();
+                AssociatedIdentifiers associatedIdentifiers = analytics.getAssociatedIdentifiers();
 
                 if (advertisingId != null && (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
                         associatedIdentifiers.isLimitAdTrackingEnabled() != limitedAdTrackingEnabled)) {
@@ -184,8 +183,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
                             return;
                         }
 
-                        airship.getAnalytics()
-                               .editAssociatedIdentifiers()
+                        analytics.editAssociatedIdentifiers()
                                .setAdvertisingId(advertisingId, limitedAdTrackingEnabled)
                                .apply();
                     }

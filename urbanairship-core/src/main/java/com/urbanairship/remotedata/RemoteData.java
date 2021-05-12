@@ -4,6 +4,7 @@ package com.urbanairship.remotedata;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 
@@ -35,7 +36,6 @@ import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.AirshipHandlerThread;
 import com.urbanairship.util.Clock;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -396,8 +396,8 @@ public class RemoteData extends AirshipComponent {
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
     public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
-        URL url = apiClient.getRemoteDataUrl(localeManager.getLocale());
-        return jsonMap.equals(createMetadata(url));
+        Uri uri = apiClient.getRemoteDataUrl(localeManager.getLocale());
+        return jsonMap.equals(createMetadata(uri));
     }
 
     /**
@@ -424,7 +424,7 @@ public class RemoteData extends AirshipComponent {
         try {
             response = apiClient.fetchRemoteDataPayloads(lastModified, locale, new RemoteDataApiClient.PayloadParser() {
                 @Override
-                public Set<RemoteDataPayload> parse(URL url, JsonList payloads) {
+                public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
                     return RemoteDataPayload.parsePayloads(payloads, createMetadata(url));
                 }
             });
@@ -479,9 +479,9 @@ public class RemoteData extends AirshipComponent {
     }
 
     @NonNull
-    private JsonMap createMetadata(@Nullable URL url) {
+    private JsonMap createMetadata(@Nullable Uri uri) {
         return JsonMap.newBuilder()
-                      .putOpt(URL_METADATA_KEY, url == null ? null : url.toString())
+                      .putOpt(URL_METADATA_KEY, uri == null ? null : uri.toString())
                       .build();
     }
 

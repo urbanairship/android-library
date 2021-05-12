@@ -27,7 +27,7 @@ public class SubjectTest extends BaseTestCase {
     }
 
     @Test
-    public void testSubject() throws Exception {
+    public void testSubject() {
         Subject<Integer> subject = Subject.create();
         subject.subscribe(new Subscriber<Integer>() {
             @Override
@@ -56,7 +56,7 @@ public class SubjectTest extends BaseTestCase {
     }
 
     @Test
-    public void testSubjectError() throws Exception {
+    public void testSubjectError() {
         final Exception exception = new Exception("Oh no");
 
         Subject<Integer> subject = Subject.create();

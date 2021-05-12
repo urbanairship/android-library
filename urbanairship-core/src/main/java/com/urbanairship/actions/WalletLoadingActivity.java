@@ -16,8 +16,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.http.ResponseParser;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -35,19 +33,7 @@ public class WalletLoadingActivity extends ThemedActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ua_activity_wallet_loading);
 
-        URL url = null;
-
-        try {
-            Uri uri = getIntent().getData();
-            if (uri != null) {
-                url = new URL(getIntent().getData().toString());
-            }
-        } catch (MalformedURLException e) {
-            Logger.warn("The wallet URL is incorrect, finishing operation.", e);
-            finish();
-            return;
-        }
-
+        Uri url = getIntent().getData();
         if (url == null) {
             Logger.warn("User URI null, unable to process link.");
             finish();
@@ -68,7 +54,7 @@ public class WalletLoadingActivity extends ThemedActivity {
         resolveWalletUrl(url);
     }
 
-    private void resolveWalletUrl(@NonNull final URL url) {
+    private void resolveWalletUrl(@NonNull final Uri url) {
         AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
 
             @Override

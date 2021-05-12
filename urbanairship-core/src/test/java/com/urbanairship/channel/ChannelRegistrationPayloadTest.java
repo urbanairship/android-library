@@ -32,7 +32,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private final String testDeviceType = "android";
     private final String testPushAddress = "gcmRegistrationId";
     private final String testUserId = "fakeUserId";
-    private final String testApid = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String testAccengageDeviceId = "accengage-device-id";
     private final boolean testSetTags = true;
     private Set<String> testTags;
@@ -43,7 +42,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private ChannelRegistrationPayload payload;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testTags = new HashSet<>();
         testTags.add("tagOne");
         testTags.add("tagTwo");
@@ -56,14 +55,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testMinimizedPayloadIgnoresCreationSpecificData() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload).build();
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
 
-        assertNull(minPayload.apid);
         assertNull(minPayload.userId);
         assertNull(minPayload.accengageDeviceId);
     }
@@ -186,7 +183,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
@@ -208,7 +204,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that the json has the full expected payload when analytics is enabled.
      */
     @Test
-    public void testAsJsonFullPayloadAnalyticsEnabled() throws JSONException {
+    public void testAsJsonFullPayloadAnalyticsEnabled() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
                 .setBackgroundEnabled(testBackgroundEnabled)
@@ -216,7 +212,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLanguage(testLanguage)
                 .setTimezone(testTimezone)
@@ -241,9 +236,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         // Identity items
         assertTrue("User ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.USER_ID_KEY));
         assertEquals("User ID should be fakeUserId.", identityHints.get(ChannelRegistrationPayload.USER_ID_KEY).getString(), testUserId);
-
-        assertTrue("APID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.APID_KEY));
-        assertEquals("APID should match.", identityHints.get(ChannelRegistrationPayload.APID_KEY).getString(), testApid);
 
         assertTrue("Accengage Device ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID));
         assertEquals("Accengage Device ID should match.", identityHints.get(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID).getString(), testAccengageDeviceId);
@@ -294,7 +286,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test when tags are empty.
      */
     @Test
-    public void testAsJsonEmptyTags() throws JSONException {
+    public void testAsJsonEmptyTags() {
         // Create payload with empty tags
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(testSetTags, new HashSet<String>()).build();
         JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
@@ -314,7 +306,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that tags are not sent when setTags is false.
      */
     @Test
-    public void testAsJsonNoTags() throws JSONException {
+    public void testAsJsonNoTags() {
         // Create payload with setTags is false
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(false, testTags).build();
         JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
@@ -331,7 +323,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that an empty identity hints section is not included.
      */
     @Test
-    public void testAsJsonEmptyIdentityHints() throws JSONException {
+    public void testAsJsonEmptyIdentityHints() {
         // Create empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -344,7 +336,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that an empty user ID is not included in the identity hints.
      */
     @Test
-    public void testAsJsonEmptyUserId() throws JSONException {
+    public void testAsJsonEmptyUserId() {
         // Create payload with empty userId
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setUserId("").build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -357,7 +349,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test an empty builder.
      */
     @Test
-    public void testEmptyBuilder() throws JSONException {
+    public void testEmptyBuilder() {
         // Create an empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
         JsonMap body = payload.toJsonValue().getMap();
@@ -389,7 +381,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setLocationSettings(true)
                 .setAppVersion("123")
                 .setApiVersion(123)
@@ -412,7 +403,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -428,7 +418,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -453,7 +442,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setBackgroundEnabled(testBackgroundEnabled)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -469,7 +457,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(null)
                 .setTags(false, null)
                 .setUserId(null)
-                .setApid(null)
                 .setLocationSettings(false)
                 .setAppVersion("234")
                 .setApiVersion(234)
@@ -505,7 +492,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .setLocationSettings(true)
                 .setAppVersion("123")
@@ -536,7 +522,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
@@ -552,7 +537,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceType(testDeviceType)
                 .setPushAddress(testPushAddress)
                 .setUserId(testUserId)
-                .setApid(testApid)
                 .setAccengageDeviceId(testAccengageDeviceId)
                 .build();
 
@@ -562,7 +546,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     }
 
     @Test
-    public void testDeliveryTypeAndroid() throws JsonException {
+    public void testDeliveryTypeAndroid() {
         payload = new ChannelRegistrationPayload.Builder()
                 .setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
                 .setDeliveryType(PushProvider.HMS_DELIVERY_TYPE)
@@ -656,7 +640,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceModel("Device model")
                 .setCarrier("Carrier")
                 .setNamedUserId("named user")
-                .setApid("some-apid")
                 .setUserId("some-user")
                 .build();
 
@@ -681,7 +664,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setDeviceModel(null)
                 .setCarrier(null)
                 .setUserId(null)
-                .setApid(null)
                 .build();
 
         assertEquals(expected, minPayload);

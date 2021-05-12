@@ -76,12 +76,7 @@ public class HtmlActivity extends InAppMessageActivity {
             setContentView(R.layout.ua_iam_html_fullscreen);
         } else {
             setContentView(R.layout.ua_iam_html);
-
-            // Drop the border radius on pre-kitkat devices since in order to do clipping, we need to use
-            // software rendering, but media require hardware acceleration.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                borderRadius = displayContent.getBorderRadius();
-            }
+            borderRadius = displayContent.getBorderRadius();
         }
 
         final ProgressBar progressBar = findViewById(R.id.progress);
@@ -98,11 +93,6 @@ public class HtmlActivity extends InAppMessageActivity {
             Logger.error("HTML in-app message URL is not allowed. Unable to display message.");
             finish();
             return;
-        }
-
-        // Workaround render issue with older android devices
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
         webView.setWebViewClient(new HtmlWebViewClient(getMessage()) {
@@ -154,18 +144,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
         webView.setAlpha(0);
         webView.getSettings().setSupportMultipleWindows(true);
-        webView.setWebChromeClient(new AirshipWebChromeClient(this) {
-            @Override
-            public Bitmap getDefaultVideoPoster() {
-
-                // Re-enable hardware rending if we detect a video in the message
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                }
-
-                return super.getDefaultVideoPoster();
-            }
-        });
+        webView.setWebChromeClient(new AirshipWebChromeClient(this));
 
         // DismissButton
         Drawable dismissDrawable = DrawableCompat.wrap(dismiss.getDrawable()).mutate();
@@ -183,7 +162,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
         content.setBackgroundColor(displayContent.getBackgroundColor());
 
-        if (borderRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (borderRadius > 0) {
             content.setClipPathBorderRadius(borderRadius);
         }
     }

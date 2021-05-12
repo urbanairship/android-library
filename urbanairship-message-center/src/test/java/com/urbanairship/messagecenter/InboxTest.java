@@ -201,7 +201,7 @@ public class InboxTest {
      * and the inbox.
      */
     @Test
-    public void testMarkMessagesDeleted() throws JSONException, InterruptedException {
+    public void testMarkMessagesDeleted() {
         assertEquals(10, inbox.getCount());
 
         HashSet<String> deletedIds = new HashSet<>();
@@ -226,7 +226,7 @@ public class InboxTest {
      * and the inbox.
      */
     @Test
-    public void testMarkMessagesRead() throws InterruptedException {
+    public void testMarkMessagesRead() {
         HashSet<String> markedReadIds = new HashSet<>();
         markedReadIds.add("1_message_id");
         markedReadIds.add("3_message_id");
@@ -256,7 +256,7 @@ public class InboxTest {
      * and the inbox.
      */
     @Test
-    public void testMarkMessagesUnread() throws InterruptedException {
+    public void testMarkMessagesUnread() {
         HashSet<String> messageIds = new HashSet<>();
         messageIds.add("1_message_id");
         messageIds.add("3_message_id");

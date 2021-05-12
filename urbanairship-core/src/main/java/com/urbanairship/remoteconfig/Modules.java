@@ -50,7 +50,13 @@ interface Modules {
      */
     String CHANNEL_MODULE = "channel";
 
+    /**
+     * Chat module
+     */
+    String CHAT_MODULE = "chat";
+
     List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE, MESSAGE_CENTER,
-            IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE, CHANNEL_MODULE);
+            IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE, CHANNEL_MODULE,
+            CHAT_MODULE);
 
 }

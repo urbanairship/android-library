@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
@@ -38,6 +39,7 @@ public class AccengageTest {
     private PushManager mockPush;
     private Analytics mockAnalytics;
     private UAirship mockAirship;
+    private AirshipConfigOptions mockConfig;
 
     private Accengage accengage;
 
@@ -52,6 +54,8 @@ public class AccengageTest {
         mockAnalytics = mock(Analytics.class);
         mockPush = mock(PushManager.class);
         mockAirship = mock(UAirship.class);
+        mockConfig = mock(AirshipConfigOptions.class);
+
 
         accengageSettings = JsonMap.EMPTY_MAP;
 
@@ -63,7 +67,7 @@ public class AccengageTest {
             }
         };
 
-        accengage = new Accengage(application, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
+        accengage = new Accengage(application, mockConfig, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
     }
 
     /**

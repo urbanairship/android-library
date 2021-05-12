@@ -256,20 +256,12 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
         if (view.getParent() == null) {
             if (container.getId() == android.R.id.content) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    // Android stops dispatching insets to the remaining children if a child
-                    // consumes the insets. To work around this, we are inserting the view
-                    // at index 0, but setting the Z value larger than the other children
-                    // so it's drawn on top.
-                    view.setZ(InAppViewUtils.getLargestChildZValue(container) + 1);
-                    container.addView(view, 0);
-                } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        // Kitkat we add padding to view to fix any inset issues
-                        view.applyLegacyWindowInsetFix();
-                    }
-                    container.addView(view);
-                }
+                // Android stops dispatching insets to the remaining children if a child
+                // consumes the insets. To work around this, we are inserting the view
+                // at index 0, but setting the Z value larger than the other children
+                // so it's drawn on top.
+                view.setZ(InAppViewUtils.getLargestChildZValue(container) + 1);
+                container.addView(view, 0);
             } else {
                 container.addView(view);
             }

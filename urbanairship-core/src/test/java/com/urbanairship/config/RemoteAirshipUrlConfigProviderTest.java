@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,8 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals(configOptions.remoteDataUrl, urlConfig.remoteDataUrl().build().toString());
         assertEquals(configOptions.analyticsUrl, urlConfig.analyticsUrl().build().toString());
         assertEquals(configOptions.walletUrl, urlConfig.walletUrl().build().toString());
+        assertTrue(configOptions.chatUrl.isEmpty());
+        assertTrue(configOptions.chatSocketUrl.isEmpty());
     }
 
     @Test
@@ -54,7 +57,9 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
 
     @Test
     public void testUpdatingUrls() {
-        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
+                "http://device", "http://wallet", "http://analytics",
+                "http://chat", "wss://chat");
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
 
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
@@ -72,11 +77,16 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", urlConfig.remoteDataUrl().build().toString());
         assertEquals("http://analytics", urlConfig.analyticsUrl().build().toString());
         assertEquals("http://wallet", urlConfig.walletUrl().build().toString());
+        assertEquals("http://chat", urlConfig.chatUrl().build().toString());
+        assertEquals("wss://chat", urlConfig.chatSocketUrl().build().toString());
+
     }
 
     @Test
     public void testUrlConfigListenerIgnoresUnchangedUpdates() {
-        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
+                "http://device", "http://wallet", "http://analytics",
+                "http://chat", "wss://chat");
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
 
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
@@ -97,7 +107,7 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
 
-        provider.onRemoteConfigUpdated(new RemoteAirshipConfig(null, null, null, null));
+        provider.onRemoteConfigUpdated(new RemoteAirshipConfig(null, null, null, null, null, null));
         AirshipUrlConfig urlConfig = provider.getConfig();
 
         assertEquals(configOptions.deviceUrl, urlConfig.deviceUrl().build().toString());
@@ -117,20 +127,28 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertNull(provider.getConfig().deviceUrl().build());
         assertNull(provider.getConfig().analyticsUrl().build());
         assertNull(provider.getConfig().walletUrl().build());
+        assertNull(provider.getConfig().chatUrl().build());
+        assertNull(provider.getConfig().chatSocketUrl().build());
         assertEquals(configOptions.remoteDataUrl, provider.getConfig().remoteDataUrl().build().toString());
 
-        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
+                "http://device", "http://wallet", "http://analytics",
+                "http://chat", "wss://chat");
         provider.onRemoteConfigUpdated(remoteConfig);
 
         assertEquals("http://device", provider.getConfig().deviceUrl().build().toString());
         assertEquals("http://remote", provider.getConfig().remoteDataUrl().build().toString());
         assertEquals("http://analytics", provider.getConfig().analyticsUrl().build().toString());
         assertEquals("http://wallet", provider.getConfig().walletUrl().build().toString());
+        assertEquals("http://chat", provider.getConfig().chatUrl().build().toString());
+        assertEquals("wss://chat", provider.getConfig().chatSocketUrl().build().toString());
     }
 
     @Test
     public void testCacheRemoteAirshipConfig() {
-        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote", "http://device", "http://wallet", "http://analytics");
+        RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
+                "http://device", "http://wallet", "http://analytics",
+                "http://chat", "wss://chat");
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
 
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
@@ -144,6 +162,8 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", urlConfig.remoteDataUrl().build().toString());
         assertEquals("http://analytics", urlConfig.analyticsUrl().build().toString());
         assertEquals("http://wallet", urlConfig.walletUrl().build().toString());
+        assertEquals("http://chat", provider.getConfig().chatUrl().build().toString());
+        assertEquals("wss://chat", provider.getConfig().chatSocketUrl().build().toString());
     }
 
 }

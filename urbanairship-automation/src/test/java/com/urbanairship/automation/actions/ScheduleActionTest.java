@@ -50,7 +50,7 @@ public class ScheduleActionTest {
 
         this.action = new ScheduleAction(new Callable<InAppAutomation>() {
             @Override
-            public InAppAutomation call() throws Exception {
+            public InAppAutomation call() {
                 return automation;
             }
         });
@@ -112,7 +112,7 @@ public class ScheduleActionTest {
      * Test perform with valid JSON.
      */
     @Test
-    public void testPerform() throws JsonException {
+    public void testPerform() {
         PendingResult<Boolean> pendingResult = new PendingResult<>();
         pendingResult.setResult(true);
 
@@ -126,7 +126,7 @@ public class ScheduleActionTest {
      * Test perform with invalid JSON.
      */
     @Test
-    public void testPerformInvalidJson() throws JsonException {
+    public void testPerformInvalidJson() {
         ActionResult result = action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, JsonMap.EMPTY_MAP));
         assertNotNull(result.getException());
         assertEquals(ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());

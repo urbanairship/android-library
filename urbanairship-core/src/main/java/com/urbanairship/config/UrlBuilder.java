@@ -4,11 +4,6 @@ package com.urbanairship.config;
 
 import android.net.Uri;
 
-import com.urbanairship.Logger;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -59,22 +54,15 @@ public class UrlBuilder {
     }
 
     /**
-     * Returns the URL. If the URL is malformed or the base URL is null, null will be returned.
+     * Returns the Uri. If the Uri is malformed or the base Uri is null, null will be returned.
      *
-     * @return The URL or null.
+     * @return The Uri or null.
      */
     @Nullable
-    public URL build() {
+    public Uri build() {
         if (uriBuilder == null) {
             return null;
         }
-        Uri uri = uriBuilder.build();
-        try {
-            return new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            Logger.error(e, "Failed to build URL");
-            return null;
-        }
+        return uriBuilder.build();
     }
-
 }

@@ -1,3 +1,7 @@
+plugins {
+    id("airship-publish")
+}
+
 description = "Airship Android SDK Location module"
 
 apply from: "../common-build.gradle"

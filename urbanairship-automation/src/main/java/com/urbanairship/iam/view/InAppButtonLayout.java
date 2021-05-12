@@ -178,10 +178,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
 
                 if (!isJoined && i > 0) {
                     params.setMargins(separatedSpaceWidth, 0, 0, 0);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                        params.setMarginStart(separatedSpaceWidth);
-                    }
+                    params.setMarginStart(separatedSpaceWidth);
                 }
             }
 

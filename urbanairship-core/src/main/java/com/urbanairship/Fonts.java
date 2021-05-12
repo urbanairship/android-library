@@ -36,14 +36,8 @@ public class Fonts {
 
     private Fonts(@NonNull Context context) {
         this.context = context.getApplicationContext();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            Collections.addAll(systemFonts, JELLY_BEAN_SYSTEM_FONT_FAMILIES);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Collections.addAll(systemFonts, LOLLIPOP_SYSTEM_FONT_FAMILIES);
-        }
+        Collections.addAll(systemFonts, JELLY_BEAN_SYSTEM_FONT_FAMILIES);
+        Collections.addAll(systemFonts, LOLLIPOP_SYSTEM_FONT_FAMILIES);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Collections.addAll(systemFonts, MARSHMALLOW_SYSTEM_FONT_FAMILIES);

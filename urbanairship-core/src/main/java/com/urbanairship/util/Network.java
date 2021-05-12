@@ -56,4 +56,13 @@ public class Network {
             return null;
         }
     }
+
+    public interface ConnectionListener {
+
+        /**
+         * Called when the connection state changed.
+         * @param isConnected
+         */
+        void onConnectionChanged(boolean isConnected);
+    }
 }

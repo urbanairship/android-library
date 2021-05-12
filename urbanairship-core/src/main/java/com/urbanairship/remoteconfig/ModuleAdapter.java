@@ -83,6 +83,9 @@ class ModuleAdapter {
 
             case Modules.CHANNEL_MODULE:
                 return getComponentsByGroup(AirshipComponentGroups.CHANNEL);
+
+            case Modules.CHAT_MODULE:
+                return getComponentsByGroup(AirshipComponentGroups.CHAT);
         }
 
         Logger.verbose("Unable to find module: %s", module);

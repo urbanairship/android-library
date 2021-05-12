@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation.auth;
 
+import android.net.Uri;
 import android.util.Base64;
 
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -54,7 +55,7 @@ class AuthApiClient {
 
     @NonNull
     public Response<AuthToken> getToken(@NonNull final String channelId) throws RequestException {
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(AUTH_PATH)
                                .build();

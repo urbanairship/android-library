@@ -14,8 +14,6 @@ import org.robolectric.annotation.Config;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-// Default to KitKat
-@Config(sdk = 19)
 public class WalletActionTest extends BaseTestCase {
 
     private WalletAction action;
@@ -33,15 +31,6 @@ public class WalletActionTest extends BaseTestCase {
 
         // Default the platform to Android
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
-    }
-
-    /**
-     * Test action rejects pre-kitkat devices.
-     */
-    @Test
-    @Config(sdk = 18)
-    public void testRejectsPreKitkat() {
-        assertFalse(action.acceptsArguments(testArgs));
     }
 
     /**

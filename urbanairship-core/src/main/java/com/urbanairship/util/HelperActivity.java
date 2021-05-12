@@ -81,7 +81,7 @@ public class HelperActivity extends Activity {
             if (startActivityIntent != null) {
                 resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
                 startActivityForResult(startActivityIntent, ++requestCode);
-            } else if (Build.VERSION.SDK_INT >= 23 && permissions != null) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
                 resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
                 requestPermissions(permissions, ++requestCode);
             } else {

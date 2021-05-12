@@ -34,7 +34,7 @@ public class ScreenTrackingEventTest extends BaseTestCase {
      * Test setting screen tracking event screen
      */
     @Test
-    public void testSetScreen() throws JSONException {
+    public void testSetScreen() {
 
         String screen = createFixedSizeString('a', 256);
 
@@ -62,7 +62,7 @@ public class ScreenTrackingEventTest extends BaseTestCase {
      * Test setting screen tracking event duration
      */
     @Test
-    public void testSetDuration() throws JSONException {
+    public void testSetDuration() {
 
         ScreenTrackingEvent event = new ScreenTrackingEvent("test_screen", null, 0, 1);
 

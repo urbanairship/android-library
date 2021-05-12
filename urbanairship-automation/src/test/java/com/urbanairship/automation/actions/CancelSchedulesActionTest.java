@@ -45,7 +45,7 @@ public class CancelSchedulesActionTest {
 
         this.action = new CancelSchedulesAction(new Callable<InAppAutomation>() {
             @Override
-            public InAppAutomation call() throws Exception {
+            public InAppAutomation call() {
                 return automation;
             }
         });

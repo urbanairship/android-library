@@ -46,7 +46,7 @@ public class LocationReceiverTest {
             }
         }, new Callable<AirshipLocationManager>() {
             @Override
-            public AirshipLocationManager call() throws Exception {
+            public AirshipLocationManager call() {
                 return locationManager;
             }
         });

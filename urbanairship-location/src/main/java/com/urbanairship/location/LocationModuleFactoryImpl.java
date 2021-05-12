@@ -5,6 +5,7 @@ package com.urbanairship.location;
 import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.location.LocationModule;
@@ -23,8 +24,12 @@ public class LocationModuleFactoryImpl implements LocationModuleFactory {
 
     @Override
     @NonNull
-    public LocationModule build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull Analytics analytics) {
-        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, airshipChannel, analytics);
+    public LocationModule build(@NonNull Context context,
+                                @NonNull PreferenceDataStore dataStore,
+                                @NonNull PrivacyManager privacyManager,
+                                @NonNull AirshipChannel airshipChannel,
+                                @NonNull Analytics analytics) {
+        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, privacyManager, airshipChannel, analytics);
         return new LocationModule(locationManager, locationManager);
     }
 

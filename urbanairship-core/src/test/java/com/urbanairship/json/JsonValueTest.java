@@ -55,7 +55,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping a JsonSerializable object returns the objects JsonValue.
      */
     @Test
-    public void testWrapJsonSerializable() throws JsonException, JSONException {
+    public void testWrapJsonSerializable() throws JsonException {
         final JsonValue serializableValue = JsonValue.wrap("some value");
         Object jsonSerializable = new JsonSerializable() {
             @NonNull
@@ -121,7 +121,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping a map.
      */
     @Test
-    public void testWrapMap() throws JSONException, JsonException {
+    public void testWrapMap() throws JsonException {
         Map<String, Object> map = new HashMap<>(primitiveMap);
         map.put("map", primitiveMap);
         map.put("collection", primitiveList);
@@ -201,7 +201,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping integers.
      */
     @Test
-    public void testWrapInteger() throws JsonException {
+    public void testWrapInteger() {
         // bytes and shorts are converted to Integer
         assertEquals(1, JsonValue.wrap((byte) 1).getInt(0));
         assertEquals(1, JsonValue.wrap((short) 1).getInt(0));
@@ -214,7 +214,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping longs.
      */
     @Test
-    public void testWrapLong() throws JsonException {
+    public void testWrapLong() {
         assertEquals(1l, JsonValue.wrap(1l).getLong(0));
         assertTrue(JsonValue.wrap(1l).getValue() instanceof Long);
     }
@@ -223,7 +223,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping doubles.
      */
     @Test
-    public void testWrapDouble() throws JsonException {
+    public void testWrapDouble() {
         // floats are converted to doubles
         assertEquals(1.0d, JsonValue.wrap(1.0f).getDouble(0));
         assertTrue(JsonValue.wrap(1.0f).getValue() instanceof Double);
@@ -236,7 +236,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping booleans.
      */
     @Test
-    public void testWrapBoolean() throws JsonException {
+    public void testWrapBoolean() {
         assertTrue(JsonValue.wrap(true).getBoolean(false));
         assertTrue(JsonValue.wrap(true).getValue() instanceof Boolean);
 
@@ -248,7 +248,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test wrapping strings.
      */
     @Test
-    public void testWrapString() throws JsonException, MalformedURLException, URISyntaxException {
+    public void testWrapString() {
         assertEquals("Hello", JsonValue.wrap("Hello").getString());
         assertTrue(JsonValue.wrap("Hello").getValue() instanceof String);
 
@@ -268,7 +268,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test JsonValue toString produces valid JSON output.
      */
     @Test
-    public void testToString() throws JsonException, JSONException {
+    public void testToString() throws JsonException {
         // Primitives
         assertEquals("\"Hello\"", JsonValue.wrap("Hello").toString());
         assertEquals("1", JsonValue.wrap(1).toString());
@@ -334,7 +334,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test trying to wrap Double.NaN throws an exception.
      */
     @Test
-    public void testDoubleNAN() throws JsonException {
+    public void testDoubleNAN() {
         assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NaN));
     }
 
@@ -342,7 +342,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test trying to wrap Double.NEGATIVE_INFINITY throws an exception.
      */
     @Test
-    public void testDoubleNegativeInfinity() throws JsonException {
+    public void testDoubleNegativeInfinity() {
         assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NEGATIVE_INFINITY));
     }
 
@@ -350,7 +350,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test trying to wrap Double.POSITIVE_INFINITY throws an exception.
      */
     @Test
-    public void testDoublePositiveInfinity() throws JsonException {
+    public void testDoublePositiveInfinity() {
         assertEquals(JsonValue.NULL, JsonValue.wrap(Double.POSITIVE_INFINITY));
     }
 
@@ -397,7 +397,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test isInteger is true only for int values.
      */
     @Test
-    public void testIsInteger() throws JsonException {
+    public void testIsInteger() {
         assertTrue(JsonValue.wrap(1).isInteger());
 
         assertFalse(JsonValue.wrap(1l).isInteger());
@@ -409,7 +409,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test isLong is true only for longs.
      */
     @Test
-    public void testIsLong() throws JsonException {
+    public void testIsLong() {
         assertTrue(JsonValue.wrap(1l).isLong());
 
         assertFalse(JsonValue.wrap(1).isLong());
@@ -421,7 +421,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test isDouble is true for floats and doubles.
      */
     @Test
-    public void testIsDouble() throws JsonException {
+    public void testIsDouble() {
         assertTrue(JsonValue.wrap(1d).isDouble());
         assertTrue(JsonValue.wrap(1f).isDouble());
 
@@ -433,7 +433,7 @@ public class JsonValueTest extends BaseTestCase {
      * Test isNumber is true for any number types.
      */
     @Test
-    public void testIsNumber() throws JsonException {
+    public void testIsNumber() {
         assertTrue(JsonValue.wrap(1d).isNumber());
         assertTrue(JsonValue.wrap(1f).isNumber());
         assertTrue(JsonValue.wrap(1).isNumber());

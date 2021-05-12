@@ -7,6 +7,7 @@ import android.os.Build;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
@@ -57,16 +58,17 @@ public class AnalyticsTest extends BaseTestCase {
     private Executor executor;
     private TestAirshipRuntimeConfig runtimeConfig;
     private TestActivityMonitor activityMonitor;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setup() {
+
         this.mockJobDispatcher = Mockito.mock(JobDispatcher.class);
         this.mockEventManager = Mockito.mock(EventManager.class);
         this.mockChannel = Mockito.mock(AirshipChannel.class);
 
         this.dataStore = TestApplication.getApplication().preferenceDataStore;
-        this.dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
-
+        this.privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
         this.localeManager = new LocaleManager(getApplication(), getApplication().preferenceDataStore);
         this.activityMonitor = new TestActivityMonitor();
 
@@ -80,7 +82,7 @@ public class AnalyticsTest extends BaseTestCase {
         this.runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
         this.analytics = new Analytics(TestApplication.getApplication(), dataStore, runtimeConfig,
-                mockChannel, activityMonitor, localeManager, executor, mockEventManager);
+                privacyManager, mockChannel, activityMonitor, localeManager, executor, mockEventManager);
 
         this.analytics.init();
     }
@@ -333,8 +335,7 @@ public class AnalyticsTest extends BaseTestCase {
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        analytics.onDataCollectionEnabledChanged(false);
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
 
         assertTrue(analytics.getAssociatedIdentifiers().getIds().isEmpty());
 
@@ -349,13 +350,11 @@ public class AnalyticsTest extends BaseTestCase {
     public void testIsEnabledDataCollectionDisabled() {
         assertTrue(analytics.isEnabled());
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        analytics.onDataCollectionEnabledChanged(false);
-
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
         assertFalse(analytics.isEnabled());
 
         analytics.setEnabled(true);
-        assertFalse(analytics.isEnabled());
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS));
     }
 
     /**

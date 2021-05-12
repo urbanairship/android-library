@@ -23,21 +23,29 @@ public class RemoteAirshipConfig implements JsonSerializable {
     private static final String DEVICE_API_URL_KEY = "device_api_url";
     private static final String WALLET_URL_KEY = "wallet_url";
     private static final String ANALYTICS_URL_KEY = "analytics_url";
+    private static final String CHAT_URL_KEY = "chat_url";
+    private static final String CHAT_SOCKET_URL_KEY = "chat_socket_url";
 
     private final String remoteDataUrl;
     private final String deviceApiUrl;
     private final String walletUrl;
     private final String analyticsUrl;
+    private final String chatUrl;
+    private final String chatSocketUrl;
 
     @VisibleForTesting
     public RemoteAirshipConfig(@Nullable String remoteDataUrl,
                                @Nullable String deviceApiUrl,
                                @Nullable String walletUrl,
-                               @Nullable String analyticsUrl) {
+                               @Nullable String analyticsUrl,
+                               @Nullable String chatUrl,
+                               @Nullable String chatSocketUrl) {
         this.remoteDataUrl = remoteDataUrl;
         this.deviceApiUrl = deviceApiUrl;
         this.walletUrl = walletUrl;
         this.analyticsUrl = analyticsUrl;
+        this.chatUrl = chatUrl;
+        this.chatSocketUrl = chatSocketUrl;
     }
 
     @NonNull
@@ -47,8 +55,10 @@ public class RemoteAirshipConfig implements JsonSerializable {
         String deviceApiUrl = jsonMap.opt(DEVICE_API_URL_KEY).getString();
         String walletUrl = jsonMap.opt(WALLET_URL_KEY).getString();
         String analyticsUrl = jsonMap.opt(ANALYTICS_URL_KEY).getString();
+        String chatUrl = jsonMap.opt(CHAT_URL_KEY).getString();
+        String chatSocketUrl = jsonMap.opt(CHAT_SOCKET_URL_KEY).getString();
 
-        return new RemoteAirshipConfig(remoteDataUrl, deviceApiUrl, walletUrl, analyticsUrl);
+        return new RemoteAirshipConfig(remoteDataUrl, deviceApiUrl, walletUrl, analyticsUrl, chatUrl, chatSocketUrl);
     }
 
     @Nullable
@@ -71,6 +81,17 @@ public class RemoteAirshipConfig implements JsonSerializable {
         return analyticsUrl;
     }
 
+    @Nullable
+    public String getChatUrl() {
+        return chatUrl;
+    }
+
+    @Nullable
+    public String getChatSocketUrl() {
+        return chatSocketUrl;
+    }
+
+
     @NonNull
     @Override
     public JsonValue toJsonValue() {
@@ -79,6 +100,8 @@ public class RemoteAirshipConfig implements JsonSerializable {
                       .put(DEVICE_API_URL_KEY, deviceApiUrl)
                       .put(ANALYTICS_URL_KEY, analyticsUrl)
                       .put(WALLET_URL_KEY, walletUrl)
+                      .put(CHAT_URL_KEY, chatUrl)
+                      .put(CHAT_SOCKET_URL_KEY, chatSocketUrl)
                       .build()
                       .toJsonValue();
     }

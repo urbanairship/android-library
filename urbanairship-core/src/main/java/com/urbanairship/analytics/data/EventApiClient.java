@@ -2,6 +2,8 @@
 
 package com.urbanairship.analytics.data;
 
+import android.net.Uri;
+
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
@@ -13,7 +15,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,7 +68,7 @@ public class EventApiClient {
     Response<EventResponse> sendEvents(@NonNull Collection<String> events,
                                        @NonNull @Size(min=1) Map<String, String> headers) throws RequestException {
 
-        URL url = runtimeConfig.getUrlConfig()
+        Uri url = runtimeConfig.getUrlConfig()
                                .analyticsUrl()
                                .appendEncodedPath(WARP9_PATH)
                                .build();

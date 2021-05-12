@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 public class FieldTest extends BaseTestCase {
 
     @Test
-    public void testFullField() throws Exception {
+    public void testFullField() {
         String name = "name";
         String label = "label";
         Integer value = 5;

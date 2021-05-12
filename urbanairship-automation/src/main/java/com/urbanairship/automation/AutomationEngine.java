@@ -4,6 +4,7 @@ package com.urbanairship.automation;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -44,6 +45,7 @@ import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.util.AirshipHandlerThread;
+import com.urbanairship.util.Network;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -103,6 +105,7 @@ public class AutomationEngine {
     private final LegacyDataMigrator legacyDataMigrator;
     private long startTime;
     private final SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
+    private NetworkMonitor networkMonitor;
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -161,6 +164,15 @@ public class AutomationEngine {
             screen = screenName;
             onEventAdded(JsonValue.wrap(screenName), Trigger.SCREEN_VIEW, 1.00);
             onScheduleConditionsChanged();
+        }
+    };
+
+    private final Network.ConnectionListener connectionListener = new Network.ConnectionListener() {
+        @Override
+        public void onConnectionChanged(boolean isConnected) {
+            if (isConnected) {
+                checkPendingSchedules();
+            }
         }
     };
 
@@ -243,6 +255,9 @@ public class AutomationEngine {
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
 
+        this.networkMonitor = new NetworkMonitor();
+        networkMonitor.setConnectionListener(connectionListener);
+
         activityMonitor.addApplicationListener(applicationListener);
         activityMonitor.addActivityListener(activityListener);
         analytics.addAnalyticsListener(analyticsListener);
@@ -293,6 +308,7 @@ public class AutomationEngine {
         compoundTriggerSubscription.cancel();
         activityMonitor.removeApplicationListener(applicationListener);
         analytics.removeAnalyticsListener(analyticsListener);
+        networkMonitor.teardown();
         cancelAlarms();
         backgroundThread.quit();
         backgroundThread = null;

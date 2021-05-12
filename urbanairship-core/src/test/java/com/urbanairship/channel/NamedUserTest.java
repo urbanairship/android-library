@@ -6,6 +6,7 @@ import android.app.Application;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
@@ -57,6 +58,7 @@ public class NamedUserTest extends BaseTestCase {
     private AttributeRegistrar mockAttributeRegistrar;
     private Application application;
     private TestClock clock;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setUp() {
@@ -70,10 +72,11 @@ public class NamedUserTest extends BaseTestCase {
         mockChannel = mock(AirshipChannel.class);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, true);
+
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         clock = new TestClock();
-        namedUser = new NamedUser(application, dataStore, mockChannel, mockDispatcher, clock,
+        namedUser = new NamedUser(application, dataStore, privacyManager, mockChannel, mockDispatcher, clock,
                 mockNamedUserClient, mockAttributeRegistrar, mockTagGroupRegistrar);
     }
 
@@ -363,7 +366,7 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testStartUpdateNamedUserTagsServiceDataCollectionDisabled() {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
 
         namedUser.editTagGroups()
                  .addTag("tagGroup", "tag1")
@@ -404,20 +407,20 @@ public class NamedUserTest extends BaseTestCase {
 
     @Test
     public void testNamedUserDataCollectionDisabled() {
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
+        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
         namedUser.setId("some-user");
         assertNull(namedUser.getId());
     }
 
     @Test
     public void testNamedUserClearOnDataCollectionDisabled() {
+        namedUser.init();
         namedUser.setId("cool");
         assertEquals("cool", namedUser.getId());
 
         clearInvocations(mockDispatcher);
 
-        dataStore.put(UAirship.DATA_COLLECTION_ENABLED_KEY, false);
-        namedUser.onDataCollectionEnabledChanged(false);
+        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
 
         assertNull(namedUser.getId());
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {

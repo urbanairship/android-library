@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Parent Style -->
+    <style name="UrbanAirship.Chat" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/ua_chat_background</item>
+        <item name="colorOnPrimary">@color/ua_chat_ui_text_color</item>
+        <item name="colorPrimaryVariant">@color/ua_chat_background</item>
+        <item name="colorSecondary">@color/ua_chat_background</item>
+        <item name="colorSecondaryVariant">@color/ua_chat_background</item>
+        <item name="colorOnSecondary">@color/ua_chat_ui_text_color</item>
+        <item name="colorSurface">@color/ua_chat_surface</item>
+        <item name="colorAccent">@color/ua_chat_accent</item>
+        <item name="android:colorBackground">@color/ua_chat_background</item>
+        <item name="android:textColorPrimary">@color/ua_chat_ui_text_color</item>
+        <item name="toolbarStyle">@style/UrbanAirship.Chat.Toolbar</item>
+    </style>
+
+    <!-- Default Activity -->
+    <style name="UrbanAirship.Chat.Activity">
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_chat_status_bar</item>
+    </style>
+
+    <!-- Toolbar -->
+    <style name="UrbanAirship.Chat.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar.Surface" />
+
+    <!-- Message list view -->
+    <style name="UrbanAirship.Chat.MessagesList">
+        <item name="android:splitMotionEvents">false</item>
+        <item name="android:background">?android:colorBackground</item>
+        <item name="android:fillViewport">true</item>
+    </style>
+
+    <!-- Message list empty view -->
+    <style name="UrbanAirship.Chat.MessageListEmpty">
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <!-- Message list empty view icon -->
+    <style name="UrbanAirship.Chat.MessageListEmptyIcon">
+        <item name="android:padding">24dp</item>
+        <item name="android:src">@drawable/ua_ic_chat_message_list_empty</item>
+    </style>
+
+    <!-- Message list empty view text -->
+    <style name="UrbanAirship.Chat.MessageListEmptyText">
+        <item name="android:textAppearance">?textAppearanceBody1</item>
+        <item name="android:text">@string/ua_chat_message_list_empty</item>
+    </style>
+
+    <!-- Message list date header container -->
+    <style name="UrbanAirship.Chat.DateHeader">
+        <item name="android:layout_gravity">center</item>
+    </style>
+
+    <!-- Message list date header text -->
+    <style name="UrbanAirship.Chat.DateHeader.Label">
+        <item name="android:textAppearance">?textAppearanceCaption</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Base chat message style -->
+    <style name="UrbanAirship.Chat.Message" />
+
+    <!-- Chat bubble container layout -->
+    <style name="UrbanAirship.Chat.Message.Container">
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Common message bubble style -->
+    <style name="UrbanAirship.Chat.Message.Bubble">
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <!-- Received message bubble -->
+    <style name="UrbanAirship.Chat.Message.Bubble.Received">
+        <item name="android:layout_gravity">left</item>
+        <item name="android:background">@drawable/background_message_received</item>
+    </style>
+
+    <!-- Sent message bubble -->
+    <style name="UrbanAirship.Chat.Message.Bubble.Sent">
+        <item name="android:layout_gravity">right</item>
+        <item name="android:background">@drawable/background_message_sent</item>
+    </style>
+
+    <!-- Common message body text style -->
+    <style name="UrbanAirship.Chat.Message.Body">
+        <item name="android:textAppearance">?textAppearanceBody1</item>
+        <item name="android:maxWidth">@dimen/ua_chat_message_bubble_max_width</item>
+    </style>
+
+    <!-- Sent message body text -->
+    <style name="UrbanAirship.Chat.Message.Body.Sent">
+        <item name="android:textColor">@color/ua_chat_sent_text_color</item>
+    </style>
+
+    <!-- Received message body text -->
+    <style name="UrbanAirship.Chat.Message.Body.Received">
+        <item name="android:textColor">@color/ua_chat_received_text_color</item>
+    </style>
+
+    <!-- Common message timestamp text style -->
+    <style name="UrbanAirship.Chat.Message.Time">
+        <item name="android:textAppearance">?textAppearanceCaption</item>
+        <item name="android:layout_marginTop">8dp</item>
+    </style>
+
+    <!-- Sent message timestamp text -->
+    <style name="UrbanAirship.Chat.Message.Time.Sent">
+        <item name="android:textColor">@color/ua_chat_sent_text_color</item>
+        <item name="android:layout_gravity">end</item>
+    </style>
+
+    <!-- Received message timestamp text -->
+    <style name="UrbanAirship.Chat.Message.Time.Received">
+        <item name="android:textColor">@color/ua_chat_received_text_color</item>
+        <item name="android:layout_gravity">start</item>
+    </style>
+
+    <!-- Common message attachment image view -->
+    <style name="UrbanAirship.Chat.Message.Attachment">
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:adjustViewBounds">true</item>
+    </style>
+
+    <!-- Parent message input style -->
+    <style name="UrbanAirship.Chat.MessageInput" />
+
+    <!-- Message input layout: contains the EditText, send button, and attachment thumbnail -->
+    <style name="UrbanAirship.Chat.MessageInput.Layout">
+        <item name="android:elevation" tools:targetApi="lollipop">8dp</item>
+        <item name="android:background">?colorSurface</item>
+        <item name="android:minHeight">@dimen/ua_chat_input_min_height</item>
+        <item name="android:animateLayoutChanges">true</item>
+    </style>
+
+    <!-- Message input EditText -->
+    <style name="UrbanAirship.Chat.MessageInput.EditText">
+        <item name="android:src">@drawable/ua_ic_close</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:background">@drawable/background_edittext_rounded_corners</item>
+        <item name="android:hint">@string/ua_chat_message_input_hint</item>
+        <item name="android:maxLines">5</item>
+        <item name="android:minHeight">@dimen/ua_chat_input_edit_text_min_height</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:textAppearance">?textAppearanceBody1</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+        <item name="android:scrollbars">vertical</item>
+    </style>
+
+    <!-- Message input send button -->
+    <style name="UrbanAirship.Chat.MessageInput.SendButton">
+        <item name="android:background">?selectableItemBackground</item>
+        <item name="android:text">@string/ua_chat_message_send_button</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textAppearance">?textAppearanceBody1</item>
+    </style>
+
+    <!-- Attachment thumbnail remove icon -->
+    <style name="UrbanAirship.Chat.MessageInput.AttachmentRemoveButton">
+        <item name="android:src">@drawable/ua_ic_close</item>
+    </style>
+</resources>
