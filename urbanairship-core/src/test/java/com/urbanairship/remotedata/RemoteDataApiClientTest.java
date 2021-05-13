@@ -26,7 +26,6 @@ import org.mockito.Mockito;
 import org.robolectric.shadows.ShadowBuild;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

@@ -58,7 +58,7 @@ public class RemoteDataApiClient {
 
     private final AirshipRuntimeConfig runtimeConfig;
     private final RequestFactory requestFactory;
-    private final Supplier<PushProviders> pushProvidersSupplier;
+    private final Supplier<PushProviders> pushProviders;
 
     public static class Result {
         @NonNull
@@ -82,29 +82,23 @@ public class RemoteDataApiClient {
      *
      * @param runtimeConfig The runtime config.
      */
-    RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(runtimeConfig, new Supplier<PushProviders>() {
-            @Nullable
-            @Override
-            public PushProviders get() {
-                return UAirship.shared().getPushProviders();
-            }
-        }, RequestFactory.DEFAULT_REQUEST_FACTORY);
+    RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, Supplier<PushProviders> pushProviders) {
+        this(runtimeConfig, pushProviders, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     /**
      * RemoteDataApiClient constructor.
      *
      * @param runtimeConfig The runtime config.
-     * @param providersSupplier The push providers
+     * @param pushProviders The push providers.
      * @param requestFactory A RequestFactory.
      */
     @VisibleForTesting
     RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                        @NonNull Supplier<PushProviders> providersSupplier,
+                        @NonNull Supplier<PushProviders> pushProviders,
                         @NonNull RequestFactory requestFactory) {
         this.runtimeConfig = runtimeConfig;
-        this.pushProvidersSupplier = providersSupplier;
+        this.pushProviders = pushProviders;
         this.requestFactory = requestFactory;
     }
 
@@ -197,7 +191,7 @@ public class RemoteDataApiClient {
     @Nullable
     private String getPushProviderCsv() {
         Set<String> deliveryTypes = new HashSet<>();
-        for (PushProvider provider : pushProvidersSupplier.get().getAvailableProviders()) {
+        for (PushProvider provider : pushProviders.get().getAvailableProviders()) {
             deliveryTypes.add(provider.getDeliveryType());
         }
 

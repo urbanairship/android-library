@@ -18,20 +18,19 @@ public class AirshipRuntimeConfig {
 
     private final AirshipUrlConfigProvider urlConfigProvider;
     private final AirshipConfigOptions configOptions;
-    @UAirship.Platform
-    private final int platform;
+    private final PlatformProvider platformProvider;
 
     /**
      * Default constructor.
      *
-     * @param platform The platform.
+     * @param platformProvider The platform provider.
      * @param configOptions The config options.
      * @param urlConfigProvider The URL config provider.
      */
-    public AirshipRuntimeConfig(@UAirship.Platform int platform,
+    public AirshipRuntimeConfig(@NonNull PlatformProvider platformProvider,
                                 @NonNull AirshipConfigOptions configOptions,
                                 @NonNull AirshipUrlConfigProvider urlConfigProvider) {
-        this.platform = platform;
+        this.platformProvider = platformProvider;
         this.configOptions = configOptions;
         this.urlConfigProvider = urlConfigProvider;
     }
@@ -43,7 +42,7 @@ public class AirshipRuntimeConfig {
      */
     @UAirship.Platform
     public int getPlatform() {
-        return platform;
+        return platformProvider.getPlatform();
     }
 
     /**

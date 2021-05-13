@@ -5,21 +5,18 @@ package com.urbanairship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.AirshipUrlConfigProvider;
+import com.urbanairship.config.PlatformProvider;
 
 import androidx.annotation.NonNull;
 
 public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
 
     private final SettableConfigProvider configProvider;
-
-    @UAirship.Platform
-    private int platform;
-
+    private final SettablePlatformProvider platformProvider;
     private AirshipConfigOptions configOptions;
 
-
     public static TestAirshipRuntimeConfig newTestConfig() {
-        AirshipConfigOptions configOptions =  new AirshipConfigOptions.Builder()
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
                 .setAppKey("appKey")
                 .setAppSecret("appSecret")
                 .build();
@@ -31,20 +28,16 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
                                                      .setRemoteDataUrl(configOptions.remoteDataUrl)
                                                      .build();
 
-        return new TestAirshipRuntimeConfig(new SettableConfigProvider(urlConfig), configOptions, UAirship.ANDROID_PLATFORM);
+
+
+        return new TestAirshipRuntimeConfig(new SettablePlatformProvider(), new SettableConfigProvider(urlConfig), configOptions);
     }
 
-    private TestAirshipRuntimeConfig(@NonNull SettableConfigProvider configProvider, @NonNull AirshipConfigOptions configOptions, int platform) {
-        super(platform, configOptions, configProvider);
-
-        this.platform = platform;
+    private TestAirshipRuntimeConfig(@NonNull SettablePlatformProvider platformProvider, @NonNull SettableConfigProvider configProvider, @NonNull AirshipConfigOptions configOptions) {
+        super(platformProvider, configOptions, configProvider);
+        this.platformProvider = platformProvider;
         this.configOptions = configOptions;
         this.configProvider = configProvider;
-    }
-
-    @Override
-    public int getPlatform() {
-        return platform;
     }
 
     @NonNull
@@ -54,7 +47,7 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
     }
 
     public void setPlatform(@UAirship.Platform int platform) {
-        this.platform = platform;
+        this.platformProvider.platform = platform;
     }
 
     public void setUrlConfig(@NonNull AirshipUrlConfig urlConfig) {
@@ -81,4 +74,15 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
 
     }
 
+    private static class SettablePlatformProvider implements PlatformProvider {
+
+        @UAirship.Platform
+        private int platform = UAirship.ANDROID_PLATFORM;
+
+        @Override
+        public int getPlatform() {
+            return platform;
+        }
+
+    }
 }

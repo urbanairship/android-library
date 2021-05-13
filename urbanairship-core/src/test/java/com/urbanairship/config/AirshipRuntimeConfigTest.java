@@ -16,6 +16,8 @@ public class AirshipRuntimeConfigTest extends BaseTestCase {
     private AirshipUrlConfig urlConfig;
     private AirshipConfigOptions configOptions;
     private AirshipUrlConfigProvider configProvider;
+    private int platform;
+    private AirshipRuntimeConfig runtimeConfig;
 
     @Before
     public void setup() {
@@ -27,31 +29,34 @@ public class AirshipRuntimeConfigTest extends BaseTestCase {
                 return urlConfig;
             }
         };
-
         configOptions = AirshipConfigOptions.newBuilder().build();
+        runtimeConfig = new  AirshipRuntimeConfig(new PlatformProvider() {
+            @Override
+            public int getPlatform() {
+                return platform;
+            }
+        }, configOptions, configProvider);
     }
 
     @Test
     public void testAndroidPlatform() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.ANDROID_PLATFORM, configOptions, configProvider);
+        platform = UAirship.ANDROID_PLATFORM;
         assertEquals(UAirship.ANDROID_PLATFORM, runtimeConfig.getPlatform());
     }
 
     @Test
     public void testAmazonPlatform() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
+        platform = UAirship.AMAZON_PLATFORM;
         assertEquals(UAirship.AMAZON_PLATFORM, runtimeConfig.getPlatform());
     }
 
     @Test
     public void testGetUrlConfig() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
         assertEquals(urlConfig, runtimeConfig.getUrlConfig());
     }
 
     @Test
     public void testGetConfigOptions() {
-        AirshipRuntimeConfig runtimeConfig = new AirshipRuntimeConfig(UAirship.AMAZON_PLATFORM, configOptions, configProvider);
         assertEquals(configOptions, runtimeConfig.getConfigOptions());
     }
 

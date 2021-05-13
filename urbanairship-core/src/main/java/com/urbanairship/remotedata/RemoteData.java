@@ -12,6 +12,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -168,13 +169,15 @@ public class RemoteData extends AirshipComponent {
      * @param privacyManager Privacy manager.
      * @param pushManager The push manager.
      * @param localeManager The locale manager.
+     * @param pushProviders The push providers.
      */
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
-                      @NonNull PushManager pushManager, @NonNull LocaleManager localeManager) {
+                      @NonNull PushManager pushManager, @NonNull LocaleManager localeManager,
+                      @NonNull com.urbanairship.base.Supplier<PushProviders> pushProviders) {
         this(context, preferenceDataStore, configOptions, privacyManager, GlobalActivityMonitor.shared(context),
                 JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK,
-                new RemoteDataApiClient(configOptions));
+                new RemoteDataApiClient(configOptions, pushProviders));
     }
 
     @VisibleForTesting

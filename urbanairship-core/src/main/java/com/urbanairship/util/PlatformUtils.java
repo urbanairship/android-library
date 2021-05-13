@@ -9,6 +9,7 @@ import androidx.annotation.RestrictTo;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 import static com.urbanairship.UAirship.ANDROID_PLATFORM;
+import static com.urbanairship.UAirship.UNKNOWN_PLATFORM;
 
 /**
  * Platform utilities.
@@ -28,6 +29,7 @@ public class PlatformUtils {
         switch (platform) {
             case AMAZON_PLATFORM:
             case ANDROID_PLATFORM:
+            case UNKNOWN_PLATFORM:
                 return true;
             default:
                 return false;
@@ -38,7 +40,7 @@ public class PlatformUtils {
      * Parses the platform int.
      *
      * @param platform The platform int.
-     * @return The corresponding platform, or {@link UAirship#ANDROID_PLATFORM} if the int
+     * @return The corresponding platform, or {@link UAirship#UNKNOWN_PLATFORM} if the int
      * does not match any platforms.
      */
     @UAirship.Platform
@@ -49,7 +51,7 @@ public class PlatformUtils {
             case UAirship.ANDROID_PLATFORM:
                 return ANDROID_PLATFORM;
             default:
-                return ANDROID_PLATFORM;
+                return UAirship.UNKNOWN_PLATFORM;
         }
     }
 

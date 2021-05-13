@@ -23,7 +23,7 @@ public class PlatformUtilsTest extends BaseTestCase {
 
         // Invalid
         assertFalse(PlatformUtils.isPlatformValid(0));
-        assertFalse(PlatformUtils.isPlatformValid(-1));
+        assertFalse(PlatformUtils.isPlatformValid(4));
         assertFalse(PlatformUtils.isPlatformValid(3));
     }
 
@@ -35,11 +35,10 @@ public class PlatformUtilsTest extends BaseTestCase {
         // Valid
         assertEquals(UAirship.AMAZON_PLATFORM, PlatformUtils.parsePlatform(UAirship.AMAZON_PLATFORM));
         assertEquals(UAirship.ANDROID_PLATFORM, PlatformUtils.parsePlatform(UAirship.ANDROID_PLATFORM));
+        assertEquals(UAirship.UNKNOWN_PLATFORM, PlatformUtils.parsePlatform(-1));
 
-        // Fallback to ANDROID_PLATFORM for invalid values
-        assertEquals(UAirship.ANDROID_PLATFORM, PlatformUtils.parsePlatform(0));
-        assertEquals(UAirship.ANDROID_PLATFORM, PlatformUtils.parsePlatform(-1));
-        assertEquals(UAirship.ANDROID_PLATFORM, PlatformUtils.parsePlatform(3));
+        assertEquals(UAirship.UNKNOWN_PLATFORM, PlatformUtils.parsePlatform(19999));
+
     }
 
     /**

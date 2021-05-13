@@ -17,12 +17,12 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
-import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.UrlAllowList;
@@ -34,11 +34,8 @@ import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushProvider;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.util.PlatformUtils;
-import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -78,7 +75,7 @@ public class UAirship {
     @NonNull
     public static final String EXTRA_APP_KEY_KEY = "app_key";
 
-    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
+    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM, UNKNOWN_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Platform {
     }
@@ -89,24 +86,14 @@ public class UAirship {
     public static final int AMAZON_PLATFORM = 1;
 
     /**
-     * Android platform type. Only GCM transport will be allowed.
+     * Android platform type. Only FCM/HMS transport will be allowed.
      */
     public static final int ANDROID_PLATFORM = 2;
 
     /**
-     * Platform preference key.
+     * Unknown platform. Returns if all features have been disabled in {@link PrivacyManager}.
      */
-    private static final String PLATFORM_KEY = "com.urbanairship.application.device.PLATFORM";
-
-    /**
-     * Push provider class preference key.
-     */
-    private static final String PROVIDER_CLASS_KEY = "com.urbanairship.application.device.PUSH_PROVIDER";
-
-    /**
-     * Library version key
-     */
-    private static final String LIBRARY_VERSION_KEY = "com.urbanairship.application.device.LIBRARY_VERSION";
+    public static final int UNKNOWN_PLATFORM = -1;
 
     private final static Object airshipLock = new Object();
     volatile static boolean isFlying = false;
@@ -135,7 +122,6 @@ public class UAirship {
     @SuppressWarnings("deprecation")
     ApplicationMetrics applicationMetrics;
     PreferenceDataStore preferenceDataStore;
-    PushProvider pushProvider;
     PushManager pushManager;
     AirshipChannel channel;
     AirshipLocationClient locationClient;
@@ -146,7 +132,6 @@ public class UAirship {
     NamedUser namedUser;
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
-    PushProviders providers;
     AirshipRuntimeConfig runtimeConfig;
     LocaleManager localeManager;
     PrivacyManager privacyManager;
@@ -699,16 +684,11 @@ public class UAirship {
 
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 
-        this.providers = PushProviders.load(application, airshipConfigOptions);
-        int platform = determinePlatform(providers);
-        this.pushProvider = determinePushProvider(platform, providers);
+        Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
 
-        if (this.pushProvider != null) {
-            Logger.info("Using push provider: %s", this.pushProvider);
-        }
-
+        DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
-        this.runtimeConfig = new AirshipRuntimeConfig(platform, airshipConfigOptions, remoteAirshipUrlConfigProvider);
+        this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider);
         remoteAirshipUrlConfigProvider.addUrlConfigListener(new AirshipUrlConfig.Listener() {
             @Override
             public void onUrlConfigUpdated() {
@@ -738,7 +718,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, privacyManager);
         components.add(this.applicationMetrics);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, privacyManager, pushProvider, channel, analytics);
+        this.pushManager = new PushManager(application, preferenceDataStore, runtimeConfig, privacyManager, pushProviders, channel, analytics);
         components.add(this.pushManager);
 
         this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
@@ -747,7 +727,7 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, runtimeConfig, privacyManager, pushManager, localeManager);
+        this.remoteData = new RemoteData(application, preferenceDataStore, runtimeConfig, privacyManager, pushManager, localeManager, pushProviders);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
@@ -906,6 +886,8 @@ public class UAirship {
 
     /**
      * The default Action Registry.
+     *
+     * @return The action registry.
      */
     @NonNull
     public ActionRegistry getActionRegistry() {
@@ -937,8 +919,9 @@ public class UAirship {
     /**
      * Returns the platform type.
      *
-     * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
-     * for Android.
+     * @return {@link #AMAZON_PLATFORM} for Amazon, {@link #ANDROID_PLATFORM} for Android (FCM/HMS),
+     * or {@link #UNKNOWN_PLATFORM} if the platform has not been resolved in the past and all features
+     * in the SDK are opted out.
      */
     @Platform
     public int getPlatformType() {
@@ -1080,18 +1063,6 @@ public class UAirship {
     }
 
     /**
-     * Gets the push providers.
-     *
-     * @return The push providers.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public PushProviders getPushProviders() {
-        return providers;
-    }
-
-    /**
      * Callback interface used to notify app when UAirship is ready.
      */
     public interface OnReadyCallback {
@@ -1105,68 +1076,5 @@ public class UAirship {
 
     }
 
-    /**
-     * Determines which push provider to use for the given platform.
-     *
-     * @param platform The providers platform.
-     * @param providers The available providers.
-     * @return The platform's best provider, or {@code null}.
-     */
-    @Nullable
-    private PushProvider determinePushProvider(@Platform int platform, @NonNull PushProviders providers) {
-        // Existing provider class
-        String existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null);
-
-        // Try to use the same provider
-        if (!UAStringUtil.isEmpty(existingProviderClass)) {
-            PushProvider provider = providers.getProvider(platform, existingProviderClass);
-            if (provider != null) {
-                return provider;
-            }
-        }
-
-        // Find the best provider for the platform
-        PushProvider provider = providers.getBestProvider(platform);
-        if (provider != null) {
-            preferenceDataStore.put(PROVIDER_CLASS_KEY, provider.getClass().toString());
-        }
-
-        return provider;
-    }
-
-    /**
-     * Determines the platform on the device.
-     *
-     * @param providers The push providers.
-     * @return The device platform.
-     */
-    @Platform
-    private int determinePlatform(@NonNull PushProviders providers) {
-        // Existing platform
-        int existingPlatform = preferenceDataStore.getInt(PLATFORM_KEY, -1);
-        if (PlatformUtils.isPlatformValid(existingPlatform)) {
-            return PlatformUtils.parsePlatform(existingPlatform);
-        }
-
-        int platform;
-
-        PushProvider bestProvider = providers.getBestProvider();
-        if (bestProvider != null) {
-            platform = PlatformUtils.parsePlatform(bestProvider.getPlatform());
-            Logger.info("Setting platform to %s for push provider: %s", PlatformUtils.asString(platform), bestProvider);
-        } else if (PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
-            Logger.info("Google Play Store available. Setting platform to Android.");
-            platform = ANDROID_PLATFORM;
-        } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
-            Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
-            platform = AMAZON_PLATFORM;
-        } else {
-            Logger.info("Defaulting platform to Android.");
-            platform = ANDROID_PLATFORM;
-        }
-
-        preferenceDataStore.put(PLATFORM_KEY, platform);
-        return PlatformUtils.parsePlatform(platform);
-    }
 
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.chat.api
 
-import android.net.Uri
 import androidx.annotation.RestrictTo
 import com.urbanairship.UAirship
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -19,14 +18,22 @@ import java.io.IOException
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ChatApiClient(
-    private val config: AirshipRuntimeConfig,
-    private val requestFactory: RequestFactory = RequestFactory.DEFAULT_REQUEST_FACTORY
-) {
+internal class ChatApiClient(private val config: AirshipRuntimeConfig, private val requestFactory: RequestFactory = RequestFactory.DEFAULT_REQUEST_FACTORY) {
 
     fun fetchUvp(channelId: String): String {
-        return requestFactory.createRequest()
-                .setOperation("GET", buildUvpUrl(channelId))
+        val platform = config.platform
+        if (platform == UAirship.UNKNOWN_PLATFORM) {
+            throw IllegalStateException("Invalid platform")
+        }
+
+        val url = config.urlConfig.chatUrl()
+                .appendEncodedPath("api/UVP")
+                .appendQueryParameter("appKey", config.configOptions.appKey)
+                .appendQueryParameter("channelId", channelId)
+                .appendQueryParameter("platform", PlatformUtils.asString(platform).capitalize())
+                .build()
+
+        return requestFactory.createRequest().setOperation("GET", url)
                 .execute { status, _, responseBody ->
                     if (!UAHttpStatusUtil.inSuccessRange(status)) {
                         throw IOException("Failed to fetch UVP! (status: $status)")
@@ -37,15 +44,5 @@ internal class ChatApiClient(
                     JsonValue.parseString(body).optMap().opt("uvp").string
                             ?: throw JsonException("Invalid response, uvp is null!")
                 }.result
-    }
-
-    private fun buildUvpUrl(channelId: String): Uri? {
-        val platformType = PlatformUtils.asString(UAirship.shared().platformType).capitalize()
-        return config.urlConfig.chatUrl()
-                .appendEncodedPath("api/UVP")
-                .appendQueryParameter("appKey", config.configOptions.appKey)
-                .appendQueryParameter("channelId", channelId)
-                .appendQueryParameter("platform", platformType)
-                .build()
     }
 }

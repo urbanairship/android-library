@@ -2,7 +2,6 @@ package com.urbanairship.chat.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
 import com.urbanairship.TestRequest
 import com.urbanairship.UAirship
 import com.urbanairship.config.AirshipUrlConfig
@@ -56,7 +55,7 @@ class ChatApiClientTest {
 
     @Test
     fun testCreateUvpAmazon() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.platform = UAirship.AMAZON_PLATFORM
 
         testRequest.responseStatus = 200
         testRequest.responseBody = """

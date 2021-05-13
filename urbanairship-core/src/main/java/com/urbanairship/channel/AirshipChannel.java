@@ -573,6 +573,8 @@ public class AirshipChannel extends AirshipComponent {
             case UAirship.AMAZON_PLATFORM:
                 builder.setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE);
                 break;
+            default:
+                throw new IllegalStateException("Unable to get platform");
         }
 
         builder.setTimezone(TimeZone.getDefault().getID());

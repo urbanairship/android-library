@@ -99,15 +99,15 @@ class NamedUserApiClient {
      * @return The device type string.
      */
     @NonNull
-    String getDeviceType() {
+    String getDeviceType() throws RequestException {
         switch (runtimeConfig.getPlatform()) {
             case UAirship.AMAZON_PLATFORM:
                 return "amazon";
 
             case UAirship.ANDROID_PLATFORM:
-            default:
                 return "android";
+            default:
+                throw new RequestException("Invalid platform");
         }
     }
-
 }

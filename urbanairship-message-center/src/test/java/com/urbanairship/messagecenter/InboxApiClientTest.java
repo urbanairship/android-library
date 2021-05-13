@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
+import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestException;
@@ -161,7 +162,7 @@ public class InboxApiClientTest {
     public void testCreateUserAndroidChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
-        runtimeConfig.setPlatform(0);
+        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
 
         Response<UserCredentials> response = inboxApiClient.createUser("channelId");
 
@@ -180,7 +181,7 @@ public class InboxApiClientTest {
     public void testCreateUserAmazonChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
-        runtimeConfig.setPlatform(1);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         Response<UserCredentials> response = inboxApiClient.createUser("channelId");
 
@@ -205,7 +206,7 @@ public class InboxApiClientTest {
     @Test
     public void testUpdateUserAndroidChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
-        runtimeConfig.setPlatform(0);
+        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
 
         Response<Void> response = inboxApiClient.updateUser(user,"channelId");
 
@@ -219,7 +220,7 @@ public class InboxApiClientTest {
     @Test
     public void testUpdateUserAmazonChannelsSucceeds() throws RequestException {
         testRequest.responseStatus = 200;
-        runtimeConfig.setPlatform(1);
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         Response<Void> response = inboxApiClient.updateUser(user,"channelId");
 

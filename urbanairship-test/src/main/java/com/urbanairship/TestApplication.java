@@ -9,6 +9,7 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.job.JobDispatcher;
@@ -31,6 +32,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 public class TestApplication extends Application implements TestLifecycleApplication {
@@ -66,6 +68,14 @@ public class TestApplication extends Application implements TestLifecycleApplica
         testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
+        Supplier<PushProviders> pushProviders = new Supplier<PushProviders>() {
+            @Nullable
+            @Override
+            public PushProviders get() {
+                return new TestPushProviders(testRuntimeConfig.getConfigOptions());
+            }
+        };
+
         UAirship.application = this;
         UAirship.isFlying = true;
         UAirship.isTakingOff = true;
@@ -79,13 +89,13 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager);
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, privacyManager, new TestActivityMonitor());
-        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, privacyManager, new TestPushProvider(), UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
+        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, pushProviders, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());
         UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel);
-        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager);
+        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager, pushProviders);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();
