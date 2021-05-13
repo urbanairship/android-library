@@ -317,6 +317,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         super.tearDown();
         if (subscription != null) {
             subscription.cancel();
+            subscription = null;
         }
         automationEngine.stop();
         isStarted.set(false);
@@ -872,7 +873,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 if (subscription == null) {
                     // New user cut off time
                     if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-                        remoteDataSubscriber.setScheduleNewUserCutOffTime(airshipChannel.getId() == null ? System.currentTimeMillis() : 0);
+                        remoteDataSubscriber.setScheduleNewUserCutOffTime(getNewUserCutOff());
                     }
                     subscription = remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), remoteDataObserverDelegate);
                 }
@@ -883,4 +884,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
     }
 
+    private long getNewUserCutOff() {
+        try {
+            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).firstInstallTime;
+        } catch (Exception e) {
+            Logger.warn("Unable to get install date", e);
+            return airshipChannel.getId() == null ? System.currentTimeMillis() : 0;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.urbanairship.automation;
 
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -41,7 +42,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.shadow.api.Shadow;
+import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -98,7 +103,7 @@ public class InAppAutomationTest {
     private FrequencyLimitManager mockFrequencyLimitManager;
     private InAppRemoteDataObserver.Delegate remoteDataObserverDelegate;
     private PrivacyManager privacyManager;
-    private RetryingExecutor  executor;
+    private RetryingExecutor executor;
 
     @Before
     public void setup() {
@@ -850,6 +855,22 @@ public class InAppAutomationTest {
 
         // Verify the miss behavior
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+    }
+
+    @Test
+    public void testNewUserCutOff() {
+        ShadowPackageManager packageManager = Shadows.shadowOf(TestApplication.getApplication().getPackageManager());
+        PackageInfo info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().getPackageName());
+        info.firstInstallTime = 9191;
+
+        when(mockObserver.getScheduleNewUserCutOffTime()).thenReturn(Long.valueOf(-1));
+
+        inAppAutomation.tearDown();
+        inAppAutomation.init();
+        inAppAutomation.onAirshipReady(UAirship.shared());
+
+
+        verify(mockObserver).setScheduleNewUserCutOffTime(9191);
     }
 
     /**
