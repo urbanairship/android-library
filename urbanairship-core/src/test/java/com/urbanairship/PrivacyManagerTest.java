@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -197,10 +198,28 @@ public class PrivacyManagerTest extends BaseTestCase {
         privacyManager.addListener(listener);
 
         privacyManager.enable(PrivacyManager.FEATURE_CHAT);
-        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
+        privacyManager.disable(PrivacyManager.FEATURE_CHAT);
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
 
         verify(listener, times(3)).onEnabledFeaturesChanged();
     }
+
+    @Test
+    public void testListenerOnlyCalledOnChange() {
+        PrivacyManager.Listener listener = mock(PrivacyManager.Listener.class);
+
+        privacyManager.addListener(listener);
+
+        privacyManager.disable(PrivacyManager.FEATURE_ALL);
+        privacyManager.disable(PrivacyManager.FEATURE_CHAT);
+        verify(listener, never()).onEnabledFeaturesChanged();
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+
+        verify(listener, times(1)).onEnabledFeaturesChanged();
+
+    }
+
 
 }

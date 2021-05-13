@@ -7,6 +7,7 @@ import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
 
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -32,7 +33,7 @@ public class PushEnablePreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return airship.getPushManager().getUserNotificationsEnabled();
+        return airship.getPushManager().getUserNotificationsEnabled() && airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_PUSH);
     }
 
     @Override

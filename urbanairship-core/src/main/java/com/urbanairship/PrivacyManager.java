@@ -179,12 +179,12 @@ public class PrivacyManager {
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     private final PreferenceDataStore dataStore;
-    private final int defaultEnabledFeatures;
+    private volatile int currentValue;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public PrivacyManager(@NonNull PreferenceDataStore dataStore, @Feature int defaultEnabledFeatures) {
         this.dataStore = dataStore;
-        this.defaultEnabledFeatures = defaultEnabledFeatures;
+        this.currentValue = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
     }
 
     /**
@@ -193,10 +193,7 @@ public class PrivacyManager {
      * @param features The features to set as enabled.
      */
     public void setEnabledFeatures(@Feature int... features) {
-        synchronized (lock) {
-            dataStore.put(ENABLED_FEATURES_KEY, combine(features));
-            notifyListeners();
-        }
+        update(combine(features));
     }
 
     /**
@@ -206,7 +203,7 @@ public class PrivacyManager {
      */
     @Feature
     public int getEnabledFeatures() {
-        return dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
+        return currentValue;
     }
 
     /**
@@ -215,11 +212,7 @@ public class PrivacyManager {
      * @param features The features to enable.
      */
     public void enable(@Feature int... features) {
-        synchronized (lock) {
-            int updated = getEnabledFeatures() | combine(features);
-            dataStore.put(ENABLED_FEATURES_KEY, updated);
-            notifyListeners();
-        }
+        update(currentValue | combine(features));
     }
 
     /**
@@ -228,11 +221,7 @@ public class PrivacyManager {
      * @param features The features to enable.
      */
     public void disable(@Feature int... features) {
-        synchronized (lock) {
-            int updated = getEnabledFeatures() & ~combine(features);
-            dataStore.put(ENABLED_FEATURES_KEY, updated);
-            notifyListeners();
-        }
+        update(currentValue &~ combine(features));
     }
 
     /**
@@ -346,9 +335,15 @@ public class PrivacyManager {
         }
     }
 
-    private void notifyListeners() {
-        for (Listener listener : listeners) {
-            listener.onEnabledFeaturesChanged();
+    private void update(int value) {
+        synchronized (lock) {
+            if (currentValue != value) {
+                currentValue = value;
+                dataStore.put(ENABLED_FEATURES_KEY, value);
+                for (Listener listener : listeners) {
+                    listener.onEnabledFeaturesChanged();
+                }
+            }
         }
     }
 

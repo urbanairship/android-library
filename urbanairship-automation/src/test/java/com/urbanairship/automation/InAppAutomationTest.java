@@ -546,20 +546,6 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testEnable() {
-        clearInvocations(mockEngine);
-        inAppAutomation.setEnabled(true);
-        verify(mockEngine).setPaused(false);
-    }
-
-    @Test
-    public void testDisable() {
-        clearInvocations(mockEngine);
-        inAppAutomation.setEnabled(false);
-        verify(mockEngine).setPaused(true);
-    }
-
-    @Test
     public void testNewConfig() {
         JsonMap config = JsonMap.newBuilder()
                                 .put("tag_groups", JsonMap.newBuilder()
