@@ -4,7 +4,11 @@ import android.Manifest;
 import android.content.Context;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.PermissionsRequester;
@@ -15,8 +19,11 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+
 import static androidx.core.content.PermissionChecker.PERMISSION_DENIED;
 import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -33,16 +40,32 @@ public class EnableFeatureActionTest extends BaseTestCase {
     int[] acceptedSituations;
     private @Action.Situation
     int[] rejectedSituations;
-    private PushManager pushManager;
-    private AirshipLocationClient locationClient;
+    private PushManager mockPush;
+    private AirshipLocationClient mockLocation;
+    private PrivacyManager privacyManager;
+    private UAirship mockShip;
 
     private PermissionsRequester permissionsRequester;
 
     @Before
     public void setup() {
+        mockPush = mock(PushManager.class);
+        mockLocation = mock(AirshipLocationClient.class);
+        privacyManager = new PrivacyManager(new PreferenceDataStore(TestApplication.getApplication()), PrivacyManager.FEATURE_NONE);
+
+        mockShip = mock(UAirship.class);
+        when(mockShip.getPushManager()).thenReturn(mockPush);
+        when(mockShip.getLocationClient()).thenReturn(mockLocation);
+        when(mockShip.getPrivacyManager()).thenReturn(privacyManager);
 
         permissionsRequester = mock(PermissionsRequester.class);
-        action = new EnableFeatureAction(permissionsRequester);
+        action = new EnableFeatureAction(permissionsRequester, new Supplier<UAirship>() {
+            @Nullable
+            @Override
+            public UAirship get() {
+                return mockShip;
+            }
+        });
 
         acceptedSituations = new int[] {
                 Action.SITUATION_PUSH_OPENED,
@@ -58,11 +81,8 @@ public class EnableFeatureActionTest extends BaseTestCase {
                 Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
         };
 
-        pushManager = mock(PushManager.class);
-        locationClient = mock(AirshipLocationClient.class);
 
-        TestApplication.getApplication().setPushManager(pushManager);
-        TestApplication.getApplication().setLocationClient(locationClient);
+
     }
 
     /**
@@ -98,7 +118,8 @@ public class EnableFeatureActionTest extends BaseTestCase {
     public void testEnableUserNotifications() {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_USER_NOTIFICATIONS);
         ActionResult result = action.perform(args);
-        verify(pushManager).setUserNotificationsEnabled(true);
+        verify(mockPush).setUserNotificationsEnabled(true);
+        assertEquals(PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
         assertTrue(result.getValue().getBoolean(false));
     }
@@ -113,7 +134,8 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
-        verify(locationClient).setLocationUpdatesEnabled(true);
+        verify(mockLocation).setLocationUpdatesEnabled(true);
+        assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
         assertTrue(result.getValue().getBoolean(false));
     }
 
@@ -127,7 +149,8 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
-        verifyZeroInteractions(locationClient);
+        assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
+        verifyZeroInteractions(mockLocation);
         assertFalse(result.getValue().getBoolean(true));
     }
 
@@ -141,8 +164,11 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);
-        verify(locationClient).setLocationUpdatesEnabled(true);
-        verify(locationClient).setBackgroundLocationAllowed(true);
+
+        assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
+
+        verify(mockLocation).setLocationUpdatesEnabled(true);
+        verify(mockLocation).setBackgroundLocationAllowed(true);
 
         assertTrue(result.getValue().getBoolean(false));
     }
@@ -157,7 +183,10 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_BACKGROUND_LOCATION);
         ActionResult result = action.perform(args);
-        verifyZeroInteractions(locationClient);
+
+        assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
+
+        verifyZeroInteractions(mockLocation);
         assertFalse(result.getValue().getBoolean(true));
     }
 

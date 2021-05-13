@@ -14,7 +14,9 @@ import android.os.Looper;
 import android.provider.Settings;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.HelperActivity;
@@ -75,9 +77,13 @@ public class EnableFeatureAction extends Action {
     public static final String FEATURE_BACKGROUND_LOCATION = "background_location";
 
     private final PermissionsRequester permissionsRequester;
+    private final Supplier<UAirship> airship;
 
-    public EnableFeatureAction(@NonNull PermissionsRequester permissionsRequester) {
+    public EnableFeatureAction(@NonNull PermissionsRequester permissionsRequester,
+                               @NonNull Supplier<UAirship> airship) {
         this.permissionsRequester = permissionsRequester;
+        this.airship = airship;
+
     }
 
     public EnableFeatureAction() {
@@ -86,6 +92,11 @@ public class EnableFeatureAction extends Action {
             @Override
             public int[] requestPermissions(@NonNull Context context, @NonNull List<String> permissions) {
                 return HelperActivity.requestPermissions(context, permissions.toArray(new String[0]));
+            }
+        }, new Supplier<UAirship>() {
+            @Override
+            public UAirship get() {
+                return UAirship.shared();
             }
         });
     }
@@ -129,7 +140,8 @@ public class EnableFeatureAction extends Action {
     public ActionResult perform(@NonNull ActionArguments arguments) {
         String feature = arguments.getValue().getString();
         Checks.checkNotNull(feature, "Missing feature.");
-        AirshipLocationClient locationClient = UAirship.shared().getLocationClient();
+        AirshipLocationClient locationClient = airship.get().getLocationClient();
+        PrivacyManager privacyManager = airship.get().getPrivacyManager();
 
         switch (feature) {
             case FEATURE_BACKGROUND_LOCATION:
@@ -137,6 +149,7 @@ public class EnableFeatureAction extends Action {
                     return ActionResult.newEmptyResult();
                 }
 
+                privacyManager.enable(PrivacyManager.FEATURE_LOCATION);
                 if (requestLocationPermissions()) {
                     locationClient.setLocationUpdatesEnabled(true);
                     locationClient.setBackgroundLocationAllowed(true);
@@ -149,6 +162,7 @@ public class EnableFeatureAction extends Action {
                     return ActionResult.newEmptyResult();
                 }
 
+                privacyManager.enable(PrivacyManager.FEATURE_LOCATION);
                 if (requestLocationPermissions()) {
                     locationClient.setLocationUpdatesEnabled(true);
                     return ActionResult.newResult(ActionValue.wrap(true));
@@ -156,7 +170,8 @@ public class EnableFeatureAction extends Action {
 
                 return ActionResult.newResult(ActionValue.wrap(false));
             case FEATURE_USER_NOTIFICATIONS:
-                UAirship.shared().getPushManager().setUserNotificationsEnabled(true);
+                airship.get().getPushManager().setUserNotificationsEnabled(true);
+                privacyManager.enable(PrivacyManager.FEATURE_PUSH);
                 if (!NotificationManagerCompat.from(UAirship.getApplicationContext()).areNotificationsEnabled()) {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
