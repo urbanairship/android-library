@@ -233,6 +233,14 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeChannelRegistrationPayloadExtender(@NonNull ChannelRegistrationPayloadExtender extender) {
+        this.channelRegistrationPayloadExtenders.remove(extender);
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @hide

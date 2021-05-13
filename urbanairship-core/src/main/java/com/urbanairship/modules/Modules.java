@@ -67,13 +67,14 @@ public class Modules {
     @Nullable
     public static Module messageCenter(@NonNull Context context,
                                        @NonNull PreferenceDataStore preferenceDataStore,
+                                       @NonNull PrivacyManager privacyManager,
                                        @NonNull AirshipChannel channel,
                                        @NonNull PushManager pushManager) {
 
         try {
             MessageCenterModuleFactory moduleFactory = createFactory(MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, channel, pushManager);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Message Center module");

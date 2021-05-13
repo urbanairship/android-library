@@ -156,6 +156,15 @@ class MessageCenterResolver extends UrbanAirshipResolver {
     }
 
     /**
+     * Deletes all messages from the database.
+     *
+     * @return Count of messages that were deleted.
+     */
+    int deleteAllMessages() {
+        return this.delete(this.uri, null, null);
+    }
+
+    /**
      * Inserts new messages into the database.
      *
      * @param messagePayloads A list of the raw message payloads.

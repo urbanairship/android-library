@@ -764,7 +764,7 @@ public class UAirship {
         this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
 
         // Message Center
-        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, channel, pushManager);
+        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager);
         processModule(messageCenterModule);
 
         // Location

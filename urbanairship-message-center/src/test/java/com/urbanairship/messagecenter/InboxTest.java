@@ -7,6 +7,8 @@ import android.content.Context;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
+import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
@@ -16,7 +18,6 @@ import com.urbanairship.job.JobInfo;
 
 import junit.framework.Assert;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,8 +39,10 @@ import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -54,6 +57,9 @@ public class InboxTest {
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockChannel;
 
+    MessageCenterResolver spyResolver;
+    GlobalActivityMonitor spyActivityMonitor;
+
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
@@ -61,8 +67,9 @@ public class InboxTest {
         mockChannel = mock(AirshipChannel.class);
 
         Context context = ApplicationProvider.getApplicationContext();
+        spyResolver = Mockito.spy(new MessageCenterResolver(context));
+        spyActivityMonitor = Mockito.spy(GlobalActivityMonitor.shared(context));
 
-        MessageCenterResolver resolver = new MessageCenterResolver(context);
         Executor executor = new Executor() {
             @Override
             public void execute(Runnable runnable) {
@@ -71,8 +78,8 @@ public class InboxTest {
         };
 
         PreferenceDataStore dataStore = new PreferenceDataStore(context);
-        GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(context);
-        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, resolver, executor, activityMonitor, mockChannel);
+        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, spyResolver, executor, spyActivityMonitor, mockChannel);
+        inbox.setEnabled(true);
 
         // Only the "even" messages
         testPredicate = new Predicate<Message>() {
@@ -95,6 +102,7 @@ public class InboxTest {
         }
 
         inbox.refresh(false);
+        Mockito.clearInvocations(spyResolver);
     }
 
     /**
@@ -475,6 +483,69 @@ public class InboxTest {
             int index = Integer.parseInt(substring);
             assertEquals(index % 2, 0);
         }
+    }
+
+    /**
+     * Test init doesn't update the user or refresh if FEATURE_MESSAGE_CENTER is disabled.
+     */
+    @Test
+    public void testInitWhenDisabledDispatchesNoJobs() {
+        inbox.setEnabled(false);
+
+        inbox.init();
+
+        verify(mockDispatcher, never()).dispatch(any(JobInfo.class));
+    }
+
+    /**
+     * Verify that calls to onPerformJob are no-ops if FEATURE_MESSAGE_CENTER is disabled.
+     */
+    @Test
+    public void testOnPerformJobWhenDisabled() {
+        InboxJobHandler jobHandler = mock(InboxJobHandler.class);
+
+        inbox.setEnabled(false);
+        inbox.inboxJobHandler = jobHandler;
+
+        int jobResult = inbox.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
+        assertEquals(JobInfo.JOB_FINISHED, jobResult);
+
+        verify(jobHandler, never()).performJob(any(JobInfo.class));
+    }
+
+    /**
+     * Verify updateEnabledState when disabled.
+     */
+    @Test
+    public void testUpdateEnabledStateNotEnabled() {
+        inbox.setEnabled(false);
+
+        inbox.updateEnabledState();
+
+        verify(spyResolver).deleteAllMessages();
+        verify(spyActivityMonitor).removeApplicationListener(any(ApplicationListener.class));
+        verify(mockChannel).removeChannelListener(any(AirshipChannelListener.class));
+        verify(mockChannel).removeChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
+        verify(mockUser).removeListener(any(User.Listener.class));
+    }
+
+    /**
+     * Verify updateEnabledState when enabled.
+     */
+    @Test
+    public void testUpdateEnabledStateEnabled() {
+        inbox.setEnabled(true);
+
+        inbox.updateEnabledState();
+        // Update again to make sure that we don't restart the Inbox if already started.
+        inbox.updateEnabledState();
+
+        // Verify that Inbox was started once.
+        verify(mockUser).addListener(any(User.Listener.class));
+        verify(spyResolver).getMessages();
+        verify(spyActivityMonitor).addApplicationListener(any(ApplicationListener.class));
+        verify(mockChannel).addChannelListener(any(AirshipChannelListener.class));
+        verify(mockChannel).addChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
     }
 
     /**

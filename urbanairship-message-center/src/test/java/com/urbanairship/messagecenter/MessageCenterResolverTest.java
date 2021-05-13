@@ -189,6 +189,17 @@ public class MessageCenterResolverTest {
         assertEquals(10, resolver.getMessages().size());
     }
 
+    /**
+     *  Test deleting all messages.
+     */
+    @Test
+    public void testDeleteAllMessages() {
+        int deleted = resolver.deleteAllMessages();
+        assertEquals(10, deleted);
+        assertEquals(0, resolver.getMessages().size());
+    }
+
+
     private Set<String> messageIdsFromMessages(Collection<Message> messages) {
         Set<String> ids = new HashSet<>();
         for (Message message : messages) {
