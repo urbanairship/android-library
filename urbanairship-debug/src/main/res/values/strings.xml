@@ -80,6 +80,8 @@
     <string name="ua_opted_out">Opted-out</string>
 
     <string name="ua_user_settings_category">User Settings</string>
+
+
     <string name="ua_data_collection_enabled_setting_title">Data Collection Enabled</string>
     <string name="ua_data_collection_enabled_setting_summary">Required for location, push, analytics, named user, attributes, and tags.</string>
     <string name="ua_named_user_settings_title">Named User</string>
@@ -276,5 +278,6 @@
     <string name="ua_deferred_message_schedules">Deferred Message Schedules</string>
     <string name="ua_debug_iaa_message_details">In-App Message Details</string>
     <string name="ua_iaa_debug_data_key">Schedule Data</string>
+    <string name="ua_sdk_settings_category">SDK Features</string>
 
 </resources>

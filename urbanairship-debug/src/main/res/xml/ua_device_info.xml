@@ -2,40 +2,82 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.preference.PreferenceCategory app:title="@string/ua_user_settings_category">
+    <androidx.preference.PreferenceCategory app:title="@string/ua_sdk_settings_category">
 
-        <com.urbanairship.preference.DataCollectionEnabledPreference
-            app:key="data_enabled"
-            app:persistent="true"
-            app:summary="@string/ua_data_collection_enabled_setting_summary"
-            app:title="@string/ua_data_collection_enabled_setting_title" />
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="push"
+            app:persistent="false"
+            app:title="Push" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="message_center"
+            app:persistent="false"
+            app:title="Message Center" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="in_app_automation"
+            app:persistent="false"
+            app:title="In-App Automation" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="analytics"
+            app:persistent="false"
+            app:title="Analytics" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="chat"
+            app:persistent="false"
+            app:title="Chat" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="location"
+            app:persistent="false"
+            app:title="Location" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="contacts"
+            app:persistent="false"
+            app:title="Contacts" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="tags_and_attributes"
+            app:persistent="false"
+            app:title="Tags &amp; Attributes" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory android:title="@string/ua_user_settings_category">
+        <com.urbanairship.preference.PushEnablePreference
+            app:dependency="push"
+            app:key="notification_preference"
+            app:persistent="false"
+            app:title="@string/ua_notifications_enabled_settings_title" />
 
         <com.urbanairship.debug.deviceinfo.preferences.NamedUserPreference
-            app:dependency="data_enabled"
+            app:dependency="contacts"
             app:key="named_user"
             app:persistent="false"
             app:title="@string/ua_named_user_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_enabled"
+            app:dependency="tags_and_attributes"
             app:key="channel_attributes"
             app:persistent="false"
             app:title="@string/ua_channel_attributes_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_enabled"
+            app:dependency="tags_and_attributes"
             app:key="named_user_attributes"
             app:persistent="false"
             app:title="@string/ua_named_user_attributes_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_enabled"
+            app:dependency="tags_and_attributes"
             app:key="tags"
             app:persistent="false"
             app:title="@string/ua_tags_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_enabled"
+            app:dependency="tags_and_attributes"
             app:key="tagGroups"
             app:persistent="false"
             app:title="@string/ua_tag_groups_settings_title" />
@@ -43,31 +85,14 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
-        app:dependency="data_enabled"
-        app:title="@string/ua_push_settings_category">
-
-        <com.urbanairship.preference.PushEnablePreference
-            app:key="notification_preference"
-            app:persistent="false"
-            app:title="@string/ua_notifications_enabled_settings_title" />
-
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory
         android:title="@string/ua_analytics_settings_category"
-        app:dependency="data_enabled">
-
-        <com.urbanairship.preference.AnalyticsEnablePreference
-            app:key="analytics_preference"
-            app:persistent="false"
-            app:title="@string/ua_analytics_enabled_settings_title" />
+        app:dependency="analytics">
 
         <com.urbanairship.debug.deviceinfo.preferences.EnableAdvertisingIdPreference
             app:persistent="false"
             app:title="@string/ua_track_advertising_id_settings_title" />
 
         <androidx.preference.Preference
-            app:dependency="data_enabled"
             app:key="associated_identifiers"
             app:persistent="false"
             app:title="@string/ua_associated_identifiers" />
@@ -75,7 +100,7 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
-        app:dependency="data_enabled"
+        app:dependency="location"
         app:title="@string/ua_location_settings_category">
 
         <com.urbanairship.preference.LocationUpdatesEnabledPreference
@@ -91,12 +116,7 @@
 
     </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory app:title="@string/ua_iaa_setting_category">
-
-        <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationEnablePreference
-            android:key="iaa_preference"
-            android:persistent="false"
-            android:title="@string/ua_iaa_enabled_settings_title" />
+    <androidx.preference.PreferenceCategory app:title="@string/ua_iaa_setting_category" android:dependency="in_app_automation">
 
         <com.urbanairship.debug.deviceinfo.preferences.InAppAutomationDisplayIntervalPreference
             android:key="iaa_display_interval_preference"
@@ -111,12 +131,10 @@
             app:persistent="false"
             app:title="@string/ua_channel_id_settings_title" />
 
-
         <com.urbanairship.debug.deviceinfo.preferences.UserPreference
             app:key="user_id_preference"
             app:persistent="false"
             app:title="@string/ua_user_id_settings_title" />
-
 
         <com.urbanairship.debug.deviceinfo.preferences.PushOptInPreference
             app:key="push_opt_in_status_preference"
@@ -127,7 +145,6 @@
             app:key="notification_opt_in_preference"
             app:persistent="false"
             app:title="@string/ua_notificaiton_optin_status_settings_title" />
-
 
         <com.urbanairship.debug.deviceinfo.preferences.PushProviderPreference
             app:key="push_provider_preference"
