@@ -50,13 +50,13 @@ public class Modules {
     public static AccengageModule accengage(@NonNull Context context,
                                             @NonNull AirshipConfigOptions configOptions,
                                             @NonNull PreferenceDataStore preferenceDataStore,
+                                            @NonNull PrivacyManager privacyManager,
                                             @NonNull AirshipChannel channel,
-                                            @NonNull PushManager pushManager,
-                                            @NonNull Analytics analytics) {
+                                            @NonNull PushManager pushManager) {
         try {
             AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, configOptions, preferenceDataStore, channel, pushManager, analytics);
+                return moduleFactory.build(context, configOptions, preferenceDataStore, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Accengage module");

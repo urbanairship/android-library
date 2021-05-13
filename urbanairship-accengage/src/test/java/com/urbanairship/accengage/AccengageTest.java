@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.analytics.Analytics;
@@ -26,6 +27,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.TestCase.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,10 +39,9 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public class AccengageTest {
 
     private AirshipChannel mockChannel;
-    private PushManager mockPush;
-    private Analytics mockAnalytics;
-    private UAirship mockAirship;
+    private PushManager mockPush;;
     private AirshipConfigOptions mockConfig;
+    private PrivacyManager privacyManager;
 
     private Accengage accengage;
 
@@ -51,11 +53,8 @@ public class AccengageTest {
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
 
         mockChannel = mock(AirshipChannel.class);
-        mockAnalytics = mock(Analytics.class);
         mockPush = mock(PushManager.class);
-        mockAirship = mock(UAirship.class);
         mockConfig = mock(AirshipConfigOptions.class);
-
 
         accengageSettings = JsonMap.EMPTY_MAP;
 
@@ -67,7 +66,8 @@ public class AccengageTest {
             }
         };
 
-        accengage = new Accengage(application, mockConfig, preferenceDataStore, mockChannel, mockPush, mockAnalytics, settingsLoader);
+        privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
+        accengage = new Accengage(application, mockConfig, preferenceDataStore, privacyManager, mockChannel, mockPush, settingsLoader);
     }
 
     /**
@@ -82,7 +82,6 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
         verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
@@ -110,7 +109,6 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
         verifyZeroInteractions(mockChannel);
     }
@@ -127,7 +125,6 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockPush, times(1)).setUserNotificationsEnabled(true);
@@ -146,7 +143,6 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
         // Verify the migration does not apply twice
         verify(mockPush, times(1)).setUserNotificationsEnabled(false);
@@ -165,11 +161,8 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
-        // Verify the migration does not apply twice
-        verify(mockAnalytics, times(1)).setEnabled(true);
-        verify(mockAnalytics, times(0)).setEnabled(false);
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS));
     }
 
     /**
@@ -184,11 +177,8 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
-        // Verify the migration does not apply twice
-        verify(mockAnalytics, times(1)).setEnabled(false);
-        verify(mockAnalytics, times(0)).setEnabled(true);
+        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS));
     }
 
     /**
@@ -196,6 +186,8 @@ public class AccengageTest {
      */
     @Test
     public void testMigrateDataOptInSetting() {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+
         // Setup
         this.accengageSettings = JsonMap.newBuilder()
                                         .put(Accengage.OPTIN_DATA_KEY, Accengage.DATA_OPT_IN)
@@ -203,10 +195,8 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
-        // Verify the migration does not apply twice
-        verify(mockAirship, times(1)).setDataCollectionEnabled(true);
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_ALL));
     }
 
     /**
@@ -221,10 +211,8 @@ public class AccengageTest {
 
         // Test migrate
         accengage.init();
-        accengage.onAirshipReady(mockAirship);
 
-        // Verify the migration does not apply twice
-        verify(mockAirship, times(1)).setDataCollectionEnabled(false);
+        assertFalse(privacyManager.isAnyFeatureEnabled());
     }
 
 
