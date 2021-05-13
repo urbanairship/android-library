@@ -2,11 +2,18 @@
 
 package com.urbanairship.remoteconfig;
 
+import android.os.Looper;
+
+import com.urbanairship.AirshipLoopers;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PrivacyManager;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.reactive.Scheduler;
 import com.urbanairship.reactive.Subject;
+import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 
@@ -14,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.robolectric.Shadows;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -43,6 +52,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
     private Subject<Collection<RemoteDataPayload>> updates;
 
     private TestModuleAdapter testModuleAdapter;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setup() {
@@ -51,7 +61,28 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         this.updates = Subject.create();
         when(remoteData.payloadsForTypes("app_config", "app_config:android")).thenReturn(updates);
 
-        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, remoteData, testModuleAdapter);
+        TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        privacyManager = new PrivacyManager(TestApplication.getApplication().preferenceDataStore, PrivacyManager.FEATURE_ALL);
+
+        Scheduler scheduler = new Scheduler() {
+            @NonNull
+            @Override
+            public Subscription schedule(@NonNull Runnable runnable) {
+                runnable.run();
+                return Subscription.empty();
+            }
+
+            @NonNull
+            @Override
+            public Subscription schedule(long delayTimeMs, @NonNull Runnable runnable) {
+                runnable.run();
+                return Subscription.empty();
+            }
+        };
+
+        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication(),
+                TestApplication.getApplication().preferenceDataStore, runtimeConfig, privacyManager,
+                remoteData, testModuleAdapter, scheduler);
         this.remoteConfigManager.init();
     }
 
@@ -178,6 +209,21 @@ public class RemoteConfigManagerTest extends BaseTestCase {
             assertNull(config.get(module));
             assertTrue(testModuleAdapter.sentConfig.keySet().contains(module));
         }
+    }
+
+    @Test
+    public void testSubscription() {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        RemoteDataPayload common = createDisablePayload("app_config", 9, Modules.ALL_MODULES);
+
+        updates.onNext(Collections.singleton(common));
+
+        assertTrue(testModuleAdapter.disabledModules.isEmpty());
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS);
+        updates.onNext(Collections.singleton(common));
+
+        assertFalse(testModuleAdapter.disabledModules.isEmpty());
     }
 
     static RemoteDataPayload createRemoteDataPayload(String type, long timeStamp, JsonMap data) {

@@ -750,7 +750,7 @@ public class UAirship {
         this.remoteData = new RemoteData(application, preferenceDataStore, runtimeConfig, privacyManager, pushManager, localeManager);
         components.add(this.remoteData);
 
-        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, remoteData);
+        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
