@@ -45,9 +45,8 @@ public class WalletActionTest extends BaseTestCase {
      * Test action rejects Amazon/ADM platform.
      */
     @Test
-    public void testRejectsAdmPlatfrom() {
+    public void testRejectsAdmPlatform() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
-
         assertFalse(action.acceptsArguments(testArgs));
     }
 

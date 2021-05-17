@@ -91,8 +91,6 @@ class InAppRemoteDataObserver {
     private final RemoteData remoteData;
     private final List<Listener> listeners = new ArrayList<>();
 
-    private Subscription subscription;
-
     interface Listener {
 
         void onSchedulesUpdated();
@@ -156,42 +154,33 @@ class InAppRemoteDataObserver {
      *
      * @param looper The looper to process updates and callbacks on.
      * @param delegate The delegate.
+     * @return The subcription.
      */
-    void subscribe(@NonNull Looper looper, @NonNull final Delegate delegate) {
-        cancel();
+    Subscription subscribe(@NonNull Looper looper, @NonNull final Delegate delegate) {
+        return remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
+                         .filter(new Predicate<RemoteDataPayload>() {
+                             @Override
+                             public boolean apply(@NonNull RemoteDataPayload payload) {
+                                 if (payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1)) {
+                                     return true;
+                                 }
 
-        this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
-                                      .filter(new Predicate<RemoteDataPayload>() {
-                                          @Override
-                                          public boolean apply(@NonNull RemoteDataPayload payload) {
-                                              if (payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1)) {
-                                                  return true;
-                                              }
-
-                                              return !payload.getMetadata().equals(getLastPayloadMetadata());
-                                          }
-                                      })
-                                      .observeOn(Schedulers.looper(looper))
-                                      .subscribe(new Subscriber<RemoteDataPayload>() {
-                                          @Override
-                                          public void onNext(@NonNull RemoteDataPayload payload) {
-                                              try {
-                                                  processPayload(payload, delegate);
-                                                  Logger.debug("Finished processing messages.");
-                                              } catch (Exception e) {
-                                                  Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
-                                              }
-                                          }
-                                      });
-    }
-
-    /**
-     * Cancels the subscription.
-     */
-    void cancel() {
-        if (this.subscription != null) {
-            this.subscription.cancel();
-        }
+                                 return !payload.getMetadata().equals(getLastPayloadMetadata());
+                             }
+                         })
+                         .observeOn(Schedulers.looper(looper))
+                         .subscribeOn(Schedulers.looper(looper))
+                         .subscribe(new Subscriber<RemoteDataPayload>() {
+                             @Override
+                             public void onNext(@NonNull RemoteDataPayload payload) {
+                                 try {
+                                     processPayload(payload, delegate);
+                                     Logger.debug("Finished processing messages.");
+                                 } catch (Exception e) {
+                                     Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
+                                 }
+                             }
+                         });
     }
 
     /**

@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
@@ -35,13 +36,14 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
     public Module build(@NonNull Context context,
                         @NonNull PreferenceDataStore dataStore,
                         @NonNull AirshipRuntimeConfig runtimeConfig,
+                        @NonNull PrivacyManager privacyManager,
                         @NonNull AirshipChannel airshipChannel,
                         @NonNull PushManager pushManager,
                         @NonNull Analytics analytics,
                         @NonNull RemoteData remoteData,
                         @NonNull NamedUser namedUser) {
 
-        InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig, analytics, remoteData, airshipChannel, namedUser);
+        InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig, privacyManager, analytics, remoteData, airshipChannel, namedUser);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
 
         Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);

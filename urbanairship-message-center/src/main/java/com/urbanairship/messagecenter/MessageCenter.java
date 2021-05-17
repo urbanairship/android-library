@@ -11,6 +11,7 @@ import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
@@ -19,11 +20,15 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+
+import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
 
 /**
  * Airship Message Center.
@@ -68,10 +73,13 @@ public class MessageCenter extends AirshipComponent {
 
     }
 
+    private final PrivacyManager privacyManager;
     private final PushManager pushManager;
     private final Inbox inbox;
     private OnShowMessageCenterListener onShowMessageCenterListener;
     private final PushListener pushListener;
+
+    private AtomicBoolean isStarted = new AtomicBoolean(false);
 
     /**
      * Gets the shared Message Center instance.
@@ -94,9 +102,10 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public MessageCenter(@NonNull Context context,
                          @NonNull PreferenceDataStore dataStore,
+                         @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel channel,
                          @NonNull PushManager pushManager) {
-        this(context, dataStore, new Inbox(context, dataStore, channel), pushManager);
+        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel), pushManager);
     }
 
     /**
@@ -112,9 +121,11 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     MessageCenter(@NonNull Context context,
                   @NonNull PreferenceDataStore dataStore,
+                  @NonNull PrivacyManager privacyManager,
                   @NonNull Inbox inbox,
                   @NonNull PushManager pushManager) {
         super(context, dataStore);
+        this.privacyManager = privacyManager;
         this.pushManager = pushManager;
         this.inbox = inbox;
 
@@ -137,9 +148,38 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void init() {
         super.init();
-        inbox.init();
 
-        pushManager.addInternalPushListener(pushListener);
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                updateInboxEnabledState();
+            }
+        });
+
+        updateInboxEnabledState();
+    }
+
+    /**
+     * Update the enabled state of the Inbox and initialize it if necessary.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void updateInboxEnabledState() {
+        boolean isEnabled = privacyManager.isEnabled(FEATURE_MESSAGE_CENTER);
+
+        inbox.setEnabled(isEnabled);
+        inbox.updateEnabledState();
+
+        if (isEnabled) {
+            if (!isStarted.getAndSet(true)) {
+                Logger.verbose("Initializing Inbox...");
+
+                pushManager.addInternalPushListener(pushListener);
+            }
+        } else {
+            tearDown();
+        }
     }
 
     /**
@@ -171,7 +211,11 @@ public class MessageCenter extends AirshipComponent {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        return inbox.onPerformJob(airship, jobInfo);
+        if (privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
+            return inbox.onPerformJob(airship, jobInfo);
+        } else {
+            return JobInfo.JOB_FINISHED;
+        }
     }
 
     /**
@@ -181,6 +225,7 @@ public class MessageCenter extends AirshipComponent {
     public void tearDown() {
         inbox.tearDown();
         pushManager.removePushListener(pushListener);
+        isStarted.set(false);
     }
 
     /**
@@ -254,6 +299,11 @@ public class MessageCenter extends AirshipComponent {
      * @param messageId The message ID.
      */
     public void showMessageCenter(@Nullable String messageId) {
+        if (!privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
+            Logger.warn("Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager.");
+            return;
+        }
+
         // Try the listener
         OnShowMessageCenterListener listener = this.onShowMessageCenterListener;
         if (listener != null && listener.onShowMessageCenter(messageId)) {
@@ -313,5 +363,4 @@ public class MessageCenter extends AirshipComponent {
                 return null;
         }
     }
-
 }

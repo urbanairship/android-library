@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.accengage.AccengageModule;
@@ -30,11 +31,11 @@ public class AccengageModuleFactoryImpl implements AccengageModuleFactory {
     public AccengageModule build(@NonNull Context context,
                                  @NonNull AirshipConfigOptions configOptions,
                                  @NonNull PreferenceDataStore dataStore,
+                                 @NonNull PrivacyManager privacyManager,
                                  @NonNull AirshipChannel airshipChannel,
-                                 @NonNull PushManager pushManager,
-                                 @NonNull Analytics analytics) {
+                                 @NonNull PushManager pushManager) {
 
-        final Accengage accengage = new Accengage(context, configOptions, dataStore, airshipChannel, pushManager, analytics);
+        final Accengage accengage = new Accengage(context, configOptions, dataStore, privacyManager, airshipChannel, pushManager);
         return new AccengageModule(accengage, new AccengageNotificationHandler() {
             @NonNull
             @Override

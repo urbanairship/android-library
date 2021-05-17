@@ -20,7 +20,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -193,7 +192,7 @@ public class InboxApiClient {
      *
      * @return The user payload as a JSON object.
      */
-    private String createNewUserPayload(@NonNull String channelId) {
+    private String createNewUserPayload(@NonNull String channelId) throws RequestException {
         Map<String, Object> payload = new HashMap<>();
         payload.put(getPayloadChannelsKey(), Collections.singletonList(channelId));
         return JsonValue.wrapOpt(payload).toString();
@@ -204,7 +203,7 @@ public class InboxApiClient {
      *
      * @return The user payload as a JSON object.
      */
-    private String createUpdateUserPayload(@NonNull String channelId) {
+    private String createUpdateUserPayload(@NonNull String channelId) throws RequestException {
         Map<String, Object> addChannels = new HashMap<>();
         addChannels.put(PAYLOAD_ADD_KEY, Collections.singletonList(channelId));
 
@@ -220,11 +219,14 @@ public class InboxApiClient {
      * @return The payload channels key as a string.
      */
     @NonNull
-    private String getPayloadChannelsKey() {
-        if (runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM) {
-            return PAYLOAD_AMAZON_CHANNELS_KEY;
-        } else {
-            return PAYLOAD_ANDROID_CHANNELS_KEY;
+    private String getPayloadChannelsKey() throws RequestException {
+        switch (runtimeConfig.getPlatform()) {
+            case UAirship.AMAZON_PLATFORM:
+                return PAYLOAD_AMAZON_CHANNELS_KEY;
+            case UAirship.ANDROID_PLATFORM:
+                return PAYLOAD_ANDROID_CHANNELS_KEY;
+            default:
+                throw new RequestException("Invalid platform");
         }
     }
 

@@ -14,6 +14,8 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import java.util.concurrent.Callable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -34,13 +36,13 @@ class TagGroupApiClient {
 
     private final AirshipRuntimeConfig runtimeConfig;
     private final RequestFactory requestFactory;
-    private final String audienceKey;
+    private Callable<String> audienceKey;
     private final String path;
 
     @VisibleForTesting
     TagGroupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
                       @NonNull RequestFactory requestFactory,
-                      @NonNull String audienceKey,
+                      @NonNull Callable<String> audienceKey,
                       @NonNull String path) {
         this.runtimeConfig = runtimeConfig;
         this.requestFactory = requestFactory;
@@ -50,13 +52,29 @@ class TagGroupApiClient {
 
     public static TagGroupApiClient namedUserClient(AirshipRuntimeConfig runtimeConfig) {
         return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                NAMED_USER_ID_KEY, NAMED_USER_TAG_GROUP_PATH);
+                new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return NAMED_USER_ID_KEY;
+                    }
+                }, NAMED_USER_TAG_GROUP_PATH);
     }
 
-    public static TagGroupApiClient channelClient(AirshipRuntimeConfig runtimeConfig) {
-        String audienceKey = runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? AMAZON_CHANNEL_KEY : ANDROID_CHANNEL_KEY;
+    public static TagGroupApiClient channelClient(final AirshipRuntimeConfig runtimeConfig) {
         return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                audienceKey, CHANNEL_TAGS_PATH);
+                new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        switch (runtimeConfig.getPlatform()) {
+                            case UAirship.AMAZON_PLATFORM:
+                                return AMAZON_CHANNEL_KEY;
+                            case UAirship.ANDROID_PLATFORM:
+                                return ANDROID_CHANNEL_KEY;
+                            default:
+                                throw new IllegalStateException("Invalid platform");
+                        }
+                    }
+                }, CHANNEL_TAGS_PATH);
     }
 
     /**
@@ -77,7 +95,7 @@ class TagGroupApiClient {
         JsonMap payload = JsonMap.newBuilder()
                                  .putAll(mutation.toJsonValue().optMap())
                                  .put(AUDIENCE_KEY, JsonMap.newBuilder()
-                                                           .put(audienceKey, identifier)
+                                                           .put(getAudienceKey(), identifier)
                                                            .build())
                                  .build();
 
@@ -100,8 +118,12 @@ class TagGroupApiClient {
     }
 
     @VisibleForTesting
-    String getAudienceKey() {
-        return audienceKey;
+    String getAudienceKey() throws RequestException {
+        try {
+            return audienceKey.call();
+        } catch (Exception e) {
+            throw new RequestException("Audience exception", e);
+        }
     }
 
     /**

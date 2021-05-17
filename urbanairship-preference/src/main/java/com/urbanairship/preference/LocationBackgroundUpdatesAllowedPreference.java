@@ -7,7 +7,9 @@ import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
 
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
+import com.urbanairship.modules.location.AirshipLocationClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +32,7 @@ public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPrefer
         super(context, attrs);
     }
 
+
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
         if (airship.getLocationClient() != null) {
@@ -44,6 +47,7 @@ public class LocationBackgroundUpdatesAllowedPreference extends UACheckBoxPrefer
         if (airship.getLocationClient() != null) {
             airship.getLocationClient().setBackgroundLocationAllowed(enabled);
         }
+
     }
 
     @Override

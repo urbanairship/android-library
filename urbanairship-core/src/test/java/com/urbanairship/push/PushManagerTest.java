@@ -9,12 +9,18 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.PushProviders;
 import com.urbanairship.R;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestPushProvider;
+import com.urbanairship.TestPushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -31,12 +37,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.Nullable;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -51,13 +60,16 @@ public class PushManagerTest extends BaseTestCase {
 
     private PushManager pushManager;
     private PreferenceDataStore preferenceDataStore;
-    private AirshipConfigOptions options;
+    private TestAirshipRuntimeConfig runtimeConfig;
+    private PushProviders mockPushProviders;
+
     private PrivacyManager privacyManager;
 
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockAirshipChannel;
     private PushProvider mockPushProvider;
     private Analytics mockAnalytics;
+    private Supplier<PushProviders> pushProvidersSupplier;
 
     @Before
     public void setup() {
@@ -70,14 +82,21 @@ public class PushManagerTest extends BaseTestCase {
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
         privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
+        mockPushProviders = mock(PushProviders.class);
+        when(mockPushProviders.getBestProvider(anyInt())).thenReturn(mockPushProvider);
 
-        options = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .build();
+        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        pushProvidersSupplier = new Supplier<PushProviders>() {
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options,
-                privacyManager, mockPushProvider, mockAirshipChannel, mockAnalytics, mockDispatcher);
+            @Nullable
+            @Override
+            public PushProviders get() {
+                return mockPushProviders;
+            }
+        };
+
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
     }
 
     /**
@@ -111,11 +130,15 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("token", pushManager.getPushToken());
 
         // Init to verify token does not clear if the delivery type is the same
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
         pushManager.init();
         assertEquals("token", pushManager.getPushToken());
 
         // Change the delivery type, should clear the token on init
         when(mockPushProvider.getDeliveryType()).thenReturn("some other type");
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
         pushManager.init();
         assertNull(pushManager.getPushToken());
     }
@@ -145,11 +168,11 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testPushRegistration() throws PushProvider.RegistrationException {
+        pushManager.init();
         when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
         when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
         pushManager.performPushRegistration(true);
         assertEquals("token", pushManager.getPushToken());
-
         verify(mockAirshipChannel).updateRegistration();
     }
 
@@ -158,6 +181,8 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testOptIn() throws PushProvider.RegistrationException {
+        pushManager.init();
+
         assertFalse(pushManager.isOptIn());
 
         pushManager.setPushEnabled(true);

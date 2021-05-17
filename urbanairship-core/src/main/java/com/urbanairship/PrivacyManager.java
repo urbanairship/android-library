@@ -151,7 +151,7 @@ public class PrivacyManager {
     /**
      * Helper flag that is all features.
      */
-    public final static int FEATURE_ALL = FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
+    public final static int FEATURE_ALL = FEATURE_IN_APP_AUTOMATION | FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
             | FEATURE_CHAT | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS | FEATURE_LOCATION;
 
     private final String ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures";
@@ -172,17 +172,19 @@ public class PrivacyManager {
     @VisibleForTesting
     @NonNull
     static final String CHAT_ENABLED_KEY = "com.urbanairship.chat.CHAT";
+    @VisibleForTesting
+    static final String IAA_ENABLED_KEY = "com.urbanairship.iam.enabled";
 
     private final Object lock = new Object();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     private final PreferenceDataStore dataStore;
-    private final int defaultEnabledFeatures;
+    private volatile int currentValue;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public PrivacyManager(@NonNull PreferenceDataStore dataStore, @Feature int defaultEnabledFeatures) {
         this.dataStore = dataStore;
-        this.defaultEnabledFeatures = defaultEnabledFeatures;
+        this.currentValue = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
     }
 
     /**
@@ -191,10 +193,7 @@ public class PrivacyManager {
      * @param features The features to set as enabled.
      */
     public void setEnabledFeatures(@Feature int... features) {
-        synchronized (lock) {
-            dataStore.put(ENABLED_FEATURES_KEY, combine(features));
-            notifyListeners();
-        }
+        update(combine(features));
     }
 
     /**
@@ -204,7 +203,7 @@ public class PrivacyManager {
      */
     @Feature
     public int getEnabledFeatures() {
-        return dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
+        return currentValue;
     }
 
     /**
@@ -213,11 +212,7 @@ public class PrivacyManager {
      * @param features The features to enable.
      */
     public void enable(@Feature int... features) {
-        synchronized (lock) {
-            int updated = getEnabledFeatures() | combine(features);
-            dataStore.put(ENABLED_FEATURES_KEY, updated);
-            notifyListeners();
-        }
+        update(currentValue | combine(features));
     }
 
     /**
@@ -226,11 +221,7 @@ public class PrivacyManager {
      * @param features The features to enable.
      */
     public void disable(@Feature int... features) {
-        synchronized (lock) {
-            int updated = getEnabledFeatures() & ~combine(features);
-            dataStore.put(ENABLED_FEATURES_KEY, updated);
-            notifyListeners();
-        }
+        update(currentValue &~ combine(features));
     }
 
     /**
@@ -335,11 +326,24 @@ public class PrivacyManager {
             }
             this.dataStore.remove(CHAT_ENABLED_KEY);
         }
+
+        if (this.dataStore.isSet(IAA_ENABLED_KEY)) {
+            if (!this.dataStore.getBoolean(IAA_ENABLED_KEY, true)) {
+                this.disable(FEATURE_IN_APP_AUTOMATION);
+            }
+            this.dataStore.remove(IAA_ENABLED_KEY);
+        }
     }
 
-    private void notifyListeners() {
-        for (Listener listener : listeners) {
-            listener.onEnabledFeaturesChanged();
+    private void update(int value) {
+        synchronized (lock) {
+            if (currentValue != value) {
+                currentValue = value;
+                dataStore.put(ENABLED_FEATURES_KEY, value);
+                for (Listener listener : listeners) {
+                    listener.onEnabledFeaturesChanged();
+                }
+            }
         }
     }
 

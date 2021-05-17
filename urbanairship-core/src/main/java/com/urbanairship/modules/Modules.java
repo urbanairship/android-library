@@ -50,13 +50,13 @@ public class Modules {
     public static AccengageModule accengage(@NonNull Context context,
                                             @NonNull AirshipConfigOptions configOptions,
                                             @NonNull PreferenceDataStore preferenceDataStore,
+                                            @NonNull PrivacyManager privacyManager,
                                             @NonNull AirshipChannel channel,
-                                            @NonNull PushManager pushManager,
-                                            @NonNull Analytics analytics) {
+                                            @NonNull PushManager pushManager) {
         try {
             AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, configOptions, preferenceDataStore, channel, pushManager, analytics);
+                return moduleFactory.build(context, configOptions, preferenceDataStore, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Accengage module");
@@ -67,13 +67,14 @@ public class Modules {
     @Nullable
     public static Module messageCenter(@NonNull Context context,
                                        @NonNull PreferenceDataStore preferenceDataStore,
+                                       @NonNull PrivacyManager privacyManager,
                                        @NonNull AirshipChannel channel,
                                        @NonNull PushManager pushManager) {
 
         try {
             MessageCenterModuleFactory moduleFactory = createFactory(MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, channel, pushManager);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Message Center module");
@@ -102,6 +103,7 @@ public class Modules {
     public static Module automation(@NonNull Context context,
                                     @NonNull PreferenceDataStore dataStore,
                                     @NonNull AirshipRuntimeConfig runtimeConfig,
+                                    @NonNull PrivacyManager privacyManager,
                                     @NonNull AirshipChannel airshipChannel,
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
@@ -110,7 +112,7 @@ public class Modules {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, runtimeConfig, airshipChannel, pushManager,
+                return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
                         analytics, remoteData, namedUser);
             }
         } catch (Exception e) {

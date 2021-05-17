@@ -5,13 +5,18 @@ package com.urbanairship.remoteconfig;
 import android.content.Context;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipLoopers;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Function;
+import com.urbanairship.reactive.Scheduler;
+import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
@@ -69,58 +74,91 @@ public class RemoteConfigManager extends AirshipComponent {
 
     private final RemoteData remoteData;
     private final ModuleAdapter moduleAdapter;
+    private final Scheduler scheduler;
+    private final PrivacyManager privacyManager;
+    private final AirshipRuntimeConfig runtimeConfig;
+
     private Subscription subscription;
     private RemoteAirshipConfig remoteAirshipConfig;
 
-    /**
-     * Default constructor.
-     *
-     * @param dataStore The preference data store.
-     * @param remoteData The remote data manager.
-     */
-    public RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData) {
-        this(context, dataStore, remoteData, new ModuleAdapter());
+    private final PrivacyManager.Listener privacyManagerListener = new PrivacyManager.Listener() {
+        @Override
+        public void onEnabledFeaturesChanged() {
+            updateSubscription();
+        }
+    };
+
+    public RemoteConfigManager(@NonNull Context context,
+                               @NonNull PreferenceDataStore dataStore,
+                               @NonNull AirshipRuntimeConfig runtimeConfig,
+                               @NonNull PrivacyManager privacyManager,
+                               @NonNull RemoteData remoteData) {
+        this(context, dataStore, runtimeConfig, privacyManager, remoteData, new ModuleAdapter(),
+                Schedulers.looper(AirshipLoopers.getBackgroundLooper()));
     }
 
     @VisibleForTesting
-    RemoteConfigManager(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull RemoteData remoteData, @NonNull ModuleAdapter moduleAdapter) {
+    RemoteConfigManager(@NonNull Context context,
+                        @NonNull PreferenceDataStore dataStore,
+                        @NonNull AirshipRuntimeConfig runtimeConfig,
+                        @NonNull PrivacyManager privacyManager,
+                        @NonNull RemoteData remoteData,
+                        @NonNull ModuleAdapter moduleAdapter,
+                        @NonNull Scheduler scheduler) {
         super(context, dataStore);
+        this.runtimeConfig = runtimeConfig;
+        this.privacyManager = privacyManager;
         this.remoteData = remoteData;
         this.moduleAdapter = moduleAdapter;
+        this.scheduler = scheduler;
     }
 
     @Override
     protected void init() {
         super.init();
+        updateSubscription();
+        privacyManager.addListener(privacyManagerListener);
+    }
 
-        String platformConfig = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? CONFIG_TYPE_AMAZON : CONFIG_TYPE_ANDROID;
-        subscription = remoteData.payloadsForTypes(CONFIG_TYPE_COMMON, platformConfig)
-                                 .map(new Function<Collection<RemoteDataPayload>, JsonMap>() {
-                                     @NonNull
-                                     @Override
-                                     public JsonMap apply(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
-                                         // sort the payloads, common first followed by platform-specific
-                                         List<RemoteDataPayload> remoteDataPayloadList = new ArrayList<>(remoteDataPayloads);
-                                         Collections.sort(remoteDataPayloadList, COMPARE_BY_PAYLOAD_TYPE);
+    private void updateSubscription() {
+        if (privacyManager.isAnyFeatureEnabled()) {
+            if (subscription == null || subscription.isCancelled()) {
+                String platformConfig = runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? CONFIG_TYPE_AMAZON : CONFIG_TYPE_ANDROID;
+                subscription = remoteData.payloadsForTypes(CONFIG_TYPE_COMMON, platformConfig)
+                                         .map(new Function<Collection<RemoteDataPayload>, JsonMap>() {
+                                             @NonNull
+                                             @Override
+                                             public JsonMap apply(@NonNull Collection<RemoteDataPayload> remoteDataPayloads) {
+                                                 // sort the payloads, common first followed by platform-specific
+                                                 List<RemoteDataPayload> remoteDataPayloadList = new ArrayList<>(remoteDataPayloads);
+                                                 Collections.sort(remoteDataPayloadList, COMPARE_BY_PAYLOAD_TYPE);
 
-                                         // combine the payloads, overwriting common config with platform-specific config
-                                         JsonMap.Builder combinedPayloadDataBuilder = JsonMap.newBuilder();
-                                         for (RemoteDataPayload payload : remoteDataPayloadList) {
-                                             combinedPayloadDataBuilder.putAll(payload.getData());
-                                         }
-                                         return combinedPayloadDataBuilder.build();
-                                     }
-                                 })
-                                 .subscribe(new Subscriber<JsonMap>() {
-                                     @Override
-                                     public void onNext(@NonNull JsonMap config) {
-                                         try {
-                                             processConfig(config);
-                                         } catch (Exception e) {
-                                             Logger.error(e, "Failed to process remote data");
-                                         }
-                                     }
-                                 });
+                                                 // combine the payloads, overwriting common config with platform-specific config
+                                                 JsonMap.Builder combinedPayloadDataBuilder = JsonMap.newBuilder();
+                                                 for (RemoteDataPayload payload : remoteDataPayloadList) {
+                                                     combinedPayloadDataBuilder.putAll(payload.getData());
+                                                 }
+                                                 return combinedPayloadDataBuilder.build();
+                                             }
+                                         })
+                                         .subscribeOn(scheduler)
+                                         .observeOn(scheduler)
+                                         .subscribe(new Subscriber<JsonMap>() {
+                                             @Override
+                                             public void onNext(@NonNull JsonMap config) {
+                                                 try {
+                                                     processConfig(config);
+                                                 } catch (Exception e) {
+                                                     Logger.error(e, "Failed to process remote data");
+                                                 }
+                                             }
+                                         });
+            }
+        } else {
+           if (subscription != null) {
+               subscription.cancel();
+           }
+        }
     }
 
     /**
@@ -200,6 +238,7 @@ public class RemoteConfigManager extends AirshipComponent {
         if (this.subscription != null) {
             this.subscription.cancel();
         }
+        this.privacyManager.removeListener(privacyManagerListener);
     }
 
     /**

@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.HashSet;
+import java.util.concurrent.Callable;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -50,7 +51,12 @@ public class TagGroupApiClientTest extends BaseTestCase {
 
     @Test
     public void testUpload() throws JsonException, RequestException {
-        TagGroupApiClient client = new TagGroupApiClient(runtimeConfig, requestFactory, "some-audience", "some-path");
+        TagGroupApiClient client = new TagGroupApiClient(runtimeConfig, requestFactory, new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return "some-audience";
+            }
+        }, "some-path");
 
         Response<Void> response = client.updateTags("identifier", mutation);
         assertEquals(testRequest.responseBody, response.getResponseBody());
@@ -69,7 +75,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
     }
 
     @Test
-    public void testAndroidChannelClient() {
+    public void testAndroidChannelClient() throws RequestException {
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
         TagGroupApiClient client = TagGroupApiClient.channelClient(runtimeConfig);
 
@@ -78,7 +84,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
     }
 
     @Test
-    public void testAmazonChannelClient() {
+    public void testAmazonChannelClient() throws RequestException {
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
         TagGroupApiClient client = TagGroupApiClient.channelClient(runtimeConfig);
 
@@ -87,7 +93,7 @@ public class TagGroupApiClientTest extends BaseTestCase {
     }
 
     @Test
-    public void testNamedUserClient() {
+    public void testNamedUserClient() throws RequestException {
         TagGroupApiClient client = TagGroupApiClient.namedUserClient(runtimeConfig);
 
         assertEquals("named_user_id", client.getAudienceKey());

@@ -39,7 +39,10 @@ public final class PreferenceDataStore {
     static final String COLUMN_NAME_KEY = "_id";
 
     private static final String[] OBSOLETE_KEYS = new String[] {
-            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS"
+            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
+            "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
+            "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",
+            "com.urbanairship.push.iam.LAST_DISPLAYED_ID"
     };
 
 

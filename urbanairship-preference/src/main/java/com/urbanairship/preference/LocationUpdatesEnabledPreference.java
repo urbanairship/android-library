@@ -11,8 +11,10 @@ import android.util.AttributeSet;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.PendingResult;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
+import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.util.HelperActivity;
 
 import java.lang.ref.WeakReference;
@@ -39,6 +41,27 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     public LocationUpdatesEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+    }
+
+    private final PrivacyManager.Listener privacyManagerListener = new PrivacyManager.Listener() {
+        @Override
+        public void onEnabledFeaturesChanged() {
+            AirshipLocationClient client = UAirship.shared().getLocationClient();
+            boolean isEnabled = client != null && client.isLocationUpdatesEnabled() && isPermissionGranted() && UAirship.shared().getPrivacyManager().isEnabled(PrivacyManager.FEATURE_LOCATION);
+            setEnabled(isEnabled);
+        }
+    };
+
+    @Override
+    public void onAttached() {
+        super.onAttached();
+        UAirship.shared().getPrivacyManager().addListener(privacyManagerListener);
+    }
+
+    @Override
+    public void onDetached() {
+        super.onDetached();
+        UAirship.shared().getPrivacyManager().removeListener(privacyManagerListener);
     }
 
     @Override
@@ -94,7 +117,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        if (airship.getLocationClient() != null && isPermissionGranted()) {
+        if (airship.getLocationClient() != null && isPermissionGranted() && airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_LOCATION)) {
             return airship.getLocationClient().isLocationUpdatesEnabled();
         } else {
             return false;
@@ -110,6 +133,10 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         if (airship.getLocationClient() != null) {
             airship.getLocationClient().setLocationUpdatesEnabled(enabled);
+        }
+
+        if (enabled) {
+            airship.getPrivacyManager().enable(PrivacyManager.FEATURE_LOCATION);
         }
     }
 

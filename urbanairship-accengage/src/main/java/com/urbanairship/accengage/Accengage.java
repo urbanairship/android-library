@@ -10,6 +10,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
@@ -35,11 +36,6 @@ import androidx.annotation.VisibleForTesting;
  * Accengage module.
  */
 public class Accengage extends AirshipComponent {
-
-    private final AirshipChannel airshipChannel;
-    private final PushManager pushManager;
-    private final Analytics analytics;
-    private final AccengageSettingsLoader settingsLoader;
 
     /**
      * Preference key for Accengage settings migration status
@@ -82,8 +78,6 @@ public class Accengage extends AirshipComponent {
     @VisibleForTesting
     static final String DO_NOT_TRACK_SETTING_KEY = "com.ad4screen.sdk.A4S.doNotTrack";
 
-    private NotificationProvider notificationProvider;
-
     /**
      * Accengage Device Info settings file
      */
@@ -108,44 +102,50 @@ public class Accengage extends AirshipComponent {
     @VisibleForTesting
     static final String DATA_OPT_OUT = "optin_no";
 
+    private final PrivacyManager privacyManager;
+    private final AirshipChannel airshipChannel;
+    private final PushManager pushManager;
+    private final AccengageSettingsLoader settingsLoader;
+
+    private NotificationProvider notificationProvider;
+    private String accengageDeviceId;
+
     /**
      * Default constructor.
      *
      * @param context The context.
      * @param configOptions The config options.
      * @param dataStore The datastore.
+     * @param privacyManager The privacy manager.
      * @param airshipChannel The airship channel.
      * @param pushManager The push manager.
-     * @param analytics The analytics instance.
      */
     Accengage(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
-              @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel,
-              @NonNull PushManager pushManager, @NonNull Analytics analytics) {
-        this(context, configOptions, dataStore, airshipChannel, pushManager, analytics, new AccengageSettingsLoader());
+              @NonNull PreferenceDataStore dataStore, @NonNull PrivacyManager privacyManager,
+              @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager) {
+        this(context, configOptions, dataStore, privacyManager, airshipChannel, pushManager, new AccengageSettingsLoader());
     }
 
     /**
      * Default constructor.
      *
      * @param context The context.
-     * @param configOptions The config options.
+     * @param configOptions The config options
+     * @param privacyManager The privacy manager..
      * @param dataStore The datastore.
      * @param airshipChannel The airship channel.
      * @param pushManager The push manager.
-     * @param analytics The analytics instance.
      * @param settingsLoader The settings loader.
      */
     @VisibleForTesting
     Accengage(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
-              @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel,
-              @NonNull PushManager pushManager, @NonNull Analytics analytics,
+              @NonNull PreferenceDataStore dataStore, @NonNull PrivacyManager privacyManager,
+              @NonNull AirshipChannel airshipChannel,  @NonNull PushManager pushManager,
               @NonNull AccengageSettingsLoader settingsLoader) {
         super(context, dataStore);
-
-
+        this.privacyManager = privacyManager;
         this.airshipChannel = airshipChannel;
         this.pushManager = pushManager;
-        this.analytics = analytics;
         this.settingsLoader = settingsLoader;
         this.notificationProvider = new AccengageNotificationProvider(configOptions);
     }
@@ -156,41 +156,28 @@ public class Accengage extends AirshipComponent {
 
         Logger.debug("Accengage Init");
 
-        // Retrieve Accengage Device ID
-        JsonMap accengageDeviceInfo = this.settingsLoader.load(getContext(), DEVICE_INFO_FILE);
-        final String deviceId = accengageDeviceInfo.opt(DEVICE_ID_KEY).getString();
-        if (deviceId != null) {
-            Logger.debug("Accengage Device ID retrieved : " + deviceId);
-            // Add Accengage Device ID to Channel Registration Payload
+        JsonMap accengageDeviceInfo = settingsLoader.load(getContext(), DEVICE_INFO_FILE);
+        accengageDeviceId = accengageDeviceInfo.opt(DEVICE_ID_KEY).getString();
+
+
+        // Add Accengage Device ID to Channel Registration Payload
+        if (accengageDeviceId != null) {
             airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
                 @NonNull
                 @Override
                 public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                    builder.setAccengageDeviceId(deviceId);
+                    builder.setAccengageDeviceId(accengageDeviceId);
                     return builder;
                 }
             });
         }
-
         pushManager.addInternalNotificationListener(new InternalNotificationListener() {
             @Override
             public void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
                 Accengage.this.onNotificationResponse(notificationInfo, actionButtonInfo);
             }
         });
-    }
-
-    @Override
-    protected void onAirshipReady(@NonNull UAirship airship) {
-        super.onAirshipReady(airship);
-
-        Logger.debug("Airship ready");
-
-        // Migrate Accengage Settings
-        if (!getDataStore().getBoolean(IS_ALREADY_MIGRATED_PREFERENCE_KEY, false)) {
-            migrateAccengageSettings(airship);
-            getDataStore().put(IS_ALREADY_MIGRATED_PREFERENCE_KEY, true);
-        }
+        migrateAccengageSettings();
     }
 
     /**
@@ -205,12 +192,20 @@ public class Accengage extends AirshipComponent {
 
     /**
      * Migrate the Accengage settings to Airship
-     *
-     * @param airship The airship instance.
      */
-    private void migrateAccengageSettings(UAirship airship) {
+    private void migrateAccengageSettings() {
+        if (getDataStore().getBoolean(IS_ALREADY_MIGRATED_PREFERENCE_KEY, false)) {
+            return;
+        }
+
         JsonMap accengageSettings = this.settingsLoader.load(getContext(), PUSH_SETTINGS_FILE);
         JsonMap accengageOptinSettings = this.settingsLoader.load(getContext(), OPTIN_SETTINGS_FILE);
+        final SharedPreferences prefs = getContext().getSharedPreferences(ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
+        if (accengageOptinSettings.isEmpty() && accengageOptinSettings.isEmpty() && !prefs.contains(DO_NOT_TRACK_SETTING_KEY)) {
+            // nothing to migrate
+            return;
+        }
+
 
         // Migrate Accengage Push Opt-in Setting
         boolean accengagePushOptinStatus = accengageSettings.opt(IS_ENABLED_SETTING_KEY).getBoolean(true);
@@ -218,26 +213,25 @@ public class Accengage extends AirshipComponent {
         pushManager.setUserNotificationsEnabled(accengagePushOptinStatus);
 
         // Migrate Accengage Data Opt-in Setting
-        boolean optinEnabled = true;
         String accengageDataOptinStatus = accengageOptinSettings.opt(OPTIN_DATA_KEY).getString();
-
         if (accengageDataOptinStatus != null) {
             Logger.debug("Migrating Accengage Data Opt-In status : " + accengageDataOptinStatus);
 
             if (accengageDataOptinStatus.equals(DATA_OPT_IN)) {
-                optinEnabled = true;
+                privacyManager.enable(PrivacyManager.FEATURE_ALL);
             } else if (accengageDataOptinStatus.equals(DATA_OPT_OUT)) {
-                optinEnabled = false;
+                privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
             }
-
-            airship.setDataCollectionEnabled(optinEnabled);
         }
 
         // Migrate Accengage Disabled Tracking Setting
-        final SharedPreferences prefs = getContext().getSharedPreferences(ACCENGAGE_PREFERENCES_FILE, Context.MODE_PRIVATE);
         boolean accengageTrackingDisabledStatus = prefs.getBoolean(DO_NOT_TRACK_SETTING_KEY, false);
         Logger.debug("Migrating Accengage Tracking Disabled status : " + accengageTrackingDisabledStatus);
-        analytics.setEnabled(!accengageTrackingDisabledStatus);
+        if (accengageTrackingDisabledStatus) {
+            privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
+        }
+
+        getDataStore().put(IS_ALREADY_MIGRATED_PREFERENCE_KEY, true);
     }
 
     /**

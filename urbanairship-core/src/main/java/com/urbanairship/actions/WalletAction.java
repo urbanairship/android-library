@@ -60,5 +60,4 @@ public class WalletAction extends OpenExternalUrlAction {
 
         return super.acceptsArguments(arguments);
     }
-
 }

@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
@@ -34,13 +35,12 @@ public class AccengageModuleImplTest {
     public void setup() {
         Application application = ApplicationProvider.getApplicationContext();
         AirshipChannel mockChannel = mock(AirshipChannel.class);
-        Analytics mockAnalytics = mock(Analytics.class);
         PushManager mockPush = mock(PushManager.class);
         mockConfig = mock(AirshipConfigOptions.class);
 
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
-
-        accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, mockConfig, preferenceDataStore, mockChannel, mockPush, mockAnalytics);
+        PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
+        accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, mockConfig, preferenceDataStore, privacyManager, mockChannel, mockPush);
     }
 
     @Test

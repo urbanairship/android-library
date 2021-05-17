@@ -4,6 +4,7 @@ package com.urbanairship;
 
 import android.content.Context;
 
+import com.urbanairship.base.Supplier;
 import com.urbanairship.push.PushProvider;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Loads push providers.
@@ -30,7 +32,8 @@ public class PushProviders {
     private final List<PushProvider> availableProviders = new ArrayList<>();
     private final AirshipConfigOptions airshipConfigOptions;
 
-    private PushProviders(@NonNull AirshipConfigOptions config) {
+    @VisibleForTesting
+    protected PushProviders(@NonNull AirshipConfigOptions config) {
         this.airshipConfigOptions = config;
     }
 
@@ -46,6 +49,10 @@ public class PushProviders {
         PushProviders providers = new PushProviders(config);
         providers.init(context);
         return providers;
+    }
+
+    static Supplier<PushProviders> lazyLoader(@NonNull Context context, @NonNull AirshipConfigOptions config) {
+        return new LazyLoader(context, config);
     }
 
     /**
@@ -152,7 +159,7 @@ public class PushProviders {
      * @return The best provider for the platform, or {@code null} if no provider is found.
      */
     @Nullable
-    PushProvider getBestProvider(@UAirship.Platform int platform) {
+    public PushProvider getBestProvider(@UAirship.Platform int platform) {
         for (PushProvider provider : availableProviders) {
             if (provider.getPlatform() == platform) {
                 return provider;
@@ -194,7 +201,7 @@ public class PushProviders {
      * @return The provider or {@code null} if the specified provider is not available.
      */
     @Nullable
-    PushProvider getProvider(@UAirship.Platform int platform, @NonNull String providerClass) {
+    public PushProvider getProvider(@UAirship.Platform int platform, @NonNull String providerClass) {
         for (PushProvider pushProvider : supportedProviders) {
             if (platform == pushProvider.getPlatform() && providerClass.equals(pushProvider.getClass().toString())) {
                 return pushProvider;
@@ -204,7 +211,7 @@ public class PushProviders {
         return null;
     }
 
-    List<String> createAllowedProviderClassList() {
+    private List<String> createAllowedProviderClassList() {
         List<String> providers = new ArrayList<>();
         if (airshipConfigOptions.allowedTransports.contains(AirshipConfigOptions.FCM_TRANSPORT)) {
             providers.add(FCM_PUSH_PROVIDER_CLASS);
@@ -219,6 +226,27 @@ public class PushProviders {
         }
 
         return providers;
+    }
+
+    private static class LazyLoader implements Supplier<PushProviders> {
+
+        private final Context context;
+        private final AirshipConfigOptions config;
+        PushProviders pushProviders = null;
+
+        public LazyLoader(Context context, AirshipConfigOptions config) {
+            this.context = context;
+            this.config = config;
+        }
+
+        @Nullable
+        @Override
+        public synchronized PushProviders get() {
+            if (pushProviders == null) {
+                pushProviders = PushProviders.load(context, config);
+            }
+            return pushProviders;
+        }
     }
 
 }

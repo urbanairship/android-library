@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.push.PushManager;
@@ -26,9 +27,9 @@ public interface AccengageModuleFactory extends AirshipVersionInfo {
     AccengageModule build(@NonNull Context context,
                           @NonNull AirshipConfigOptions configOptions,
                           @NonNull PreferenceDataStore dataStore,
+                          @NonNull PrivacyManager privacyManager,
                           @NonNull AirshipChannel airshipChannel,
-                          @NonNull PushManager manager,
-                          @NonNull Analytics analytics);
+                          @NonNull PushManager manager);
 
 
 }

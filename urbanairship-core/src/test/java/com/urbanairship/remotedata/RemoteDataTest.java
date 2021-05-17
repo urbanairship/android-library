@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
@@ -49,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -57,6 +59,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -74,6 +77,7 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload payload;
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
+    private PrivacyManager privacyManager;
 
     @Before
     public void setup() {
@@ -81,6 +85,8 @@ public class RemoteDataTest extends BaseTestCase {
 
         mockDispatcher = mock(JobDispatcher.class);
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
+
+        privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         localeManager = new LocaleManager(getApplication(), preferenceDataStore);
 
@@ -92,7 +98,7 @@ public class RemoteDataTest extends BaseTestCase {
         when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(Uri.parse("https://airship.com"));
 
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, TestAirshipRuntimeConfig.newTestConfig(),
-                activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient);
+                privacyManager, activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient);
 
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         remoteData.init();
@@ -177,6 +183,29 @@ public class RemoteDataTest extends BaseTestCase {
         }));
 
         verifyNoMoreInteractions(mockDispatcher);
+    }
+
+    @Test
+    public void testCheckRefreshFeaturesDisabled() {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        activityMonitor.foreground();
+        verifyNoInteractions(mockDispatcher);
+    }
+
+    @Test
+    public void testRefreshFeaturesEnabled() {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+        activityMonitor.foreground();
+
+        verifyNoInteractions(mockDispatcher);
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS);
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
+            }
+        }));
     }
 
     /**
@@ -489,7 +518,6 @@ public class RemoteDataTest extends BaseTestCase {
         assertEquals(RemoteDataPayload.parsePayloads(payloads, metadata), parsed);
     }
 
-
     /**
      * Test that fetching remote data succeeds if the status is 200
      */
@@ -504,6 +532,17 @@ public class RemoteDataTest extends BaseTestCase {
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
         assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    @Test
+    public void testRefreshWhenFeaturesDisabled() {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
+        verifyNoMoreInteractions(mockClient);
     }
 
     /**

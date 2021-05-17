@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
 /**
@@ -86,6 +87,17 @@ class InboxJobHandler {
         this.dataStore = dataStore;
         this.resolver = resolver;
         this.inboxApiClient = inboxApiClient;
+    }
+
+    /**
+     * Delete saved state from the data store.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void removeStoredData() {
+        dataStore.remove(LAST_MESSAGE_REFRESH_TIME);
+        dataStore.remove(LAST_UPDATE_TIME);
     }
 
     /**

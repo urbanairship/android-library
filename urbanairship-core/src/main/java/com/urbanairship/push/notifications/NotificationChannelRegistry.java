@@ -11,7 +11,9 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
+import com.urbanairship.R;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -22,6 +24,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
+import androidx.core.app.NotificationCompat;
 
 /**
  * Compatibility class for registering notification channels.
@@ -81,18 +84,26 @@ public class NotificationChannelRegistry {
             @Override
             public void run() {
                 NotificationChannelCompat result;
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     NotificationChannel channel = notificationManager.getNotificationChannel(id);
                     if (channel != null) {
                         result = new NotificationChannelCompat(channel);
                     } else {
                         result = dataManager.getChannel(id);
+                        if (result == null) {
+                            result = getAndCreateDefaultChannel(id);
+                        }
+
                         if (result != null) {
                             notificationManager.createNotificationChannel(result.toNotificationChannel());
                         }
                     }
                 } else {
                     result = dataManager.getChannel(id);
+                    if (result == null) {
+                        result = getAndCreateDefaultChannel(id);
+                    }
                 }
 
                 pendingResult.setResult(result);
@@ -222,24 +233,17 @@ public class NotificationChannelRegistry {
         });
     }
 
-    /**
-     * Like {@link #createNotificationChannels(int)}, but on Android O and above, the channels
-     * will not be created with the NotificationManager until they are accessed with
-     * {@link #getNotificationChannel(String)}.
-     *
-     * @param resourceId The xml resource ID.
-     * @hide
-     */
-    public void createDeferredNotificationChannels(@XmlRes final int resourceId) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<NotificationChannelCompat> channelCompats = NotificationChannelCompat.fromXml(context, resourceId);
-                for (NotificationChannelCompat channelCompat : channelCompats) {
-                    dataManager.createChannel(channelCompat);
-                }
+    @WorkerThread
+    private NotificationChannelCompat getAndCreateDefaultChannel(@NonNull String id) {
+        List<NotificationChannelCompat> defaultChannels = NotificationChannelCompat.fromXml(context, R.xml.ua_default_channels);
+        for (NotificationChannelCompat channel : defaultChannels) {
+            if (id.equals(channel.getId())) {
+                dataManager.createChannel(channel);
+                return channel;
             }
-        });
+        }
+
+        return null;
     }
 
 }

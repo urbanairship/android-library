@@ -60,6 +60,7 @@ public class Subscription {
     public synchronized void cancel() {
         if (this.runnable != null) {
             this.runnable.run();
+            this.runnable = null;
         }
         this.canceled = true;
     }

@@ -3,6 +3,7 @@ package com.urbanairship.messagecenter;
 import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
@@ -21,8 +22,13 @@ public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactor
 
     @NonNull
     @Override
-    public Module build(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull AirshipChannel airshipChannel, @NonNull PushManager pushManager) {
-        MessageCenter messageCenter = new MessageCenter(context, dataStore, airshipChannel, pushManager);
+    public Module build(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull PrivacyManager privacyManager,
+            @NonNull AirshipChannel airshipChannel,
+            @NonNull PushManager pushManager) {
+        MessageCenter messageCenter = new MessageCenter(context, dataStore, privacyManager, airshipChannel, pushManager);
         return Module.singleComponent(messageCenter, R.xml.ua_message_center_actions);
     }
 

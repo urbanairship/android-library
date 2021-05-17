@@ -17,6 +17,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.AirshipChannel.ChannelRegistrationPayloadExtender;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -79,12 +81,20 @@ public class Inbox {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
-    private final ApplicationListener listener;
+    private final ApplicationListener applicationListener;
+    private final AirshipChannelListener channelListener;
+    private final ChannelRegistrationPayloadExtender channelRegistrationPayloadExtender;
+    private final User.Listener userListener;
     private final ActivityMonitor activityMonitor;
     private final AirshipChannel airshipChannel;
 
     private boolean isFetchingMessages = false;
-    private InboxJobHandler inboxJobHandler;
+    @Nullable
+    @VisibleForTesting
+    InboxJobHandler inboxJobHandler;
+
+    private final AtomicBoolean isEnabled = new AtomicBoolean(false);
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
     private final List<PendingFetchMessagesCallback> pendingFetchCallbacks = new ArrayList<>();
 
@@ -116,7 +126,7 @@ public class Inbox {
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
         this.airshipChannel = airshipChannel;
-        this.listener = new ApplicationListener() {
+        this.applicationListener = new ApplicationListener() {
             @Override
             public void onForeground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()
@@ -137,6 +147,31 @@ public class Inbox {
                 jobDispatcher.dispatch(jobInfo);
             }
         };
+        this.channelListener = new AirshipChannelListener() {
+            @Override
+            public void onChannelCreated(@NonNull String channelId) {
+                dispatchUpdateUserJob(true);
+            }
+
+            @Override
+            public void onChannelUpdated(@NonNull String channelId) {
+            }
+        };
+        this.channelRegistrationPayloadExtender = new ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setUserId(getUser().getId());
+            }
+        };
+        this.userListener = new User.Listener() {
+            @Override
+            public void onUserUpdated(boolean success) {
+                if (success) {
+                    fetchMessages();
+                }
+            }
+        };
         this.activityMonitor = activityMonitor;
     }
 
@@ -145,43 +180,7 @@ public class Inbox {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void init() {
-        // Refresh the inbox whenever the user is updated.
-        user.addListener(new User.Listener() {
-            @Override
-            public void onUserUpdated(boolean success) {
-                if (success) {
-                    fetchMessages();
-                }
-            }
-        });
-
-        refresh(false);
-
-        activityMonitor.addApplicationListener(listener);
-
-        airshipChannel.addChannelListener(new AirshipChannelListener() {
-            @Override
-            public void onChannelCreated(@NonNull String channelId) {
-                dispatchUpdateUserJob(true);
-            }
-
-            @Override
-            public void onChannelUpdated(@NonNull String channelId) {
-
-            }
-        });
-
-        if (user.shouldUpdate()) {
-            dispatchUpdateUserJob(true);
-        }
-
-        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                return builder.setUserId(getUser().getId());
-            }
-        });
+        updateEnabledState();
     }
 
     /**
@@ -191,6 +190,10 @@ public class Inbox {
     @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+        if (!isEnabled.get()) {
+            return JobInfo.JOB_FINISHED;
+        }
+
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
                     airship.getRuntimeConfig(), dataStore);
@@ -200,11 +203,60 @@ public class Inbox {
     }
 
     /**
+     * Initializes or tears down the Inbox based on the current enabled state.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void updateEnabledState() {
+        if (isEnabled.get()) {
+            if (!isStarted.getAndSet(true)) {
+                // Refresh the inbox whenever the user is updated.
+                user.addListener(userListener);
+
+                refresh(false);
+
+                activityMonitor.addApplicationListener(applicationListener);
+                airshipChannel.addChannelListener(channelListener);
+
+                if (user.shouldUpdate()) {
+                    dispatchUpdateUserJob(true);
+                }
+
+                airshipChannel.addChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender);
+            }
+        } else {
+            // Clean up any Message Center data stored on the device.
+            deleteAllMessages();
+            InboxJobHandler jobHandler = inboxJobHandler;
+            if (jobHandler != null) {
+                jobHandler.removeStoredData();
+            }
+
+            tearDown();
+        }
+    }
+
+    /**
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void tearDown() {
-        activityMonitor.removeApplicationListener(listener);
+        activityMonitor.removeApplicationListener(applicationListener);
+        airshipChannel.removeChannelListener(channelListener);
+        airshipChannel.removeChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender);
+        user.removeListener(userListener);
+        isStarted.set(false);
+    }
+
+    /**
+     * Enables or disables the Inbox.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void setEnabled(boolean isEnabled) {
+        this.isEnabled.set(isEnabled);
     }
 
     /**
@@ -588,6 +640,28 @@ public class Inbox {
                     deletedMessageIds.add(messageId);
                 }
             }
+        }
+
+        notifyInboxUpdated();
+    }
+
+    /**
+     * Delete all message data stored on the device.
+     *
+     * @hide
+     */
+    private void deleteAllMessages() {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                messageCenterResolver.deleteAllMessages();
+            }
+        });
+
+        synchronized (inboxLock) {
+            unreadMessages.clear();
+            readMessages.clear();
+            deletedMessageIds.clear();
         }
 
         notifyInboxUpdated();

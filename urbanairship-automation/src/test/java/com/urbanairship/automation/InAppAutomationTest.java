@@ -1,11 +1,13 @@
 package com.urbanairship.automation;
 
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
@@ -30,6 +32,7 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.reactive.Subscription;
 import com.urbanairship.util.RetryingExecutor;
 
 import org.junit.Before;
@@ -39,7 +42,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.shadow.api.Shadow;
+import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -57,13 +64,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -91,6 +102,8 @@ public class InAppAutomationTest {
     private ActionsScheduleDelegate mockActionsScheduleDelegate;
     private FrequencyLimitManager mockFrequencyLimitManager;
     private InAppRemoteDataObserver.Delegate remoteDataObserverDelegate;
+    private PrivacyManager privacyManager;
+    private RetryingExecutor executor;
 
     @Before
     public void setup() {
@@ -117,7 +130,7 @@ public class InAppAutomationTest {
             }
         }).when(mockEngine).setScheduleListener(any(AutomationEngine.ScheduleListener.class));
 
-        RetryingExecutor executor = new RetryingExecutor(new Handler(Looper.getMainLooper()), new Executor() {
+        executor = new RetryingExecutor(new Handler(Looper.getMainLooper()), new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
@@ -127,9 +140,10 @@ public class InAppAutomationTest {
         mockMessageScheduleDelegate = mock(InAppMessageScheduleDelegate.class);
         mockActionsScheduleDelegate = mock(ActionsScheduleDelegate.class);
         mockFrequencyLimitManager = mock(FrequencyLimitManager.class);
+        privacyManager = new PrivacyManager(TestApplication.getApplication().preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
+                privacyManager, mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
                 mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager);
 
         inAppAutomation.init();
@@ -176,6 +190,65 @@ public class InAppAutomationTest {
     public void testGetActionSchedulesByGroup() {
         inAppAutomation.getActionScheduleGroup("some group");
         verify(mockEngine).getSchedules("some group", Schedule.TYPE_ACTION);
+    }
+
+    @Test
+    public void testDelayedStart() {
+        privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        inAppAutomation.tearDown();
+        clearInvocations(mockEngine);
+        clearInvocations(mockObserver);
+
+        inAppAutomation.init();
+        inAppAutomation.onAirshipReady(UAirship.shared());
+
+        verify(mockEngine, never()).start(driver);
+        verify(mockObserver, never()).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+
+        privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        verify(mockEngine).start(driver);
+        verify(mockObserver).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+    }
+
+    @Test
+    public void testStartsWhenScheduleModified() {
+        privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        inAppAutomation.tearDown();
+
+        clearInvocations(mockEngine);
+        clearInvocations(mockObserver);
+
+        inAppAutomation.init();
+        inAppAutomation.onAirshipReady(UAirship.shared());
+
+        verify(mockEngine, never()).start(driver);
+        verify(mockObserver, never()).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+
+        inAppAutomation.cancelSchedule("sweet");
+
+        verify(mockEngine).start(driver);
+    }
+
+    @Test
+    public void testInAppUpdatesSubscription() {
+        privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        inAppAutomation.tearDown();
+
+        clearInvocations(mockEngine);
+        clearInvocations(mockObserver);
+
+        inAppAutomation.init();
+        inAppAutomation.onAirshipReady(UAirship.shared());
+
+        Subscription subscription = Subscription.create(null);
+        when(mockObserver.subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class))).thenReturn(subscription);
+
+        privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        verify(mockObserver).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+        assertFalse(subscription.isCancelled());
+
+        privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
+        assertTrue(subscription.isCancelled());
     }
 
     @Test
@@ -470,20 +543,6 @@ public class InAppAutomationTest {
         inAppAutomation.setPaused(false);
         verify(mockEngine).checkPendingSchedules();
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
-    }
-
-    @Test
-    public void testEnable() {
-        clearInvocations(mockEngine);
-        inAppAutomation.setEnabled(true);
-        verify(mockEngine).setPaused(false);
-    }
-
-    @Test
-    public void testDisable() {
-        clearInvocations(mockEngine);
-        inAppAutomation.setEnabled(false);
-        verify(mockEngine).setPaused(true);
     }
 
     @Test
@@ -782,6 +841,22 @@ public class InAppAutomationTest {
 
         // Verify the miss behavior
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+    }
+
+    @Test
+    public void testNewUserCutOff() {
+        ShadowPackageManager packageManager = Shadows.shadowOf(TestApplication.getApplication().getPackageManager());
+        PackageInfo info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().getPackageName());
+        info.firstInstallTime = 9191;
+
+        when(mockObserver.getScheduleNewUserCutOffTime()).thenReturn(Long.valueOf(-1));
+
+        inAppAutomation.tearDown();
+        inAppAutomation.init();
+        inAppAutomation.onAirshipReady(UAirship.shared());
+
+
+        verify(mockObserver).setScheduleNewUserCutOffTime(9191);
     }
 
     /**
