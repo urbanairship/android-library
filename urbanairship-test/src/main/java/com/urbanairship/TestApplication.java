@@ -4,6 +4,7 @@ package com.urbanairship;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.content.Context;
 import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
@@ -11,6 +12,10 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.Scheduler;
+import com.urbanairship.job.SchedulerException;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
@@ -40,6 +45,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void onCreate() {
         super.onCreate();
 
+        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        final AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
+
         this.preferenceDataStore = new PreferenceDataStore(getApplicationContext());
         preferenceDataStore.init(airshipConfigOptions);
 
@@ -54,12 +62,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
 
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
-        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-        final AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
-
-        this.preferenceDataStore = new PreferenceDataStore(getApplicationContext());
-        preferenceDataStore.init(airshipConfigOptions);
-
         Supplier<PushProviders> pushProviders = new Supplier<PushProviders>() {
             @Nullable
             @Override
