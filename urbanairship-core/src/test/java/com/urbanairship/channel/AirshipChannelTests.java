@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -977,6 +978,35 @@ public class AirshipChannelTests extends BaseTestCase {
                 return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
             }
         }));
+    }
+
+    @Test
+    public void testOptingChannelOut() throws RequestException {
+        when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
+                .thenReturn(createResponse("channel", 200));
+        airshipChannel.onPerformJob(UAirship.shared(), UPDATE_CHANNEL_JOB);
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
+
+        // Should be ignored
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                return builder.setDeviceModel(UUID.randomUUID().toString());
+            }
+        });
+
+        ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder()
+                .setOptIn(false)
+                .setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
+                .build();
+
+        when(mockClient.updateChannelWithPayload("channel", payload))
+                .thenReturn(AirshipChannelTests.<Void>createResponse(null, 200));
+
+        airshipChannel.onPerformJob(UAirship.shared(), UPDATE_CHANNEL_JOB);
+        verify(mockClient, times(1)).updateChannelWithPayload("channel", payload);
     }
 
     @Test
