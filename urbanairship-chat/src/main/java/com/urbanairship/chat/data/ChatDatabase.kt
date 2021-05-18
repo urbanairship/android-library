@@ -22,6 +22,11 @@ internal abstract class ChatDatabase : RoomDatabase() {
 
     abstract fun chatDao(): ChatDao
 
+    fun exists(context: Context): Boolean {
+        // null databaseName means it is an in-memory database. Lets assume the database exists when in-memory.
+        return openHelper.databaseName == null || context.getDatabasePath(openHelper.databaseName).exists()
+    }
+
     companion object {
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): ChatDatabase {
             val name = config.configOptions.appKey + "_chat"

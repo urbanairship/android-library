@@ -19,7 +19,6 @@ import com.urbanairship.chat.api.ChatApiClient
 import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatConnection.CloseReason
 import com.urbanairship.chat.api.ChatResponse
-import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -47,16 +46,19 @@ class Conversation
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @VisibleForTesting
 internal constructor(
+    private val context: Context,
     private val dataStore: PreferenceDataStore,
     private val config: AirshipRuntimeConfig,
     private val channel: AirshipChannel,
-    private val chatDao: ChatDao,
+    private val chatDatabase: ChatDatabase,
     private val connection: ChatConnection,
     private val apiClient: ChatApiClient,
     private val activityMonitor: ActivityMonitor,
     private val connectionDispatcher: CoroutineDispatcher,
     private val ioDispatcher: CoroutineDispatcher
 ) {
+
+    private val chatDao = chatDatabase.chatDao()
 
     /**
      * "Default" convenience constructor.
@@ -69,7 +71,7 @@ internal constructor(
         dataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         channel: AirshipChannel
-    ) : this(dataStore, config, channel, ChatDatabase.createDatabase(context, config).chatDao(), ChatConnection(config),
+    ) : this(context, dataStore, config, channel, ChatDatabase.createDatabase(context, config), ChatConnection(config),
             ChatApiClient(config), GlobalActivityMonitor.shared(context), AirshipDispatchers.newSingleThreadDispatcher(),
             AirshipDispatchers.IO)
 
@@ -194,7 +196,9 @@ internal constructor(
         scope.launch {
             connection.close()
             dataStore.remove(UVP_KEY)
-            chatDao.deleteMessages()
+            if (chatDatabase.exists(context)) {
+                chatDao.deleteMessages()
+            }
         }
     }
 
