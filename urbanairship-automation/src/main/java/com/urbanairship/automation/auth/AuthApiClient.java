@@ -17,7 +17,6 @@ import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -71,7 +70,7 @@ class AuthApiClient {
         return requestFactory.createRequest()
                              .setOperation("GET", url)
                              .setAirshipJsonAcceptsHeader()
-                             .setHeader("X-UA-App-Key", runtimeConfig.getConfigOptions().appKey)
+                             .setAirshipUserAgent(runtimeConfig)
                              .setHeader("X-UA-Channel-ID", channelId)
                              .setHeader("Authorization", "Bearer " + bearerToken)
                              .execute(new ResponseParser<AuthToken>() {

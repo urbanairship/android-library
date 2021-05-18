@@ -64,6 +64,7 @@ class NamedUserApiClient {
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(payload)
                              .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
 
@@ -90,6 +91,7 @@ class NamedUserApiClient {
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(payload)
                              .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
 

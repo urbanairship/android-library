@@ -115,6 +115,7 @@ public class RemoteDataApiClient {
 
         Request request = requestFactory.createRequest()
                                         .setOperation("GET", url)
+                                        .setAirshipUserAgent(runtimeConfig)
                                         .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret);
 
         if (lastModified != null) {

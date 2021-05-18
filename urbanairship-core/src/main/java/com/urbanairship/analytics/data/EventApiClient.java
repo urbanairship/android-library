@@ -91,6 +91,7 @@ public class EventApiClient {
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
                                         .setHeader("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt))
+                                        .setAirshipUserAgent(runtimeConfig)
                                         .addHeaders(headers);
 
         Logger.debug("Sending analytics events. Request: %s Events: %s", request, events);

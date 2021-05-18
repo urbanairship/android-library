@@ -3,13 +3,14 @@
 package com.urbanairship.http;
 
 import android.net.Uri;
-import android.os.Build;
 import android.util.Base64;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.util.ConnectionUtils;
+import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.BufferedReader;
@@ -76,7 +77,7 @@ public class Request {
     @NonNull
     protected final Map<String, String> responseProperties;
 
-    private static final String USER_AGENT_FORMAT = "%s (%s; %s; UrbanAirshipLib-%s/%s; %s; %s)";
+    private static final String USER_AGENT_FORMAT = "(UrbanAirshipLib-%s/%s; %s)";
 
     /**
      * Request constructor.
@@ -92,7 +93,6 @@ public class Request {
 
     public Request() {
         responseProperties = new HashMap<>();
-        responseProperties.put("User-Agent", getUrbanAirshipUserAgent());
     }
 
     public Request setOperation(@Nullable String requestMethod, @Nullable Uri uri) {
@@ -100,6 +100,7 @@ public class Request {
         this.uri = uri;
         return this;
     }
+
     /**
      * Sets the credentials.
      *
@@ -112,6 +113,25 @@ public class Request {
         this.user = user;
         this.password = password;
 
+        return this;
+    }
+
+    /**
+     * Sets the airship user agent and X-UA-App-Key header.
+     *
+     * @param config The runtime config.
+     */
+    public Request setAirshipUserAgent(@NonNull AirshipRuntimeConfig config) {
+        String platform = PlatformUtils.asString(config.getPlatform());
+
+        String userAgent = String.format(Locale.ROOT,
+                USER_AGENT_FORMAT,
+                platform,
+                UAirship.getVersion(),
+                config.getConfigOptions().appKey);
+
+        responseProperties.put("X-UA-App-Key", config.getConfigOptions().appKey);
+        responseProperties.put("User-Agent", userAgent);
         return this;
     }
 
@@ -320,21 +340,6 @@ public class Request {
         }
     }
 
-    /**
-     * Gets the Airship User Agent used for any Airship requests.
-     *
-     * @return The Airship User Agent.
-     */
-    @NonNull
-    public String getUrbanAirshipUserAgent() {
-        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? "amazon" : "android";
-
-        return String.format(Locale.US, USER_AGENT_FORMAT, UAirship.getPackageName(),
-                Build.MODEL, Build.VERSION.RELEASE, platform, UAirship.getVersion(),
-                UAirship.shared().getAirshipConfigOptions().appKey,
-                UAirship.shared().getLocale());
-    }
-
     @Nullable
     private String readEntireStream(@Nullable InputStream input) throws IOException {
         if (input == null) {
@@ -361,7 +366,5 @@ public class Request {
 
         return sb.toString();
     }
-
-
 
 }

@@ -162,6 +162,7 @@ public class PassRequest {
 
                 Request httpRequest = requestFactory.createRequest()
                                                     .setOperation("POST", url)
+                                                    .setAirshipUserAgent(UAirship.shared().getRuntimeConfig())
                                                     .setHeader(API_REVISION_HEADER_NAME, API_REVISION)
                                                     .setRequestBody(body.toString(), "application/json");
 

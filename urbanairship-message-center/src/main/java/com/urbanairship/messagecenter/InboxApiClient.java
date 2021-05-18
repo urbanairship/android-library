@@ -65,7 +65,8 @@ public class InboxApiClient {
         return requestFactory.createRequest()
                              .setOperation("GET", url)
                              .setCredentials(user.getId(), user.getPassword())
-                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .setHeader(CHANNEL_ID_HEADER, channelId)
                              .setIfModifiedSince(lastMessageRefreshTime)
                              .execute(new ResponseParser<JsonList>() {
@@ -98,7 +99,8 @@ public class InboxApiClient {
                              .setCredentials(user.getId(), user.getPassword())
                              .setRequestBody(payload.toString(), "application/json")
                              .setHeader(CHANNEL_ID_HEADER, channelId)
-                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
 
@@ -130,7 +132,8 @@ public class InboxApiClient {
                              .setOperation("POST", url)
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(payload, "application/json")
-                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute(new ResponseParser<UserCredentials>() {
                                  @Override
                                  public UserCredentials parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
@@ -162,7 +165,8 @@ public class InboxApiClient {
                              .setOperation("POST", url)
                              .setCredentials(user.getId(), user.getPassword())
                              .setRequestBody(payload, "application/json")
-                             .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
 

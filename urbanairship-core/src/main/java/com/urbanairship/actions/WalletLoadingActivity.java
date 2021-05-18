@@ -9,6 +9,7 @@ import android.os.Bundle;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
+import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
@@ -64,6 +65,7 @@ public class WalletLoadingActivity extends ThemedActivity {
                     Response<String> response = new Request()
                             .setOperation("GET", url)
                             .setInstanceFollowRedirects(false)
+                            .setAirshipUserAgent(UAirship.shared().getRuntimeConfig())
                             .execute(new ResponseParser<String>() {
                                 @Override
                                 public String parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) {

@@ -22,7 +22,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -142,6 +141,7 @@ public class DeferredScheduleClient {
     private Response<Result> performRequest(@NonNull Uri url, @NonNull String token, @NonNull JsonMap requestBody) throws RequestException {
         return requestFactory.createRequest()
                              .setOperation("POST", url)
+                             .setAirshipUserAgent(runtimeConfig)
                              .setHeader("Authorization", "Bearer " + token)
                              .setAirshipJsonAcceptsHeader()
                              .setRequestBody(requestBody)
