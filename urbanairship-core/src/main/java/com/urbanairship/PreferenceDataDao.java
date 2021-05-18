@@ -25,24 +25,17 @@ public abstract class PreferenceDataDao {
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insert(@NonNull PreferenceData entity);
+    public abstract void upsert(@NonNull PreferenceData entity);
 
     @Transaction
     @Update
     public abstract void update(@NonNull PreferenceData entity);
-
-    @Transaction
-    @Update
-    public abstract void updatePreferences(@NonNull List<PreferenceData> entities);
 
     @Delete
     public abstract void delete(@NonNull PreferenceData entity);
 
     @Query("DELETE FROM preferences")
     public abstract void deleteAll();
-
-    @Query("SELECT COUNT(*) FROM preferences")
-    public abstract int getPreferencesCount();
 
     @Transaction
     @Query("SELECT * FROM preferences")
