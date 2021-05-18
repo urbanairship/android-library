@@ -9,8 +9,6 @@ import com.urbanairship.chat.websocket.WebSocketListener
 import com.urbanairship.config.AirshipUrlConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -103,7 +101,7 @@ class ChatConnectionTest {
         val expected = ChatRequest.FetchConversation("some-uvp")
 
         verify(mockWebSocket).send(argThat {
-            val parsed = parse<ChatRequest.FetchConversation>(this)
+            val parsed = ChatRequest.FetchConversation.parse(this)
             expected == parsed
         })
     }
@@ -119,7 +117,7 @@ class ChatConnectionTest {
         val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id")
 
         verify(mockWebSocket).send(argThat {
-            val parsed = parse<ChatRequest.SendMessage>(this)
+            val parsed = ChatRequest.SendMessage.parse(this)
             expected == parsed
         })
     }
@@ -145,7 +143,7 @@ class ChatConnectionTest {
         }
         """
 
-        val expected = parse<ChatResponse.NewMessage>(response)
+        val expected = ChatResponse.NewMessage.parse(response)
         socketFactory.lastListener?.onReceive(response)
         verify(mockChatConnectionListener).onChatResponse(expected)
     }
@@ -171,7 +169,7 @@ class ChatConnectionTest {
         }
         """
 
-        val expected = parse<ChatResponse.MessageReceived>(response)
+        val expected = ChatResponse.MessageReceived.parse(response)
         socketFactory.lastListener?.onReceive(response)
         verify(mockChatConnectionListener).onChatResponse(expected)
     }
@@ -206,7 +204,7 @@ class ChatConnectionTest {
         }
         """
 
-        val expected = parse<ChatResponse.ConversationLoaded>(response)
+        val expected = ChatResponse.ConversationLoaded.parse(response)
         socketFactory.lastListener?.onReceive(response)
         verify(mockChatConnectionListener).onChatResponse(expected)
     }
@@ -244,7 +242,7 @@ class ChatConnectionTest {
 
         testScope.advanceTimeBy(120000)
         verify(mockWebSocket, times(3)).send(argThat {
-            val parsed = parse<ChatRequest.Heartbeat>(this)
+            val parsed = ChatRequest.Heartbeat.parse(this)
             heartbeat == parsed
         })
     }
@@ -257,18 +255,8 @@ class ChatConnectionTest {
 
         val heartbeat = ChatRequest.Heartbeat("some-uvp")
         verify(mockWebSocket, times(1)).send(argThat {
-            val parsed = parse<ChatRequest.Heartbeat>(this)
+            val parsed = ChatRequest.Heartbeat.parse(this)
             heartbeat == parsed
         })
-    }
-
-    private inline fun <reified T> parse(string: String): T {
-
-        val jsonParser = Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
-
-        return jsonParser.decodeFromString(string)
     }
 }
