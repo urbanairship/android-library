@@ -102,8 +102,11 @@ class ChatFragment : Fragment() {
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                     val last = messageAdapter.itemCount - 1
                     val lastDirection = messageAdapter.getChatMessage(last)?.direction
-                    if (positionStart == last && lastDirection == ChatDirection.OUTGOING) {
-                        scrollToPosition(last)
+                    if (positionStart == last) {
+                        val lastVisibleItem = linearLayoutManager.findLastCompletelyVisibleItemPosition()
+                        if (lastDirection == ChatDirection.OUTGOING || lastVisibleItem == positionStart - 1) {
+                            scrollToPosition(last)
+                        }
                     }
                 }
             })
