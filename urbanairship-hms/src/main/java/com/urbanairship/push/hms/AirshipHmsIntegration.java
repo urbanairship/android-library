@@ -60,6 +60,6 @@ public class AirshipHmsIntegration {
      */
     public static void processNewToken(@NonNull Context context, @NonNull String token) {
         HmsTokenCache.shared().set(context, token);
-        PushProviderBridge.requestRegistrationUpdate(context);
+        PushProviderBridge.requestRegistrationUpdate(context, HmsPushProvider.class, token);
     }
 }

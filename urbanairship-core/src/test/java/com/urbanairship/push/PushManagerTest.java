@@ -46,6 +46,7 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -436,6 +437,69 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(NotificationInfo argument) {
                 return argument.getMessage().equals(message) && argument.getNotificationId() == 100 && argument.getNotificationTag().equals("neat");
+            }
+        }));
+    }
+
+    @Test
+    public void testOnTokenChange() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+        verify(mockAirshipChannel).updateRegistration();
+
+        clearInvocations(mockDispatcher);
+
+        pushManager.onTokenChanged(mockPushProvider.getClass(), "some-other-token");
+        assertNull(pushManager.getPushToken());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
+            }
+        }));
+    }
+
+    @Test
+    public void testOnTokenChangeSameToken() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+        verify(mockAirshipChannel).updateRegistration();
+
+        clearInvocations(mockDispatcher);
+
+        pushManager.onTokenChanged(mockPushProvider.getClass(), "token");
+        assertEquals("token", pushManager.getPushToken());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
+            }
+        }));
+    }
+
+    @Test
+    public void testOnTokenChangeLegacy() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+        verify(mockAirshipChannel).updateRegistration();
+
+        clearInvocations(mockDispatcher);
+
+        pushManager.onTokenChanged(null, null);
+        assertEquals("token", pushManager.getPushToken());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
             }
         }));
     }

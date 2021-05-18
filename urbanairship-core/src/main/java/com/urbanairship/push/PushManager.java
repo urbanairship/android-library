@@ -325,18 +325,22 @@ public class PushManager extends AirshipComponent {
             }
 
             if (shouldDispatchUpdateTokenJob) {
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-                                         .setAirshipComponent(PushManager.class)
-                                         .build();
-
-                jobDispatcher.dispatch(jobInfo);
+                dispatchUpdateJob();
             }
         } else {
             preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
             preferenceDataStore.remove(PUSH_TOKEN_KEY);
             shouldDispatchUpdateTokenJob = true;
         }
+    }
+
+    private void dispatchUpdateJob() {
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
     }
 
     @Nullable
@@ -1066,4 +1070,16 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    void onTokenChanged(@Nullable Class<? extends PushProvider> pushProviderClass, @Nullable String token) {
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && pushProvider != null) {
+            if (pushProviderClass != null && pushProvider.getClass().equals(pushProviderClass)) {
+                String oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null);
+                if (token != null && !UAStringUtil.equals(token, oldToken)) {
+                    preferenceDataStore.remove(PUSH_TOKEN_KEY);
+                    preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
+                }
+            }
+            dispatchUpdateJob();
+        }
+    }
 }
