@@ -7,8 +7,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
-import androidx.paging.toLiveData
 import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatMessage
 
@@ -31,16 +31,13 @@ internal class ChatViewModel @JvmOverloads constructor(
         }
     }
 
-    val messages = chat.conversation.messageDataSourceFactory.toLiveData(pageSize = 50,
-        boundaryCallback = object : PagedList.BoundaryCallback<ChatMessage>() {
-            override fun onZeroItemsLoaded() {
-                listViewVisibility.postValue(false)
-            }
+    val messages = LivePagedListBuilder(chat.conversation.messageDataSourceFactory, 50)
+            .setBoundaryCallback(object : PagedList.BoundaryCallback<ChatMessage>() {
+                override fun onZeroItemsLoaded() = listViewVisibility.postValue(false)
 
-            override fun onItemAtFrontLoaded(itemAtFront: ChatMessage) {
-                listViewVisibility.postValue(true)
-            }
-        })
+                override fun onItemAtFrontLoaded(itemAtFront: ChatMessage) = listViewVisibility.postValue(true)
+            }).build()
+
     val listViewVisibility = MutableLiveData(true)
     val emptyViewVisibility = Transformations.map(listViewVisibility) { it.not() }
 

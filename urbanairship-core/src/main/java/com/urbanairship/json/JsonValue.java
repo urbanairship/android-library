@@ -228,6 +228,24 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Gets the contained values as a boolean.
+     *
+     * @return The value as a Boolean, or null if the value is not a Boolean.
+     */
+    @Nullable
+    public Boolean getBoolean() {
+        if (value == null) {
+            return null;
+        }
+
+        if (isBoolean()) {
+            return (Boolean) value;
+        }
+
+        return null;
+    }
+
+    /**
      * Gets the contained value as a JsonList.
      *
      * @return The value as a JsonList, or null if the value is not a JsonList.

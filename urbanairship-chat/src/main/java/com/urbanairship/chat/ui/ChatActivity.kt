@@ -2,7 +2,6 @@ package com.urbanairship.chat.ui
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.core.os.bundleOf
 import com.urbanairship.Autopilot
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
@@ -47,7 +46,9 @@ class ChatActivity : ThemedActivity() {
 
         if (!this::fragment.isInitialized) {
             fragment = ChatFragment().apply {
-                arguments = bundleOf(ChatFragment.ARG_DRAFT to intent.getStringExtra(EXTRA_DRAFT))
+                arguments = Bundle().apply {
+                    putString(ChatFragment.ARG_DRAFT, intent.getStringExtra(EXTRA_DRAFT))
+                }
             }
             supportFragmentManager.beginTransaction()
                     .add(android.R.id.content, fragment, FRAGMENT_TAG)
