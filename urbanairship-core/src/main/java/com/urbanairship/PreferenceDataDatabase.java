@@ -8,6 +8,7 @@ import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import androidx.room.Database;
 import androidx.room.Room;
@@ -66,4 +67,12 @@ public abstract class PreferenceDataDatabase extends RoomDatabase {
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }
+
+    @VisibleForTesting
+    public static PreferenceDataDatabase createInMemoryDatabase(@NonNull Context context) {
+        return Room.inMemoryDatabaseBuilder(context, PreferenceDataDatabase.class)
+                   .allowMainThreadQueries()
+                   .build();
+    }
+
 }

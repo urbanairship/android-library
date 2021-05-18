@@ -15,4 +15,6 @@ dependencies {
     api project(':urbanairship-core')
     implementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     implementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    implementation 'androidx.room:room-runtime:2.3.0'
+    annotationProcessor 'androidx.room:room-compiler:2.3.0'
 }

@@ -48,8 +48,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         final AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
-        this.preferenceDataStore = new PreferenceDataStore(getApplicationContext());
-        preferenceDataStore.init(airshipConfigOptions);
+        this.preferenceDataStore = PreferenceDataStore.inMemoryStore(getApplicationContext());
 
         JobDispatcher dispatcher = new JobDispatcher(this, new Scheduler() {
             @Override

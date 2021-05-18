@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
@@ -40,25 +41,10 @@ public final class PreferenceDataStore {
     };
 
     Executor executor = AirshipExecutors.newSerialExecutor();
-
     private final Map<String, Preference> preferences = new HashMap<>();
-    @NonNull
-    private final Context context;
-    private PreferenceDataDao dao;
-    private PreferenceDataDatabase db;
-    private Observer<PreferenceData> observer = new Observer<PreferenceData>() {
-        @Override
-        public void onChanged(final PreferenceData preference) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    if (preference != null) {
-                        preferences.get(preference.getKey()).syncValue();
-                    }
-                }
-            });
-        }
-    };
+
+    private final PreferenceDataDao dao;
+    private final PreferenceDataDatabase db;
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
 
@@ -77,28 +63,28 @@ public final class PreferenceDataStore {
 
     }
 
-    /**
-     * Preferences constructor.
-     *
-     * @param context The application context.
-     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public PreferenceDataStore(@NonNull Context context) {
-        this.context = context;
+    public static PreferenceDataStore loadDataStore(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
+        PreferenceDataDatabase db = PreferenceDataDatabase.createDatabase(context, configOptions);
+        PreferenceDataStore dataStore = new PreferenceDataStore(db);
+        dataStore.init();
+        return dataStore;
     }
 
-    /**
-     * Preferences constructor.
-     *
-     * @param context The application context.
-     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public PreferenceDataStore(@NonNull Context context, @NonNull PreferenceDataDatabase db) {
-        this.context = context;
-        this.db = db;
-        //TODO : changer tous les tests pour mettre la db et allow main thread
+    @VisibleForTesting
+    public static PreferenceDataStore inMemoryStore(@NonNull Context context) {
+        PreferenceDataDatabase db = PreferenceDataDatabase.createInMemoryDatabase(context);
+        PreferenceDataStore dataStore = new PreferenceDataStore(db);
+        dataStore.init();
+        return dataStore;
     }
 
+    @VisibleForTesting
+    PreferenceDataStore(@NonNull PreferenceDataDatabase dataDatabase) {
+        this.db = dataDatabase;
+        this.dao = dataDatabase.getDao();
+    }
 
     /**
      * Adds a listener for preference changes.
@@ -125,19 +111,17 @@ public final class PreferenceDataStore {
     /**
      * Initializes the preference data store.
      */
-    protected void init(AirshipConfigOptions airshipConfigOptions) {
-        db = PreferenceDataDatabase.createDatabase(context, airshipConfigOptions);
-        dao = db.getDao();
-        loadPreferences();
+    private void init() {
+        if (db.exists(context)) {
+            loadPreferences();
+        }
     }
 
     private void loadPreferences() {
         try {
-            List<PreferenceData> preferencesFromDao;
+            List<PreferenceData> preferencesFromDao = dao.getPreferences();
+
             List<Preference> fromStore = new ArrayList<>();
-
-            preferencesFromDao = dao.getPreferences();
-
             for (PreferenceData preferenceData : preferencesFromDao) {
                 fromStore.add(new Preference(preferenceData.getKey(), preferenceData.getValue()));
             }
@@ -150,52 +134,46 @@ public final class PreferenceDataStore {
     }
 
     private void fallbackLoad() {
-        List<String> keys = queryKeys();
-        if (keys.isEmpty()) {
+        List<String> keys = null;
+        try {
+            keys = dao.queryKeys();
+        } catch (Exception e) {
+            Logger.error(e, "Failed to load keys.");
+        }
+
+        if (keys == null || keys.isEmpty()) {
             Logger.error("Unable to load keys, deleting preference store.");
-            dao.deleteAll();
+            try {
+                dao.deleteAll();
+            } catch (Exception e) {
+                Logger.error(e,"Failed to delete preferences.");
+            }
             return;
         }
 
         List<Preference> fromStore = new ArrayList<>();
 
         for (String key : keys) {
-            String value = queryValue(key);
-            if (value == null) {
-                Logger.error("Unable to fetch preference value. Deleting: %s", key);
-                final PreferenceData preferenceToDelete = new PreferenceData(key, null);
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        dao.delete(preferenceToDelete);
-                    }
-                });
-            } else {
-                fromStore.add(new Preference(key, value));
+            try {
+                PreferenceData preferenceData = dao.queryValue(key);
+                if (preferenceData.value == null) {
+                    Logger.error("Unable to fetch preference value. Deleting: %s", key);
+                    dao.delete(key);
+                } else {
+                    fromStore.add(new Preference(preferenceData.getKey(), preferenceData.getValue()));
+                }
+            } catch (Exception e) {
+                Logger.error(e, "Failed to delete preference %s", key);
             }
         }
         finishLoad(fromStore);
-    }
-
-    private String queryValue(String key) {
-        return dao.queryValue(key).getValue().value;
-    }
-
-    @NonNull
-    private List<String> queryKeys() {
-        LiveData<List<String>> preferences = dao.queryKeys();
-
-        if (preferences.getValue() == null) {
-            return Collections.emptyList();
-        } else {
-            return preferences.getValue();
-        }
     }
 
     private void finishLoad(@NonNull final List<Preference> preferences) {
         for (Preference preference : preferences) {
             this.preferences.put(preference.key, preference);
         }
+
         for (String key : OBSOLETE_KEYS) {
             remove(key);
         }
@@ -526,35 +504,22 @@ public final class PreferenceDataStore {
          */
         private boolean writeValue(@Nullable final String value) {
             synchronized (this) {
-                if (value == null) {
-                    Logger.verbose("Removing preference: %s", key);
-                    dao.delete(new PreferenceData(key, value));
-                } else {
-                    Logger.verbose("Saving preference: %s value: %s", key, value);
-                    dao.upsert(new PreferenceData(key, value));
-                }
-                return true;
-            }
-        }
-
-        /**
-         * Syncs the value from the database to the preference.
-         */
-        void syncValue() {
-            LiveData<PreferenceData> preferenceData;
-            synchronized (this) {
-                preferenceData = dao.queryValue(key);
-            }
-
-            if (preferenceData.getValue() != null) {
                 try {
-                    setValue(preferenceData.getValue().value);
+                    if (value == null) {
+                        Logger.verbose("Removing preference: %s", key);
+                        dao.delete(key);
+                    } else {
+                        Logger.verbose("Saving preference: %s value: %s", key, value);
+                        dao.upsert(new PreferenceData(key, value));
+                    }
+                    return true;
                 } catch (Exception e) {
-                    Logger.error(e, "Unable to sync preference %s from database", key);
+                    Logger.error(e, "Failed to write preference %s:%s", key, value);
+                    return false;
                 }
-            } else {
-                Logger.debug("Unable to get preference %s from database. Falling back to cached value.", key);
+
             }
         }
+
     }
 }

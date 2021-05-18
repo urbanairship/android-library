@@ -38,7 +38,7 @@ public class AccengageModuleImplTest {
         PushManager mockPush = mock(PushManager.class);
         mockConfig = mock(AirshipConfigOptions.class);
 
-        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
+        PreferenceDataStore preferenceDataStore = P(application);
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
         accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, mockConfig, preferenceDataStore, privacyManager, mockChannel, mockPush);
     }

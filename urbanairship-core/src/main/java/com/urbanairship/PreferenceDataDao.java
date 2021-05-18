@@ -27,12 +27,8 @@ public abstract class PreferenceDataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void upsert(@NonNull PreferenceData entity);
 
-    @Transaction
-    @Update
-    public abstract void update(@NonNull PreferenceData entity);
-
-    @Delete
-    public abstract void delete(@NonNull PreferenceData entity);
+    @Query("DELETE FROM preferences WHERE (`_id` == :key)")
+    public abstract void delete(@NonNull String key);
 
     @Query("DELETE FROM preferences")
     public abstract void deleteAll();
@@ -45,10 +41,10 @@ public abstract class PreferenceDataDao {
     @Transaction
     @Query("SELECT * FROM preferences WHERE (`_id` == :key)")
     @NonNull
-    public abstract LiveData<PreferenceData> queryValue(@NonNull String key);
+    public abstract PreferenceData queryValue(@NonNull String key);
 
     @Transaction
     @Query("SELECT _id FROM preferences")
     @NonNull
-    public abstract LiveData<List<String>> queryKeys();
+    public abstract List<String> queryKeys();
 }
