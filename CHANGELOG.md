@@ -2,6 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.4.3 May 19, 2021
+Patch release that fixes auto scrolling the live chat message list in the `ChatFragment` when a message is received and
+removes some of the `urbanairship-chat` dependencies to make the module easier to generate Xamarin
+bindings.
+
+### Changes
+- Drop `*-ktk` jetpack dependencies and `kotlin-serialization` from urbanairship-chat module.
+- `ChatFragment` now auto scrolling the list when a message is received.
+
+
 ## Version 14.4.2 May 13, 2021
 Patch release to fix styling of IAA banner buttons when using a Material theme.
 
