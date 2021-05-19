@@ -6,7 +6,6 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.push.PushManager;
@@ -38,7 +37,7 @@ public class AccengageModuleImplTest {
         PushManager mockPush = mock(PushManager.class);
         mockConfig = mock(AirshipConfigOptions.class);
 
-        PreferenceDataStore preferenceDataStore = P(application);
+        PreferenceDataStore preferenceDataStore = PreferenceDataStore.inMemoryStore(application);
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
         accengageModuleLoader = new AccengageModuleFactoryImpl().build(application, mockConfig, preferenceDataStore, privacyManager, mockChannel, mockPush);
     }

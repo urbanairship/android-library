@@ -30,7 +30,7 @@ public class ModuleTest extends BaseTestCase {
     @Before
     public void setup() {
         this.context = ApplicationProvider.getApplicationContext();
-        this.dataStore = new PreferenceDataStore(context);
+        this.dataStore = PreferenceDataStore.inMemoryStore(context);
         this.actionRegistry = mock(ActionRegistry.class);
     }
 

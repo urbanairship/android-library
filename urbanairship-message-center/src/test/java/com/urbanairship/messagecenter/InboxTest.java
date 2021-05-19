@@ -77,7 +77,7 @@ public class InboxTest {
             }
         };
 
-        PreferenceDataStore dataStore = new PreferenceDataStore(context);
+        PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(context);
         inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, spyResolver, executor, spyActivityMonitor, mockChannel);
         inbox.setEnabled(true);
 

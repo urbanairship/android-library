@@ -11,7 +11,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 
 /**
  * PreferenceDataStore stores and retrieves all the Airship preferences through the
@@ -67,7 +64,7 @@ public final class PreferenceDataStore {
     public static PreferenceDataStore loadDataStore(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         PreferenceDataDatabase db = PreferenceDataDatabase.createDatabase(context, configOptions);
         PreferenceDataStore dataStore = new PreferenceDataStore(db);
-        dataStore.init();
+        dataStore.init(context);
         return dataStore;
     }
 
@@ -76,7 +73,7 @@ public final class PreferenceDataStore {
     public static PreferenceDataStore inMemoryStore(@NonNull Context context) {
         PreferenceDataDatabase db = PreferenceDataDatabase.createInMemoryDatabase(context);
         PreferenceDataStore dataStore = new PreferenceDataStore(db);
-        dataStore.init();
+        dataStore.init(context);
         return dataStore;
     }
 
@@ -111,7 +108,7 @@ public final class PreferenceDataStore {
     /**
      * Initializes the preference data store.
      */
-    private void init() {
+    private void init(@NonNull Context context) {
         if (db.exists(context)) {
             loadPreferences();
         }

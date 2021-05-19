@@ -52,7 +52,7 @@ public class InboxApiClientTest {
         mockChannel = Mockito.mock(AirshipChannel.class);
 
         Context context = ApplicationProvider.getApplicationContext();
-        dataStore = new PreferenceDataStore(context);
+        dataStore = PreferenceDataStore.inMemoryStore(context);
 
         user = new User(dataStore, mockChannel);
         // Set a valid user

@@ -64,7 +64,7 @@ public class InboxJobHandlerTest {
     @Before
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
-        dataStore = new PreferenceDataStore(context);
+        dataStore = PreferenceDataStore.inMemoryStore(context);
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         mockChannel = Mockito.mock(AirshipChannel.class);
         mockResolver = Mockito.mock(MessageCenterResolver.class);

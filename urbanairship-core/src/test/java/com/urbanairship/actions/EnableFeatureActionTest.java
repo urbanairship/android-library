@@ -51,7 +51,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
     public void setup() {
         mockPush = mock(PushManager.class);
         mockLocation = mock(AirshipLocationClient.class);
-        privacyManager = new PrivacyManager(new PreferenceDataStore(TestApplication.getApplication()), PrivacyManager.FEATURE_NONE);
+        privacyManager = new PrivacyManager(PreferenceDataStore.inMemoryStore(TestApplication.getApplication()), PrivacyManager.FEATURE_NONE);
 
         mockShip = mock(UAirship.class);
         when(mockShip.getPushManager()).thenReturn(mockPush);

@@ -75,4 +75,9 @@ public abstract class PreferenceDataDatabase extends RoomDatabase {
                    .build();
     }
 
+    public boolean exists(@NonNull Context context) {
+        return getOpenHelper().getDatabaseName() == null ||
+                context.getDatabasePath(getOpenHelper().getDatabaseName()).exists();
+    }
+
 }

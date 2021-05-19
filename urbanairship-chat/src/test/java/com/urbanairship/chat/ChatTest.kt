@@ -38,7 +38,7 @@ class ChatTest {
     fun setUp() {
         mockConversation = mock()
 
-        dataStore = PreferenceDataStore(TestApplication.getApplication())
+        dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication())
         privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
         mockPush = mock()
         mockJobDispatcher = mock()

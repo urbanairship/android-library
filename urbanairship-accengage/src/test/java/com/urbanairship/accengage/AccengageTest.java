@@ -7,9 +7,7 @@ import android.content.SharedPreferences;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-import com.urbanairship.UAirship;
 import com.urbanairship.accengage.common.persistence.AccengageSettingsLoader;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonMap;
@@ -50,7 +48,7 @@ public class AccengageTest {
     @Before
     public void setup() {
         Application application = ApplicationProvider.getApplicationContext();
-        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application);
+        PreferenceDataStore preferenceDataStore = PreferenceDataStore.inMemoryStore(application);
 
         mockChannel = mock(AirshipChannel.class);
         mockPush = mock(PushManager.class);

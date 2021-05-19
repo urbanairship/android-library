@@ -26,7 +26,7 @@ public class LocaleManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         context = TestApplication.getApplication();
-        localeManager = new LocaleManager(context, new PreferenceDataStore(context));
+        localeManager = new LocaleManager(context, PreferenceDataStore.inMemoryStore(context));
     }
 
     @Test
