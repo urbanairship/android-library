@@ -577,20 +577,6 @@ public class AirshipChannel extends AirshipComponent {
                 throw new IllegalStateException("Unable to get platform");
         }
 
-        builder.setTimezone(TimeZone.getDefault().getID());
-
-        Locale locale = localeManager.getLocale();
-
-        if (!UAStringUtil.isEmpty(locale.getCountry())) {
-            builder.setCountry(locale.getCountry());
-        }
-
-        if (!UAStringUtil.isEmpty(locale.getLanguage())) {
-            builder.setLanguage(locale.getLanguage());
-        }
-
-        builder.setSdkVersion(UAirship.getVersion());
-
         if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
             if (UAirship.getPackageInfo() != null) {
                 builder.setAppVersion(UAirship.getPackageInfo().versionName);
@@ -601,8 +587,25 @@ public class AirshipChannel extends AirshipComponent {
             builder.setApiVersion(Build.VERSION.SDK_INT);
         }
 
-        for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
-            builder = extender.extend(builder);
+        if (privacyManager.isAnyFeatureEnabled()) {
+            builder.setTimezone(TimeZone.getDefault().getID());
+
+            Locale locale = localeManager.getLocale();
+
+            if (!UAStringUtil.isEmpty(locale.getCountry())) {
+                builder.setCountry(locale.getCountry());
+            }
+
+            if (!UAStringUtil.isEmpty(locale.getLanguage())) {
+                builder.setLanguage(locale.getLanguage());
+            }
+
+            builder.setSdkVersion(UAirship.getVersion());
+
+
+            for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
+                builder = extender.extend(builder);
+            }
         }
 
         return builder.build();

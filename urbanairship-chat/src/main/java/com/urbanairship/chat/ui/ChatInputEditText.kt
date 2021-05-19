@@ -5,6 +5,8 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
@@ -12,7 +14,6 @@ import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.inputmethod.InputConnectionCompat
-import androidx.core.widget.addTextChangedListener
 import com.urbanairship.chat.R
 
 /** Custom `EditText` that supports image input via URI. */
@@ -42,9 +43,14 @@ internal class ChatInputEditText @JvmOverloads constructor(
             }
         }
 
-        addTextChangedListener { text ->
-            updateBackgroundDrawable(isVisible = text.isNullOrEmpty())
-        }
+        addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                updateBackgroundDrawable(isVisible = text.isNullOrEmpty())
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        })
     }
 
     override fun onCreateInputConnection(editorInfo: EditorInfo): InputConnection {

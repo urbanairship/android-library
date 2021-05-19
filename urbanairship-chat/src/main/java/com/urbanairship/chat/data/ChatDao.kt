@@ -25,7 +25,7 @@ internal interface ChatDao {
 
     @WorkerThread
     @Query("SELECT * FROM messages ORDER BY isPending DESC, createdOn DESC LIMIT :limit")
-    suspend fun getMessages(limit: Int = 50): List<MessageEntity>
+    fun getMessages(limit: Int = 50): List<MessageEntity>
 
     @WorkerThread
     @Query("SELECT * FROM messages WHERE isPending == 1 ORDER BY createdOn DESC")

@@ -20,6 +20,6 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(@NonNull String token) {
-        AirshipFirebaseIntegration.processNewToken(getApplicationContext());
+        AirshipFirebaseIntegration.processNewToken(getApplicationContext(), token);
     }
 }

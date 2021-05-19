@@ -105,6 +105,7 @@ class TagGroupApiClient {
                                                 .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                                 .setRequestBody(payload)
                                                 .setAirshipJsonAcceptsHeader()
+                                                .setAirshipUserAgent(runtimeConfig)
                                                 .execute();
 
         logTagGroupResponseIssues(response);

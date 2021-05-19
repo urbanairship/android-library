@@ -6,8 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
+import com.urbanairship.UAirship;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -32,17 +31,39 @@ public abstract class PushProviderBridge {
      * Triggers a registration update.
      *
      * @param context The application context.
+     * @param pushProviderClass The push provider class.
+     * @param newToken The token.
      */
+    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull final Class<? extends PushProvider> pushProviderClass, @Nullable final String newToken) {
+        Autopilot.automaticTakeOff(context);
+        if (UAirship.isFlying() || UAirship.isTakingOff()) {
+            UAirship.shared(new UAirship.OnReadyCallback() {
+                @Override
+                public void onAirshipReady(@NonNull UAirship airship) {
+                    airship.getPushManager().onTokenChanged(pushProviderClass, newToken);
+                }
+            });
+        }
+    }
+
+    /**
+     * Triggers a registration update.
+     *
+     * @param context The application context.
+     * @deprecated Use {@link #requestRegistrationUpdate(Context, Class, String)} instead.
+     */
+    @Deprecated
     public static void requestRegistrationUpdate(@NonNull Context context) {
         Autopilot.automaticTakeOff(context);
 
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(PushManager.class)
-                                 .build();
-
-        JobDispatcher.shared(context).dispatch(jobInfo);
+        if (UAirship.isFlying() || UAirship.isTakingOff()) {
+            UAirship.shared(new UAirship.OnReadyCallback() {
+                @Override
+                public void onAirshipReady(@NonNull UAirship airship) {
+                    airship.getPushManager().onTokenChanged(null, null);
+                }
+            });
+        }
     }
 
     /**

@@ -6,7 +6,6 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
-        classpath "org.jetbrains.kotlin:kotlin-serialization:$rootProject.kotlinVersion"
     }
 }
 
@@ -19,7 +18,6 @@ description = "Airship Android Chat extension."
 apply from: "../common-build.gradle"
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlinx-serialization'
 
 android {
     buildFeatures {
@@ -50,15 +48,12 @@ dependencies {
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$rootProject.kotlinSerializationVersion"
 
     // AndroidX
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
-    implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"
-    implementation "androidx.core:core-ktx:$rootProject.androidxCoreVersion"
+    implementation "androidx.paging:paging-runtime:$rootProject.androidxPagingVersion"
+    implementation "androidx.core:core:$rootProject.androidxCoreVersion"
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    implementation "androidx.room:room-ktx:$rootProject.androidxRoomVersion"
     kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     // OkHttp

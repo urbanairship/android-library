@@ -117,6 +117,7 @@ class AttributeApiClient {
 
         return requestFactory.createRequest()
                              .setOperation("POST", url)
+                             .setAirshipUserAgent(runtimeConfig)
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(attributePayload)
                              .setAirshipJsonAcceptsHeader()

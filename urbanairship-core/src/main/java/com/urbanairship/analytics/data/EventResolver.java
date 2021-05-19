@@ -154,7 +154,7 @@ public class EventResolver extends UrbanAirshipResolver {
 
         if (cursor == null) {
             Logger.error("EventsStorage - Unable to query events database.");
-            return -1;
+            return 0;
         }
 
         if (cursor.moveToFirst()) {
@@ -163,7 +163,7 @@ public class EventResolver extends UrbanAirshipResolver {
 
         cursor.close();
 
-        return result == null ? -1 : result;
+        return result == null ? 0 : result;
     }
 
     /**
@@ -178,7 +178,7 @@ public class EventResolver extends UrbanAirshipResolver {
 
         if (cursor == null) {
             Logger.error("EventsStorage - Unable to query events database.");
-            return -1;
+            return 0;
         }
 
         if (cursor.moveToFirst()) {
@@ -187,7 +187,7 @@ public class EventResolver extends UrbanAirshipResolver {
 
         cursor.close();
 
-        return result == null ? -1 : result;
+        return result == null ? 0 : result;
     }
 
     /**

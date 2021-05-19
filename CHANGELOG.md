@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.4.2 May 13, 2021
+Patch release to fix styling of IAA banner buttons when using a Material theme.
+
+### Changes
+- Fix IAA banner button custom styling when using a Material theme.
+
 ## Version 14.4.1 May 7, 2021
 Patch release to fix full screen In-App Automation reporting events when a user taps a button.
 

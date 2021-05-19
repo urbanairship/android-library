@@ -66,6 +66,7 @@ class ChannelApiClient {
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(channelPayload)
                              .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute(new ResponseParser<String>() {
                                  @Override
                                  public String parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
@@ -92,6 +93,7 @@ class ChannelApiClient {
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(channelPayload)
                              .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
 

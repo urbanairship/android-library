@@ -10,7 +10,6 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.api.ChatApiClient
 import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatResponse
-import com.urbanairship.chat.data.ChatDao
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipUrlConfig
@@ -47,7 +46,7 @@ class ConversationTest {
     private lateinit var mockChannel: AirshipChannel
     private lateinit var mockConnection: ChatConnection
     private lateinit var mockApiClient: ChatApiClient
-    private lateinit var chatDao: ChatDao
+    private lateinit var chatDatabase: ChatDatabase
     private lateinit var testActivityMonitor: TestActivityMonitor
 
     private lateinit var dataStore: PreferenceDataStore
@@ -64,7 +63,9 @@ class ConversationTest {
         mockApiClient = mock()
         mockChannel = mock()
 
-        chatDao = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java).allowMainThreadQueries().build().chatDao()
+        chatDatabase = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java)
+                .allowMainThreadQueries()
+                .build()
 
         testDispatcher = TestCoroutineDispatcher()
 
@@ -82,8 +83,9 @@ class ConversationTest {
                 .setChatUrl("https://test.urbanairship.com")
                 .build()
 
-        conversation = Conversation(dataStore, runtimeConfig, mockChannel, chatDao, mockConnection, mockApiClient,
-                testActivityMonitor, testDispatcher, testDispatcher)
+        conversation = Conversation(TestApplication.getApplication(), dataStore, runtimeConfig,
+                mockChannel, chatDatabase, mockConnection, mockApiClient, testActivityMonitor,
+                testDispatcher, testDispatcher)
 
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
@@ -184,7 +186,7 @@ class ConversationTest {
     fun testBackgroundPendingMessages() = testDispatcher.runBlockingTest {
         connect()
         conversation.sendMessage("hello")
-        val requestId = chatDao.getPendingMessages()[0].messageId
+        val requestId = chatDatabase.chatDao().getPendingMessages()[0].messageId
 
         testActivityMonitor.background()
         verify(mockConnection, Mockito.never()).close()
@@ -250,10 +252,10 @@ class ConversationTest {
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         conversation.sendMessage("some-message")
-        assertTrue(chatDao.hasPendingMessages())
+        assertTrue(chatDatabase.chatDao().hasPendingMessages())
 
         conversation.clearData()
-        assertFalse(chatDao.hasPendingMessages())
+        assertFalse(chatDatabase.chatDao().hasPendingMessages())
     }
 
     @Test
@@ -289,14 +291,14 @@ class ConversationTest {
         assertEquals(emptyList<ChatMessage>(), conversation.getMessages())
 
         val message = randomMessageEntity()
-        chatDao.upsert(message)
+        chatDatabase.chatDao().upsert(message)
 
         assertEquals(listOf(message), conversation.getMessages())
     }
 
     fun testGetMessagesSortAndLimit() = testDispatcher.runBlockingTest {
         val allMessages = List(100) { randomMessageEntity() }
-        allMessages.forEach { message -> chatDao.upsert(message) }
+        allMessages.forEach { message -> chatDatabase.chatDao().upsert(message) }
 
         val expected = allMessages
                 .sortedWith(compareBy(MessageEntity::isPending, MessageEntity::createdOn))

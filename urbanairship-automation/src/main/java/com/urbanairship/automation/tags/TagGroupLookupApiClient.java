@@ -14,7 +14,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
-import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
@@ -105,7 +104,8 @@ class TagGroupLookupApiClient {
                                      .setOperation("POST", url)
                                      .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                                      .setRequestBody(tagPayload, "application/json")
-                                     .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                     .setAirshipJsonAcceptsHeader()
+                                     .setAirshipUserAgent(runtimeConfig)
                                      .execute();
         } catch (RequestException e) {
             Logger.error(e, "Failed to refresh the cache.");

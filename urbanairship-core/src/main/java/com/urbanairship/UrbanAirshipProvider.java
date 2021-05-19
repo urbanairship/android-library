@@ -139,6 +139,10 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return -1;
         }
 
+        if (!model.dataManager.databaseExists(getContext())) {
+            return -1;
+        }
+
         return model.dataManager.delete(model.table, selection, selectionArgs);
     }
 
@@ -197,6 +201,10 @@ public final class UrbanAirshipProvider extends ContentProvider {
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
+            return null;
+        }
+
+        if (!model.dataManager.databaseExists(getContext())) {
             return null;
         }
 
