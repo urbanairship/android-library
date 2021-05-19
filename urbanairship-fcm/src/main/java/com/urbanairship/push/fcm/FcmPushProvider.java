@@ -13,6 +13,7 @@ import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
@@ -25,16 +26,17 @@ import androidx.annotation.RestrictTo;
  *
  * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int getPlatform() {
         return UAirship.ANDROID_PLATFORM;
     }
 
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String getDeliveryType() {
         return PushProvider.FCM_DELIVERY_TYPE;
     }
@@ -42,6 +44,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @SuppressWarnings("deprecation")
     @Override
     @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         try {
             String senderIdOverride = getSenderIdOverride();
@@ -74,6 +77,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     }
 
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isAvailable(@NonNull Context context) {
         try {
             int playServicesStatus = PlayServicesUtils.isGooglePlayServicesAvailable(context);
@@ -89,26 +93,35 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     }
 
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isSupported(@NonNull Context context) {
         return PlayServicesUtils.isGooglePlayStoreAvailable(context);
     }
 
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String toString() {
         return "FCM Push Provider " + getAirshipVersion();
     }
 
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String getAirshipVersion() {
         return BuildConfig.AIRSHIP_VERSION;
     }
 
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public String getPackageVersion() {
         return BuildConfig.SDK_VERSION;
+    }
+
+    @NonNull
+    public static boolean isAirshipPush(PushMessage message) {
+        return message.isAirshipPush();
     }
 
 }
