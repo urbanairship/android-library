@@ -3,12 +3,14 @@
 package com.urbanairship;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "preferences")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceData {
 
     public PreferenceData(@NonNull String _id, String value) {
