@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UAirship
 import com.urbanairship.chat.ChatDirection
 import com.urbanairship.chat.R
-import com.urbanairship.chat.databinding.UaFragmentChatBinding
 import com.urbanairship.images.ImageLoader.ImageLoadedCallback
 import com.urbanairship.images.ImageRequestOptions
 import java.util.Calendar
@@ -44,6 +43,21 @@ class ChatFragment : Fragment() {
         )).get(ChatViewModel::class.java)
     }
 
+    private class Views(
+        val root: View,
+        val messagesList: RecyclerView = root.findViewById(R.id.messages_list),
+        val messagesEmpty: ViewGroup = root.findViewById(R.id.messages_empty),
+        val messageInputDivider: View = root.findViewById(R.id.divider),
+        val attachmentContainer: ViewGroup = root.findViewById(R.id.image_view),
+        val attachmentThumbnail: ImageView = root.findViewById(R.id.attachment_thumbnail),
+        val attachmentRemoveButton: ImageView = root.findViewById(R.id.attachment_remove_button),
+        val messageInput: ChatInputEditText = root.findViewById(R.id.chat_message_input),
+        val sendButton: TextView = root.findViewById(R.id.chat_send_button)
+    )
+    private lateinit var views: Views
+
+    private val messageAdapter by lazy { MessageAdapter() }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -51,35 +65,33 @@ class ChatFragment : Fragment() {
     ): View {
         val themedContext = ContextThemeWrapper(requireContext(), R.style.UrbanAirship_Chat)
         val themedInflater = inflater.cloneInContext(themedContext)
-        val binding = UaFragmentChatBinding.inflate(themedInflater, container, false)
+        return themedInflater.inflate(R.layout.ua_fragment_chat, container, false)
+    }
 
-        val messageAdapter = MessageAdapter()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        views = Views(view)
 
-        viewModel.messages.observe(viewLifecycleOwner, {
-            messageAdapter.submitList(it) {
-                binding.messagesList.post {
-                    binding.messagesList.invalidateItemDecorations()
-                }
-            }
-        })
-
-        binding.lifecycleOwner = this@ChatFragment
-        binding.viewModel = this@ChatFragment.viewModel
-
-        with(binding.chatMessageInput) {
-            setListener(object : ChatInputEditText.ChatInputListener {
-                override fun onImageSelected(imageUri: String) {
-                    viewModel.setImage(imageUri)
-                    binding.attachmentThumbnail.loadAttachment(imageUri) {
-                        viewModel.onAttachmentThumbnailLoaded()
+        // Wire up list and empty views
+        with(viewModel) {
+            messages.observe(viewLifecycleOwner, {
+                messageAdapter.submitList(it) {
+                    views.messagesList.run {
+                        post { invalidateItemDecorations() }
                     }
                 }
+            })
 
-                override fun onActionDone() = viewModel.send()
+            listViewVisibility.observe(viewLifecycleOwner, { isVisible ->
+                views.messagesList.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+            })
+
+            emptyViewVisibility.observe(viewLifecycleOwner, { isVisible ->
+                views.messagesEmpty.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
             })
         }
 
-        with(binding.messagesList) {
+        with(views.messagesList) {
             val linearLayoutManager = LinearLayoutManager(requireContext()).apply {
                 // Stack from end to show new message below older ones, with gravity pulling
                 // all messages to the bottom of the list view.
@@ -112,7 +124,50 @@ class ChatFragment : Fragment() {
             })
         }
 
-        return binding.root
+        // Wire up message input and attachment views
+        with(viewModel) {
+            hasText.observe(viewLifecycleOwner, { hasText ->
+                views.messageInputDivider.visibility = if (hasText) View.VISIBLE else View.INVISIBLE
+            })
+
+            hasImage.observe(viewLifecycleOwner, {
+                views.attachmentContainer.visibility = if (it) View.VISIBLE else View.GONE
+            })
+
+            isAttachmentLoaded.observe(viewLifecycleOwner, {
+                views.attachmentRemoveButton.visibility = if (it) View.VISIBLE else View.GONE
+            })
+
+            text.observe(viewLifecycleOwner, {
+                val currentText = views.messageInput.text.toString()
+                val updatedText = it ?: ""
+                if (!updatedText.contentEquals(currentText)) {
+                    views.messageInput.setText(it)
+                }
+            })
+
+            sendButtonEnabled.observe(viewLifecycleOwner, {
+                views.sendButton.isEnabled = it
+            })
+
+            views.attachmentContainer.setOnClickListener { clearImage() }
+            views.sendButton.setOnClickListener { send() }
+
+            views.messageInput.setListener(object : ChatInputEditText.ChatInputListener {
+                override fun onImageSelected(imageUri: String) {
+                    setImage(imageUri)
+                    views.attachmentThumbnail.loadAttachment(imageUri) {
+                        onAttachmentThumbnailLoaded()
+                    }
+                }
+
+                override fun onActionDone() = send()
+
+                override fun onTextChanged(text: String?) {
+                    viewModel.text.value = text
+                }
+            })
+        }
     }
 }
 
