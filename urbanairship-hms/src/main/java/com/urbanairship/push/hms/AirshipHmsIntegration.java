@@ -62,4 +62,15 @@ public class AirshipHmsIntegration {
         HmsTokenCache.shared().set(context, token);
         PushProviderBridge.requestRegistrationUpdate(context, HmsPushProvider.class, token);
     }
+
+    /**
+     * Checks if the push is from Airship or not.
+     *
+     * @param message The message.
+     * @return {@code true} if its from Airship, otherwise {@code false}.
+     */
+    @NonNull
+    public static boolean isAirshipPush(RemoteMessage message) {
+        return new PushMessage(message.getDataOfMap()).isAirshipPush();
+    }
 }
