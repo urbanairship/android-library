@@ -26,6 +26,7 @@ import com.urbanairship.push.notifications.NotificationChannelUtils;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
 import com.urbanairship.util.Checks;
+import com.urbanairship.util.PendingIntentCompat;
 
 import java.util.Map;
 import java.util.UUID;
@@ -331,8 +332,8 @@ class IncomingPushRunnable implements Runnable {
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
         }
 
-        notification.contentIntent = PendingIntent.getActivity(context, 0, contentIntent, 0);
-        notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
+        notification.contentIntent = PendingIntentCompat.getActivity(context, 0, contentIntent, 0);
+        notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0);
 
         Logger.info("Posting notification: %s id: %s tag: %s", notification, id, tag);
         try {

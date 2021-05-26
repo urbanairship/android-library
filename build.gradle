@@ -81,7 +81,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:${gradlePluginVersion}"
+        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
         classpath "com.pinterest:ktlint:$ktlintPluginVersion"

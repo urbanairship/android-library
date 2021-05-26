@@ -10,6 +10,7 @@ import android.content.Intent;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.Clock;
+import com.urbanairship.util.PendingIntentCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -145,7 +146,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
         }
 
         Intent intent = new Intent(context, AlarmOperationReceiver.class).setAction(AlarmOperationReceiver.ACTION);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntentCompat.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         try {
             delegate.onSchedule(nextScheduleTime, pendingIntent);

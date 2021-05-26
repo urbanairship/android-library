@@ -4,8 +4,11 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.hardware.display.DisplayManager;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.urbanairship.AirshipExecutors;
@@ -18,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.zip.Inflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,9 +50,7 @@ public class NotificationUtils {
     public static Bitmap fetchBigImage(@NonNull final Context context, @NonNull final URL url) {
 
         Logger.debug("Fetching notification image at URL: %s", url);
-        WindowManager window = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        window.getDefaultDisplay().getMetrics(dm);
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
 
         // Since notifications do not take up the entire screen, request 3/4 the longest device dimension
         final int reqWidth = (int) (Math.max(dm.widthPixels, dm.heightPixels) * BIG_IMAGE_SCREEN_WIDTH_PERCENT);
