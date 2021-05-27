@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.4.4, May 26, 2021
+Patch release with updates to support targeting the Android S preview SDK.
+
+### Changes
+- Explicitly declare `exported` for all `<intent-filter>` declarations in manifest files.
+- Set explicit mutability flags on all uses of `PendingIntent`.
+- Removed databinding in `urbanairship-chat`.
+
 ## Version 14.4.3 May 19, 2021
 Patch release that fixes auto scrolling the live chat message list in the `ChatFragment` when a message is received and
 removes some of the `urbanairship-chat` dependencies to make the module easier to generate Xamarin
