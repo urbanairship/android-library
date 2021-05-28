@@ -18,7 +18,8 @@
 
         <receiver
             android:name="com.urbanairship.push.adm.AdmPushReceiver"
-            android:permission="com.amazon.device.messaging.permission.SEND">
+            android:permission="com.amazon.device.messaging.permission.SEND"
+            android:exported="true">
 
             <intent-filter>
                 <action android:name="com.amazon.device.messaging.intent.RECEIVE" />

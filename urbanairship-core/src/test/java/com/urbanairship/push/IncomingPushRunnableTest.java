@@ -25,6 +25,7 @@ import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationProvider;
 import com.urbanairship.push.notifications.NotificationResult;
+import com.urbanairship.util.PendingIntentCompat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -458,7 +459,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
+        PendingIntent pendingIntent = PendingIntentCompat.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notificationProvider.notification = createNotification();
         notificationProvider.tag = "cool-tag";
         notificationProvider.notification.contentIntent = pendingIntent;
@@ -488,7 +489,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
+        PendingIntent pendingIntent = PendingIntentCompat.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notificationProvider.notification = createNotification();
         notificationProvider.notification.deleteIntent = pendingIntent;
 

@@ -6,11 +6,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.os.Build;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.util.PendingIntentCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -220,7 +222,7 @@ class UALocationProvider {
     @Nullable
     PendingIntent getPendingIntent(@NonNull LocationAdapter adapter, int flags) {
         try {
-            return PendingIntent.getBroadcast(context, adapter.getRequestCode(), this.locationUpdateIntent, flags);
+            return PendingIntentCompat.getBroadcast(context, adapter.getRequestCode(), this.locationUpdateIntent, flags);
         } catch (Exception e) {
             Logger.error(e, "Unable to get pending intent.");
             return null;

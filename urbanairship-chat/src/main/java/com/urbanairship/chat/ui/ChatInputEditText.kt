@@ -26,6 +26,7 @@ internal class ChatInputEditText @JvmOverloads constructor(
     interface ChatInputListener {
         fun onImageSelected(imageUri: String)
         fun onActionDone()
+        fun onTextChanged(text: String?)
     }
 
     private val animationDuration = resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
@@ -48,8 +49,11 @@ internal class ChatInputEditText @JvmOverloads constructor(
                 updateBackgroundDrawable(isVisible = text.isNullOrEmpty())
             }
 
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                listener?.onTextChanged(s?.toString())
+            }
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
         })
     }
 

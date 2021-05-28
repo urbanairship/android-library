@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.minSdkVersion
-        compileSdkVersion rootProject.targetSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
     }
 }
 

@@ -5,7 +5,7 @@
 
     <application>
 
-        <receiver android:name=".PackageUpdatedReceiver">
+        <receiver android:name=".PackageUpdatedReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>

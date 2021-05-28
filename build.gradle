@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '14.4.2'
+        airshipVersion = '14.4.4'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "beta"
@@ -81,7 +81,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:${gradlePluginVersion}"
+        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
         classpath "com.pinterest:ktlint:$ktlintPluginVersion"

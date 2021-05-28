@@ -10,6 +10,7 @@ import android.os.Bundle;
 import com.urbanairship.push.NotificationProxyActivity;
 import com.urbanairship.push.NotificationProxyReceiver;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.util.PendingIntentCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -158,12 +159,15 @@ public class NotificationActionButton {
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, isForegroundAction)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION, actionDescription);
 
+        // If remote inputs are present, create a mutable PendingIntent so that the underlying intent can be modified.
+        int flags = (remoteInputs == null) ? 0 : PendingIntentCompat.FLAG_MUTABLE;
+
         if (isForegroundAction) {
             intent.setClass(context, NotificationProxyActivity.class);
-            actionPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+            actionPendingIntent = PendingIntentCompat.getActivity(context, 0, intent, flags);
         } else {
             intent.setClass(context, NotificationProxyReceiver.class);
-            actionPendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+            actionPendingIntent = PendingIntentCompat.getBroadcast(context, 0, intent, flags);
         }
 
         NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(iconId, HtmlCompat.fromHtml(label, HtmlCompat.FROM_HTML_MODE_LEGACY), actionPendingIntent)

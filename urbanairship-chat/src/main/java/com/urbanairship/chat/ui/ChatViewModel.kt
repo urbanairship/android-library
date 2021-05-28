@@ -3,6 +3,7 @@ package com.urbanairship.chat.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
@@ -47,6 +48,12 @@ internal class ChatViewModel @JvmOverloads constructor(
     private val image = MutableLiveData<String>()
     val hasImage = Transformations.map(image) { it != null }
 
+    val sendButtonEnabled: LiveData<Boolean> =
+        MediatorLiveData<Boolean>().apply {
+            addSource(hasText) { this.value = it || hasImage.value == true }
+            addSource(hasImage) { this.value = it || hasText.value == true }
+        }
+
     private val attachmentLoaded = MutableLiveData<Boolean>()
     val isAttachmentLoaded: LiveData<Boolean> = attachmentLoaded
 
@@ -58,7 +65,7 @@ internal class ChatViewModel @JvmOverloads constructor(
         val text = this.text.value
         val image = this.image.value
 
-        if (text != null || image != null) {
+        if (!text.isNullOrBlank() || image != null) {
             chat.conversation.sendMessage(text, image)
             this.text.value = null
             clearImage()
