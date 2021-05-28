@@ -97,6 +97,11 @@ public class RemoteData extends AirshipComponent {
     private static final String URL_METADATA_KEY = "url";
 
     /**
+     * Default foreground refresh interval in milliseconds.
+     */
+    public static final long DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS = 10000; // 10 seconds
+
+    /**
      * Action to refresh remote data.
      *
      * @hide
@@ -114,6 +119,8 @@ public class RemoteData extends AirshipComponent {
     private final RemoteDataApiClient apiClient;
     private final PrivacyManager privacyManager;
 
+    private volatile boolean refreshedSinceLastForeground = false;
+
     @VisibleForTesting
     final Subject<Set<RemoteDataPayload>> payloadUpdates;
 
@@ -126,6 +133,7 @@ public class RemoteData extends AirshipComponent {
     private final ApplicationListener applicationListener = new SimpleApplicationListener() {
         @Override
         public void onForeground(long time) {
+            refreshedSinceLastForeground = false;
             if (shouldRefresh()) {
                 refresh();
             }
@@ -255,7 +263,7 @@ public class RemoteData extends AirshipComponent {
      * @return The foreground refresh interval.
      */
     public long getForegroundRefreshInterval() {
-        return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, 0);
+        return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS);
     }
 
     /**
@@ -373,8 +381,7 @@ public class RemoteData extends AirshipComponent {
             return false;
         }
 
-        long timeSinceLastRefresh = clock.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
-        if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
+        if (!isLastMetadataCurrent()) {
             return true;
         }
 
@@ -384,8 +391,11 @@ public class RemoteData extends AirshipComponent {
             return true;
         }
 
-        if (!isLastMetadataCurrent()) {
-            return true;
+        if (!refreshedSinceLastForeground) {
+            long timeSinceLastRefresh = clock.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
+            if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
+                return true;
+            }
         }
 
         return false;
@@ -477,6 +487,7 @@ public class RemoteData extends AirshipComponent {
     }
 
     private void onRefreshFinished() {
+        refreshedSinceLastForeground = true;
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
             preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, PackageInfoCompat.getLongVersionCode(packageInfo));

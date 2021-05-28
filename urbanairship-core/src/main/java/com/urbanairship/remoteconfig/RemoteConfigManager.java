@@ -250,7 +250,7 @@ public class RemoteConfigManager extends AirshipComponent {
         Set<String> disableModules = new HashSet<>();
         Set<String> enabledModules = new HashSet<>(Modules.ALL_MODULES);
 
-        long remoteDataInterval = 0;
+        long remoteDataInterval = RemoteData.DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS;
 
         // Combine the disable modules and remote data interval
         for (DisableInfo info : disableInfos) {

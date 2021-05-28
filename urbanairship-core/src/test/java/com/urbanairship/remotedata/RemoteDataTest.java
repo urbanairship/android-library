@@ -263,6 +263,49 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     /**
+     * Test privacy manager only updates remote-data if it has not been updated during the session.
+     */
+    @Test
+    public void testPrivacyManagerChanges() throws RequestException {
+        activityMonitor.foreground();
+
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
+            }
+        }));
+
+        updatePayloads();
+
+        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
+        verifyNoMoreInteractions(mockDispatcher);
+    }
+
+    /**
+     * Test privacy manager triggers updates on change.
+     */
+    @Test
+    public void testPrivacyManagerTriggersUpdates() {
+        activityMonitor.foreground();
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
+            }
+        }));
+
+
+        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
+        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
+            }
+        }));
+    }
+
+    /**
      * Test that an empty cache will result in empty model objects in the initial callback.
      */
     @Test
