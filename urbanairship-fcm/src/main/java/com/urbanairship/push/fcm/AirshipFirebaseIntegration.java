@@ -74,4 +74,14 @@ public class AirshipFirebaseIntegration {
         PushProviderBridge.requestRegistrationUpdate(context, FcmPushProvider.class, token);
     }
 
+    /**
+     * Checks if the push is from Airship or not.
+     *
+     * @param message The message.
+     * @return {@code true} if its from Airship, otherwise {@code false}.
+     */
+    public static boolean isAirshipPush(@NonNull RemoteMessage message) {
+        return new PushMessage(message.getData()).isAirshipPush();
+    }
+
 }
