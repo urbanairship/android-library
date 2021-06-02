@@ -30,7 +30,7 @@ public class PreferenceDataStoreTest extends BaseTestCase {
     @Before
     public void setUp() {
         context = RuntimeEnvironment.application.getApplicationContext();
-        testPrefs = new PreferenceDataStore(context);
+        testPrefs = PreferenceDataStore.inMemoryStore(context);
     }
 
     @Test

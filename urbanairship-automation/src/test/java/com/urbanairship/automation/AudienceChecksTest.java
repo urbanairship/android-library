@@ -58,7 +58,7 @@ public class AudienceChecksTest {
         applicationMetrics = mock(ApplicationMetrics.class);
         context = TestApplication.getApplication();
 
-        PreferenceDataStore dataStore = new PreferenceDataStore(TestApplication.getApplication());
+        PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication());
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         TestApplication.getApplication().setChannel(airshipChannel);

@@ -18,7 +18,7 @@ public class PrivacyManagerTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        this.dataStore = new PreferenceDataStore(TestApplication.getApplication());
+        this.dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication());
         this.privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_NONE);
     }
 

@@ -676,8 +676,7 @@ public class UAirship {
     private void init() {
 
         // Create and init the preference data store first
-        this.preferenceDataStore = new PreferenceDataStore(application);
-        this.preferenceDataStore.init();
+        this.preferenceDataStore = PreferenceDataStore.loadDataStore(getApplicationContext(), airshipConfigOptions);
 
         this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
         this.privacyManager.migrateData();

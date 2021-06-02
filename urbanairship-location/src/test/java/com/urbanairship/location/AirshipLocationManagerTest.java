@@ -7,7 +7,6 @@ import android.location.Location;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
@@ -48,7 +47,7 @@ public class AirshipLocationManagerTest {
         mockAnalytics = mock(Analytics.class);
         mockChannel = mock(AirshipChannel.class);
 
-        dataStore = new PreferenceDataStore(ApplicationProvider.getApplicationContext());
+        dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext());
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         Context context = ApplicationProvider.getApplicationContext();

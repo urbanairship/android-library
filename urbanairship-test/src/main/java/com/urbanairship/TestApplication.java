@@ -29,7 +29,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.TestLifecycleApplication;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,13 +45,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void onCreate() {
         super.onCreate();
 
-        this.preferenceDataStore = new PreferenceDataStore(getApplicationContext());
-        preferenceDataStore.executor = new Executor() {
-            @Override
-            public void execute(Runnable command) {
-                command.run();
-            }
-        };
+        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        final AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
+
+        this.preferenceDataStore = PreferenceDataStore.inMemoryStore(getApplicationContext());
 
         JobDispatcher dispatcher = new JobDispatcher(this, new Scheduler() {
             @Override
@@ -65,9 +61,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
 
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
-        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-        AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
-
         Supplier<PushProviders> pushProviders = new Supplier<PushProviders>() {
             @Nullable
             @Override
@@ -137,6 +130,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     @Override
     public void afterTest(Method method) {
+        preferenceDataStore.tearDown();
     }
 
     @Override

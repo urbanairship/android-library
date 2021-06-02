@@ -73,7 +73,7 @@ class ConversationTest {
 
         testActivityMonitor = TestActivityMonitor()
 
-        dataStore = PreferenceDataStore(TestApplication.getApplication())
+        dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication())
 
         val captor = ArgumentCaptor.forClass(ChatConnection.ChatListener::class.java)
 

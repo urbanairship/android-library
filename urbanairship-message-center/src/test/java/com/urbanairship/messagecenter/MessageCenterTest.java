@@ -59,7 +59,7 @@ public class MessageCenterTest {
     @Before
     public void setup() {
         context = ApplicationProvider.getApplicationContext();
-        PreferenceDataStore dataStore = new PreferenceDataStore(context);
+        PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(context);
 
         privacyManager = mock(PrivacyManager.class);
         channel = mock(AirshipChannel.class);

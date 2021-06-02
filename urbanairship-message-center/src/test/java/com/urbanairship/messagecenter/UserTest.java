@@ -5,7 +5,6 @@ package com.urbanairship.messagecenter;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ public class UserTest {
 
     @Before
     public void setUp() {
-        dataStore = new PreferenceDataStore(ApplicationProvider.getApplicationContext());
+        dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext());
         mockChannel = Mockito.mock(AirshipChannel.class);
         user = new User(dataStore, mockChannel);
 
