@@ -80,8 +80,7 @@ public class AirshipFirebaseIntegration {
      * @param message The message.
      * @return {@code true} if its from Airship, otherwise {@code false}.
      */
-    @NonNull
-    public static boolean isAirshipPush(RemoteMessage message) {
+    public static boolean isAirshipPush(@NonNull RemoteMessage message) {
         return new PushMessage(message.getData()).isAirshipPush();
     }
 
