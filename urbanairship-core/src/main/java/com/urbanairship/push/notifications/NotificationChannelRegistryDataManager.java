@@ -18,7 +18,10 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+
+import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 
 /**
  * {@link DataManager} class for NotificationChannelRegistry.
@@ -41,7 +44,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
     /**
      * The database version.
      */
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     /**
      * NotificationChannelRegistryDataManager constructor.
@@ -59,9 +62,36 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         Logger.debug("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_NAME_CHANNEL_ID + " TEXT,"
+                + COLUMN_NAME_CHANNEL_ID + " TEXT UNIQUE,"
                 + COLUMN_NAME_DATA + " TEXT"
                 + ");");
+    }
+
+    @Override
+    protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        switch (oldVersion) {
+            case 1:
+                // Remove duplicate channel records (by channel ID).
+                db.execSQL("DELETE FROM " + TABLE_NAME + " WHERE rowid NOT IN ("
+                        + " SELECT max(rowid) FROM " + TABLE_NAME
+                        + " GROUP BY " + COLUMN_NAME_CHANNEL_ID + ");");
+                // Add UNIQUE constraint to channel_id column by creating an index on it.
+                db.execSQL("CREATE UNIQUE INDEX " + TABLE_NAME + "_" + COLUMN_NAME_CHANNEL_ID
+                        + " ON " + TABLE_NAME + "(" + COLUMN_NAME_CHANNEL_ID + ");");
+            case 2:
+                break;
+            default:
+                // Fall back to destructive migration.
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+                onCreate(db);
+        }
+    }
+
+    @Override
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Drop the table and recreate it.
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        onCreate(db);
     }
 
     /**
@@ -196,6 +226,6 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         value.put(COLUMN_NAME_CHANNEL_ID, channelCompat.getId());
         value.put(COLUMN_NAME_DATA, channelCompat.toJsonValue().toString());
 
-        database.insert(TABLE_NAME, null, value);
+        database.insertWithOnConflict(TABLE_NAME, null, value, CONFLICT_REPLACE);
     }
 }

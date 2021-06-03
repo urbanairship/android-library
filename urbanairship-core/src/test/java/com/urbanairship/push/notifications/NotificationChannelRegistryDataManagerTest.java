@@ -10,10 +10,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 public class NotificationChannelRegistryDataManagerTest extends BaseTestCase {
 
@@ -23,7 +25,7 @@ public class NotificationChannelRegistryDataManagerTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        dataManager = new NotificationChannelRegistryDataManager(RuntimeEnvironment.application, "appKey", "test");
+        dataManager = new NotificationChannelRegistryDataManager(getApplication(), "appKey", "test");
         channel1 = new NotificationChannelCompat("test", "Test Channel", NotificationManager.IMPORTANCE_HIGH);
         channel1.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         channel1.setSound(Uri.parse("cool://sound"));
@@ -47,6 +49,25 @@ public class NotificationChannelRegistryDataManagerTest extends BaseTestCase {
     public void testCreateChannel() {
         boolean success = dataManager.createChannel(channel1);
         Assert.assertTrue(success);
+    }
+
+    @Test
+    public void testCreateChannelUpserts() {
+        // Initial create
+        dataManager.createChannel(channel1);
+        Assert.assertEquals(1, dataManager.getChannels().size());
+
+        // Update the channel object and create it again
+        NotificationChannelCompat updatedChannel1 =
+                requireNonNull(NotificationChannelCompat.fromJson(channel1.toJsonValue()));
+        updatedChannel1.setDescription("The same, but different...");
+        dataManager.createChannel(updatedChannel1);
+
+        Set<NotificationChannelCompat> channels = dataManager.getChannels();
+        // Verify that we didn't create a duplicate
+        Assert.assertEquals(1, channels.size());
+        // Verify that the existing channel was updated with the new description
+        Assert.assertEquals(Collections.singleton(updatedChannel1), channels);
     }
 
     @Test
