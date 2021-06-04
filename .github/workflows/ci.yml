@@ -12,6 +12,6 @@ jobs:
         with:
           java-version: 1.8
       - name: Build and Test SDK
-        run: bash ./gradlew build
+        run: bash ./gradlew build --info
       - name: Build Docs
         run: bash ./gradlew javadoc

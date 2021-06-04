@@ -2,7 +2,18 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 14.4.4, May 26, 2021
+## Version 14.5.0 June 4, 2021
+
+Minor release changing how the SDK handles data collection by introducing the privacy manager. Privacy manager allows fine-grained control over what data is allowed to be collected or accessed by the Airship SDK.
+
+### Changes
+- Added privacy manager
+- Deprecated existing data collection flags
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-14.5.md) and the [Data Collection docs](https://docs.airship.com/platform/android/data-collection/) for further details.
+
+
+## Version 14.4.4 May 26, 2021
 Patch release with updates to support targeting the Android S preview SDK.
 
 ### Changes
