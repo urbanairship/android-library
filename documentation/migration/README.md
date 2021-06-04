@@ -1,5 +1,6 @@
 
 # Airship Android SDK Migration Guides
+* [SDK 14.x to 14.5](migration-guide-14.5.md)
 * [SDK 13.x to 14.x](migration-guide-13-14.md)
 * [SDK 12.x to 13.x](migration-guide-12-13.md)
 * [SDK 11.x to 12.x](migration-guide-11-12.md)

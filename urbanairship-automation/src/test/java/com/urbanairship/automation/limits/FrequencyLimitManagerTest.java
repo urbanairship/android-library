@@ -3,7 +3,6 @@
 package com.urbanairship.automation.limits;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.urbanairship.TestClock;
 import com.urbanairship.automation.limits.storage.FrequencyLimitDao;
@@ -25,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
