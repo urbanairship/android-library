@@ -86,6 +86,7 @@ internal constructor(
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val scope = CoroutineScope(connectionDispatcher)
     private val conversationListeners = CopyOnWriteArrayList<ConversationListener>()
+    private var shouldConnect = false;
 
     internal var isEnabled: Boolean
         get() = enabledState.value
@@ -109,8 +110,8 @@ internal constructor(
     init {
         connection.chatListener = ChatListener()
         activityMonitor.addApplicationListener(object : ApplicationListener {
-            override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
-            override fun onBackground(milliseconds: Long) = launchConnectionUpdate()
+            override fun onForeground(milliseconds: Long) = connect()
+            override fun onBackground(milliseconds: Long) = disconnect()
         })
 
         channel.addChannelListener(object : AirshipChannelListener {
@@ -244,20 +245,25 @@ internal constructor(
                 activityMonitor.isAppForegrounded
             }
 
-            if (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages()) {
-                if (!connection.isOpenOrOpening) {
-                    try {
-                        connection.open(uvp)
-                        isPendingSent.value = false
-                        connection.fetchConversation()
+            if (isForeground && shouldConnect) {
+                if (!isPendingSent.value || isForeground || forceOpen || chatDao.hasPendingMessages()) {
+                    if (!connection.isOpenOrOpening) {
+                        try {
+                            connection.open(uvp)
+                            isPendingSent.value = false
+                            connection.fetchConversation()
+                            return@withContext true
+                        } catch (e: Exception) {
+                            Logger.error(e, "Failed to establish chat WebSocket connection!")
+                            retryConnectionUpdate()
+                            return@withContext false
+                        }
+                    } else {
                         return@withContext true
-                    } catch (e: Exception) {
-                        Logger.error(e, "Failed to establish chat WebSocket connection!")
-                        retryConnectionUpdate()
-                        return@withContext false
                     }
                 } else {
-                    return@withContext true
+                    connection.close()
+                    return@withContext false
                 }
             } else {
                 connection.close()
@@ -273,6 +279,18 @@ internal constructor(
             delay(RECONNECT_DELAY_MS)
             launchConnectionUpdate()
         }
+    }
+
+    private fun connect() {
+        Logger.debug("UALibAPK connect method")
+        shouldConnect = true
+        launchConnectionUpdate()
+    }
+
+    private fun disconnect() {
+        Logger.debug("UALibAPK disconnect method")
+        shouldConnect = false
+        launchConnectionUpdate()
     }
 
     private suspend fun getUvp(): String? = withContext(ioDispatcher) {
