@@ -1,10 +1,8 @@
 plugins {
-    id("airship-publish")
+    id 'airship-module'
 }
 
 description = "Airship Android SDK preference extension."
-
-apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')

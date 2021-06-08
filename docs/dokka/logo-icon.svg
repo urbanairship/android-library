@@ -1,0 +1,29 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" height="51px" version="1.1"
+    viewBox="0 0 75 51" width="75px" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <path d="M70.479,32.949 L37.53,2.13162821e-14 L1.42108547e-14,37.53 L13.347,50.876 L13.45,50.979 C19.306,44.192 27.964,39.891 37.632,39.891 C47.3,39.891 55.958,44.192 61.815,50.979 L75.162,37.633 L70.479,32.949 Z" id="path-1" />
+        <path d="M53.582,29.97 C59.519,29.97 65.209,31.022 70.479,32.948 L37.53,-1.0658141e-14 L2.84217094e-14,37.529 L13.347,50.876 C22.25,38.235 36.947,29.97 53.582,29.97" id="path-3" />
+        <filter filterUnits="objectBoundingBox" height="133.4%" id="filter-4" width="125.5%" x="-6.4%" y="-10.8%">
+            <feOffset dx="5" dy="3" in="SourceAlpha" result="shadowOffsetOuter1" />
+            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2" />
+            <feColorMatrix in="shadowBlurOuter1" type="matrix" values="0 0 0 0 0.00784313725   0 0 0 0 0.00784313725   0 0 0 0 0.00784313725  0 0 0 0.4 0" />
+        </filter>
+    </defs>
+    <g fill="none" fill-rule="evenodd" id="visual" stroke="none" stroke-width="1">
+        <g id="color" transform="translate(-72.000000, -425.000000)">
+            <g id="logo-horizontal" transform="translate(72.000000, 425.000000)">
+                <g id="mark">
+                    <mask fill="white" id="mask-2"><use xlink:href="#path-1" /></mask>
+                    <use fill="#004BFF" id="mask" xlink:href="#path-1" />
+                    <path d="M70.479,32.949 L37.53,2.13162821e-14 L1.42108547e-14,37.53 L13.347,50.876 L13.45,50.979 C19.306,44.192 27.964,39.891 37.632,39.891 C47.3,39.891 55.958,44.192 61.815,50.979 L75.162,37.633 L70.479,32.949 Z" fill="#004BFF" id="full" mask="url(#mask-2)" />
+                    <path d="M53.5822,29.9696 C36.9472,29.9696 22.2502,38.2356 13.3472,50.8756 L13.4502,50.9786 C19.3062,44.1926 27.9642,39.8906 37.6322,39.8906 C47.3002,39.8906 55.9582,44.1926 61.8142,50.9786 L75.1622,37.6316 L70.4782,32.9486 C65.2092,31.0226 59.5192,29.9696 53.5822,29.9696" fill="#000080" id="swoop" mask="url(#mask-2)" />
+                    <g id="arch" mask="url(#mask-2)">
+                        <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3" />
+                        <use fill="#004BFF" fill-rule="evenodd" xlink:href="#path-3" />
+                    </g>
+                    <path d="M41.417,19.111 C41.417,21.202 39.723,22.897 37.632,22.897 C35.542,22.897 33.847,21.202 33.847,19.111 C33.847,17.021 35.542,15.326 37.632,15.326 C39.723,15.326 41.417,17.021 41.417,19.111 Z" fill="#FFFFFF" id="circle" mask="url(#mask-2)" />
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

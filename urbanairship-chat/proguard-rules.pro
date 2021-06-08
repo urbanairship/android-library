@@ -20,23 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-
-# kotlinx-serialization-json
-
--keepattributes *Annotation*, InnerClasses
--dontnote kotlinx.serialization.AnnotationsKt # core serialization annotations
-
--keepclassmembers class kotlinx.serialization.json.** {
-    *** Companion;
-}
--keepclasseswithmembers class kotlinx.serialization.json.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
-
--keep,includedescriptorclasses class com.urbanairship.chat.**$$serializer { *; }
--keepclassmembers class com.urbanairship.chat.** {
-    *** Companion;
-}
--keepclasseswithmembers class com.urbanairship.chat.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
+# Workaround R8 warnings from OkHttp 4.9.0
+# This can be removed once we update to 5.0.x or if the fix is included in a 4.9.x release
+# See: https://github.com/square/okhttp/issues/6299
+-dontwarn org.conscrypt.ConscryptHostnameVerifier

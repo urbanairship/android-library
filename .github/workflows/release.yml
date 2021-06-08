@@ -50,6 +50,7 @@ jobs:
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
           gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
+          gsutil cp build/docs/$VERSION-kdoc.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/$VERSION.tar.gz
 
       - name: Github Release
         uses: actions/create-release@v1.0.1
@@ -61,22 +62,6 @@ jobs:
           body: ${{ steps.get_release_notes.outputs.NOTES }}
           draft: false
           prerelease: false
-
-      - name: Assemble Release
-        run: >-
-          ./gradlew
-          urbanairship-core:assembleRelease
-          urbanairship-automation:assembleRelease
-          urbanairship-message-center:assembleRelease
-          urbanairship-location:assembleRelease
-          urbanairship-ads-identifier:assembleRelease
-          urbanairship-preference:assembleRelease
-          urbanairship-accengage:assembleRelease
-          urbanairship-fcm:assembleRelease
-          urbanairship-adm:assembleRelease
-          urbanairship-hms:assembleRelease
-          urbanairship-chat:assembleRelease
-          --stacktrace
 
       - name: Publish to Maven Central
         env:

@@ -1,0 +1,6 @@
+#logo {
+    background-image: url('../images/docs_logo.svg');
+    background-size: 230px 33px;
+    padding-top: 12px;
+    height: 48px;
+}

@@ -16,7 +16,7 @@ buildscript {
         gradlePluginVersion = '4.1.3'
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
-        spotlessPluginVersion = '3.27.1'
+        spotlessPluginVersion = '5.12.5'
         ktlintPluginVersion = '0.36.0'
 
         // Dependencies
@@ -34,7 +34,7 @@ buildscript {
         androidxAppCompatVersion = '1.2.0'
         androidxPreferenceVersion = '1.1.1'
         androidxVectorDrawableVersion = '1.1.0'
-        androidxRoomVersion = '2.2.6'
+        androidxRoomVersion = '2.3.0'
         androidxConstraintLayoutVersion = '2.0.4'
         androidxPagingVersion = '2.1.2'
         androidxLifeCycleVersion = '2.3.0'
@@ -73,6 +73,7 @@ buildscript {
 
         // Doc Dependencies
         doclavaVersion = '1.0.6'
+        dokkaVersion = '1.4.32'
     }
 
     repositories {
@@ -83,14 +84,16 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:$spotlessPluginVersion"
         classpath "com.pinterest:ktlint:$ktlintPluginVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
 
 plugins {
-    id('airship-publish')
+    id 'airship-doclava'
+    id 'airship-dokka'
+    id 'airship-publish'
+    id 'com.diffplug.spotless' version "$spotlessPluginVersion"
 }
 
 allprojects {
@@ -100,72 +103,10 @@ allprojects {
     }
 }
 
-configurations {
-    doclava
-}
-
-dependencies {
-    // Docs
-    doclava("com.google.doclava:doclava:$rootProject.doclavaVersion")
-}
-
-task javadoc(type: Javadoc) {
-    destinationDir = file("$buildDir/docs/javadoc")
-    title = null
-    failOnError false
-
-    exclude '**/BuildConfig.java'
-    exclude '**/R.java'
-    exclude '**/com/ad4screen/**'
-
-    options {
-        docletpath = configurations.doclava.files as List
-        doclet "com.google.doclava.Doclava"
-        bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
-        addStringOption "notimestamp", null
-        addStringOption "hdf project.name", "Airship Android SDK"
-        addStringOption "hdf project.version", project.version
-        addStringOption "apiversion", "v2"
-        addStringOption "federate android", "http://developer.android.com/reference"
-        addStringOption "federationxml android", "docs/android-22.xml"
-        addStringOption "templatedir", "docs/template"
-    }
-
-    subprojects.findAll { it.name.startsWith("urbanairship-") && !it.name.contains("stub") && !it.name.contains("test")}.each { proj ->
-        proj.afterEvaluate { evaluated ->
-            source += evaluated.android.sourceSets.main.java.sourceFiles
-            if (proj.name.equals("urbanairship-core") ||
-                proj.name.equals("urbanairship-accengage") ||
-                proj.name.equals("urbanairship-ads-identifier") ||
-                proj.name.equals("urbanairship-automation") ||
-                proj.name.equals("urbanairship-location") ||
-                proj.name.equals("urbanairship-message-center") ||
-                proj.name.equals("urbanairship-preference") ||
-                proj.name.equals("urbanairship-chat")) {
-                classpath += evaluated.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
-
-                evaluated.android.libraryVariants.all { variant ->
-                    if (variant.name == 'release') {
-                        classpath += variant.getJavaCompileProvider().get().classpath
-                        classpath += project.files(evaluated.android.getBootClasspath().join(File.pathSeparator))
-                    }
-                }
-            }
-        }
-    }
-}
-
-task packageDocs(type: Tar, dependsOn: 'javadoc') {
-    into('./') {
-        from 'build/docs/javadoc'
-    }
-
-    archiveFileName = "${rootProject.airshipVersion}.tar.gz"
-    compression = Compression.GZIP
-
-    destinationDirectory.set(file('build/docs'))
-    archiveExtension.set('tar.gz')
-    compression = Compression.GZIP
+task packageDocs() {
+    dependsOn(packageJavadoc, packageKDoc)
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Generate Javadoc and KDoc archives for release"
 }
 
 task getVersion() {
@@ -177,8 +118,6 @@ task getVersion() {
         println version
     }
 }
-
-apply plugin: "com.diffplug.gradle.spotless"
 
 spotless {
     java {
@@ -192,6 +131,16 @@ spotless {
     kotlin {
         target '**/*.kt'
         targetExclude '.idea/**'
+
+        ktlint().userData(['max_line_length': 'off'])
+
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target '**/*.gradle.kts'
+        targetExclude '.idea/**', 'buildSrc/build/**'
 
         ktlint().userData(['max_line_length': 'off'])
 
