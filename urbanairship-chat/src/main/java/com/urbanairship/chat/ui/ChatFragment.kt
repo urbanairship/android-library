@@ -15,11 +15,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.urbanairship.Logger
 import com.urbanairship.UAirship
+import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatDirection
+import com.urbanairship.chat.Conversation
 import com.urbanairship.chat.R
 import com.urbanairship.images.ImageLoader.ImageLoadedCallback
 import com.urbanairship.images.ImageRequestOptions
@@ -68,9 +71,38 @@ class ChatFragment : Fragment() {
         return themedInflater.inflate(R.layout.ua_fragment_chat, container, false)
     }
 
+    private class ChatObserver(lifecycleOwner: LifecycleOwner) : LifecycleObserver {
+
+        val mLifecycleOwner = lifecycleOwner
+
+        init {
+            mLifecycleOwner.lifecycle.addObserver(this)
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        fun onResume() {
+            Chat.shared().conversation.connect()
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        fun onPause() {
+            Chat.shared().conversation.disconnect()
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun onDestroy() {
+            mLifecycleOwner.lifecycle.removeObserver(this)
+        }
+    }
+
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         views = Views(view)
+
+        // Observe lifecycle for chat connection
+        ChatObserver(viewLifecycleOwner)
 
         // Wire up list and empty views
         with(viewModel) {

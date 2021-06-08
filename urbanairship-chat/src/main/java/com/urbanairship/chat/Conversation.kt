@@ -109,10 +109,6 @@ internal constructor(
 
     init {
         connection.chatListener = ChatListener()
-        activityMonitor.addApplicationListener(object : ApplicationListener {
-            override fun onForeground(milliseconds: Long) = connect()
-            override fun onBackground(milliseconds: Long) = disconnect()
-        })
 
         channel.addChannelListener(object : AirshipChannelListener {
             override fun onChannelCreated(channelId: String) = launchConnectionUpdate()
@@ -281,14 +277,12 @@ internal constructor(
         }
     }
 
-    private fun connect() {
-        Logger.debug("UALibAPK connect method")
+    fun connect() {
         shouldConnect = true
         launchConnectionUpdate()
     }
 
-    private fun disconnect() {
-        Logger.debug("UALibAPK disconnect method")
+    fun disconnect() {
         shouldConnect = false
         launchConnectionUpdate()
     }
