@@ -15,10 +15,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.urbanairship.Logger
 import com.urbanairship.UAirship
 import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatDirection
@@ -72,8 +74,7 @@ class ChatFragment : Fragment() {
         return themedInflater.inflate(R.layout.ua_fragment_chat, container, false)
     }
 
-     class ChatObserver(val conversation: Conversation) : LifecycleObserver {
-
+    class ChatObserver(val conversation: Conversation) : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         fun onResume() {
             conversation.connect()

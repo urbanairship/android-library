@@ -85,7 +85,7 @@ internal constructor(
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val scope = CoroutineScope(connectionDispatcher)
     private val conversationListeners = CopyOnWriteArrayList<ConversationListener>()
-    private var shouldConnect = false;
+    private var shouldConnect = false
 
     internal var isEnabled: Boolean
         get() = enabledState.value
