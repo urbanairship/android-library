@@ -11,7 +11,6 @@ import com.urbanairship.push.PushProvider;
 
 import junit.framework.Assert;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,7 +68,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test that the minimized payload includes optional fields if changed
      */
     @Test
-    public void testMinimizedPayloadIncludesOptionalFieldsIfChanged() {
+    public void testMinimizedPayloadIncludesOptionalFieldsIfChanged() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setTags(testSetTags, testTags)
                 .setLanguage(testLanguage)
@@ -98,17 +97,25 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
 
-        assertEquals(minPayload.language, "newLanguage");
-        assertEquals(minPayload.timezone, "newTimezone");
-        assertEquals(minPayload.country, "newCountry");
+        JsonMap.Builder builder = JsonMap.newBuilder();
+        Set<String> expectedAdd = new HashSet<>(Arrays.asList("new", "tags"));
+        Set<String> expectedRemove = new HashSet<>(Arrays.asList("tagOne", "tagTwo"));
+        builder.put("add", JsonValue.wrap(expectedAdd));
+        builder.put("remove", JsonValue.wrap(expectedRemove));
+        JsonMap expectedTagChanges = builder.build();
+
+        assertEquals("newLanguage", minPayload.language);
+        assertEquals("newTimezone", minPayload.timezone);
+        assertEquals("newCountry", minPayload.country);
         assertTrue(minPayload.setTags);
-        assertEquals(minPayload.tags, new HashSet<>(Arrays.asList("new", "tags")));
-        assertEquals(minPayload.locationSettings, false);
-        assertEquals(minPayload.appVersion, "234");
-        assertEquals((Object) minPayload.apiVersion, 234);
-        assertEquals(minPayload.sdkVersion, "2.3.4");
-        assertEquals(minPayload.deviceModel, "Other device model");
-        assertEquals(minPayload.carrier, "Other carrier");
+        assertEquals(new HashSet<>(Arrays.asList("new", "tags")), minPayload.tags);
+        assertEquals(expectedTagChanges, minPayload.tagChanges);
+        assertEquals(false, minPayload.locationSettings);
+        assertEquals("234", minPayload.appVersion);
+        assertEquals(234, (Object) minPayload.apiVersion);
+        assertEquals("2.3.4", minPayload.sdkVersion);
+        assertEquals("Other device model", minPayload.deviceModel);
+        assertEquals("Other carrier", minPayload.carrier);
     }
 
     /**
@@ -139,6 +146,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertNull(minPayload.country);
         assertFalse(minPayload.setTags);
         assertNull(minPayload.tags);
+        assertNull(minPayload.tagChanges);
         assertNull(minPayload.locationSettings);
         assertNull(minPayload.appVersion);
         assertNull(minPayload.sdkVersion);
@@ -543,6 +551,47 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
+    }
+
+    /**
+     * Test payload created from JSON with Tag Changes
+     */
+    @Test
+    public void testCreateFromJSONWithTagChanges() throws JsonException {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setOptIn(testOptIn)
+                .setDeviceType(testDeviceType)
+                .setPushAddress(testPushAddress)
+                .setTags(testSetTags, testTags)
+                .setUserId(testUserId)
+                .setAccengageDeviceId(testAccengageDeviceId)
+                .setLocationSettings(true)
+                .setAppVersion("123")
+                .setApiVersion(123)
+                .setSdkVersion("1.2.3")
+                .setDeviceModel("Device model")
+                .setCarrier("Carrier")
+                .build();
+
+        ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
+                .setLanguage("newLanguage")
+                .setTimezone("newTimezone")
+                .setCountry("newCountry")
+                .setTags(true, new HashSet<>(Arrays.asList("new", "tags")))
+                .setLocationSettings(false)
+                .setAppVersion("234")
+                .setApiVersion(234)
+                .setSdkVersion("2.3.4")
+                .setDeviceModel("Other device model")
+                .setCarrier("Other carrier")
+                .build();
+
+        ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
+
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.fromJson(minPayload.toJsonValue());
+        assertTrue("Payloads should match.", minPayload.equals(jsonPayload));
+        assertEquals("Payloads should match.", minPayload.hashCode(), jsonPayload.hashCode());
+
     }
 
     @Test
