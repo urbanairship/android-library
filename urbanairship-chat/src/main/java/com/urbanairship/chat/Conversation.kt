@@ -11,7 +11,6 @@ import com.urbanairship.Logger
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
@@ -241,25 +240,20 @@ internal constructor(
                 activityMonitor.isAppForegrounded
             }
 
-            if (isForeground && shouldConnect) {
-                if (!isPendingSent.value || isForeground || forceOpen || chatDao.hasPendingMessages()) {
-                    if (!connection.isOpenOrOpening) {
-                        try {
-                            connection.open(uvp)
-                            isPendingSent.value = false
-                            connection.fetchConversation()
-                            return@withContext true
-                        } catch (e: Exception) {
-                            Logger.error(e, "Failed to establish chat WebSocket connection!")
-                            retryConnectionUpdate()
-                            return@withContext false
-                        }
-                    } else {
+            if (!isPendingSent.value || isForeground && shouldConnect || forceOpen || chatDao.hasPendingMessages()) {
+                if (!connection.isOpenOrOpening) {
+                    try {
+                        connection.open(uvp)
+                        isPendingSent.value = false
+                        connection.fetchConversation()
                         return@withContext true
+                    } catch (e: Exception) {
+                        Logger.error(e, "Failed to establish chat WebSocket connection!")
+                        retryConnectionUpdate()
+                        return@withContext false
                     }
                 } else {
-                    connection.close()
-                    return@withContext false
+                    return@withContext true
                 }
             } else {
                 connection.close()

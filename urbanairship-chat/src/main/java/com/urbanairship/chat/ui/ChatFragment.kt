@@ -58,6 +58,7 @@ class ChatFragment : Fragment() {
         val sendButton: TextView = root.findViewById(R.id.chat_send_button)
     )
     private lateinit var views: Views
+    private var chatObserver = ChatObserver(Chat.shared().conversation)
 
     private val messageAdapter by lazy { MessageAdapter() }
 
@@ -71,38 +72,25 @@ class ChatFragment : Fragment() {
         return themedInflater.inflate(R.layout.ua_fragment_chat, container, false)
     }
 
-    private class ChatObserver(lifecycleOwner: LifecycleOwner) : LifecycleObserver {
-
-        val mLifecycleOwner = lifecycleOwner
-
-        init {
-            mLifecycleOwner.lifecycle.addObserver(this)
-        }
+     class ChatObserver(val conversation: Conversation) : LifecycleObserver {
 
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         fun onResume() {
-            Chat.shared().conversation.connect()
+            conversation.connect()
         }
 
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         fun onPause() {
-            Chat.shared().conversation.disconnect()
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun onDestroy() {
-            mLifecycleOwner.lifecycle.removeObserver(this)
+            conversation.disconnect()
         }
     }
-
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         views = Views(view)
 
         // Observe lifecycle for chat connection
-        ChatObserver(viewLifecycleOwner)
+        viewLifecycleOwner.lifecycle.addObserver(chatObserver)
 
         // Wire up list and empty views
         with(viewModel) {
@@ -200,6 +188,11 @@ class ChatFragment : Fragment() {
                 }
             })
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewLifecycleOwner.lifecycle.removeObserver(chatObserver)
     }
 }
 
