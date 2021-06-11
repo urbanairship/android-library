@@ -15,16 +15,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UAirship
 import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatDirection
-import com.urbanairship.chat.Conversation
 import com.urbanairship.chat.R
 import com.urbanairship.images.ImageLoader.ImageLoadedCallback
 import com.urbanairship.images.ImageRequestOptions
@@ -60,7 +56,6 @@ class ChatFragment : Fragment() {
         val sendButton: TextView = root.findViewById(R.id.chat_send_button)
     )
     private lateinit var views: Views
-    private var chatObserver = ChatObserver(Chat.shared().conversation)
 
     private val messageAdapter by lazy { MessageAdapter() }
 
@@ -74,24 +69,12 @@ class ChatFragment : Fragment() {
         return themedInflater.inflate(R.layout.ua_fragment_chat, container, false)
     }
 
-    class ChatObserver(val conversation: Conversation) : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        fun onResume() {
-            conversation.connect()
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        fun onPause() {
-            conversation.disconnect()
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         views = Views(view)
 
         // Observe lifecycle for chat connection
-        viewLifecycleOwner.lifecycle.addObserver(chatObserver)
+        Chat.shared().conversation.connect(viewLifecycleOwner)
 
         // Wire up list and empty views
         with(viewModel) {
@@ -189,11 +172,6 @@ class ChatFragment : Fragment() {
                 }
             })
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        viewLifecycleOwner.lifecycle.removeObserver(chatObserver)
     }
 }
 

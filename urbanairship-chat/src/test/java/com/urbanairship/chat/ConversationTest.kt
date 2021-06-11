@@ -15,16 +15,12 @@ import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
-import com.urbanairship.chat.ui.ChatFragment
 import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertNull
 import junit.framework.Assert.assertTrue
-import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -42,6 +38,9 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -57,7 +56,6 @@ class ConversationTest {
     private lateinit var dataStore: PreferenceDataStore
     private lateinit var conversation: Conversation
     private lateinit var chatListener: ChatConnection.ChatListener
-    private lateinit var chatObserver: ChatFragment.ChatObserver
 
     private lateinit var testDispatcher: TestCoroutineDispatcher
     private lateinit var runtimeConfig: TestAirshipRuntimeConfig
@@ -99,8 +97,8 @@ class ConversationTest {
                 testDispatcher, testDispatcher)
 
         lifeCycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
-        chatObserver = ChatFragment.ChatObserver(conversation)
-        lifeCycleRegistry.addObserver(chatObserver)
+//        chatObserver = ChatFragment.ChatObserver(conversation)
+//        lifeCycleRegistry.addObserver(chatObserver)
 
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
@@ -126,12 +124,12 @@ class ConversationTest {
     }
 
     @Test
+
     fun testConnectionRequestsConversation() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
-        conversation.connect()
 
         verify(mockConnection).open("some-uvp")
         verify(mockConnection).fetchConversation()

@@ -6,11 +6,16 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import androidx.paging.DataSource
 import com.urbanairship.Logger
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
@@ -109,6 +114,12 @@ internal constructor(
     init {
         connection.chatListener = ChatListener()
 
+        activityMonitor.addApplicationListener(object : ApplicationListener {
+            override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
+            override fun onBackground(milliseconds: Long) {
+                shouldConnect = false
+            }
+        })
         channel.addChannelListener(object : AirshipChannelListener {
             override fun onChannelCreated(channelId: String) = launchConnectionUpdate()
             override fun onChannelUpdated(channelId: String) = launchConnectionUpdate()
@@ -276,7 +287,26 @@ internal constructor(
         launchConnectionUpdate()
     }
 
-    fun disconnect() {
+    fun connect(lifecycleOwner: LifecycleOwner) {
+        val lifeCycleObserver: LifecycleObserver = object : LifecycleObserver {
+            @OnLifecycleEvent(Lifecycle.Event.ON_START)
+            fun onStart() {
+                connect()
+            }
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            fun onDestroy() {
+                lifecycleOwner.lifecycle.removeObserver(this)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(lifeCycleObserver)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            connect()
+        }
+    }
+
+    private fun disconnect() {
         shouldConnect = false
         launchConnectionUpdate()
     }
