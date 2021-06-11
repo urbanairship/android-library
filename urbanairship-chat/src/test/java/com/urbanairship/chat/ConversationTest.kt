@@ -17,10 +17,13 @@ import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertNull
 import junit.framework.Assert.assertTrue
+import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -38,9 +41,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.random.Random
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
