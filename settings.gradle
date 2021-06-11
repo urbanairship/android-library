@@ -6,18 +6,19 @@ pluginManagement {
     }
 }
 
-include ':urbanairship-core',
+include ':urbanairship-accengage',
         ':urbanairship-adm',
-        ':urbanairship-fcm',
         ':urbanairship-ads-identifier',
-        ':urbanairship-preference',
+        ':urbanairship-automation',
+        ':urbanairship-chat',
+        ':urbanairship-core',
         ':urbanairship-debug',
-        ':urbanairship-accengage',
+        ':urbanairship-fcm',
         ':urbanairship-hms',
         ':urbanairship-hms-stub',
         ':urbanairship-location',
         ':urbanairship-message-center',
-        ':urbanairship-automation',
-        ':urbanairship-chat',
+        ':urbanairship-preference',
+        ':urbanairship-preference-center',
         ':urbanairship-test',
         ":sample"
