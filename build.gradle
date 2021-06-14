@@ -17,7 +17,9 @@ buildscript {
         bintrayPluginVersion = '1.8.4'
         googleServicesPluginVersion = '4.3.3'
         spotlessPluginVersion = '5.12.5'
-        ktlintPluginVersion = '0.36.0'
+
+        // Spotless plugins
+        ktlintVersion = '0.41.0'
 
         // Dependencies
 
@@ -84,7 +86,6 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"
-        classpath "com.pinterest:ktlint:$ktlintPluginVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
@@ -128,21 +129,31 @@ spotless {
         indentWithSpaces()
         endWithNewline()
     }
+
+    def ktlintUserData = [
+        'android': 'true',
+        'max_line_length': 'off',
+        // Match Android Kotlin style guide import order.
+        // https://developer.android.com/kotlin/style-guide
+        'kotlin_imports_layout': 'ascii',
+        // Disable 'indent' to avoid overly aggressive wrapping of function parameters.
+        'disabled_rules': 'indent'
+    ]
     kotlin {
         target '**/*.kt'
-        targetExclude '.idea/**'
+        targetExclude '.idea/**', 'buildSrc/**'
 
-        ktlint().userData(['max_line_length': 'off'])
+        ktlint(ktlintVersion).userData(ktlintUserData)
 
         trimTrailingWhitespace()
         indentWithSpaces()
         endWithNewline()
     }
     kotlinGradle {
-        target '**/*.gradle.kts'
-        targetExclude '.idea/**', 'buildSrc/build/**'
+        target 'buildSrc/**/*.kts', 'buildSrc/**/*.kt'
+        targetExclude 'buildSrc/build/**'
 
-        ktlint().userData(['max_line_length': 'off'])
+        ktlint(ktlintVersion).userData(ktlintUserData)
 
         trimTrailingWhitespace()
         indentWithSpaces()

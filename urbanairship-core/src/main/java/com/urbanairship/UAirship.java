@@ -764,6 +764,10 @@ public class UAirship {
         Module chat = Modules.chat(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(chat);
 
+        // Preference Center
+        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
+        processModule(preferenceCenter);
+
         for (AirshipComponent component : components) {
             component.init();
         }

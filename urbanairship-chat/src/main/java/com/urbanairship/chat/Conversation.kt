@@ -42,7 +42,6 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Chat Conversation.
  */
 class Conversation
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @VisibleForTesting
 internal constructor(

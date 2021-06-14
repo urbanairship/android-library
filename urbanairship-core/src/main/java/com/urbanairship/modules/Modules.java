@@ -23,6 +23,7 @@ import com.urbanairship.modules.debug.DebugModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
+import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
 
@@ -45,6 +46,7 @@ public class Modules {
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
     private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
+    private static final String PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl";
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
@@ -166,6 +168,23 @@ public class Modules {
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Chat module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module preferenceCenter(@NonNull Context context,
+                                          @NonNull PreferenceDataStore dataStore,
+                                          @NonNull PrivacyManager privacyManager,
+                                          @NonNull RemoteData remoteData) {
+        try {
+            PreferenceCenterModuleFactory moduleFactory =
+                    createFactory(PREFERENCE_CENTER_FACTORY, PreferenceCenterModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, privacyManager, remoteData);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Preference Center module");
         }
         return null;
     }
