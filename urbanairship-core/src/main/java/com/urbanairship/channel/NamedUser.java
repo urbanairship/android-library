@@ -4,6 +4,13 @@ package com.urbanairship.channel;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
@@ -22,13 +29,6 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * The named user is an alternate method of identifying the device. Once a named
@@ -94,7 +94,7 @@ public class NamedUser extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      * @param runtimeConfig The airship runtime config.
      * @param airshipChannel The airship channel.
-     * @[param privacyManager The privacy manager.
+     * @param privacyManager The privacy manager.
      */
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                      @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull PrivacyManager privacyManager,

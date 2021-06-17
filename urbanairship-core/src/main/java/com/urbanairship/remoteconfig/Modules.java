@@ -55,8 +55,13 @@ interface Modules {
      */
     String CHAT_MODULE = "chat";
 
+    /**
+     * Contact module.
+     */
+    String CONTACT_MODULE = "contact";
+
     List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE, MESSAGE_CENTER,
             IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE, CHANNEL_MODULE,
-            CHAT_MODULE);
+            CHAT_MODULE, CONTACT_MODULE);
 
 }

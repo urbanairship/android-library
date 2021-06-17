@@ -13,12 +13,20 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
+
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.Contact;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
@@ -44,13 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -135,6 +136,7 @@ public class UAirship {
     AirshipRuntimeConfig runtimeConfig;
     LocaleManager localeManager;
     PrivacyManager privacyManager;
+    Contact contact;
 
     /**
      * Constructs an instance of UAirship.
@@ -733,6 +735,9 @@ public class UAirship {
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
+        components.add(this.contact);
+
         // Debug
         Module debugModule = Modules.debug(application, preferenceDataStore);
         processModule(debugModule);
@@ -917,6 +922,16 @@ public class UAirship {
     @Nullable
     public AccengageNotificationHandler getAccengageNotificationHandler() {
         return accengageNotificationHandler;
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.channel.Contact} instance.
+     *
+     * @return The {@link com.urbanairship.channel.Contact} instance.
+     */
+    @NonNull
+    public Contact getContact() {
+        return contact;
     }
 
     /**
