@@ -8,6 +8,7 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "com.google.firebase:firebase-messaging:$rootProject.firebaseFcmVersion"
+    implementation "com.google.firebase:firebase-messaging:$rootProject.firebaseMessagingVersion"
+    implementation "com.google.firebase:firebase-iid:$rootProject.firebaseIidVersion"
     implementation "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 }

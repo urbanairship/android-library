@@ -10,6 +10,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.urbanairship.AirshipVersionInfo;
+import com.urbanairship.BuildConfig;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
@@ -69,6 +70,13 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         if (senderId.equals(FirebaseApp.getInstance().getOptions().getGcmSenderId())) {
             return null;
         }
+
+        // Log a warning about sender ID overrides being unsupported in the future
+        Logger.error("The airship config options specify an fcmSenderId that overrides the " +
+                "sender ID from the default Firebase project. This configuration is no longer recommended " +
+                "by Firebase and may not be supported by future versions of the Airship Android SDK. " +
+                "Firebase currently recommends using a single Firebase Project/Firebase App for both FCM " +
+                "and Crashlytics.");
 
         return senderId;
     }
