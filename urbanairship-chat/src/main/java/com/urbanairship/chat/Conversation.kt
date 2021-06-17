@@ -27,8 +27,6 @@ import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.DateUtils
-import java.util.UUID
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +39,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Chat Conversation.
@@ -118,6 +118,7 @@ internal constructor(
             override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
             override fun onBackground(milliseconds: Long) {
                 shouldConnect = false
+                launchConnectionUpdate()
             }
         })
         channel.addChannelListener(object : AirshipChannelListener {
@@ -251,7 +252,7 @@ internal constructor(
                 activityMonitor.isAppForegrounded
             }
 
-            if (!isPendingSent.value || isForeground && shouldConnect || forceOpen || chatDao.hasPendingMessages()) {
+            if (!isPendingSent.value || (isForeground && shouldConnect) || forceOpen || chatDao.hasPendingMessages()) {
                 if (!connection.isOpenOrOpening) {
                     try {
                         connection.open(uvp)
@@ -282,11 +283,19 @@ internal constructor(
         }
     }
 
+    /**
+     * Opens the connection for the Conversation
+     */
     fun connect() {
         shouldConnect = true
         launchConnectionUpdate()
     }
 
+    /**
+     * Opens the connection and attach a LifecycleObserver so the connection stays open
+     * while the Conversation is on foreground.
+     * @param lifecycleOwner The view's LifecycleOwner
+     */
     fun connect(lifecycleOwner: LifecycleOwner) {
         val lifeCycleObserver: LifecycleObserver = object : LifecycleObserver {
             @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -304,11 +313,6 @@ internal constructor(
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
             connect()
         }
-    }
-
-    private fun disconnect() {
-        shouldConnect = false
-        launchConnectionUpdate()
     }
 
     private suspend fun getUvp(): String? = withContext(ioDispatcher) {
