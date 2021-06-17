@@ -27,6 +27,8 @@ import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.DateUtils
+import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,8 +41,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.UUID
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Chat Conversation.
