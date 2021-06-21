@@ -4,6 +4,10 @@ package com.urbanairship.channel;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -16,10 +20,6 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.concurrent.Callable;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 /**
  * TagGroup API client.
  */
@@ -27,10 +27,12 @@ class TagGroupApiClient {
 
     private static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
     private static final String NAMED_USER_TAG_GROUP_PATH = "api/named_users/tags/";
+    private static final String CONTACT_TAG_GROUP_PATH = "api/contacts/tags/";
 
     private static final String ANDROID_CHANNEL_KEY = "android_channel";
     private static final String AMAZON_CHANNEL_KEY = "amazon_channel";
     private static final String NAMED_USER_ID_KEY = "named_user_id";
+    private static final String CONTACT_ID_KEY = "contact_id";
 
     private static final String AUDIENCE_KEY = "audience";
 
@@ -75,6 +77,16 @@ class TagGroupApiClient {
                         }
                     }
                 }, CHANNEL_TAGS_PATH);
+    }
+
+    public static TagGroupApiClient contactClient(AirshipRuntimeConfig runtimeConfig) {
+        return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
+                new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return CONTACT_ID_KEY;
+                    }
+                }, CONTACT_TAG_GROUP_PATH);
     }
 
     /**

@@ -4,15 +4,15 @@ package com.urbanairship.channel;
 
 import android.net.Uri;
 
-import com.urbanairship.UAirship;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
+import com.urbanairship.util.PlatformUtils;
 
 /**
  * A high level abstraction for performing Named User API requests.
@@ -53,9 +53,11 @@ class NamedUserApiClient {
                                .appendEncodedPath(ASSOCIATE_PATH)
                                .build();
 
+        String deviceType = PlatformUtils.getDeviceType(runtimeConfig.getPlatform());
+
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, channelId)
-                                 .put(DEVICE_TYPE_KEY, getDeviceType())
+                                 .put(DEVICE_TYPE_KEY, deviceType)
                                  .put(NAMED_USER_ID_KEY, id)
                                  .build();
 
@@ -81,9 +83,11 @@ class NamedUserApiClient {
                                .appendEncodedPath(DISASSOCIATE_PATH)
                                .build();
 
+        String deviceType = PlatformUtils.getDeviceType(runtimeConfig.getPlatform());
+
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, channelId)
-                                 .put(DEVICE_TYPE_KEY, getDeviceType())
+                                 .put(DEVICE_TYPE_KEY, deviceType)
                                  .build();
 
         return requestFactory.createRequest()
@@ -95,21 +99,4 @@ class NamedUserApiClient {
                              .execute();
     }
 
-    /**
-     * Returns the device type based on the platform.
-     *
-     * @return The device type string.
-     */
-    @NonNull
-    String getDeviceType() throws RequestException {
-        switch (runtimeConfig.getPlatform()) {
-            case UAirship.AMAZON_PLATFORM:
-                return "amazon";
-
-            case UAirship.ANDROID_PLATFORM:
-                return "android";
-            default:
-                throw new RequestException("Invalid platform");
-        }
-    }
 }

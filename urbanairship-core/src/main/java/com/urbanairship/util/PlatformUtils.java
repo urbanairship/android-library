@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestException;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 import static com.urbanairship.UAirship.ANDROID_PLATFORM;
@@ -18,6 +19,10 @@ import static com.urbanairship.UAirship.UNKNOWN_PLATFORM;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PlatformUtils {
+
+    public static final String AMAZON = "amazon";
+    public static final String ANDROID = "android";
+    public static final String UNKNOWN = "unknown";
 
     /**
      * Checks if the platform is valid.
@@ -65,12 +70,28 @@ public class PlatformUtils {
     public static String asString(@UAirship.Platform int platform) {
         switch (platform) {
             case UAirship.AMAZON_PLATFORM:
-                return "amazon";
+                return AMAZON;
             case UAirship.ANDROID_PLATFORM:
-                return "android";
+                return ANDROID;
             default:
-                return "unknown";
+                return UNKNOWN;
         }
+    }
+
+    /**
+     * Converts a platform to a string
+     *
+     * @param platform The platform.
+     * @return The string representing the platform.
+     * @throws RequestException If the platform is unknown
+     */
+    @NonNull
+    public static String getDeviceType(@UAirship.Platform int platform) throws RequestException {
+        String deviceType = PlatformUtils.asString(platform);
+        if (deviceType.equals(PlatformUtils.UNKNOWN)) {
+            throw new RequestException("Invalid platform");
+        }
+        return deviceType;
     }
 
 }

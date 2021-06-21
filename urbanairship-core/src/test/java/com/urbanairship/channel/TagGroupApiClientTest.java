@@ -97,6 +97,14 @@ public class TagGroupApiClientTest extends BaseTestCase {
         TagGroupApiClient client = TagGroupApiClient.namedUserClient(runtimeConfig);
 
         assertEquals("named_user_id", client.getAudienceKey());
-        assertEquals("api/named_users/tags/", client.getPath());;
+        assertEquals("api/named_users/tags/", client.getPath());
+    }
+
+    @Test
+    public void testContactClient() throws RequestException {
+        TagGroupApiClient client = TagGroupApiClient.contactClient(runtimeConfig);
+
+        assertEquals("contact_id", client.getAudienceKey());
+        assertEquals("api/contacts/tags/", client.getPath());
     }
 }
