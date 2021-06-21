@@ -2,6 +2,20 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.5.1 June 21, 2021
+
+Patch release that updates the version of `firebase-messaging` used by `urbanairship-fcm` and adds
+a dependency on `firebase-iid` to maintain support for overriding `fcmSenderId` to a non-default 
+Firebase project. This configuration is no longer recommended by Firebase and may not be supported
+in future versions of the Airship FCM module. Firebase currently recommends using a single Firebase
+project for Crashlytics and Cloud Messaging. 
+
+### Changes
+- Updated`firebase-messaging` to version `22.0.0`.
+- Added `firebase-iid` dependency to `urbanairship-fcm`.
+- Added a warning log message if `fcmSenderId` is being overridden to a non-default Firebase project.
+- Marked `fcmSenderId` and related setter methods in `AirshipConfigOptions` as `@Deprecated`.
+
 ## Version 14.5.0 June 4, 2021
 
 Minor release changing how the SDK handles data collection by introducing the privacy manager. Privacy manager allows fine-grained control over what data is allowed to be collected or accessed by the Airship SDK.
