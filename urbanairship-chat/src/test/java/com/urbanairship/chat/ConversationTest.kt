@@ -1,5 +1,8 @@
 package com.urbanairship.chat
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
@@ -16,6 +19,10 @@ import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertFalse
+import junit.framework.Assert.assertNull
+import junit.framework.Assert.assertTrue
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,10 +31,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +49,7 @@ class ConversationTest {
     private lateinit var mockChannel: AirshipChannel
     private lateinit var mockConnection: ChatConnection
     private lateinit var mockApiClient: ChatApiClient
+    private lateinit var mockChat: Chat
     private lateinit var chatDatabase: ChatDatabase
     private lateinit var testActivityMonitor: TestActivityMonitor
 
@@ -56,12 +60,17 @@ class ConversationTest {
     private lateinit var testDispatcher: TestCoroutineDispatcher
     private lateinit var runtimeConfig: TestAirshipRuntimeConfig
 
+    private lateinit var mockLifeCycleOwner: LifecycleOwner
+    private lateinit var lifeCycleRegistry: LifecycleRegistry
+
     @Before
     fun setUp() {
         mockChannel = mock()
         mockConnection = mock()
         mockApiClient = mock()
+        mockChat = mock()
         mockChannel = mock()
+        mockLifeCycleOwner = mock()
 
         chatDatabase = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java)
                 .allowMainThreadQueries()
@@ -87,6 +96,8 @@ class ConversationTest {
                 mockChannel, chatDatabase, mockConnection, mockApiClient, testActivityMonitor,
                 testDispatcher, testDispatcher)
 
+        lifeCycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
+
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
 
@@ -105,12 +116,13 @@ class ConversationTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
-        testActivityMonitor.foreground()
+        conversation.connect()
 
         verify(mockApiClient).fetchUvp("some-channel")
     }
 
     @Test
+
     fun testConnectionRequestsConversation() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
@@ -127,6 +139,7 @@ class ConversationTest {
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
         verify(mockConnection).open("some-uvp")
     }
@@ -173,6 +186,7 @@ class ConversationTest {
         connect()
         verify(mockConnection).open("some-uvp")
 
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         testActivityMonitor.background()
         verify(mockConnection, Mockito.never()).close()
 
@@ -188,6 +202,7 @@ class ConversationTest {
         conversation.sendMessage("hello")
         val requestId = chatDatabase.chatDao().getPendingMessages()[0].messageId
 
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         testActivityMonitor.background()
         verify(mockConnection, Mockito.never()).close()
 
@@ -262,6 +277,7 @@ class ConversationTest {
     fun testClearDataDeletesUvp() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        conversation.connect()
         testActivityMonitor.foreground()
 
         assertEquals("some-uvp", dataStore.getString("com.urbanairship.chat.UVP", null))
@@ -351,6 +367,7 @@ class ConversationTest {
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         whenever(mockConnection.isOpenOrOpening).thenReturn(true)
     }
 

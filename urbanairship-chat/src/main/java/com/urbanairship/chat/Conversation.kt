@@ -6,6 +6,10 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import androidx.paging.DataSource
 import com.urbanairship.Logger
 import com.urbanairship.PendingResult
@@ -85,6 +89,7 @@ internal constructor(
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val scope = CoroutineScope(connectionDispatcher)
     private val conversationListeners = CopyOnWriteArrayList<ConversationListener>()
+    private var shouldConnect = false
 
     internal var isEnabled: Boolean
         get() = enabledState.value
@@ -107,11 +112,14 @@ internal constructor(
 
     init {
         connection.chatListener = ChatListener()
+
         activityMonitor.addApplicationListener(object : ApplicationListener {
             override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
-            override fun onBackground(milliseconds: Long) = launchConnectionUpdate()
+            override fun onBackground(milliseconds: Long) {
+                shouldConnect = false
+                launchConnectionUpdate()
+            }
         })
-
         channel.addChannelListener(object : AirshipChannelListener {
             override fun onChannelCreated(channelId: String) = launchConnectionUpdate()
             override fun onChannelUpdated(channelId: String) = launchConnectionUpdate()
@@ -243,7 +251,7 @@ internal constructor(
                 activityMonitor.isAppForegrounded
             }
 
-            if (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages()) {
+            if (!isPendingSent.value || (isForeground && shouldConnect) || forceOpen || chatDao.hasPendingMessages()) {
                 if (!connection.isOpenOrOpening) {
                     try {
                         connection.open(uvp)
@@ -271,6 +279,38 @@ internal constructor(
         retryConnectionJob = scope.launch {
             delay(RECONNECT_DELAY_MS)
             launchConnectionUpdate()
+        }
+    }
+
+    /**
+     * Opens the connection for the Conversation
+     */
+    fun connect() {
+        shouldConnect = true
+        launchConnectionUpdate()
+    }
+
+    /**
+     * Opens the connection and attach a LifecycleObserver so the connection stays open
+     * while the Conversation is on foreground.
+     * @param lifecycleOwner The view's LifecycleOwner
+     */
+    fun connect(lifecycleOwner: LifecycleOwner) {
+        val lifeCycleObserver: LifecycleObserver = object : LifecycleObserver {
+            @OnLifecycleEvent(Lifecycle.Event.ON_START)
+            fun onStart() {
+                connect()
+            }
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            fun onDestroy() {
+                lifecycleOwner.lifecycle.removeObserver(this)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(lifeCycleObserver)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            connect()
         }
     }
 
