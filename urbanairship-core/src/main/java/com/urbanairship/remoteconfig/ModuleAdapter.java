@@ -90,6 +90,8 @@ class ModuleAdapter {
             case Modules.CONTACT_MODULE:
                 return getComponentsByGroup(AirshipComponentGroups.CONTACT);
 
+            case Modules.PREFERENCE_CENTER_MODULE:
+                return getComponentsByGroup(AirshipComponentGroups.PREFERENCE_CENTER);
         }
 
         Logger.verbose("Unable to find module: %s", module);

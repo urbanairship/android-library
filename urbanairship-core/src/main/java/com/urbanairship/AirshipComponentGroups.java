@@ -2,11 +2,11 @@
 
 package com.urbanairship;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.RestrictTo;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.RestrictTo;
 
 /**
  * Airship component groups. Used to group components for remote-config.
@@ -15,7 +15,7 @@ import java.lang.annotation.RetentionPolicy;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AirshipComponentGroups {
 
-    @IntDef({ NONE, PUSH, ANALYTICS, MESSAGE_CENTER, IN_APP, ACTION_AUTOMATION, NAMED_USER, LOCATION, CHANNEL, CHAT, CONTACT })
+    @IntDef({ NONE, PUSH, ANALYTICS, MESSAGE_CENTER, IN_APP, ACTION_AUTOMATION, NAMED_USER, LOCATION, CHANNEL, CHAT, CONTACT, PREFERENCE_CENTER })
     @Retention(RetentionPolicy.SOURCE)
     @interface Group {
     }
@@ -31,4 +31,5 @@ public interface AirshipComponentGroups {
     int CHANNEL = 7;
     int CHAT = 8;
     int CONTACT = 9;
+    int PREFERENCE_CENTER = 10;
 }
