@@ -112,9 +112,9 @@ class ChatConnectionTest {
         testScope.pauseDispatcher()
 
         chatConnection.open("some-uvp")
-        chatConnection.sendMessage("hi", "some attachment", "request id")
+        chatConnection.sendMessage("hi", "some attachment", "request id", ChatRequest.ChatRouting("agent!"))
 
-        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id")
+        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id", ChatRequest.ChatRouting("agent!"))
 
         verify(mockWebSocket).send(argThat {
             val parsed = ChatRequest.SendMessage.parse(this)
