@@ -30,6 +30,12 @@ class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponent
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val message = arguments.value.map?.opt("chat_input")?.string
+        val routing = arguments.value.map?.opt("chat_routing")?.string
+
+        if (routing != null) {
+            chatCallable.conversation.routing = routing
+        }
+
         chatCallable.call().openChat(message)
         return ActionResult.newEmptyResult()
     }

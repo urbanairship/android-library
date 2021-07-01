@@ -76,7 +76,7 @@ internal class ChatConnection(
         }
     }
 
-    internal fun sendMessage(text: String?, attachment: String?, requestId: String): Boolean {
+    internal fun sendMessage(text: String?, attachment: String?, requestId: String, routing: String?): Boolean {
         val uvp = this.uvp
         if (uvp == null) {
             Logger.error("Failed to send message. UVP is null.")
@@ -88,7 +88,9 @@ internal class ChatConnection(
             return false
         }
 
-        return send(ChatRequest.SendMessage(uvp, text, attachment, requestId))
+        val chatRouting = ChatRequest.ChatRouting(routing ?: "")
+
+        return send(ChatRequest.SendMessage(uvp, text, attachment, requestId, chatRouting))
     }
 
     internal fun fetchConversation(): Boolean {

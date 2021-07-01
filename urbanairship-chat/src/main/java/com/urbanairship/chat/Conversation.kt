@@ -98,6 +98,11 @@ internal constructor(
         private set
 
     /**
+     * Determines which agent a conversation gets assigned to by matching this value to an agent in Live Chat Manager.
+     */
+    var routing: String = ""
+
+    /**
      * The message data source to be used in a paging adapter.
      */
     val messageDataSourceFactory: DataSource.Factory<Int, ChatMessage> by lazy {
@@ -156,7 +161,7 @@ internal constructor(
             chatDao.upsert(pending)
 
             if (connection.isOpenOrOpening && isPendingSent.value) {
-                connection.sendMessage(text, attachmentUrl, requestId)
+                connection.sendMessage(text, attachmentUrl, requestId, routing)
             } else {
                 updateConnection()
             }
@@ -322,7 +327,7 @@ internal constructor(
                         }
                         if (connection.isOpenOrOpening) {
                             chatDao.getPendingMessages().forEach { message ->
-                                connection.sendMessage(message.text, message.attachment, message.messageId)
+                                connection.sendMessage(message.text, message.attachment, message.messageId, routing)
                             }
                             isPendingSent.value = true
                         }
