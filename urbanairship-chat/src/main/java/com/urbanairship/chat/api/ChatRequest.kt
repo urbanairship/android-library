@@ -27,6 +27,8 @@ internal sealed class ChatRequest(
         private const val KEY_TEXT = "text"
         private const val KEY_ATTACHMENT = "attachment"
         private const val KEY_REQUEST_ID = "request_id"
+        private const val KEY_ROUTING = "routing"
+        private const val KEY_AGENT = "agent"
     }
 
     abstract val uvp: String
@@ -101,23 +103,27 @@ internal sealed class ChatRequest(
             uvp: String,
             text: String? = null,
             attachment: String? = null,
-            requestId: String
-        ) : this(uvp, Message(requestId, text, attachment))
+            requestId: String,
+            routing: ChatRouting
+        ) : this(uvp, Message(requestId, text, attachment, routing))
 
         internal data class Message(
             val requestId: String,
             val text: String? = null,
-            val attachment: String? = null
+            val attachment: String? = null,
+            val routing: ChatRouting,
         ) : JsonSerializable {
             companion object {
                 fun fromJsonMap(jsonMap: JsonMap): Message {
                     val requestId = requireNotNull(jsonMap.opt(KEY_REQUEST_ID).string) { "$KEY_REQUEST_ID' may not be null!" }
                     val text = jsonMap.get(KEY_TEXT)?.string
                     val attachment = jsonMap.get(KEY_ATTACHMENT)?.string
+                    val routing = jsonMap.get(KEY_ROUTING)?.ChatRouting
                     return Message(
                             requestId = requestId,
                             text = text,
-                            attachment = attachment
+                            attachment = attachment,
+                            routing = routing
                     )
                 }
             }
@@ -127,6 +133,26 @@ internal sealed class ChatRequest(
                             .put(KEY_REQUEST_ID, requestId)
                             .put(KEY_TEXT, text)
                             .put(KEY_ATTACHMENT, attachment)
+                            .put(KEY_ROUTING, routing)
+                            .build()
+                            .toJsonValue()
+        }
+
+        internal data class ChatRouting(
+            val agent: String = ""
+        ) : JsonSerializable {
+            companion object {
+                fun fromJsonMap(jsonMap: JsonMap): ChatRouting {
+                    val agent = jsonMap.get(KEY_AGENT)?.string
+                    return ChatRouting(
+                            agent = agent
+                    )
+                }
+            }
+
+            override fun toJsonValue(): JsonValue =
+                    JsonMap.newBuilder()
+                            .put(KEY_AGENT, agent)
                             .build()
                             .toJsonValue()
         }
