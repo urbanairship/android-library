@@ -111,7 +111,7 @@ internal sealed class ChatRequest(
                 val requestId: String,
                 val text: String? = null,
                 val attachment: String? = null,
-                val routing: ChatRouting?,
+                val routing: ChatRouting?
         ) : JsonSerializable {
             companion object {
                 fun fromJsonMap(jsonMap: JsonMap): Message {
@@ -123,7 +123,7 @@ internal sealed class ChatRequest(
                             requestId = requestId,
                             text = text,
                             attachment = attachment,
-                            routing = routing as ChatRouting
+                            routing = routing
                     )
                 }
             }
