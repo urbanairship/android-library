@@ -18,6 +18,7 @@ import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.chat.api.ChatApiClient
 import com.urbanairship.chat.api.ChatConnection
 import com.urbanairship.chat.api.ChatConnection.CloseReason
+import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
@@ -100,7 +101,7 @@ internal constructor(
     /**
      * Determines which agent a conversation gets assigned to by matching this value to an agent in Live Chat Manager.
      */
-    var routing: String = ""
+    var routing: ChatRequest.ChatRouting = ChatRequest.ChatRouting("")
 
     /**
      * The message data source to be used in a paging adapter.

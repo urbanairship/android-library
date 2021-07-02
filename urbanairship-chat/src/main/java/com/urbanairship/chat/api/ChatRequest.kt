@@ -9,7 +9,7 @@ import com.urbanairship.json.JsonValue
 
 /** Data classes for building request payloads to be sent to the server. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal sealed class ChatRequest(
+sealed class ChatRequest(
     val action: String,
     private val origin: String = ORIGIN
 ) : JsonSerializable {
@@ -145,7 +145,7 @@ internal sealed class ChatRequest(
                         .toJsonValue()
     }
 
-    internal data class ChatRouting(
+    data class ChatRouting(
         val agent: String? = ""
     ) : JsonSerializable {
         companion object {

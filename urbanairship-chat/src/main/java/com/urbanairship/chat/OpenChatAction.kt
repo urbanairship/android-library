@@ -3,6 +3,7 @@ package com.urbanairship.chat
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.util.AirshipComponentUtils
 import java.util.concurrent.Callable
 
@@ -30,10 +31,10 @@ class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponent
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val message = arguments.value.map?.opt("chat_input")?.string
-        val routing = arguments.value.map?.opt("chat_routing")?.string
+        val routing =  arguments.value.map?.opt("chat_routing")?.string
 
-        if (routing != null) {
-            chatCallable.call().conversation.routing = routing
+        if (!routing.isNullOrEmpty()) {
+            chatCallable.call().conversation.routing = ChatRequest.ChatRouting.fromJsonMap(arguments.value.map?.opt("chat_routing")?.optMap())
         }
 
         chatCallable.call().openChat(message)
