@@ -118,12 +118,12 @@ internal sealed class ChatRequest(
                     val requestId = requireNotNull(jsonMap.opt(KEY_REQUEST_ID).string) { "$KEY_REQUEST_ID' may not be null!" }
                     val text = jsonMap.get(KEY_TEXT)?.string
                     val attachment = jsonMap.get(KEY_ATTACHMENT)?.string
-                    val routing = jsonMap.get(KEY_ROUTING)?.value
+                    val routing = ChatRouting.fromJsonMap(jsonMap.get(KEY_ROUTING)?.optMap())
                     return Message(
                             requestId = requestId,
                             text = text,
                             attachment = attachment,
-                            routing = routing as ChatRouting?
+                            routing = routing as ChatRouting
                     )
                 }
             }
@@ -149,8 +149,8 @@ internal sealed class ChatRequest(
             val agent: String? = ""
     ) : JsonSerializable {
         companion object {
-            fun fromJsonMap(jsonMap: JsonMap): ChatRouting {
-                val agent = jsonMap.get(KEY_AGENT)?.string
+            fun fromJsonMap(jsonMap: JsonMap?): ChatRouting {
+                val agent = jsonMap?.get(KEY_AGENT)?.string
                 return ChatRouting(
                         agent = agent
                 )
