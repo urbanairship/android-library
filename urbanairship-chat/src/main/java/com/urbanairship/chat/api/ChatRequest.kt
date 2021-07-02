@@ -104,14 +104,14 @@ internal sealed class ChatRequest(
             text: String? = null,
             attachment: String? = null,
             requestId: String,
-            routing: ChatRouting
+            routing: ChatRouting?
         ) : this(uvp, Message(requestId, text, attachment, routing))
 
         internal data class Message(
                 val requestId: String,
                 val text: String? = null,
                 val attachment: String? = null,
-                val routing: JsonSerializable,
+                val routing: ChatRouting?,
         ) : JsonSerializable {
             companion object {
                 fun fromJsonMap(jsonMap: JsonMap): Message {
@@ -123,7 +123,7 @@ internal sealed class ChatRequest(
                             requestId = requestId,
                             text = text,
                             attachment = attachment,
-                            routing = routing as JsonSerializable
+                            routing = routing as ChatRouting?
                     )
                 }
             }
