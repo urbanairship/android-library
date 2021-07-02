@@ -33,7 +33,7 @@ class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponent
         val routing = arguments.value.map?.opt("chat_routing")?.string
 
         if (routing != null) {
-            chatCallable.conversation.routing = routing
+            chatCallable.call().conversation.routing = routing
         }
 
         chatCallable.call().openChat(message)

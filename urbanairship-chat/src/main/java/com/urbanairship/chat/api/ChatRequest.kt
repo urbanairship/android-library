@@ -108,22 +108,22 @@ internal sealed class ChatRequest(
         ) : this(uvp, Message(requestId, text, attachment, routing))
 
         internal data class Message(
-            val requestId: String,
-            val text: String? = null,
-            val attachment: String? = null,
-            val routing: ChatRouting,
+                val requestId: String,
+                val text: String? = null,
+                val attachment: String? = null,
+                val routing: JsonSerializable,
         ) : JsonSerializable {
             companion object {
                 fun fromJsonMap(jsonMap: JsonMap): Message {
                     val requestId = requireNotNull(jsonMap.opt(KEY_REQUEST_ID).string) { "$KEY_REQUEST_ID' may not be null!" }
                     val text = jsonMap.get(KEY_TEXT)?.string
                     val attachment = jsonMap.get(KEY_ATTACHMENT)?.string
-                    val routing = jsonMap.get(KEY_ROUTING)?.ChatRouting
+                    val routing = jsonMap.get(KEY_ROUTING)?.value
                     return Message(
                             requestId = requestId,
                             text = text,
                             attachment = attachment,
-                            routing = routing
+                            routing = routing as JsonSerializable
                     )
                 }
             }
@@ -138,28 +138,28 @@ internal sealed class ChatRequest(
                             .toJsonValue()
         }
 
-        internal data class ChatRouting(
-            val agent: String = ""
-        ) : JsonSerializable {
-            companion object {
-                fun fromJsonMap(jsonMap: JsonMap): ChatRouting {
-                    val agent = jsonMap.get(KEY_AGENT)?.string
-                    return ChatRouting(
-                            agent = agent
-                    )
-                }
-            }
-
-            override fun toJsonValue(): JsonValue =
-                    JsonMap.newBuilder()
-                            .put(KEY_AGENT, agent)
-                            .build()
-                            .toJsonValue()
-        }
-
         override fun toJsonValue(): JsonValue =
                 jsonMapBuilder()
                         .put(KEY_PAYLOAD, payload)
+                        .build()
+                        .toJsonValue()
+    }
+
+    internal data class ChatRouting(
+            val agent: String? = ""
+    ) : JsonSerializable {
+        companion object {
+            fun fromJsonMap(jsonMap: JsonMap): ChatRouting {
+                val agent = jsonMap.get(KEY_AGENT)?.string
+                return ChatRouting(
+                        agent = agent
+                )
+            }
+        }
+
+        override fun toJsonValue(): JsonValue =
+                JsonMap.newBuilder()
+                        .put(KEY_AGENT, agent)
                         .build()
                         .toJsonValue()
     }
