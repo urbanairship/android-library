@@ -9,6 +9,7 @@ import com.urbanairship.TestApplication
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.api.ChatApiClient
 import com.urbanairship.chat.api.ChatConnection
+import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
@@ -138,37 +139,37 @@ class ConversationTest {
         val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
         chatListener.onChatResponse(response)
 
-        conversation.routing = "agent!"
+        conversation.routing = ChatRequest.ChatRouting("agent!")
         conversation.sendMessage("hello")
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq("agent!"))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRequest.ChatRouting("agent!")))
     }
 
     @Test
     fun testSendMessageBeforeSync() = testDispatcher.runBlockingTest {
         connect()
-        conversation.routing = "agent!"
+        conversation.routing = ChatRequest.ChatRouting("agent!")
         conversation.sendMessage("hello")
 
-        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq("agent!"))
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRequest.ChatRouting("agent!")))
 
         val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
         chatListener.onChatResponse(response)
 
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq("agent!"))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRequest.ChatRouting("agent!")))
     }
 
     @Test
     fun testSendMessageBeforeConnect() = testDispatcher.runBlockingTest {
-        conversation.routing = "agent!"
+        conversation.routing = ChatRequest.ChatRouting("agent!")
         conversation.sendMessage("hello")
         connect()
 
-        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq("agent!"))
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRequest.ChatRouting("agent!")))
 
         val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
         chatListener.onChatResponse(response)
 
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq("agent!"))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRequest.ChatRouting("agent!")))
     }
 
     @Test
@@ -188,7 +189,7 @@ class ConversationTest {
     @Test
     fun testBackgroundPendingMessages() = testDispatcher.runBlockingTest {
         connect()
-        conversation.routing = "agent!"
+        conversation.routing = ChatRequest.ChatRouting("agent!")
         conversation.sendMessage("hello")
         val requestId = chatDatabase.chatDao().getPendingMessages()[0].messageId
 
@@ -199,7 +200,7 @@ class ConversationTest {
         chatListener.onChatResponse(response)
         verify(mockConnection, Mockito.never()).close()
 
-        verify(mockConnection).sendMessage("hello", null, requestId, "agent!")
+        verify(mockConnection).sendMessage("hello", null, requestId, ChatRequest.ChatRouting("agent!"))
         verify(mockConnection, Mockito.never()).close()
 
         val message = ChatResponse.Message("some-id", DateUtils.createIso8601TimeStamp(0), 1, "hello", null, requestId)
