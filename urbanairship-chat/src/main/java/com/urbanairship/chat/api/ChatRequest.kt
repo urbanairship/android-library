@@ -3,13 +3,14 @@
 package com.urbanairship.chat.api
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.chat.ChatRouting
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 /** Data classes for building request payloads to be sent to the server. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-sealed class ChatRequest(
+internal sealed class ChatRequest(
     val action: String,
     private val origin: String = ORIGIN
 ) : JsonSerializable {
@@ -141,25 +142,6 @@ sealed class ChatRequest(
         override fun toJsonValue(): JsonValue =
                 jsonMapBuilder()
                         .put(KEY_PAYLOAD, payload)
-                        .build()
-                        .toJsonValue()
-    }
-
-    data class ChatRouting(
-        val agent: String? = ""
-    ) : JsonSerializable {
-        companion object {
-            fun fromJsonMap(jsonMap: JsonMap?): ChatRouting {
-                val agent = jsonMap?.get(KEY_AGENT)?.string
-                return ChatRouting(
-                        agent = agent
-                )
-            }
-        }
-
-        override fun toJsonValue(): JsonValue =
-                JsonMap.newBuilder()
-                        .put(KEY_AGENT, agent)
                         .build()
                         .toJsonValue()
     }
