@@ -101,7 +101,7 @@ internal constructor(
     /**
      * Determines which agent a conversation gets assigned to by matching this value to an agent in Live Chat Manager.
      */
-    var routing: ChatRequest.ChatRouting = ChatRequest.ChatRouting("")
+    var routing: ChatRouting? = ChatRouting("")
 
     /**
      * The message data source to be used in a paging adapter.
