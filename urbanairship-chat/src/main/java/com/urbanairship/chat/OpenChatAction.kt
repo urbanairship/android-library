@@ -3,7 +3,6 @@ package com.urbanairship.chat
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
-import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.util.AirshipComponentUtils
 import java.util.concurrent.Callable
 

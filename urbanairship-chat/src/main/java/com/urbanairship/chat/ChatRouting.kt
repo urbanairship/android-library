@@ -2,17 +2,16 @@
 
 package com.urbanairship.chat
 
-import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 /** Data class for building routing payloads to be sent along with chat messages. */
 data class ChatRouting(
-        /**
-         * Value for routing a conversation to a specific agent.
-         */
-        val agent: String?
+    /**
+     * Value for routing a conversation to a specific agent.
+     */
+    val agent: String?
 ) : JsonSerializable {
     companion object {
         private const val KEY_AGENT = "agent"

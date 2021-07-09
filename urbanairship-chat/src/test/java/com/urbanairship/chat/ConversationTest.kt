@@ -9,7 +9,6 @@ import com.urbanairship.TestApplication
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.chat.api.ChatApiClient
 import com.urbanairship.chat.api.ChatConnection
-import com.urbanairship.chat.api.ChatRequest
 import com.urbanairship.chat.api.ChatResponse
 import com.urbanairship.chat.data.ChatDatabase
 import com.urbanairship.chat.data.MessageEntity
