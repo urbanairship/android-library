@@ -31,10 +31,10 @@ class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponent
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val message = arguments.value.map?.opt("chat_input")?.string
-        val routing = arguments.value.map?.opt("chat_routing")?.string
+        val routing = ChatRouting.fromJsonMap(arguments.value.map?.opt("chat_routing")?.optMap())
 
-        if (!routing.isNullOrEmpty()) {
-            chatCallable.call().conversation.routing = ChatRequest.ChatRouting.fromJsonMap(arguments.value.map?.opt("chat_routing")?.optMap())
+        if (!routing.agent.isNullOrEmpty()) {
+            chatCallable.call().conversation.routing = routing
         }
 
         chatCallable.call().openChat(message)
