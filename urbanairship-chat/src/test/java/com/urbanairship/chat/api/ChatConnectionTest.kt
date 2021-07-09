@@ -3,6 +3,7 @@ package com.urbanairship.chat.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.chat.ChatRouting
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
@@ -112,9 +113,9 @@ class ChatConnectionTest {
         testScope.pauseDispatcher()
 
         chatConnection.open("some-uvp")
-        chatConnection.sendMessage("hi", "some attachment", "request id", ChatRequest.ChatRouting("agent!"))
+        chatConnection.sendMessage("hi", "some attachment", "request id", ChatRouting("agent!"))
 
-        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id", ChatRequest.ChatRouting("agent!"))
+        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id", ChatRouting("agent!"))
 
         verify(mockWebSocket).send(argThat {
             val parsed = ChatRequest.SendMessage.parse(this)
