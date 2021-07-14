@@ -14,7 +14,7 @@ import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
 import com.urbanairship.UAirship
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.json.JsonException
-import com.urbanairship.preferencecenter.data.PreferenceForm
+import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Schedulers
 import com.urbanairship.reactive.Subscriber
@@ -33,7 +33,6 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
-
         /**
          * Gets the shared `PreferenceCenter` instance.
          *
@@ -106,8 +105,8 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * @param preferenceCenterId The ID of the Preference Center.
      * @return The requested [PreferenceForm].
      */
-    fun getConfig(preferenceCenterId: String): PendingResult<PreferenceForm> {
-        val pendingResult = PendingResult<PreferenceForm>()
+    fun getConfig(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
+        val pendingResult = PendingResult<PreferenceCenterConfig>()
 
         remoteData.payloadsForType(PAYLOAD_TYPE)
                 .flatMap { payload ->
@@ -115,7 +114,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
                     Logger.verbose("Found ${forms.size()} preference forms in RemoteData")
                     val preferenceForms = try {
                         // Parse the payloads and return the list as a map of ID to PreferenceForms.
-                        forms.map { PreferenceForm.fromJson(it.optMap()) }.associateBy { it.id }
+                        forms.map { PreferenceCenterConfig.parse(it.optMap()) }.associateBy { it.id }
                     } catch (e: JsonException) {
                         return@flatMap Observable.error(e)
                     }
@@ -123,8 +122,8 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
                 }
                 .subscribeOn(backgroundScheduler)
                 .observeOn(backgroundScheduler)
-                .subscribe(object : Subscriber<Map<String, PreferenceForm>>() {
-                    override fun onNext(value: Map<String, PreferenceForm>) {
+                .subscribe(object : Subscriber<Map<String, PreferenceCenterConfig>>() {
+                    override fun onNext(value: Map<String, PreferenceCenterConfig>) {
                         pendingResult.result = value[preferenceCenterId]
                     }
 

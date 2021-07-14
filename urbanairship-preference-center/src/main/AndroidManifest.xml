@@ -6,6 +6,10 @@
 
     <application>
 
+        <activity android:name="com.urbanairship.preferencecenter.ui.PreferenceCenterActivity"
+            android:label="@string/ua_preference_center_label"
+            android:theme="@style/Theme.MaterialComponents.DayNight"
+            android:exported="false" />
 
     </application>
 </manifest>

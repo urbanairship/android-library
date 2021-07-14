@@ -1,6 +1,7 @@
 plugins {
     id 'airship-module'
     id 'kotlin-android'
+    id 'kotlin-allopen'
 }
 
 description = "Airship Preference Center extension."
@@ -10,13 +11,36 @@ airshipModule {
 }
 
 android {
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        // Add sharedTest srcDir to both testDebug and androidTestDebug source sets so that
+        // instrumentation tests can be run on an emulated or real device, or headless via
+        // Robolectric. We can only run tests using the fragment testing library in the debug
+        // configuration because the empty host activity must be present in the manifest, which
+        // is accomplished by adding the library via `debugImplementation`.
+        testDebug.java.srcDirs += 'src/sharedTest/java'
+        androidTestDebug.java.srcDirs += 'src/sharedTest/java'
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
+}
+
+allOpen {
+    annotation "com.urbanairship.preferencecenter.testing.OpenForTesting"
 }
 
 dependencies {
@@ -29,18 +53,50 @@ dependencies {
     // AndroidX
     implementation "androidx.core:core:$rootProject.androidxCoreVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
 
     // Support libraries
     implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     implementation "com.google.android.material:material:$rootProject.materialVersion"
 
-    // Tests
+    // Tests (Shared)
+
+    // debugImplementation is used here so that the empty Activity that FragmentScenario relies on
+    // is accessible by the target test process.
+    debugImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    debugImplementation "androidx.fragment:fragment-testing:$rootProject.androidxFragmentVersion"
+
+    // Unit Tests
     testImplementation project(':urbanairship-test')
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    testImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
+    testImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
+    testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+
+    // Instrumentation Tests
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
+
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
+    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+
+    androidTestImplementation "org.robolectric:annotations:$rootProject.robolectricVersion"
+
+    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
+    androidTestImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
 }

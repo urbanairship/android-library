@@ -7,12 +7,13 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.job.JobDispatcher
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.PAYLOAD_TYPE
-import com.urbanairship.preferencecenter.data.PreferenceForm
+import com.urbanairship.preferencecenter.data.CommonDisplay
+import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
+import com.urbanairship.preferencecenter.util.jsonListOf
+import com.urbanairship.preferencecenter.util.jsonMapOf
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData
@@ -43,8 +44,8 @@ class PreferenceCenterTest {
         private const val ID_1 = "id-1"
         private const val ID_2 = "id-2"
 
-        private val PREFERENCE_FORM_1 = PreferenceForm(ID_1, 0L, 0L, jsonMapOf("form" to "1"))
-        private val PREFERENCE_FORM_2 = PreferenceForm(ID_2, 0L, 0L, jsonMapOf("form" to "2"))
+        private val PREFERENCE_FORM_1 = PreferenceCenterConfig(ID_1, emptyList(), CommonDisplay.EMPTY)
+        private val PREFERENCE_FORM_2 = PreferenceCenterConfig(ID_2, emptyList(), CommonDisplay.EMPTY)
 
         private val METADATA = jsonMapOf("metadata" to "foo")
 
@@ -59,9 +60,7 @@ class PreferenceCenterTest {
                 .setType(PAYLOAD_TYPE)
                 .setTimeStamp(2L)
                 .setMetadata(METADATA)
-                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(
-                        PREFERENCE_FORM_1.toJson(), PREFERENCE_FORM_2.toJson()
-                )))
+                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(PREFERENCE_FORM_1.toJson(), PREFERENCE_FORM_2.toJson())))
                 .build()
     }
 
@@ -136,12 +135,3 @@ class PreferenceCenterTest {
         assertEquals(null, pendingResult.result)
     }
 }
-
-private fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
-        JsonMap.newBuilder().apply {
-            for ((k, v) in fields) {
-                put(k, JsonValue.wrap(v))
-            }
-        }.build()
-
-private fun jsonListOf(vararg values: Any): JsonList = JsonList(values.map(JsonValue::wrap))
