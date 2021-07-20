@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
@@ -81,6 +82,7 @@ public class AirshipChannel extends AirshipComponent {
     private static final String LAST_REGISTRATION_PAYLOAD_KEY = "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD";
     private static final String ATTRIBUTE_DATASTORE_KEY = "com.urbanairship.push.ATTRIBUTE_DATA_STORE";
     private static final String TAG_GROUP_DATASTORE_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
+    private static final String SUBSCRIPTION_LISTS_DATASTORE_KEY = "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS";
 
     private final ChannelApiClient channelApiClient;
 
@@ -91,10 +93,12 @@ public class AirshipChannel extends AirshipComponent {
 
     private final List<AirshipChannelListener> airshipChannelListeners = new CopyOnWriteArrayList<>();
     private final List<ChannelRegistrationPayloadExtender> channelRegistrationPayloadExtenders = new CopyOnWriteArrayList<>();
+
     private final Object tagLock = new Object();
 
     private final TagGroupRegistrar tagGroupRegistrar;
     private final AttributeRegistrar attributeRegistrar;
+    private final SubscriptionListRegistrar subscriptionListRegistrar;
 
     private final AirshipRuntimeConfig runtimeConfig;
 
@@ -142,7 +146,8 @@ public class AirshipChannel extends AirshipComponent {
                 JobDispatcher.shared(context), Clock.DEFAULT_CLOCK,
                 new ChannelApiClient(runtimeConfig),
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
-                new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)));
+                new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)),
+                new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)));
     }
 
     @VisibleForTesting
@@ -155,7 +160,8 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull Clock clock,
                    @NonNull ChannelApiClient channelApiClient,
                    @NonNull AttributeRegistrar attributeRegistrar,
-                   @NonNull TagGroupRegistrar tagGroupRegistrar) {
+                   @NonNull TagGroupRegistrar tagGroupRegistrar,
+                   @NonNull SubscriptionListRegistrar subscriptionListRegistrar) {
         super(context, dataStore);
 
         this.runtimeConfig = runtimeConfig;
@@ -165,6 +171,7 @@ public class AirshipChannel extends AirshipComponent {
         this.channelApiClient = channelApiClient;
         this.attributeRegistrar = attributeRegistrar;
         this.tagGroupRegistrar = tagGroupRegistrar;
+        this.subscriptionListRegistrar = subscriptionListRegistrar;
         this.clock = clock;
     }
 
@@ -179,6 +186,7 @@ public class AirshipChannel extends AirshipComponent {
         super.init();
         tagGroupRegistrar.setId(getId(), false);
         attributeRegistrar.setId(getId(), false);
+        subscriptionListRegistrar.setId(getId(), false);
 
         if (Logger.getLogLevel() < Log.ASSERT && !UAStringUtil.isEmpty(getId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getId());
@@ -195,6 +203,7 @@ public class AirshipChannel extends AirshipComponent {
                     }
                     tagGroupRegistrar.clearPendingMutations();
                     attributeRegistrar.clearPendingMutations();
+                    subscriptionListRegistrar.clearPendingMutations();
                 }
 
                 updateRegistration();
@@ -388,6 +397,17 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Adds a subscription list listener.
+     *
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addSubscriptionListListener(@NonNull SubscriptionListListener listener) {
+        this.subscriptionListRegistrar.addSubscriptionListListener(listener);
+    }
+
+    /**
      * Edits channel Tags.
      *
      * @return A {@link TagEditor}
@@ -528,6 +548,55 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Returns the current set of subscription lists for this channel.
+     * <p>
+     * An empty set indicates that this channel is not subscribed to any lists.
+     *
+     * @return A {@link PendingResult} of the current set of subscription lists.
+     */
+    @NonNull
+    public PendingResult<Set<String>> getSubscriptionLists() {
+        final PendingResult<Set<String>> result = new PendingResult<>();
+
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+            result.setResult(Collections.<String>emptySet());
+        }
+
+        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+            @Override
+            public void run() {
+                Set<String> listIds = subscriptionListRegistrar.fetchChannelSubscriptionLists();
+                result.setResult(listIds);
+            }
+        });
+
+        return result;
+    }
+
+    /**
+     * Edit the channel subscription lists.
+     *
+     * @return a {@link SubscriptionListEditor}.
+     */
+    @NonNull
+    public SubscriptionListEditor editSubscriptionLists() {
+        return new SubscriptionListEditor(clock) {
+            @Override
+            protected void onApply(@NonNull List<SubscriptionListMutation> collapsedMutations) {
+                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    Logger.warn("AirshipChannel - Unable to apply subscription list edits when opted out of tags and attributes.");
+                    return;
+                }
+
+                if (!collapsedMutations.isEmpty()) {
+                   subscriptionListRegistrar.addPendingMutations(collapsedMutations);
+                   dispatchUpdateJob();
+                }
+            }
+        };
+    }
+
+    /**
      * Enables channel creation if channel creation has been delayed.
      * <p>
      * This setting is persisted between application starts, so there is no need to call this
@@ -657,6 +726,18 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Gets any pending subscription list updates.
+     *
+     * @return The list of pending subscription list updates.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<SubscriptionListMutation> getPendingSubscriptionListUpdates() {
+        return subscriptionListRegistrar.getPendingMutations();
+    }
+
+    /**
      * Determines whether channel creation is initially disabled, to be enabled later
      * by enableChannelCreation.
      *
@@ -767,6 +848,7 @@ public class AirshipChannel extends AirshipComponent {
             getDataStore().put(CHANNEL_ID_KEY, channelId);
             tagGroupRegistrar.setId(channelId, false);
             attributeRegistrar.setId(channelId, false);
+            subscriptionListRegistrar.setId(channelId, false);
             setLastRegistrationPayload(payload);
             for (AirshipChannelListener listener : airshipChannelListeners) {
                 listener.onChannelCreated(channelId);
@@ -812,10 +894,12 @@ public class AirshipChannel extends AirshipComponent {
         } else {
             channelId = getId();
             if (channelId != null && privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                // Update tag groups and attributes
+                // Update tag groups, attributes, and subscription lists
                 boolean attributeResult = attributeRegistrar.uploadPendingMutations();
                 boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
-                if (!attributeResult || !tagResult) {
+                boolean subscriptionListResult = subscriptionListRegistrar.uploadPendingMutations();
+
+                if (!attributeResult || !tagResult || !subscriptionListResult) {
                     return JobInfo.JOB_RETRY;
                 }
             }

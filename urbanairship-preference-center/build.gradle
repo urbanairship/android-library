@@ -80,6 +80,7 @@ dependencies {
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
     testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+    testImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
 
     // Instrumentation Tests
     androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
