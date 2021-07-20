@@ -5,6 +5,7 @@ package com.urbanairship.chat.api
 import androidx.annotation.RestrictTo
 import com.urbanairship.Logger
 import com.urbanairship.chat.AirshipDispatchers
+import com.urbanairship.chat.ChatRouting
 import com.urbanairship.chat.websocket.DefaultWebSocketFactory
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
@@ -76,7 +77,7 @@ internal class ChatConnection(
         }
     }
 
-    internal fun sendMessage(text: String?, attachment: String?, requestId: String): Boolean {
+    internal fun sendMessage(text: String?, attachment: String?, requestId: String, routing: ChatRouting?): Boolean {
         val uvp = this.uvp
         if (uvp == null) {
             Logger.error("Failed to send message. UVP is null.")
@@ -88,7 +89,7 @@ internal class ChatConnection(
             return false
         }
 
-        return send(ChatRequest.SendMessage(uvp, text, attachment, requestId))
+        return send(ChatRequest.SendMessage(uvp, text, attachment, requestId, routing))
     }
 
     internal fun fetchConversation(): Boolean {
