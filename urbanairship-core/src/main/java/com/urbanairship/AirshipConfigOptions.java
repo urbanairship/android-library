@@ -243,9 +243,13 @@ public class AirshipConfigOptions {
      * if the production or development FCM sender ID is not set.
      * This is your Google API project number.
      * <p>
-     * Optional if you are using `urbanairship-fcm` package and want Airship to use the
+     * Optional if you are using the {@code urbanairship-fcm} package and want Airship to use the
      * main Firebase application's sender ID.
+     *
+     * @deprecated fcmSenderId should be set via google-services.json. The {@code urbanairship-fcm}
+     * package will automatically use the sender ID from the default Firebase project.
      */
+    @Deprecated
     @Nullable
     public final String fcmSenderId;
 
@@ -1251,7 +1255,10 @@ public class AirshipConfigOptions {
          *
          * @param senderId The production FCM sender ID.
          * @return The config options builder.
+         *
+         * @deprecated The production sender ID should be supplied via a google-services.json
          */
+        @Deprecated
         @NonNull
         public Builder setProductionFcmSenderId(@Nullable String senderId) {
             this.productionFcmSenderId = senderId;
@@ -1266,7 +1273,10 @@ public class AirshipConfigOptions {
          *
          * @param senderId The development FCM sender ID.
          * @return The config options builder.
+         *
+         * @deprecated The development sender ID should be supplied via a google-services.json
          */
+        @Deprecated
         @NonNull
         public Builder setDevelopmentFcmSenderId(@Nullable String senderId) {
             this.developmentFcmSenderId = senderId;
@@ -1281,7 +1291,10 @@ public class AirshipConfigOptions {
          *
          * @param senderId The FCM sender ID.
          * @return The config options builder.
+         *
+         * @deprecated The default sender ID should be supplied via google-services.json
          */
+        @Deprecated
         @NonNull
         public Builder setFcmSenderId(@Nullable String senderId) {
             this.fcmSenderId = senderId;

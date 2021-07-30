@@ -12,7 +12,8 @@
         <activity
             android:name="com.urbanairship.push.NotificationProxyActivity"
             android:exported="false"
-            android:taskAffinity="com.urbanairship.push.NotificationProxyActivity"
+            android:launchMode="singleInstance"
+            android:taskAffinity="${applicationId}.NotificationProxyActivity"
             android:theme="@android:style/Theme.NoDisplay" />
         <activity
             android:name="com.urbanairship.util.HelperActivity"
