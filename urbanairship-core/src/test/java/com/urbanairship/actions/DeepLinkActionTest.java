@@ -5,10 +5,12 @@ import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
@@ -18,15 +20,38 @@ import androidx.annotation.Nullable;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 public class DeepLinkActionTest extends BaseTestCase {
 
     private DeepLinkAction action;
+    private UAirship mockShip;
 
     @Before
     public void setup() {
-        action = new DeepLinkAction();
+        mockShip = Mockito.mock(UAirship.class);
+        action = new DeepLinkAction(new Supplier<UAirship>() {
+            @Nullable
+            @Override
+            public UAirship get() {
+                return mockShip;
+            }
+        });
+    }
+
+    @Test
+    public void testPerform() {
+        String deepLink = "http://example.com";
+        when(mockShip.deepLink(deepLink)).thenReturn(true);
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, deepLink);
+        ActionResult result = action.perform(args);
+
+        assertEquals(result.getStatus(), ActionResult.STATUS_COMPLETED);
+        assertEquals(deepLink, result.getValue().getString());
+        verify(mockShip).deepLink(deepLink);
     }
 
     @Test
@@ -45,40 +70,31 @@ public class DeepLinkActionTest extends BaseTestCase {
     }
 
     @Test
-    public void testPerform() {
-        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "http://example.com");
+    public void testPerformFallback() {
+        String deepLink = "http://example.com";
+        when(mockShip.deepLink(deepLink)).thenReturn(false);
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, deepLink);
         ActionResult result = action.perform(args);
 
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
-        validateLastActivity("http://example.com", null);
-
-        args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "adfadfafdsaf adfa dsfadfsa example");
-        result = action.perform(args);
-        assertEquals("Value should be the uri", "adfadfafdsaf adfa dsfadfsa example", result.getValue().getString());
-        validateLastActivity("adfadfafdsaf adfa dsfadfsa example", null);
+        assertEquals(deepLink, result.getValue().getString());
+        validateLastActivity(deepLink, null);
     }
 
     @Test
-    public void testDeepLinkListener() {
-        final DeepLinkActionTest.TestDeepLinkListener listener = new DeepLinkActionTest.TestDeepLinkListener() {
-            @Override
-            public boolean onDeepLink(@NonNull String deepLink) {
-                assertEquals("Value should be the deep link uri as a string", "http://example.com", deepLink);
-                return super.onDeepLink(deepLink);
-            }
-        };
+    public void testPerformFallbackAnyString() {
+        String deepLink = "adfadfafdsaf adfa dsfadfsa example";
+        when(mockShip.deepLink(deepLink)).thenReturn(false);
 
-        UAirship.shared().setDeepLinkListener(listener);
-
-        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "http://example.com");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, deepLink);
         ActionResult result = action.perform(args);
 
-        assertEquals(result.getStatus(), ActionResult.STATUS_COMPLETED);
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
+        assertEquals(deepLink, result.getValue().getString());
+        validateLastActivity(deepLink, null);
     }
 
     @Test
-    public void testPerformPushMessage() {
+    public void testFallbackPushMessage() {
         Bundle bundle = new Bundle();
         bundle.putString("oh", "hi");
         PushMessage message = new PushMessage(bundle);
@@ -102,19 +118,5 @@ public class DeepLinkActionTest extends BaseTestCase {
         if (message != null) {
             assertEquals(message, PushMessage.fromIntent(intent));
         }
-    }
-
-    /**
-     * Helper callback for testing.
-     */
-    static class TestDeepLinkListener implements DeepLinkListener {
-        volatile boolean onDeepLinkCalled = false;
-
-        @Override
-        public boolean onDeepLink(@NonNull String deepLink) {
-            onDeepLinkCalled = true;
-            return onDeepLinkCalled;
-        }
-
     }
 }

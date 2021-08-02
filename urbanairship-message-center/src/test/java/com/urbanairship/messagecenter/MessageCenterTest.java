@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.shadows.ShadowApplication;
 
@@ -31,7 +32,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -55,6 +58,8 @@ public class MessageCenterTest {
     private PushListener pushListener;
     private PrivacyManager.Listener privacyManagerListener;
     private Context context;
+    MessageCenter.OnShowMessageCenterListener onShowMessageCenterListener = mock(MessageCenter.OnShowMessageCenterListener.class);
+
 
     @Before
     public void setup() {
@@ -271,5 +276,58 @@ public class MessageCenterTest {
         assertEquals(JobInfo.JOB_FINISHED, result);
 
         verify(inbox, never()).onPerformJob(any(UAirship.class), any(JobInfo.class));
+    }
+
+    @Test
+    public void testDeepLinkMessageCenter() {
+        this.messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener);
+
+        Uri deepLink = Uri.parse("uairship://message_center");
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink));
+
+        verify(onShowMessageCenterListener).onShowMessageCenter(null);
+    }
+
+    @Test
+    public void testDeepLinkMessageCenterTrailingSlash() {
+        this.messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener);
+
+        Uri deepLink = Uri.parse("uairship://message_center/");
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink));
+
+        verify(onShowMessageCenterListener).onShowMessageCenter(null);
+    }
+
+    @Test
+    public void testDeepLinkMessage() {
+        this.messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener);
+
+        Uri deepLink = Uri.parse("uairship://message_center/cool-message");
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink));
+
+        verify(onShowMessageCenterListener).onShowMessageCenter("cool-message");
+    }
+
+    @Test
+    public void testDeepLinkMessageTrailingSlash() {
+        this.messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener);
+
+        Uri deepLink = Uri.parse("uairship://message_center/cool-message/");
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink));
+
+        verify(onShowMessageCenterListener).onShowMessageCenter("cool-message");
+    }
+
+    @Test
+    public void testInvalidDeepLinks() {
+        this.messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener);
+
+        Uri wrongHost = Uri.parse("uairship://what/cool-message/");
+        assertFalse(messageCenter.onAirshipDeepLink(wrongHost));
+
+        Uri wrongArgs = Uri.parse("uairship://message_center/cool-message/what");
+        assertFalse(messageCenter.onAirshipDeepLink(wrongArgs));
+
+        verify(onShowMessageCenterListener, never()).onShowMessageCenter(ArgumentMatchers.<String>any());
     }
 }

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -47,6 +48,7 @@ import com.urbanairship.remotedata.RemoteData;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +77,9 @@ public class UAirship {
 
     @NonNull
     public static final String EXTRA_APP_KEY_KEY = "app_key";
+
+    @NonNull
+    public static final String EXTRA_AIRSHIP_DEEP_LINK_SCHEME = "uairship";
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM, UNKNOWN_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -116,7 +121,8 @@ public class UAirship {
 
     private DeepLinkListener deepLinkListener;
     private final Map<Class, AirshipComponent> componentClassMap = new HashMap<>();
-    private final List<AirshipComponent> components = new ArrayList<>();
+
+    List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -1006,6 +1012,30 @@ public class UAirship {
             throw new IllegalArgumentException("Unable to find component " + clazz);
         }
         return component;
+    }
+
+    /**
+     * Deep links. If the deep link is an `uairship://` it will be handled internally by the SDK.
+     * All other deep links will be forwarded to the deep link listener.
+     *
+     * @param deepLink The deep link.
+     * @return {@code true} if the deep link was handled, otherwise {@code false}.
+     */
+    @MainThread
+    public boolean deepLink(@NonNull String deepLink) {
+        Uri uri = Uri.parse(deepLink);
+        if (EXTRA_AIRSHIP_DEEP_LINK_SCHEME.equals(uri.getScheme())) {
+            for (AirshipComponent component : getComponents()) {
+                if (component.onAirshipDeepLink(uri)) {
+                    return true;
+                }
+            }
+            Logger.debug("Airship deep link not handled: %s", deepLink);
+            return true;
+        } else {
+            DeepLinkListener deepLinkListener = getDeepLinkListener();
+            return deepLinkListener != null && deepLinkListener.onDeepLink(deepLink);
+        }
     }
 
     /**

@@ -20,6 +20,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
@@ -54,7 +55,11 @@ public class MessageCenter extends AirshipComponent {
     @NonNull
     public static final String MESSAGE_DATA_SCHEME = "message";
 
+    @NonNull
+    private static final String DEEP_LINK_HOST = "message_center";
+
     private Predicate<Message> predicate;
+
 
     /**
      * Listener for showing the message center. If set, the listener
@@ -363,4 +368,21 @@ public class MessageCenter extends AirshipComponent {
                 return null;
         }
     }
+
+    @Override
+    public boolean onAirshipDeepLink(@NonNull Uri uri) {
+        if (DEEP_LINK_HOST.equals(uri.getEncodedAuthority())) {
+            List<String> paths = uri.getPathSegments();
+            if (paths.size() == 0) {
+                showMessageCenter();
+                return true;
+            } else if (paths.size() == 1) {
+                showMessageCenter(paths.get(0));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

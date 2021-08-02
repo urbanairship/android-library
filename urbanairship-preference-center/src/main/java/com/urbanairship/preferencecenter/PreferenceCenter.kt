@@ -2,6 +2,7 @@ package com.urbanairship.preferencecenter
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Looper
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
@@ -45,6 +46,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
 
         internal const val PAYLOAD_TYPE = "preference_forms"
         internal const val KEY_PREFERENCE_FORMS = "preference_forms"
+        internal const val DEEP_LINK_HOST = "preferences"
     }
 
     private val backgroundScheduler = Schedulers.looper(backgroundLooper)
@@ -134,5 +136,15 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
                 })
 
         return pendingResult
+    }
+
+    override fun onAirshipDeepLink(uri: Uri): Boolean {
+        val paths = uri.pathSegments
+        return if (DEEP_LINK_HOST == uri.encodedAuthority && paths.size == 1) {
+            open(paths[0])
+            true
+        } else {
+            false
+        }
     }
 }

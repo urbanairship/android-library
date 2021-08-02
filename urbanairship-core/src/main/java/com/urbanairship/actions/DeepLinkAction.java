@@ -7,11 +7,15 @@ import android.net.Uri;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.UriUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Action for opening a deep link.
@@ -41,32 +45,45 @@ public class DeepLinkAction extends Action {
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^d";
 
+    private final Supplier<UAirship> airshipSupplier;
+
+    public DeepLinkAction() {
+        this(new Supplier<UAirship>() {
+            @Override
+            public UAirship get() {
+                return UAirship.shared();
+            }
+        });
+    }
+
+    @VisibleForTesting
+    DeepLinkAction(@NonNull Supplier<UAirship> airshipSupplier) {
+        this.airshipSupplier = airshipSupplier;
+    }
+
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        Uri uri = UriUtils.parse(arguments.getValue().getString());
-        if (uri == null) {
-            return ActionResult.newEmptyResult();
-        }
-        Logger.info("Deep linking: %s", uri);
+        String deepLink = arguments.getValue().getString();
+        UAirship airship = airshipSupplier.get();
+        Checks.checkNotNull(deepLink, "Missing feature.");
+        Checks.checkNotNull(airship, "Missing airship.");
 
-        DeepLinkListener listener = UAirship.shared().getDeepLinkListener();
-        if (listener != null && listener.onDeepLink(uri.toString())) {
-            Logger.info("Calling through to deep link listener with uri string: %s", uri.toString());
+        Logger.info("Deep linking: %s", deepLink);
+        if (!airship.deepLink(deepLink)) {
+            // Fallback to intent launching
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .setPackage(UAirship.getPackageName());
 
-            return ActionResult.newResult(arguments.getValue());
-        }
+            PushMessage message = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
+            if (message != null) {
+                intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle());
+            }
 
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setPackage(UAirship.getPackageName());
-
-        PushMessage message = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
-        if (message != null) {
-            intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle());
+            UAirship.getApplicationContext().startActivity(intent);
         }
 
-        UAirship.getApplicationContext().startActivity(intent);
         return ActionResult.newResult(arguments.getValue());
     }
 
@@ -78,7 +95,7 @@ public class DeepLinkAction extends Action {
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_AUTOMATION:
-                return UriUtils.parse(arguments.getValue().getString()) != null;
+                return arguments.getValue().getString() != null;
 
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             case Action.SITUATION_PUSH_RECEIVED:

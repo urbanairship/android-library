@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter
 
 import android.content.Context
+import android.net.Uri
 import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
@@ -18,7 +19,10 @@ import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import java.util.UUID
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -78,6 +82,7 @@ class PreferenceCenterTest {
 
     private val backgroundLooper: Looper = Looper.getMainLooper()
     private val onOpenListener: PreferenceCenter.OnOpenListener = mock()
+    private val what = UUID.randomUUID().toString()
 
     private lateinit var prefCenter: PreferenceCenter
 
@@ -135,5 +140,39 @@ class PreferenceCenterTest {
 
         val pendingResult = prefCenter.getConfig("foo")
         assertEquals(null, pendingResult.result)
+    }
+
+    @Test
+    fun testDeepLink() {
+        val deepLink = Uri.parse("uairship://preferences/some-preference")
+        prefCenter.openListener = onOpenListener
+
+        assertTrue(prefCenter.onAirshipDeepLink(deepLink))
+        verify(onOpenListener).onOpenPreferenceCenter("some-preference")
+    }
+
+    @Test
+    fun testDeepLinkTrailingSlash() {
+        val deepLink = Uri.parse("uairship://preferences/some-preference/")
+        prefCenter.openListener = onOpenListener
+
+        assertTrue(prefCenter.onAirshipDeepLink(deepLink))
+        verify(onOpenListener).onOpenPreferenceCenter("some-preference")
+    }
+
+    @Test
+    fun testInvalidDeepLinks() {
+        prefCenter.openListener = onOpenListener
+
+        val wrongHost = Uri.parse("uairship://what/some-preference/")
+        assertFalse(prefCenter.onAirshipDeepLink(wrongHost))
+
+        val missingId = Uri.parse("uairship://preferences/")
+        assertFalse(prefCenter.onAirshipDeepLink(missingId))
+
+        val tooManyArgs = Uri.parse("uairship://preferences/what/what")
+        assertFalse(prefCenter.onAirshipDeepLink(tooManyArgs))
+
+        verify(onOpenListener, never()).onOpenPreferenceCenter(any())
     }
 }
