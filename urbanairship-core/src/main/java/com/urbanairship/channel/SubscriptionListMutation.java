@@ -30,8 +30,18 @@ public class SubscriptionListMutation implements JsonSerializable {
     private static final String KEY_ACTION = "action";
     private static final String KEY_LIST_ID = "list_id";
     private static final String KEY_TIMESTAMP = "timestamp";
-    private static final String ACTION_SUBSCRIBE = "subscribe";
-    private static final String ACTION_UNSUBSCRIBE = "unsubscribe";
+    /**
+     * Subscribe action.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String ACTION_SUBSCRIBE = "subscribe";
+    /**
+     * Unsubscribe action.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String ACTION_UNSUBSCRIBE = "unsubscribe";
 
     @NonNull private final String action;
     @NonNull private final String listId;
@@ -139,6 +149,36 @@ public class SubscriptionListMutation implements JsonSerializable {
         return result;
     }
 
+    /**
+     * Mutation action.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public String getAction() {
+        return action;
+    }
+
+    /**
+     * Mutation list Id.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @NonNull
+    public String getListId() {
+        return listId;
+    }
+
+    /**
+     * Mutation timestamp.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Nullable
+    public String getTimestamp() {
+        return timestamp;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -162,5 +202,4 @@ public class SubscriptionListMutation implements JsonSerializable {
                 ", timestamp='" + timestamp + '\'' +
                 '}';
     }
-
 }

@@ -14,6 +14,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -71,6 +72,11 @@ public class AirshipChannel extends AirshipComponent {
     private static final long CHANNEL_REREGISTRATION_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
 
     /**
+     * Max age for the channel subscription listing cache.
+     */
+    private static final long SUBSCRIPTION_CACHE_LIFETIME_MS = 5 * 60 * 1000; // 5M
+
+    /**
      * The default tag group.
      */
     private final String DEFAULT_TAG_GROUP = "device";
@@ -99,6 +105,12 @@ public class AirshipChannel extends AirshipComponent {
     private final TagGroupRegistrar tagGroupRegistrar;
     private final AttributeRegistrar attributeRegistrar;
     private final SubscriptionListRegistrar subscriptionListRegistrar;
+
+    private final Object subscriptionListCacheLock = new Object();
+
+    @Nullable
+    private Set<String> subscriptionListCache;
+    private Long subscriptionListCacheExpiration = 0L;
 
     private final AirshipRuntimeConfig runtimeConfig;
 
@@ -204,6 +216,7 @@ public class AirshipChannel extends AirshipComponent {
                     tagGroupRegistrar.clearPendingMutations();
                     attributeRegistrar.clearPendingMutations();
                     subscriptionListRegistrar.clearPendingMutations();
+                    invalidateSubscriptionListsCache();
                 }
 
                 updateRegistration();
@@ -408,6 +421,17 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
+     * Removes a subscription list listener.
+     *
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeSubscriptionListListener(@NonNull SubscriptionListListener listener) {
+        this.subscriptionListRegistrar.removeSubscriptionListListener(listener);
+    }
+
+    /**
      * Edits channel Tags.
      *
      * @return A {@link TagEditor}
@@ -548,30 +572,128 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Returns the current set of subscription lists for this channel.
+     * Returns the current set of subscription lists for this channel, optionally applying pending
+     * subscription list changes that will be applied during the next channel update.
      * <p>
      * An empty set indicates that this channel is not subscribed to any lists.
      *
+     * @param includePendingUpdates `true` to apply pending updates to the returned set, `false` to return the set without pending updates.
      * @return A {@link PendingResult} of the current set of subscription lists.
      */
     @NonNull
-    public PendingResult<Set<String>> getSubscriptionLists() {
+    public PendingResult<Set<String>> getSubscriptionLists(final boolean includePendingUpdates) {
         final PendingResult<Set<String>> result = new PendingResult<>();
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-            result.setResult(Collections.<String>emptySet());
+            result.setResult(null);
         }
 
-        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+        PendingResult<Set<String>> subscriptionListsResult = getSubscriptionLists();
+        subscriptionListsResult.addResultCallback(new ResultCallback<Set<String>>() {
             @Override
-            public void run() {
-                Set<String> listIds = subscriptionListRegistrar.fetchChannelSubscriptionLists();
-                result.setResult(listIds);
+            public void onResult(@Nullable Set<String> subscriptions) {
+                if (subscriptions == null) {
+                    result.setResult(Collections.<String>emptySet());
+                    return;
+                }
+
+                if (!includePendingUpdates) {
+                    result.setResult(subscriptions);
+                    return;
+                }
+
+                for (SubscriptionListMutation mutation : getPendingSubscriptionListUpdates()) {
+                    if (mutation.getAction().equals(SubscriptionListMutation.ACTION_SUBSCRIBE)) {
+                        subscriptions.add(mutation.getListId());
+                    } else {
+                        subscriptions.remove(mutation.getListId());
+                    }
+                }
+                result.setResult(subscriptions);
             }
         });
 
         return result;
     }
+
+    /**
+     * Returns the current set of subscription lists for this channel from the cache, if available,
+     * or fetches from the network, if not.
+     */
+    @NonNull
+    private PendingResult<Set<String>> getSubscriptionLists() {
+        final PendingResult<Set<String>> result = new PendingResult<>();
+
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+            result.setResult(null);
+        }
+
+        Set<String> cachedSubscriptions = getCachedSubscriptionLists();
+        if (cachedSubscriptions != null) {
+            // Return subscription lists from the in-memory cache, if available.
+            result.setResult(cachedSubscriptions);
+        } else {
+            // Otherwise, fetch the current subscriptions over the network and update the cache.
+            AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Set<String> fetchedSubscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();
+                    if (fetchedSubscriptions != null) {
+                        cacheSubscriptionLists(fetchedSubscriptions);
+                    }
+                    result.setResult(fetchedSubscriptions);
+                }
+            });
+        }
+
+        return result;
+    }
+
+    /**
+     * Caches a set of channel subscriptions.
+     *
+     * @hide
+     */
+    @VisibleForTesting
+    void cacheSubscriptionLists(Set<String> subscriptions) {
+        synchronized (subscriptionListCacheLock) {
+            subscriptionListCache = subscriptions;
+            subscriptionListCacheExpiration = clock.currentTimeMillis() + SUBSCRIPTION_CACHE_LIFETIME_MS;
+        }
+    }
+
+    /**
+     * Retrieves a set of channel subscriptions from the cache, if fresh. Otherwise returns null.
+     *
+     * @return Cached subscription lists or null.
+     * @hide
+     */
+    @Nullable
+    @VisibleForTesting
+    Set<String> getCachedSubscriptionLists() {
+        synchronized (subscriptionListCacheLock) {
+            boolean isExpired = clock.currentTimeMillis() >= subscriptionListCacheExpiration;
+            if (subscriptionListCache == null || isExpired) {
+                return null;
+            }
+
+            return subscriptionListCache;
+        }
+    }
+
+    /**
+     * Clears cached channel subscriptions lists.
+     *
+     * @hide
+     */
+    @VisibleForTesting
+    void invalidateSubscriptionListsCache() {
+        synchronized (subscriptionListCacheLock) {
+            subscriptionListCache = null;
+            subscriptionListCacheExpiration = 0L;
+        }
+    }
+
 
     /**
      * Edit the channel subscription lists.
@@ -589,8 +711,9 @@ public class AirshipChannel extends AirshipComponent {
                 }
 
                 if (!collapsedMutations.isEmpty()) {
-                   subscriptionListRegistrar.addPendingMutations(collapsedMutations);
-                   dispatchUpdateJob();
+                    invalidateSubscriptionListsCache();
+                    subscriptionListRegistrar.addPendingMutations(collapsedMutations);
+                    dispatchUpdateJob();
                 }
             }
         };

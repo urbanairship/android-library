@@ -88,7 +88,7 @@ public class SubscriptionListApiClient {
      * Uploads subscription list edits.
      *
      * @param identifier The identifier (a Channel ID).
-     * @param mutation The subscription list mutations.
+     * @param mutations The subscription list mutations.
      * @return The response.
      * @throws RequestException
      */
@@ -113,7 +113,7 @@ public class SubscriptionListApiClient {
                                  .put(AUDIENCE_KEY, audienceJson)
                                  .build();
 
-        Logger.verbose("Updating subscription lists for ID: $s with payload: %s", identifier, payload);
+        Logger.verbose("Updating subscription lists for ID: %s with payload: %s", identifier, payload);
 
         return requestFactory.createRequest()
                 .setOperation("POST", uri)

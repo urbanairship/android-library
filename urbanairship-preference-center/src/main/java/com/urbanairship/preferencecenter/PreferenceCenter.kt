@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter
 
 import android.content.Context
+import android.content.Intent
 import android.os.Looper
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
@@ -12,9 +13,10 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
 import com.urbanairship.UAirship
-import com.urbanairship.job.JobDispatcher
 import com.urbanairship.json.JsonException
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
+import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
+import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Schedulers
 import com.urbanairship.reactive.Subscriber
@@ -28,8 +30,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
-    backgroundLooper: Looper = AirshipLoopers.getBackgroundLooper(),
-    private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
+    backgroundLooper: Looper = AirshipLoopers.getBackgroundLooper()
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
@@ -86,15 +87,14 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
             Logger.warn("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
             return
         }
+        if (openListener?.onOpenPreferenceCenter(preferenceCenterId) != true) {
+            Logger.verbose("Launching PreferenceCenterActivity with id = $preferenceCenterId")
 
-        val result = getConfig(preferenceCenterId)
-        result.addResultCallback { form ->
-            form?.let {
-                if (openListener?.onOpenPreferenceCenter(preferenceCenterId) != true) {
-                    // TODO: start PreferenceCenterActivity and pass preferenceCenterId as an extra
-                    Logger.verbose("TODO: Launch PreferenceCenterActivity with id = $preferenceCenterId")
-                }
-            } ?: Logger.error("Unable to open Preference Center! No configuration was found for id: '$preferenceCenterId'.")
+            val intent = Intent(context, PreferenceCenterActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra(PreferenceCenterActivity.EXTRA_ID, preferenceCenterId)
+
+            context.startActivity(intent)
         }
     }
 
@@ -114,7 +114,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
                     Logger.verbose("Found ${forms.size()} preference forms in RemoteData")
                     val preferenceForms = try {
                         // Parse the payloads and return the list as a map of ID to PreferenceForms.
-                        forms.map { PreferenceCenterConfig.parse(it.optMap()) }.associateBy { it.id }
+                        forms.map { PreferenceCenterPayload.parse(it.optMap()).config }.associateBy { it.id }
                     } catch (e: JsonException) {
                         return@flatMap Observable.error(e)
                     }

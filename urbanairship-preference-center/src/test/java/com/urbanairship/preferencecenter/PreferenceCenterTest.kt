@@ -6,12 +6,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
-import com.urbanairship.job.JobDispatcher
 import com.urbanairship.json.JsonMap
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.PAYLOAD_TYPE
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
+import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
 import com.urbanairship.preferencecenter.util.jsonListOf
 import com.urbanairship.preferencecenter.util.jsonMapOf
 import com.urbanairship.reactive.Observable
@@ -47,20 +47,23 @@ class PreferenceCenterTest {
         private val PREFERENCE_FORM_1 = PreferenceCenterConfig(ID_1, emptyList(), CommonDisplay.EMPTY)
         private val PREFERENCE_FORM_2 = PreferenceCenterConfig(ID_2, emptyList(), CommonDisplay.EMPTY)
 
+        private val FORM_1_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_1)
+        private val FORM_2_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_2)
+
         private val METADATA = jsonMapOf("metadata" to "foo")
 
         private val SINGLE_FORM_PAYLOAD = RemoteDataPayload.newBuilder()
                 .setType(PAYLOAD_TYPE)
                 .setTimeStamp(1L)
                 .setMetadata(METADATA)
-                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(PREFERENCE_FORM_1.toJson())))
+                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson())))
                 .build()
 
         private val MULTI_FORM_PAYLOAD = RemoteDataPayload.newBuilder()
                 .setType(PAYLOAD_TYPE)
                 .setTimeStamp(2L)
                 .setMetadata(METADATA)
-                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(PREFERENCE_FORM_1.toJson(), PREFERENCE_FORM_2.toJson())))
+                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson(), FORM_2_PAYLOAD.toJson())))
                 .build()
     }
 
@@ -73,7 +76,6 @@ class PreferenceCenterTest {
         on { payloadsForType(eq(PAYLOAD_TYPE)) } doReturn payloads
     }
 
-    private val jobDispatcher: JobDispatcher = mock()
     private val backgroundLooper: Looper = Looper.getMainLooper()
     private val onOpenListener: PreferenceCenter.OnOpenListener = mock()
 
@@ -81,7 +83,7 @@ class PreferenceCenterTest {
 
     @Before
     fun setUp() {
-        prefCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData, backgroundLooper, jobDispatcher)
+        prefCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData, backgroundLooper)
     }
 
     @Test

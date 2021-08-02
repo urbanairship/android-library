@@ -89,6 +89,24 @@ public class SubscriptionListEditorTest extends BaseTestCase {
         assertEquals(expected, editor.collapsedMutations);
     }
 
+    @Test
+    public void testMutate() {
+        editor.mutate("foo", true)
+              .mutate("bar", true)
+              .mutate("foo", false)
+              .mutate("bar", false)
+              .mutate("baz", true)
+              .apply();
+
+        List<SubscriptionListMutation> expected = Arrays.asList(
+                SubscriptionListMutation.newUnsubscribeMutation("foo", 0L),
+                SubscriptionListMutation.newUnsubscribeMutation("bar", 0L),
+                SubscriptionListMutation.newSubscribeMutation("baz", 0L)
+        );
+
+        assertEquals(expected, editor.collapsedMutations);
+    }
+
     private static class TestSubscriptionListEditor extends SubscriptionListEditor {
 
         TestSubscriptionListEditor(Clock clock) {

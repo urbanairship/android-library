@@ -1,19 +1,34 @@
 package com.urbanairship.preferencecenter.ui
 
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.TypedValue
+import android.view.ContextThemeWrapper
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.testing.OpenForTesting
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @OpenForTesting
@@ -36,10 +51,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected val viewModelFactory: ViewModelProvider.Factory by lazy {
-        PreferenceCenterViewModelFactory(
-                application = requireActivity().application,
-                preferenceCenterId = preferenceCenterId
-        )
+        PreferenceCenterViewModelFactory(preferenceCenterId)
     }
 
     private val preferenceCenterId: String by lazy {
@@ -51,15 +63,46 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     private val adapter: PreferenceCenterAdapter by lazy {
-        PreferenceCenterAdapter()
+        PreferenceCenterAdapter(scope = viewLifecycleOwner.lifecycleScope)
     }
 
     private lateinit var views: Views
 
     private data class Views(
         val view: View,
-        val list: RecyclerView = view.findViewById(android.R.id.list)
-    )
+        val list: RecyclerView = view.findViewById(R.id.list),
+        val loading: ViewGroup = view.findViewById(R.id.loading),
+        val error: ViewGroup = view.findViewById(R.id.error),
+        val errorMessage: TextView = error.findViewById(R.id.error_text),
+        val errorRetryButton: Button = error.findViewById(R.id.error_button)
+    ) {
+        fun showContent() {
+            error.visibility = View.GONE
+            loading.visibility = View.GONE
+
+            list.visibility = View.VISIBLE
+        }
+
+        fun showError() {
+            list.visibility = View.GONE
+            loading.visibility = View.GONE
+
+            error.visibility = View.VISIBLE
+        }
+
+        fun showLoading() {
+            list.visibility = View.GONE
+            error.visibility = View.GONE
+
+            loading.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val themedContext = ContextThemeWrapper(requireContext(), R.style.UrbanAirship_PreferenceCenter)
+        val themedInflater = inflater.cloneInContext(themedContext)
+        return super.onCreateView(themedInflater, container, savedInstanceState)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -67,23 +110,88 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         views = Views(view)
 
         with(views) {
-            list.layoutManager = LinearLayoutManager(requireContext())
+            adapter.setHasStableIds(true)
             list.adapter = adapter
+            list.layoutManager = LinearLayoutManager(requireContext())
+            list.addItemDecoration(SectionDividerDecoration(requireContext()))
         }
 
-        viewLifecycleOwner.lifecycle.coroutineScope.launch {
-            viewModel.states.collect { state ->
-                when (state) {
-                    is State.Loading -> Snackbar.make(view, "loading...", Snackbar.LENGTH_SHORT)
-                    is State.Error -> Snackbar.make(view, "error: ${state.message}", Snackbar.LENGTH_LONG)
-                    is State.Content -> render(state)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.states.collect(::render)
+        }
+
+        adapter.itemEvents
+            .map { event ->
+                when (event) {
+                    is ChannelSubscriptionChange -> Action.PreferenceItemChanged(event.item, event.isChecked)
                 }
+            }
+            .onEach { action -> viewModel.handle(action) }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+
+        views.errorRetryButton.setOnClickListener { viewModel.handle(Action.Refresh) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.handle(Action.Refresh)
+    }
+
+    private fun render(state: State): Unit = when (state) {
+        is State.Loading -> views.showLoading()
+        is State.Error -> views.showError()
+        is State.Content -> {
+            activity?.title = state.title
+
+            adapter.submit(state.listItems, state.subscriptions)
+
+            views.showContent()
+        }
+    }
+}
+
+private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDecoration() {
+    private val drawable = run {
+        val dividerAttr = TypedValue()
+        context.theme.resolveAttribute(R.attr.dividerHorizontal, dividerAttr, true)
+        ContextCompat.getDrawable(context, dividerAttr.resourceId)
+            ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
+    }
+
+    private val dividerHeight: Int = drawable.intrinsicHeight
+
+    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        if (shouldDrawDividerBelow(view, parent)) {
+            outRect.bottom = dividerHeight
+        }
+    }
+
+    override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        val width = parent.width
+        for (i in 0 until parent.childCount) {
+            val child = parent.getChildAt(i)
+            if (shouldDrawDividerBelow(child, parent)) {
+                val top = (child.y + child.height).toInt()
+                drawable.setBounds(0, top, width, top + dividerHeight)
+                drawable.draw(c)
             }
         }
     }
 
-    private fun render(state: State.Content) {
-        activity?.title = state.title
-        adapter.submitList(state.list)
+    private fun shouldDrawDividerBelow(view: View, parent: RecyclerView): Boolean {
+        val holder = parent.getChildViewHolder(view)
+        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder
+
+        val index = parent.indexOfChild(view)
+        return if (index < parent.childCount - 1) {
+            val nextView = parent.getChildAt(index + 1)
+            val nextHolder = parent.getChildViewHolder(nextView)
+            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder
+
+            isNotSectionItem && isNextSectionItem
+        } else {
+            false
+        }
     }
 }

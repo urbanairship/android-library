@@ -9,8 +9,10 @@ import android.telephony.TelephonyManager;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
@@ -26,8 +28,8 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,7 +42,9 @@ import java.util.UUID;
 import javax.net.ssl.HttpsURLConnection;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import static android.os.Looper.getMainLooper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -52,10 +56,12 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 /**
  * Tests for {@link AirshipChannel}.
@@ -169,7 +175,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockSubscriptionListRegistrar).setId("channel", false);
 
         // Verify the channel created intent was fired
-        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
+        List<Intent> intents = shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
         assertEquals(intents.size(), 0);
     }
 
@@ -214,7 +220,7 @@ public class AirshipChannelTests extends BaseTestCase {
         assertTrue(listener.onChannelCreatedCalled);
 
         // Verify the airship ready intent was fired
-        List<Intent> intents = Shadows.shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
+        List<Intent> intents = shadowOf(RuntimeEnvironment.application).getBroadcastIntents();
         assertEquals(intents.size(), 1);
         assertEquals(intents.get(0).getAction(), AirshipChannel.ACTION_CHANNEL_CREATED);
         assertNotNull(intents.get(0).getExtras());
@@ -987,6 +993,147 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel.setTags(tags);
         assertEquals(airshipChannel.getTags().size(), 1);
         assertEquals(airshipChannel.getTags().iterator().next(), tag);
+    }
+
+    /**
+     * Tests that subscription lists are returned from the in-memory cache when available.
+     */
+    @Test
+    public void testGetSubscriptionListsFromCache() {
+        Set<String> subscriptions = new HashSet<String>() {{
+           add("foo");
+           add("bar");
+        }};
+
+        assertNull(airshipChannel.getCachedSubscriptionLists());
+
+        airshipChannel.cacheSubscriptionLists(subscriptions);
+
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+
+        // Result should be available immediately when returning from the cache.
+        assertEquals(result.getResult(), subscriptions);
+        verify(mockSubscriptionListRegistrar, never()).fetchChannelSubscriptionLists();
+    }
+
+    /**
+     * Tests that subscription lists are fetched from the network when the cache is expired.
+     */
+    @Test
+    public void testGetSubscriptionListsFromNetworkIfCacheExpired() {
+        final Set<String> cachedSubscriptions = new HashSet<String>() {{
+            add("foo");
+            add("bar");
+        }};
+
+        final Set<String> networkSubscriptions = new HashSet<String>() {{
+            addAll(cachedSubscriptions);
+            add("fizz");
+            add("buzz");
+        }};
+
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(networkSubscriptions);
+
+        // Prime the cache
+        clock.currentTimeMillis = 100;
+        airshipChannel.cacheSubscriptionLists(cachedSubscriptions);
+
+        // Advance the time past the subscription cache lifetime
+        clock.currentTimeMillis += 10 * 60 * 1000;
+        assertNull(airshipChannel.getCachedSubscriptionLists());
+
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        result.addResultCallback(new ResultCallback<Set<String>>() {
+            @Override
+            public void onResult(@Nullable Set<String> result) {
+                assertEquals(networkSubscriptions, result);
+
+                // Verify that the cache was updated
+                assertEquals(networkSubscriptions, airshipChannel.getCachedSubscriptionLists());
+
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+            }
+        });
+
+        shadowOf(getMainLooper()).idle();
+    }
+
+    /**
+     * Tests that subscription lists are fetched from the network when the cache is empty.
+     */
+    @Test
+    public void testGetSubscriptionListsFromNetworkIfCacheEmpty() {
+        final Set<String> cachedSubscriptions = new HashSet<String>() {{
+            add("foo");
+            add("bar");
+        }};
+
+        final Set<String> networkSubscriptions = new HashSet<String>() {{
+            addAll(cachedSubscriptions);
+            add("fizz");
+            add("buzz");
+        }};
+
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(networkSubscriptions);
+
+        // Ensure the cache is empty
+        assertNull(airshipChannel.getCachedSubscriptionLists());
+
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        result.addResultCallback(new ResultCallback<Set<String>>() {
+            @Override
+            public void onResult(@Nullable Set<String> result) {
+                assertEquals(networkSubscriptions, result);
+
+                // Verify that the cache was updated
+                assertEquals(networkSubscriptions, airshipChannel.getCachedSubscriptionLists());
+
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+            }
+        });
+
+        shadowOf(getMainLooper()).idle();
+    }
+
+    /**
+     * Test that pending subscription list updates are applied to the set returned by
+     * getSubscriptionLists(true).
+     */
+    @Test
+    public void testGetSubscriptionListsIncludesPending() {
+        final Set<String> initialSubscriptions = new HashSet<String>() {{
+            add("foo");
+            add("bar");
+        }};
+        final Set<String> subscriptionsWithPending = new HashSet<String>() {{
+            add("fizz");
+            add("buzz");
+        }};
+        List<SubscriptionListMutation> pendingMutations = new ArrayList<SubscriptionListMutation>() {{
+            add(SubscriptionListMutation.newSubscribeMutation("fizz", 0L));
+            add(SubscriptionListMutation.newSubscribeMutation("buzz", 0L));
+            add(SubscriptionListMutation.newUnsubscribeMutation("foo", 0L));
+            add(SubscriptionListMutation.newUnsubscribeMutation("bar", 0L));
+        }};
+
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(initialSubscriptions);
+        when(mockSubscriptionListRegistrar.getPendingMutations()).thenReturn(pendingMutations);
+
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(true);
+        result.addResultCallback(new ResultCallback<Set<String>>() {
+            @Override
+            public void onResult(@Nullable Set<String> subscriptions) {
+                assertEquals(subscriptionsWithPending, subscriptions);
+
+                // Verify that pending updates weren't stored in the cache after being applied.
+                assertEquals(initialSubscriptions, airshipChannel.getCachedSubscriptionLists());
+
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+                verify(mockSubscriptionListRegistrar).getPendingMutations();
+            }
+        });
+
+        shadowOf(getMainLooper()).idle();
     }
 
     /**

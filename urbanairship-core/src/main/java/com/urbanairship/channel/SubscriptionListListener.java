@@ -2,7 +2,7 @@ package com.urbanairship.channel;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -10,13 +10,13 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface SubscriptionListListener {
+public abstract class SubscriptionListListener {
 
     /**
      * Called when a subscription list update is uploaded.
      *
      * @param identifier The identifier (a Channel ID).
-     * @param subscriptionListMutation The subscription list mutation.
+     * @param mutations The subscription list mutations that were uploaded.
      */
-    void onSubscriptionListMutationUploaded(@NonNull String identifier, @NonNull List<SubscriptionListMutation> mutations);
+    public abstract void onSubscriptionListMutationUploaded(@Nullable String identifier, @Nullable List<SubscriptionListMutation> mutations);
 }

@@ -6,12 +6,12 @@ import com.urbanairship.http.Response;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -90,6 +90,7 @@ public class SubscriptionListRegistrar {
         }
     }
 
+    @Nullable
     Set<String> fetchChannelSubscriptionLists() {
         String fetchIdentifier;
         synchronized (idLock) {
@@ -100,8 +101,8 @@ public class SubscriptionListRegistrar {
         try {
             response = apiClient.getSubscriptionLists(fetchIdentifier);
         } catch (RequestException e) {
-            Logger.error("Failed to fetch channel subscription lists!");
-            return Collections.emptySet();
+            Logger.error(e, "Failed to fetch channel subscription lists!");
+            return null;
         }
 
         Logger.verbose("Subscription list fetched: %s", response);
@@ -111,7 +112,7 @@ public class SubscriptionListRegistrar {
         } else {
             Logger.error("Failed to fetch channel subscription lists! error: %d message: %s",
                     response.getStatus(), response.getResponseBody());
-            return Collections.emptySet();
+            return null;
         }
     }
 
@@ -129,5 +130,9 @@ public class SubscriptionListRegistrar {
 
     void addSubscriptionListListener(@NonNull SubscriptionListListener listener) {
         listeners.add(listener);
+    }
+
+    void removeSubscriptionListListener(@NonNull SubscriptionListListener listener) {
+        listeners.remove(listener);
     }
 }

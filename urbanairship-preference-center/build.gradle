@@ -21,8 +21,8 @@ android {
         // Robolectric. We can only run tests using the fragment testing library in the debug
         // configuration because the empty host activity must be present in the manifest, which
         // is accomplished by adding the library via `debugImplementation`.
-        testDebug.java.srcDirs += 'src/sharedTest/java'
-        androidTestDebug.java.srcDirs += 'src/sharedTest/java'
+        testDebug.java.srcDirs += 'src/sharedTestDebug/java'
+        androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
     }
 
     testOptions {
@@ -36,6 +36,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
 }
 
@@ -54,7 +55,7 @@ dependencies {
     implementation "androidx.core:core:$rootProject.androidxCoreVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
     implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
 
     // Support libraries
@@ -81,6 +82,7 @@ dependencies {
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
     testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
     testImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
+    testImplementation "app.cash.turbine:turbine:0.5.2"
 
     // Instrumentation Tests
     androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"

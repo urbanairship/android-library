@@ -93,6 +93,19 @@ public abstract class SubscriptionListEditor {
     }
 
     /**
+     * Internal helper that uses a boolean flag to indicate whether to subscribe or unsubscribe.
+     *
+     * @param subscriptionListId The ID of the list to subscribe to or unsubscribe from.
+     * @param isSubscribe {@code true} to subscribe or {@code false} to unsubscribe.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public SubscriptionListEditor mutate(String subscriptionListId, boolean isSubscribe) {
+        return isSubscribe ? subscribe(subscriptionListId) : unsubscribe(subscriptionListId);
+    }
+
+    /**
      * Apply the subscription list changes.
      */
     public void apply() {
@@ -102,11 +115,9 @@ public abstract class SubscriptionListEditor {
     /**
      * Called when apply is called.
      *
-     * @param listsToSubscribe List IDs to subscribe to.
-     * @param listsToUnsubscribe List IDs to unsubscribe from.
+     * @param collapsedMutations The collapsed list of mutations to be applied.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected abstract void onApply(@NonNull List<SubscriptionListMutation> collapsedMutations);
-
 }

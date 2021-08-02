@@ -9,25 +9,27 @@ import com.urbanairship.preferencecenter.util.requireField
 import com.urbanairship.preferencecenter.util.toJsonList
 
 /**
- * Preference Center Response from Remote Data.
+ * Preference Center Payload from Remote Data.
  */
-internal data class PreferenceCenterResponse(
+internal data class PreferenceCenterPayload(
     val config: PreferenceCenterConfig
 ) {
     companion object {
         private const val KEY_FORM = "form"
 
         /**
-         * Parses a `JsonMap` into a `PreferenceCenterResponse` object.
+         * Parses a `JsonMap` into a `PreferenceCenterPayload` object.
          *
          * @hide
          * @throws JsonException
          */
-        internal fun parse(json: JsonMap): PreferenceCenterResponse =
-            PreferenceCenterResponse(
-                config = PreferenceCenterConfig.parse(json.opt(KEY_FORM).optMap())
-            )
+        internal fun parse(json: JsonMap): PreferenceCenterPayload =
+            PreferenceCenterPayload(PreferenceCenterConfig.parse(json.opt(KEY_FORM).optMap()))
     }
+
+    internal fun toJson(): JsonMap = jsonMapOf(
+        KEY_FORM to config.toJson()
+    )
 }
 
 /**
@@ -68,14 +70,14 @@ data class PreferenceCenterConfig(
  * Common display attributes.
  */
 data class CommonDisplay(
-    val title: String? = null,
-    val subtitle: String? = null
+    val name: String? = null,
+    val description: String? = null
 ) {
     companion object {
         @JvmStatic val EMPTY = CommonDisplay(null, null)
 
-        private const val KEY_TITLE = "title"
-        private const val KEY_SUBTITLE = "subtitle"
+        private const val KEY_NAME = "name"
+        private const val KEY_DESCRIPTION = "description"
 
         /**
          * Parses a `JsonMap` into a `CommonDisplay` object.
@@ -85,8 +87,8 @@ data class CommonDisplay(
          */
         internal fun parse(json: JsonMap): CommonDisplay =
             CommonDisplay(
-                title = json.optionalField(KEY_TITLE),
-                subtitle = json.optionalField(KEY_SUBTITLE)
+                name = json.optionalField(KEY_NAME),
+                description = json.optionalField(KEY_DESCRIPTION)
             )
 
         /**
@@ -100,8 +102,8 @@ data class CommonDisplay(
     }
 
     internal fun toJson(): JsonMap = jsonMapOf(
-        KEY_TITLE to title,
-        KEY_SUBTITLE to subtitle
+        KEY_NAME to name,
+        KEY_DESCRIPTION to description
     )
 }
 
