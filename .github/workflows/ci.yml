@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v2
       - name: set up JDK 1.8
@@ -13,5 +14,11 @@ jobs:
           java-version: 1.8
       - name: Build and Test SDK
         run: bash ./gradlew build --info
-      - name: Build Docs
-        run: bash ./gradlew javadoc
+      - name: publish unit test reports
+        if: always()
+        uses: mikepenz/action-junit-report@a6502270b81b22b7cf745720fcf00edf7d31dc04
+        with:
+          check_name: 'Unit test reports'
+          github_token: ${{ github.token }}
+          report_paths: '**/build/test-results/**/TEST-*.xml'
+          fail_on_failure: true
