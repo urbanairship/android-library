@@ -239,21 +239,6 @@ public class AirshipConfigOptions {
     public final Uri appStoreUri;
 
     /**
-     * The FCM sender ID for push registration. Used as a fallback
-     * if the production or development FCM sender ID is not set.
-     * This is your Google API project number.
-     * <p>
-     * Optional if you are using the {@code urbanairship-fcm} package and want Airship to use the
-     * main Firebase application's sender ID.
-     *
-     * @deprecated fcmSenderId should be set via google-services.json. The {@code urbanairship-fcm}
-     * package will automatically use the sender ID from the default Firebase project.
-     */
-    @Deprecated
-    @Nullable
-    public final String fcmSenderId;
-
-    /**
      * The transport types allowed for Push.
      * <p>
      * Defaults to ADM, FCM.
@@ -437,12 +422,10 @@ public class AirshipConfigOptions {
         if (builder.inProduction) {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
             this.appSecret = firstOrEmpty(builder.productionAppSecret, builder.appSecret);
-            this.fcmSenderId = firstOrNull(builder.productionFcmSenderId, builder.fcmSenderId);
             this.logLevel = first(builder.productionLogLevel, builder.logLevel, DEFAULT_PRODUCTION_LOG_LEVEL);
         } else {
             this.appKey = firstOrEmpty(builder.developmentAppKey, builder.appKey);
             this.appSecret = firstOrEmpty(builder.developmentAppSecret, builder.appSecret);
-            this.fcmSenderId = firstOrNull(builder.developmentFcmSenderId, builder.fcmSenderId);
             this.logLevel = first(builder.developmentLogLevel, builder.logLevel, DEFAULT_DEVELOPMENT_LOG_LEVEL);
         }
 
@@ -658,9 +641,6 @@ public class AirshipConfigOptions {
         private String remoteDataUrl;
         private String chatSocketUrl;
         private String chatUrl;
-        private String fcmSenderId;
-        private String productionFcmSenderId;
-        private String developmentFcmSenderId;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
         private List<String> urlAllowList = new ArrayList<>();
         private List<String> urlAllowListScopeJavaScriptInterface = new ArrayList<>();
@@ -949,15 +929,9 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_FCM_SENDER_ID:
-                            this.setFcmSenderId(configParser.getString(name));
-                            break;
-
                         case FIELD_DEVELOPMENT_FCM_SENDER_ID:
-                            this.setDevelopmentFcmSenderId(configParser.getString(name));
-                            break;
-
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
-                            this.setProductionFcmSenderId(configParser.getString(name));
+                            Logger.error("Support for Sender ID override has been removed. Firebase doesn't support multiple projects in a single app anymore.");
                             break;
 
                         case "enableUrlWhitelisting":
@@ -1244,60 +1218,6 @@ public class AirshipConfigOptions {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setRemoteDataUrl(@Nullable String remoteDataUrl) {
             this.remoteDataUrl = remoteDataUrl;
-            return this;
-        }
-
-        /**
-         * Sets the production FCM sender ID.
-         * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
-         * main Firebase application's sender ID.
-         *
-         * @param senderId The production FCM sender ID.
-         * @return The config options builder.
-         *
-         * @deprecated The production sender ID should be supplied via a google-services.json
-         */
-        @Deprecated
-        @NonNull
-        public Builder setProductionFcmSenderId(@Nullable String senderId) {
-            this.productionFcmSenderId = senderId;
-            return this;
-        }
-
-        /**
-         * Sets the development FCM sender ID.
-         * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
-         * main Firebase application's sender ID.
-         *
-         * @param senderId The development FCM sender ID.
-         * @return The config options builder.
-         *
-         * @deprecated The development sender ID should be supplied via a google-services.json
-         */
-        @Deprecated
-        @NonNull
-        public Builder setDevelopmentFcmSenderId(@Nullable String senderId) {
-            this.developmentFcmSenderId = senderId;
-            return this;
-        }
-
-        /**
-         * Sets the default FCM sender ID.
-         * <p>
-         * Optional if you are using `urbanairship-fcm` package and want Airship to use the
-         * main Firebase application's sender ID.
-         *
-         * @param senderId The FCM sender ID.
-         * @return The config options builder.
-         *
-         * @deprecated The default sender ID should be supplied via google-services.json
-         */
-        @Deprecated
-        @NonNull
-        public Builder setFcmSenderId(@Nullable String senderId) {
-            this.fcmSenderId = senderId;
             return this;
         }
 
