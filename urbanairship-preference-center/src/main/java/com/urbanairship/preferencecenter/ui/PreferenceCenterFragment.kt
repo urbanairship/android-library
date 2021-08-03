@@ -49,6 +49,21 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
             }
     }
 
+    /**
+     * Listener to override Preference Center display behavior.
+     */
+    fun interface OnDisplayPreferenceCenterListener {
+
+        /**
+         * Called when a Preference Center title and description will be displayed.
+         *
+         * @param title Title of the Preference Center.
+         * @param description Description of the Preference Center.
+         * @return `true` if the title and description were displayed, otherwise `false` to trigger the default display as an item at the top of the list.
+         */
+        fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected val viewModelFactory: ViewModelProvider.Factory by lazy {
         PreferenceCenterViewModelFactory(preferenceCenterId)
@@ -67,6 +82,8 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     private lateinit var views: Views
+
+    private var onDisplayListener: OnDisplayPreferenceCenterListener? = null
 
     private data class Views(
         val view: View,
@@ -110,7 +127,6 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         views = Views(view)
 
         with(views) {
-            adapter.setHasStableIds(true)
             list.adapter = adapter
             list.layoutManager = LinearLayoutManager(requireContext())
             list.addItemDecoration(SectionDividerDecoration(requireContext()))
@@ -138,11 +154,29 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         viewModel.handle(Action.Refresh)
     }
 
+    /**
+     * Sets the [OnDisplayPreferenceCenterListener].
+     */
+    fun setOnDisplayPreferenceCenterListener(listener: OnDisplayPreferenceCenterListener?) {
+        onDisplayListener = listener
+    }
+
+    /**
+     * Shows the title and description as an item at the top of the list.
+     */
+    fun showHeaderItem(title: String?, description: String?) {
+        adapter.setHeaderItem(title, description)
+    }
+
     private fun render(state: State): Unit = when (state) {
         is State.Loading -> views.showLoading()
         is State.Error -> views.showError()
         is State.Content -> {
-            activity?.title = state.title
+            onDisplayListener?.let {
+                if (!it.onDisplayPreferenceCenter(state.title, state.subtitle)) {
+                    showHeaderItem(state.title, state.subtitle)
+                }
+            } ?: showHeaderItem(state.title, state.subtitle)
 
             adapter.submit(state.listItems, state.subscriptions)
 

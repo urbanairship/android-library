@@ -195,20 +195,11 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
  * @hide
  */
 @VisibleForTesting
-internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> {
-    val items = mutableListOf<PrefCenterItem>()
-
-    display.description?.let { description ->
-        items += PrefCenterItem.DescriptionItem(description)
-    }
-
-    items += sections.flatMap { section ->
+internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
+    sections.flatMap { section ->
         listOf(PrefCenterItem.SectionItem(section)) + section.items.map { item ->
             when (item) {
                 is Item.ChannelSubscription -> PrefCenterItem.ChannelSubscriptionItem(item)
             }
         }
     }
-
-    return items
-}

@@ -43,6 +43,8 @@ internal class PreferenceCenterAdapter(
 
     private val subscriptions: MutableSet<String> = mutableSetOf()
 
+    private var descriptionItem: DescriptionItem? = null
+
     sealed class ItemEvent {
         data class ChannelSubscriptionChange(
             val item: Item.ChannelSubscription,
@@ -78,7 +80,8 @@ internal class PreferenceCenterAdapter(
 
     fun submit(items: List<PrefCenterItem>, subscriptions: Set<String>) {
         setSubscriptions(subscriptions)
-        submitList(items)
+        val list = descriptionItem?.let { listOf(it) + items } ?: items
+        submitList(list)
     }
 
     private fun setSubscriptions(subscriptions: Set<String>) {
@@ -88,6 +91,28 @@ internal class PreferenceCenterAdapter(
                 addAll(subscriptions)
             }
             notifyDataSetChanged()
+        }
+    }
+
+    internal fun setHeaderItem(title: String?, description: String?) {
+        val item = if (title.isNullOrBlank() && description.isNullOrBlank()) {
+            null
+        } else {
+            DescriptionItem(title, description)
+        }
+
+        descriptionItem = item
+
+        if (currentList.isEmpty()) { return }
+
+        val list = currentList.toMutableList()
+        if (list.firstOrNull() is DescriptionItem) {
+            list.removeFirst()
+        }
+
+        if (item != null) {
+            list.add(0, item)
+            submitList(list)
         }
     }
 
@@ -127,7 +152,7 @@ internal sealed class PrefCenterItem(val type: Int) {
     abstract fun areItemsTheSame(otherItem: PrefCenterItem): Boolean
     abstract fun areContentsTheSame(otherItem: PrefCenterItem): Boolean
 
-    internal data class DescriptionItem(val description: String) : PrefCenterItem(TYPE_DESCRIPTION) {
+    internal data class DescriptionItem(val title: String?, val description: String?) : PrefCenterItem(TYPE_DESCRIPTION) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference_description
@@ -158,7 +183,8 @@ internal sealed class PrefCenterItem(val type: Int) {
 
         class ViewHolder(itemView: View) : PrefCenterViewHolder<DescriptionItem>(itemView) {
             override fun bind(item: DescriptionItem) {
-                descriptionView.text = item.description
+                titleView.setTextOrHide(item.title)
+                descriptionView.setTextOrHide(item.description)
             }
         }
     }

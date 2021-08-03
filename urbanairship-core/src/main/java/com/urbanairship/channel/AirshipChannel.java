@@ -74,7 +74,7 @@ public class AirshipChannel extends AirshipComponent {
     /**
      * Max age for the channel subscription listing cache.
      */
-    private static final long SUBSCRIPTION_CACHE_LIFETIME_MS = 5 * 60 * 1000; // 5M
+    private static final long SUBSCRIPTION_CACHE_LIFETIME_MS = 10 * 60 * 1000; // 10M
 
     /**
      * The default tag group.

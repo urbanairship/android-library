@@ -21,7 +21,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.common.truth.Truth.assertThat
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Item
@@ -30,6 +29,7 @@ import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.testing.RecyclerViewItemCountAssertion.Companion.hasItemCount
 import com.urbanairship.preferencecenter.testing.RecyclerViewMatcher.Companion.withRecyclerView
 import com.urbanairship.preferencecenter.testing.ViewModelUtil
+import com.urbanairship.preferencecenter.ui.PreferenceCenterFragment.OnDisplayPreferenceCenterListener
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import java.util.UUID
@@ -123,6 +123,10 @@ internal class PreferenceCenterFragmentTest {
         on(it.states) doReturn states
     }
 
+    private val onDisplayListener: OnDisplayPreferenceCenterListener = mock {
+        on(it.onDisplayPreferenceCenter(any(), any())) doReturn false
+    }
+
     @Test
     fun testDisplaysLoading() {
         preferenceCenter(initialState = State.Loading) {
@@ -142,15 +146,13 @@ internal class PreferenceCenterFragmentTest {
     @Test
     fun testDisplaysContent() {
         preferenceCenter(initialState = State.Loading) {
+
             emitState(STATE_CONTENT)
 
-            // Make sure the Activity title was set. (The empty test Activity doesn't have a toolbar, so this won't be
-            // visible if running on device)
-            verifyActivityTitle(TITLE)
             // Verify the list
             verifyContentDisplayed(ITEM_COUNT)
-            // Description
-            verifyItem(0, subtitle = SUBTITLE)
+            // Description item
+            verifyItem(0, title = TITLE, subtitle = SUBTITLE)
             // Section 1
             verifyItem(position = 1, title = SECTION_1_TITLE, subtitle = SECTION_1_SUBTITLE)
             verifyChannelSubscriptionItem(position = 2, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE)
@@ -159,6 +161,9 @@ internal class PreferenceCenterFragmentTest {
             verifyItem(position = 4, title = SECTION_2_TITLE, subtitle = SECTION_2_SUBTITLE)
             verifyChannelSubscriptionItem(position = 5, title = PREF_3_TITLE)
             verifyChannelSubscriptionItem(position = 6, title = PREF_4_TITLE)
+
+            // Make sure the onDisplayListener was called
+            verify(onDisplayListener).onDisplayPreferenceCenter(TITLE, SUBTITLE)
         }
     }
 
@@ -229,7 +234,9 @@ internal class PreferenceCenterFragmentTest {
         block: PreferenceCenterRobot.() -> Unit
     ) {
         val scenario = launchFragmentInContainer(args, R.style.UrbanAirship_PreferenceCenter_Activity) {
-            TestPreferenceCenterFragment(mockViewModelFactory = ViewModelUtil.createFor(viewModel))
+            TestPreferenceCenterFragment(mockViewModelFactory = ViewModelUtil.createFor(viewModel)).apply {
+                setOnDisplayPreferenceCenterListener(onDisplayListener)
+            }
         }
         PreferenceCenterRobot(states, initialState, scenario).apply(block)
     }
@@ -239,7 +246,7 @@ internal class PreferenceCenterFragmentTest {
 internal class PreferenceCenterRobot(
     private val states: MutableStateFlow<State>,
     initialState: State? = null,
-    private val scenario: FragmentScenario<TestPreferenceCenterFragment>
+    val scenario: FragmentScenario<TestPreferenceCenterFragment>
 ) {
     companion object {
         private val ID_LIST = R.id.list
@@ -259,12 +266,6 @@ internal class PreferenceCenterRobot(
 
     fun emitState(state: State) {
         states.value = state
-    }
-
-    fun verifyActivityTitle(title: String) {
-        scenario.onFragment { fragment ->
-            assertThat(fragment.activity?.title).isEqualTo(title)
-        }
     }
 
     fun verifyLoading() {
