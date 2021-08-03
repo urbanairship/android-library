@@ -53,6 +53,7 @@ buildscript {
 
         // Firebase
         firebaseMessagingVersion = '22.0.0'
+        firebaseIidVersion = '21.1.0'
 
         // OkHttp (for WebSocket support in airship-chat)
         okHttpVersion = '4.9.0'
