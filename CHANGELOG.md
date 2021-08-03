@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 14.6.0 August 3, 2021
+
+Minor release that adds Airship Chat routing support.
+
+### Changes
+- Added support for specifying a routing string in Airship Chat for directing messages to a particular agent.
+- Added a `try/catch` around network callback register and unregister in `NetworkMonitor`, to prevent crashes on a small subset of devices.
+
 ## Version 14.5.1 June 21, 2021
 
 Patch release that updates the version of `firebase-messaging` used by `urbanairship-fcm` and adds
@@ -11,7 +19,7 @@ in future versions of the Airship FCM module. Firebase currently recommends usin
 project for Crashlytics and Cloud Messaging. 
 
 ### Changes
-- Updated`firebase-messaging` to version `22.0.0`.
+- Updated `firebase-messaging` to version `22.0.0`.
 - Added `firebase-iid` dependency to `urbanairship-fcm`.
 - Added a warning log message if `fcmSenderId` is being overridden to a non-default Firebase project.
 - Marked `fcmSenderId` and related setter methods in `AirshipConfigOptions` as `@Deprecated`.
