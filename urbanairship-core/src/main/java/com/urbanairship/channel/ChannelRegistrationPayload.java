@@ -2,6 +2,12 @@
 
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+
+import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -13,11 +19,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.StringDef;
 
 /**
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
@@ -44,6 +45,9 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String PUSH_ADDRESS_KEY = "push_address";
     static final String SET_TAGS_KEY = "set_tags";
     static final String TAGS_KEY = "tags";
+    static final String TAG_CHANGES_KEY = "tag_changes";
+    static final String TAG_CHANGES_ADD_KEY = "add";
+    static final String TAG_CHANGES_REMOVE_KEY = "remove";
     static final String IDENTITY_HINTS_KEY = "identity_hints";
     static final String USER_ID_KEY = "user_id";
     static final String TIMEZONE_KEY = "timezone";
@@ -67,6 +71,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String pushAddress;
     public final boolean setTags;
     public final Set<String> tags;
+    public final JsonMap tagChanges;
     public final String userId;
     public final String timezone;
     public final String language;
@@ -92,6 +97,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String pushAddress;
         private boolean setTags;
         private Set<String> tags;
+        private JsonMap tagChanges;
         private String userId;
         private String timezone;
         private String language;
@@ -123,6 +129,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.pushAddress = payload.pushAddress;
             this.setTags = payload.setTags;
             this.tags = payload.tags;
+            this.tagChanges = payload.tagChanges;
             this.userId = payload.userId;
             this.timezone = payload.timezone;
             this.language = payload.language;
@@ -249,6 +256,18 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         /**
+         * Set tag changes
+         *
+         * @param tagChanges A map containing a set of add tags and a set of remove tags
+         * @return The builder with channelTagRegistrationEnabled and tag changes set
+         */
+        @NonNull
+        private Builder setTagChanges(@Nullable JsonMap tagChanges) {
+            this.tagChanges = tagChanges;
+            return this;
+        }
+
+        /**
          * Set the userId
          *
          * @param userId A string value
@@ -370,6 +389,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.pushAddress = builder.pushAddress;
         this.setTags = builder.setTags;
         this.tags = builder.setTags ? builder.tags : null;
+        this.tagChanges = builder.tagChanges;
         this.userId = builder.userId;
         this.timezone = builder.timezone;
         this.language = builder.language;
@@ -396,8 +416,16 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         builder.setAccengageDeviceId(null);
 
         if (last.setTags && setTags) {
-            if (last.tags != null && last.tags.equals(tags)) {
-                builder.setTags(false, null);
+            if (last.tags != null) {
+                if (last.tags.equals(tags)) {
+                    builder.setTags(false, null);
+                } else {
+                    try {
+                        builder.setTagChanges(getTagChanges(last.tags));
+                    } catch (JsonException e) {
+                        Logger.debug(e, "ChannelRegistrationPayload - Failed to wrap tag changes to JsonMap");
+                    }
+                }
             }
         }
 
@@ -444,6 +472,33 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     }
 
     @NonNull
+    private JsonMap getTagChanges(@NonNull Set<String> lastTags) throws JsonException {
+        Set<String> add = new HashSet<>();
+        for (String tag : tags) {
+            if (!lastTags.contains(tag)) {
+                add.add(tag);
+            }
+        }
+
+        Set<String> remove = new HashSet<>();
+        for (String tag : lastTags) {
+            if (!tags.contains(tag)) {
+                remove.add(tag);
+            }
+        }
+
+        JsonMap.Builder builder = JsonMap.newBuilder();
+        if (!add.isEmpty()) {
+            builder.put(TAG_CHANGES_ADD_KEY, JsonValue.wrap(add));
+        }
+        if (!remove.isEmpty()) {
+            builder.put(TAG_CHANGES_REMOVE_KEY, JsonValue.wrap(remove));
+        }
+
+        return builder.build();
+    }
+
+    @NonNull
     @Override
     public JsonValue toJsonValue() {
         // Channel Payload
@@ -479,6 +534,10 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         // If setTags is TRUE, then include the tags
         if (setTags && tags != null) {
             channel.put(TAGS_KEY, JsonValue.wrapOpt(tags).getList());
+        }
+
+        if (setTags && tagChanges != null) {
+            channel.put(TAG_CHANGES_KEY, JsonValue.wrapOpt(tagChanges).getMap());
         }
 
         // Identity hints
@@ -524,6 +583,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         if (pushAddress != null ? !pushAddress.equals(that.pushAddress) : that.pushAddress != null)
             return false;
         if (tags != null ? !tags.equals(that.tags) : that.tags != null) return false;
+        if (tagChanges != null ? !tagChanges.equals(that.tagChanges) : that.tagChanges != null) return false;
         if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
         if (timezone != null ? !timezone.equals(that.timezone) : that.timezone != null)
             return false;
@@ -556,6 +616,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (pushAddress != null ? pushAddress.hashCode() : 0);
         result = 31 * result + (setTags ? 1 : 0);
         result = 31 * result + (tags != null ? tags.hashCode() : 0);
+        result = 31 * result + (tagChanges != null ? tagChanges.hashCode() : 0);
         result = 31 * result + (userId != null ? userId.hashCode() : 0);
         result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
@@ -596,6 +657,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             }
         }
 
+        JsonMap tagChanges = channelJson.opt(TAG_CHANGES_KEY).optMap();
+
         Boolean locationSettings = null;
         Integer apiVersion = null;
 
@@ -617,6 +680,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setCountry(channelJson.opt(COUNTRY_KEY).getString())
                             .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())
                             .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
+                            .setTagChanges(tagChanges.isEmpty() ? null : tagChanges)
                             .setUserId(identityHints.opt(USER_ID_KEY).getString())
                             .setAccengageDeviceId(identityHints.opt(ACCENGAGE_DEVICE_ID).getString())
                             .setLocationSettings(locationSettings)
