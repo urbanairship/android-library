@@ -92,53 +92,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
     }
 
     @Test
-    public void testDevelopmentFcmSenderId() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setProductionAppSecret("appSecret")
-                .setProductionAppKey("appKey")
-                .setInProduction(false)
-                .setDevelopmentFcmSenderId("dev fcm sender ID")
-                .setProductionFcmSenderId("prod fcm sender ID")
-                .setFcmSenderId("fcm sender ID")
-                .build();
-
-        assertEquals("dev fcm sender ID", aco.fcmSenderId);
-    }
-
-    @Test
-    public void testProductionFcmSenderId() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setProductionAppSecret("appSecret")
-                .setProductionAppKey("appKey")
-                .setInProduction(true)
-                .setDevelopmentFcmSenderId("dev fcm sender ID")
-                .setProductionFcmSenderId("prod fcm sender ID")
-                .setFcmSenderId("fcm sender ID")
-                .build();
-
-        assertEquals("prod fcm sender ID", aco.fcmSenderId);
-    }
-
-    @Test
-    public void testCommonFcmSenderId() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
-                .setDevelopmentAppKey("appKey")
-                .setDevelopmentAppSecret("appSecret")
-                .setProductionAppSecret("appSecret")
-                .setProductionAppKey("appKey")
-                .setInProduction(true)
-                .setDevelopmentFcmSenderId("dev fcm sender ID")
-                .setFcmSenderId("fcm sender ID")
-                .build();
-
-        assertEquals("fcm sender ID", aco.fcmSenderId);
-    }
-
-    @Test
     public void testDefaultConfig() {
         AirshipConfigOptions defaultConfig = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -155,7 +108,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertNull(defaultConfig.notificationChannel);
         assertNull(defaultConfig.appStoreUri);
 
-        assertNull(defaultConfig.fcmSenderId);
         assertNull(defaultConfig.customPushProvider);
 
         assertTrue(defaultConfig.urlAllowList.isEmpty());
