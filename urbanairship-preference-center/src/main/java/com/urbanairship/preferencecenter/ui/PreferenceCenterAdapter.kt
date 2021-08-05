@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 internal class PreferenceCenterAdapter(
-    private val scope: CoroutineScope
+    private val scopeProvider: () -> CoroutineScope
 ) : ListAdapter<PrefCenterItem, PrefCenterViewHolder<*>>(DIFF_CALLBACK) {
 
     companion object {
@@ -39,6 +39,10 @@ internal class PreferenceCenterAdapter(
             override fun areContentsTheSame(oldItem: PrefCenterItem, newItem: PrefCenterItem): Boolean =
                 oldItem.areContentsTheSame(newItem)
         }
+    }
+
+    init {
+        setHasStableIds(true)
     }
 
     private val subscriptions: MutableSet<String> = mutableSetOf()
@@ -79,18 +83,20 @@ internal class PreferenceCenterAdapter(
     override fun getItemViewType(position: Int): Int = getItem(position).type
 
     fun submit(items: List<PrefCenterItem>, subscriptions: Set<String>) {
-        setSubscriptions(subscriptions)
+        setSubscriptions(subscriptions, notify = false)
         val list = descriptionItem?.let { listOf(it) + items } ?: items
         submitList(list)
     }
 
-    private fun setSubscriptions(subscriptions: Set<String>) {
+    private fun setSubscriptions(subscriptions: Set<String>, notify: Boolean = true) {
         if (this.subscriptions != subscriptions) {
             with(this.subscriptions) {
                 clear()
                 addAll(subscriptions)
             }
-            notifyDataSetChanged()
+            if (notify) {
+                notifyDataSetChanged()
+            }
         }
     }
 
@@ -101,9 +107,17 @@ internal class PreferenceCenterAdapter(
             DescriptionItem(title, description)
         }
 
+        if (item != null && descriptionItem?.areContentsTheSame(item) == true) {
+            // No-op. The current header item matches the one being set.
+            return
+        }
+
         descriptionItem = item
 
-        if (currentList.isEmpty()) { return }
+        if (currentList.isEmpty()) {
+            // Nothing being displayed yet... The header will be shown when the list is submitted.
+            return
+        }
 
         val list = currentList.toMutableList()
         if (list.firstOrNull() is DescriptionItem) {
@@ -124,7 +138,7 @@ internal class PreferenceCenterAdapter(
             else -> null
         } ?: return
 
-        scope.launch {
+        scopeProvider().launch {
             itemEventsFlow.emit(event)
         }
     }
@@ -178,7 +192,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         override fun areContentsTheSame(otherItem: PrefCenterItem): Boolean {
             if (javaClass != otherItem.javaClass) return false
             otherItem as DescriptionItem
-            return description == otherItem.description
+            return title == otherItem.title && description == otherItem.description
         }
 
         class ViewHolder(itemView: View) : PrefCenterViewHolder<DescriptionItem>(itemView) {

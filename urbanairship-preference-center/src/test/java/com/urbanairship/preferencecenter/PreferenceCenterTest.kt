@@ -19,7 +19,6 @@ import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
-import java.util.UUID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -82,7 +81,6 @@ class PreferenceCenterTest {
 
     private val backgroundLooper: Looper = Looper.getMainLooper()
     private val onOpenListener: PreferenceCenter.OnOpenListener = mock()
-    private val what = UUID.randomUUID().toString()
 
     private lateinit var prefCenter: PreferenceCenter
 
