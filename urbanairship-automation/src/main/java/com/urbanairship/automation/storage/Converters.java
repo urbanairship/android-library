@@ -24,44 +24,6 @@ import androidx.room.TypeConverter;
 public final class Converters {
 
     @TypeConverter
-    public JsonValue jsonValueFromString(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        try {
-            return JsonValue.parseString(value);
-        } catch (JsonException e) {
-            Logger.error(e, "Unable to parse json value: " + value);
-            return null;
-        }
-    }
-
-    @TypeConverter
-    public String jsonValueToString(JsonValue value) {
-        return value == null ? null : value.toString();
-    }
-
-    @TypeConverter
-    public JsonMap jsonMapFromString(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        try {
-            return JsonValue.parseString(value).optMap();
-        } catch (JsonException e) {
-            Logger.error(e, "Unable to parse json value: " + value);
-            return null;
-        }
-    }
-
-    @TypeConverter
-    public String jsonMapToString(JsonMap map) {
-        return map == null ? null : map.toJsonValue().toString();
-    }
-
-    @TypeConverter
     public String triggerContextToString(TriggerContext context) {
         return context == null ? null : context.toJsonValue().toString();
     }
@@ -95,25 +57,6 @@ public final class Converters {
             return Audience.fromJson(JsonValue.parseString(value));
         } catch (JsonException e) {
             Logger.error(e, "Unable to parse audience: " + value);
-            return null;
-        }
-    }
-
-    @TypeConverter
-    public String jsonPredicateToString(JsonPredicate predicate) {
-        return predicate == null ? null : predicate.toJsonValue().toString();
-    }
-
-    @TypeConverter
-    public JsonPredicate jsonPredicateFromString(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        try {
-            return JsonPredicate.parse(JsonValue.parseString(value));
-        } catch (JsonException e) {
-            Logger.error(e, "Unable to parse trigger context: " + value);
             return null;
         }
     }

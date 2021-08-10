@@ -65,7 +65,7 @@ public class EventApiClient {
      * @return eventResponse
      */
     @NonNull
-    Response<EventResponse> sendEvents(@NonNull Collection<String> events,
+    Response<EventResponse> sendEvents(@NonNull List<JsonValue> events,
                                        @NonNull @Size(min=1) Map<String, String> headers) throws RequestException {
 
         Uri url = runtimeConfig.getUrlConfig()
@@ -74,14 +74,6 @@ public class EventApiClient {
                                .build();
 
         List<JsonValue> eventJSON = new ArrayList<>();
-
-        for (String eventPayload : events) {
-            try {
-                eventJSON.add(JsonValue.parseString(eventPayload));
-            } catch (JsonException e) {
-                Logger.error(e, "EventApiClient - Invalid eventPayload.");
-            }
-        }
 
         String payload = new JsonList(eventJSON).toString();
         double sentAt = System.currentTimeMillis() / 1000.0;

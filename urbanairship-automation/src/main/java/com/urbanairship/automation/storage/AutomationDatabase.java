@@ -5,6 +5,7 @@ package com.urbanairship.automation.storage;
 import android.content.Context;
 
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.json.JsonTypeConverters;
 
 import java.io.File;
 
@@ -25,7 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 3, exportSchema = false)
-@TypeConverters({ Converters.class })
+@TypeConverters({ Converters.class, JsonTypeConverters.class })
 public abstract class AutomationDatabase extends RoomDatabase {
 
     public abstract AutomationDao getScheduleDao();
