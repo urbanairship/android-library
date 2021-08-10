@@ -27,7 +27,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.Contact;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
@@ -931,9 +931,9 @@ public class UAirship {
     }
 
     /**
-     * Returns the {@link com.urbanairship.channel.Contact} instance.
+     * Returns the {@link Contact} instance.
      *
-     * @return The {@link com.urbanairship.channel.Contact} instance.
+     * @return The {@link Contact} instance.
      */
     @NonNull
     public Contact getContact() {

@@ -2,6 +2,10 @@
 
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -16,10 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 /**
  * A model defining attribute mutations.
  *
@@ -28,18 +28,18 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AttributeMutation implements JsonSerializable {
 
-    private static final String ATTRIBUTE_ACTION_REMOVE = "remove";
-    private static final String ATTRIBUTE_ACTION_SET = "set";
+    public static final String ATTRIBUTE_ACTION_REMOVE = "remove";
+    public static final String ATTRIBUTE_ACTION_SET = "set";
 
     static final String ATTRIBUTE_NAME_KEY = "key";
     static final String ATTRIBUTE_VALUE_KEY = "value";
     static final String ATTRIBUTE_ACTION_KEY = "action";
     static final String ATTRIBUTE_TIMESTAMP_KEY = "timestamp";
 
-    private final String action;
-    private final String name;
-    private final JsonValue value;
-    private final String timestamp;
+    public final String action;
+    public final String name;
+    public final JsonValue value;
+    public final String timestamp;
 
     /**
      * Default attribute mutation constructor.
@@ -100,7 +100,7 @@ public class AttributeMutation implements JsonSerializable {
     }
 
     @NonNull
-    static List<AttributeMutation> fromJsonList(@NonNull JsonList jsonList) {
+    public static List<AttributeMutation> fromJsonList(@NonNull JsonList jsonList) {
         List<AttributeMutation> mutations = new ArrayList<>();
 
         for (JsonValue value : jsonList) {
