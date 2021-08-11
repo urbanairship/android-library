@@ -27,8 +27,8 @@ import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.automation.tags.TagGroupResult;
 import com.urbanairship.automation.tags.TagGroupUtils;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
@@ -162,7 +162,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param analytics Analytics instance.
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
-     * @param namedUser The named user.
+     * @param contact The contact.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -173,12 +173,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull Analytics analytics,
                            @NonNull RemoteData remoteData,
                            @NonNull AirshipChannel airshipChannel,
-                           @NonNull NamedUser namedUser) {
+                           @NonNull Contact contact) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
         this.airshipChannel = airshipChannel;
-        this.audienceManager = new AudienceManager(runtimeConfig, airshipChannel, namedUser, preferenceDataStore);
+        this.audienceManager = new AudienceManager(runtimeConfig, airshipChannel, contact, preferenceDataStore);
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore, remoteData);
         this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, new InAppMessageManager.Delegate() {
             @Override

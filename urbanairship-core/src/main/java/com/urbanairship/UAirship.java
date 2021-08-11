@@ -27,8 +27,8 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.contacts.Contact;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
@@ -48,7 +48,6 @@ import com.urbanairship.remotedata.RemoteData;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -728,9 +727,6 @@ public class UAirship {
         this.pushManager = new PushManager(application, preferenceDataStore, runtimeConfig, privacyManager, pushProviders, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
-        components.add(this.namedUser);
-
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
@@ -743,6 +739,10 @@ public class UAirship {
 
         this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
         components.add(this.contact);
+
+        //noinspection deprecation
+        this.namedUser = new NamedUser(application, preferenceDataStore, contact);
+        components.add(this.namedUser);
 
         // Debug
         Module debugModule = Modules.debug(application, preferenceDataStore);
@@ -764,7 +764,7 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                privacyManager, channel, pushManager, analytics, remoteData, namedUser);
+                privacyManager, channel, pushManager, analytics, remoteData, contact);
         processModule(automationModule);
 
         // Ad Id
@@ -817,8 +817,10 @@ public class UAirship {
      * Returns the {@link com.urbanairship.channel.NamedUser} instance.
      *
      * @return The {@link com.urbanairship.channel.NamedUser} instance.
+     * @deprecated Use {@link Contact} instead.
      */
     @NonNull
+    @Deprecated
     public NamedUser getNamedUser() {
         return namedUser;
     }

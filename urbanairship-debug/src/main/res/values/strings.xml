@@ -88,7 +88,7 @@
     <string name="ua_tags_settings_title">Tags</string>
     <string name="ua_tag_groups_settings_title">Tag Groups</string>
     <string name="ua_channel_attributes_settings_title">Channel Attributes</string>
-    <string name="ua_named_user_attributes_settings_title">Named User Attributes</string>
+    <string name="ua_contact_attributes_settings_title">Contact Attributes</string>
 
     <string name="ua_analytics_settings_category">Analytics Settings</string>
     <string name="ua_analytics_enabled_settings_title">Analytics Enabled</string>
@@ -136,6 +136,7 @@
     <string name="ua_remove_Tag">Remove</string>
     <string name="ua_channel">Channel</string>
     <string name="ua_named_user">Named User</string>
+    <string name="ua_contact">Contact</string>
 
     <string name="ua_identifier">Identifier</string>
 

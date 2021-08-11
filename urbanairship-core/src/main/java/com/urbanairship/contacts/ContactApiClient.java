@@ -170,7 +170,7 @@ class ContactApiClient {
 
         JsonMap.Builder builder = JsonMap.newBuilder();
 
-        if (tagGroupMutations != null) {
+        if (tagGroupMutations != null && !tagGroupMutations.isEmpty()) {
             JsonMap.Builder tagBuilder = JsonMap.newBuilder();
 
             List<TagGroupsMutation> tags = TagGroupsMutation.collapseMutations(tagGroupMutations);
@@ -183,14 +183,8 @@ class ContactApiClient {
             builder.put(TAGS, tagBuilder.build());
         }
 
-        if (attributeMutations != null) {
-            List<AttributeMutation> attributeList = AttributeMutation.collapseMutations(attributeMutations);
-
-            try {
-                builder.put(ATTRIBUTES, JsonValue.wrap(attributeList));
-            } catch (JsonException e) {
-                Logger.debug(e, "Unable to parse attribute list.");
-            }
+        if (attributeMutations != null && !attributeMutations.isEmpty()) {
+            builder.put(ATTRIBUTES, JsonValue.wrapOpt(AttributeMutation.collapseMutations(attributeMutations)));
         }
 
         return requestFactory.createRequest()

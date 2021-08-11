@@ -6,7 +6,7 @@ import com.urbanairship.TestClock;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.NamedUser;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.json.JsonValue;
 
 import org.json.JSONArray;
@@ -32,16 +32,19 @@ public class SetAttributesActionTest extends BaseTestCase {
 
     private SetAttributesAction action;
     private AirshipChannel channel;
-    private NamedUser namedUser;
+    private Contact contact;
     private TestClock clock;
 
     @Before
     public void setup() {
         channel = mock(AirshipChannel.class);
-        namedUser = mock(NamedUser.class);
+        contact = mock(Contact.class);
         action = new SetAttributesAction();
         clock = new TestClock();
         clock.currentTimeMillis = 1000;
+
+        TestApplication.getApplication().setChannel(channel);
+        TestApplication.getApplication().setContact(contact);
     }
 
     @Test
@@ -249,8 +252,6 @@ public class SetAttributesActionTest extends BaseTestCase {
 
     @Test
     public void testPerformWithChannelAttributes() throws ActionValueException, JSONException {
-        TestApplication.getApplication().setChannel(channel);
-
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
             @Override
@@ -292,7 +293,7 @@ public class SetAttributesActionTest extends BaseTestCase {
 
     @Test
     public void testPerformWithNamedUserAttributes() throws ActionValueException, JSONException {
-        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setContact(contact);
 
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
@@ -302,7 +303,7 @@ public class SetAttributesActionTest extends BaseTestCase {
             }
         };
 
-        when(namedUser.editAttributes()).thenReturn(attributeEditor);
+        when(contact.editAttributes()).thenReturn(attributeEditor);
 
         // Named User attributes
         JSONObject namedUserSet = new JSONObject();
@@ -336,7 +337,7 @@ public class SetAttributesActionTest extends BaseTestCase {
     @Test
     public void testPerform() throws ActionValueException, JSONException {
         TestApplication.getApplication().setChannel(channel);
-        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setContact(contact);
 
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
@@ -347,7 +348,7 @@ public class SetAttributesActionTest extends BaseTestCase {
         };
 
         when(channel.editAttributes()).thenReturn(attributeEditor);
-        when(namedUser.editAttributes()).thenReturn(attributeEditor);
+        when(contact.editAttributes()).thenReturn(attributeEditor);
 
         // Channel attributes
         JSONObject channelSet = new JSONObject();

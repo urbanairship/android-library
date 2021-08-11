@@ -9,9 +9,9 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagEditor;
 import com.urbanairship.channel.TagGroupsEditor;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
@@ -75,7 +75,7 @@ public class RemoveTagsActionTest extends BaseTestCase {
     @Test
     public void testPerformTagGroups() {
         final Map<String, Set<String>> removed = new HashMap<>();
-        NamedUser namedUser = mock(NamedUser.class);
+        Contact contact = mock(Contact.class);
 
         TagGroupsEditor tagGroupsEditor = new TagGroupsEditor() {
             @NonNull
@@ -87,9 +87,9 @@ public class RemoveTagsActionTest extends BaseTestCase {
         };
 
         when(channel.editTagGroups()).thenReturn(tagGroupsEditor);
-        when(namedUser.editTagGroups()).thenReturn(tagGroupsEditor);
+        when(contact.editTagGroups()).thenReturn(tagGroupsEditor);
 
-        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setContact(contact);
 
         JsonValue tags = JsonValue.wrapOpt(Arrays.asList("tag1", "tag2", "tag3"));
         Map<String, JsonValue> tagGroup = new HashMap<>();

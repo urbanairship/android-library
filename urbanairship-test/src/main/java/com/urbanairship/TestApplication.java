@@ -11,7 +11,7 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.Scheduler;
@@ -87,7 +87,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager, pushProviders);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.remoteData);
 
@@ -112,8 +111,8 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().applicationMetrics = metrics;
     }
 
-    public void setNamedUser(NamedUser namedUser) {
-        UAirship.shared().namedUser = namedUser;
+    public void setContact(Contact contact) {
+        UAirship.shared().contact = contact;
     }
 
     public void setAnalytics(Analytics analytics) {

@@ -5,6 +5,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -71,7 +72,7 @@ class TagGroupRegistrar {
                 Logger.error("Dropping tag group update %s due to error: %s message: %s", mutation, response.getStatus(), response.getResponseBody());
             } else {
                 for (TagGroupListener listener : tagGroupListeners) {
-                    listener.onTagGroupsMutationUploaded(identifier, mutation);
+                    listener.onTagGroupsMutationUploaded(Collections.singletonList(mutation));
                 }
             }
 

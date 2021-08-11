@@ -6,13 +6,16 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupsMutation;
+import com.urbanairship.contacts.Contact;
+import com.urbanairship.contacts.ContactChangeListener;
+import com.urbanairship.contacts.ContactConflictListener;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -52,7 +55,7 @@ public class AudienceManagerTest {
     private TagGroupLookupApiClient mockClient;
     private AirshipChannel mockChannel;
     private AudienceHistorian mockHistorian;
-    private NamedUser mockNamedUser;
+    private Contact mockContact;
     private TagGroupLookupResponseCache spyCache;
 
     private TestCallback callback;
@@ -85,13 +88,13 @@ public class AudienceManagerTest {
 
         mockClient = mock(TagGroupLookupApiClient.class);
         mockChannel = mock(AirshipChannel.class);
-        mockNamedUser = mock(NamedUser.class);
+        mockContact = mock(Contact.class);
         spyCache = spy(new TagGroupLookupResponseCache(TestApplication.getApplication().preferenceDataStore, clock));
 
         pendingChannelMutations = new ArrayList<>();
         when(mockChannel.getPendingTagUpdates()).thenReturn(pendingChannelMutations);
         pendingNamedUserMutations = new ArrayList<>();
-        when(mockNamedUser.getPendingTagUpdates()).thenReturn(pendingNamedUserMutations);
+        when(mockContact.getPendingTagUpdates()).thenReturn(pendingNamedUserMutations);
 
         channelId = "some-channel-id";
         when(mockChannel.getId()).thenAnswer(new Answer<String>() {
@@ -102,7 +105,7 @@ public class AudienceManagerTest {
         });
 
         mockHistorian = mock(AudienceHistorian.class);
-        manager = new AudienceManager(mockClient, mockChannel, mockNamedUser, spyCache,
+        manager = new AudienceManager(mockClient, mockChannel, mockContact, spyCache,
                 mockHistorian, TestApplication.getApplication().preferenceDataStore, clock);
 
         callback = new TestCallback();
@@ -110,7 +113,6 @@ public class AudienceManagerTest {
 
         // Request the current tags
         callback.tags = callbackResponseTags;
-
     }
 
     /**
@@ -445,8 +447,6 @@ public class AudienceManagerTest {
     public void testGetTagOverrides() {
         clock.currentTimeMillis = System.currentTimeMillis();
 
-        when(mockNamedUser.getId()).thenReturn("named-user-id");
-
         List<TagGroupsMutation> history = new ArrayList<>();
         history.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
         history.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
@@ -472,8 +472,6 @@ public class AudienceManagerTest {
     public void testGetAttributeOverrides() {
         clock.currentTimeMillis = System.currentTimeMillis();
 
-        when(mockNamedUser.getId()).thenReturn("named-user-id");
-
         List<AttributeMutation> history = new ArrayList<>();
         history.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
         history.add(AttributeMutation.newSetAttributeMutation("bar", JsonValue.wrapOpt(100), 100));
@@ -485,7 +483,7 @@ public class AudienceManagerTest {
         when(mockChannel.getPendingAttributeUpdates()).thenReturn(pendingChannelAttributes);
 
         List<AttributeMutation> pendingNamedUserAttributes = Collections.singletonList(AttributeMutation.newSetAttributeMutation("bar", JsonValue.wrapOpt("updated bar"), 100));
-        when(mockNamedUser.getPendingAttributeUpdates()).thenReturn(pendingNamedUserAttributes);
+        when(mockContact.getPendingAttributeUpdates()).thenReturn(pendingNamedUserAttributes);
 
         List<AttributeMutation> expected = new ArrayList<>();
         expected.addAll(history);
@@ -496,14 +494,11 @@ public class AudienceManagerTest {
     }
 
     @Test
-    public void testNamedUserIdChangeClearsCache() {
-        manager.onNamedUserIdChanged("new ID");
+    public void testContactChangeClearsCache() {
+        ArgumentCaptor<ContactChangeListener> argumentCaptor = ArgumentCaptor.forClass(ContactChangeListener.class);
+        verify(mockContact).addContactChangeListener(argumentCaptor.capture());
+        argumentCaptor.getValue().onContactChanged();
         verify(spyCache).clear();
     }
 
-    @Test
-    public void testNamedUserIdRemovalClearsCache() {
-        manager.onNamedUserIdChanged(null);
-        verify(spyCache).clear();
-    }
 }

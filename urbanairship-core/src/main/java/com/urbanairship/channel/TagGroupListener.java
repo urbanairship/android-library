@@ -1,5 +1,7 @@
 package com.urbanairship.channel;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
@@ -13,8 +15,7 @@ public interface TagGroupListener {
     /**
      * Called when a tag group is uploaded.
      *
-     * @param identifier The identifier. Either the channel or named user Id.
      * @param tagGroupsMutation The tag groups mutation.
      */
-    void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation);
+    void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> tagGroupsMutation);
 }

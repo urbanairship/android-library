@@ -23,7 +23,10 @@ import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.AttributeEditor;
+import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
+import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -36,17 +39,33 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
+import org.w3c.dom.Attr;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
  * within Airship. Contacts may be named and have channels associated with it.
  */
 public class Contact extends AirshipComponent {
+
+    @NonNull
+    @VisibleForTesting
+    static final String LEGACY_NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
+
+    @NonNull
+    @VisibleForTesting
+    static final String LEGACY_ATTRIBUTE_MUTATION_STORE_KEY = "com.urbanairship.nameduser.ATTRIBUTE_MUTATION_STORE_KEY";
+
+    @NonNull
+    @VisibleForTesting
+    static final String LEGACY_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
 
     @VisibleForTesting
     @NonNull
@@ -71,6 +90,11 @@ public class Contact extends AirshipComponent {
     private boolean isContactIdRefreshed = false;
 
     private ContactConflictListener contactConflictListener;
+
+    private List<AttributeListener> attributeListeners = new CopyOnWriteArrayList<>();
+    private List<TagGroupListener> tagGroupListeners = new CopyOnWriteArrayList<>();
+    private List<ContactChangeListener> contactChangeListeners = new CopyOnWriteArrayList<>();
+
 
     /**
      * Creates a Contact.
@@ -107,6 +131,8 @@ public class Contact extends AirshipComponent {
     protected void init() {
         super.init();
 
+        migrateNamedUser();
+
         activityMonitor.addApplicationListener(new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
@@ -130,20 +156,69 @@ public class Contact extends AirshipComponent {
             }
         });
 
-        privacyManager.addListener(new PrivacyManager.Listener() {
+        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
+            @NonNull
             @Override
-            public void onEnabledFeaturesChanged() {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-                    ContactIdentity lastContactIdentity = getLastContactIdentity();
-                    if (lastContactIdentity != null && (lastContactIdentity.isAnonymous() || getAnonContactData() != null)) {
-                        reset();
-                        dispatchContactUpdateJob();
-                    }
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                ContactIdentity lastContactIdentity =  getLastContactIdentity();
+                if (lastContactIdentity != null) {
+                    builder.setContactId(lastContactIdentity.getContactId());
                 }
+                return builder;
             }
         });
 
+        privacyManager.addListener(new PrivacyManager.Listener() {
+            @Override
+            public void onEnabledFeaturesChanged() {
+                checkPrivacyManager();
+            }
+        });
+
+        checkPrivacyManager();
         dispatchContactUpdateJob();
+    }
+
+    private void checkPrivacyManager() {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            ContactIdentity lastContactIdentity = getLastContactIdentity();
+            if (lastContactIdentity == null) {
+                return;
+            }
+
+            if (!lastContactIdentity.isAnonymous() || getAnonContactData() != null) {
+                addOperation(ContactOperation.reset());
+                dispatchContactUpdateJob();
+            }
+        }
+    }
+
+    private void migrateNamedUser() {
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            String namedUserId = preferenceDataStore.getString(LEGACY_NAMED_USER_ID_KEY, null);
+            if (namedUserId != null) {
+                identify(namedUserId);
+
+                if (privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    JsonValue attributeJson = preferenceDataStore.getJsonValue(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY);
+                    List<AttributeMutation> attributeMutations = AttributeMutation.fromJsonList(attributeJson.optList());
+                    attributeMutations = AttributeMutation.collapseMutations(attributeMutations);
+
+                    JsonValue tagsJson = preferenceDataStore.getJsonValue(LEGACY_TAG_GROUP_MUTATIONS_KEY);
+                    List<TagGroupsMutation> tagGroupMutations = TagGroupsMutation.fromJsonList(tagsJson.optList());
+                    tagGroupMutations = TagGroupsMutation.collapseMutations(tagGroupMutations);
+
+                    if (!attributeMutations.isEmpty() || !tagGroupMutations.isEmpty()) {
+                        ContactOperation update = ContactOperation.update(tagGroupMutations, attributeMutations);
+                        addOperation(update);
+                    }
+                }
+            }
+        }
+
+        preferenceDataStore.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY);
+        preferenceDataStore.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY);
+        preferenceDataStore.remove(LEGACY_NAMED_USER_ID_KEY);
     }
 
     /**
@@ -173,7 +248,7 @@ public class Contact extends AirshipComponent {
      *
      * @param externalId The channel's identifier.
      */
-    public void identify(@NonNull @Size(min=1) String externalId) {
+    public void identify(@NonNull @Size(min=1, max = 128) String externalId) {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
             Logger.debug("Contact - Contacts is disabled, ignoring contact identifying.");
             return;
@@ -371,7 +446,7 @@ public class Contact extends AirshipComponent {
 
         try {
             Response response = performOperation(nextOperation, channelId);
-            Logger.debug("Operation %s finished with status.", nextOperation, response.getStatus());
+            Logger.debug("Operation %s finished with response %s", nextOperation, response);
             if (response.isSuccessful()) {
                 removeFirstOperation();
                 dispatchContactUpdateJob();
@@ -515,6 +590,18 @@ public class Contact extends AirshipComponent {
                 Response<Void> updateResponse = contactApiClient.update(lastContactIdentity.getContactId(), updatePayload.getTagGroupMutations(), updatePayload.getAttributeMutations());
                 if (updateResponse.isSuccessful() && lastContactIdentity.isAnonymous()) {
                     updateAnonData(updatePayload);
+
+                    if (!updatePayload.getAttributeMutations().isEmpty()) {
+                        for (AttributeListener listener : this.attributeListeners) {
+                            listener.onAttributeMutationsUploaded(updatePayload.getAttributeMutations());
+                        }
+                    }
+
+                    if (!updatePayload.getTagGroupMutations().isEmpty()) {
+                        for (TagGroupListener listener : this.tagGroupListeners) {
+                            listener.onTagGroupsMutationUploaded(updatePayload.getTagGroupMutations());
+                        }
+                    }
                 }
                 return updateResponse;
 
@@ -543,8 +630,7 @@ public class Contact extends AirshipComponent {
                 return resolveResponse;
 
             default:
-                Logger.debug("Unexpected operation type: %s", operation.getType());
-                return null;
+                throw new IllegalStateException("Unexpected operation type: " + operation.getType());
         }
     }
 
@@ -561,6 +647,11 @@ public class Contact extends AirshipComponent {
             setLastContactIdentity(contactIdentity);
             setAnonContactData(null);
             airshipChannel.updateRegistration();
+
+            for (ContactChangeListener listener : this.contactChangeListeners) {
+                listener.onContactChanged();
+            }
+
         } else {
             ContactIdentity updated = new ContactIdentity(
                     contactIdentity.getContactId(),
@@ -656,4 +747,107 @@ public class Contact extends AirshipComponent {
     private void setLastContactIdentity(ContactIdentity contactIdentity) {
         preferenceDataStore.put(LAST_CONTACT_IDENTITY_KEY, JsonValue.wrap(contactIdentity));
     }
+
+    /**
+     * Adds an attribute listener.
+     * @param attributeListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addAttributeListener(@NonNull AttributeListener attributeListener) {
+        this.attributeListeners.add(attributeListener);
+    }
+
+    /**
+     * Removes an attribute listener.
+     * @param attributeListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeAttributeListener(@NonNull AttributeListener attributeListener) {
+        this.attributeListeners.remove(attributeListener);
+    }
+
+    /**
+     * Adds a tag group listener.
+     * @param tagGroupListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addTagGroupListener(@NonNull TagGroupListener tagGroupListener) {
+        this.tagGroupListeners.add(tagGroupListener);
+    }
+
+    /**
+     * Adds a tag group listener.
+     * @param tagGroupListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeTagGroupListener(@NonNull TagGroupListener tagGroupListener) {
+        this.tagGroupListeners.remove(tagGroupListener);
+    }
+
+    /**
+     * Removes a contact change listener.
+     * @param changeListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addContactChangeListener(@NonNull ContactChangeListener changeListener) {
+        this.contactChangeListeners.add(changeListener);
+    }
+
+    /**
+     * Removes a contact change listener.
+     * @param changeListener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeContactChangeListener(@NonNull ContactChangeListener changeListener) {
+        this.contactChangeListeners.remove(changeListener);
+    }
+
+    /**
+     * Gets any pending tag updates.
+     *
+     * @return The list of pending tag updates.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<TagGroupsMutation> getPendingTagUpdates() {
+        synchronized (operationLock) {
+            List<TagGroupsMutation> mutations = new ArrayList<>();
+            for (ContactOperation operation : getOperations()) {
+                if (operation.getType().equals(ContactOperation.OPERATION_UPDATE)) {
+                    ContactOperation.UpdatePayload payload = operation.coercePayload();
+                    mutations.addAll(payload.getTagGroupMutations());
+                }
+            }
+            return TagGroupsMutation.collapseMutations(mutations);
+        }
+    }
+
+    /**
+     * Gets any pending attribute updates.
+     *
+     * @return The list of pending attribute updates.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<AttributeMutation> getPendingAttributeUpdates() {
+        synchronized (operationLock) {
+            List<AttributeMutation> mutations = new ArrayList<>();
+            for (ContactOperation operation : getOperations()) {
+                if (operation.getType().equals(ContactOperation.OPERATION_UPDATE)) {
+                    ContactOperation.UpdatePayload payload = operation.coercePayload();
+                    mutations.addAll(payload.getAttributeMutations());
+                }
+            }
+            return AttributeMutation.collapseMutations(mutations);
+        }
+    }
+
 }

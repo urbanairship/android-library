@@ -110,6 +110,14 @@ class ContactOperation implements JsonSerializable {
                 .build().toJsonValue();
     }
 
+    @Override
+    public String toString() {
+        return "ContactOperation{" +
+                "type='" + type + '\'' +
+                ", payload=" + payload +
+                '}';
+    }
+
     interface Payload extends JsonSerializable {
 
     }
@@ -144,6 +152,14 @@ class ContactOperation implements JsonSerializable {
                 throw new JsonException("Invalid payload: " + jsonValue);
             }
         }
+
+        @Override
+        public String toString() {
+            return "IdentifyPayload{" +
+                    "identifier='" + identifier + '\'' +
+                    '}';
+        }
+
     }
 
 
@@ -191,6 +207,15 @@ class ContactOperation implements JsonSerializable {
                           .put(ATTRIBUTE_MUTATIONS_KEY, JsonValue.wrapOpt(attributeMutations))
                           .build().toJsonValue();
         }
+
+        @Override
+        public String toString() {
+            return "UpdatePayload{" +
+                    "tagGroupMutations=" + tagGroupMutations +
+                    ", attributeMutations=" + attributeMutations +
+                    '}';
+        }
+
     }
 
 }

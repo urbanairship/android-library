@@ -14,6 +14,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequestExtender;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.javascript.JavaScriptExecutor;
 import com.urbanairship.javascript.NativeBridge;
@@ -38,21 +39,17 @@ import static org.mockito.Mockito.when;
 
 public class AirshipWebViewClientTest extends BaseTestCase {
 
-    private AirshipWebViewClient client;
-    private View rootView;
+    private View rootView = mock(View.class);
+    private String webViewUrl = "http://test-client";
+    private WebView webView = mock(WebView.class);
+    private NativeBridge nativeBridge = mock(NativeBridge.class);
+    private Contact mockContact = mock(Contact.class);
 
-    private String webViewUrl;
-    private WebView webView;
-    private NativeBridge nativeBridge;
+    private AirshipWebViewClient client;
 
     @Before
     public void setup() {
-        nativeBridge = mock(NativeBridge.class);
-        rootView = mock(View.class);
-        webView = Mockito.mock(WebView.class);
         when(webView.getRootView()).thenReturn(rootView);
-
-        webViewUrl = "http://test-client";
         when(webView.getUrl()).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) {
@@ -61,8 +58,8 @@ public class AirshipWebViewClientTest extends BaseTestCase {
         });
         when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
+        TestApplication.getApplication().setContact(mockContact);
         UAirship.shared().getUrlAllowList().addEntry("http://test-client");
-
         client = new AirshipWebViewClient(nativeBridge);
     }
 

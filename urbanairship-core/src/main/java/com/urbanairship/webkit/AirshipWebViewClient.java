@@ -96,7 +96,7 @@ public class AirshipWebViewClient extends WebViewClient {
         return builder.addGetter("getDeviceModel", Build.MODEL)
                       .addGetter("getChannelId", UAirship.shared().getChannel().getId())
                       .addGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().appKey)
-                      .addGetter("getNamedUser", UAirship.shared().getNamedUser().getId());
+                      .addGetter("getNamedUser", UAirship.shared().getContact().getNamedUserId());
     }
 
     /**

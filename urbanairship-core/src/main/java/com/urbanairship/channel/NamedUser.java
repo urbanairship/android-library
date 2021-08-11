@@ -18,6 +18,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
@@ -34,145 +35,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * The named user is an alternate method of identifying the device. Once a named
  * user is associated to the device, it can be used to send push notifications
  * to the device.
+ * @deprecated Use {@link com.urbanairship.contacts.Contact} instead.
  */
 public class NamedUser extends AirshipComponent {
-
-    /**
-     * The change token tracks the start of setting the named user ID.
-     */
-    private static final String CHANGE_TOKEN_KEY = "com.urbanairship.nameduser.CHANGE_TOKEN_KEY";
-
-    /**
-     * The named user ID.
-     */
-    private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
-
-    /**
-     * Attribute storage key.
-     */
-    private static final String ATTRIBUTE_MUTATION_STORE_KEY = "com.urbanairship.nameduser.ATTRIBUTE_MUTATION_STORE_KEY";
-
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    private static final String TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
-
-    /**
-     * Action to update named user association or disassociation.
-     */
-    static final String ACTION_UPDATE_NAMED_USER = "ACTION_UPDATE_NAMED_USER";
-
-    /**
-     * Key for storing the {@link NamedUser#getChangeToken()} in the {@link PreferenceDataStore} from the
-     * last time the named user was updated.
-     */
-    private static final String LAST_UPDATED_TOKEN_KEY = "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY";
-
-    /**
-     * The maximum length of the named user ID string.
-     */
-    private static final int MAX_NAMED_USER_ID_LENGTH = 128;
-
-    private final PreferenceDataStore preferenceDataStore;
-    private final Object idLock = new Object();
-    private final JobDispatcher jobDispatcher;
-    private final Clock clock;
-    private final PrivacyManager privacyManager;
-
-    private final AirshipChannel airshipChannel;
-    private final NamedUserApiClient namedUserApiClient;
-
-    private final TagGroupRegistrar tagGroupRegistrar;
-    private final AttributeRegistrar attributeRegistrar;
-
-    private final List<NamedUserListener> namedUserListeners = new CopyOnWriteArrayList<>();
-
-    /**
-     * Creates a NamedUser.
-     *
-     * @param context The application context.
-     * @param preferenceDataStore The preferences data store.
-     * @param runtimeConfig The airship runtime config.
-     * @param airshipChannel The airship channel.
-     * @param privacyManager The privacy manager.
-     */
-    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                     @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull PrivacyManager privacyManager,
-                     @NonNull AirshipChannel airshipChannel) {
-        this(context, preferenceDataStore, privacyManager, airshipChannel, JobDispatcher.shared(context),
-                Clock.DEFAULT_CLOCK, new NamedUserApiClient(runtimeConfig),
-                new AttributeRegistrar(AttributeApiClient.namedUserClient(runtimeConfig), new PendingAttributeMutationStore(preferenceDataStore, ATTRIBUTE_MUTATION_STORE_KEY)),
-                new TagGroupRegistrar(TagGroupApiClient.namedUserClient(runtimeConfig), new PendingTagGroupMutationStore(preferenceDataStore, TAG_GROUP_MUTATIONS_KEY)));
-    }
+    private final Contact contact;
 
     /**
      * @hide
      */
-    @VisibleForTesting
-    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-              @NonNull PrivacyManager privacyManager, @NonNull AirshipChannel airshipChannel,
-              @NonNull JobDispatcher dispatcher, @NonNull Clock clock,
-              @NonNull NamedUserApiClient namedUserApiClient, @NonNull AttributeRegistrar attributeRegistrar,
-              @NonNull TagGroupRegistrar tagGroupRegistrar) {
+    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+              @NonNull Contact contact) {
         super(context, preferenceDataStore);
-        this.preferenceDataStore = preferenceDataStore;
-        this.privacyManager = privacyManager;
-        this.airshipChannel = airshipChannel;
-        this.jobDispatcher = dispatcher;
-        this.clock = clock;
-        this.namedUserApiClient = namedUserApiClient;
-        this.attributeRegistrar = attributeRegistrar;
-        this.tagGroupRegistrar = tagGroupRegistrar;
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-
-        tagGroupRegistrar.setId(getId(), false);
-        attributeRegistrar.setId(getId(), false);
-
-        airshipChannel.addChannelListener(new AirshipChannelListener() {
-            @Override
-            public void onChannelCreated(@NonNull String channelId) {
-                if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-                    forceUpdate();
-                }
-            }
-
-            @Override
-            public void onChannelUpdated(@NonNull String channelId) {
-
-            }
-        });
-
-        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                return builder.setNamedUserId(getId());
-            }
-        });
-
-        if (airshipChannel.getId() != null && (!isIdUpToDate() || getId() != null)) {
-            if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-                dispatchNamedUserUpdateJob();
-            }
-        }
-
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-                    setId(null);
-                }
-
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    tagGroupRegistrar.clearPendingMutations();
-                    attributeRegistrar.clearPendingMutations();
-                }
-            }
-        });
+        this.contact = contact;
     }
 
     /**
@@ -186,61 +60,24 @@ public class NamedUser extends AirshipComponent {
     }
 
     /**
-     * @hide
-     */
-    @Override
-    @WorkerThread
-    @JobInfo.JobResult
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (ACTION_UPDATE_NAMED_USER.equals(jobInfo.getAction())) {
-            return onUpdateNamedUser();
-        }
-
-        return JobInfo.JOB_FINISHED;
-    }
-
-    /**
-     * Gets any pending tag updates.
-     *
-     * @return The list of pending tag updates.
-     * @hide
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public List<TagGroupsMutation> getPendingTagUpdates() {
-        return tagGroupRegistrar.getPendingMutations();
-    }
-
-    /**
-     * Gets any pending attribute updates.
-     *
-     * @return The list of pending attribute updates.
-     * @hide
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public List<AttributeMutation> getPendingAttributeUpdates() {
-        return attributeRegistrar.getPendingMutations();
-    }
-
-    /**
      * Returns the named user ID.
      *
      * @return The named user ID as a string or null if it does not exist.
+     * @deprecated Use {@link Contact#getNamedUserId()} instead.
      */
+    @Deprecated
     @Nullable
     public String getId() {
-        return preferenceDataStore.getString(NAMED_USER_ID_KEY, null);
+        return contact.getNamedUserId();
     }
 
     /**
      * Forces a named user update.
+     * @deprecated No longer necessary
      */
+    @Deprecated
     public void forceUpdate() {
-        Logger.debug("force named user update.");
-        updateChangeToken();
-        dispatchNamedUserUpdateJob();
+        // no-op
     }
 
     /**
@@ -250,47 +87,17 @@ public class NamedUser extends AirshipComponent {
      * To disassociate the named user ID, its value must be empty or null.
      *
      * @param namedUserId The named user ID string.
+     * @deprecated Use {@link Contact#identify(String)} or {@link Contact#reset()} instead.
      */
-    public void setId(@Nullable @Size(max = MAX_NAMED_USER_ID_LENGTH) String namedUserId) {
-        if (namedUserId != null && !privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-            Logger.debug("NamedUser - Contacts is disabled, ignoring named user association.");
-            return;
+    @Deprecated
+    public void setId(@Nullable @Size(max = 128) String namedUserId) {
+        if (namedUserId != null) {
+            namedUserId = namedUserId.trim();
         }
-
-        String id = null;
-
-        // Treat empty namedUserId as a command to dissociate
-        if (!UAStringUtil.isEmpty(namedUserId)) {
-            id = namedUserId.trim();
-
-            // Treat namedUserId trimmed to empty as invalid
-            if (UAStringUtil.isEmpty(id) || id.length() > MAX_NAMED_USER_ID_LENGTH) {
-                Logger.error("Failed to set named user ID. The named user ID must be composed" +
-                        "of non-whitespace characters and be less than 129 characters in length.");
-                return;
-            }
-        }
-
-        synchronized (idLock) {
-            if (!UAStringUtil.equals(getId(), id)) {
-                // New/Cleared Named User, clear pending updates and update the token and ID
-                preferenceDataStore.put(NAMED_USER_ID_KEY, id);
-                updateChangeToken();
-                attributeRegistrar.setId(getId(), true);
-                tagGroupRegistrar.setId(getId(), true);
-                dispatchNamedUserUpdateJob();
-
-                // ID changed, update CRA
-                if (id != null) {
-                    airshipChannel.updateRegistration();
-                }
-
-                for (NamedUserListener listener : namedUserListeners) {
-                    listener.onNamedUserIdChanged(id);
-                }
-            } else {
-                Logger.debug("Skipping update. Named user ID trimmed already matches existing named user: %s", getId());
-            }
+        if (UAStringUtil.isEmpty(namedUserId)) {
+            contact.reset();
+        } else {
+            contact.identify(namedUserId);
         }
     }
 
@@ -298,235 +105,22 @@ public class NamedUser extends AirshipComponent {
      * Edit the named user tags.
      *
      * @return The TagGroupsEditor.
+     * @deprecated Use {@link Contact#editTagGroups()} instead.
      */
     @NonNull
+    @Deprecated
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor() {
-            @Override
-            protected void onApply(@NonNull List<TagGroupsMutation> collapsedMutations) {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.warn("NamedUser - Ignoring tag edits while contacts and/or tags and attributes are disabled.");
-                    return;
-                }
-
-                if (!collapsedMutations.isEmpty()) {
-                    tagGroupRegistrar.addPendingMutations(collapsedMutations);
-                    dispatchNamedUserUpdateJob();
-                }
-            }
-        };
+        return contact.editTagGroups();
     }
 
     /**
      * Edit the attributes associated with the named user.
      *
      * @return An {@link AttributeEditor}.
+     * @deprecated Use {@link Contact#editAttributes()} instead.
      */
     @NonNull
     public AttributeEditor editAttributes() {
-        return new AttributeEditor(clock) {
-            @Override
-            protected void onApply(@NonNull List<AttributeMutation> mutations) {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.warn("NamedUser - Ignoring attributes edits while contacts and/or tags and attributes are disabled.");
-                    return;
-                }
-
-                if (!mutations.isEmpty()) {
-                    attributeRegistrar.addPendingMutations(mutations);
-                    dispatchNamedUserUpdateJob();
-                }
-            }
-        };
+        return contact.editAttributes();
     }
-
-    /**
-     * Adds a tag group listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addTagGroupListener(@NonNull TagGroupListener listener) {
-        this.tagGroupRegistrar.addTagGroupListener(listener);
-    }
-
-    /**
-     * Adds an attribute listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addAttributeListener(@NonNull AttributeListener listener) {
-        this.attributeRegistrar.addAttributeListener(listener);
-    }
-
-    /**
-     * Adds a named user listener.
-     *
-     * @param listener The named user listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addNamedUserListener(@NonNull NamedUserListener listener) {
-        namedUserListeners.add(listener);
-    }
-
-    /**
-     * Removes a named user listener.
-     *
-     * @param listener The named user listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void removeNamedUserListener(@NonNull NamedUserListener listener) {
-        namedUserListeners.remove(listener);
-    }
-
-    @VisibleForTesting
-    boolean isIdUpToDate() {
-        synchronized (idLock) {
-            String changeToken = getChangeToken();
-            String lastUpdatedToken = preferenceDataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
-            String currentId = getId();
-
-            if (currentId == null && changeToken == null) {
-                return true;
-            }
-
-            return lastUpdatedToken != null && lastUpdatedToken.equals(changeToken);
-        }
-    }
-
-    /**
-     * Gets the named user ID change token.
-     *
-     * @return The named user ID change token.
-     */
-    @Nullable
-    private String getChangeToken() {
-        return preferenceDataStore.getString(CHANGE_TOKEN_KEY, null);
-    }
-
-    /**
-     * Modify the change token to force an update.
-     */
-    private void updateChangeToken() {
-        preferenceDataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString());
-    }
-
-    /**
-     * Dispatches a job to update the named user.
-     */
-    void dispatchNamedUserUpdateJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_NAMED_USER)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(NamedUser.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onUrlConfigUpdated() {
-        boolean isChannelCreated = airshipChannel.getId() != null;
-        boolean isNamedUserSet = getId() != null;
-        if (isChannelCreated && isNamedUserSet) {
-            forceUpdate();
-        }
-    }
-
-    /**
-     * Handles named user update job.
-     *
-     * @return The job result.
-     */
-    @JobInfo.JobResult
-    @WorkerThread
-    private int onUpdateNamedUser() {
-        String channelId = airshipChannel.getId();
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.verbose("The channel ID does not exist. Will retry when channel ID is available.");
-            return JobInfo.JOB_FINISHED;
-        }
-
-        // Update ID
-        if (!isIdUpToDate()) {
-            int result = updateNamedUserId(channelId);
-            if (result != JobInfo.JOB_FINISHED) {
-                return result;
-            }
-        }
-
-        // Update tag groups and attributes if we have an Id and it's up to date
-        if (isIdUpToDate() && getId() != null) {
-            boolean attributeResult = attributeRegistrar.uploadPendingMutations();
-            boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
-            if (!attributeResult || !tagResult) {
-                return JobInfo.JOB_RETRY;
-            }
-        }
-
-        return JobInfo.JOB_FINISHED;
-    }
-
-    /**
-     * Handles associate/disassociate updates.
-     *
-     * @return The job result.
-     */
-    @JobInfo.JobResult
-    @WorkerThread
-    private int updateNamedUserId(@NonNull String channelId) {
-        String changeToken;
-        String namedUserId;
-
-        synchronized (idLock) {
-            changeToken = getChangeToken();
-            namedUserId = getId();
-        }
-
-        Response<Void> response;
-        try {
-            response = namedUserId == null ? namedUserApiClient.disassociate(channelId)
-                    : namedUserApiClient.associate(namedUserId, channelId);
-        } catch (RequestException e) {
-            // Server error occurred, so retry later.
-            Logger.debug(e, "Update named user failed, will retry.");
-            return JobInfo.JOB_RETRY;
-        }
-
-        // 500 | 429
-        if (response.isServerError() || response.isTooManyRequestsError()) {
-            Logger.debug("Update named user failed. Too many requests. Will retry.");
-            return JobInfo.JOB_RETRY;
-        }
-
-        // 403
-        if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.debug("Update named user failed with response: %s." +
-                    "This action is not allowed when the app is in server-only mode.", response);
-            return JobInfo.JOB_FINISHED;
-        }
-
-        // 2xx
-        if (response.isSuccessful()) {
-            Logger.debug("Update named user succeeded with status: %s", response.getStatus());
-            preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
-            return JobInfo.JOB_FINISHED;
-        }
-
-        // 4xx
-        Logger.debug("Update named user failed with response: %s", response);
-        return JobInfo.JOB_FINISHED;
-    }
-
 }
