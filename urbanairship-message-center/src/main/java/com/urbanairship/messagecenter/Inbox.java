@@ -74,7 +74,7 @@ public class Inbox {
     private final Map<String, Message> readMessages = new HashMap<>();
     private final Map<String, Message> messageUrlMap = new HashMap<>();
 
-    private final MessageCenterResolver messageCenterResolver;
+    private final MessageDao messageDao;
     private final User user;
     private final Executor executor;
     private final Context context;
@@ -108,7 +108,7 @@ public class Inbox {
     public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
                  @NonNull AirshipChannel airshipChannel) {
         this(context, dataStore, JobDispatcher.shared(context), new User(dataStore, airshipChannel),
-                new MessageCenterResolver(context), AirshipExecutors.newSerialExecutor(),
+                MessageDatabase.createDatabase(context, UAirship.shared().getAirshipConfigOptions()).getDao(), AirshipExecutors.newSerialExecutor(),
                 GlobalActivityMonitor.shared(context), airshipChannel);
     }
 
@@ -117,12 +117,12 @@ public class Inbox {
      */
     @VisibleForTesting
     Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
-          @NonNull User user, @NonNull MessageCenterResolver resolver, @NonNull Executor executor,
+          @NonNull User user, @NonNull MessageDao messageDao, @NonNull Executor executor,
           @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
-        this.messageCenterResolver = resolver;
+        this.messageDao = messageDao;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
         this.airshipChannel = airshipChannel;
@@ -560,11 +560,11 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesRead(@NonNull final Set<String> messageIds) {
+    public void markMessagesRead(@NonNull final List<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesRead(messageIds);
+                messageDao.markMessagesRead(messageIds);
             }
         });
 
@@ -589,11 +589,11 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesUnread(@NonNull final Set<String> messageIds) {
+    public void markMessagesUnread(@NonNull final List<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesUnread(messageIds);
+                messageDao.markMessagesUnread(messageIds);
             }
         });
 
@@ -621,11 +621,11 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void deleteMessages(@NonNull final Set<String> messageIds) {
+    public void deleteMessages(@NonNull final List<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesDeleted(messageIds);
+                messageDao.markMessagesDeleted(messageIds);
             }
         });
 
@@ -654,7 +654,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.deleteAllMessages();
+                messageDao.deleteAllMessages();
             }
         });
 
@@ -674,7 +674,7 @@ public class Inbox {
      */
     void refresh(boolean notify) {
 
-        Collection<Message> messageList = messageCenterResolver.getMessages();
+        List<MessageEntity> messageList = messageDao.getMessages();
 
         // Sync the messages
         synchronized (inboxLock) {
@@ -690,7 +690,9 @@ public class Inbox {
             messageUrlMap.clear();
 
             // Process the new messages
-            for (Message message : messageList) {
+            for (MessageEntity messageEntity : messageList) {
+
+                Message message = messageEntity.createMessageFromEntity(messageEntity);
 
                 // Deleted
                 if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {

@@ -25,8 +25,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -56,8 +56,9 @@ public class InboxTest {
     private User mockUser;
     private JobDispatcher mockDispatcher;
     private AirshipChannel mockChannel;
+    private MessageDao mockMessageDao;
+    private ArrayList<MessageEntity> messageEntities;
 
-    MessageCenterResolver spyResolver;
     GlobalActivityMonitor spyActivityMonitor;
 
     @Before
@@ -65,9 +66,11 @@ public class InboxTest {
         mockDispatcher = mock(JobDispatcher.class);
         mockUser = mock(User.class);
         mockChannel = mock(AirshipChannel.class);
+        mockMessageDao = mock(MessageDao.class);
+
+        MessageCenterTestUtils.setup();
 
         Context context = ApplicationProvider.getApplicationContext();
-        spyResolver = Mockito.spy(new MessageCenterResolver(context));
         spyActivityMonitor = Mockito.spy(GlobalActivityMonitor.shared(context));
 
         Executor executor = new Executor() {
@@ -78,8 +81,10 @@ public class InboxTest {
         };
 
         PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(context);
-        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, spyResolver, executor, spyActivityMonitor, mockChannel);
+        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, mockMessageDao, executor, spyActivityMonitor, mockChannel);
         inbox.setEnabled(true);
+
+        messageEntities = new ArrayList<>();
 
         // Only the "even" messages
         testPredicate = new Predicate<Message>() {
@@ -93,16 +98,19 @@ public class InboxTest {
 
         // Populate the MCRAP database with 10 messages
         for (int i = 0; i < 10; i++) {
-            MessageCenterTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
+            Message message = MessageCenterTestUtils.createMessage(String.valueOf(i + 1) + "_message_id", null, false);
+            messageEntities.add(MessageEntity.createMessageFromPayload(message.getMessageId(), message.getRawMessageJson()));
         }
 
         // Put some expired messages in there (these should not show up after refresh)
         for (int i = 10; i < 15; i++) {
-            MessageCenterTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id", null, true);
+            Message message = MessageCenterTestUtils.createMessage(String.valueOf(i + 1) + "_message_id", null, true);
+            messageEntities.add(MessageEntity.createMessageFromPayload(message.getMessageId(), message.getRawMessageJson()));
         }
 
+        when(mockMessageDao.getMessages()).thenReturn(messageEntities);
         inbox.refresh(false);
-        Mockito.clearInvocations(spyResolver);
+        Mockito.clearInvocations(mockMessageDao);
     }
 
     /**
@@ -212,7 +220,7 @@ public class InboxTest {
     public void testMarkMessagesDeleted() {
         assertEquals(10, inbox.getCount());
 
-        HashSet<String> deletedIds = new HashSet<>();
+        ArrayList<String> deletedIds = new ArrayList<>();
         deletedIds.add("1_message_id");
         deletedIds.add("3_message_id");
         deletedIds.add("6_message_id");
@@ -235,7 +243,7 @@ public class InboxTest {
      */
     @Test
     public void testMarkMessagesRead() {
-        HashSet<String> markedReadIds = new HashSet<>();
+        ArrayList<String> markedReadIds = new ArrayList<>();
         markedReadIds.add("1_message_id");
         markedReadIds.add("3_message_id");
         markedReadIds.add("6_message_id");
@@ -265,7 +273,7 @@ public class InboxTest {
      */
     @Test
     public void testMarkMessagesUnread() {
-        HashSet<String> messageIds = new HashSet<>();
+        ArrayList<String> messageIds = new ArrayList<>();
         messageIds.add("1_message_id");
         messageIds.add("3_message_id");
         messageIds.add("6_message_id");
@@ -438,14 +446,14 @@ public class InboxTest {
     @Test
     public void testGetUnreadMessages() {
 
-        HashSet<String> messageIds = new HashSet<>();
+        ArrayList<String> messageIds = new ArrayList<>();
         messageIds.add("1_message_id");
         messageIds.add("2_message_id");
         messageIds.add("3_message_id");
         messageIds.add("4_message_id");
-
         // Mark messages read
         inbox.markMessagesRead(messageIds);
+
 
         List<Message> unreadMessages = inbox.getUnreadMessages();
         assertEquals(unreadMessages.size(), 6);
@@ -462,7 +470,7 @@ public class InboxTest {
 
     @Test
     public void testGetReadMessages() {
-        HashSet<String> messageIds = new HashSet<>();
+        ArrayList<String> messageIds = new ArrayList<>();
 
         messageIds.add("1_message_id");
         messageIds.add("2_message_id");
@@ -522,7 +530,7 @@ public class InboxTest {
 
         inbox.updateEnabledState();
 
-        verify(spyResolver).deleteAllMessages();
+        verify(mockMessageDao).deleteAllMessages();
         verify(spyActivityMonitor).removeApplicationListener(any(ApplicationListener.class));
         verify(mockChannel).removeChannelListener(any(AirshipChannelListener.class));
         verify(mockChannel).removeChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
@@ -542,7 +550,7 @@ public class InboxTest {
 
         // Verify that Inbox was started once.
         verify(mockUser).addListener(any(User.Listener.class));
-        verify(spyResolver).getMessages();
+        verify(mockMessageDao).getMessages();
         verify(spyActivityMonitor).addApplicationListener(any(ApplicationListener.class));
         verify(mockChannel).addChannelListener(any(AirshipChannelListener.class));
         verify(mockChannel).addChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
