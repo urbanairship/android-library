@@ -699,7 +699,7 @@ public class PushManager extends AirshipComponent {
      * @return {@code true} if notifications are opted in, otherwise {@code false}.
      */
     public boolean areNotificationsOptedIn() {
-        return getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled();
+        return notificationManagerCompat.areNotificationsEnabled();
     }
 
     /**
