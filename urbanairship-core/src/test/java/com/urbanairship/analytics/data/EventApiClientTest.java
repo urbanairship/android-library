@@ -61,7 +61,7 @@ public class EventApiClientTest extends BaseTestCase {
      * Test sending a correct request that succeeds
      */
     @Test
-    public void testSendEventsSucceed() throws RequestException {
+    public void testSendEventsSucceed() throws RequestException, JsonException {
         testRequest.responseBody = "";
         testRequest.responseStatus = 200;
         testRequest.responseLastModifiedTime = 0;
@@ -72,6 +72,7 @@ public class EventApiClientTest extends BaseTestCase {
         assertEquals("", response.getResponseBody());
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(JsonValue.wrapOpt(events), JsonValue.parseString(testRequest.getRequestBody()));
         assertEquals(0, response.getLastModifiedTime());
         assertNull(response.getResponseHeaders());
     }

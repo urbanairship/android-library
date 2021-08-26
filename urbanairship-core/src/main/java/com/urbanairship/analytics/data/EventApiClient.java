@@ -73,9 +73,7 @@ public class EventApiClient {
                                .appendEncodedPath(WARP9_PATH)
                                .build();
 
-        List<JsonValue> eventJSON = new ArrayList<>();
-
-        String payload = new JsonList(eventJSON).toString();
+        String payload = JsonValue.wrapOpt(events).toString();
         double sentAt = System.currentTimeMillis() / 1000.0;
 
         Request request = requestFactory.createRequest()
