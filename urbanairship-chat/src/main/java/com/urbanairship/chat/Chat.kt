@@ -50,6 +50,7 @@ class Chat
         private const val DEEP_LINK_HOST = "chat"
         private const val DEEP_LINK_INPUT_KEY = "chat_input"
         private const val DEEP_LINK_ROUTING_KEY = "routing"
+        private const val DEEP_LINK_PREPOPULATED_KEY = "prepopulated_messages"
 
         /**
          * Gets the shared `AirshipChat` instance.
@@ -202,6 +203,16 @@ class Chat
                     Logger.error("Failed to parse routing", e)
                 }
             }
+
+            uri.getQueryParameter(DEEP_LINK_PREPOPULATED_KEY)?.let {
+                try {
+                    val messages = ChatIncomingMessage.getListFromJSONArrayString(it)
+                    conversation.addIncoming(messages)
+                } catch (e: JsonException) {
+                    Logger.error("Failed to parse outgoing messages", e)
+                }
+            }
+
             openChat(chatInput)
             true
         } else {

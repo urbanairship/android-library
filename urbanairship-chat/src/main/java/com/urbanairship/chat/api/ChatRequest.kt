@@ -3,10 +3,12 @@
 package com.urbanairship.chat.api
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.chat.ChatDirection
 import com.urbanairship.chat.ChatRouting
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.DateUtils
 
 /** Data classes for building request payloads to be sent to the server. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -27,6 +29,8 @@ internal sealed class ChatRequest(
         private const val KEY_PAYLOAD = "payload"
         private const val KEY_TEXT = "text"
         private const val KEY_ATTACHMENT = "attachment"
+        private const val KEY_DIRECTION = "direction"
+        private const val KEY_DATE = "created_on"
         private const val KEY_REQUEST_ID = "request_id"
         private const val KEY_ROUTING = "routing"
         private const val KEY_AGENT = "agent"
@@ -105,13 +109,17 @@ internal sealed class ChatRequest(
             text: String? = null,
             attachment: String? = null,
             requestId: String,
+            direction: ChatDirection,
+            date: Long?,
             routing: ChatRouting?
-        ) : this(uvp, Message(requestId, text, attachment, routing))
+        ) : this(uvp, Message(requestId, text, attachment, direction.ordinal, date, routing))
 
         internal data class Message(
             val requestId: String,
             val text: String? = null,
             val attachment: String? = null,
+            val direction: Int,
+            val date: Long?,
             val routing: ChatRouting?
         ) : JsonSerializable {
             companion object {
@@ -119,11 +127,15 @@ internal sealed class ChatRequest(
                     val requestId = requireNotNull(jsonMap.opt(KEY_REQUEST_ID).string) { "$KEY_REQUEST_ID' may not be null!" }
                     val text = jsonMap.get(KEY_TEXT)?.string
                     val attachment = jsonMap.get(KEY_ATTACHMENT)?.string
+                    val direction = requireNotNull(jsonMap.get(KEY_DIRECTION)?.getInt(0)) { "$KEY_DIRECTION' may not be null!" }
+                    val date = jsonMap.get(KEY_DATE)?.string?.let { DateUtils.parseIso8601(it) }
                     val routing = ChatRouting.fromJsonMap(jsonMap.get(KEY_ROUTING)?.optMap())
                     return Message(
                             requestId = requestId,
                             text = text,
                             attachment = attachment,
+                            direction = direction,
+                            date = date,
                             routing = routing
                     )
                 }
@@ -134,6 +146,8 @@ internal sealed class ChatRequest(
                             .put(KEY_REQUEST_ID, requestId)
                             .put(KEY_TEXT, text)
                             .put(KEY_ATTACHMENT, attachment)
+                            .put(KEY_DIRECTION, direction)
+                            .put(KEY_DATE, date?.let { DateUtils.createIso8601TimeStamp(it) })
                             .put(KEY_ROUTING, routing)
                             .build()
                             .toJsonValue()

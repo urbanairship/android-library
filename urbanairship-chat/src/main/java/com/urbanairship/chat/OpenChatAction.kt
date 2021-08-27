@@ -1,8 +1,10 @@
 package com.urbanairship.chat
 
+import com.urbanairship.Logger
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.json.JsonException
 import com.urbanairship.util.AirshipComponentUtils
 import java.util.concurrent.Callable
 
@@ -31,9 +33,19 @@ class OpenChatAction(private val chatCallable: Callable<Chat> = AirshipComponent
     override fun perform(arguments: ActionArguments): ActionResult {
         val message = arguments.value.map?.opt("chat_input")?.string
         val routing = ChatRouting.fromJsonMap(arguments.value.map?.opt("chat_routing")?.optMap())
+        val incoming = arguments.value.map?.opt("prepopulated_messages")?.string
 
         if (!routing.agent.isNullOrEmpty()) {
             chatCallable.call().conversation.routing = routing
+        }
+
+        if (!incoming.isNullOrEmpty()) {
+            try {
+                val messages = ChatIncomingMessage.getListFromJSONArrayString(incoming)
+                chatCallable.call().conversation.addIncoming(messages)
+            } catch (e: JsonException) {
+                Logger.error("Failed to parse outgoing messages", e)
+            }
         }
 
         chatCallable.call().openChat(message)
