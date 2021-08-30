@@ -8,8 +8,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 
@@ -126,8 +126,8 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
     }
 
     @NonNull
-    private List<String> getCheckedMessageIds() {
-        final List<String> messageIds = new ArrayList<>();
+    private Set<String> getCheckedMessageIds() {
+        final Set<String> messageIds = new HashSet<>();
 
         if (messageListFragment.getAbsListView() == null) {
             return messageIds;

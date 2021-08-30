@@ -14,13 +14,6 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.pm.PackageInfoCompat;
-
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -48,12 +41,18 @@ import com.urbanairship.remotedata.RemoteData;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -754,7 +753,7 @@ public class UAirship {
         this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
 
         // Message Center
-        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager);
+        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager, getAirshipConfigOptions());
         processModule(messageCenterModule);
 
         // Location

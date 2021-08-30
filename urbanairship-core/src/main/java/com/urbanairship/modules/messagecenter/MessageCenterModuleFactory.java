@@ -4,6 +4,7 @@ package com.urbanairship.modules.messagecenter;
 
 import android.content.Context;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -27,6 +28,7 @@ public interface MessageCenterModuleFactory extends AirshipVersionInfo {
                  @NonNull PreferenceDataStore dataStore,
                  @NonNull PrivacyManager privacyManager,
                  @NonNull AirshipChannel airshipChannel,
-                 @NonNull PushManager pushManager);
+                 @NonNull PushManager pushManager,
+                 @NonNull AirshipConfigOptions configOptions);
 
 }

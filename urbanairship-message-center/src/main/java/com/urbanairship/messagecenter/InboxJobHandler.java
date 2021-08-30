@@ -69,8 +69,9 @@ class InboxJobHandler {
                     @NonNull User user,
                     @NonNull AirshipChannel channel,
                     @NonNull AirshipRuntimeConfig runtimeConfig,
-                    @NonNull PreferenceDataStore dataStore) {
-        this(inbox, user, channel, dataStore, MessageDatabase.createDatabase(context, UAirship.shared().getAirshipConfigOptions()).getDao(), new InboxApiClient(runtimeConfig));
+                    @NonNull PreferenceDataStore dataStore,
+                    @NonNull MessageDao messageDao) {
+        this(inbox, user, channel, dataStore, messageDao, new InboxApiClient(runtimeConfig));
     }
 
     @VisibleForTesting

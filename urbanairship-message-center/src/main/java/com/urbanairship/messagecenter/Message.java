@@ -9,10 +9,9 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -290,9 +289,9 @@ public class Message implements Comparable<Message> {
     public void markRead() {
         if (this.unreadClient) {
             unreadClient = false;
-            List<String> list = new ArrayList<>();
-            list.add(messageId);
-            MessageCenter.shared().getInbox().markMessagesRead(list);
+            HashSet<String> set = new HashSet<>();
+            set.add(messageId);
+            MessageCenter.shared().getInbox().markMessagesRead(set);
         }
     }
 
@@ -302,9 +301,9 @@ public class Message implements Comparable<Message> {
     public void markUnread() {
         if (!this.unreadClient) {
             unreadClient = true;
-            List<String> list = new ArrayList<>();
-            list.add(messageId);
-            MessageCenter.shared().getInbox().markMessagesUnread(list);
+            HashSet<String> set = new HashSet<>();
+            set.add(messageId);
+            MessageCenter.shared().getInbox().markMessagesUnread(set);
         }
     }
 
@@ -314,9 +313,9 @@ public class Message implements Comparable<Message> {
     public void delete() {
         if (!this.deleted) {
             deleted = true;
-            ArrayList<String> list = new ArrayList<>();
-            list.add(messageId);
-            MessageCenter.shared().getInbox().deleteMessages(list);
+            HashSet<String> set = new HashSet<>();
+            set.add(messageId);
+            MessageCenter.shared().getInbox().deleteMessages(set);
         }
     }
 

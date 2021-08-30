@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -106,9 +107,10 @@ public class Inbox {
      * @hide
      */
     public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipChannel airshipChannel) {
+                 @NonNull AirshipChannel airshipChannel, @NonNull AirshipConfigOptions configOptions) {
         this(context, dataStore, JobDispatcher.shared(context), new User(dataStore, airshipChannel),
-                MessageDatabase.createDatabase(context, UAirship.shared().getAirshipConfigOptions()).getDao(), AirshipExecutors.newSerialExecutor(),
+                MessageDatabase.createDatabase(context, configOptions).getDao(),
+                AirshipExecutors.newSerialExecutor(),
                 GlobalActivityMonitor.shared(context), airshipChannel);
     }
 
@@ -196,7 +198,7 @@ public class Inbox {
 
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
-                    airship.getRuntimeConfig(), dataStore);
+                    airship.getRuntimeConfig(), dataStore, messageDao);
         }
 
         return inboxJobHandler.performJob(jobInfo);
@@ -560,11 +562,13 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesRead(@NonNull final List<String> messageIds) {
+    public void markMessagesRead(@NonNull final Set<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageDao.markMessagesRead(messageIds);
+                List<String> messageIdsList = new ArrayList<>();
+                messageIdsList.addAll(messageIds);
+                messageDao.markMessagesRead(messageIdsList);
             }
         });
 
@@ -589,11 +593,13 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesUnread(@NonNull final List<String> messageIds) {
+    public void markMessagesUnread(@NonNull final Set<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageDao.markMessagesUnread(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList<>();
+                messageIdsList.addAll(messageIds);
+                messageDao.markMessagesUnread(messageIdsList);
             }
         });
 
@@ -621,11 +627,13 @@ public class Inbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void deleteMessages(@NonNull final List<String> messageIds) {
+    public void deleteMessages(@NonNull final Set<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageDao.markMessagesDeleted(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList();
+                messageIdsList.addAll(messageIds);
+                messageDao.markMessagesDeleted(messageIdsList);
             }
         });
 

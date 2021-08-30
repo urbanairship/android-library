@@ -8,6 +8,7 @@ import android.net.Uri;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
@@ -109,8 +110,9 @@ public class MessageCenter extends AirshipComponent {
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel channel,
-                         @NonNull PushManager pushManager) {
-        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel), pushManager);
+                         @NonNull PushManager pushManager,
+                         @NonNull AirshipConfigOptions configOptions) {
+        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel, configOptions), pushManager);
     }
 
     /**

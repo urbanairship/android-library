@@ -27,8 +27,10 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
@@ -220,7 +222,7 @@ public class InboxTest {
     public void testMarkMessagesDeleted() {
         assertEquals(10, inbox.getCount());
 
-        ArrayList<String> deletedIds = new ArrayList<>();
+        Set<String> deletedIds = new HashSet<>();
         deletedIds.add("1_message_id");
         deletedIds.add("3_message_id");
         deletedIds.add("6_message_id");
@@ -243,7 +245,7 @@ public class InboxTest {
      */
     @Test
     public void testMarkMessagesRead() {
-        ArrayList<String> markedReadIds = new ArrayList<>();
+        Set<String> markedReadIds = new HashSet<>();
         markedReadIds.add("1_message_id");
         markedReadIds.add("3_message_id");
         markedReadIds.add("6_message_id");
@@ -273,7 +275,7 @@ public class InboxTest {
      */
     @Test
     public void testMarkMessagesUnread() {
-        ArrayList<String> messageIds = new ArrayList<>();
+        Set<String> messageIds = new HashSet<>();
         messageIds.add("1_message_id");
         messageIds.add("3_message_id");
         messageIds.add("6_message_id");
@@ -445,15 +447,13 @@ public class InboxTest {
 
     @Test
     public void testGetUnreadMessages() {
-
-        ArrayList<String> messageIds = new ArrayList<>();
+        Set<String> messageIds = new HashSet<>();
         messageIds.add("1_message_id");
         messageIds.add("2_message_id");
         messageIds.add("3_message_id");
         messageIds.add("4_message_id");
         // Mark messages read
         inbox.markMessagesRead(messageIds);
-
 
         List<Message> unreadMessages = inbox.getUnreadMessages();
         assertEquals(unreadMessages.size(), 6);
@@ -470,8 +470,7 @@ public class InboxTest {
 
     @Test
     public void testGetReadMessages() {
-        ArrayList<String> messageIds = new ArrayList<>();
-
+        Set<String> messageIds = new HashSet<>();
         messageIds.add("1_message_id");
         messageIds.add("2_message_id");
         messageIds.add("3_message_id");
