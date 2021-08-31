@@ -99,6 +99,8 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                     navigateToTrigger(it)
                 })
             }
+
+            add(AutomationDetail("Schedule Payload", schedule.data.toString()))
         }
     }
 }
