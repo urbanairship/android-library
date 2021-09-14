@@ -280,5 +280,6 @@
     <string name="ua_debug_iaa_message_details">In-App Message Details</string>
     <string name="ua_iaa_debug_data_key">Schedule Data</string>
     <string name="ua_sdk_settings_category">SDK Features</string>
+    <string name="ua_iaa_debug_payload_key">Schedule Payload</string>
 
 </resources>
