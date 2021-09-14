@@ -2,13 +2,27 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 15.0.0 September 14, 2021
+
+Major release that adds support for Airship Preference Center, Subscription Lists, and Contacts. This
+release removes support for overriding Firebase sender ID to a non-default Firebase project. Firebase
+currently recommends using a single Firebase project for both Crashlytics and Cloud Messaging.
+
+### Changes
+- Added new module `AirshipPreferenceCenter`.
+- Added new subscription lists APIs for Channel.
+- Replaced `NamedUser` with `Contact`, which allows setting data on a user without an external ID (Named User ID).
+- Added Dokka for generation of Kotlin documentation.
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-14-15.md) for further details.
+
 ## Version 14.5.1 June 21, 2021
 
 Patch release that updates the version of `firebase-messaging` used by `urbanairship-fcm` and adds
-a dependency on `firebase-iid` to maintain support for overriding `fcmSenderId` to a non-default 
+a dependency on `firebase-iid` to maintain support for overriding `fcmSenderId` to a non-default
 Firebase project. This configuration is no longer recommended by Firebase and may not be supported
 in future versions of the Airship FCM module. Firebase currently recommends using a single Firebase
-project for Crashlytics and Cloud Messaging. 
+project for Crashlytics and Cloud Messaging.
 
 ### Changes
 - Updated`firebase-messaging` to version `22.0.0`.
