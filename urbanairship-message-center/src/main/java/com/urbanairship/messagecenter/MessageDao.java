@@ -18,15 +18,8 @@ import androidx.room.Update;
 @Dao
 public abstract class MessageDao {
 
-    private static final String WHERE_CLAUSE_CHANGED = MessageDatabase.COLUMN_NAME_UNREAD +
-            " <> " + MessageDatabase.COLUMN_NAME_UNREAD_ORIG;
-    private static final String WHERE_CLAUSE_READ = MessageDatabase.COLUMN_NAME_UNREAD + " = ?";
-    private static final String WHERE_CLAUSE_MESSAGE_ID = MessageDatabase.COLUMN_NAME_MESSAGE_ID + " = ?";
-    private static final String FALSE_VALUE = "0";
-    private static final String TRUE_VALUE = "1";
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insert(MessageEntity message);
+    public abstract void insert(@NonNull MessageEntity message);
 
     @Transaction
     @Query("SELECT * FROM richpush")

@@ -97,13 +97,19 @@ public class MessageEntity {
 
         if (messageIds == null) {
             for (JsonValue messagePayload : messagePayloads) {
-                messageEntities.add(createMessageFromPayload(null, messagePayload));
+                MessageEntity messageEntity = createMessageFromPayload(null, messagePayload);
+                if (messageEntity != null) {
+                    messageEntities.add(messageEntity);
+                }
             }
             return messageEntities;
         }
 
         for (int i = 0; i < messageIds.size(); i++) {
-            messageEntities.add(createMessageFromPayload(messageIds.get(i), messagePayloads.get(i)));
+            MessageEntity messageEntity = createMessageFromPayload(messageIds.get(i), messagePayloads.get(i));
+            if (messageEntity != null) {
+                messageEntities.add(messageEntity);
+            }
         }
         return messageEntities;
     }

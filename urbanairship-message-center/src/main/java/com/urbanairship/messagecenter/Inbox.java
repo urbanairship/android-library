@@ -566,8 +566,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                List<String> messageIdsList = new ArrayList<>();
-                messageIdsList.addAll(messageIds);
+                List<String> messageIdsList = new ArrayList<>(messageIds);
                 messageDao.markMessagesRead(messageIdsList);
             }
         });
@@ -597,8 +596,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                ArrayList<String> messageIdsList = new ArrayList<>();
-                messageIdsList.addAll(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList<>(messageIds);
                 messageDao.markMessagesUnread(messageIdsList);
             }
         });
@@ -631,8 +629,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                ArrayList<String> messageIdsList = new ArrayList();
-                messageIdsList.addAll(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList(messageIds);
                 messageDao.markMessagesDeleted(messageIdsList);
             }
         });
@@ -701,6 +698,10 @@ public class Inbox {
             for (MessageEntity messageEntity : messageList) {
 
                 Message message = messageEntity.createMessageFromEntity(messageEntity);
+
+                if (message == null) {
+                    continue;
+                }
 
                 // Deleted
                 if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {
