@@ -7,7 +7,7 @@ plugins {
 description = "Airship Preference Center extension."
 
 airshipModule {
-    published = false
+    published = true
 }
 
 android {
