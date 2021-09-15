@@ -1,5 +1,8 @@
 package com.urbanairship.chat
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
@@ -16,6 +19,10 @@ import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertFalse
+import junit.framework.Assert.assertNull
+import junit.framework.Assert.assertTrue
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,16 +31,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -46,6 +50,7 @@ class ConversationTest {
     private lateinit var mockChannel: AirshipChannel
     private lateinit var mockConnection: ChatConnection
     private lateinit var mockApiClient: ChatApiClient
+    private lateinit var mockChat: Chat
     private lateinit var chatDatabase: ChatDatabase
     private lateinit var testActivityMonitor: TestActivityMonitor
 
@@ -56,12 +61,17 @@ class ConversationTest {
     private lateinit var testDispatcher: TestCoroutineDispatcher
     private lateinit var runtimeConfig: TestAirshipRuntimeConfig
 
+    private lateinit var mockLifeCycleOwner: LifecycleOwner
+    private lateinit var lifeCycleRegistry: LifecycleRegistry
+
     @Before
     fun setUp() {
         mockChannel = mock()
         mockConnection = mock()
         mockApiClient = mock()
+        mockChat = mock()
         mockChannel = mock()
+        mockLifeCycleOwner = mock()
 
         chatDatabase = Room.inMemoryDatabaseBuilder(TestApplication.getApplication(), ChatDatabase::class.java)
                 .allowMainThreadQueries()
@@ -87,6 +97,8 @@ class ConversationTest {
                 mockChannel, chatDatabase, mockConnection, mockApiClient, testActivityMonitor,
                 testDispatcher, testDispatcher)
 
+        lifeCycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
+
         verify(mockConnection).chatListener = captor.capture()
         chatListener = captor.value
 
@@ -105,12 +117,13 @@ class ConversationTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
-        testActivityMonitor.foreground()
+        conversation.connect()
 
         verify(mockApiClient).fetchUvp("some-channel")
     }
 
     @Test
+
     fun testConnectionRequestsConversation() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
@@ -127,6 +140,7 @@ class ConversationTest {
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
         verify(mockConnection).open("some-uvp")
     }
@@ -140,7 +154,7 @@ class ConversationTest {
 
         conversation.routing = ChatRouting("agent!")
         conversation.sendMessage("hello")
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRouting("agent!")))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.OUTGOING), Mockito.eq(null), Mockito.eq(ChatRouting("agent!")))
     }
 
     @Test
@@ -149,12 +163,45 @@ class ConversationTest {
         conversation.routing = ChatRouting("agent!")
         conversation.sendMessage("hello")
 
-        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRouting("agent!")))
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.OUTGOING), Mockito.eq(null), Mockito.eq(ChatRouting("agent!")))
 
         val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
         chatListener.onChatResponse(response)
 
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRouting("agent!")))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.OUTGOING), Mockito.eq(null), Mockito.eq(ChatRouting("agent!")))
+    }
+
+    @Test
+    fun testSendIncomingAfterSync() = testDispatcher.runBlockingTest {
+        connect()
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        conversation.routing = ChatRouting("agent!")
+
+        val date = DateUtils.parseIso8601("2021-01-01T00:00:00Z")
+        val messages = listOf(ChatIncomingMessage("msg1", null, "2021-01-01T00:00:00Z", "asdfasdf"))
+
+        conversation.addIncoming(messages)
+        verify(mockConnection).sendMessage(Mockito.eq("msg1"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.INCOMING), Mockito.eq(date), Mockito.eq(ChatRouting("agent!")))
+    }
+
+    @Test
+    fun testSendIncomingBeforeSync() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.routing = ChatRouting("agent!")
+
+        val date = DateUtils.parseIso8601("2021-01-01T00:00:00Z")
+        val messages = listOf(ChatIncomingMessage("msg1", null, "2021-01-01T00:00:00Z", "asdfasdf"))
+        conversation.addIncoming(messages)
+
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("msg1"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.INCOMING), Mockito.eq(date), Mockito.eq(ChatRouting("agent!")))
+
+        val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
+        chatListener.onChatResponse(response)
+
+        verify(mockConnection).sendMessage(Mockito.eq("msg1"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.INCOMING), Mockito.eq(date), Mockito.eq(ChatRouting("agent!")))
     }
 
     @Test
@@ -163,12 +210,12 @@ class ConversationTest {
         conversation.sendMessage("hello")
         connect()
 
-        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRouting("agent!")))
+        verify(mockConnection, Mockito.never()).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.OUTGOING), Mockito.eq(null), Mockito.eq(ChatRouting("agent!")))
 
         val response = ChatResponse.ConversationLoaded(conversation = ChatResponse.ConversationLoaded.ConversationPayload(null))
         chatListener.onChatResponse(response)
 
-        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), Mockito.eq(ChatRouting("agent!")))
+        verify(mockConnection).sendMessage(Mockito.eq("hello"), Mockito.isNull(), Mockito.anyString(), eq(ChatDirection.OUTGOING), Mockito.eq(null), Mockito.eq(ChatRouting("agent!")))
     }
 
     @Test
@@ -176,6 +223,7 @@ class ConversationTest {
         connect()
         verify(mockConnection).open("some-uvp")
 
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         testActivityMonitor.background()
         verify(mockConnection, Mockito.never()).close()
 
@@ -192,6 +240,7 @@ class ConversationTest {
         conversation.sendMessage("hello")
         val requestId = chatDatabase.chatDao().getPendingMessages()[0].messageId
 
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         testActivityMonitor.background()
         verify(mockConnection, Mockito.never()).close()
 
@@ -199,7 +248,7 @@ class ConversationTest {
         chatListener.onChatResponse(response)
         verify(mockConnection, Mockito.never()).close()
 
-        verify(mockConnection).sendMessage("hello", null, requestId, ChatRouting("agent!"))
+        verify(mockConnection).sendMessage("hello", null, requestId, ChatDirection.OUTGOING, null, ChatRouting("agent!"))
         verify(mockConnection, Mockito.never()).close()
 
         val message = ChatResponse.Message("some-id", DateUtils.createIso8601TimeStamp(0), 1, "hello", null, requestId)
@@ -208,6 +257,22 @@ class ConversationTest {
         chatListener.onChatResponse(messageResponse)
 
         verify(mockConnection).close()
+    }
+
+    @Test
+    fun testFetchMessagesPending() = testDispatcher.runBlockingTest {
+        connect()
+        conversation.routing = ChatRouting("agent!")
+        val date = DateUtils.parseIso8601("2021-01-01T00:00:00Z")
+        val incoming = listOf(ChatIncomingMessage("msg1", "https://fakeu.rl", "2021-01-01T00:00:00Z", "asdfasdf"))
+
+        conversation.addIncoming(incoming)
+        conversation.sendMessage("hello")
+
+        val result = conversation.getMessages().result
+        val expected = listOf(ChatMessage(result?.get(0)?.messageId!!, "hello", result?.get(0)?.createdOn!!, ChatDirection.OUTGOING, null, true), ChatMessage("asdfasdf", "msg1", date, ChatDirection.INCOMING, "https://fakeu.rl", false))
+
+        assertEquals(result, expected)
     }
 
     @Test
@@ -266,6 +331,7 @@ class ConversationTest {
     fun testClearDataDeletesUvp() = testDispatcher.runBlockingTest {
         whenever(mockChannel.id).thenReturn("some-channel")
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
+        conversation.connect()
         testActivityMonitor.foreground()
 
         assertEquals("some-uvp", dataStore.getString("com.urbanairship.chat.UVP", null))
@@ -355,6 +421,7 @@ class ConversationTest {
         whenever(mockApiClient.fetchUvp("some-channel")).thenReturn("some-uvp")
 
         testActivityMonitor.foreground()
+        lifeCycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         whenever(mockConnection.isOpenOrOpening).thenReturn(true)
     }
 

@@ -1,12 +1,10 @@
 plugins {
-    id("airship-publish")
+    id 'airship-module'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 description = "Airship Android Chat extension."
-
-apply from: "../common-build.gradle"
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 
 android {
     compileOptions {
@@ -26,6 +24,8 @@ android {
         }
     }
 }
+
+kapt.includeCompileClasspath = false
 
 dependencies {
     api project(':urbanairship-core')

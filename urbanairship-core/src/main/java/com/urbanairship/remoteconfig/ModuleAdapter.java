@@ -4,6 +4,9 @@ package com.urbanairship.remoteconfig;
 
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
@@ -14,9 +17,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Used by {@link RemoteConfigManager} to handle mapping modules to airship components.
@@ -86,6 +86,12 @@ class ModuleAdapter {
 
             case Modules.CHAT_MODULE:
                 return getComponentsByGroup(AirshipComponentGroups.CHAT);
+
+            case Modules.CONTACT_MODULE:
+                return getComponentsByGroup(AirshipComponentGroups.CONTACT);
+
+            case Modules.PREFERENCE_CENTER_MODULE:
+                return getComponentsByGroup(AirshipComponentGroups.PREFERENCE_CENTER);
         }
 
         Logger.verbose("Unable to find module: %s", module);

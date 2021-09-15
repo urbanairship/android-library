@@ -6,10 +6,10 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.NamedUser;
-import com.urbanairship.channel.NamedUserListener;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
+import com.urbanairship.contacts.ContactChangeListener;
 import com.urbanairship.util.Clock;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import androidx.annotation.WorkerThread;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class AudienceManager implements NamedUserListener {
+public class AudienceManager  {
     // Device tag group
     private static final String DEVICE_GROUP = "device";
 
@@ -66,7 +66,7 @@ public class AudienceManager implements NamedUserListener {
     private final AirshipChannel airshipChannel;
     private final TagGroupLookupApiClient client;
     private final Clock clock;
-    private final NamedUser namedUser;
+    private final Contact contact;
     private final TagGroupLookupResponseCache cache;
 
     private RequestTagsCallback requestTagsCallback;
@@ -76,26 +76,26 @@ public class AudienceManager implements NamedUserListener {
      *
      * @param runtimeConfig The runtime config.
      * @param airshipChannel The Airship channel.
-     * @param namedUser The named user.
+     * @param contact The contact.
      * @param dataStore The preference data store.
      */
     public AudienceManager(@NonNull AirshipRuntimeConfig runtimeConfig,
                            @NonNull AirshipChannel airshipChannel,
-                           @NonNull NamedUser namedUser,
+                           @NonNull Contact contact,
                            @NonNull PreferenceDataStore dataStore) {
-        this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel, namedUser,
+        this(new TagGroupLookupApiClient(runtimeConfig), airshipChannel, contact,
                 new TagGroupLookupResponseCache(dataStore, Clock.DEFAULT_CLOCK), new AudienceHistorian(
-                        airshipChannel, namedUser, Clock.DEFAULT_CLOCK),
+                        airshipChannel, contact, Clock.DEFAULT_CLOCK),
                 dataStore, Clock.DEFAULT_CLOCK);
     }
 
     @VisibleForTesting
     AudienceManager(@NonNull TagGroupLookupApiClient client, @NonNull AirshipChannel airshipChannel,
-                    @NonNull NamedUser namedUser, @NonNull TagGroupLookupResponseCache cache,
+                    @NonNull Contact contact, @NonNull final TagGroupLookupResponseCache cache,
                     @NonNull AudienceHistorian historian, @NonNull PreferenceDataStore dataStore, @NonNull Clock clock) {
         this.client = client;
         this.airshipChannel = airshipChannel;
-        this.namedUser = namedUser;
+        this.contact = contact;
         this.cache = cache;
         this.historian = historian;
         this.dataStore = dataStore;
@@ -103,7 +103,12 @@ public class AudienceManager implements NamedUserListener {
 
         this.historian.init();
 
-        namedUser.addNamedUserListener(this);
+        contact.addContactChangeListener(new ContactChangeListener() {
+            @Override
+            public void onContactChanged() {
+                cache.clear();
+            }
+        });
     }
 
     /**
@@ -266,12 +271,6 @@ public class AudienceManager implements NamedUserListener {
 
         return new TagGroupResult(false, null);
     }
-
-    @Override
-    public void onNamedUserIdChanged(@Nullable String id) {
-        cache.clear();
-    }
-
     /**
      * Helper method to generate the tags from the response. Local cache data will be applied.
      *
@@ -343,7 +342,7 @@ public class AudienceManager implements NamedUserListener {
         mutations.addAll(historian.getTagGroupHistory(since));
 
         // Pending Tags
-        mutations.addAll(namedUser.getPendingTagUpdates());
+        mutations.addAll(contact.getPendingTagUpdates());
         mutations.addAll(airshipChannel.getPendingTagUpdates());
 
         // Channel tags
@@ -366,7 +365,7 @@ public class AudienceManager implements NamedUserListener {
         mutations.addAll(historian.getAttributeHistory(clock.currentTimeMillis() - DEFAULT_PREFER_LOCAL_DATA_TIME_MS));
 
         // Pending
-        mutations.addAll(namedUser.getPendingAttributeUpdates());
+        mutations.addAll(contact.getPendingAttributeUpdates());
         mutations.addAll(airshipChannel.getPendingAttributeUpdates());
 
         return AttributeMutation.collapseMutations(mutations);

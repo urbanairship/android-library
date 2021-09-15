@@ -1,4 +1,3 @@
-
 import com.android.build.gradle.LibraryExtension
 import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import io.github.gradlenexus.publishplugin.NexusPublishPlugin

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <ActionEntry class="com.urbanairship.preferencecenter.OpenPreferenceCenterAction">
+        <name>open_preference_center_action</name>
+    </ActionEntry>
+</resources>

@@ -77,7 +77,7 @@ public class AddTagsAction extends BaseTagsAction {
     void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
         Logger.info("AddTagsAction - Adding named user tag groups: %s", tags);
 
-        TagGroupsEditor tagGroupsEditor = UAirship.shared().getNamedUser().editTagGroups();
+        TagGroupsEditor tagGroupsEditor = UAirship.shared().getContact().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.addTags(entry.getKey(), entry.getValue());
         }

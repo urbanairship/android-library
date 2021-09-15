@@ -9,9 +9,17 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
@@ -20,6 +28,7 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
@@ -45,13 +54,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.pm.PackageInfoCompat;
-
 /**
  * UAirship manages the shared state for all Airship
  * services. UAirship.takeOff() should be called to initialize
@@ -74,6 +76,9 @@ public class UAirship {
 
     @NonNull
     public static final String EXTRA_APP_KEY_KEY = "app_key";
+
+    @NonNull
+    public static final String EXTRA_AIRSHIP_DEEP_LINK_SCHEME = "uairship";
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM, UNKNOWN_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -115,7 +120,8 @@ public class UAirship {
 
     private DeepLinkListener deepLinkListener;
     private final Map<Class, AirshipComponent> componentClassMap = new HashMap<>();
-    private final List<AirshipComponent> components = new ArrayList<>();
+
+    List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -135,6 +141,7 @@ public class UAirship {
     AirshipRuntimeConfig runtimeConfig;
     LocaleManager localeManager;
     PrivacyManager privacyManager;
+    Contact contact;
 
     /**
      * Constructs an instance of UAirship.
@@ -720,9 +727,6 @@ public class UAirship {
         this.pushManager = new PushManager(application, preferenceDataStore, runtimeConfig, privacyManager, pushProviders, channel, analytics);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
-        components.add(this.namedUser);
-
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
@@ -732,6 +736,13 @@ public class UAirship {
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
+
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
+        components.add(this.contact);
+
+        //noinspection deprecation
+        this.namedUser = new NamedUser(application, preferenceDataStore, contact);
+        components.add(this.namedUser);
 
         // Debug
         Module debugModule = Modules.debug(application, preferenceDataStore);
@@ -753,7 +764,7 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                privacyManager, channel, pushManager, analytics, remoteData, namedUser);
+                privacyManager, channel, pushManager, analytics, remoteData, contact);
         processModule(automationModule);
 
         // Ad Id
@@ -763,6 +774,10 @@ public class UAirship {
         // Chat
         Module chat = Modules.chat(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(chat);
+
+        // Preference Center
+        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
+        processModule(preferenceCenter);
 
         for (AirshipComponent component : components) {
             component.init();
@@ -802,8 +817,10 @@ public class UAirship {
      * Returns the {@link com.urbanairship.channel.NamedUser} instance.
      *
      * @return The {@link com.urbanairship.channel.NamedUser} instance.
+     * @deprecated Use {@link Contact} instead.
      */
     @NonNull
+    @Deprecated
     public NamedUser getNamedUser() {
         return namedUser;
     }
@@ -916,6 +933,16 @@ public class UAirship {
     }
 
     /**
+     * Returns the {@link Contact} instance.
+     *
+     * @return The {@link Contact} instance.
+     */
+    @NonNull
+    public Contact getContact() {
+        return contact;
+    }
+
+    /**
      * Returns the platform type.
      *
      * @return {@link #AMAZON_PLATFORM} for Amazon, {@link #ANDROID_PLATFORM} for Android (FCM/HMS),
@@ -987,6 +1014,30 @@ public class UAirship {
             throw new IllegalArgumentException("Unable to find component " + clazz);
         }
         return component;
+    }
+
+    /**
+     * Deep links. If the deep link is an `uairship://` it will be handled internally by the SDK.
+     * All other deep links will be forwarded to the deep link listener.
+     *
+     * @param deepLink The deep link.
+     * @return {@code true} if the deep link was handled, otherwise {@code false}.
+     */
+    @MainThread
+    public boolean deepLink(@NonNull String deepLink) {
+        Uri uri = Uri.parse(deepLink);
+        if (EXTRA_AIRSHIP_DEEP_LINK_SCHEME.equals(uri.getScheme())) {
+            for (AirshipComponent component : getComponents()) {
+                if (component.onAirshipDeepLink(uri)) {
+                    return true;
+                }
+            }
+            Logger.debug("Airship deep link not handled: %s", deepLink);
+            return true;
+        } else {
+            DeepLinkListener deepLinkListener = getDeepLinkListener();
+            return deepLinkListener != null && deepLinkListener.onDeepLink(deepLink);
+        }
     }
 
     /**

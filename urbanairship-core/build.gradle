@@ -1,10 +1,8 @@
 plugins {
-    id("airship-publish")
+    id 'airship-module'
 }
 
 description = "Airship Android Core SDK"
-
-apply from: "../common-build.gradle"
 
 dependencies {
     // Required

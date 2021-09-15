@@ -21,8 +21,8 @@
             android:id="@+id/action_deviceInfoFragment_to_deviceInfoAssociatedIdentifiersFragment"
             app:destination="@id/deviceInfoAssociatedIdentifiersFragment" />
         <action
-            android:id="@+id/action_deviceInfoFragment_to_deviceNamedUserAttributesFragment"
-            app:destination="@id/deviceNamedUserAttributesFragment" />
+            android:id="@+id/action_deviceInfoFragment_to_deviceContactAttributesFragment"
+            app:destination="@id/deviceContactAttributesFragment" />
     </fragment>
 
     <fragment
@@ -41,12 +41,12 @@
     </fragment>
 
     <fragment
-        android:id="@+id/deviceNamedUserAttributesFragment"
+        android:id="@+id/deviceContactAttributesFragment"
         android:name="com.urbanairship.debug.deviceinfo.attributes.AttributesFragment"
-        android:label="@string/ua_named_user_attributes_settings_title">
+        android:label="@string/ua_contact_attributes_settings_title">
         <argument
             android:name="type"
-            android:defaultValue="named_user"
+            android:defaultValue="contact"
             app:argType="string" />
     </fragment>
 

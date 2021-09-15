@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/list"
+        layout="@layout/ua_include_preference_center_list"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/error"
+        layout="@layout/ua_include_preference_center_error"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/loading"
+        layout="@layout/ua_include_preference_center_loading"
+        android:visibility="gone" />
+</FrameLayout>

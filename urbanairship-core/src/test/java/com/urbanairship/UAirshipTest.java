@@ -4,8 +4,11 @@ package com.urbanairship;
 
 import android.app.Application;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
+
+import com.urbanairship.actions.DeepLinkListener;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,6 +27,10 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class UAirshipTest extends BaseTestCase {
 
@@ -223,6 +230,67 @@ public class UAirshipTest extends BaseTestCase {
         assertFalse(UAirship.shared().isDataCollectionEnabled());
     }
 
+    @Test
+    public void testDeepLinkListener() {
+        UAirship airship = new UAirship(configOptions);
+
+        DeepLinkListener mockListener = mock(DeepLinkListener.class);
+        airship.setDeepLinkListener(mockListener);
+
+        String goodDeepLink = "some deep link";
+        String badDeepLink = "some other deep link";
+
+        when(mockListener.onDeepLink(goodDeepLink)).thenReturn(true);
+        when(mockListener.onDeepLink(badDeepLink)).thenReturn(false);
+
+        assertTrue(airship.deepLink(goodDeepLink));
+        assertFalse(airship.deepLink(badDeepLink));
+
+        verify(mockListener).onDeepLink(goodDeepLink);
+        verify(mockListener).onDeepLink(badDeepLink);
+    }
+
+    @Test
+    public void testDeepLinkNotHandledByListener() {
+        UAirship airship = new UAirship(configOptions);
+
+        DeepLinkListener mockListener = mock(DeepLinkListener.class);
+        airship.setDeepLinkListener(mockListener);
+
+        when(mockListener.onDeepLink("some deep link")).thenReturn(true);
+        assertTrue(airship.deepLink("some deep link"));
+        verify(mockListener).onDeepLink("some deep link");
+    }
+
+    @Test
+    public void testAirshipDeepLinks() {
+        UAirship airship = new UAirship(configOptions);
+
+        String deepLink = "uairship://neat";
+        Uri uri = Uri.parse(deepLink);
+
+        AirshipComponent mockComponent1 = mock(AirshipComponent.class);
+        when(mockComponent1.onAirshipDeepLink(uri)).thenReturn(false);
+        airship.components.add(mockComponent1);
+
+        AirshipComponent mockComponent2 = mock(AirshipComponent.class);
+        when(mockComponent2.onAirshipDeepLink(uri)).thenReturn(true);
+        airship.components.add(mockComponent2);
+
+        AirshipComponent mockComponent3 = mock(AirshipComponent.class);
+        when(mockComponent3.onAirshipDeepLink(uri)).thenReturn(true);
+        airship.components.add(mockComponent3);
+
+        DeepLinkListener mockListener = mock(DeepLinkListener.class);
+        airship.setDeepLinkListener(mockListener);
+
+        assertTrue(airship.deepLink(deepLink));
+
+        verify(mockListener, never()).onDeepLink(deepLink);
+        verify(mockComponent1).onAirshipDeepLink(uri);
+        verify(mockComponent2).onAirshipDeepLink(uri);
+        verify(mockComponent3, never()).onAirshipDeepLink(uri);
+    }
 
     /**
      * Helper callback for testing.

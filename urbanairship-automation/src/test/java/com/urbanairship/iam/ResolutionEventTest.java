@@ -2,18 +2,17 @@
 
 package com.urbanairship.iam;
 
+import static junit.framework.Assert.assertEquals;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import static junit.framework.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)
 public class ResolutionEventTest {
@@ -61,7 +60,7 @@ public class ResolutionEventTest {
         JsonMap expectedResolutionInfo = JsonMap.newBuilder()
                                                 .put("type", "button_click")
                                                 .put("button_id", "button id")
-                                                .put("button_description", largeLabel.substring(0, 30))
+                                                .put("button_description", largeLabel)
                                                 .put("display_time", Event.millisecondsToSecondsString(3500))
                                                 .build();
 

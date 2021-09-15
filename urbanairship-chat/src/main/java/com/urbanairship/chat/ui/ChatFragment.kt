@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UAirship
+import com.urbanairship.chat.Chat
 import com.urbanairship.chat.ChatDirection
 import com.urbanairship.chat.R
 import com.urbanairship.images.ImageLoader.ImageLoadedCallback
@@ -71,6 +72,9 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         views = Views(view)
+
+        // Observe lifecycle for chat connection
+        Chat.shared().conversation.connect(viewLifecycleOwner)
 
         // Wire up list and empty views
         with(viewModel) {

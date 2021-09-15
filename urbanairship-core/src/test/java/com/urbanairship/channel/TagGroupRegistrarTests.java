@@ -137,8 +137,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
         registrar.uploadPendingMutations();
 
         assertEquals(1, listener.mutations.size());
-        assertEquals(1, listener.mutations.get("identifier").size());
-        assertEquals(mutation, listener.mutations.get("identifier").get(0));
+        assertEquals(mutation, listener.mutations.get(0));
     }
 
     private void verifyRequest(int status, boolean expectedResult) throws RequestException {
@@ -160,21 +159,17 @@ public class TagGroupRegistrarTests extends BaseTestCase {
 
         if (status == 200) {
             assertEquals(1, listener.mutations.size());
-            assertEquals(1, listener.mutations.get("identifier").size());
-            assertEquals(mutation, listener.mutations.get("identifier").get(0));
+            assertEquals(mutation, listener.mutations.get(0));
         }
     }
 
     private static class TestListener implements TagGroupListener {
-
-        Map<String, List<TagGroupsMutation>> mutations = new HashMap<>();
+        List<TagGroupsMutation> mutations = new ArrayList<>();
 
         @Override
-        public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
-            mutations.putIfAbsent(identifier, new ArrayList<TagGroupsMutation>());
-            mutations.get(identifier).add(tagGroupsMutation);
+        public void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> mutations) {
+            this.mutations.addAll(mutations);
         }
-
     }
 
 }

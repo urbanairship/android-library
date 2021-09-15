@@ -9,6 +9,8 @@ import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,22 +28,27 @@ import static org.mockito.Mockito.when;
 
 public class EventApiClientTest extends BaseTestCase {
 
-    private List<String> events;
+    private List<JsonValue> events;
     private EventApiClient client;
     private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
     private RequestFactory mockRequestFactory;
 
+    private JsonValue validEvent;
+    private JsonValue invalidEvent;
+
     @Before
-    public void setUp() {
+    public void setUp() throws JsonException {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
                                                    .setAnalyticsUrl("http://example.com")
                                                    .build());
 
+        validEvent = JsonValue.parseString("{\"some\":\"json\"}");
+        invalidEvent = JsonValue.NULL;
 
         events = new ArrayList<>();
-        events.add("{\"some\":\"json\"}");
+        events.add(validEvent);
 
         testRequest = new TestRequest();
         mockRequestFactory = Mockito.mock(RequestFactory.class);
@@ -54,7 +61,7 @@ public class EventApiClientTest extends BaseTestCase {
      * Test sending a correct request that succeeds
      */
     @Test
-    public void testSendEventsSucceed() throws RequestException {
+    public void testSendEventsSucceed() throws RequestException, JsonException {
         testRequest.responseBody = "";
         testRequest.responseStatus = 200;
         testRequest.responseLastModifiedTime = 0;
@@ -65,6 +72,7 @@ public class EventApiClientTest extends BaseTestCase {
         assertEquals("", response.getResponseBody());
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
+        assertEquals(JsonValue.wrapOpt(events), JsonValue.parseString(testRequest.getRequestBody()));
         assertEquals(0, response.getLastModifiedTime());
         assertNull(response.getResponseHeaders());
     }
@@ -134,7 +142,7 @@ public class EventApiClientTest extends BaseTestCase {
         testRequest.responseLastModifiedTime = 0;
 
         events = new ArrayList<>();
-        events.add("{{null2:\"some\":}");
+        events.add(invalidEvent);
         Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
         assertEquals(200, response.getStatus());
         assertEquals("", response.getResponseBody());

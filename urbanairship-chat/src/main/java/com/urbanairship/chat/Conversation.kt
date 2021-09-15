@@ -6,6 +6,10 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import androidx.paging.DataSource
 import com.urbanairship.Logger
 import com.urbanairship.PendingResult
@@ -42,7 +46,6 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Chat Conversation.
  */
 class Conversation
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @VisibleForTesting
 internal constructor(
@@ -86,6 +89,7 @@ internal constructor(
     private var enabledState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val scope = CoroutineScope(connectionDispatcher)
     private val conversationListeners = CopyOnWriteArrayList<ConversationListener>()
+    private var shouldConnect = false
 
     internal var isEnabled: Boolean
         get() = enabledState.value
@@ -113,11 +117,14 @@ internal constructor(
 
     init {
         connection.chatListener = ChatListener()
+
         activityMonitor.addApplicationListener(object : ApplicationListener {
             override fun onForeground(milliseconds: Long) = launchConnectionUpdate()
-            override fun onBackground(milliseconds: Long) = launchConnectionUpdate()
+            override fun onBackground(milliseconds: Long) {
+                shouldConnect = false
+                launchConnectionUpdate()
+            }
         })
-
         channel.addChannelListener(object : AirshipChannelListener {
             override fun onChannelCreated(channelId: String) = launchConnectionUpdate()
             override fun onChannelUpdated(channelId: String) = launchConnectionUpdate()
@@ -161,7 +168,7 @@ internal constructor(
             chatDao.upsert(pending)
 
             if (connection.isOpenOrOpening && isPendingSent.value) {
-                connection.sendMessage(text, attachmentUrl, requestId, routing)
+                connection.sendMessage(text, attachmentUrl, requestId, ChatDirection.OUTGOING, null, routing)
             } else {
                 updateConnection()
             }
@@ -179,6 +186,36 @@ internal constructor(
             pendingResult.result = chatDao.getMessages().map { it.toChatMessage() }
         }
         return pendingResult
+    }
+
+    /**
+     * Sends messages from a JSONArray.
+     * @param messages The list of messages to send.
+     */
+    internal fun addIncoming(messages: List<ChatIncomingMessage>) {
+        for (msg in messages) {
+            val requestId = msg.id ?: UUID.randomUUID().toString()
+            val createdOn = msg.date?.let { DateUtils.parseIso8601(it) } ?: System.currentTimeMillis()
+
+            scope.launch {
+                val pending = MessageEntity(
+                        messageId = requestId,
+                        text = msg.message,
+                        attachment = msg.url,
+                        createdOn = createdOn,
+                        isPending = true,
+                        direction = ChatDirection.INCOMING
+                )
+
+                chatDao.upsert(pending)
+
+                if (connection.isOpenOrOpening && isPendingSent.value) {
+                    connection.sendMessage(msg.message, msg.url, requestId, ChatDirection.INCOMING, createdOn, routing)
+                } else {
+                    updateConnection()
+                }
+            }
+        }
     }
 
     /**
@@ -249,7 +286,7 @@ internal constructor(
                 activityMonitor.isAppForegrounded
             }
 
-            if (!isPendingSent.value || forceOpen || isForeground || chatDao.hasPendingMessages()) {
+            if (!isPendingSent.value || (isForeground && shouldConnect) || forceOpen || chatDao.hasPendingMessages()) {
                 if (!connection.isOpenOrOpening) {
                     try {
                         connection.open(uvp)
@@ -277,6 +314,38 @@ internal constructor(
         retryConnectionJob = scope.launch {
             delay(RECONNECT_DELAY_MS)
             launchConnectionUpdate()
+        }
+    }
+
+    /**
+     * Opens the connection for the Conversation
+     */
+    fun connect() {
+        shouldConnect = true
+        launchConnectionUpdate()
+    }
+
+    /**
+     * Opens the connection and attach a LifecycleObserver so the connection stays open
+     * while the Conversation is on foreground.
+     * @param lifecycleOwner The view's LifecycleOwner
+     */
+    fun connect(lifecycleOwner: LifecycleOwner) {
+        val lifeCycleObserver: LifecycleObserver = object : LifecycleObserver {
+            @OnLifecycleEvent(Lifecycle.Event.ON_START)
+            fun onStart() {
+                connect()
+            }
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            fun onDestroy() {
+                lifecycleOwner.lifecycle.removeObserver(this)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(lifeCycleObserver)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            connect()
         }
     }
 
@@ -327,7 +396,8 @@ internal constructor(
                         }
                         if (connection.isOpenOrOpening) {
                             chatDao.getPendingMessages().forEach { message ->
-                                connection.sendMessage(message.text, message.attachment, message.messageId, routing)
+                                val date = if (message.direction == ChatDirection.INCOMING) message.createdOn else null
+                                connection.sendMessage(message.text, message.attachment, message.messageId, message.direction, date, routing)
                             }
                             isPendingSent.value = true
                         }
@@ -381,13 +451,18 @@ internal constructor(
 }
 
 internal fun MessageEntity.toChatMessage(): ChatMessage {
+    var pending = false
+    if (this.direction == ChatDirection.OUTGOING) {
+        pending = this.isPending
+    }
+
     return ChatMessage(
             messageId = this.messageId,
             text = this.text,
             createdOn = this.createdOn,
             direction = this.direction,
             attachmentUrl = this.attachment,
-            pending = this.isPending
+            pending = pending
     )
 }
 

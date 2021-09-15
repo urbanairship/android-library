@@ -86,7 +86,7 @@ public class FetchDeviceInfoAction extends Action {
                                             .put(CHANNEL_ID_KEY, UAirship.shared().getChannel().getId())
                                             .put(PUSH_OPT_IN_KEY, UAirship.shared().getPushManager().isOptIn())
                                             .put(LOCATION_ENABLED_KEY, locationClient != null && locationClient.isLocationUpdatesEnabled())
-                                            .putOpt(NAMED_USER_ID_KEY, UAirship.shared().getNamedUser().getId());
+                                            .putOpt(NAMED_USER_ID_KEY, UAirship.shared().getContact().getNamedUserId());
 
         Set<String> tags = UAirship.shared().getChannel().getTags();
         if (!tags.isEmpty()) {

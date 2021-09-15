@@ -2,6 +2,8 @@
 
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequest;
@@ -20,8 +22,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 
@@ -115,6 +115,26 @@ public class AttributeApiClientTest extends BaseTestCase {
                                       .build();
 
         assertEquals("https://example.com/api/named_users/expected_identifier/attributes", testRequest.getUrl().toString());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals(expectedBody,  JsonValue.parseString(testRequest.getRequestBody()));
+        assertEquals(200,  response.getStatus());
+    }
+
+    /**
+     * Test contact attributes
+     */
+    @Test
+    public void testAttributeUpdateContact() throws JsonException, RequestException {
+        AttributeApiClient client = new AttributeApiClient(runtimeConfig, requestFactory, AttributeApiClient.CONTACT_URL_FACTORY);
+        testRequest.responseStatus = 200;
+
+        Response<Void> response = client.updateAttributes("expected_identifier", mutations);
+
+        JsonMap expectedBody = JsonMap.newBuilder()
+                .putOpt("attributes", mutations)
+                .build();
+
+        assertEquals("https://example.com/api/contacts/expected_identifier/attributes", testRequest.getUrl().toString());
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals(expectedBody,  JsonValue.parseString(testRequest.getRequestBody()));
         assertEquals(200,  response.getStatus());

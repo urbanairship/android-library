@@ -4,6 +4,10 @@ package com.urbanairship.channel;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -12,10 +16,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 
@@ -26,6 +26,7 @@ class AttributeApiClient {
 
     private static final String CHANNEL_API_PATH = "api/channels/";
     private static final String NAMED_USER_API_PATH = "api/named_users/";
+    private static final String CONTACT_API_PATH = "api/contacts/";
 
     private static final String ATTRIBUTE_PARAM = "attributes";
 
@@ -80,6 +81,21 @@ class AttributeApiClient {
     };
 
     @VisibleForTesting
+    static final UrlFactory CONTACT_URL_FACTORY = new UrlFactory() {
+        @Nullable
+        @Override
+        public Uri createUrl(@NonNull AirshipRuntimeConfig config, @NonNull String identifier) {
+            return config.getUrlConfig()
+                    .deviceUrl()
+                    .appendEncodedPath(CONTACT_API_PATH)
+                    .appendPath(identifier)
+                    .appendPath(ATTRIBUTE_PARAM)
+                    .build();
+
+        }
+    };
+
+    @VisibleForTesting
     AttributeApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
                        @NonNull RequestFactory requestFactory,
                        @NonNull UrlFactory urlFactory) {
@@ -96,6 +112,11 @@ class AttributeApiClient {
     public static AttributeApiClient channelClient(AirshipRuntimeConfig runtimeConfig) {
         return new AttributeApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
                 CHANNEL_URL_FACTORY);
+    }
+
+    public static AttributeApiClient contactClient(AirshipRuntimeConfig runtimeConfig) {
+        return new AttributeApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
+                CONTACT_URL_FACTORY);
     }
 
     /**

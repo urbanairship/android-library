@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base style -->
+    <style name="UrbanAirship.PreferenceCenter" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/ua_preference_center_background</item>
+        <item name="colorOnPrimary">@color/ua_preference_center_ui_text_color</item>
+        <item name="colorPrimaryVariant">@color/ua_preference_center_background</item>
+        <item name="colorSecondary">@color/ua_preference_center_background</item>
+        <item name="colorSecondaryVariant">@color/ua_preference_center_status_bar</item>
+        <item name="colorOnSecondary">@color/ua_preference_center_ui_text_color</item>
+        <item name="colorSurface">@color/ua_preference_center_surface</item>
+        <item name="colorAccent">@color/ua_preference_center_accent</item>
+        <item name="android:colorBackground">@color/ua_preference_center_background</item>
+        <item name="android:textColorPrimary">@color/ua_preference_center_ui_text_color</item>
+        <item name="toolbarStyle">@style/UrbanAirship.PreferenceCenter.Toolbar</item>
+    </style>
+
+    <!-- Default Activity -->
+    <style name="UrbanAirship.PreferenceCenter.Activity">
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
+    </style>
+
+    <!-- Toolbar -->
+    <style name="UrbanAirship.PreferenceCenter.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar.Surface" />
+
+    <!-- Preference Center list view -->
+    <style name="UrbanAirship.PreferenceCenter.List">
+        <item name="android:fillViewport">false</item>
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <!-- Preference Center error view -->
+    <style name="UrbanAirship.PreferenceCenter.Error">
+        <item name="android:background">?android:colorBackground</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <!-- Preference Center error view icon -->
+    <style name="UrbanAirship.PreferenceCenter.ErrorIcon">
+        <item name="android:src">@drawable/ua_ic_preference_center_round_error_outline</item>
+        <item name="android:tint">?android:textColorSecondary</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- Preference Center error view text -->
+    <style name="UrbanAirship.PreferenceCenter.ErrorText">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textAppearance">?textAppearanceBody1</item>
+        <item name="android:text">@string/ua_preference_center_empty</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">48dp</item>
+        <item name="android:paddingStart">56dp</item>
+        <item name="android:paddingEnd">56dp</item>
+    </style>
+
+    <!-- Preference Center error view retry button -->
+    <style name="UrbanAirship.PreferenceCenter.ErrorButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:text">@string/ua_preference_center_error_retry</item>
+        <item name="android:textAppearance">?textAppearanceButton</item>
+    </style>
+
+    <!-- Preference Center loading view group -->
+    <style name="UrbanAirship.PreferenceCenter.ListLoading">
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <!-- Preference Center loading progress indicator -->
+    <style name="UrbanAirship.PreferenceCenter.ListLoadingIndicator" parent="Widget.MaterialComponents.CircularProgressIndicator">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:indeterminate">true</item>
+        <item name="indicatorColor">?android:colorAccent</item>
+        <item name="minHideDelay">@android:integer/config_mediumAnimTime</item>
+    </style>
+
+    <!-- Preference Center list item base style -->
+    <style name="UrbanAirship.PreferenceCenter.Item">
+        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
+        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
+    </style>
+
+    <!-- Preference Center list header -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Header">
+        <item name="android:minHeight">?android:attr/listPreferredItemHeightLarge</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <!-- Preference Center list description header item text -->
+    <style name="UrbanAirship.PreferenceCenter.Item.HeaderTitle" parent="">
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline6</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <!-- Preference Center list description header item text -->
+    <style name="UrbanAirship.PreferenceCenter.Item.HeaderDescription" parent="">
+        <item name="android:maxLines">6</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+    </style>
+
+    <!-- Preference Center list section header item -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Section">
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <!-- Preference Center section header title -->
+    <style name="UrbanAirship.PreferenceCenter.Item.SectionTitle" parent="">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+        <item name="android:textColor">?android:attr/colorAccent</item>
+    </style>
+
+    <!-- Preference Center section header description -->
+    <style name="UrbanAirship.PreferenceCenter.Item.SectionDescription" parent="">
+        <item name="android:maxLines">10</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItemSecondary</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Preference Center list preference item -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Preference">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <!-- Preference Center list preference item title -->
+    <style name="UrbanAirship.PreferenceCenter.Item.PreferenceTitle" parent="">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <!-- Preference Center list preference item description -->
+    <style name="UrbanAirship.PreferenceCenter.Item.PreferenceDescription" parent="">
+        <item name="android:maxLines">10</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItemSecondary</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Preference Center list item widget base style -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget" parent="">
+        <item name="android:gravity">end|center_vertical</item>
+        <item name="paddingStart">16dp</item>
+        <item name="paddingEnd">0dp</item>
+    </style>
+
+    <!-- Preference Center list item switch widget -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.Switch">
+
+    </style>
+</resources>

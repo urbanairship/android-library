@@ -21,6 +21,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
 
 import org.json.JSONObject;
@@ -411,7 +412,14 @@ public class NativeBridge {
      * @param namedUser
      */
     private void setNamedUserCommand(String namedUser) {
-        UAirship.shared().getNamedUser().setId(namedUser);
+        if (namedUser != null) {
+            namedUser = namedUser.trim();
+        }
+        if (UAStringUtil.isEmpty(namedUser)) {
+            UAirship.shared().getContact().reset();
+        } else {
+            UAirship.shared().getContact().identify(namedUser);
+        }
     }
 
 }

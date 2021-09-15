@@ -8,6 +8,7 @@ import android.webkit.WebView;
 
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.iam.html.HtmlWebViewClient;
 import com.urbanairship.javascript.JavaScriptEnvironment;
@@ -32,21 +33,20 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class HtmlWebViewClientTest {
 
-    private WebView webView;
-    private String webViewUrl;
+    private WebView webView = mock(WebView.class);
+    private String webViewUrl = "http://test-client";
+    private Contact mockContact = mock(Contact.class);
     private InAppMessage message;
 
     @Before
     public void setup() {
-        webView = Mockito.mock(WebView.class);
-
-        webViewUrl = "http://test-client";
         when(webView.getUrl()).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) {
@@ -68,7 +68,7 @@ public class HtmlWebViewClientTest {
                                    .build();
 
         UAirship.shared().getUrlAllowList().addEntry("http://test-client");
-
+        TestApplication.getApplication().setContact(mockContact);
     }
 
     /**
@@ -106,7 +106,7 @@ public class HtmlWebViewClientTest {
 
     @Test
     public void testJavaScriptEnvironment() {
-        NativeBridge nativeBridge = Mockito.mock(NativeBridge.class);
+        NativeBridge nativeBridge = mock(NativeBridge.class);
         HtmlWebViewClient client = new HtmlWebViewClient(nativeBridge, message) {
             @Override
             public void onMessageDismissed(@NonNull JsonValue argument) {

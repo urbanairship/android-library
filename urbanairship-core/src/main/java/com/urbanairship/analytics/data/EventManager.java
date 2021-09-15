@@ -13,7 +13,11 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +71,7 @@ public class EventManager {
     private final PreferenceDataStore preferenceDataStore;
     private final JobDispatcher jobDispatcher;
     private final ActivityMonitor activityMonitor;
-    private final EventResolver eventResolver;
+    private final EventDao eventDao;
     private final EventApiClient apiClient;
     private final AirshipRuntimeConfig runtimeConfig;
 
@@ -80,7 +84,7 @@ public class EventManager {
                         @NonNull PreferenceDataStore preferenceDataStore,
                         @NonNull AirshipRuntimeConfig runtimeConfig) {
         this(preferenceDataStore, runtimeConfig, JobDispatcher.shared(context), GlobalActivityMonitor.shared(context),
-                new EventResolver(context), new EventApiClient(runtimeConfig));
+                AnalyticsDatabase.createDatabase(context, runtimeConfig).getEventDao(), new EventApiClient(runtimeConfig));
     }
 
     @VisibleForTesting
@@ -88,14 +92,14 @@ public class EventManager {
                  @NonNull AirshipRuntimeConfig runtimeConfig,
                  @NonNull JobDispatcher jobDispatcher,
                  @NonNull ActivityMonitor activityMonitor,
-                 @NonNull EventResolver eventResolver,
+                 @NonNull EventDao eventDao,
                  @NonNull EventApiClient apiClient) {
 
         this.preferenceDataStore = preferenceDataStore;
         this.runtimeConfig = runtimeConfig;
         this.jobDispatcher = jobDispatcher;
         this.activityMonitor = activityMonitor;
-        this.eventResolver = eventResolver;
+        this.eventDao = eventDao;
         this.apiClient = apiClient;
 
     }
@@ -151,11 +155,20 @@ public class EventManager {
      */
     @WorkerThread
     public void addEvent(@NonNull Event event, @NonNull String sessionId) {
+        EventEntity entity;
+        try {
+            entity = EventEntity.create(event, sessionId);
+        } catch (JsonException e) {
+            Logger.error(e, "Analytics - Invalid event: %s", event);
+            return;
+        }
+
         synchronized (eventLock) {
-            eventResolver.insertEvent(event, sessionId);
+            eventDao.insert(entity);
 
             // Handle database max size exceeded
-            eventResolver.trimDatabase(preferenceDataStore.getInt(MAX_TOTAL_DB_SIZE_KEY, EventResponse.MAX_TOTAL_DB_SIZE_BYTES));
+            int maxSize = preferenceDataStore.getInt(MAX_TOTAL_DB_SIZE_KEY, EventResponse.MAX_TOTAL_DB_SIZE_BYTES);
+            eventDao.trimDatabase(maxSize);
         }
 
         switch (event.getPriority()) {
@@ -188,7 +201,7 @@ public class EventManager {
     @WorkerThread
     public void deleteEvents() {
         synchronized (eventLock) {
-            eventResolver.deleteAllEvents();
+            eventDao.deleteAll();
         }
     }
 
@@ -219,21 +232,21 @@ public class EventManager {
         }
 
         int eventCount;
-        Map<String, String> events;
+        List<EventEntity.EventIdAndData> events;
 
         synchronized (eventLock) {
-            eventCount = eventResolver.getEventCount();
+            eventCount = eventDao.count();
 
             if (eventCount <= 0) {
                 Logger.debug("No events to send.");
                 return true;
             }
 
-            final int avgSize = Math.max(1, eventResolver.getDatabaseSize() / eventCount);
+            final int avgSize = Math.max(1, eventDao.databaseSize() / eventCount);
 
             //pull enough events to fill a batch (roughly)
             int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize);
-            events = eventResolver.getEvents(batchEventCount);
+            events = eventDao.getBatch(batchEventCount);
         }
 
         if (events.isEmpty()) {
@@ -241,8 +254,13 @@ public class EventManager {
             return false;
         }
 
+        List<JsonValue> eventPayloads = new ArrayList<>(events.size());
+        for (EventEntity.EventIdAndData event : events) {
+            eventPayloads.add(event.data);
+        }
+
         try {
-            Response<EventResponse> response = apiClient.sendEvents(events.values(), headers);
+            Response<EventResponse> response = apiClient.sendEvents(eventPayloads, headers);
             if (!response.isSuccessful()) {
                 Logger.debug("Analytic upload failed.");
                 return false;
@@ -250,7 +268,7 @@ public class EventManager {
 
             Logger.debug("Analytic events uploaded.");
             synchronized (eventLock) {
-                eventResolver.deleteEvents(events.keySet());
+                eventDao.deleteBatch(events);
             }
 
             // Update preferences

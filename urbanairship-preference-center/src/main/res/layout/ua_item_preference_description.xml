@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.PreferenceCenter.Item.Header"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="vertical">
+
+    <!-- This view is hidden by default in the HeaderTitle style. -->
+    <TextView
+        android:id="@+id/ua_pref_title"
+        style="@style/UrbanAirship.PreferenceCenter.Item.HeaderTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:visibility="visible"
+        tools:text="Preference Center Title" />
+
+    <TextView
+        android:id="@+id/ua_pref_description"
+        style="@style/UrbanAirship.PreferenceCenter.Item.HeaderDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Preference Center Description" />
+</LinearLayout>

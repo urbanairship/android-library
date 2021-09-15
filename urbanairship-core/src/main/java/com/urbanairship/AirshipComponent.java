@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.content.Context;
+import android.net.Uri;
 
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
@@ -201,4 +202,17 @@ public abstract class AirshipComponent {
         return AirshipComponentGroups.NONE;
     }
 
+
+    /**
+     * Called to handle `uairship://` deep links.
+     *
+     * @param uri The deep link.
+     * @return true if the deep link was handled, otherwise false.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @AirshipComponentGroups.Group
+    public boolean onAirshipDeepLink(@NonNull Uri uri) {
+        return false;
+    }
 }
