@@ -205,11 +205,13 @@ class Chat
             }
 
             uri.getQueryParameter(DEEP_LINK_PREPOPULATED_KEY)?.let {
-                try {
-                    val messages = ChatIncomingMessage.getListFromJSONArrayString(it)
-                    conversation.addIncoming(messages)
-                } catch (e: JsonException) {
-                    Logger.error("Failed to parse outgoing messages", e)
+                if (!it.isEmpty()) {
+                    try {
+                        val messages = ChatIncomingMessage.getListFromJSONArrayString(it)
+                        conversation.addIncoming(messages)
+                    } catch (e: JsonException) {
+                        Logger.error("Failed to parse outgoing messages", e)
+                    }
                 }
             }
 

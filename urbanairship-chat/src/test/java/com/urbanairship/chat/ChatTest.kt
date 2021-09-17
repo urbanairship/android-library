@@ -173,6 +173,30 @@ class ChatTest {
     }
 
     @Test
+    fun testDeepLinkEmptyChatArgs() {
+        // uairship://chat?routing={"agent":"smith"}&chat_input=
+
+        val deepLink = Uri.parse("uairship://chat?routing=%7B%22agent%22%3A%22smith%22%7D&chat_input=")
+        chat.openChatListener = onShowChatListener
+
+        assertTrue(chat.onAirshipDeepLink(deepLink))
+        verify(onShowChatListener).onOpenChat("")
+        verify(mockConversation).routing = ChatRouting(agent = "smith")
+    }
+
+    @Test
+    fun testDeepLinkEmptyMessageArgs() {
+        // uairship://chat?routing={"agent":"smith"}&chat_input=Hello Person!&prepopulated_messages=
+
+        val deepLink = Uri.parse("uairship://chat?routing=%7B%22agent%22%3A%22smith%22%7D&chat_input=Hello%20Person%21&prepopulated_messages=")
+        chat.openChatListener = onShowChatListener
+
+        assertTrue(chat.onAirshipDeepLink(deepLink))
+        verify(onShowChatListener).onOpenChat("Hello Person!")
+        verify(mockConversation).routing = ChatRouting(agent = "smith")
+    }
+
+    @Test
     fun testInvalidDeepLinks() {
         chat.openChatListener = onShowChatListener
 
