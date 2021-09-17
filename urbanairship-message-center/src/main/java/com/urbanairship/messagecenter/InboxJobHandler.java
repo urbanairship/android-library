@@ -242,7 +242,14 @@ class InboxJobHandler {
 
             serverMessageIds.add(messageId);
 
-            if (messageDao.updateMessage(MessageEntity.createMessageFromPayload(messageId, message)) != 1) {
+            MessageEntity messageEntity = MessageEntity.createMessageFromPayload(messageId, message);
+
+            if (messageEntity == null) {
+                Logger.error("InboxJobHandler - Message Entity is null");
+                continue;
+            }
+
+            if (messageDao.updateMessage(messageEntity) != 1) {
                 messagesToInsert.add(message);
             }
         }
