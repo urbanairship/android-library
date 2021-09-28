@@ -2,12 +2,12 @@
 
 package com.urbanairship.iam;
 
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 /**
  * Resolution event.
@@ -16,11 +16,6 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ResolutionEvent extends InAppMessageEvent {
-
-    /**
-     * Max button description length.
-     */
-    private static final int MAX_BUTTON_DESCRIPTION_LENGTH = 30;
 
     private static final String TYPE = "in_app_resolution";
 
@@ -100,9 +95,6 @@ class ResolutionEvent extends InAppMessageEvent {
 
         if (ResolutionInfo.RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.getType()) && resolutionInfo.getButtonInfo() != null) {
             String description = resolutionInfo.getButtonInfo().getLabel().getText();
-            if (description != null && description.length() > MAX_BUTTON_DESCRIPTION_LENGTH) {
-                description = description.substring(0, MAX_BUTTON_DESCRIPTION_LENGTH);
-            }
             resolutionDataBuilder.put(BUTTON_ID, resolutionInfo.getButtonInfo().getId())
                                  .put(BUTTON_DESCRIPTION, description);
         }

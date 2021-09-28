@@ -3,11 +3,13 @@ package com.urbanairship.chat.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.chat.ChatDirection
 import com.urbanairship.chat.ChatRouting
 import com.urbanairship.chat.websocket.WebSocket
 import com.urbanairship.chat.websocket.WebSocketFactory
 import com.urbanairship.chat.websocket.WebSocketListener
 import com.urbanairship.config.AirshipUrlConfig
+import com.urbanairship.util.DateUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import org.junit.After
@@ -112,10 +114,28 @@ class ChatConnectionTest {
         // Prevent heartbeats
         testScope.pauseDispatcher()
 
-        chatConnection.open("some-uvp")
-        chatConnection.sendMessage("hi", "some attachment", "request id", ChatRouting("agent!"))
+        val date = DateUtils.parseIso8601("2021-01-01T00:00:00")
 
-        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id", ChatRouting("agent!"))
+        chatConnection.open("some-uvp")
+        chatConnection.sendMessage("hi", "some attachment", "request id", ChatDirection.OUTGOING, date, ChatRouting("agent!"))
+
+        val expected = ChatRequest.SendMessage("some-uvp", "hi", "some attachment", "request id", ChatDirection.OUTGOING, date, ChatRouting("agent!"))
+
+        verify(mockWebSocket).send(argThat {
+            val parsed = ChatRequest.SendMessage.parse(this)
+            expected == parsed
+        })
+    }
+
+    @Test
+    fun testSendNilOptionalValues() {
+        // Prevent heartbeats
+        testScope.pauseDispatcher()
+
+        chatConnection.open("some-uvp")
+        chatConnection.sendMessage("hi", null, "request id", ChatDirection.OUTGOING, null, null)
+
+        val expected = ChatRequest.SendMessage("some-uvp", "hi", null, "request id", ChatDirection.OUTGOING, null, ChatRouting(null))
 
         verify(mockWebSocket).send(argThat {
             val parsed = ChatRequest.SendMessage.parse(this)

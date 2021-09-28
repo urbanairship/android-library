@@ -216,9 +216,9 @@ public class PrivacyManager {
     }
 
     /**
-     * Enables features.
+     * Disables features.
      *
-     * @param features The features to enable.
+     * @param features The features to disable.
      */
     public void disable(@Feature int... features) {
         update(currentValue &~ combine(features));

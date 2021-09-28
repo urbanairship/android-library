@@ -66,9 +66,9 @@
 
         <androidx.preference.Preference
             app:dependency="tags_and_attributes"
-            app:key="named_user_attributes"
+            app:key="contact_attributes"
             app:persistent="false"
-            app:title="@string/ua_named_user_attributes_settings_title" />
+            app:title="@string/ua_contact_attributes_settings_title" />
 
         <androidx.preference.Preference
             app:dependency="tags_and_attributes"

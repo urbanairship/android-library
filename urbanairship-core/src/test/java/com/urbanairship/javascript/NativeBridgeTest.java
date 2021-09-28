@@ -6,6 +6,7 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.StubbedActionRunRequest;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -17,6 +18,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
+import com.urbanairship.contacts.Contact;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,12 +45,12 @@ import static org.mockito.Mockito.when;
 
 public class NativeBridgeTest extends BaseTestCase {
 
-    private NativeBridge nativeBridge;
 
-    private ActionRunRequestFactory runRequestFactory;
-    private ActionRunRequestExtender runRequestExtender;
-    private JavaScriptExecutor javaScriptExecutor;
-    private NativeBridge.CommandDelegate commandDelegate;
+    private ActionRunRequestFactory runRequestFactory = mock(ActionRunRequestFactory.class);
+    private ActionRunRequestExtender runRequestExtender = mock(ActionRunRequestExtender.class);
+    private JavaScriptExecutor javaScriptExecutor = mock(JavaScriptExecutor.class);
+    private NativeBridge.CommandDelegate commandDelegate = mock(NativeBridge.CommandDelegate.class);
+    private Contact contact = mock(Contact.class);
 
     private Executor executor = new Executor() {
         @Override
@@ -57,20 +59,17 @@ public class NativeBridgeTest extends BaseTestCase {
         }
     };
 
+    private NativeBridge nativeBridge;
+
     @Before
     public void setup() {
-        runRequestFactory = mock(ActionRunRequestFactory.class);
-        runRequestExtender = mock(ActionRunRequestExtender.class);
         when(runRequestExtender.extend(any(ActionRunRequest.class))).then(new Answer<ActionRunRequest>() {
             @Override
             public ActionRunRequest answer(InvocationOnMock invocation) {
                 return (ActionRunRequest) invocation.getArgument(0);
             }
         });
-
-        javaScriptExecutor = mock(JavaScriptExecutor.class);
-        commandDelegate = mock(NativeBridge.CommandDelegate.class);
-
+        TestApplication.getApplication().setContact(contact);
         nativeBridge = new NativeBridge(runRequestFactory, executor);
     }
 
@@ -486,20 +485,20 @@ public class NativeBridgeTest extends BaseTestCase {
     public void testNamedUserCommand() {
         String url = "uairship://named_user?id=cool";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
-        assertEquals("cool", UAirship.shared().getNamedUser().getId());
+        verify(contact).identify("cool");
     }
 
     @Test
     public void testEncodedNamedUserCommand() {
         String url = "uairship://named_user?id=my%2Fname%26%20user";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
-        assertEquals("my/name& user", UAirship.shared().getNamedUser().getId());
+        verify(contact).identify("my/name& user");
     }
 
     @Test
     public void testNamedUserNullCommand() {
         String url = "uairship://named_user?id=";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
-        assertEquals(null, UAirship.shared().getNamedUser().getId());
+        verify(contact).reset();
     }
 }

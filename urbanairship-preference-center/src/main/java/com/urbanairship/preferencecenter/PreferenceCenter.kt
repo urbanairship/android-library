@@ -14,7 +14,6 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
 import com.urbanairship.UAirship
-import com.urbanairship.json.JsonException
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
 import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
@@ -112,14 +111,18 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
 
         remoteData.payloadsForType(PAYLOAD_TYPE)
                 .flatMap { payload ->
-                    val forms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
-                    Logger.verbose("Found ${forms.size()} preference forms in RemoteData")
-                    val preferenceForms = try {
-                        // Parse the payloads and return the list as a map of ID to PreferenceForms.
-                        forms.map { PreferenceCenterPayload.parse(it.optMap()).config }.associateBy { it.id }
-                    } catch (e: JsonException) {
-                        return@flatMap Observable.error(e)
-                    }
+                    val payloadForms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
+                    Logger.verbose("Found ${payloadForms.size()} preference forms in RemoteData")
+
+                    // Parse the payloads and return the list as a map of ID to PreferenceForms.
+                    val preferenceForms = payloadForms.mapNotNull {
+                        try {
+                            PreferenceCenterPayload.parse(it.optMap()).config
+                        } catch (e: Exception) {
+                            Logger.warn("Failed to parse preference center config: ${e.message}")
+                            null
+                        }
+                    }.associateBy { it.id }
                     Observable.just(preferenceForms)
                 }
                 .subscribeOn(backgroundScheduler)

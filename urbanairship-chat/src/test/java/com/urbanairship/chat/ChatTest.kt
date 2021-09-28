@@ -158,13 +158,32 @@ class ChatTest {
 
     @Test
     fun testDeepLinkArgs() {
-        // uairship://chat?routing={"agent":"smith"}&chat_input=Hello Person!
-        val deepLink = Uri.parse("uairship://chat?routing=%7B%22agent%22%3A%22smith%22%7D&chat_input=Hello%20Person%21")
+        // uairship://chat?routing={"agent":"smith"}&chat_input=Hello Person!&prepopulated_messages=[{"msg":"msg1","url":"https://fakeu.rl","date":"2021-01-01T00:00:00Z","id":"asdfasdf"},{"msg":"msg2","url":"https://fakeu.rl"},"date":"2021-01-02T00:00:00Z","id":"fdsafdsa"}]
+
+        val deepLink = Uri.parse("uairship://chat?routing=%7B%22agent%22%3A%22smith%22%7D&chat_input=Hello%20Person%21&prepopulated_messages=%5B%7B%22msg%22%3A%22msg1%22%2C%22url%22%3A%22https%3A%2F%2Ffakeu.rl%22%2C%22date%22%3A%222021-01-01T00%3A00%3A00Z%22%2C%22id%22%3A%22asdfasdf%22%7D%2C%7B%22msg%22%3A%22msg2%22%2C%22url%22%3A%22https%3A%2F%2Ffakeu.rl%22%2C%22date%22%3A%222021-01-02T00%3A00%3A00Z%22%2C%22id%22%3A%22fdsafdsa%22%7D%5D%0A%0A")
         chat.openChatListener = onShowChatListener
 
         assertTrue(chat.onAirshipDeepLink(deepLink))
         verify(onShowChatListener).onOpenChat("Hello Person!")
         verify(mockConversation).routing = ChatRouting(agent = "smith")
+
+        val messages = listOf(ChatIncomingMessage("msg1", "https://fakeu.rl", "2021-01-01T00:00:00Z", "asdfasdf"),
+                ChatIncomingMessage("msg2", "https://fakeu.rl", "2021-01-02T00:00:00Z", "fdsafdsa"))
+        verify(mockConversation).addIncoming(messages)
+    }
+
+    @Test
+    fun testSimpleStringsDeepLinkArgs() {
+        // uairship://chat?route_agent=smith&prepopulated_message=msg1
+
+        val deepLink = Uri.parse("uairship://chat?route_agent=smith&prepopulated_message=msg1")
+        chat.openChatListener = onShowChatListener
+
+        assertTrue(chat.onAirshipDeepLink(deepLink))
+        verify(mockConversation).routing = ChatRouting(agent = "smith")
+
+        val messages = listOf(ChatIncomingMessage("msg1", null, null, null))
+        verify(mockConversation).addIncoming(messages)
     }
 
     @Test

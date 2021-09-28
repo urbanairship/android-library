@@ -15,8 +15,7 @@ public interface AttributeListener {
     /**
      * Called when attributes are uploaded.
      *
-     * @param identifier The identifier. Either the channel or named user Id.
      * @param attributes The attributes.
      */
-    void onAttributeMutationsUploaded(@NonNull String identifier, @NonNull List<AttributeMutation> attributes);
+    void onAttributeMutationsUploaded(@NonNull List<AttributeMutation> attributes);
 }

@@ -168,7 +168,7 @@ internal constructor(
             chatDao.upsert(pending)
 
             if (connection.isOpenOrOpening && isPendingSent.value) {
-                connection.sendMessage(text, attachmentUrl, requestId, routing)
+                connection.sendMessage(text, attachmentUrl, requestId, ChatDirection.OUTGOING, null, routing)
             } else {
                 updateConnection()
             }
@@ -186,6 +186,36 @@ internal constructor(
             pendingResult.result = chatDao.getMessages().map { it.toChatMessage() }
         }
         return pendingResult
+    }
+
+    /**
+     * Sends messages from a JSONArray.
+     * @param messages The list of messages to send.
+     */
+    internal fun addIncoming(messages: List<ChatIncomingMessage>) {
+        for (msg in messages) {
+            val requestId = msg.id ?: UUID.randomUUID().toString()
+            val createdOn = msg.date?.let { DateUtils.parseIso8601(it) } ?: System.currentTimeMillis()
+
+            scope.launch {
+                val pending = MessageEntity(
+                        messageId = requestId,
+                        text = msg.message,
+                        attachment = msg.url,
+                        createdOn = createdOn,
+                        isPending = true,
+                        direction = ChatDirection.INCOMING
+                )
+
+                chatDao.upsert(pending)
+
+                if (connection.isOpenOrOpening && isPendingSent.value) {
+                    connection.sendMessage(msg.message, msg.url, requestId, ChatDirection.INCOMING, createdOn, routing)
+                } else {
+                    updateConnection()
+                }
+            }
+        }
     }
 
     /**
@@ -366,7 +396,8 @@ internal constructor(
                         }
                         if (connection.isOpenOrOpening) {
                             chatDao.getPendingMessages().forEach { message ->
-                                connection.sendMessage(message.text, message.attachment, message.messageId, routing)
+                                val date = if (message.direction == ChatDirection.INCOMING) message.createdOn else null
+                                connection.sendMessage(message.text, message.attachment, message.messageId, message.direction, date, routing)
                             }
                             isPendingSent.value = true
                         }
@@ -420,13 +451,18 @@ internal constructor(
 }
 
 internal fun MessageEntity.toChatMessage(): ChatMessage {
+    var pending = false
+    if (this.direction == ChatDirection.OUTGOING) {
+        pending = this.isPending
+    }
+
     return ChatMessage(
             messageId = this.messageId,
             text = this.text,
             createdOn = this.createdOn,
             direction = this.direction,
             attachmentUrl = this.attachment,
-            pending = this.isPending
+            pending = pending
     )
 }
 

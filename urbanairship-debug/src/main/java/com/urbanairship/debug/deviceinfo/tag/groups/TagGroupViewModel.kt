@@ -53,8 +53,8 @@ class TagGroupViewModel : ViewModel() {
             TagGroupType.CHANNEL -> {
                 UAirship.shared().channel.editTagGroups()
             }
-            TagGroupType.NAMED_USER -> {
-                UAirship.shared().namedUser.editTagGroups()
+            TagGroupType.CONTACT -> {
+                UAirship.shared().contact.editTagGroups()
             }
         }
     }

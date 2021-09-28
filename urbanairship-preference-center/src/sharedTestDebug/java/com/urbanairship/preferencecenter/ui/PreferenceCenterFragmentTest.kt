@@ -33,9 +33,12 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterFragment.OnDisplayPr
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import java.util.UUID
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.TestCoroutineScope
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
@@ -47,6 +50,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class PreferenceCenterFragmentTest {
 
     companion object {
@@ -117,6 +121,8 @@ internal class PreferenceCenterFragmentTest {
         private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, CONFIG.asPrefCenterItems(), emptySet())
     }
 
+    private val testScope = TestCoroutineScope()
+
     private val states = MutableStateFlow<State>(State.Loading)
 
     private val viewModel: PreferenceCenterViewModel = mock {
@@ -125,6 +131,11 @@ internal class PreferenceCenterFragmentTest {
 
     private val onDisplayListener: OnDisplayPreferenceCenterListener = mock {
         on(it.onDisplayPreferenceCenter(any(), any())) doReturn false
+    }
+
+    @After
+    fun tearDown() {
+        testScope.cleanupTestCoroutines()
     }
 
     @Test
@@ -234,7 +245,10 @@ internal class PreferenceCenterFragmentTest {
         block: PreferenceCenterRobot.() -> Unit
     ) {
         val scenario = launchFragmentInContainer(args, R.style.UrbanAirship_PreferenceCenter_Activity) {
-            TestPreferenceCenterFragment(mockViewModelFactory = ViewModelUtil.createFor(viewModel)).apply {
+            TestPreferenceCenterFragment(
+                mockViewModelFactory = ViewModelUtil.createFor(viewModel),
+                mockViewModelScopeProvider = { testScope }
+            ).apply {
                 setOnDisplayPreferenceCenterListener(onDisplayListener)
             }
         }

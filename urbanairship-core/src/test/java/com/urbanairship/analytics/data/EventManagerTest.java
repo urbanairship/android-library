@@ -11,6 +11,8 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +23,7 @@ import org.mockito.internal.verification.Times;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.urbanairship.analytics.data.EventManager.MIN_BATCH_INTERVAL_KEY;
@@ -36,7 +39,7 @@ public class EventManagerTest extends BaseTestCase {
 
     private EventManager eventManager;
     private EventApiClient mockClient;
-    private EventResolver mockEventResolver;
+    private EventDao mockEventDao;
     private JobDispatcher mockDispatcher;
     private ActivityMonitor mockActivityMonitor;
     private PreferenceDataStore dataStore;
@@ -46,7 +49,7 @@ public class EventManagerTest extends BaseTestCase {
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
-        mockEventResolver = mock(EventResolver.class);
+        mockEventDao = mock(EventDao.class);
 
         testAirshipRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
@@ -55,20 +58,20 @@ public class EventManagerTest extends BaseTestCase {
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        eventManager = new EventManager(dataStore, testAirshipRuntimeConfig, mockDispatcher,
-                mockActivityMonitor, mockEventResolver, mockClient);
+        eventManager = new EventManager(dataStore, testAirshipRuntimeConfig, mockDispatcher, mockActivityMonitor, mockEventDao, mockClient);
     }
 
     /**
      * Tests adding an event after the next send time schedules an upload with a 10 second delay.
      */
     @Test
-    public void testAddEventAfterNextSendTime() {
+    public void testAddEventAfterNextSendTime() throws JsonException {
         CustomEvent customEvent = CustomEvent.newBuilder("event name").build();
-        eventManager.addEvent(customEvent, "session");
+        EventEntity entity = EventEntity.create(customEvent, "session");
 
+        eventManager.addEvent(customEvent, "session");
         // Verify we add an event.
-        verify(mockEventResolver, new Times(1)).insertEvent(customEvent, "session");
+        verify(mockEventDao, new Times(1)).insert(entity);
 
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
@@ -106,9 +109,11 @@ public class EventManagerTest extends BaseTestCase {
      * Tests sending events
      */
     @Test
-    public void testSendingEvents() throws RequestException {
-        Map<String, String> events = new HashMap<>();
-        events.put("firstEvent", "{ 'firstEventBody' }");
+    public void testSendingEvents() throws RequestException, JsonException {
+        JsonValue data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }");
+        EventEntity.EventIdAndData payload = new EventEntity.EventIdAndData(1, "firstEvent", data);
+        List<EventEntity.EventIdAndData> events = Collections.singletonList(payload);
+        List<JsonValue> eventPayloads = Collections.singletonList(payload.data);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
@@ -116,14 +121,14 @@ public class EventManagerTest extends BaseTestCase {
         // Set up data manager to return 2 count for events.
         // Note: we only have one event, but it should only ask for one to upload
         // having it return 2 will make it schedule to upload events in the future
-        when(mockEventResolver.getEventCount()).thenReturn(2);
+        when(mockEventDao.count()).thenReturn(2);
 
         // Return 200 bytes in size.  It should only be able to do 100 bytes so only
         // the first event.
-        when(mockEventResolver.getDatabaseSize()).thenReturn(200);
+        when(mockEventDao.databaseSize()).thenReturn(200);
 
         // Return the event when it asks for 1
-        when(mockEventResolver.getEvents(1)).thenReturn(events);
+        when(mockEventDao.getBatch(1)).thenReturn(events);
 
         // Set the max batch size to 100
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
@@ -135,7 +140,7 @@ public class EventManagerTest extends BaseTestCase {
         when(eventResponse.getMinBatchInterval()).thenReturn(100);
 
         // Return the response
-        when(mockClient.sendEvents(events.values(), headers))
+        when(mockClient.sendEvents(eventPayloads, headers))
                 .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_OK)
                         .setResult(eventResponse)
                         .build());
@@ -144,10 +149,10 @@ public class EventManagerTest extends BaseTestCase {
         assertTrue(eventManager.uploadEvents(headers));
 
         // Check mockClients receives the events
-        verify(mockClient).sendEvents(events.values(), headers);
+        verify(mockClient).sendEvents(eventPayloads, headers);
 
         // Check data manager deletes events
-        verify(mockEventResolver).deleteEvents(events.keySet());
+        verify(mockEventDao).deleteBatch(events);
 
         // Verify responses are being saved
         assertEquals(200, dataStore.getInt(EventManager.MAX_TOTAL_DB_SIZE_KEY, 0));
@@ -172,46 +177,48 @@ public class EventManagerTest extends BaseTestCase {
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000);
 
         // Fake the resolver to act like it has more than 500 events
-        when(mockEventResolver.getDatabaseSize()).thenReturn(100000);
-        when(mockEventResolver.getEventCount()).thenReturn(1000);
+        when(mockEventDao.databaseSize()).thenReturn(100000);
+        when(mockEventDao.count()).thenReturn(1000);
 
         eventManager.uploadEvents(Collections.<String, String>emptyMap());
 
         // Verify it only asked for 500
-        verify(mockEventResolver).getEvents(500);
+        verify(mockEventDao).getBatch(500);
     }
 
     /**
      * Test sending events when the upload fails.
      */
     @Test
-    public void testSendEventsFails() throws RequestException {
-        Map<String, String> events = new HashMap<>();
-        events.put("firstEvent", "{ 'firstEventBody' }");
+    public void testSendEventsFails() throws RequestException, JsonException {
+        JsonValue data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }");
+        EventEntity.EventIdAndData payload = new EventEntity.EventIdAndData(1, "firstEvent", data);
+        List<EventEntity.EventIdAndData> events = Collections.singletonList(payload);
+        List<JsonValue> eventPayloads = Collections.singletonList(payload.data);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
 
-        when(mockEventResolver.getEventCount()).thenReturn(1);
-        when(mockEventResolver.getDatabaseSize()).thenReturn(100);
-        when(mockEventResolver.getEvents(1)).thenReturn(events);
+        when(mockEventDao.count()).thenReturn(1);
+        when(mockEventDao.databaseSize()).thenReturn(100);
+        when(mockEventDao.getBatch(1)).thenReturn(events);
 
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100);
 
         EventResponse eventResponse = mock(EventResponse.class);
 
-        when(mockClient.sendEvents(events.values(), headers))
+        when(mockClient.sendEvents(eventPayloads, headers))
                 .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_BAD_REQUEST)
-                        .setResult(null)
+                        .setResult(eventResponse)
                         .build());
 
         assertFalse(eventManager.uploadEvents(headers));
 
         // Check mockClient receives the events
-        verify(mockClient).sendEvents(events.values(), headers);
+        verify(mockClient).sendEvents(eventPayloads, headers);
 
         // If it fails, it should skip deleting events
-        verify(mockEventResolver, never()).deleteEvents(events.keySet());
+        verify(mockEventDao, never()).deleteBatch(events);
     }
 
     /**
@@ -245,7 +252,6 @@ public class EventManagerTest extends BaseTestCase {
     @Test
     public void testDeleteAll() {
         eventManager.deleteEvents();
-        verify(mockEventResolver).deleteAllEvents();
+        verify(mockEventDao).deleteAll();
     }
-
 }

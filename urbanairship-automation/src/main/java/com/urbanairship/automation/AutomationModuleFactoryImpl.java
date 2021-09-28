@@ -9,8 +9,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
@@ -41,9 +41,9 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
                         @NonNull PushManager pushManager,
                         @NonNull Analytics analytics,
                         @NonNull RemoteData remoteData,
-                        @NonNull NamedUser namedUser) {
+                        @NonNull Contact contact) {
 
-        InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig, privacyManager, analytics, remoteData, airshipChannel, namedUser);
+        InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig, privacyManager, analytics, remoteData, airshipChannel, contact);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
 
         Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);

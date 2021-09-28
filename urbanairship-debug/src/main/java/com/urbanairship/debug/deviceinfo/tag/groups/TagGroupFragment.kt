@@ -25,13 +25,13 @@ class TagGroupFragment : Fragment() {
         binding.radioGroupIdentifierType.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.channelChip -> viewModel.tagGroupType.set(TagGroupType.CHANNEL)
-                R.id.namedUserChip -> viewModel.tagGroupType.set(TagGroupType.NAMED_USER)
+                R.id.namedUserChip -> viewModel.tagGroupType.set(TagGroupType.CONTACT)
             }
         }
 
         when (viewModel.tagGroupType.get()) {
             TagGroupType.CHANNEL -> binding.radioGroupIdentifierType.check(R.id.channelChip)
-            TagGroupType.NAMED_USER -> binding.radioGroupIdentifierType.check(R.id.namedUserChip)
+            TagGroupType.CONTACT -> binding.radioGroupIdentifierType.check(R.id.namedUserChip)
         }
 
         return binding.root

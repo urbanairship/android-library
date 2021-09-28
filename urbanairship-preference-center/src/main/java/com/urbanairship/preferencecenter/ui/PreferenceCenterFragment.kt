@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.preferencecenter.R
@@ -25,6 +26,7 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.Ch
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -77,8 +79,11 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         ViewModelProvider(this, viewModelFactory).get(PreferenceCenterViewModel::class.java)
     }
 
+    @VisibleForTesting
+    protected val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
+
     private val adapter: PreferenceCenterAdapter by lazy {
-        PreferenceCenterAdapter(scope = viewLifecycleOwner.lifecycleScope)
+        PreferenceCenterAdapter(scopeProvider = viewModelScopeProvider)
     }
 
     private lateinit var views: Views

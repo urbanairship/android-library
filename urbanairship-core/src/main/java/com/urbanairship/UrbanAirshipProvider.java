@@ -10,7 +10,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.urbanairship.analytics.data.EventsStorage;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.util.DataManager;
 
@@ -39,8 +38,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     static final String RICH_PUSH_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "richpush";
     static final String PREFERENCES_CONTENT_TYPE = MULTIPLE_SUFFIX + "preference";
     static final String PREFERENCES_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "preference";
-    static final String EVENTS_CONTENT_TYPE = MULTIPLE_SUFFIX + "events";
-    static final String EVENTS_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "events";
+
     /**
      * Used to match passed in Uris to databases.
      */
@@ -58,12 +56,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
     private static final int PREFERENCES_URI_TYPE = 2;
     private static final int PREFERENCE_URI_TYPE = 3;
 
-    private static final int EVENTS_URI_TYPE = 4;
-    private static final int EVENT_URI_TYPE = 5;
-
     private DatabaseModel richPushDataModel;
     private DatabaseModel preferencesDataModel;
-    private DatabaseModel eventsDataModel;
 
     private static String authorityString;
 
@@ -85,16 +79,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
     @NonNull
     public static Uri getPreferencesContentUri(@NonNull Context context) {
         return Uri.parse("content://" + getAuthorityString(context) + "/preferences");
-    }
-
-    /**
-     * Creates the events URI.
-     *
-     * @return The events URI.
-     */
-    @NonNull
-    public static Uri getEventsContentUri(@NonNull Context context) {
-        return Uri.parse("content://" + getAuthorityString(context) + "/events");
     }
 
     /**
@@ -122,8 +106,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
         matcher.addURI(getAuthorityString(getContext()), "richpush/*", RICHPUSH_MESSAGE_URI_TYPE);
         matcher.addURI(getAuthorityString(getContext()), "preferences", PREFERENCES_URI_TYPE);
         matcher.addURI(getAuthorityString(getContext()), "preferences/*", PREFERENCE_URI_TYPE);
-        matcher.addURI(getAuthorityString(getContext()), "events", EVENT_URI_TYPE);
-        matcher.addURI(getAuthorityString(getContext()), "events/*", EVENT_URI_TYPE);
 
         Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
 
@@ -159,11 +141,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 return PREFERENCES_CONTENT_TYPE;
             case PREFERENCE_URI_TYPE:
                 return PREFERENCES_CONTENT_ITEM_TYPE;
-            case EVENT_URI_TYPE:
-                return EVENTS_CONTENT_TYPE;
-            case EVENTS_URI_TYPE:
-                return EVENTS_CONTENT_ITEM_TYPE;
-
         }
         throw new IllegalArgumentException("Invalid Uri: " + uri);
     }
@@ -245,11 +222,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
             preferencesDataModel.dataManager.close();
             preferencesDataModel = null;
         }
-
-        if (eventsDataModel != null) {
-            eventsDataModel.dataManager.close();
-            eventsDataModel = null;
-        }
     }
 
     /**
@@ -280,13 +252,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 }
 
                 return richPushDataModel;
-            case EVENT_URI_TYPE:
-            case EVENTS_URI_TYPE:
-                if (eventsDataModel == null) {
-                    eventsDataModel = DatabaseModel.createEventsDataModel(getContext(), appKey);
-                }
-
-                return eventsDataModel;
         }
 
         throw new IllegalArgumentException("Invalid URI: " + uri);
@@ -325,12 +290,5 @@ public final class UrbanAirshipProvider extends ContentProvider {
             DataManager model = new MessageCenterDataManager(context, appKey);
             return new DatabaseModel(model, MessageCenterDataManager.MessageTable.TABLE_NAME, MessageCenterDataManager.MessageTable.COLUMN_NAME_MESSAGE_ID);
         }
-
-        static DatabaseModel createEventsDataModel(@NonNull Context context, @NonNull String appKey) {
-            DataManager model = new EventsStorage(context, appKey);
-            return new DatabaseModel(model, EventsStorage.Events.TABLE_NAME, EventsStorage.Events._ID);
-        }
-
     }
-
 }

@@ -22,8 +22,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * PreferenceDataStore stores and retrieves all the Airship preferences through the
- * {@link UrbanAirshipProvider}.
+ * PreferenceDataStore stores and retrieves all the Airship preferences scoped at the app key.
  *
  * @hide
  */
@@ -34,7 +33,9 @@ public final class PreferenceDataStore {
             "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
             "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
             "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",
-            "com.urbanairship.push.iam.LAST_DISPLAYED_ID"
+            "com.urbanairship.push.iam.LAST_DISPLAYED_ID",
+            "com.urbanairship.nameduser.CHANGE_TOKEN_KEY",
+            "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY"
     };
 
     Executor executor = AirshipExecutors.newSerialExecutor();

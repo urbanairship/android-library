@@ -114,7 +114,7 @@ public class AttributeRegistrarTest extends BaseTestCase {
         assertEquals(expectedResult, store.getList().isEmpty());
 
         if (UAHttpStatusUtil.inSuccessRange(status)) {
-            verify(mockListener).onAttributeMutationsUploaded("identifier", pendingAttributeMutations);
+            verify(mockListener).onAttributeMutationsUploaded(pendingAttributeMutations);
         }
     }
 }

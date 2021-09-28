@@ -22,7 +22,7 @@ class AttributesFragment : Fragment() {
 
     companion object {
         const val TYPE_ARGUMENT_KEY = "type"
-        const val NAMED_USER_TYPE = "named_user"
+        const val CONTACT_TYPE = "contact"
         const val CHANNEL_TYPE = "channel"
     }
 
@@ -81,7 +81,7 @@ class AttributesFragment : Fragment() {
 
     private fun createEditor(): AttributeEditor {
         return when (val type = requireArguments().getString(TYPE_ARGUMENT_KEY)) {
-            NAMED_USER_TYPE -> UAirship.shared().namedUser.editAttributes()
+            CONTACT_TYPE -> UAirship.shared().contact.editAttributes()
             CHANNEL_TYPE -> UAirship.shared().channel.editAttributes()
             else -> throw IllegalArgumentException("Invalid type: $type")
         }

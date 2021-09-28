@@ -2,19 +2,44 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 15.0.0 September 14, 2021
+
+Major release that adds support for Airship Preference Center, Subscription Lists, and Contacts. This
+release removes support for overriding Firebase sender ID to a non-default Firebase project. Firebase
+currently recommends using a single Firebase project for both Crashlytics and Cloud Messaging.
+
+### Changes
+- Added new module `AirshipPreferenceCenter`.
+- Added new subscription lists APIs for Channel.
+- Replaced `NamedUser` with `Contact`, which allows setting data on a user without an external ID (Named User ID).
+- Added Dokka for generation of Kotlin documentation.
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-14-15.md) for further details.
+
+## Version 14.6.0 August 3, 2021
+
+Minor release that adds Airship Chat routing support.
+
+### Changes
+- Added support for specifying a routing string in Airship Chat for directing messages to a particular agent.
+- Added a `try/catch` around network callback register and unregister in `NetworkMonitor`, to prevent crashes on a small subset of devices.
+
+
 ## Version 14.5.1 June 21, 2021
 
 Patch release that updates the version of `firebase-messaging` used by `urbanairship-fcm` and adds
-a dependency on `firebase-iid` to maintain support for overriding `fcmSenderId` to a non-default 
+a dependency on `firebase-iid` to maintain support for overriding `fcmSenderId` to a non-default
 Firebase project. This configuration is no longer recommended by Firebase and may not be supported
 in future versions of the Airship FCM module. Firebase currently recommends using a single Firebase
-project for Crashlytics and Cloud Messaging. 
+project for Crashlytics and Cloud Messaging.
 
 ### Changes
-- Updated`firebase-messaging` to version `22.0.0`.
+- Updated `firebase-messaging` to version `22.0.0`.
 - Added `firebase-iid` dependency to `urbanairship-fcm`.
 - Added a warning log message if `fcmSenderId` is being overridden to a non-default Firebase project.
 - Marked `fcmSenderId` and related setter methods in `AirshipConfigOptions` as `@Deprecated`.
+
 
 ## Version 14.5.0 June 4, 2021
 

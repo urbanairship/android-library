@@ -76,7 +76,7 @@ public class RemoveTagsAction extends BaseTagsAction {
     void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
         Logger.info("RemoveTagsAction - Removing named user tag groups: %s", tags);
 
-        TagGroupsEditor tagGroupsEditor = UAirship.shared().getNamedUser().editTagGroups();
+        TagGroupsEditor tagGroupsEditor = UAirship.shared().getContact().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.removeTags(entry.getKey(), entry.getValue());
         }

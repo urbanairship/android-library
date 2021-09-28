@@ -16,6 +16,7 @@ import com.urbanairship.automation.Trigger
 import com.urbanairship.automation.actions.Actions
 import com.urbanairship.automation.deferred.Deferred
 import com.urbanairship.debug.R
+import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.debug.utils.PendingResultLiveData
 import com.urbanairship.iam.InAppMessage
 import java.util.Date
@@ -99,6 +100,8 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                     navigateToTrigger(it)
                 })
             }
+
+            add(AutomationDetail(getString(R.string.ua_iaa_debug_payload_key), schedule.data.toJsonValue().toFormattedJsonString()))
         }
     }
 }

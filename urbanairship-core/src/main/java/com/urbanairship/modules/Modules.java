@@ -12,8 +12,8 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
@@ -111,12 +111,12 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull NamedUser namedUser) {
+                                    @NonNull Contact contact) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
-                        analytics, remoteData, namedUser);
+                        analytics, remoteData, contact);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Automation module");

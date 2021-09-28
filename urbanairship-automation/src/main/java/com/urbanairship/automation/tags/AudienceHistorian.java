@@ -5,9 +5,10 @@ package com.urbanairship.automation.tags;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsMutation;
+import com.urbanairship.contacts.Contact;
+import com.urbanairship.contacts.ContactChangeListener;
 import com.urbanairship.util.Clock;
 
 import java.lang.annotation.Retention;
@@ -17,7 +18,6 @@ import java.util.List;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Tracks uploaded tags and attributes.
@@ -26,7 +26,7 @@ class AudienceHistorian {
 
     private final Clock clock;
     private final AirshipChannel channel;
-    private final NamedUser namedUser;
+    private final Contact contact;
     private final List<MutationRecord<TagGroupsMutation>> tagRecords = new ArrayList<>();
     private final List<MutationRecord<AttributeMutation>> attributeRecords = new ArrayList<>();
 
@@ -34,12 +34,12 @@ class AudienceHistorian {
      * Default constructor.
      *
      * @param channel The channel.
-     * @param namedUser The named user.
+     * @param contact The contact.
      * @param clock The clock;
      */
-    AudienceHistorian(@NonNull AirshipChannel channel, @NonNull NamedUser namedUser, @NonNull Clock clock) {
+    AudienceHistorian(@NonNull AirshipChannel channel, @NonNull Contact contact, @NonNull Clock clock) {
         this.channel = channel;
-        this.namedUser = namedUser;
+        this.contact = contact;
         this.clock = clock;
     }
 
@@ -49,34 +49,36 @@ class AudienceHistorian {
     void init() {
         channel.addTagGroupListener(new TagGroupListener() {
             @Override
-            public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
-                recordTagGroup(new MutationRecord<>(MutationRecord.SOURCE_CHANNEL, identifier, clock.currentTimeMillis(), tagGroupsMutation));
+            public void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> tagGroupsMutations) {
+                recordTags(tagGroupsMutations, MutationRecord.SOURCE_CONTACT);
             }
         });
 
         channel.addAttributeListener(new AttributeListener() {
             @Override
-            public void onAttributeMutationsUploaded(@NonNull String identifier, @NonNull List<AttributeMutation> attributes) {
-                long time = clock.currentTimeMillis();
-                for (AttributeMutation mutation : attributes) {
-                    recordAttribute(new MutationRecord<>(MutationRecord.SOURCE_CHANNEL, identifier, time, mutation));
-                }
+            public void onAttributeMutationsUploaded(@NonNull List<AttributeMutation> attributes) {
+                recordAttributes(attributes, MutationRecord.SOURCE_CONTACT);
             }
         });
 
-        namedUser.addTagGroupListener(new TagGroupListener() {
+        contact.addTagGroupListener(new TagGroupListener() {
             @Override
-            public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull TagGroupsMutation tagGroupsMutation) {
-                recordTagGroup(new MutationRecord<>(MutationRecord.SOURCE_NAMED_USER, identifier, clock.currentTimeMillis(), tagGroupsMutation));
+            public void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> tagGroupsMutations) {
+                recordTags(tagGroupsMutations, MutationRecord.SOURCE_CONTACT);
             }
         });
-        namedUser.addAttributeListener(new AttributeListener() {
+
+        contact.addAttributeListener(new AttributeListener() {
             @Override
-            public void onAttributeMutationsUploaded(@NonNull String identifier, @NonNull List<AttributeMutation> attributes) {
-                long time = clock.currentTimeMillis();
-                for (AttributeMutation mutation : attributes) {
-                    recordAttribute(new MutationRecord<>(MutationRecord.SOURCE_NAMED_USER, identifier, time, mutation));
-                }
+            public void onAttributeMutationsUploaded(@NonNull List<AttributeMutation> attributes) {
+                recordAttributes(attributes, MutationRecord.SOURCE_CONTACT);
+            }
+        });
+
+        contact.addContactChangeListener(new ContactChangeListener() {
+            @Override
+            public void onContactChanged() {
+                clearContactHistory();
             }
         });
     }
@@ -109,10 +111,9 @@ class AudienceHistorian {
 
     private <T> List<T> filterHistory(List<MutationRecord<T>> history, long sinceDate) {
         List<T> mutations = new ArrayList<>();
-        String namedUserId = namedUser.getId();
 
         for (MutationRecord<T> record : history) {
-            if (record.time >= sinceDate && (record.source == MutationRecord.SOURCE_CHANNEL || record.identifier.equals(namedUserId))) {
+            if (record.time >= sinceDate) {
                 mutations.add(record.mutation);
             }
         }
@@ -120,40 +121,62 @@ class AudienceHistorian {
         return mutations;
     }
 
-    private void recordTagGroup(@NonNull MutationRecord<TagGroupsMutation> record) {
+    private void recordTags(@NonNull List<TagGroupsMutation> mutations, @MutationRecord.Source int source) {
         synchronized (tagRecords) {
-            tagRecords.add(record);
+            long time = clock.currentTimeMillis();
+            for (TagGroupsMutation mutation : mutations) {
+                tagRecords.add(new MutationRecord<>(source, time, mutation));
+            }
         }
     }
 
-    private void recordAttribute(@NonNull MutationRecord<AttributeMutation> record) {
+    private void recordAttributes(@NonNull List<AttributeMutation> mutations, @MutationRecord.Source int source) {
         synchronized (attributeRecords) {
-            attributeRecords.add(record);
+            long time = clock.currentTimeMillis();
+            for (AttributeMutation mutation : mutations) {
+                attributeRecords.add(new MutationRecord<>(source, time, mutation));
+            }
+        }
+    }
+
+    private void clearContactHistory() {
+        synchronized (tagRecords) {
+            for (MutationRecord<TagGroupsMutation> record : new ArrayList<>(tagRecords)) {
+                if (record.source == MutationRecord.SOURCE_CONTACT) {
+                    tagRecords.remove(record);
+                }
+            }
+        }
+
+        synchronized (attributeRecords) {
+            for (MutationRecord<AttributeMutation> record : new ArrayList<>(attributeRecords)) {
+                if (record.source == MutationRecord.SOURCE_CONTACT) {
+                    attributeRecords.remove(record);
+                }
+            }
         }
     }
 
     /**
-     * Defines a mutation, timestamp, and an optional named user Id.
+     * Defines a mutation and a timestamp.
      */
     private static class MutationRecord<T> {
 
-        @IntDef({ SOURCE_CHANNEL, SOURCE_NAMED_USER})
+        @IntDef({ SOURCE_CHANNEL, SOURCE_CONTACT})
         @Retention(RetentionPolicy.SOURCE)
         @interface Source {
         }
 
         final static int SOURCE_CHANNEL = 0;
-        final static int SOURCE_NAMED_USER = 1;
+        final static int SOURCE_CONTACT = 1;
 
         @Source final int source;
         final long time;
         final T mutation;
-        final String identifier;
 
-        MutationRecord(@Source int source, @Nullable String identifier, long time, @NonNull T mutation) {
+        MutationRecord(@Source int source, long time, @NonNull T mutation) {
             this.source = source;
             this.time = time;
-            this.identifier = identifier;
             this.mutation = mutation;
         }
     }

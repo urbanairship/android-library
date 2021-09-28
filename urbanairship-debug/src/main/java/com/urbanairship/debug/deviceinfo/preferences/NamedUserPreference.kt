@@ -14,17 +14,23 @@ import com.urbanairship.util.UAStringUtil
 class NamedUserPreference(context: Context, attrs: AttributeSet) : EditTextPreference(context, attrs) {
 
     override fun setText(text: String?) {
-        val namedUser = if (UAStringUtil.isEmpty(text)) null else text
-        UAirship.shared().namedUser.id = namedUser
+        val namedUser = if (UAStringUtil.isEmpty(text?.trim())) null else text
+
+        if (namedUser != null) {
+            UAirship.shared().contact.identify(namedUser)
+        } else {
+            UAirship.shared().contact.reset()
+        }
+
         notifyChanged()
     }
 
     override fun getText(): String? {
-        return UAirship.shared().namedUser.id
+        return UAirship.shared().contact.namedUserId
     }
 
     override fun getSummary(): String? {
-        return UAirship.shared().namedUser.id
+        return UAirship.shared().contact.namedUserId
     }
 
     override fun shouldPersist(): Boolean {

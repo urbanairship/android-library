@@ -74,18 +74,23 @@ public class SetAttributesAction extends Action {
         if (arguments.getValue().getMap() != null) {
 
             // Channel Attribute
-            AttributeEditor channelAttributeEditor = UAirship.shared().getChannel().editAttributes();
-            for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(CHANNEL_KEY).optMap().getMap().entrySet()) {
-                handleAttributeActions(channelAttributeEditor, entry);
+            if (arguments.getValue().getMap().containsKey(CHANNEL_KEY)) {
+                AttributeEditor channelAttributeEditor = UAirship.shared().getChannel().editAttributes();
+                for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(CHANNEL_KEY).optMap().getMap().entrySet()) {
+                    handleAttributeActions(channelAttributeEditor, entry);
+                }
+                channelAttributeEditor.apply();
             }
-            channelAttributeEditor.apply();
 
-            // Named User Attribute
-            AttributeEditor namedUserAttributeEditor = UAirship.shared().getNamedUser().editAttributes();
-            for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(NAMED_USER_KEY).optMap().getMap().entrySet()) {
-                handleAttributeActions(namedUserAttributeEditor, entry);
+            // Contact Attribute
+            if (arguments.getValue().getMap().containsKey(NAMED_USER_KEY)) {
+                AttributeEditor contactEditor = UAirship.shared().getContact().editAttributes();
+                for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(NAMED_USER_KEY).optMap().getMap().entrySet()) {
+                    handleAttributeActions(contactEditor, entry);
+                }
+                contactEditor.apply();
             }
-            namedUserAttributeEditor.apply();
+
         }
 
         return ActionResult.newEmptyResult();
@@ -151,12 +156,12 @@ public class SetAttributesAction extends Action {
         switch (entry.getKey()) {
             case SET_KEY:
                 for (Map.Entry<String, JsonValue> setAttributeEntry : entry.getValue().optMap().entrySet()) {
-                    setAttribute(attributeEditor, setAttributeEntry.getKey(),setAttributeEntry.getValue().getValue());
+                    setAttribute(attributeEditor, setAttributeEntry.getKey(), setAttributeEntry.getValue().getValue());
                 }
                 break;
             case REMOVE_KEY:
                 for (JsonValue jsonValue : entry.getValue().optList().getList()) {
-                    attributeEditor.removeAttribute(jsonValue.getString());
+                    attributeEditor.removeAttribute(jsonValue.optString());
                 }
                 break;
             default:

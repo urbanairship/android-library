@@ -5,7 +5,7 @@ package com.urbanairship.actions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -29,7 +29,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
 
     private AirshipChannel airshipChannel;
     private PushManager pushManager;
-    private NamedUser namedUser;
+    private Contact contact;
     private AirshipLocationClient locationClient;
     private FetchDeviceInfoAction action;
 
@@ -40,11 +40,11 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
     public void setUp() {
         airshipChannel = mock(AirshipChannel.class);
         pushManager = mock(PushManager.class);
-        namedUser = mock(NamedUser.class);
+        contact = mock(Contact.class);
         locationClient = mock(AirshipLocationClient.class);
         TestApplication.getApplication().setChannel(airshipChannel);
         TestApplication.getApplication().setPushManager(pushManager);
-        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setContact(contact);
         TestApplication.getApplication().setLocationClient(locationClient);
 
         this.action = new FetchDeviceInfoAction();
@@ -86,7 +86,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(airshipChannel.getTags()).thenReturn(new HashSet<>(tags));
         when(locationClient.isLocationUpdatesEnabled()).thenReturn(true);
-        when(namedUser.getId()).thenReturn(namedUserId);
+        when(contact.getNamedUserId()).thenReturn(namedUserId);
 
         JsonMap result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)).getValue().getMap();
         assertEquals(channelId, result.get(FetchDeviceInfoAction.CHANNEL_ID_KEY).getString());
@@ -108,7 +108,7 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         when(pushManager.isOptIn()).thenReturn(true);
         when(airshipChannel.getTags()).thenReturn(new HashSet<String>());
         when(locationClient.isLocationUpdatesEnabled()).thenReturn(true);
-        when(namedUser.getId()).thenReturn(namedUserId);
+        when(contact.getNamedUserId()).thenReturn(namedUserId);
 
         JsonMap result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)).getValue().getMap();
         assertEquals(channelId, result.get(FetchDeviceInfoAction.CHANNEL_ID_KEY).getString());

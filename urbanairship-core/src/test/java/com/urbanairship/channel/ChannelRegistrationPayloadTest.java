@@ -653,12 +653,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setSdkVersion("1.2.3")
                 .setDeviceModel("Device model")
                 .setCarrier("Carrier")
-                .setNamedUserId("named user")
+                .setContactId("contact id")
                 .setAccengageDeviceId("accengage ID")
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
-                .setNamedUserId("different named user")
+                .setContactId("different contact id")
                 .build();
 
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
@@ -666,7 +666,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         ChannelRegistrationPayload expected =  new ChannelRegistrationPayload.Builder(payload)
                 .setTags(false, null)
                 .setAccengageDeviceId(null)
-                .setNamedUserId("different named user")
+                .setContactId("different contact id")
                 .build();
 
         assertEquals(expected, minPayload);
@@ -688,12 +688,12 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setSdkVersion("1.2.3")
                 .setDeviceModel("Device model")
                 .setCarrier("Carrier")
-                .setNamedUserId("named user")
+                .setContactId("contact id")
                 .setUserId("some-user")
                 .build();
 
         ChannelRegistrationPayload newPayload = new ChannelRegistrationPayload.Builder(payload)
-                .setNamedUserId(null)
+                .setContactId(null)
                 .build();
 
         ChannelRegistrationPayload minPayload = newPayload.minimizedPayload(payload);
@@ -701,7 +701,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         ChannelRegistrationPayload expected =  new ChannelRegistrationPayload.Builder(payload)
                 .setTags(false, null)
                 .setAccengageDeviceId(null)
-                .setNamedUserId(null)
+                .setContactId(null)
                 .setDeviceType(null)
                 .setLanguage(null)
                 .setTimezone(null)
