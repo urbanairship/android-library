@@ -28,9 +28,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-internal class PreferenceCenterAdapter(
-    private val scopeProvider: () -> CoroutineScope
-) : ListAdapter<PrefCenterItem, PrefCenterViewHolder<*>>(DIFF_CALLBACK) {
+internal class PreferenceCenterAdapter(private val scopeProvider: () -> CoroutineScope) : ListAdapter<PrefCenterItem, PrefCenterViewHolder<*>>(DIFF_CALLBACK) {
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PrefCenterItem>() {
@@ -39,10 +37,6 @@ internal class PreferenceCenterAdapter(
             override fun areContentsTheSame(oldItem: PrefCenterItem, newItem: PrefCenterItem): Boolean =
                 oldItem.areContentsTheSame(newItem)
         }
-    }
-
-    init {
-        setHasStableIds(true)
     }
 
     private val subscriptions: MutableSet<String> = mutableSetOf()

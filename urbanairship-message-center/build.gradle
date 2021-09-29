@@ -7,6 +7,8 @@ description = "Airship Android SDK Message Center module"
 dependencies {
     api project(':urbanairship-core')
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
+    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
+    annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     // Tests
     testImplementation project(':urbanairship-test')

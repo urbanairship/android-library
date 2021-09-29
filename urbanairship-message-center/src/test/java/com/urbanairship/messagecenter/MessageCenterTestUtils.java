@@ -5,13 +5,22 @@ package com.urbanairship.messagecenter;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.test.core.app.ApplicationProvider;
 
 public class MessageCenterTestUtils {
+
+    private static List<MessageEntity> messageEntities;
+    private static MessageDao messageDao;
+    private static MessageDatabase messageDatabase;
+
+    public static void setup() {
+        messageDatabase = MessageDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext());
+        messageDao = messageDatabase.getDao();
+    }
 
     public static void insertMessage(String messageId) {
         insertMessage(messageId,null);
@@ -23,8 +32,8 @@ public class MessageCenterTestUtils {
 
     public static void insertMessage(String messageId, Map<String, String> extras, boolean expired) {
         Message message = createMessage(messageId, extras, expired);
-        MessageCenterResolver resolver = new MessageCenterResolver(ApplicationProvider.getApplicationContext());
-        resolver.insertMessages(Arrays.asList(message.getRawMessageJson()));
+        messageDao.insert(MessageEntity.createMessageFromPayload(messageId, message.getRawMessageJson()));
+        messageEntities = messageDao.getMessages();
     }
 
     public static Message createMessage(String messageId, Map<String, String> extras, boolean expired) {

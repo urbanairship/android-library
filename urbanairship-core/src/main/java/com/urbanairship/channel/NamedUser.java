@@ -38,6 +38,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @deprecated Use {@link com.urbanairship.contacts.Contact} instead.
  */
 public class NamedUser extends AirshipComponent {
+
     private final Contact contact;
 
     /**

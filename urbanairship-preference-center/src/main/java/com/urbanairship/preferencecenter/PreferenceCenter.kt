@@ -123,7 +123,6 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
                             null
                         }
                     }.associateBy { it.id }
-
                     Observable.just(preferenceForms)
                 }
                 .subscribeOn(backgroundScheduler)

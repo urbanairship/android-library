@@ -23,10 +23,7 @@ import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -53,7 +50,7 @@ public class InboxJobHandlerTest {
     private InboxJobHandler jobHandler;
 
     private AirshipChannel mockChannel;
-    private MessageCenterResolver mockResolver;
+    private MessageDao mockMessageDao;
     private InboxApiClient mockInboxApiClient;
 
     private User user;
@@ -67,7 +64,7 @@ public class InboxJobHandlerTest {
         dataStore = PreferenceDataStore.inMemoryStore(context);
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         mockChannel = Mockito.mock(AirshipChannel.class);
-        mockResolver = Mockito.mock(MessageCenterResolver.class);
+        mockMessageDao = Mockito.mock(MessageDao.class);
 
         userListener = new TestUserListener();
         user = new User(dataStore, mockChannel);
@@ -82,7 +79,7 @@ public class InboxJobHandlerTest {
         user.setUser(null, null);
 
         jobHandler = new InboxJobHandler(inbox, user, mockChannel, dataStore,
-                mockResolver, mockInboxApiClient);
+                mockMessageDao, mockInboxApiClient);
     }
 
     /**
@@ -280,20 +277,20 @@ public class InboxJobHandlerTest {
                         .setResult(JsonValue.parseString(responseBody).optMap().opt("messages").getList())
                         .build());
 
-        Set<String> idsToDelete = new HashSet<>();
+        ArrayList<String> idsToDelete = new ArrayList<>();
         Message messageToDelete = createFakeMessage("id1", false, true);
         Message messageToDelete2 = createFakeMessage("id2", false, true);
-        Collection<Message> messageCollection = new ArrayList<>();
+        ArrayList<MessageEntity> messageCollection = new ArrayList<>();
         List<JsonValue> reportingsToDelete = new ArrayList<>();
-        messageCollection.add(messageToDelete);
-        messageCollection.add(messageToDelete2);
+        messageCollection.add(MessageEntity.createMessageFromPayload(messageToDelete.getMessageId(), messageToDelete.getRawMessageJson()));
+        messageCollection.add(MessageEntity.createMessageFromPayload(messageToDelete2.getMessageId(), messageToDelete2.getRawMessageJson()));
 
-        for (Message message : messageCollection) {
+        for (MessageEntity message : messageCollection) {
             reportingsToDelete.add(message.getMessageReporting());
             idsToDelete.add(message.getMessageId());
         }
 
-        when(mockResolver.getLocallyDeletedMessages()).thenReturn(messageCollection);
+        when(mockMessageDao.getLocallyDeletedMessages()).thenReturn(messageCollection);
 
         // Return a 500 internal server error
         when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete))
@@ -307,7 +304,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-        verify(mockResolver, never()).deleteMessages(idsToDelete);
+        verify(mockMessageDao, never()).deleteMessages(idsToDelete);
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
         assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
@@ -334,19 +331,19 @@ public class InboxJobHandlerTest {
                         .setResult(JsonValue.parseString(responseBody).optMap().opt("messages").getList())
                         .build());
 
-        Set<String> idsToDelete = new HashSet<>();
+        ArrayList<String> idsToDelete = new ArrayList<>();
         List<JsonValue> reportingsToDelete = new ArrayList<>();
         Message messageToDelete = createFakeMessage("id1", false, true);
         Message messageToDelete2 = createFakeMessage("id2", false, true);
-        Collection<Message> messagesToDelete = new ArrayList<>();
-        messagesToDelete.add(messageToDelete);
-        messagesToDelete.add(messageToDelete2);
+        ArrayList<MessageEntity> messagesToDelete = new ArrayList<>();
+        messagesToDelete.add(MessageEntity.createMessageFromPayload(messageToDelete.getMessageId(), messageToDelete.getRawMessageJson()));
+        messagesToDelete.add(MessageEntity.createMessageFromPayload(messageToDelete2.getMessageId(), messageToDelete2.getRawMessageJson()));
 
-        for (Message message : messagesToDelete) {
+        for (MessageEntity message : messagesToDelete) {
             reportingsToDelete.add(message.getMessageReporting());
             idsToDelete.add(message.getMessageId());
         }
-        when(mockResolver.getLocallyDeletedMessages()).thenReturn(messagesToDelete);
+        when(mockMessageDao.getLocallyDeletedMessages()).thenReturn(messagesToDelete);
 
         // Return a 200 message list response with messages
         when(mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete))
@@ -360,7 +357,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-        verify(mockResolver).deleteMessages(idsToDelete);
+        verify(mockMessageDao).deleteMessages(idsToDelete);
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
         assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
@@ -387,19 +384,19 @@ public class InboxJobHandlerTest {
                         .setResult(JsonValue.parseString(responseBody).optMap().opt("messages").getList())
                         .build());
 
-        Set<String> idsToUpdate = new HashSet<>();
+        ArrayList<String> idsToUpdate = new ArrayList<>();
         List<JsonValue> reportingsToUpdate = new ArrayList<>();
         Message messageToUpdate = createFakeMessage("id1", false, false);
         Message messageToUpdate2 = createFakeMessage("id2", false, false);
-        Collection<Message> messagesToUpdate = new ArrayList<>();
-        messagesToUpdate.add(messageToUpdate);
-        messagesToUpdate.add(messageToUpdate2);
+        ArrayList<MessageEntity> messagesToUpdate = new ArrayList<>();
+        messagesToUpdate.add(MessageEntity.createMessageFromPayload(messageToUpdate.getMessageId(), messageToUpdate.getRawMessageJson()));
+        messagesToUpdate.add(MessageEntity.createMessageFromPayload(messageToUpdate2.getMessageId(), messageToUpdate2.getRawMessageJson()));
 
-        for (Message message : messagesToUpdate) {
+        for (MessageEntity message : messagesToUpdate) {
             reportingsToUpdate.add(message.getMessageReporting());
             idsToUpdate.add(message.getMessageId());
         }
-        when(mockResolver.getLocallyReadMessages()).thenReturn(messagesToUpdate);
+        when(mockMessageDao.getLocallyReadMessages()).thenReturn(messagesToUpdate);
 
         // Return a 500 internal server error
         when(mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate))
@@ -413,7 +410,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-        verify(mockResolver, never()).markMessagesReadOrigin(idsToUpdate);
+        verify(mockMessageDao, never()).markMessagesReadOrigin(idsToUpdate);
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
         assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
@@ -440,18 +437,19 @@ public class InboxJobHandlerTest {
                         .setResult(JsonValue.parseString(responseBody).optMap().opt("messages").getList())
                         .build());
 
-        Set<String> idsToUpdate = new HashSet<>();
+        ArrayList<String> idsToUpdate = new ArrayList<>();
         List<JsonValue> reportingsToUpdate = new ArrayList<>();
         Message messageToUpdate = createFakeMessage("id1", false, false);
         Message messageToUpdate2 = createFakeMessage("id2", false, false);
-        Collection<Message> messagesToUpdate = new ArrayList<>();
-        messagesToUpdate.add(messageToUpdate);
+        ArrayList<MessageEntity> messagesToUpdate = new ArrayList<>();
+        messagesToUpdate.add(MessageEntity.createMessageFromPayload(messageToUpdate.getMessageId(), messageToUpdate.getRawMessageJson()));
 
-        for (Message message : messagesToUpdate) {
+
+        for (MessageEntity message : messagesToUpdate) {
             reportingsToUpdate.add(message.getMessageReporting());
             idsToUpdate.add(message.getMessageId());
         }
-        when(mockResolver.getLocallyReadMessages()).thenReturn(messagesToUpdate);
+        when(mockMessageDao.getLocallyReadMessages()).thenReturn(messagesToUpdate);
 
         // Return a 200 message list response with messages
         when(mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate))
@@ -465,7 +463,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
-        verify(mockResolver).markMessagesReadOrigin(idsToUpdate);
+        verify(mockMessageDao).markMessagesReadOrigin(idsToUpdate);
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
         assertEquals(300L, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));

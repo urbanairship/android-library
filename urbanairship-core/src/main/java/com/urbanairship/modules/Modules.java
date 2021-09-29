@@ -71,12 +71,13 @@ public class Modules {
                                        @NonNull PreferenceDataStore preferenceDataStore,
                                        @NonNull PrivacyManager privacyManager,
                                        @NonNull AirshipChannel channel,
-                                       @NonNull PushManager pushManager) {
+                                       @NonNull PushManager pushManager,
+                                       @NonNull AirshipConfigOptions configOptions) {
 
         try {
             MessageCenterModuleFactory moduleFactory = createFactory(MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager, configOptions);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Message Center module");
