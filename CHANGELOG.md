@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 15.1.0 October 1, 2021
+
+Minor release that adds support for specifying `route_agent` values and passing single
+messages to prepopulate into Airship Chat via deep link.
+
+### Changes
+- Added support for handling `route_agent` and `prepopulated_message` params on Airship Chat deep links.
+- Updated `14.5` migration guide and `PrivacyManager` javadoc to clarify usage.
+- Updated `14.x - 15.x` migration guide with instructions for enabling `FEATURE_CONTACTS`.
 
 ## Version 15.0.0 September 14, 2021
 
