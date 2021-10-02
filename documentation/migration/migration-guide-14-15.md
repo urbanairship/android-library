@@ -5,6 +5,14 @@
 `NamedUser` has been deprecated in favor of `Contact`. A Contact is distinct from a channel and
 represents a "user" within Airship. Contacts may be named and have channels associated with them.
 
+### Enable Contact Features
+
+In order to use the new `Contact`, the corresponding feature must be enabled via `PrivacyManager`:
+
+```java
+    UAirship.shared().getPrivacyManager().enable(PrivacyManager.FEATURE_CONTACTS);
+```
+
 ### Getting and settings IDs
 
 ```java

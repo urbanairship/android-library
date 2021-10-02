@@ -188,7 +188,9 @@ public class PrivacyManager {
     }
 
     /**
-     * Sets the current enabled features.
+     * Sets the current enabled features, replacing any currently enabled features with the given set.
+     *
+     * Any features that were previously enabled and not passed into the current set will be disabled.
      *
      * @param features The features to set as enabled.
      */
@@ -207,7 +209,9 @@ public class PrivacyManager {
     }
 
     /**
-     * Enables features.
+     * Enables features, adding them to the set of currently enabled features.
+     *
+     * Any features that were previously enabled will remain enabled.
      *
      * @param features The features to enable.
      */
@@ -216,7 +220,9 @@ public class PrivacyManager {
     }
 
     /**
-     * Disables features.
+     * Disables features, removing them from the set of currently enabled features.
+     *
+     * Any features that were previously enabled and not passed to {@code disable} will remain enabled.
      *
      * @param features The features to disable.
      */
@@ -225,10 +231,10 @@ public class PrivacyManager {
     }
 
     /**
-     * Checks if a given feature is enabled.
+     * Checks if all of the given features are enabled.
      *
      * @param features The features to check.
-     * @return {@code true} if the provided features are enabled, otherwise {@code false}.
+     * @return {@code true} if all the provided features are enabled, otherwise {@code false}.
      */
     public boolean isEnabled(@Feature int... features) {
         int enabledFeatures = getEnabledFeatures();
@@ -241,6 +247,12 @@ public class PrivacyManager {
         }
     }
 
+    /**
+     * Checks if any of the given features are enabled.
+     *
+     * @param features The features to check.
+     * @return {@code true} if any of the provided features are enabled, otherwise {@code false}.
+     */
     public boolean isAnyEnabled(@Feature int... features) {
         int enabledFeatures = getEnabledFeatures();
 
@@ -252,7 +264,6 @@ public class PrivacyManager {
                 return true;
             }
         }
-
 
         return false;
     }
