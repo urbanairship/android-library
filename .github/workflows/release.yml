@@ -83,6 +83,7 @@ jobs:
           urbanairship-adm:publishProductionPublicationToSonatypeRepository
           urbanairship-hms:publishProductionPublicationToSonatypeRepository
           urbanairship-chat:publishProductionPublicationToSonatypeRepository
+          urbanairship-preference-center:publishProductionPublicationToSonatypeRepository
           --stacktrace
           --max-workers 1
           closeAndReleaseSonatypeStagingRepository
