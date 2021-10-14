@@ -57,11 +57,11 @@ public class MainActivity extends AppCompatActivity {
                 R.navigation.nav_settings,
                 R.navigation.ua_debug_navigation);
 
-        navigationView.setOnNavigationItemReselectedListener(menuItem -> {
+        navigationView.setOnItemReselectedListener(menuItem -> {
             helper.resetCurrentGraph();
         });
 
-        navigationView.setOnNavigationItemSelectedListener(menuItem -> {
+        navigationView.setOnItemSelectedListener(menuItem -> {
             // BottomNavigation items use the same Ids as the navigation graphs
             helper.navigate(menuItem.getItemId());
             return true;
