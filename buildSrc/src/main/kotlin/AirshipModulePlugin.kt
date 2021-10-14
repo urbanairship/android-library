@@ -68,8 +68,8 @@ class AirshipModulePlugin : Plugin<Project> {
             }
 
             compileOptions.apply {
-                sourceCompatibility = JavaVersion.VERSION_1_7
-                targetCompatibility(JavaVersion.VERSION_1_7)
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility(JavaVersion.VERSION_1_8)
             }
 
             lintOptions.checkOnly("Interoperability")
