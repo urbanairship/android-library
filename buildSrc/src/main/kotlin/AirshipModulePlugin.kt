@@ -75,9 +75,12 @@ class AirshipModulePlugin : Plugin<Project> {
             lintOptions.checkOnly("Interoperability")
 
             testOptions.unitTests.isIncludeAndroidResources = true
-            testOptions.unitTests.all {
-                it.systemProperty("robolectric.dependency.repo.id", "sonatype")
-                it.systemProperty("robolectric.dependency.repo.url", "https://oss.sonatype.org/content/groups/public/")
+
+            if (System.getenv("CI") == "true") {
+                testOptions.unitTests.all {
+                    it.systemProperty("robolectric.offline", "true")
+                    it.systemProperty("robolectric.dependency.dir", "${rootProject.projectDir}/robolectric-jars")
+                }
             }
         }
     }

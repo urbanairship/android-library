@@ -5,7 +5,7 @@ on: [pull_request, workflow_dispatch]
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v2
 
@@ -20,6 +20,13 @@ jobs:
 
       - name: Switch to Gradle Binary Distribution
         run: sed -i -e 's/-all.zip/-bin.zip/' gradle/wrapper/gradle-wrapper.properties
+
+      - name: Prefetch Robolectric jars
+        run: |
+          mkdir robolectric-jars
+          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/7.1.0_r7-robolectric-r1/android-all-7.1.0_r7-robolectric-r1.jar
+          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/9-robolectric-4913185-2/android-all-9-robolectric-4913185-2.jar
+          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/10-robolectric-5803371/android-all-10-robolectric-5803371.jar
 
       - name: Build and Test SDK
         run: bash ./gradlew build --info --stacktrace
