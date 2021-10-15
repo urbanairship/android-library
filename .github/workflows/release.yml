@@ -31,10 +31,10 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           if [[ $(./gradlew -q getVersion) = $VERSION ]]; then exit 0 ; else exit 1; fi
 
-      - name: Set up JDK 1.8
+      - name: Set up JDK 11 
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
 
       - name: Setup GCP
         uses: google-github-actions/setup-gcloud@daadedc81d5f9d3c06d2c92f49202a3cc2b919ba # v0.2.1
