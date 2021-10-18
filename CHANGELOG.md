@@ -2,7 +2,7 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 16.0.0 October 15, 2021
+## Version 16.0.0 October 18, 2021
 
 Major release that adds support for targeting API 31 (Android S), upgrades SDK dependencies, and
 updates the minimum required compile SDK version to API 31. No other breaking API changes are
@@ -12,6 +12,8 @@ included in this release.
 - Updated compile and target version to 31
 - Updated Java source and target compatibility versions to 1.8
 - Updated SDK dependencies
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-15-16.md) for further details.
 
 ## Version 15.1.0 October 1, 2021
 
