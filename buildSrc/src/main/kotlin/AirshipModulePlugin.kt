@@ -68,13 +68,20 @@ class AirshipModulePlugin : Plugin<Project> {
             }
 
             compileOptions.apply {
-                sourceCompatibility = JavaVersion.VERSION_1_7
-                targetCompatibility(JavaVersion.VERSION_1_7)
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility(JavaVersion.VERSION_1_8)
             }
 
             lintOptions.checkOnly("Interoperability")
 
             testOptions.unitTests.isIncludeAndroidResources = true
+
+            if (System.getenv("CI") == "true") {
+                testOptions.unitTests.all {
+                    it.systemProperty("robolectric.offline", "true")
+                    it.systemProperty("robolectric.dependency.dir", "${rootProject.projectDir}/robolectric-jars")
+                }
+            }
         }
     }
 
