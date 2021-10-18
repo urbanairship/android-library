@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -57,7 +56,7 @@ class InboxJobHandler {
     private static final String LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME";
     private static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
 
-    private final MessageCenterResolver resolver;
+    private final MessageDao messageDao;
     private final User user;
     private final Inbox inbox;
     private final PreferenceDataStore dataStore;
@@ -70,8 +69,9 @@ class InboxJobHandler {
                     @NonNull User user,
                     @NonNull AirshipChannel channel,
                     @NonNull AirshipRuntimeConfig runtimeConfig,
-                    @NonNull PreferenceDataStore dataStore) {
-        this(inbox, user, channel, dataStore, new MessageCenterResolver(context), new InboxApiClient(runtimeConfig));
+                    @NonNull PreferenceDataStore dataStore,
+                    @NonNull MessageDao messageDao) {
+        this(inbox, user, channel, dataStore, messageDao, new InboxApiClient(runtimeConfig));
     }
 
     @VisibleForTesting
@@ -79,13 +79,13 @@ class InboxJobHandler {
                     @NonNull User user,
                     @NonNull AirshipChannel channel,
                     @NonNull PreferenceDataStore dataStore,
-                    @NonNull MessageCenterResolver resolver,
+                    @NonNull MessageDao messageDao,
                     @NonNull InboxApiClient inboxApiClient) {
         this.inbox = inbox;
         this.user = user;
         this.channel = channel;
         this.dataStore = dataStore;
-        this.resolver = resolver;
+        this.messageDao = messageDao;
         this.inboxApiClient = inboxApiClient;
     }
 
@@ -242,19 +242,26 @@ class InboxJobHandler {
 
             serverMessageIds.add(messageId);
 
-            if (resolver.updateMessage(messageId, message) != 1) {
+            MessageEntity messageEntity = MessageEntity.createMessageFromPayload(messageId, message);
+
+            if (messageEntity == null) {
+                Logger.error("InboxJobHandler - Message Entity is null");
+                continue;
+            }
+
+            if (messageDao.updateMessage(messageEntity) != 1) {
                 messagesToInsert.add(message);
             }
         }
 
         // Bulk insert any new messages
         if (messagesToInsert.size() > 0) {
-            resolver.insertMessages(messagesToInsert);
+            messageDao.insertMessages(MessageEntity.createMessagesFromPayload(null, messagesToInsert));
         }
 
-        Set<String> deletedMessageIds = resolver.getMessageIds();
+        List<String> deletedMessageIds = messageDao.getMessageIds();
         deletedMessageIds.removeAll(serverMessageIds);
-        resolver.deleteMessages(deletedMessageIds);
+        messageDao.deleteMessages(deletedMessageIds);
     }
 
     /**
@@ -266,10 +273,10 @@ class InboxJobHandler {
             return;
         }
 
-        Collection<Message> messagesToUpdate = resolver.getLocallyDeletedMessages();
-        Set<String> idsToDelete = new HashSet<>();
+        Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyDeletedMessages();
+        List<String> idsToDelete = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();
-        for (Message message : messagesToUpdate) {
+        for (MessageEntity message : messagesToUpdate) {
             if (message.getMessageReporting() != null) {
                 reportings.add(message.getMessageReporting());
                 idsToDelete.add(message.getMessageId());
@@ -288,7 +295,7 @@ class InboxJobHandler {
             Logger.verbose("Delete inbox messages response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-                resolver.deleteMessages(idsToDelete);
+                messageDao.deleteMessages(idsToDelete);
             }
         } catch (RequestException e) {
             Logger.debug(e, "Deleted message state synchronize failed.");
@@ -304,10 +311,10 @@ class InboxJobHandler {
             return;
         }
 
-        Collection<Message> messagesToUpdate = resolver.getLocallyReadMessages();
-        Set<String> idsToUpdate = new HashSet<>();
+        Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyReadMessages();
+        List<String> idsToUpdate = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();
-        for (Message message : messagesToUpdate) {
+        for (MessageEntity message : messagesToUpdate) {
             if (message.getMessageReporting() != null) {
                 reportings.add(message.getMessageReporting());
                 idsToUpdate.add(message.getMessageId());
@@ -325,7 +332,7 @@ class InboxJobHandler {
             Logger.verbose("Mark inbox messages read response: %s", response);
 
             if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-                resolver.markMessagesReadOrigin(idsToUpdate);
+                messageDao.markMessagesReadOrigin(idsToUpdate);
             }
         } catch (RequestException e) {
             Logger.debug(e, "Read message state synchronize failed.");

@@ -31,15 +31,16 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           if [[ $(./gradlew -q getVersion) = $VERSION ]]; then exit 0 ; else exit 1; fi
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
         with:
-          java-version: 1.8
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Setup GCP
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@daadedc81d5f9d3c06d2c92f49202a3cc2b919ba # v0.2.1
         with:
-          version: "270.0.0"
+          version: '351.0.0'
           service_account_email: ${{ secrets.GCP_SA_EMAIL }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
 
@@ -83,6 +84,7 @@ jobs:
           urbanairship-adm:publishProductionPublicationToSonatypeRepository
           urbanairship-hms:publishProductionPublicationToSonatypeRepository
           urbanairship-chat:publishProductionPublicationToSonatypeRepository
+          urbanairship-preference-center:publishProductionPublicationToSonatypeRepository
           --stacktrace
           --max-workers 1
           closeAndReleaseSonatypeStagingRepository

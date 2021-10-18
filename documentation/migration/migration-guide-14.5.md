@@ -11,6 +11,32 @@ The privacy manager can be accessed from the shared `UAirship` instance:
   PrivacyManager privacyManager = UAirship.shared().getPrivacyManager();
 ```
 
+## Privacy Manager API
+
+#### `public void setEnabledFeatures(@Feature int... features)`
+
+Enables the given features, replacing the set of currently enabled features with the new set that was passed in. Any features that were enabled before the call to `setEnabledFeatures(...)` will no longer be enabled. This method is effectively the same as calling `disable(FEATURE_ALL)`, followed by `enable(...)`.
+
+#### `public void enable(@Feature int... features)`
+
+Enables the given features, adding them to the set of currently enabled features. Any features that were enabled prior to calling `enable(...)` will remain enabled.
+
+#### `public void disable(@Feature int... features)`
+
+Disables the given features, removing them from the set of currently enabled features. Any features that were previously enabled and not passed to `disable(...)` will remain enabled.
+
+#### `public int getEnabledFeatures()`
+
+Returns the current set of enabled features.
+
+#### `public boolean isEnabled(@Features int... features)`
+
+Returns true if *all* of the given features are currently enabled.
+
+#### `public boolean isAnyEnabled(@Features int... features)`
+
+Returns true if *any* of the given features are currently enabled.
+
 ## Enabling & Disabling Data Collection
 
 To enable data collection set enabled features to `FEATURE_ALL`:

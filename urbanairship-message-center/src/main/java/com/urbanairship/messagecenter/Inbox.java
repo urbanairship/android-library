@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -74,7 +75,7 @@ public class Inbox {
     private final Map<String, Message> readMessages = new HashMap<>();
     private final Map<String, Message> messageUrlMap = new HashMap<>();
 
-    private final MessageCenterResolver messageCenterResolver;
+    private final MessageDao messageDao;
     private final User user;
     private final Executor executor;
     private final Context context;
@@ -106,9 +107,10 @@ public class Inbox {
      * @hide
      */
     public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipChannel airshipChannel) {
+                 @NonNull AirshipChannel airshipChannel, @NonNull AirshipConfigOptions configOptions) {
         this(context, dataStore, JobDispatcher.shared(context), new User(dataStore, airshipChannel),
-                new MessageCenterResolver(context), AirshipExecutors.newSerialExecutor(),
+                MessageDatabase.createDatabase(context, configOptions).getDao(),
+                AirshipExecutors.newSerialExecutor(),
                 GlobalActivityMonitor.shared(context), airshipChannel);
     }
 
@@ -117,12 +119,12 @@ public class Inbox {
      */
     @VisibleForTesting
     Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
-          @NonNull User user, @NonNull MessageCenterResolver resolver, @NonNull Executor executor,
+          @NonNull User user, @NonNull MessageDao messageDao, @NonNull Executor executor,
           @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
-        this.messageCenterResolver = resolver;
+        this.messageDao = messageDao;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
         this.airshipChannel = airshipChannel;
@@ -196,7 +198,7 @@ public class Inbox {
 
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
-                    airship.getRuntimeConfig(), dataStore);
+                    airship.getRuntimeConfig(), dataStore, messageDao);
         }
 
         return inboxJobHandler.performJob(jobInfo);
@@ -564,7 +566,8 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesRead(messageIds);
+                List<String> messageIdsList = new ArrayList<>(messageIds);
+                messageDao.markMessagesRead(messageIdsList);
             }
         });
 
@@ -593,7 +596,8 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesUnread(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList<>(messageIds);
+                messageDao.markMessagesUnread(messageIdsList);
             }
         });
 
@@ -625,7 +629,8 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.markMessagesDeleted(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList(messageIds);
+                messageDao.markMessagesDeleted(messageIdsList);
             }
         });
 
@@ -654,7 +659,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                messageCenterResolver.deleteAllMessages();
+                messageDao.deleteAllMessages();
             }
         });
 
@@ -674,7 +679,7 @@ public class Inbox {
      */
     void refresh(boolean notify) {
 
-        Collection<Message> messageList = messageCenterResolver.getMessages();
+        List<MessageEntity> messageList = messageDao.getMessages();
 
         // Sync the messages
         synchronized (inboxLock) {
@@ -690,7 +695,13 @@ public class Inbox {
             messageUrlMap.clear();
 
             // Process the new messages
-            for (Message message : messageList) {
+            for (MessageEntity messageEntity : messageList) {
+
+                Message message = messageEntity.createMessageFromEntity(messageEntity);
+
+                if (message == null) {
+                    continue;
+                }
 
                 // Deleted
                 if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {

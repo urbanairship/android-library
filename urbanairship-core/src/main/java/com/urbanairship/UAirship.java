@@ -32,6 +32,7 @@ import com.urbanairship.contacts.Contact;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.UrlAllowList;
@@ -754,7 +755,7 @@ public class UAirship {
         this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
 
         // Message Center
-        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager);
+        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager, getAirshipConfigOptions());
         processModule(messageCenterModule);
 
         // Location

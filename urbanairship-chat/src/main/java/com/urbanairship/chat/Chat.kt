@@ -50,7 +50,9 @@ class Chat
         private const val DEEP_LINK_HOST = "chat"
         private const val DEEP_LINK_INPUT_KEY = "chat_input"
         private const val DEEP_LINK_ROUTING_KEY = "routing"
+        private const val DEEP_LINK_ROUTE_AGENT_KEY = "route_agent"
         private const val DEEP_LINK_PREPOPULATED_KEY = "prepopulated_messages"
+        private const val DEEP_LINK_SINGLE_PREPOPULATED_KEY = "prepopulated_message"
 
         /**
          * Gets the shared `AirshipChat` instance.
@@ -196,22 +198,47 @@ class Chat
     override fun onAirshipDeepLink(uri: Uri): Boolean {
         return if (DEEP_LINK_HOST == uri.encodedAuthority && uri.pathSegments.size == 0) {
             val chatInput = uri.getQueryParameter(DEEP_LINK_INPUT_KEY)
-            uri.getQueryParameter(DEEP_LINK_ROUTING_KEY)?.let {
+            val paramNames = uri.queryParameterNames
+
+            if (paramNames.contains(DEEP_LINK_ROUTING_KEY) || paramNames.contains(DEEP_LINK_ROUTE_AGENT_KEY)) {
                 try {
-                    conversation.routing = ChatRouting.fromJsonMap(JsonValue.parseString(it).optMap())
+                    var routing: ChatRouting? = null
+
+                    uri.getQueryParameter(DEEP_LINK_ROUTING_KEY)?.let {
+                        routing = ChatRouting.fromJsonMap(JsonValue.parseString(it).optMap())
+                    }
+
+                    if (routing == null) {
+                        uri.getQueryParameter(DEEP_LINK_ROUTE_AGENT_KEY)?.let {
+                            routing = ChatRouting(it)
+                        }
+                    }
+
+                    conversation.routing = routing
                 } catch (e: JsonException) {
                     Logger.error("Failed to parse routing", e)
                 }
             }
 
-            uri.getQueryParameter(DEEP_LINK_PREPOPULATED_KEY)?.let {
-                if (!it.isEmpty()) {
-                    try {
-                        val messages = ChatIncomingMessage.getListFromJSONArrayString(it)
-                        conversation.addIncoming(messages)
-                    } catch (e: JsonException) {
-                        Logger.error("Failed to parse outgoing messages", e)
+            if (paramNames.contains(DEEP_LINK_PREPOPULATED_KEY) || paramNames.contains(DEEP_LINK_SINGLE_PREPOPULATED_KEY)) {
+                try {
+                    val messages = mutableListOf<ChatIncomingMessage>()
+
+                    uri.getQueryParameter(DEEP_LINK_PREPOPULATED_KEY)?.let {
+                        if (it.isNotEmpty()) {
+                            messages.addAll(ChatIncomingMessage.getListFromJSONArrayString(it))
+                        }
                     }
+
+                    if (messages.count() == 0) {
+                        uri.getQueryParameter(DEEP_LINK_SINGLE_PREPOPULATED_KEY)?.let {
+                            messages.add(ChatIncomingMessage(it, null, null, null))
+                        }
+                    }
+
+                    conversation.addIncoming(messages)
+                } catch (e: JsonException) {
+                    Logger.error("Failed to parse prepopulated messages", e)
                 }
             }
 

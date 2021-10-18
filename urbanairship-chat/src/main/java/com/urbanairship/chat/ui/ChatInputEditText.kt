@@ -57,8 +57,8 @@ internal class ChatInputEditText @JvmOverloads constructor(
         })
     }
 
-    override fun onCreateInputConnection(editorInfo: EditorInfo): InputConnection {
-        val ic: InputConnection = super.onCreateInputConnection(editorInfo)
+    override fun onCreateInputConnection(editorInfo: EditorInfo): InputConnection? {
+        val ic: InputConnection = super.onCreateInputConnection(editorInfo) ?: return null
 
         // Force Android to show actionSend instead of enter on the on-screen keyboard. This is
         // needed because the inputType set in the layout includes textMultiLine, which shows the
