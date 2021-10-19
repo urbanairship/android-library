@@ -4,7 +4,7 @@
 
 ## Version 16.0.0 October 18, 2021
 
-Major release that adds support for targeting API 31 (Android S), upgrades SDK dependencies, and
+Major release that adds support for targeting Android 12 (API 31), upgrades SDK dependencies, and
 updates the minimum required compile SDK version to API 31. No other breaking API changes are
 included in this release.
 
