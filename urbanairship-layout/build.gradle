@@ -1,0 +1,67 @@
+plugins {
+    id 'airship-module'
+}
+
+description = "Airship Layout Rendering Library"
+
+airshipModule {
+    published = false
+}
+
+android {
+    compileSdkVersion 31
+
+    defaultConfig {
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+        targetSdkVersion 31
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api project(':urbanairship-core')
+
+    // AndroidX
+    implementation "androidx.core:core:1.6.0"//$rootProject.androidxCoreVersion"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.1"//$rootProject.androidxConstraintLayoutVersion"
+
+    // Support libraries
+    implementation "androidx.appcompat:appcompat:1.3.1"//$rootProject.androidxAppCompatVersion"
+    implementation "com.google.android.material:material:1.4.0"//$rootProject.materialVersion"
+
+    // TODO: remove or move to debugImplementation, for debugging
+    implementation 'com.squareup.radiography:radiography:2.4.1'
+
+    // Unit Tests
+    testImplementation "junit:junit:$rootProject.junitVersion"
+    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:4.6.1"//$rootProject.robolectricVersion"
+
+    // Instrumentation Tests
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
+
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
+    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+
+    androidTestImplementation "org.robolectric:annotations:4.6.1"//$rootProject.robolectricVersion"
+
+    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
+}

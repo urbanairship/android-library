@@ -1,0 +1,56 @@
+---
+modal:
+  placementSelectors:
+  - orientation: portrait
+    placement:
+      size:
+        width: 66%
+        height: auto
+      position:
+        horizontal: center
+        vertical: center
+      backgroundColor: "#00000000"
+  - orientation: landscape
+    placement:
+      size:
+        width: 33%
+        height: auto
+      position:
+        horizontal: center
+        vertical: center
+      backgroundColor: "#00000000"
+  defaultPlacement:
+    size:
+      width: 100%
+      height: auto
+    position:
+      horizontal: center
+      vertical: center
+    backgroundColor: "#00000000"
+layout:
+  type: container
+  border:
+    strokeColor: "#CED8F7"
+    strokeWidth: 2
+    radius: 15
+  backgroundColor: "#002082"
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    margin:
+      top: 16
+      bottom: 16
+      start: 16
+      end: 16
+    size:
+      width: 100%
+      height: auto
+    view:
+      type: label
+      text: If the <b><i>Placement Selectors</i></b> for this modal are working correctly, the container should fill <b>~2/3</b> of the screen width in <b><i>portrait orientation</i></b> or <b>~1/3</b> of the width in <b><i>landscape orientation</i></b>.<br/><br/>If this modal is touching any edges of the screen, <b><i>something ain't right</i></b> and it was rendered with <b><i>default placement!</i></b>.
+      color: "#CED8F7"
+      alignment: center
+      fontFamilies:
+      - walter_turncoat
+      fontSize: 14

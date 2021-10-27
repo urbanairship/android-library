@@ -1,0 +1,296 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 90%
+      height: 90%
+    position:
+      horizontal: center
+      vertical: center
+    # transparent background on the modal allows for rounded corners on container to display correctly.
+    # not sure if this is how it should work, but kinda neat that it does ¯\_(ツ)_/¯
+    backgroundColor: "#00000000"
+layout:
+  type: container
+  border:
+    strokeColor: "#FF00FF"
+    strokeWidth: 1
+    radius: 10
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: 100%
+      width: 100%
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+        #
+        # Positions
+        #
+      - margin:
+          top: 24
+          bottom: 16
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: "Position"
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+      # Button: start|top
+      - size:
+          width: 100%
+          height: auto
+        view:
+          type: container
+          position:
+            horizontal: center
+            vertical: center
+          items:
+          - position:
+              horizontal: start
+              vertical: top
+            margin:
+              bottom: 8
+              start: 16
+              end: 16
+            size:
+              width: auto
+              height: auto
+            view:
+              type: button
+              identifier: button1
+              color: "#D32F2F" # red
+              label:
+                type: label
+                fontSize: 10
+                alignment: center
+                text: 'start|top'
+      # Button: center|center
+      - size:
+          width: 100%
+          height: auto
+        view:
+          type: container
+          position:
+            horizontal: center
+            vertical: center
+          items:
+          - position:
+              horizontal: center
+              vertical: center
+            margin:
+              bottom: 8
+              start: 16
+              end: 16
+            size:
+              width: auto
+              height: auto
+            view:
+              type: button
+              identifier: button2
+              color: "#E65100" # orange
+              label:
+                type: label
+                fontSize: 10
+                alignment: center
+                text: 'center|center'
+      # Button: end|bottom
+      - size:
+          width: 100%
+          height: auto
+        view:
+          type: container
+          position:
+            horizontal: center
+            vertical: center
+          items:
+          - position:
+              horizontal: end
+              vertical: bottom
+            margin:
+              bottom: 8
+              start: 16
+              end: 16
+            size:
+              width: auto
+              height: auto
+            view:
+              type: button
+              identifier: button3
+              color: "#FFD600" # yellow
+              label:
+                type: label
+                fontSize: 10
+                color: "#333333"
+                alignment: center
+                text: 'end|bottom'
+        #
+        # Borders
+        #
+      - margin:
+          top: 24
+          bottom: 16
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: "Border"
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+
+      # Button w/ 2dp border and no radius
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: button
+          identifier: button4
+          color: "#558B2F" # green
+          border:
+            radius: 0
+            strokeWidth: 3
+            strokeColor: "#AED581" # light green
+          label:
+            type: label
+            fontSize: 12
+            alignment: center
+            text: '3dp stroke'
+
+        # Button w/ 5dp border and 10dp radius
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: button
+          identifier: button5
+          color: "#1976D2" # blue
+          border:
+            radius: 15
+            strokeWidth: 5
+            strokeColor: "#64B5F6" # light blue
+          label:
+            type: label
+            fontSize: 12
+            alignment: center
+            text: '5dp stroke, 15dp radius'
+
+        # Button w/ no border and 20dp radius
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: button
+          identifier: button6
+          color: "#283593" # purple
+          border:
+            radius: 25
+            strokeWidth: 0
+          label:
+            type: label
+            fontSize: 12
+            alignment: center
+            text: 'no stroke, 20dp radius'
+
+        #
+        # Sizes
+        #
+      - margin:
+          top: 24
+          bottom: 16
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: "Size"
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+
+      # Button: auto x auto
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: auto
+          height: auto
+        view:
+          type: button
+          identifier: button7
+          color: "#AED581" # light green
+          label:
+            type: label
+            fontSize: 12
+            color: "#333333"
+            alignment: center
+            text: 'auto x auto'
+
+        # 100% x auto
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: 66%
+          height: auto
+        view:
+          type: button
+          identifier: button8
+          color: "#64B5F6" # light blue
+          label:
+            type: label
+            fontSize: 12
+            alignment: center
+            color: "#333333"
+            text: '66% x auto'
+
+        # auto x 56dp
+      - margin:
+          top: 8
+          start: 16
+          end: 16
+        size:
+          width: auto
+          height: 64
+        view:
+          type: button
+          identifier: button9
+          color: "#283593" # purple
+          label:
+            type: label
+            fontSize: 12
+            alignment: center
+            text: 'auto x 64dp'

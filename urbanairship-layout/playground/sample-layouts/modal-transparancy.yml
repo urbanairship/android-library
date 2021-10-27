@@ -1,0 +1,76 @@
+#100% — FF
+#95% — F2
+#90% — E6
+#85% — D9
+#80% — CC
+#75% — BF
+#70% — B3
+#65% — A6
+#60% — 99
+#55% — 8C
+#50% — 80
+#45% — 73
+#40% — 66
+#35% — 59
+#30% — 4D
+#25% — 40
+#20% — 33
+#15% — 26
+#10% — 1A
+#5% — 0D
+#0% — 00
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 75%
+      height: 50%
+    position:
+      horizontal: center
+      vertical: center
+    backgroundColor: "#26FFFFFF"
+layout:
+  type: container
+  backgroundColor: "#40FFFFFF"
+  border:
+    strokeColor: "#80FF0000"
+    strokeWidth: 2
+    radius: 0
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: 100%
+      width: 100%
+    margin:
+      top: 16
+      bottom: 16
+      start: 16
+      end: 16
+    view:
+      type: container
+      backgroundColor: "#40FFFFFF"
+      border:
+        strokeColor: "#800000FF"
+        strokeWidth: 2
+        radius: 0
+      items:
+      - position:
+          horizontal: center
+          vertical: center
+        margin:
+          top: 16
+          bottom: 16
+          start: 16
+          end: 16
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Lorem ipsum dolor sit amet
+          color: "#333333"
+          alignment: center
+          fontFamilies:
+          - permanent_marker

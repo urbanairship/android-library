@@ -1,0 +1,161 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 90%
+      height: 75%
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  # TOP-LEVEL LINEAR LAYOUT
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: 100%
+      width: 100%
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+      # SCROLL LAYOUT
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 100%
+          height: 100%
+        weight: 1
+        view:
+          type: scroll_layout
+          direction: vertical
+          size:
+            width: 100%
+            height: 100%
+          view:
+            # SCROLL CONTENT (LINEAR LAYOUT)
+            type: linear_layout
+            direction: vertical
+            items:
+            # MEDIA
+            - size:
+                width: 100%
+                height: auto
+              view:
+                type: media
+                url: https://media.giphy.com/media/6y70TnZ4ug9zetb5Oq/giphy.gif
+                mediaType: image
+            # HEADER
+            - margin:
+                top: 16
+                bottom: 8
+                start: 16
+                end: 16
+              view:
+                type: label
+                text: Lorem ipsum dolor sit amet
+                color: "#FF00FF"
+                alignment: left
+                textStyles:
+                - bold
+                - underline
+                - italic
+                fontFamilies:
+                - permanent_marker
+                - casual
+                fontSize: 24
+            # BODY
+            - size:
+                width: 100%
+                height: auto
+              margin:
+                top: 8
+                bottom: 16
+                start: 16
+                end: 16
+              view:
+                type: label
+                text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                  do eiusmod tempor incididunt ut labore et dolore magna aliqua. In
+                  arcu cursus euismod quis viverra nibh. Lobortis feugiat vivamus
+                  at augue eget arcu dictum. Imperdiet dui accumsan sit amet nulla.
+                  Ultrices neque ornare aenean euismod elementum. Tincidunt id aliquet
+                  risus feugiat in ante metus dictum.
+                color: "#333333"
+                alignment: left
+                textStyles:
+                - italic
+                fontFamilies:
+                - permanent_marker
+      # BOTTOM-PINNED BUTTON #1
+      - position:
+          horizontal: center
+          vertical: center
+        margin:
+          top: 0
+          bottom: 0
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        weight: 0
+        view:
+          type: button
+          identifier: BUTTON
+          color: "#FF0000"
+          label:
+            type: label
+            fontSize: 24
+            alignment: center
+            textStyles:
+            - bold
+            - italic
+            - underline
+            fontFamilies:
+            - permanent_marker
+            color: "#00FF00"
+            text: 'NO'
+      # BOTTOM-PINNED BUTTON #2
+      - position:
+          horizontal: center
+          vertical: center
+        margin:
+          top: 0
+          bottom: 0
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        weight: 0
+        view:
+          type: button
+          identifier: BUTTON
+          color: "#00FF00"
+          label:
+            type: label
+            fontSize: 24
+            alignment: center
+            textStyles:
+            - bold
+            - italic
+            - underline
+            fontFamilies:
+            - permanent_marker
+            color: "#FF0000"
+            text: 'YES'
+  # TOP-RIGHT IMAGE BUTTON
+  - position:
+      horizontal: end
+      vertical: top
+    size:
+      width: 48
+      height: 48
+    view:
+      type: image_button
+      url: https://testing-library.com/img/octopus-64x64.png
+      identifier: myid

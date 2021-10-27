@@ -104,6 +104,38 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Gets the contained value coerced into a String.
+     *
+     * @return The value coerced as a String, or null if the value is not coercible into a String.
+     */
+    @Nullable
+    public String coerceString() {
+        if (value == null || value == JsonValue.NULL) {
+            return null;
+        }
+
+        if (value instanceof JsonMap || value instanceof JsonList) {
+            return null;
+        }
+
+        if (isString()) {
+            return (String) value;
+        }
+
+        if (isNumber()) {
+            try {
+                return JSONObject.numberToString((Number) value);
+            } catch (JSONException e) {
+                // Should never happen
+                Logger.error(e, "JsonValue - Failed to coerce JSON Number into String.");
+                return null;
+            }
+        }
+
+        return String.valueOf(value);
+    }
+
+    /**
      * Gets the contained values as an int.
      *
      * @param defaultValue The default value if the contained value is not a number.
@@ -124,6 +156,25 @@ public class JsonValue implements Parcelable, JsonSerializable {
 
         return defaultValue;
     }
+
+    /**
+     * Gets the contained values as an Integer.
+     *
+     * @return The value as an Integer, or null if the value is not set or not a number.
+     */
+    @Nullable
+    public Integer getInteger() {
+        if (isInteger()) {
+            return (Integer) value;
+        }
+
+        if (isNumber()) {
+            return ((Number) value).intValue();
+        }
+
+        return null;
+    }
+
 
     /**
      * Gets the contained values as a float.

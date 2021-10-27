@@ -1,0 +1,49 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 95%
+      height: 90%
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  - position:
+      horizontal: center
+      vertical: top
+    size:
+      height: 90%
+      width: 100%
+    view:
+      type: web_view
+      url: "https://docs.airship.com"
+      backgroundColor: "#000000"
+  - position:
+      horizontal: start
+      vertical: bottom
+    size:
+      height: 10%
+      width: 50%
+    view:
+      type: button
+      identifier: button1
+      color: "#AED581" # green
+      label:
+        type: label
+        text: cool
+  - position:
+      horizontal: end
+      vertical: bottom
+    size:
+      height: 10%
+      width: 50%
+    view:
+      type: button
+      identifier: button1
+      color: "#D32F2F" # red
+      label:
+        type: label
+        text: beans
+

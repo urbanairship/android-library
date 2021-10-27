@@ -1,0 +1,5 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_name">Airship Layout Playground</string>
+    <string name="layout_picker_label">Pick a layout file</string>
+    <string name="render_button_label">Render it!</string>
+</resources>

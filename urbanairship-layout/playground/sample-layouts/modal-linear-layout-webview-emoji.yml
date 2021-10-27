@@ -1,0 +1,104 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 95%
+      height: 90%
+    position:
+      horizontal: center
+      vertical: center
+    backgroundColor: "#000000"
+layout:
+  type: container
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      width: 100%
+      height: 100%
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 100%
+          height: auto
+        margin:
+          top: 24
+          bottom: 24
+          start: 16
+          end: 16
+        weight: 0
+        view:
+          type: container
+          items:
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "Wikipedia <i>Push technology</i>"
+              color: "#ffffff"
+              alignment: center
+              fontSize: 18
+              textStyles:
+              - bold
+              fontFamilies:
+              - monospace
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 100%
+          height: 100%
+        margin:
+          top: 16
+          bottom: 16
+          start: 16
+          end: 16
+        weight: 1
+        view:
+          type: container
+          items:
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: 100%
+              height: 100%
+            view:
+              type: web_view
+              url: "https://en.m.wikipedia.org/wiki/Push_technology"
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 100%
+          height: auto
+        margin:
+          top: 24
+          bottom: 24
+          start: 16
+          end: 16
+        weight: 0
+        view:
+          type: container
+          items:
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: auto
+              height: auto
+            view:
+              type: label
+              text: "🆒 🆒 🆒"
+              fontSize: 24
+              color: "#FFFFFF"

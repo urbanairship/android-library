@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright Airship and Contributors
+  ~
+  -->
+
+<resources>
+    <array name="preloaded_fonts" translatable="false">
+        <item>@font/geo</item>
+        <item>@font/walter_turncoat</item>
+    </array>
+</resources>

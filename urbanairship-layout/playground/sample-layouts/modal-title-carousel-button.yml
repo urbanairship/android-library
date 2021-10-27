@@ -1,0 +1,105 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      height: auto
+      width: 95%
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: auto
+      width: 100%
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+      - size:
+          height: auto
+          width: 100%
+        margin:
+          top: 16
+          bottom: 16
+          start: 16
+          end: 16
+        view:
+          type: label
+          text: Take a spin
+          alignment: center
+          textStyles:
+          - bold
+          fontSize: 18
+      - size:
+          height: 450
+          width: 100%
+        margin:
+          start: 16
+          end: 16
+          top: 16
+          bottom: 16
+        view:
+          type: carousel
+          items:
+          - type: container
+            backgroundColor: "#88FF0000"
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
+              view:
+                type: label
+                text: This is the first page about stuff.
+                alignment: center
+          - type: container
+            backgroundColor: "#8800FF00"
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
+              view:
+                type: label
+                text: More stuff is here on the second page.
+                alignment: center
+          - type: container
+            backgroundColor: "#880000FF"
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
+              view:
+                type: label
+                text: That's not all! There's a third page, too!
+                alignment: center
+      - size:
+          height: auto
+          width: auto
+        margin:
+          start: 16
+          end: 16
+          top: 16
+          bottom: 16
+        view:
+          type: button
+          identifier: button1
+          color: "#FFD600"
+          label:
+            type: label
+            fontSize: 10
+            color: "#333333"
+            alignment: center
+            text: 'Impressive!'

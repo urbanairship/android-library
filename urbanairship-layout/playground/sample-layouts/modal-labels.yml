@@ -1,0 +1,258 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 90%
+      height: auto
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      width: 100%
+      height: auto
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+      #
+      # Size
+      #
+      - margin:
+          top: 16
+          bottom: 16
+          start: 16
+          end: 16
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Size
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+      - margin:
+          top: 48
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Tiny (8sp)
+          alignment: left
+          fontSize: 8
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Small (10sp)
+          alignment: left
+          fontSize: 10
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Normal (12sp)
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Larger (16sp)
+          alignment: left
+          fontSize: 16
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Huge (24sp)
+          alignment: left
+          fontSize: 24
+      #
+      # Alignment
+      #
+      - margin:
+          top: 8
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Alignment
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Left
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Center
+          alignment: center
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Right
+          alignment: right
+          fontSize: 12
+      #
+      # Style
+      #
+      - margin:
+          top: 8
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: 100%
+          height: auto
+        view:
+          type: label
+          text: Style
+          alignment: left
+          textStyles:
+          - bold
+          - underline
+          fontSize: 16
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Normal
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Bold
+          textStyles:
+          - bold
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Underline
+          textStyles:
+          - underline
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Italic
+          textStyles:
+          - italic
+          alignment: left
+          fontSize: 12
+      - margin:
+          top: 0
+          bottom: 8
+          start: 8
+          end: 8
+        size:
+          width: auto
+          height: auto
+        view:
+          type: label
+          text: Bold + Italic + Underline
+          textStyles:
+          - bold
+          - underline
+          - italic
+          alignment: left
+          fontSize: 12

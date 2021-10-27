@@ -1,0 +1,22 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 95%
+      height: 90%
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: 100%
+      width: 100%
+    view:
+      type: web_view
+      url: "https://docs.airship.com"
+      backgroundColor: "#000000"
