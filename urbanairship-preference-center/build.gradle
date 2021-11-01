@@ -89,6 +89,11 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
     androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
 
+    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"){
+        // https://github.com/Kotlin/kotlinx.coroutines/issues/2023
+        exclude group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-debug"
+    }
+
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
