@@ -1,0 +1,81 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      height: 85%
+      width: 95%
+    position:
+      horizontal: center
+      vertical: center
+layout:
+  type: container
+  items:
+  - position:
+      vertical: center
+      horizontal: center
+    size:
+      height: 100%
+      width: 100%
+#    margin:
+#      start: 16
+#      end: 16
+#      top: 16
+#      bottom: 16
+    view:
+      type: carousel
+      identifier: CAROUSEL_ID
+      items:
+      - type: container
+        backgroundColor: "#88FF0000"
+        items:
+        - position:
+            vertical: center
+            horizontal: center
+          size:
+            height: auto
+            width: auto
+          view:
+            type: label
+            text: This is the first page about stuff.
+            alignment: center
+      - type: container
+        backgroundColor: "#8800FF00"
+        items:
+        - position:
+            vertical: center
+            horizontal: center
+          size:
+            height: auto
+            width: auto
+          view:
+            type: label
+            text: More stuff is here on the second page.
+            alignment: center
+      - type: container
+        backgroundColor: "#880000FF"
+        items:
+        - position:
+            vertical: center
+            horizontal: center
+          size:
+            height: auto
+            width: auto
+          view:
+            type: label
+            text: That's not all! There's a third page, too!
+            alignment: center
+  - size:
+      height: 48
+      width: auto
+    position:
+      vertical: bottom
+      horizontal: center
+    margin:
+      start: 0
+      end: 0
+      top: 0
+      bottom: 16
+    view:
+      type: carousel_indicator
+      carouselIdentifier: CAROUSEL_ID
+#

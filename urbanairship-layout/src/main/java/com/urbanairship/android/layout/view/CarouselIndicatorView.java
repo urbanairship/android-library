@@ -4,14 +4,14 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
 
 import com.urbanairship.android.layout.model.CarouselIndicatorModel;
+import com.urbanairship.android.layout.widget.PagingIndicatorLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class CarouselIndicatorView extends View implements BaseView<CarouselIndicatorModel> {
+public class CarouselIndicatorView extends PagingIndicatorLayout implements BaseView<CarouselIndicatorModel> {
     private CarouselIndicatorModel model;
 
     public CarouselIndicatorView(@NonNull Context context) {
@@ -47,6 +47,32 @@ public class CarouselIndicatorView extends View implements BaseView<CarouselIndi
     }
 
     private void configure() {
-        // TODO: draw some dots
+       model.setListener(listener);
     }
+
+    //
+    // PagingIndicatorLayout overrides
+    //
+
+    @Override
+    protected void onIndicatorClick(int position) {
+        model.onIndicatorClick(position);
+    }
+
+    //
+    // Model Listener
+    //
+
+    private final CarouselIndicatorModel.Listener listener = new CarouselIndicatorModel.Listener() {
+        @Override
+        public void onInit(int size, int position) {
+            setCount(size);
+            setPosition(position);
+        }
+
+        @Override
+        public void onUpdate(int position) {
+            setPosition(position);
+        }
+    };
 }

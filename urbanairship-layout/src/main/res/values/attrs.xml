@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="WeightlessLinearLayout">
+        <attr name="android:orientation"/>
+        <attr name="android:gravity"/>
+    </declare-styleable>
+
+    <declare-styleable name="WeightlessLinearLayout_Layout">
+        <attr name="android:layout_width"/>
+        <attr name="android:layout_height"/>
+        <attr name="android:layout_gravity"/>
+
+        <attr name="maxPercentWidth" format="float"/>
+        <attr name="maxPercentHeight" format="float" />
+    </declare-styleable>
+</resources>

@@ -1,0 +1,73 @@
+---
+modal:
+  defaultPlacement:
+    size:
+      width: 364
+      height: 30%
+    position:
+      horizontal: center
+      vertical: center
+    backgroundColor: "#00000000"
+layout:
+  type: container
+  border:
+    strokeColor: "#000000"
+    strokeWidth: 3
+  items:
+  # TOP-LEVEL LINEAR LAYOUT
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: 100%
+      width: 100%
+    view:
+      type: linear_layout
+      direction: horizontal
+      backgroundColor: "#55ffffff"
+      items:
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: auto
+          height: 100%
+        view:
+          type: label
+          backgroundColor: "#55FF0000"
+          alignment: center
+          text: auto
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 75%
+          height: 100%
+        view:
+          type: label
+          backgroundColor: "#5500FF00"
+          text: 75%
+          alignment: center
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 20%
+          height: 100%
+        view:
+          backgroundColor: "#550000FF"
+          type: label
+          alignment: center
+          text: 20%
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 40
+          height: 100%
+        view:
+          backgroundColor: "#55FF00FF"
+          type: label
+          alignment: center
+          text: 40dp
+

@@ -5,7 +5,6 @@ package com.urbanairship.android.layout.util;
 import android.content.Context;
 import android.util.Log;
 
-import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Position;
 import com.urbanairship.android.layout.property.Size;
@@ -47,40 +46,17 @@ public final class ConstraintSetBuilder {
     }
 
     @NonNull
-    public static ConstraintSetBuilder newBuilder(@NonNull Context context, @NonNull ConstraintSet constraints) {
-        return new ConstraintSetBuilder(context, constraints);
-    }
-
-    @NonNull
     public ConstraintSetBuilder constrainWithinParent(int viewId) {
-        constraints.addToHorizontalChain(viewId, PARENT_ID, PARENT_ID);
-        constraints.addToVerticalChain(viewId, PARENT_ID, PARENT_ID);
-        return this;
+        return constrainWithinParent(viewId, null);
     }
 
     @NonNull
-    public ConstraintSetBuilder chainVertically(@NonNull int[] viewIds, @NonNull Margin[] margins) {
-        for (int i = 0; i < viewIds.length; i++) {
-            int viewId = viewIds[i];
-            Margin margin = margins[i];
-
-            int topId = i == 0 ? PARENT_ID : viewIds[i - 1];
-            int bottomId = i == viewIds.length - 1 ? PARENT_ID : viewIds[i + 1];
-            addToVerticalChain(viewId, topId, bottomId, margin.getTop(), margin.getBottom());
+    public ConstraintSetBuilder constrainWithinParent(int viewId, @Nullable Margin margin) {
+        if (margin == null) {
+            constraints.addToHorizontalChain(viewId, PARENT_ID, PARENT_ID);
+            constraints.addToVerticalChain(viewId, PARENT_ID, PARENT_ID);
+        } else {
             addToHorizontalChain(viewId, PARENT_ID, PARENT_ID, margin.getStart(), margin.getEnd());
-        }
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder chainHorizontally(@NonNull int[] viewIds, @NonNull Margin[] margins) {
-        for (int i = 0; i < viewIds.length; i++) {
-            int viewId = viewIds[i];
-            Margin margin = margins[i];
-
-            int leftId = i == 0 ? PARENT_ID : viewIds[i - 1];
-            int rightId = i == viewIds.length - 1 ? PARENT_ID : viewIds[i + 1];
-            addToHorizontalChain(viewId, leftId, rightId, margin.getStart(), margin.getEnd());
             addToVerticalChain(viewId, PARENT_ID, PARENT_ID, margin.getTop(), margin.getBottom());
         }
         return this;
@@ -95,8 +71,8 @@ public final class ConstraintSetBuilder {
      */
     @NonNull
     public ConstraintSetBuilder addToVerticalChain(int viewId, int topId, int bottomId, int marginTop, int marginBottom) {
-        constraints.connect(viewId, TOP, topId, (topId == PARENT_ID) ? TOP : BOTTOM, marginTop);
-        constraints.connect(viewId, BOTTOM, bottomId, (bottomId == PARENT_ID) ? BOTTOM : TOP, marginBottom);
+        constraints.connect(viewId, TOP, topId, (topId == PARENT_ID) ? TOP : BOTTOM, (int) dpToPx(context, marginTop));
+        constraints.connect(viewId, BOTTOM, bottomId, (bottomId == PARENT_ID) ? BOTTOM : TOP, (int) dpToPx(context, marginBottom));
         if (topId != PARENT_ID) {
             constraints.connect(topId, BOTTOM, viewId, TOP, 0);
         }
@@ -116,8 +92,8 @@ public final class ConstraintSetBuilder {
      */
     @NonNull
     public ConstraintSetBuilder addToHorizontalChain(int viewId, int leftId, int rightId, int leftMargin, int rightMargin) {
-        constraints.connect(viewId, LEFT, leftId, (leftId == PARENT_ID) ? LEFT : RIGHT, leftMargin);
-        constraints.connect(viewId, RIGHT, rightId, (rightId == PARENT_ID) ? RIGHT : LEFT, rightMargin);
+        constraints.connect(viewId, LEFT, leftId, (leftId == PARENT_ID) ? LEFT : RIGHT, (int) dpToPx(context, leftMargin));
+        constraints.connect(viewId, RIGHT, rightId, (rightId == PARENT_ID) ? RIGHT : LEFT, (int) dpToPx(context, rightMargin));
         if (leftId != PARENT_ID) {
             constraints.connect(leftId, RIGHT, viewId, LEFT, 0);
         }
@@ -125,30 +101,6 @@ public final class ConstraintSetBuilder {
             constraints.connect(rightId, LEFT, viewId, RIGHT, 0);
         }
 
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder setVerticalChainStyle(int viewId, int chainStyle) {
-        constraints.setVerticalChainStyle(viewId, chainStyle);
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder setVerticalBias(int viewId, float bias) {
-        constraints.setVerticalBias(viewId, bias);
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder setHorizontalChainStyle(int viewId, int chainStyle) {
-        constraints.setHorizontalChainStyle(viewId, chainStyle);
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder setHorizontalBias(int viewId, float bias) {
-        constraints.setHorizontalBias(viewId, bias);
         return this;
     }
 
@@ -164,6 +116,7 @@ public final class ConstraintSetBuilder {
             switch (width.getType()) {
                 case AUTO:
                     constraints.constrainWidth(viewId, autoValue);
+                    constraints.constrainedWidth(viewId,true);
                     break;
                 case PERCENT:
                     if (width.getFloat() == 1f) {
@@ -181,6 +134,7 @@ public final class ConstraintSetBuilder {
             switch (height.getType()) {
                 case AUTO:
                     constraints.constrainHeight(viewId, autoValue);
+                    constraints.constrainedHeight(viewId,true);
                     break;
                 case PERCENT:
                     if (height.getFloat() == 1f) {
@@ -197,7 +151,6 @@ public final class ConstraintSetBuilder {
         return this;
     }
 
-    // TODO: not sure if this is actually needed / in the spec?
     @NonNull
     public ConstraintSetBuilder maxSize(@Nullable Size size, @IdRes int viewId) {
         if (size == null) {
@@ -240,21 +193,9 @@ public final class ConstraintSetBuilder {
     }
 
     @NonNull
-    public ConstraintSetBuilder weight(@Nullable Float weight, @Nullable Direction direction, @IdRes int viewId) {
-        if (direction != null && weight != null) {
-            if (direction == Direction.VERTICAL) {
-                constraints.setVerticalWeight(viewId, weight);
-            } else {
-                constraints.setHorizontalWeight(viewId, weight);
-            }
-        }
-        return this;
-    }
-
-    @NonNull
     public ConstraintSetBuilder position(@Nullable Position position, @IdRes int viewId) {
         if (position != null) {
-            connectAllSidesToParent(viewId);
+            constrainWithinParent(viewId);
 
             switch (position.getHorizontal()) {
                 case START:
@@ -291,16 +232,6 @@ public final class ConstraintSetBuilder {
             constraints.setMargin(viewId, ConstraintSet.START, (int) dpToPx(context, margin.getStart()));
             constraints.setMargin(viewId, ConstraintSet.END, (int) dpToPx(context, margin.getEnd()));
         }
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder connectAllSidesToParent(int viewId) {
-        constraints.connect(viewId, TOP, ConstraintSet.PARENT_ID, TOP);
-        constraints.connect(viewId, BOTTOM, ConstraintSet.PARENT_ID, BOTTOM);
-        constraints.connect(viewId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-        constraints.connect(viewId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-
         return this;
     }
 

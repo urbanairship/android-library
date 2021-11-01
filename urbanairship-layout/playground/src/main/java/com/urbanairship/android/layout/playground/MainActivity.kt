@@ -20,6 +20,8 @@ class MainActivity : AppCompatActivity() {
         private const val SAMPLE_LAYOUTS_PATH = "sample_layouts"
     }
 
+    private lateinit var binding: ActivityMainBinding
+
     private val sharedPrefs by lazy {
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
@@ -37,15 +39,23 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
-        initViews(binding)
+        binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
+
+        initViews(binding)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (binding.layoutSpinnerText.adapter != adapter) {
+            binding.layoutSpinnerText.setAdapter(adapter)
+        }
     }
 
     private fun initViews(binding: ActivityMainBinding) {
         val layoutFiles = ResourceUtils.listJsonAssets(this, SAMPLE_LAYOUTS_PATH)
         adapter.addAll(layoutFiles)
-        binding.layoutSpinnerText.setAdapter(adapter)
 
         previousSelection?.let { selected ->
             if (adapter.getPosition(selected) > -1) {

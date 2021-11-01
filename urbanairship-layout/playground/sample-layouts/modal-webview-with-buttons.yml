@@ -29,6 +29,7 @@ layout:
     view:
       type: button
       identifier: button1
+      behavior: dismiss
       color: "#AED581" # green
       label:
         type: label
@@ -41,7 +42,8 @@ layout:
       width: 50%
     view:
       type: button
-      identifier: button1
+      behavior: cancel
+      identifier: button2
       color: "#D32F2F" # red
       label:
         type: label

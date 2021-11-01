@@ -24,10 +24,10 @@ layout:
       # Size
       #
       - margin:
-          top: 16
-          bottom: 16
-          start: 16
-          end: 16
+          top: 8
+          bottom: 8
+          start: 8
+          end: 8
         size:
           width: 100%
           height: auto
@@ -40,7 +40,7 @@ layout:
           - underline
           fontSize: 16
       - margin:
-          top: 48
+          top: 0
           bottom: 8
           start: 8
           end: 8

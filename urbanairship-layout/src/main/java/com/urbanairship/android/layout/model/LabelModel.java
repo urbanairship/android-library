@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import android.graphics.Color;
 
+import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.TextAlignment;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.property.ViewType;
@@ -38,8 +39,10 @@ public class LabelModel extends BaseModel {
         @Nullable @ColorInt Integer color,
         @Nullable TextAlignment alignment,
         @NonNull List<TextStyle> textStyles,
-        @NonNull List<String> fontFamilies) {
-        super(ViewType.LABEL);
+        @NonNull List<String> fontFamilies,
+        @Nullable @ColorInt Integer backgroundColor,
+        @Nullable Border border) {
+        super(ViewType.LABEL, backgroundColor, border);
 
         this.text = text;
         this.fontSize = fontSize;
@@ -79,7 +82,10 @@ public class LabelModel extends BaseModel {
             }
         }
 
-        return new LabelModel(text, fontSize, color, alignment, textStyles, fontFamilies);
+        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Border border = borderFromJson(json);
+
+        return new LabelModel(text, fontSize, color, alignment, textStyles, fontFamilies, backgroundColor, border);
     }
 
     @NonNull

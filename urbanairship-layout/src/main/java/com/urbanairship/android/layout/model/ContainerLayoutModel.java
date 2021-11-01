@@ -2,8 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import android.graphics.Color;
-
 import com.urbanairship.android.layout.Layout;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Margin;
@@ -30,25 +28,28 @@ public class ContainerLayoutModel extends LayoutModel  {
     @ColorInt
     private final Integer backgroundColor;
 
+    @NonNull
+    private final List<BaseModel> children = new ArrayList<>();
+
     public ContainerLayoutModel(@NonNull List<Item> items, @Nullable Border border, @Nullable @ColorInt Integer backgroundColor) {
         super(ViewType.CONTAINER);
 
         this.items = items;
         this.border = border;
         this.backgroundColor = backgroundColor;
+
+        for (Item item : items) {
+            item.view.addListener(this);
+            children.add(item.view);
+        }
     }
 
     @NonNull
     public static ContainerLayoutModel fromJson(@NonNull JsonMap json) throws JsonException {
         JsonList itemsJson = json.opt("items").optList();
-        JsonMap borderJson = json.opt("border").optMap();
-        // TODO: this isn't in the spec!
-        //  we should either add it to the spec or remove it here!
-        String backgroundColorString = json.opt("backgroundColor").optString();
-
         List<Item> items = Item.fromJsonList(itemsJson);
-        Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
-        @ColorInt Integer backgroundColor = backgroundColorString.isEmpty() ? null : Color.parseColor(backgroundColorString);
+        Border border = borderFromJson(json);
+        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
 
         return new ContainerLayoutModel(items, border, backgroundColor);
     }
@@ -68,6 +69,11 @@ public class ContainerLayoutModel extends LayoutModel  {
     public
     Integer getBackgroundColor() {
         return backgroundColor;
+    }
+
+    @NonNull
+    public List<BaseModel> getChildren() {
+        return children;
     }
 
     public static class Item {

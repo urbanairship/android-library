@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import android.graphics.Color;
 
+import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonBehavior;
 import com.urbanairship.android.layout.property.ViewType;
@@ -66,6 +67,10 @@ public class ButtonModel extends BaseModel {
         return new ButtonModel(id, label, border, color, behavior, actions);
     }
 
+    //
+    // Fields
+    //
+
     @NonNull
     public String getId() {
         return id;
@@ -97,8 +102,11 @@ public class ButtonModel extends BaseModel {
         return actions;
     }
 
+    //
+    // View Actions
+    //
+
     public void onClick() {
-        // TODO: do something based on behavior and actions?
-        //  Need some way of bubbling events up to the top-level Display or some other manager class...
+        bubbleEvent(new Event.ButtonClick(this));
     }
 }

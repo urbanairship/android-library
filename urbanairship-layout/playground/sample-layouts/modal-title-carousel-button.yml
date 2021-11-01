@@ -2,7 +2,7 @@
 modal:
   defaultPlacement:
     size:
-      height: auto
+      height: 85%
       width: 95%
     position:
       horizontal: center
@@ -42,9 +42,10 @@ layout:
           start: 16
           end: 16
           top: 16
-          bottom: 16
+          bottom: 0
         view:
           type: carousel
+          identifier: CAROUSEL_ID
           items:
           - type: container
             backgroundColor: "#88FF0000"
@@ -86,8 +87,25 @@ layout:
                 text: That's not all! There's a third page, too!
                 alignment: center
       - size:
+          height: 48
+          width: auto
+        position:
+          vertical: center
+          horizontal: center
+        margin:
+          start: 16
+          end: 16
+          top: 0
+          bottom: 0
+        view:
+          type: carousel_indicator
+          carouselIdentifier: CAROUSEL_ID
+      - size:
           height: auto
           width: auto
+        position:
+          vertical: center
+          horizontal: center
         margin:
           start: 16
           end: 16
@@ -96,6 +114,7 @@ layout:
         view:
           type: button
           identifier: button1
+          behavior: dismiss
           color: "#FFD600"
           label:
             type: label

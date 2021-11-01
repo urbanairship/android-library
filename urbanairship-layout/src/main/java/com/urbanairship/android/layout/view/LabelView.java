@@ -45,5 +45,6 @@ public class LabelView extends MaterialTextView implements BaseView<LabelModel> 
     public void setModel(@NonNull LabelModel model) {
         this.model = model;
         LayoutUtils.applyLabelModel(this, model);
+        LayoutUtils.applyBorderAndBackground(this, model);
     }
 }

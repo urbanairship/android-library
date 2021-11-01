@@ -28,7 +28,6 @@ layout:
         size:
           width: 100%
           height: 100%
-        weight: 1
         view:
           type: scroll_layout
           direction: vertical
@@ -50,10 +49,10 @@ layout:
                 mediaType: image
             # HEADER
             - margin:
-                top: 16
+                top: 8
                 bottom: 8
-                start: 16
-                end: 16
+                start: 8
+                end: 8
               view:
                 type: label
                 text: Lorem ipsum dolor sit amet
@@ -73,9 +72,9 @@ layout:
                 height: auto
               margin:
                 top: 8
-                bottom: 16
-                start: 16
-                end: 16
+                bottom: 8
+                start: 8
+                end: 8
               view:
                 type: label
                 text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
@@ -97,12 +96,11 @@ layout:
         margin:
           top: 0
           bottom: 0
-          start: 16
-          end: 16
+          start: 8
+          end: 8
         size:
           width: 100%
           height: auto
-        weight: 0
         view:
           type: button
           identifier: BUTTON
@@ -126,12 +124,11 @@ layout:
         margin:
           top: 0
           bottom: 0
-          start: 16
-          end: 16
+          start: 8
+          end: 8
         size:
           width: 100%
           height: auto
-        weight: 0
         view:
           type: button
           identifier: BUTTON
@@ -157,5 +154,6 @@ layout:
       height: 48
     view:
       type: image_button
+      behavior: cancel
       url: https://testing-library.com/img/octopus-64x64.png
       identifier: myid

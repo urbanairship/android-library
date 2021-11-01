@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.Layout;
+import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Size;
@@ -14,6 +15,7 @@ import com.urbanairship.json.JsonMap;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -23,11 +25,19 @@ public class LinearLayoutModel extends LayoutModel {
     @NonNull
     private final List<Item> items;
 
-    public LinearLayoutModel(@NonNull Direction direction, @NonNull List<Item> items) {
-        super(ViewType.LINEAR_LAYOUT);
+    @NonNull
+    private final List<BaseModel> children = new ArrayList<>();
+
+    public LinearLayoutModel(@NonNull Direction direction, @NonNull List<Item> items, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+        super(ViewType.LINEAR_LAYOUT, backgroundColor, border);
 
         this.direction = direction;
         this.items = items;
+
+        for (Item item : items) {
+            item.view.addListener(this);
+            children.add(item.view);
+        }
     }
 
     @NonNull
@@ -38,7 +48,10 @@ public class LinearLayoutModel extends LayoutModel {
         Direction direction = Direction.from(directionString);
         List<Item> items = Item.fromJsonList(itemsJson);
 
-        return new LinearLayoutModel(direction, items);
+        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Border border = borderFromJson(json);
+
+        return new LinearLayoutModel(direction, items, backgroundColor, border);
     }
 
     @NonNull
@@ -51,20 +64,22 @@ public class LinearLayoutModel extends LayoutModel {
         return new ArrayList<>(items);
     }
 
+    @NonNull
+    public List<BaseModel> getChildren() {
+       return children;
+    }
+
     public static class Item {
         @NonNull
         private final BaseModel view;
         @Nullable
         private final Margin margin;
         @Nullable
-        private final Float weight;
-        @Nullable
         private final Size size;
 
-        public Item(@NonNull BaseModel view, @Nullable Margin margin, @Nullable Float weight, @Nullable Size size) {
+        public Item(@NonNull BaseModel view, @Nullable Margin margin, @Nullable Size size) {
             this.view = view;
             this.margin = margin;
-            this.weight = weight;
             this.size = size;
         }
 
@@ -72,15 +87,13 @@ public class LinearLayoutModel extends LayoutModel {
         public static Item fromJson(@NonNull JsonMap json) throws JsonException {
             JsonMap viewJson = json.opt("view").optMap();
             JsonMap marginJson = json.opt("margin").optMap();
-            Number weightString = json.opt("weight").getNumber();
             JsonMap sizeJson = json.opt("size").optMap();
 
             BaseModel view = Layout.model(viewJson);
             Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
-            Float weight = weightString == null ? null : weightString.floatValue();
             Size size = sizeJson.isEmpty() ? Size.AUTO : Size.fromJson(sizeJson);
 
-            return new Item(view, margin, weight, size);
+            return new Item(view, margin, size);
         }
 
         @NonNull
@@ -97,11 +110,6 @@ public class LinearLayoutModel extends LayoutModel {
         @NonNull
         public BaseModel getView() {
             return view;
-        }
-
-        @Nullable
-        public Float getWeight() {
-            return weight;
         }
 
         @Nullable

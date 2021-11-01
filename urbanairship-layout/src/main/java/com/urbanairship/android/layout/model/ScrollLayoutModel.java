@@ -9,6 +9,9 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
+import java.util.Collections;
+import java.util.List;
+
 import androidx.annotation.NonNull;
 
 public class ScrollLayoutModel extends LayoutModel {
@@ -25,6 +28,8 @@ public class ScrollLayoutModel extends LayoutModel {
         this.view = view;
         this.direction = direction;
         this.size = size;
+
+        view.addListener(this);
     }
 
     @NonNull
@@ -53,5 +58,10 @@ public class ScrollLayoutModel extends LayoutModel {
     @NonNull
     public BaseModel getView() {
         return view;
+    }
+
+    @NonNull
+    public List<BaseModel> getChildren() {
+        return Collections.singletonList(view);
     }
 }

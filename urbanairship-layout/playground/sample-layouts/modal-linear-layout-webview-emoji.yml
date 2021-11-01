@@ -32,7 +32,6 @@ layout:
           bottom: 24
           start: 16
           end: 16
-        weight: 0
         view:
           type: container
           items:
@@ -63,7 +62,6 @@ layout:
           bottom: 16
           start: 16
           end: 16
-        weight: 1
         view:
           type: container
           items:
@@ -87,7 +85,6 @@ layout:
           bottom: 24
           start: 16
           end: 16
-        weight: 0
         view:
           type: container
           items:

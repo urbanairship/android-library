@@ -63,6 +63,13 @@ android {
 }
 
 dependencies {
+    // TODO: remove this after bumping the rootProject version and shipping a release!
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.work:work-runtime:2.7.0'
+        }
+    }
+
     implementation project(":urbanairship-layout")
 
     implementation 'androidx.core:core-ktx:1.6.0'

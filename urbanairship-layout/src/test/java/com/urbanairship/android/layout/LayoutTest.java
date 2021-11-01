@@ -1,12 +1,11 @@
 package com.urbanairship.android.layout;
 
-import com.urbanairship.android.layout.model.ContainerLayoutModel;
-import com.urbanairship.android.layout.display.Display;
 import com.urbanairship.android.layout.display.ModalDisplay;
-import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.model.ContainerLayoutModel;
 import com.urbanairship.android.layout.property.HorizontalPosition;
 import com.urbanairship.android.layout.property.Position;
 import com.urbanairship.android.layout.property.VerticalPosition;
+import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -48,7 +47,7 @@ public class LayoutTest {
         assertEquals(HorizontalPosition.CENTER, position.getHorizontal());
         assertEquals(VerticalPosition.CENTER, position.getVertical());
 
-        ContainerLayoutModel layout = modal.getLayout();
+        ContainerLayoutModel layout = (ContainerLayoutModel) modal.getLayout();
         assertNotNull(layout);
         assertTrue(layout.getItems().size() > 0);
 

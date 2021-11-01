@@ -9,9 +9,7 @@ import android.util.AttributeSet;
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.model.ImageButtonModel;
-import com.urbanairship.android.layout.property.ButtonBehavior;
 import com.urbanairship.images.ImageRequestOptions;
-import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,6 +39,8 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
 
         Drawable ripple = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple);
         setBackgroundDrawable(ripple);
+        setClickable(true);
+        setFocusable(true);
     }
 
     @NonNull
@@ -57,14 +57,9 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     }
 
     public void configureButton() {
-        String id = model.getId();
-        String url = model.getUrl();
-        ButtonBehavior behavior = model.getBehavior();
-        JsonMap actions = model.getActions();
-
-        ImageRequestOptions options = ImageRequestOptions.newBuilder(url).build();
+        ImageRequestOptions options = ImageRequestOptions.newBuilder(model.getUrl()).build();
         UAirship.shared().getImageLoader().load(getContext(), this, options);
 
-        // TODO: Wire up click listener to do stuff based on behavior/actions
+        setOnClickListener(v -> model.onClick());
     }
 }

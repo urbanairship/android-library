@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.ButtonBehavior;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonMap;
@@ -46,6 +47,10 @@ public class ImageButtonModel extends BaseModel {
         return new ImageButtonModel(id, url, behavior, actions);
     }
 
+    //
+    // Fields
+    //
+
     @NonNull
     public String getId() {
         return id;
@@ -64,5 +69,13 @@ public class ImageButtonModel extends BaseModel {
     @Nullable
     public JsonMap getActions() {
         return actions;
+    }
+
+    //
+    // View Actions
+    //
+
+    public void onClick() {
+        bubbleEvent(new Event.ButtonClick(this));
     }
 }

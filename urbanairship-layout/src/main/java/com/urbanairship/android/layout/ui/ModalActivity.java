@@ -49,8 +49,22 @@ public class ModalActivity extends AppCompatActivity {
             );
 
             modalView.setOnClickOutsideListener(v -> finish());
+
+            modal.setListener(modalListener);
         } catch (@NonNull JsonException | IOException e) {
             Log.e(getClass().getSimpleName(), "Failed to load modal!", e);
         }
     }
+
+    private final ModalDisplay.Listener modalListener = new ModalDisplay.Listener() {
+        @Override
+        public void onCancel() {
+            finish();
+        }
+
+        @Override
+        public void onDismiss() {
+            finish();
+        }
+    };
 }

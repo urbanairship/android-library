@@ -8,15 +8,21 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.shape.CornerFamily;
+import com.google.android.material.shape.MaterialShapeDrawable;
+import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
+import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.MediaModel;
+import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.view.MediaView;
 import com.urbanairship.util.UAStringUtil;
@@ -24,6 +30,7 @@ import com.urbanairship.util.UAStringUtil;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -36,6 +43,38 @@ public final class LayoutUtils {
     private static final int DEFAULT_BORDER_RADIUS = 0;
 
     private LayoutUtils() {}
+
+    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel model) {
+        Context context = view.getContext();
+        Border border = model.getBorder();
+        @ColorInt Integer backgroundColor = model.getBackgroundColor();
+        if (border != null) {
+            float cornerRadius = border.getRadius() == null ? 0 : ResourceUtils.dpToPx(context, border.getRadius());
+            ShapeAppearanceModel shapeModel = ShapeAppearanceModel.builder()
+                                                                  .setAllCorners(CornerFamily.ROUNDED, cornerRadius)
+                                                                  .build();
+            MaterialShapeDrawable shapeDrawable = new MaterialShapeDrawable(shapeModel);
+
+            if (border.getStrokeWidth() != null) {
+                float strokeWidth = ResourceUtils.dpToPx(context, border.getStrokeWidth());
+                shapeDrawable.setStrokeWidth(strokeWidth);
+            }
+
+            if (border.getStrokeColor() != null) {
+                shapeDrawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor()));
+            }
+
+            @ColorInt int fillColor = backgroundColor != null
+                ? backgroundColor
+                : ResourceUtils.getColorAttr(context, android.R.attr.colorBackground);
+
+            shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
+
+            view.setBackground(shapeDrawable);
+        } else if (backgroundColor != null) {
+            view.setBackgroundColor(backgroundColor);
+        }
+    }
 
     public static void applyButtonModel(@NonNull MaterialButton button, @NonNull ButtonModel model) {
         applyLabelModel(button, model.getLabel());
