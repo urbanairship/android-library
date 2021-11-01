@@ -1,4 +1,4 @@
-# Airship Android SDK 14.x to 15.0 Migration Guide
+# Airship Android SDK 15.x to 16.0 Migration Guide
 
 ## Compile and Target SDK Versions
 
