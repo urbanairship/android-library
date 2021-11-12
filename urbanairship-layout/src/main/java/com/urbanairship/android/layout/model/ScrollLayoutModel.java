@@ -2,9 +2,9 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.android.layout.Layout;
+import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Direction;
-import com.urbanairship.android.layout.property.Size;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -12,22 +12,21 @@ import com.urbanairship.json.JsonMap;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class ScrollLayoutModel extends LayoutModel {
-    @NonNull
-    private final Size size;
     @NonNull
     private final Direction direction;
     @NonNull
     private final BaseModel view;
 
-    public ScrollLayoutModel(@NonNull BaseModel view, @NonNull Direction direction, @NonNull Size size) {
-        super(ViewType.SCROLL_LAYOUT);
+    public ScrollLayoutModel(@NonNull BaseModel view, @NonNull Direction direction, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+        super(ViewType.SCROLL_LAYOUT, backgroundColor, border);
 
         this.view = view;
         this.direction = direction;
-        this.size = size;
 
         view.addListener(this);
     }
@@ -35,19 +34,14 @@ public class ScrollLayoutModel extends LayoutModel {
     @NonNull
     public static ScrollLayoutModel fromJson(@NonNull JsonMap json) throws JsonException {
         JsonMap viewJson = json.opt("view").optMap();
-        JsonMap sizeJson = json.opt("size").optMap();
         String directionString = json.opt("direction").optString();
 
-        BaseModel view = Layout.model(viewJson);
+        BaseModel view = Thomas.model(viewJson);
         Direction direction = Direction.from(directionString);
-        Size size = Size.fromJson(sizeJson);
+        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Border border = borderFromJson(json);
 
-        return new ScrollLayoutModel(view, direction, size);
-    }
-
-    @NonNull
-    public Size getSize() {
-        return size;
+        return new ScrollLayoutModel(view, direction, backgroundColor, border);
     }
 
     @NonNull

@@ -3,27 +3,27 @@
 package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.ButtonModel;
-import com.urbanairship.android.layout.model.CarouselIndicatorModel;
-import com.urbanairship.android.layout.model.CarouselModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
-import com.urbanairship.android.layout.property.ButtonBehavior;
+import com.urbanairship.android.layout.model.LabelButtonModel;
+import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.json.JsonMap;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /** Base event. */
 public abstract class Event {
     /** Event types. */
     public enum Type {
-        /** Button and ImageButton clicks. */
+        /** LabelButton and ImageButton clicks. */
         BUTTON_CLICK,
-        /** Carousel initialization event. */
-        CAROUSEL_INIT,
-        /** Carousel scroll events. */
-        CAROUSEL_SCROLL,
-        /** Carousel indicator clicks. */
-        CAROUSEL_INDICATOR_CLICK
+        /** Pager initialization event. */
+        PAGER_INIT,
+        /** Pager scroll events. */
+        PAGER_SCROLL
+
+        // TODO: add form event types
     }
 
     @NonNull
@@ -43,33 +43,21 @@ public abstract class Event {
         return type;
     }
 
-    /** Event emitted on Button and ImageButton clicks. */
+    /** Event emitted on LabelButton and ImageButton clicks. */
     public static final class ButtonClick extends Event {
-        @NonNull private final String buttonId;
-        @Nullable private final ButtonBehavior behavior;
-        @Nullable private final JsonMap actions;
+        @NonNull private final String identifier;
+        @NonNull private final List<ButtonClickBehaviorType> behavior;
+        @NonNull private final List<JsonMap> actions;
 
         /**
-         * Constructs a {@code ButtonClick} event from a {@link ButtonModel}.
+         * Constructs a {@code ButtonClick} event from a {@link LabelButtonModel} or {@link ImageButtonModel}.
          *
          * @param model The {@code ButtonModel} that received the click.
          */
         public ButtonClick(@NonNull ButtonModel model) {
             super(Type.BUTTON_CLICK);
-            this.buttonId = model.getId();
-            this.behavior = model.getBehavior();
-            this.actions = model.getActions();
-        }
-
-        /**
-         * Constructs a {@code ButtonClick} event from a {@link ImageButtonModel}.
-         *
-         * @param model The {@code ImageButtonModel} that received the click.
-         */
-        public ButtonClick(@NonNull ImageButtonModel model) {
-            super(Type.BUTTON_CLICK);
-            this.buttonId = model.getId();
-            this.behavior = model.getBehavior();
+            this.identifier = model.getIdentifier();
+            this.behavior = model.getButtonClickBehaviors();
             this.actions = model.getActions();
         }
 
@@ -79,8 +67,8 @@ public abstract class Event {
          * @return The button ID.
          */
         @NonNull
-        public String getButtonId() {
-            return buttonId;
+        public String getButtonIdentifier() {
+            return identifier;
         }
 
         /**
@@ -88,8 +76,8 @@ public abstract class Event {
          *
          * @return The {@code ButtonBehavior}, or {@code null} if unset.
          */
-        @Nullable
-        public ButtonBehavior getBehavior() {
+        @NonNull
+        public List<ButtonClickBehaviorType> getButtonClickBehaviors() {
             return behavior;
         }
 
@@ -98,37 +86,24 @@ public abstract class Event {
          *
          * @return A {@code JsonMap} of actions, or {@code null} if unset.
          */
-        @Nullable
-        public JsonMap getActions() {
+        @NonNull
+        public List<JsonMap> getActions() {
             return actions;
         }
     }
 
-    /** Event emitted by Carousel views on scroll to the next or previous page. */
-    public static final class CarouselScroll extends Event {
-        @NonNull private final String carouselId;
+    /** Event emitted by Pager views on scroll to the next or previous page. */
+    public static final class PagerScroll extends Event {
         private final int position;
 
         /**
-         * Constructs a {@code CarouselScroll} event.
+         * Constructs a {@code PagerScroll} event.
          *
-         * @param model The {@code CarouselModel} that received the scroll.
          * @param position The position of the item being displayed.
          */
-        public CarouselScroll(@NonNull CarouselModel model, int position) {
-            super(Type.CAROUSEL_SCROLL);
-            this.carouselId = model.getIdentifier();
+        public PagerScroll(int position) {
+            super(Type.PAGER_SCROLL);
             this.position = position;
-        }
-
-        /**
-         * Gets the carousel identifier.
-         *
-         * @return The carousel ID.
-         */
-        @NonNull
-        public String getCarouselId() {
-            return carouselId;
         }
 
         /**
@@ -141,76 +116,26 @@ public abstract class Event {
         }
     }
 
-    /** Event emitted on Carousel Indicator dot clicks. */
-    public static final class CarouselIndicatorClick extends Event {
-        @NonNull private final String carouselId;
-        private final int position;
-
-        /**
-         * Constructs a {@code CarouselIndicatorClick} event.
-         *
-         * @param model The {@code CarouselIndicatorModel} that received the click.
-         * @param position The position of the indicator dot that was clicked.
-         */
-        public CarouselIndicatorClick(@NonNull CarouselIndicatorModel model, int position) {
-            super(Type.CAROUSEL_INDICATOR_CLICK);
-            this.carouselId = model.getIdentifier();
-            this.position = position;
-        }
-
-        /**
-         * Gets the carousel identifier.
-         *
-         * @return The carousel ID.
-         */
-        @NonNull
-        public String getCarouselId() {
-            return carouselId;
-        }
-
-        /**
-         * Gets the position of the indicator dot that was clicked.
-         *
-         * @return The position of the indicator click.
-         */
-        public int getPosition() {
-            return position;
-        }
-    }
-
-    /** Event emitted by Carousel views, announcing their ID, size, and current position. */
-    public static final class CarouselInit extends Event {
-        @NonNull private final String carouselId;
+    /** Event emitted by Pager views, announcing their size and current position. */
+    public static final class PagerInit extends Event {
         private final int size;
         private final int position;
 
         /**
-         * Constructs a {@code CarouselInit} event.
+         * Constructs a {@code PagerInit} event.
          *
-         * @param model The {@code CarouselModel} that is initializing.
          * @param position The current position of the carousel.
          */
-        public CarouselInit(@NonNull CarouselModel model, int position) {
-            super(Type.CAROUSEL_INIT);
-            this.carouselId = model.getIdentifier();
-            this.size = model.getItems().size();
+        public PagerInit(int size, int position) {
+            super(Type.PAGER_INIT);
+            this.size = size;
             this.position = position;
         }
 
         /**
-         * Gets the carousel identifier.
+         * Gets the number of items in the Pager view.
          *
-         * @return The carousel ID.
-         */
-        @NonNull
-        public String getCarouselId() {
-            return carouselId;
-        }
-
-        /**
-         * Gets the number of items in the Carousel view.
-         *
-         * @return The number of Carousel items.
+         * @return The number of Pager items.
          */
         public int getSize() {
             return size;
@@ -219,7 +144,7 @@ public abstract class Event {
         /**
          * Gets the position of the item being displayed.
          *
-         * @return The carousel position.
+         * @return The current Pager position.
          */
         public int getPosition() {
             return position;

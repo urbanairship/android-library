@@ -2,12 +2,10 @@
 
 package com.urbanairship.android.layout.util;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 
 import com.urbanairship.android.layout.property.Orientation;
@@ -23,12 +21,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
-import androidx.annotation.AttrRes;
-import androidx.annotation.ColorInt;
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 
 import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
@@ -36,6 +31,7 @@ import static android.content.res.Configuration.SCREENLAYOUT_SIZE_LARGE;
 import static android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL;
 import static android.content.res.Configuration.SCREENLAYOUT_SIZE_SMALL;
 import static android.content.res.Configuration.SCREENLAYOUT_SIZE_XLARGE;
+import static androidx.annotation.Dimension.DP;
 
 public final class ResourceUtils {
     private ResourceUtils() {}
@@ -72,37 +68,10 @@ public final class ResourceUtils {
         return readStream(context.getResources().getAssets().open(fileName));
     }
 
-    public static float dpToPx(@NonNull Context context, @Dimension(unit = Dimension.DP) int dp) {
+    @Dimension
+    public static float dpToPx(@NonNull Context context, @Dimension(unit = DP) int dp) {
         Resources r = context.getResources();
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
-    }
-
-    @Nullable
-    public static Drawable getDrawableAttr(@NonNull Context context, @AttrRes int attrId) {
-        Activity activity = ContextUtil.getActivityContext(context);
-        if (activity == null) {
-            return null;
-        }
-        TypedValue value = new TypedValue();
-        activity.getTheme().resolveAttribute(attrId, value, true);
-        if (value.resourceId == 0) {
-            return null;
-        }
-        return ContextCompat.getDrawable(activity, value.resourceId);
-    }
-
-    @ColorInt
-    public static int getColorAttr(@NonNull Context context, @AttrRes int attrId) {
-        Activity activity = ContextUtil.getActivityContext(context);
-        if (activity == null) {
-            return 0;
-        }
-        TypedValue value = new TypedValue();
-        activity.getTheme().resolveAttribute(attrId, value, true);
-        if (value.resourceId == 0) {
-            return 0;
-        }
-        return ContextCompat.getColor(activity, value.resourceId);
     }
 
     @Nullable
@@ -118,7 +87,6 @@ public final class ResourceUtils {
 
     @Nullable
     public static WindowSize getWindowSize(@NonNull Context context) {
-        // TODO: this is getting the screen size bucket, not the actual window size... is that what we want?
         int screenLayout = context.getResources().getConfiguration().screenLayout;
         screenLayout &= Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayout) {

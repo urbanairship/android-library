@@ -46,6 +46,6 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
     @Override
     public void setModel(@NonNull TextInputModel model) {
         this.model = model;
-        LayoutUtils.applyLabelModel(this, model.getLabel());
+        LayoutUtils.applyTextInputModel(this, model);
     }
 }

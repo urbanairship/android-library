@@ -9,8 +9,8 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 
 public enum TextAlignment {
-    START("left", Gravity.START), // spec uses "left"
-    END("right", Gravity.END), // spec uses "right"
+    START("start", Gravity.START),
+    END("end", Gravity.END),
     CENTER("center", Gravity.CENTER);
 
     @NonNull

@@ -19,21 +19,26 @@ import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.model.BaseModel;
-import com.urbanairship.android.layout.model.ButtonModel;
+import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.MediaModel;
+import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.TextAlignment;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.view.MediaView;
+import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.appcompat.widget.AppCompatEditText;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.text.HtmlCompat;
 
@@ -45,15 +50,26 @@ public final class LayoutUtils {
     private LayoutUtils() {}
 
     public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel model) {
+        applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
+    }
+
+    public static void applyBorderAndBackground(
+        @NonNull View view,
+        @Nullable Border border,
+        @Nullable @ColorInt Integer backgroundColor
+    ) {
         Context context = view.getContext();
-        Border border = model.getBorder();
-        @ColorInt Integer backgroundColor = model.getBackgroundColor();
+
         if (border != null) {
-            float cornerRadius = border.getRadius() == null ? 0 : ResourceUtils.dpToPx(context, border.getRadius());
+            @Dimension float cornerRadius = border.getRadius() == null ? 0 : ResourceUtils.dpToPx(context, border.getRadius());
             ShapeAppearanceModel shapeModel = ShapeAppearanceModel.builder()
                                                                   .setAllCorners(CornerFamily.ROUNDED, cornerRadius)
                                                                   .build();
             MaterialShapeDrawable shapeDrawable = new MaterialShapeDrawable(shapeModel);
+
+            if (view instanceof Clippable) {
+                ((Clippable) view).setClipPathBorderRadius(cornerRadius);
+            }
 
             if (border.getStrokeWidth() != null) {
                 float strokeWidth = ResourceUtils.dpToPx(context, border.getStrokeWidth());
@@ -64,10 +80,7 @@ public final class LayoutUtils {
                 shapeDrawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor()));
             }
 
-            @ColorInt int fillColor = backgroundColor != null
-                ? backgroundColor
-                : ResourceUtils.getColorAttr(context, android.R.attr.colorBackground);
-
+            @ColorInt int fillColor = backgroundColor != null ? backgroundColor : Color.TRANSPARENT;
             shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
 
             view.setBackground(shapeDrawable);
@@ -76,12 +89,10 @@ public final class LayoutUtils {
         }
     }
 
-    public static void applyButtonModel(@NonNull MaterialButton button, @NonNull ButtonModel model) {
+    public static void applyButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
         applyLabelModel(button, model.getLabel());
 
-        int textColor = model.getLabel().getColor() == null
-            ? button.getCurrentTextColor()
-            : model.getLabel().getColor();
+        int textColor = model.getLabel().getForegroundColor();
         int backgroundColor = model.getBackgroundColor() == null
             ? Color.TRANSPARENT
             : model.getBackgroundColor();
@@ -107,14 +118,8 @@ public final class LayoutUtils {
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
-        if (label.getFontSize() != null) {
-            textView.setTextSize(label.getFontSize());
-        }
-
-        if (label.getColor() != null) {
-            textView.setTextColor(label.getColor());
-        }
-
+        textView.setTextSize(label.getFontSize());
+        textView.setTextColor(label.getForegroundColor());
         textView.setText(HtmlCompat.fromHtml(label.getText(), HtmlCompat.FROM_HTML_MODE_LEGACY));
 
         int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
@@ -134,18 +139,17 @@ public final class LayoutUtils {
             }
         }
 
-        if (label.getAlignment() != null) {
-            switch (label.getAlignment()) {
-                case CENTER:
-                    textView.setGravity(Gravity.CENTER);
-                    break;
-                case START:
-                    textView.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-                    break;
-                case END:
-                    textView.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
-                    break;
-            }
+        TextAlignment alignment = label.getAlignment() != null ? label.getAlignment() : TextAlignment.CENTER;
+        switch (alignment) {
+            case CENTER:
+                textView.setGravity(Gravity.CENTER);
+                break;
+            case START:
+                textView.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                break;
+            case END:
+                textView.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+                break;
         }
 
         Typeface typeface = getTypeFace(textView.getContext(), label.getFontFamilies());
@@ -155,6 +159,44 @@ public final class LayoutUtils {
 
         textView.setTypeface(typeface, typefaceFlags);
         textView.setPaintFlags(paintFlags);
+    }
+
+    public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
+        LayoutUtils.applyBorderAndBackground(editText, textInput);
+
+        editText.setTextSize(textInput.getFontSize());
+        editText.setTextColor(textInput.getForegroundColor());
+        editText.setHint(textInput.getHintText());
+        editText.setInputType(textInput.getInputType().getTypeMask());
+
+        int typefaceFlags = editText.getTypeface() == null ? Typeface.NORMAL : editText.getTypeface().getStyle();
+        int paintFlags = editText.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
+
+        for (TextStyle style : textInput.getTextStyles()) {
+            switch (style) {
+                case BOLD:
+                    typefaceFlags |= Typeface.BOLD;
+                    break;
+                case ITALIC:
+                    typefaceFlags |= Typeface.ITALIC;
+                    break;
+                case UNDERLINE:
+                    paintFlags |= Paint.UNDERLINE_TEXT_FLAG;
+                    break;
+            }
+        }
+
+        Typeface typeface = getTypeFace(editText.getContext(), textInput.getFontFamilies());
+        if (typeface == null) {
+            typeface = editText.getTypeface();
+        }
+
+        if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
+            editText.setContentDescription(textInput.getContentDescription());
+        }
+
+        editText.setTypeface(typeface, typefaceFlags);
+        editText.setPaintFlags(paintFlags);
     }
 
     /**

@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.property;
 
+import android.view.Gravity;
+
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
@@ -35,5 +37,9 @@ public class Position {
     @NonNull
     public VerticalPosition getVertical() {
         return vertical;
+    }
+
+    public int getGravity() {
+        return Gravity.CENTER |  horizontal.getGravity() | vertical.getGravity();
     }
 }

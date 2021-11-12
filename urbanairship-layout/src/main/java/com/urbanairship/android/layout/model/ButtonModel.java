@@ -1,112 +1,88 @@
-/* Copyright Airship and Contributors */
+/*
+ Copyright Airship and Contributors
+ */
 
 package com.urbanairship.android.layout.model;
 
-import android.graphics.Color;
-
-import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
-import com.urbanairship.android.layout.property.ButtonBehavior;
+import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
-import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class ButtonModel extends BaseModel {
+public abstract class ButtonModel extends BaseModel implements Accessible, Identifiable {
     @NonNull
-    private final String id;
+    private final String identifier;
     @NonNull
-    private final LabelModel label;
+    private final List<ButtonClickBehaviorType> buttonClickBehaviors;
+    @NonNull
+    private final List<JsonMap> actions;
+    @Nullable
+    private final String contentDescription;
 
-    @Nullable
-    private final Border border;
-    @Nullable
-    @ColorInt
-    private final Integer backgroundColor;
-    @Nullable
-    private final ButtonBehavior behavior;
-    // TODO: should probably concrete this field up? fine for now, though...
-    @Nullable
-    private final JsonMap actions;
-
-    public ButtonModel(
-        @NonNull String id,
-        @NonNull LabelModel label,
-        @Nullable Border border,
+    protected ButtonModel(
+        @NonNull ViewType type,
+        @NonNull String identifier,
+        @NonNull List<ButtonClickBehaviorType> buttonClickBehaviors,
+        @NonNull List<JsonMap> actions,
         @Nullable @ColorInt Integer backgroundColor,
-        @Nullable ButtonBehavior behavior,
-        @Nullable JsonMap actions) {
-        super(ViewType.BUTTON);
+        @Nullable Border border,
+        @Nullable String contentDescription
+    ) {
+        super(type, backgroundColor, border);
 
-        this.id = id;
-        this.label = label;
-        this.border = border;
-        this.backgroundColor = backgroundColor;
-        this.behavior = behavior;
+        this.identifier = identifier;
+        this.buttonClickBehaviors = buttonClickBehaviors;
         this.actions = actions;
+        this.contentDescription = contentDescription;
     }
 
-    @NonNull
-    public static ButtonModel fromJson(@NonNull JsonMap json) throws JsonException {
-        String id = json.opt("identifier").optString();
-        JsonMap labelJson = json.opt("label").optMap();
-        JsonMap borderJson = json.opt("border").optMap();
-        String colorString = json.opt("color").optString();
-        String behaviorString = json.opt("behavior").optString();
-        JsonMap actions = json.opt("actions").optMap();
-
-        LabelModel label = LabelModel.fromJson(labelJson);
-        Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
-        @ColorInt Integer color = colorString.isEmpty() ? null : Color.parseColor(colorString);
-
-        ButtonBehavior behavior = behaviorString.isEmpty() ? null : ButtonBehavior.from(behaviorString);
-
-        return new ButtonModel(id, label, border, color, behavior, actions);
+    public static List<ButtonClickBehaviorType> buttonClickBehaviorsFromJson(@NonNull JsonMap json) {
+        JsonList clickBehaviorsList = json.opt("button_click").optList();
+        return ButtonClickBehaviorType.fromList(clickBehaviorsList);
     }
 
-    //
-    // Fields
-    //
+    public static List<JsonMap> actionsFromJson(@NonNull JsonMap json) {
+        JsonList actionsJson = json.opt("actions").optList();
+        if (actionsJson.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-    @NonNull
-    public String getId() {
-        return id;
-    }
-
-    @NonNull
-    public LabelModel getLabel() {
-        return label;
-    }
-
-    @Nullable
-    public Border getBorder() {
-        return border;
-    }
-
-    @Nullable
-    @ColorInt
-    public Integer getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    @Nullable
-    public ButtonBehavior getBehavior() {
-        return behavior;
-    }
-
-    @Nullable
-    public JsonMap getActions() {
+        List<JsonMap> actions = new ArrayList<>(actionsJson.size());
+        for (JsonValue value : actionsJson) {
+            actions.add(value.optMap());
+        }
         return actions;
     }
 
-    //
-    // View Actions
-    //
+    @Override
+    @NonNull
+    public String getIdentifier() {
+        return identifier;
+    }
 
-    public void onClick() {
-        bubbleEvent(new Event.ButtonClick(this));
+    @Override
+    @Nullable
+    public String getContentDescription() {
+        return contentDescription;
+    }
+
+    @NonNull
+    public List<ButtonClickBehaviorType> getButtonClickBehaviors() {
+        return buttonClickBehaviors;
+    }
+
+    @NonNull
+    public List<JsonMap> getActions() {
+        return actions;
     }
 }

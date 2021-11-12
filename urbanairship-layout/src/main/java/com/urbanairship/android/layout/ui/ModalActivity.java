@@ -4,11 +4,16 @@ package com.urbanairship.android.layout.ui;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.urbanairship.Logger;
-import com.urbanairship.android.layout.display.ModalDisplay;
+import com.urbanairship.android.layout.BasePayload;
+import com.urbanairship.android.layout.ModalPresentation;
+import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.android.layout.view.ModalView;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -37,9 +42,18 @@ public class ModalActivity extends AppCompatActivity {
 
         String fileName = getIntent().getStringExtra(EXTRA_MODAL_ASSET);
         try {
-            ModalDisplay modal = ModalDisplay.fromJson(Objects.requireNonNull(readJsonAsset(this, "sample_layouts/" + fileName)));
+            JsonMap json = Objects.requireNonNull(readJsonAsset(this, "sample_layouts/" + fileName));
+            BasePayload payload = BasePayload.fromJson(json);
+            if (payload.getPresentation().getType() != PresentationType.MODAL) {
+                Toast.makeText(this, "Layout is not a modal!", Toast.LENGTH_LONG);
+                finish();
+                return;
+            }
 
-            modalView = ModalView.create(this, modal);
+            ModalPresentation presentation = (ModalPresentation) payload.getPresentation();
+            BaseModel view = payload.getView();
+
+            modalView = ModalView.create(this, view, presentation);
             modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             setContentView(modalView);
 
@@ -50,21 +64,10 @@ public class ModalActivity extends AppCompatActivity {
 
             modalView.setOnClickOutsideListener(v -> finish());
 
-            modal.setListener(modalListener);
         } catch (@NonNull JsonException | IOException e) {
             Log.e(getClass().getSimpleName(), "Failed to load modal!", e);
+            Toast.makeText(this, "Failed to load modal!", Toast.LENGTH_LONG);
+            finish();
         }
     }
-
-    private final ModalDisplay.Listener modalListener = new ModalDisplay.Listener() {
-        @Override
-        public void onCancel() {
-            finish();
-        }
-
-        @Override
-        public void onDismiss() {
-            finish();
-        }
-    };
 }

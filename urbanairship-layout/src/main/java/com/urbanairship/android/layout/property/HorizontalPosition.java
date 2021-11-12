@@ -2,20 +2,24 @@
 
 package com.urbanairship.android.layout.property;
 
+import android.view.Gravity;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
 public enum HorizontalPosition {
-    START("start"),
-    END("end"),
-    CENTER("center");
+    START("start", Gravity.START),
+    END("end", Gravity.END),
+    CENTER("center", Gravity.CENTER_HORIZONTAL);
 
     @NonNull
     private final String value;
+    private final int gravity;
 
-    HorizontalPosition(@NonNull String value) {
+    HorizontalPosition(@NonNull String value, int gravity) {
         this.value = value;
+        this.gravity = gravity;
     }
 
     @NonNull
@@ -26,6 +30,10 @@ public enum HorizontalPosition {
             }
         }
         throw new IllegalArgumentException("Unknown HorizontalPosition value: " + value);
+    }
+
+    public int getGravity() {
+        return gravity;
     }
 
     @NonNull

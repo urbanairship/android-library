@@ -6,10 +6,10 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.urbanairship.android.layout.Layout;
+import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
-import com.urbanairship.android.layout.property.Size;
+import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,20 +20,20 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
 
     public ScrollLayoutView(@NonNull Context context) {
         super(context);
-        init(context);
+        init();
     }
 
     public ScrollLayoutView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init();
     }
 
     public ScrollLayoutView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init();
     }
 
-    private void init(@NonNull Context context) {
+    private void init() {
         setId(generateViewId());
         setFillViewport(true);
     }
@@ -52,9 +52,10 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
     }
 
     private void configureScrollLayout() {
-        Size size = model.getSize();
+        LayoutUtils.applyBorderAndBackground(this, model);
+
         Direction direction = model.getDirection();
-        View contentView = Layout.view(getContext(), model.getView());
+        View contentView = Thomas.view(getContext(), model.getView());
 
         LayoutParams layoutParams;
         if (direction == Direction.VERTICAL) {
@@ -62,8 +63,6 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
         } else {
             layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
         }
-
-        size.applyTo(contentView, layoutParams);
 
         contentView.setLayoutParams(layoutParams);
         addView(contentView);

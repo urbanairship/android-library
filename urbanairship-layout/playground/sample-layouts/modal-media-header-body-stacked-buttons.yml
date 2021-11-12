@@ -1,14 +1,21 @@
 ---
-modal:
-  defaultPlacement:
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
     size:
       width: 90%
       height: 75%
-    position:
-      horizontal: center
-      vertical: center
-layout:
+    shade_color:
+      hex: '#000000'
+      alpha: 0.6
+view:
   type: container
+  background_color:
+    hex: "#ffffff"
+    alpha: 1
   items:
   # TOP-LEVEL LINEAR LAYOUT
   - position:
@@ -31,13 +38,13 @@ layout:
         view:
           type: scroll_layout
           direction: vertical
-          size:
-            width: 100%
-            height: 100%
           view:
             # SCROLL CONTENT (LINEAR LAYOUT)
             type: linear_layout
             direction: vertical
+            size:
+              width: 100%
+              height: 100%
             items:
             # MEDIA
             - size:
@@ -46,26 +53,32 @@ layout:
               view:
                 type: media
                 url: https://media.giphy.com/media/6y70TnZ4ug9zetb5Oq/giphy.gif
-                mediaType: image
+                media_type: image
+                media_fit: center_inside
             # HEADER
             - margin:
                 top: 8
                 bottom: 8
                 start: 8
                 end: 8
+              size:
+                width: 100%
+                height: auto
               view:
                 type: label
                 text: Lorem ipsum dolor sit amet
-                color: "#FF00FF"
-                alignment: left
-                textStyles:
+                foreground_color:
+                  hex: "#FF00FF"
+                  alpha: 1
+                alignment: start
+                text_styles:
                 - bold
                 - underline
                 - italic
-                fontFamilies:
+                font_families:
                 - permanent_marker
                 - casual
-                fontSize: 24
+                font_size: 24
             # BODY
             - size:
                 width: 100%
@@ -83,12 +96,12 @@ layout:
                   at augue eget arcu dictum. Imperdiet dui accumsan sit amet nulla.
                   Ultrices neque ornare aenean euismod elementum. Tincidunt id aliquet
                   risus feugiat in ante metus dictum.
-                color: "#333333"
-                alignment: left
-                textStyles:
-                - italic
-                fontFamilies:
-                - permanent_marker
+                foreground_color:
+                  hex: "#333333"
+                  alpha: 1
+                alignment: start
+                text_styles: [ italic ]
+                font_families: [ permanent_marker ]
       # BOTTOM-PINNED BUTTON #1
       - position:
           horizontal: center
@@ -102,20 +115,24 @@ layout:
           width: 100%
           height: auto
         view:
-          type: button
+          type: label_button
           identifier: BUTTON
-          color: "#FF0000"
+          background_color:
+            hex: "#FF0000"
+            alpha: 1
           label:
             type: label
-            fontSize: 24
+            font_size: 24
             alignment: center
-            textStyles:
+            text_styles:
             - bold
             - italic
             - underline
-            fontFamilies:
+            font_families:
             - permanent_marker
-            color: "#00FF00"
+            foreground_color:
+              hex: "#00FF00"
+              alpha: 1
             text: 'NO'
       # BOTTOM-PINNED BUTTON #2
       - position:
@@ -130,22 +147,40 @@ layout:
           width: 100%
           height: auto
         view:
-          type: button
+          type: label_button
           identifier: BUTTON
-          color: "#00FF00"
+          background_color:
+            hex: "#00FF00"
+            alpha: 1
           label:
             type: label
-            fontSize: 24
+            font_size: 24
             alignment: center
-            textStyles:
+            text_styles:
             - bold
             - italic
             - underline
-            fontFamilies:
+            font_families:
             - permanent_marker
-            color: "#FF0000"
+            foreground_color:
+              hex: "#FF0000"
+              alpha: 1
             text: 'YES'
-  # TOP-RIGHT IMAGE BUTTON
+  # TOP-LEFT IMAGE BUTTON
+  - position:
+      horizontal: start
+      vertical: top
+    size:
+      width: 48
+      height: 48
+    view:
+      type: image_button
+      identifier: octopus_button
+      button_click: [ cancel ]
+      image:
+        type: url
+        url: https://testing-library.com/img/octopus-64x64.png
+  # TOP-RIGHT ICON BUTTON
   - position:
       horizontal: end
       vertical: top
@@ -154,6 +189,11 @@ layout:
       height: 48
     view:
       type: image_button
-      behavior: cancel
-      url: https://testing-library.com/img/octopus-64x64.png
-      identifier: myid
+      identifier: close_button
+      button_click: [ dismiss ]
+      image:
+        type: icon
+        icon: close
+        tint:
+          hex: "#FF00FF"
+          alpha: 1

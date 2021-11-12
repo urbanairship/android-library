@@ -20,6 +20,10 @@ public enum TextStyle {
 
     @NonNull
     public static TextStyle from(@NonNull String value) {
+        // 'underlined' is hardcoded in IAA settings
+        if (value.equals("underlined")) {
+            return UNDERLINE;
+        }
         for (TextStyle type : TextStyle.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;

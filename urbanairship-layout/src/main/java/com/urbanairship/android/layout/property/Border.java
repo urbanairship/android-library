@@ -2,11 +2,10 @@
 
 package com.urbanairship.android.layout.property;
 
-import android.graphics.Color;
-
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -28,13 +27,14 @@ public class Border {
     @NonNull
     public static Border fromJson(@NonNull JsonMap json) {
         Integer radius = json.opt("radius").getInteger();
-        Integer strokeWidth = json.opt("strokeWidth").getInteger();
-        String colorString = json.opt("strokeColor").getString();
-        @ColorInt Integer strokeColor = colorString == null ? null : Color.parseColor(colorString);
+        Integer strokeWidth = json.opt("stroke_width").getInteger();
+        JsonMap colorJson = json.opt("stroke_color").optMap();
+        @ColorInt Integer strokeColor = colorJson.isEmpty() ? null : Color.fromJson(colorJson);
 
         return new Border(radius, strokeWidth, strokeColor);
     }
 
+    @Dimension(unit = Dimension.DP)
     @Nullable
     public Integer getRadius() {
         return radius;

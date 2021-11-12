@@ -21,6 +21,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.util.ContextUtil;
+import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.webkit.AirshipWebChromeClient;
@@ -32,6 +33,8 @@ import androidx.annotation.Nullable;
 
 /** Web view... view? */
 public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
+    private WebViewModel model;
+
     @Nullable
     private WebView webView;
     @Nullable
@@ -104,7 +107,12 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
      * @param model The media info.
      * // TODO: @param cachedMediaUrl The cached media URL.
      */
-    public void setModel(@NonNull final WebViewModel model) {
+    public void setModel(@NonNull WebViewModel model) {
+        this.model = model;
+        configure();
+    }
+
+    private void configure() {
         removeAllViewsInLayout();
 
         // If we had a web view previously clear it
@@ -116,11 +124,13 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             this.webView = null;
         }
 
+        LayoutUtils.applyBorderAndBackground(this, model);
+
         loadWebView(model);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void loadWebView(@NonNull final WebViewModel model) {
+    private void loadWebView(@NonNull WebViewModel model) {
         this.webView = new WebView(getContext());
 
         FrameLayout frameLayout = new FrameLayout(getContext());
@@ -130,7 +140,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
         frameLayout.addView(webView, webViewLayoutParams);
 
-        final ProgressBar progressBar = new ProgressBar(getContext());
+        ProgressBar progressBar = new ProgressBar(getContext());
         progressBar.setIndeterminate(true);
         progressBar.setId(android.R.id.progress);
 
@@ -147,7 +157,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             settings.setDatabaseEnabled(true);
         }
 
-        final WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
+        WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
 
         Runnable load = () -> {
             WebView webView = webViewWeakReference.get();
@@ -189,7 +199,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         }
 
         @Override
-        public void onPageFinished(@NonNull WebView view, final String url) {
+        public void onPageFinished(@NonNull WebView view, String url) {
             super.onPageFinished(view, url);
             if (error) {
                 view.postDelayed(onRetry, retryDelay);

@@ -23,9 +23,11 @@ import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.ContextUtil;
+import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
+import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.webkit.AirshipWebChromeClient;
 
 import java.lang.ref.WeakReference;
@@ -34,12 +36,17 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
 /**
  * Media view.
  *
  * @hide
  */
 public class MediaView extends FrameLayout implements BaseView<MediaModel> {
+    private MediaModel model;
+
     @Nullable
     private WebView webView;
     @Nullable
@@ -135,8 +142,14 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      * // TODO: @param cachedMediaUrl The cached media URL.
      */
     @Override
-    public void setModel(@NonNull final MediaModel model) {
+    public void setModel(@NonNull MediaModel model) {
+        this.model = model;
+        configure();
+    }
+
+    private void configure() {
         removeAllViewsInLayout();
+        LayoutUtils.applyBorderAndBackground(this, model);
 
         // If we had a web view previously clear it
         if (this.webView != null) {
@@ -149,35 +162,38 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
         switch (model.getMediaType()) {
             case IMAGE:
-                loadImage(model);
+                configureImage(model);
                 break;
             case VIDEO:
             case YOUTUBE:
-                loadWebView(model);
+                configureVideo(model);
                 break;
         }
     }
 
-    private void loadImage(@NonNull MediaModel model) {
+    private void configureImage(@NonNull MediaModel model) {
         String url = model.getUrl();
         if (url.endsWith(".svg")) {
             // Load SVGs in a webview because they won't work in an ImageView
             // TODO: this won't work if the url lacks an extension or if someone
             // gets wacky and the ext doesn't match the actual media type -_-
-            loadWebView(model);
-        } else {
-            ImageView imageView = new ImageView(getContext());
-            imageView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            imageView.setAdjustViewBounds(true);
-            // TODO: we should allow this to be set for a11y...
-            // imageView.setContentDescription(media.getDescription());
-            addView(imageView);
-
-            UAirship.shared()
-                    .getImageLoader()
-                    .load(getContext(), imageView, ImageRequestOptions.newBuilder(url).build());
+            configureVideo(model);
+            return;
         }
+
+        ImageView imageView = new ImageView(getContext());
+        imageView.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        imageView.setScaleType(model.getScaleType());
+        imageView.setAdjustViewBounds(true);
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            imageView.setContentDescription(model.getContentDescription());
+        }
+
+        addView(imageView);
+
+        UAirship.shared().getImageLoader()
+                .load(getContext(), imageView, ImageRequestOptions.newBuilder(url).build());
+
     }
 
     /**
@@ -186,7 +202,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      * @param model The media info.
      */
     @SuppressLint("SetJavaScriptEnabled")
-    private void loadWebView(@NonNull final MediaModel model) {
+    private void configureVideo(@NonNull MediaModel model) {
 
         // Default to a 16:9 aspect ratio
         int width = 16;
@@ -196,7 +212,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             ViewGroup.LayoutParams params = getLayoutParams();
 
             // Check if we can grow the image horizontally to fit the width
-            if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+            if (params.height == WRAP_CONTENT) {
                 float scale = (float) getWidth() / (float) width;
                 params.height = Math.round(scale * height);
             } else {
@@ -212,7 +228,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
                     if (w > 0) {
                         params.width = w;
                     } else {
-                        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                        params.width = MATCH_PARENT;
                     }
                 }
             }
@@ -223,17 +239,17 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         this.webView = new WebView(getContext());
 
         FrameLayout frameLayout = new FrameLayout(getContext());
-        frameLayout.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        LayoutParams webViewLayoutParams = new LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        frameLayout.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        LayoutParams webViewLayoutParams = new LayoutParams(MATCH_PARENT, MATCH_PARENT);
         webViewLayoutParams.gravity = Gravity.CENTER;
 
         frameLayout.addView(webView, webViewLayoutParams);
 
-        final ProgressBar progressBar = new ProgressBar(getContext());
+        ProgressBar progressBar = new ProgressBar(getContext());
         progressBar.setIndeterminate(true);
         progressBar.setId(android.R.id.progress);
 
-        LayoutParams progressBarLayoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LayoutParams progressBarLayoutParams = new LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
         progressBarLayoutParams.gravity = Gravity.CENTER;
 
         frameLayout.addView(progressBar, progressBarLayoutParams);
@@ -249,7 +265,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             settings.setDatabaseEnabled(true);
         }
 
-        final WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
+        WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
 
         Runnable load = () -> {
             WebView webView = webViewWeakReference.get();
@@ -279,8 +295,9 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         };
 
         webView.setWebChromeClient(chromeClient);
-        // TODO: allow this to be set for a11y...
-        // webView.setContentDescription(media.getDescription());
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            webView.setContentDescription(model.getContentDescription());
+        }
         webView.setVisibility(View.INVISIBLE);
         webView.setWebViewClient(new MediaWebViewClient(load) {
             @Override
@@ -313,7 +330,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         }
 
         @Override
-        public void onPageFinished(@NonNull WebView view, final String url) {
+        public void onPageFinished(@NonNull WebView view, String url) {
             super.onPageFinished(view, url);
             if (error) {
                 view.postDelayed(onRetry, retryDelay);

@@ -32,7 +32,7 @@ public class ModalPlacementSelector {
     @NonNull
     public static ModalPlacementSelector fromJson(@NonNull JsonMap json) throws JsonException {
         JsonMap placementJson = json.opt("placement").optMap();
-        String windowSizeString = json.opt("windowSize").optString();
+        String windowSizeString = json.opt("window_size").optString();
         String orientationString = json.opt("orientation").optString();
 
         ModalPlacement placement = ModalPlacement.fromJson(placementJson);

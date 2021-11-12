@@ -21,12 +21,12 @@
             android:layout_marginTop="24dp"
             android:layout_marginEnd="24dp"
             android:layout_marginBottom="24dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:hint="@string/layout_picker_label"
             app:layout_constraintBottom_toTopOf="@id/showModal"
-            app:layout_constraintVertical_chainStyle="packed"
-            android:hint="@string/layout_picker_label">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed">
 
             <AutoCompleteTextView
                 android:id="@+id/layoutSpinnerText"
@@ -36,7 +36,6 @@
                 />
 
         </com.google.android.material.textfield.TextInputLayout>
-
         <Button
             android:id="@+id/showModal"
             style="@style/Widget.MaterialComponents.Button"
@@ -54,5 +53,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layoutSpinner" />
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

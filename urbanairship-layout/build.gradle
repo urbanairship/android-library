@@ -45,23 +45,5 @@ dependencies {
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:4.6.1"//$rootProject.robolectricVersion"
-
-    // Instrumentation Tests
-    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
-    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
-
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
-
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
-
-    androidTestImplementation "org.robolectric:annotations:4.6.1"//$rootProject.robolectricVersion"
-
-    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
 }

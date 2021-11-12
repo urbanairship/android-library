@@ -2,13 +2,12 @@
 
 package com.urbanairship.android.layout.model;
 
-import android.graphics.Color;
-
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonMap;
 
@@ -32,10 +31,6 @@ public abstract class BaseModel implements EventSource, EventListener {
     @Nullable
     private final Border border;
 
-    public BaseModel(@NonNull ViewType viewType) {
-        this(viewType, null, null);
-    }
-
     public BaseModel(@NonNull ViewType viewType, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
         this.viewType = viewType;
         this.backgroundColor = backgroundColor;
@@ -57,10 +52,10 @@ public abstract class BaseModel implements EventSource, EventListener {
         return border;
     }
 
+    @Nullable
     @ColorInt
     public static Integer backgroundColorFromJson(@NonNull JsonMap json) {
-        String colorString = json.opt("backgroundColor").optString();
-        return colorString.isEmpty() ? null : Color.parseColor(colorString);
+        return Color.fromJsonField(json, "background_color");
     }
 
     @Nullable
@@ -68,7 +63,6 @@ public abstract class BaseModel implements EventSource, EventListener {
         JsonMap borderJson = json.opt("border").optMap();
         return borderJson.isEmpty() ? null : Border.fromJson(borderJson);
     }
-
 
     //
     // EventSource impl

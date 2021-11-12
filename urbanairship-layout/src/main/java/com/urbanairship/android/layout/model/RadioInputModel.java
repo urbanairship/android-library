@@ -2,9 +2,8 @@
 
 package com.urbanairship.android.layout.model;
 
-import android.graphics.Color;
-
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -13,63 +12,57 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class RadioInputModel extends InputModel {
-    @NonNull
-    private final String identifier;
-    @NonNull
-    private final LabelModel label;
-    @Nullable
-    private final Border border;
-    @Nullable
+public class RadioInputModel extends BaseModel implements Accessible {
     @ColorInt
-    private final Integer backgroundColor;
+    private final int foregroundColor;
+    @NonNull
+    private final String reportingValue;
+    @Nullable
+    private final String contentDescription;
 
     public RadioInputModel(
-        @NonNull String identifier,
-        @NonNull LabelModel label,
-        @Nullable Border border,
-        @Nullable @ColorInt Integer backgroundColor
+        @ColorInt int foregroundColor,
+        @NonNull String reportingValue,
+        @Nullable String contentDescription,
+        @Nullable @ColorInt Integer backgroundColor,
+        @Nullable Border border
     ) {
-        super(ViewType.RADIO_INPUT);
+        super(ViewType.RADIO_INPUT, backgroundColor, border);
 
-        this.identifier = identifier;
-        this.label = label;
-        this.border = border;
-        this.backgroundColor = backgroundColor;
+        this.foregroundColor = foregroundColor;
+        this.reportingValue = reportingValue;
+        this.contentDescription = contentDescription;
     }
 
     @NonNull
     public static RadioInputModel fromJson(@NonNull JsonMap json) throws JsonException {
-        String identifier = json.opt("identifier").optString();
-        JsonMap labelJson = json.opt("label").optMap();
-        JsonMap borderJson = json.opt("border").optMap();
-        String colorString = json.opt("backgroundColor").optString();
+        @ColorInt Integer foregroundColor = Color.fromJsonField(json, "foreground_color");
+        if (foregroundColor == null) {
+            throw new JsonException("Failed to parse radio_input. 'foreground_color' may not be null!");
+        }
+        String reportingValue = json.opt("value").optString();
 
-        LabelModel label = LabelModel.fromJson(labelJson);
-        Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
-        @ColorInt Integer backgroundColor = colorString.isEmpty() ? null : Color.parseColor(colorString);
+        String contentDescription = Accessible.contentDescriptionFromJson(json);
+        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Border border = borderFromJson(json);
 
-        return new RadioInputModel(identifier, label, border, backgroundColor);
+        return new RadioInputModel(foregroundColor, reportingValue, contentDescription, backgroundColor, border);
     }
 
-    @NonNull
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    @NonNull
-    public LabelModel getLabel() {
-        return label;
-    }
-
-    @Nullable
-    public Border getBorder() {
-        return border;
-    }
-
-    @Nullable
     @ColorInt
-    public Integer getBackgroundColor() {
-        return backgroundColor;
+    public int getForegroundColor() {
+        return foregroundColor;
+    }
+
+    /** Value for reports. */
+    @NonNull
+    public String getReportingValue() {
+        return reportingValue;
+    }
+
+    @Override
+    @Nullable
+    public String getContentDescription() {
+        return contentDescription;
     }
 }

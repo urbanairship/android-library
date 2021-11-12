@@ -1,18 +1,26 @@
 ---
-modal:
-  defaultPlacement:
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
     size:
       width: 364
       height: 30%
-    position:
-      horizontal: center
-      vertical: center
-    backgroundColor: "#00000000"
-layout:
+    shade_color:
+      hex: '#000000'
+      alpha: 0.7
+view:
   type: container
+  background_color:
+    hex: "#ffffff"
+    alpha: 1
   border:
-    strokeColor: "#000000"
-    strokeWidth: 3
+    stroke_color:
+      hex: "#000000"
+      alpha: 1
+    stroke_width: 3
   items:
   # TOP-LEVEL LINEAR LAYOUT
   - position:
@@ -24,7 +32,9 @@ layout:
     view:
       type: linear_layout
       direction: horizontal
-      backgroundColor: "#55ffffff"
+      background_color:
+        hex: "#ffffff"
+        alpha: 0.35
       items:
       - position:
           horizontal: center
@@ -34,9 +44,15 @@ layout:
           height: 100%
         view:
           type: label
-          backgroundColor: "#55FF0000"
+          background_color:
+            hex: "#FF0000"
+            alpha: 0.35
+          foreground_color:
+            hex: "#000000"
+            alpha: 1
           alignment: center
           text: auto
+          font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -45,9 +61,15 @@ layout:
           height: 100%
         view:
           type: label
-          backgroundColor: "#5500FF00"
+          background_color:
+            hex: "#00FF00"
+            alpha: 0.35
+          foreground_color:
+            hex: "#000000"
+            alpha: 1
           text: 75%
           alignment: center
+          font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -55,10 +77,16 @@ layout:
           width: 20%
           height: 100%
         view:
-          backgroundColor: "#550000FF"
+          background_color:
+            hex: "#0000FF"
+            alpha: 0.35
+          foreground_color:
+            hex: "#000000"
+            alpha: 1
           type: label
           alignment: center
           text: 20%
+          font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -66,8 +94,14 @@ layout:
           width: 40
           height: 100%
         view:
-          backgroundColor: "#55FF00FF"
+          background_color:
+            hex: "#FF00FF"
+            alpha: 0.35
+          foreground_color:
+            hex: "#000000"
+            alpha: 1
           type: label
           alignment: center
           text: 40dp
+          font_size: 12
 

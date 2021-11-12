@@ -2,7 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.android.layout.Layout;
+import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
@@ -24,11 +24,11 @@ public class LinearLayoutModel extends LayoutModel {
     private final Direction direction;
     @NonNull
     private final List<Item> items;
-
     @NonNull
     private final List<BaseModel> children = new ArrayList<>();
 
-    public LinearLayoutModel(@NonNull Direction direction, @NonNull List<Item> items, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+    public LinearLayoutModel(@NonNull Direction direction, @NonNull List<Item> items,
+                             @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
         super(ViewType.LINEAR_LAYOUT, backgroundColor, border);
 
         this.direction = direction;
@@ -72,28 +72,28 @@ public class LinearLayoutModel extends LayoutModel {
     public static class Item {
         @NonNull
         private final BaseModel view;
+        @NonNull
+        private final Size size;
         @Nullable
         private final Margin margin;
-        @Nullable
-        private final Size size;
 
-        public Item(@NonNull BaseModel view, @Nullable Margin margin, @Nullable Size size) {
+        public Item(@NonNull BaseModel view, @NonNull Size size, @Nullable Margin margin) {
             this.view = view;
-            this.margin = margin;
             this.size = size;
+            this.margin = margin;
         }
 
         @NonNull
         public static Item fromJson(@NonNull JsonMap json) throws JsonException {
             JsonMap viewJson = json.opt("view").optMap();
-            JsonMap marginJson = json.opt("margin").optMap();
             JsonMap sizeJson = json.opt("size").optMap();
+            JsonMap marginJson = json.opt("margin").optMap();
 
-            BaseModel view = Layout.model(viewJson);
+            BaseModel view = Thomas.model(viewJson);
+            Size size = Size.fromJson(sizeJson);
             Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
-            Size size = sizeJson.isEmpty() ? Size.AUTO : Size.fromJson(sizeJson);
 
-            return new Item(view, margin, size);
+            return new Item(view, size, margin);
         }
 
         @NonNull
@@ -112,7 +112,7 @@ public class LinearLayoutModel extends LayoutModel {
             return view;
         }
 
-        @Nullable
+        @NonNull
         public Size getSize() {
             return size;
         }

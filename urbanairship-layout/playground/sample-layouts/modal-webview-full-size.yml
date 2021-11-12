@@ -1,14 +1,21 @@
 ---
-modal:
-  defaultPlacement:
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
     size:
       width: 95%
       height: 90%
-    position:
-      horizontal: center
-      vertical: center
-layout:
+    shade_color:
+      hex: '#000000'
+      alpha: 0.6
+view:
   type: container
+  background_color:
+    hex: "#ffffff"
+    alpha: 1
   items:
   - position:
       horizontal: center
@@ -19,4 +26,6 @@ layout:
     view:
       type: web_view
       url: "https://docs.airship.com"
-      backgroundColor: "#000000"
+      background_color:
+        hex: "#000000"
+        alpha: 1

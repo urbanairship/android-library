@@ -16,15 +16,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public abstract class LayoutModel extends BaseModel {
-    public LayoutModel(@NonNull ViewType viewType) {
-        super(viewType);
-    }
 
     public LayoutModel(@NonNull ViewType viewType, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
         super(viewType, backgroundColor, border);
     }
 
-        @NonNull
+    @NonNull
     public static LayoutModel fromJson(@NonNull JsonMap json) throws JsonException {
         String typeString = json.opt("type").optString();
 
@@ -35,6 +32,8 @@ public abstract class LayoutModel extends BaseModel {
                 return LinearLayoutModel.fromJson(json);
             case SCROLL_LAYOUT:
                 return ScrollLayoutModel.fromJson(json);
+            case PAGER_CONTROLLER:
+                return PagerController.fromJson(json);
         }
 
         throw new JsonException("Error inflating layout! Unrecognized view type: " + typeString);

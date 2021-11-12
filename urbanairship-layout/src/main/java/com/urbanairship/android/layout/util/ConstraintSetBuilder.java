@@ -3,7 +3,6 @@
 package com.urbanairship.android.layout.util;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Position;
@@ -148,47 +147,6 @@ public final class ConstraintSetBuilder {
                     break;
             }
         }
-        return this;
-    }
-
-    @NonNull
-    public ConstraintSetBuilder maxSize(@Nullable Size size, @IdRes int viewId) {
-        if (size == null) {
-            return this;
-        }
-
-        Log.v(getClass().getSimpleName(), "Constraining max size: " + size);
-
-        Size.Dimension width = size.getWidth();
-        switch (width.getType()) {
-            case AUTO:
-                // TODO: make this work? throw an error?
-                // constraints.constrainMaxWidth(viewId, ConstraintSet.WRAP_CONTENT);
-                break;
-            case PERCENT:
-                // TODO: make this work? throw an error?
-                // constraints.constrainPercentWidth(viewId, width.getFloat());
-                break;
-            case ABSOLUTE:
-                constraints.constrainMaxWidth(viewId, (int) dpToPx(context, width.getInt()));
-                break;
-        }
-
-        Size.Dimension height = size.getHeight();
-        switch (height.getType()) {
-            case AUTO:
-                // TODO: make this work? throw an error?
-                // constraints.constrainMaxHeight(viewId, ConstraintSet.WRAP_CONTENT);
-                break;
-            case PERCENT:
-                // TODO: make this work? throw an error?
-                // constraints.constrainPercentHeight(viewId, height.getFloat());
-                break;
-            case ABSOLUTE:
-                constraints.constrainMaxHeight(viewId, (int) dpToPx(context, height.getInt()));
-                break;
-        }
-
         return this;
     }
 

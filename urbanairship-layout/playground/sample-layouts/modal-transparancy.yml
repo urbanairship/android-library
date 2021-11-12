@@ -20,21 +20,28 @@
 #5% — 0D
 #0% — 00
 ---
-modal:
-  defaultPlacement:
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
     size:
       width: 75%
       height: 50%
-    position:
-      horizontal: center
-      vertical: center
-    backgroundColor: "#26FFFFFF"
-layout:
+    shade_color:
+      hex: '#000000'
+      alpha: 0.75
+view:
   type: container
-  backgroundColor: "#40FFFFFF"
+  background_color:
+    hex: "#FFFFFF"
+    alpha: .25
   border:
-    strokeColor: "#80FF0000"
-    strokeWidth: 2
+    stroke_color:
+      hex: "#FF0000"
+      alpha: 0.5
+    stroke_width: 2
     radius: 0
   items:
   - position:
@@ -50,10 +57,14 @@ layout:
       end: 16
     view:
       type: container
-      backgroundColor: "#40FFFFFF"
+      background_color:
+        hex: "#FFFFFF"
+        alpha: 0.25
       border:
-        strokeColor: "#800000FF"
-        strokeWidth: 2
+        stroke_color:
+          hex: "#0000FF"
+          alpha: 0.5
+        stroke_width: 2
         radius: 0
       items:
       - position:
@@ -70,7 +81,10 @@ layout:
         view:
           type: label
           text: Lorem ipsum dolor sit amet
-          color: "#333333"
+          foreground_color:
+            hex: "#333333"
+            alpha: 1
           alignment: center
-          fontFamilies:
+          font_size: 14
+          font_families:
           - permanent_marker

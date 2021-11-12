@@ -2,21 +2,16 @@
 
 package com.urbanairship.android.layout.property;
 
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.urbanairship.android.layout.util.PercentUtils;
-import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 
+// Note: If a parent defines `auto` for a dimension, children must have either `auto` or `points` for the same dimension
 public class Size {
     @NonNull
     private static final String SIZE_AUTO = "auto";
-    @NonNull
-    public static final Size AUTO = new Size(SIZE_AUTO, SIZE_AUTO);
 
     @NonNull
     private final Dimension width;
@@ -54,52 +49,6 @@ public class Size {
     @NonNull
     public Dimension getHeight() {
         return height;
-    }
-
-    public void applyTo(@NonNull View view, @NonNull ViewGroup.LayoutParams layoutParams) {
-        int width = 0;
-        int height = 0;
-
-        Dimension w = getWidth();
-        switch (w.getType()) {
-            case AUTO:
-                width = ViewGroup.LayoutParams.WRAP_CONTENT;
-                break;
-            case PERCENT:
-                if (w.getFloat() == 1) {
-                    width = ViewGroup.LayoutParams.MATCH_PARENT;
-                } else {
-                    // TODO: make this work... or don't... this method is only used by Scroll Layout
-                    //  and it may be fine to assume all scroll children will be either MATCH x WRAP
-                    //  or WRAP x MATCH depending on the scroll direction?
-                    width = ViewGroup.LayoutParams.MATCH_PARENT;
-                }
-                break;
-            case ABSOLUTE:
-                width = (int) ResourceUtils.dpToPx(view.getContext(), w.getInt());
-                break;
-        }
-
-        Dimension h = getHeight();
-        switch (h.getType()) {
-            case AUTO:
-                height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                break;
-            case PERCENT:
-                if (h.getFloat() == 1) {
-                    height = ViewGroup.LayoutParams.MATCH_PARENT;
-                } else {
-                    // TODO: make this work... (see above, tho!)
-                    height = ViewGroup.LayoutParams.MATCH_PARENT;
-                }
-                break;
-            case ABSOLUTE:
-                height = (int) ResourceUtils.dpToPx(view.getContext(), h.getInt());
-                break;
-        }
-
-        layoutParams.width = width;
-        layoutParams.height = height;
     }
 
     public enum DimensionType {

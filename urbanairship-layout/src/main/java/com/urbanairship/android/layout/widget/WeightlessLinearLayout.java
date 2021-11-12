@@ -364,7 +364,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                     int childWidth = 0;
                     int widthSpec;
                     if (lp.width == 0 && lp.maxWidthPercent > 0) {
-                        childWidth = (int)(maxWidth * lp.maxWidthPercent) - (lp.rightMargin + lp.leftMargin);
+                        childWidth = (int)(widthSize * lp.maxWidthPercent) - (lp.rightMargin + lp.leftMargin);
                         widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
                     } else {
                         widthSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingLeft() + getPaddingRight() + lp.leftMargin + lp.rightMargin, childWidth);
@@ -588,7 +588,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                     int childHeight = 0;
                     int heightSpec;
                     if (lp.height == 0 && lp.maxHeightPercent > 0) {
-                        childHeight = (int)(maxHeight * lp.maxHeightPercent) - (lp.rightMargin + lp.leftMargin);
+                        childHeight = (int)(heightSize * lp.maxHeightPercent) - (lp.rightMargin + lp.leftMargin);
                         heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
                     } else {
                         heightSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingLeft() + getPaddingRight() + lp.leftMargin + lp.rightMargin, childHeight);

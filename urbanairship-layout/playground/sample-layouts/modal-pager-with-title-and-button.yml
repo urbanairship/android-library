@@ -1,0 +1,183 @@
+---
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
+    size:
+      width: 85%
+      height: auto
+      max_height: 90%
+    shade_color:
+      hex: '#000000'
+      alpha: 0.7
+view:
+  type: container
+  background_color:
+    hex: "#ffffff"
+    alpha: 1
+  items:
+  - position:
+      horizontal: center
+      vertical: center
+    size:
+      height: auto
+      width: 100%
+    view:
+      type: pager_controller
+      view:
+        type: linear_layout
+        direction: vertical
+        items:
+        - size:
+            height: auto
+            width: 100%
+          margin:
+            top: 16
+            bottom: 16
+            start: 16
+            end: 16
+          view:
+            type: label
+            text: Take a spin
+            alignment: center
+            text_styles:
+            - bold
+            font_size: 18
+            foreground_color:
+              hex: "#333333"
+              alpha: 1
+        - size:
+            height: 450
+            width: 100%
+          margin:
+            start: 16
+            end: 16
+            top: 16
+            bottom: 0
+          view:
+            type: pager
+            identifier: CAROUSEL_ID
+            items:
+            - type: container
+              background_color:
+                hex: "#FF0000"
+                alpha: 0.5
+              items:
+              - position:
+                  vertical: center
+                  horizontal: center
+                size:
+                  height: auto
+                  width: auto
+                view:
+                  type: label
+                  text: This is the first page about stuff.
+                  alignment: center
+                  font_size: 14
+                  foreground_color:
+                    hex: "#333333"
+                    alpha: 1
+            - type: container
+              background_color:
+                hex: "#00FF00"
+                alpha: 0.5
+              items:
+              - position:
+                  vertical: center
+                  horizontal: center
+                size:
+                  height: auto
+                  width: auto
+                view:
+                  type: label
+                  text: More stuff is here on the second page.
+                  alignment: center
+                  font_size: 14
+                  foreground_color:
+                    hex: "#333333"
+                    alpha: 1
+            - type: container
+              background_color:
+                hex: "#0000FF"
+                alpha: 0.5
+              items:
+              - position:
+                  vertical: center
+                  horizontal: center
+                size:
+                  height: auto
+                  width: auto
+                view:
+                  type: label
+                  text: That's not all! There's a third page, too!
+                  alignment: center
+                  font_size: 14
+                  foreground_color:
+                    hex: "#333333"
+                    alpha: 1
+        - size:
+            height: 48
+            width: auto
+          position:
+            vertical: center
+            horizontal: center
+          margin:
+            start: 16
+            end: 16
+            top: 0
+            bottom: 0
+          view:
+            type: pager_indicator
+            carousel_identifier: CAROUSEL_ID
+            indicator_spacing: 4
+            indicator_bindings:
+              selected:
+                type: rectangle
+                width: 8
+                height: 8
+                border:
+                  stroke_width: 1
+                  stroke_color:
+                    hex: "#000000"
+                    alpha: 1
+                color:
+                  hex: "#00ffff"
+                  alpha: 1
+              deselected:
+                type: circle
+                radius: 4
+                border:
+                  stroke_width: 1
+                  stroke_color:
+                    hex: "#000000"
+                    alpha: 1
+                color:
+                  hex: "#000000"
+                  alpha: 0
+        - size:
+            height: auto
+            width: auto
+          position:
+            vertical: center
+            horizontal: center
+          margin:
+            start: 16
+            end: 16
+            top: 16
+            bottom: 16
+          view:
+            type: label_button
+            identifier: button1
+            button_click: [ dismiss ]
+            background_color:
+              hex: "#FFD600"
+            label:
+              type: label
+              font_size: 14
+              foreground_color:
+                hex: "#333333"
+                alpha: 1
+              alignment: center
+              text: 'Impressive!'

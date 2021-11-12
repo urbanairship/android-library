@@ -7,7 +7,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 
-import com.urbanairship.android.layout.Layout;
+import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.model.LinearLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
@@ -71,7 +71,7 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
             LinearLayoutModel.Item item = items.get(i);
             LayoutParams lp = generateItemLayoutParams(item);
 
-            View itemView = Layout.view(getContext(), item.getView());
+            View itemView = Thomas.view(getContext(), item.getView());
             itemView.setLayoutParams(lp);
             // Add view after any existing children, without requesting a layout pass on the child.
             addViewInLayout(itemView, -1, lp, true);
@@ -85,38 +85,36 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
         float maxHeightPercent = 0;
 
         Size size = item.getSize();
-        if (size != null) {
-            Size.Dimension w = size.getWidth();
-            switch (w.getType()) {
-                case AUTO:
-                    width = LayoutParams.WRAP_CONTENT;
-                    maxWidthPercent = 0;
-                    break;
-                case ABSOLUTE:
-                    width = (int) dpToPx(getContext(), w.getInt());
-                    maxWidthPercent = 0;
-                    break;
-                case PERCENT:
-                    width = 0;
-                    maxWidthPercent = w.getFloat();
-                    break;
-            }
+        Size.Dimension w = size.getWidth();
+        switch (w.getType()) {
+            case AUTO:
+                width = LayoutParams.WRAP_CONTENT;
+                maxWidthPercent = 0;
+                break;
+            case ABSOLUTE:
+                width = (int) dpToPx(getContext(), w.getInt());
+                maxWidthPercent = 0;
+                break;
+            case PERCENT:
+                width = 0;
+                maxWidthPercent = w.getFloat();
+                break;
+        }
 
-            Size.Dimension h = size.getHeight();
-            switch (h.getType()) {
-                case AUTO:
-                    height = LayoutParams.WRAP_CONTENT;
-                    maxHeightPercent = 0;
-                    break;
-                case ABSOLUTE:
-                    height = (int) dpToPx(getContext(), h.getInt());
-                    maxHeightPercent = 0;
-                    break;
-                case PERCENT:
-                    height = 0;
-                    maxHeightPercent = h.getFloat();
-                    break;
-            }
+        Size.Dimension h = size.getHeight();
+        switch (h.getType()) {
+            case AUTO:
+                height = LayoutParams.WRAP_CONTENT;
+                maxHeightPercent = 0;
+                break;
+            case ABSOLUTE:
+                height = (int) dpToPx(getContext(), h.getInt());
+                maxHeightPercent = 0;
+                break;
+            case PERCENT:
+                height = 0;
+                maxHeightPercent = h.getFloat();
+                break;
         }
 
         LayoutParams lp = new LayoutParams(width, height, maxWidthPercent, maxHeightPercent);

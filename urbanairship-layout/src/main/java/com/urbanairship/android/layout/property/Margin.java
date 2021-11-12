@@ -12,9 +12,6 @@ public class Margin {
     private final int start;
     private final int end;
 
-    @NonNull
-    public static final Margin NONE = new Margin(0, 0, 0, 0);
-
     public Margin(int top, int bottom, int start, int end) {
         this.top = top;
         this.bottom = bottom;

@@ -1,14 +1,21 @@
 ---
-modal:
-  defaultPlacement:
+version: 1
+context:
+  content_types: []
+presentation:
+  type: modal
+  default_placement:
     size:
       width: 95%
       height: 90%
-    position:
-      horizontal: center
-      vertical: center
-layout:
+    shade_color:
+      hex: '#000000'
+      alpha: 0.6
+view:
   type: container
+  background_color:
+    hex: "#000000"
+    alpha: 1
   items:
   - position:
       horizontal: center
@@ -19,7 +26,9 @@ layout:
     view:
       type: web_view
       url: "https://docs.airship.com"
-      backgroundColor: "#000000"
+      background_color:
+        hex: "#000000"
+        alpha: 1
   - position:
       horizontal: start
       vertical: bottom
@@ -27,13 +36,19 @@ layout:
       height: 10%
       width: 50%
     view:
-      type: button
+      type: label_button
       identifier: button1
-      behavior: dismiss
-      color: "#AED581" # green
+      button_click: [ dismiss ]
       label:
         type: label
         text: cool
+        font_size: 14
+        foreground_color:
+          hex: "#000000"
+          alpha: 1
+      background_color:
+        hex: "#AED581" # green
+        alpha: 1
   - position:
       horizontal: end
       vertical: bottom
@@ -41,11 +56,17 @@ layout:
       height: 10%
       width: 50%
     view:
-      type: button
-      behavior: cancel
+      type: label_button
+      button_click: [ cancel ]
       identifier: button2
-      color: "#D32F2F" # red
+      background_color:
+        hex: "#D32F2F" # red
+        alpha: 1
       label:
         type: label
         text: beans
+        font_size: 14
+        foreground_color:
+          hex: "#000000"
+          alpha: 1
 
