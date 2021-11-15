@@ -2,6 +2,17 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.1.0 November 15, 2021
+
+Minor release that adds a new chat action and has some minor
+fixes for Accengage, Chat, and the Preference center module.
+
+### Changes
+- Added send chat action
+- Fixed showing the preference center loading indicator if the content is already loaded
+- Updated the kotlin-coroutine-core dependency on chat to kotlin-coroutine-android
+- Fixed treating a push with both Accengage and Airship keys as Accengage instead of Airship.
+
 ## Version 16.0.0 October 18, 2021
 
 Major release that adds support for targeting Android 12 (API 31), upgrades SDK dependencies, and
