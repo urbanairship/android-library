@@ -1,11 +1,11 @@
-/*
- Copyright Airship and Contributors
- */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
+import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -26,6 +25,8 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     private final List<ButtonClickBehaviorType> buttonClickBehaviors;
     @NonNull
     private final List<JsonMap> actions;
+    @NonNull
+    private final List<ButtonEnableBehaviorType> enableBehaviors;
     @Nullable
     private final String contentDescription;
 
@@ -34,7 +35,8 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         @NonNull String identifier,
         @NonNull List<ButtonClickBehaviorType> buttonClickBehaviors,
         @NonNull List<JsonMap> actions,
-        @Nullable @ColorInt Integer backgroundColor,
+        @NonNull List<ButtonEnableBehaviorType> enableBehaviors,
+        @Nullable Color backgroundColor,
         @Nullable Border border,
         @Nullable String contentDescription
     ) {
@@ -43,6 +45,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         this.identifier = identifier;
         this.buttonClickBehaviors = buttonClickBehaviors;
         this.actions = actions;
+        this.enableBehaviors = enableBehaviors;
         this.contentDescription = contentDescription;
     }
 
@@ -62,6 +65,11 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
             actions.add(value.optMap());
         }
         return actions;
+    }
+
+    public static List<ButtonEnableBehaviorType> buttonEnableBehaviorsFromJson(@NonNull JsonMap json) {
+        JsonList enableBehaviorsList = json.opt("enabled").optList();
+        return ButtonEnableBehaviorType.fromList(enableBehaviorsList);
     }
 
     @Override
@@ -84,5 +92,10 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     @NonNull
     public List<JsonMap> getActions() {
         return actions;
+    }
+
+    @NonNull
+    public List<ButtonEnableBehaviorType> getButtonEnableBehaviors() {
+        return enableBehaviors;
     }
 }

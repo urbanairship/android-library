@@ -64,10 +64,10 @@ public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel>
 
         switch (model.getToggleType()) {
             case SWITCH:
-                configureSwitch((SwitchStyle) model.getToggleStyle());
+                configureSwitch((SwitchStyle) model.getStyle());
                 break;
             case CHECKBOX:
-                configureCheckbox((CheckboxStyle) model.getToggleStyle());
+                configureCheckbox((CheckboxStyle) model.getStyle());
                 break;
         }
     }

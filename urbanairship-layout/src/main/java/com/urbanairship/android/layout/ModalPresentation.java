@@ -22,15 +22,18 @@ public class ModalPresentation extends BasePresentation {
     private final ModalPlacement defaultPlacement;
     @Nullable
     private final List<ModalPlacementSelector> placementSelectors;
+    private final boolean dismissOnTouchOutside;
 
     public ModalPresentation(
         @NonNull ModalPlacement defaultPlacement,
-        @Nullable List<ModalPlacementSelector> placementSelectors
+        @Nullable List<ModalPlacementSelector> placementSelectors,
+        boolean dismissOnTouchOutside
     ) {
         super(PresentationType.MODAL);
 
         this.defaultPlacement = defaultPlacement;
         this.placementSelectors = placementSelectors;
+        this.dismissOnTouchOutside = dismissOnTouchOutside;
     }
 
     @NonNull
@@ -44,7 +47,9 @@ public class ModalPresentation extends BasePresentation {
         List<ModalPlacementSelector> placementSelectors =
             placementSelectorsJson.isEmpty() ? null : ModalPlacementSelector.fromJsonList(placementSelectorsJson);
 
-        return new ModalPresentation(defaultPlacement, placementSelectors);
+        boolean dismissOnTouchOutside = json.opt("dismiss_on_touch_outside").getBoolean(false);
+
+        return new ModalPresentation(defaultPlacement, placementSelectors, dismissOnTouchOutside);
     }
 
     @NonNull
@@ -55,5 +60,9 @@ public class ModalPresentation extends BasePresentation {
     @Nullable
     public List<ModalPlacementSelector> getPlacementSelectors() {
         return placementSelectors;
+    }
+
+    public boolean isDismissOnTouchOutside() {
+        return dismissOnTouchOutside;
     }
 }

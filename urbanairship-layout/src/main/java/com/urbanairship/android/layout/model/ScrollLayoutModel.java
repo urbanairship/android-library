@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
@@ -12,7 +13,6 @@ import com.urbanairship.json.JsonMap;
 import java.util.Collections;
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -22,7 +22,7 @@ public class ScrollLayoutModel extends LayoutModel {
     @NonNull
     private final BaseModel view;
 
-    public ScrollLayoutModel(@NonNull BaseModel view, @NonNull Direction direction, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+    public ScrollLayoutModel(@NonNull BaseModel view, @NonNull Direction direction, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.SCROLL_LAYOUT, backgroundColor, border);
 
         this.view = view;
@@ -38,7 +38,7 @@ public class ScrollLayoutModel extends LayoutModel {
 
         BaseModel view = Thomas.model(viewJson);
         Direction direction = Direction.from(directionString);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new ScrollLayoutModel(view, direction, backgroundColor, border);

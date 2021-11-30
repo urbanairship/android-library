@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Position;
 import com.urbanairship.android.layout.property.Size;
@@ -15,7 +16,6 @@ import com.urbanairship.json.JsonMap;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -26,7 +26,7 @@ public class ContainerLayoutModel extends LayoutModel  {
     @NonNull
     private final List<BaseModel> children = new ArrayList<>();
 
-    public ContainerLayoutModel(@NonNull List<Item> items, @Nullable Border border, @Nullable @ColorInt Integer backgroundColor) {
+    public ContainerLayoutModel(@NonNull List<Item> items, @Nullable Border border, @Nullable Color backgroundColor) {
         super(ViewType.CONTAINER, backgroundColor, border);
 
         this.items = items;
@@ -41,7 +41,7 @@ public class ContainerLayoutModel extends LayoutModel  {
     public static ContainerLayoutModel fromJson(@NonNull JsonMap json) throws JsonException {
         JsonList itemsJson = json.opt("items").optList();
         List<Item> items = Item.fromJsonList(itemsJson);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new ContainerLayoutModel(items, border, backgroundColor);

@@ -5,13 +5,14 @@ package com.urbanairship.android.layout.model;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
+import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -22,13 +23,14 @@ public class LabelButtonModel extends ButtonModel {
     public LabelButtonModel(
         @NonNull String id,
         @NonNull LabelModel label,
-        @NonNull List<ButtonClickBehaviorType> behaviors,
+        @NonNull List<ButtonClickBehaviorType> clickBehaviors,
         @NonNull List<JsonMap> actions,
-        @Nullable @ColorInt Integer backgroundColor,
+        @NonNull List<ButtonEnableBehaviorType> enableBehaviors,
+        @Nullable Color backgroundColor,
         @Nullable Border border,
         @Nullable String contentDescription
     ) {
-        super(ViewType.LABEL_BUTTON, id, behaviors, actions, backgroundColor, border, contentDescription);
+        super(ViewType.LABEL_BUTTON, id, clickBehaviors, actions, enableBehaviors, backgroundColor, border, contentDescription);
 
         this.label = label;
     }
@@ -38,13 +40,23 @@ public class LabelButtonModel extends ButtonModel {
         String id = Identifiable.identifierFromJson(json);
         JsonMap labelJson = json.opt("label").optMap();
         LabelModel label = LabelModel.fromJson(labelJson);
-        List<ButtonClickBehaviorType> behaviors = buttonClickBehaviorsFromJson(json);
+        List<ButtonClickBehaviorType> clickBehaviors = buttonClickBehaviorsFromJson(json);
         List<JsonMap> actions = actionsFromJson(json);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        List<ButtonEnableBehaviorType> enableBehaviors = buttonEnableBehaviorsFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
 
-        return new LabelButtonModel(id, label,  behaviors, actions, backgroundColor, border, contentDescription);
+        return new LabelButtonModel(
+            id,
+            label,
+            clickBehaviors,
+            actions,
+            enableBehaviors,
+            backgroundColor,
+            border,
+            contentDescription
+        );
     }
 
     //

@@ -13,8 +13,10 @@
         "max_width": "80%"
       },
       "shade_color": {
-        "hex": "#000000",
-        "alpha": 0.6
+        "default": {
+          "hex": "#000000",
+          "alpha": 0.6
+        }
       }
     }
   },
@@ -24,13 +26,17 @@
       "radius": 30,
       "stroke_width": 1,
       "stroke_color": {
-        "hex": "#cccccc",
-        "alpha": 0.8
+        "default": {
+          "hex": "#cccccc",
+          "alpha": 0.8
+        }
       }
     },
     "background_color": {
-      "hex": "#ffffff",
-      "alpha": 1
+      "default": {
+        "hex": "#ffffff",
+        "alpha": 1
+      }
     },
     "items": [
       {
@@ -52,8 +58,10 @@
             {
               "type": "container",
               "background_color": {
-                "hex": "#FF0000",
-                "alpha": 0.5
+                "default": {
+                  "hex": "#FF0000",
+                  "alpha": 0.5
+                }
               },
               "items": [
                 {
@@ -68,10 +76,14 @@
                   "view": {
                     "type": "label",
                     "text": "This is the first page about stuff.",
-                    "alignment": "center",
-                    "foreground_color": {
-                      "hex": "#000000",
-                      "alpha": 1
+                    "text_appearance": {
+                      "alignment": "center",
+                      "color": {
+                        "default": {
+                          "hex": "#000000",
+                          "alpha": 1
+                        }
+                      }
                     }
                   }
                 }
@@ -80,8 +92,10 @@
             {
               "type": "container",
               "background_color": {
-                "hex": "#00FF00",
-                "alpha": 0.5
+                "default": {
+                  "hex": "#00FF00",
+                  "alpha": 0.5
+                }
               },
               "items": [
                 {
@@ -96,10 +110,14 @@
                   "view": {
                     "type": "label",
                     "text": "More stuff is here on the second page.",
-                    "alignment": "center",
-                    "foreground_color": {
-                      "hex": "#000000",
-                      "alpha": 1
+                    "text_appearance": {
+                      "alignment": "center",
+                      "color": {
+                        "default": {
+                          "hex": "#000000",
+                          "alpha": 1
+                        }
+                      }
                     }
                   }
                 }
@@ -108,8 +126,10 @@
             {
               "type": "container",
               "background_color": {
-                "hex": "#0000FF",
-                "alpha": 0.5
+                "default": {
+                  "hex": "#0000FF",
+                  "alpha": 0.5
+                }
               },
               "items": [
                 {
@@ -124,10 +144,14 @@
                   "view": {
                     "type": "label",
                     "text": "That's not all! There's a third page, too!",
-                    "alignment": "center",
-                    "foreground_color": {
-                      "hex": "#000000",
-                      "alpha": 1
+                    "text_appearance": {
+                      "alignment": "center",
+                      "color": {
+                        "default": {
+                          "hex": "#000000",
+                          "alpha": 1
+                        }
+                      }
                     }
                   }
                 }
@@ -147,37 +171,55 @@
         },
         "view": {
           "type": "pager_indicator",
-          "indicator_spacing": 12,
-          "indicator_bindings": {
+          "spacing": 12,
+          "bindings": {
             "selected": {
-              "type": "circle",
-              "color": {
-                "hex": "#cccccc",
-                "alpha": 1
-              },
-              "radius": 4,
-              "border": {
-                "stroke_width": 1,
-                "stroke_color": {
-                  "hex": "#cccccc",
-                  "alpha": 1
+              "shapes": [
+                {
+                  "type": "ellipse",
+                  "aspect_ratio": 1,
+                  "scale": 1,
+                  "color": {
+                    "default": {
+                      "hex": "#cccccc",
+                      "alpha": 1
+                    }
+                  },
+                  "border": {
+                    "stroke_width": 1,
+                    "stroke_color": {
+                      "default": {
+                        "hex": "#cccccc",
+                        "alpha": 1
+                      }
+                    }
+                  }
                 }
-              }
+              ]
             },
             "deselected": {
-              "type": "circle",
-              "color": {
-                "hex": "#000000",
-                "alpha": 0
-              },
-              "radius": 4,
-              "border": {
-                "stroke_width": 1,
-                "stroke_color": {
-                  "hex": "#cccccc",
-                  "alpha": 1
+              "shapes": [
+                {
+                  "type": "ellipse",
+                  "aspect_ratio": 1,
+                  "scale": 1,
+                  "color": {
+                    "default": {
+                      "hex": "#000000",
+                      "alpha": 0
+                    }
+                  },
+                  "border": {
+                    "stroke_width": 1,
+                    "stroke_color": {
+                      "default": {
+                        "hex": "#cccccc",
+                        "alpha": 1
+                      }
+                    }
+                  }
                 }
-              }
+              ]
             }
           }
         }

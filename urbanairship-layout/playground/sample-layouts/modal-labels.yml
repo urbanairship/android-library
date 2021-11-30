@@ -9,13 +9,15 @@ presentation:
       width: 90%
       height: auto
     shade_color:
-      hex: '#000000'
-      alpha: 0.75
+      default:
+        hex: '#000000'
+        alpha: 0.75
 view:
   type: container
   background_color:
-    hex: "#ffffff"
-    alpha: 1
+    default:
+      hex: "#ffffff"
+      alpha: 1
   items:
   - position:
       horizontal: center
@@ -41,14 +43,16 @@ view:
         view:
           type: label
           text: Size
-          alignment: start
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
-          text_styles:
-          - bold
-          - underline
-          font_size: 16
+          text_appearance:
+            alignment: start
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            styles:
+            - bold
+            - underlined
+            font_size: 16
       - margin:
           top: 0
           bottom: 8
@@ -60,11 +64,13 @@ view:
         view:
           type: label
           text: Tiny (8sp)
-          alignment: start
-          font_size: 8
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 8
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -76,11 +82,13 @@ view:
         view:
           type: label
           text: Small (10sp)
-          alignment: start
-          font_size: 10
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 10
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -92,11 +100,13 @@ view:
         view:
           type: label
           text: Normal (12sp)
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -108,11 +118,13 @@ view:
         view:
           type: label
           text: Larger (16sp)
-          alignment: start
-          font_size: 16
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 16
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -124,11 +136,13 @@ view:
         view:
           type: label
           text: Huge (24sp)
-          alignment: start
-          font_size: 24
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 24
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       #
       # Alignment
       #
@@ -143,14 +157,16 @@ view:
         view:
           type: label
           text: Alignment
-          alignment: start
-          text_styles:
-          - bold
-          - underline
-          font_size: 16
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            styles:
+            - bold
+            - underlined
+            font_size: 16
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -162,11 +178,13 @@ view:
         view:
           type: label
           text: Start
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -178,11 +196,13 @@ view:
         view:
           type: label
           text: Center
-          alignment: center
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: center
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -194,11 +214,13 @@ view:
         view:
           type: label
           text: End
-          alignment: end
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: end
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       #
       # Style
       #
@@ -213,14 +235,16 @@ view:
         view:
           type: label
           text: Style
-          alignment: start
-          text_styles:
-          - bold
-          - underline
-          font_size: 16
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            styles:
+            - bold
+            - underlined
+            font_size: 16
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -232,11 +256,13 @@ view:
         view:
           type: label
           text: Normal
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -248,13 +274,15 @@ view:
         view:
           type: label
           text: Bold
-          text_styles:
-          - bold
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            styles:
+            - bold
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -266,13 +294,15 @@ view:
         view:
           type: label
           text: Underline
-          text_styles:
-          - underline
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            styles:
+            - underlined
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -284,13 +314,15 @@ view:
         view:
           type: label
           text: Italic
-          text_styles:
-          - italic
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            styles:
+            - italic
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
       - margin:
           top: 0
           bottom: 8
@@ -302,12 +334,14 @@ view:
         view:
           type: label
           text: Bold + Italic + Underline
-          text_styles:
-          - bold
-          - underline
-          - italic
-          alignment: start
-          font_size: 12
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
+          text_appearance:
+            styles:
+            - bold
+            - underlined
+            - italic
+            alignment: start
+            font_size: 12
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1

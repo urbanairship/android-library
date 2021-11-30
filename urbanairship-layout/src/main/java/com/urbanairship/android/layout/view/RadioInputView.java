@@ -4,12 +4,14 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.util.AttributeSet;
 
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.urbanairship.android.layout.model.RadioInputModel;
+import com.urbanairship.android.layout.property.CheckboxStyle;
+import com.urbanairship.android.layout.property.SwitchStyle;
+import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.ColorInt;
@@ -60,14 +62,25 @@ public class RadioInputView extends MaterialRadioButton implements BaseView<Radi
     }
 
     private void configure() {
-        LayoutUtils.applyBorderAndBackground(this, model.getBorder(), Color.TRANSPARENT);
+        LayoutUtils.applyBorderAndBackground(this, model.getBorder(), null);
 
-        ColorStateList tintList = getTintList(
-            model.getForegroundColor(),
-            model.getBackgroundColor() != null ? model.getBackgroundColor() : Color.TRANSPARENT
-        );
+        ToggleStyle style = model.getStyle();
+        switch (style.getType()) {
+            case SWITCH:
+                configureSwitch((SwitchStyle) style);
+                break;
+            case CHECKBOX:
+                configureCheckbox((CheckboxStyle) style);
+                break;
+        }
+    }
 
-        setButtonTintList(tintList);
+    private void configureSwitch(@NonNull SwitchStyle style) {
+        // TODO: draw switch
+    }
+
+    private void configureCheckbox(@NonNull CheckboxStyle style) {
+        // TODO: draw switch
     }
 
     private ColorStateList getTintList(@ColorInt int foregroundColor, @ColorInt int backgroundColor) {

@@ -3,13 +3,13 @@
 package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ToggleType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -23,15 +23,14 @@ public class ToggleModel extends BaseModel implements Identifiable, Accessible, 
     private final ToggleStyle toggleStyle;
     @Nullable
     private final String contentDescription;
-    @Nullable
-    private final Boolean isRequired;
+    private final boolean isRequired;
 
     public ToggleModel(
         @NonNull String identifier,
         @NonNull ToggleStyle toggleStyle,
         @Nullable String contentDescription,
-        @Nullable Boolean isRequired,
-        @Nullable Integer backgroundColor,
+        boolean isRequired,
+        @Nullable Color backgroundColor,
         @Nullable Border border
     ) {
         super(ViewType.TOGGLE, backgroundColor, border);
@@ -44,12 +43,12 @@ public class ToggleModel extends BaseModel implements Identifiable, Accessible, 
 
     @NonNull
     public static ToggleModel fromJson(@NonNull JsonMap json) throws JsonException {
-        JsonMap toggleStyleJson = json.opt("toggle_style").optMap();
+        JsonMap toggleStyleJson = json.opt("style").optMap();
         ToggleStyle toggleStyle = ToggleStyle.fromJson(toggleStyleJson);
         String identifier = Identifiable.identifierFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
-        Boolean required = Validatable.requiredFromJson(json);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        boolean required = Validatable.requiredFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new ToggleModel(identifier, toggleStyle, contentDescription, required, backgroundColor, border);
@@ -73,8 +72,7 @@ public class ToggleModel extends BaseModel implements Identifiable, Accessible, 
     }
 
     @Override
-    @Nullable
-    public Boolean isRequired() {
+    public boolean isRequired() {
         return isRequired;
     }
 

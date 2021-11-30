@@ -9,17 +9,20 @@ presentation:
       width: 30%
       height: 364
     shade_color:
-      hex: '#000000'
-      alpha: 0.7
+      default:
+        hex: '#000000'
+        alpha: 0.7
 view:
   type: container
   background_color:
-    hex: "#ffffff"
-    alpha: 1
+    default:
+      hex: "#ffffff"
+      alpha: 1
   border:
     stroke_color:
-      hex: "#000000"
-      alpha: 1
+      default:
+        hex: "#000000"
+        alpha: 1
     stroke_width: 3
   items:
   # TOP-LEVEL LINEAR LAYOUT
@@ -33,8 +36,9 @@ view:
       type: linear_layout
       direction: vertical
       background_color:
-        hex: "#ffffff"
-        alpha: 0.35
+        default:
+          hex: "#ffffff"
+          alpha: 0.35
       items:
       - position:
           horizontal: center
@@ -44,15 +48,18 @@ view:
           height: auto
         view:
           type: label
-          background_color:
-            hex: "#FF0000"
-            alpha: 0.35
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
-          alignment: center
           text: auto
-          font_size: 12
+          background_color:
+            default:
+              hex: "#FF0000"
+              alpha: 0.35
+          text_appearance:
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            alignment: center
+            font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -61,15 +68,18 @@ view:
           height: 75%
         view:
           type: label
-          background_color:
-            hex: "#00FF00"
-            alpha: 0.35
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
           text: 75%
-          alignment: center
-          font_size: 12
+          background_color:
+            default:
+              hex: "#00FF00"
+              alpha: 0.35
+          text_appearance:
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            alignment: center
+            font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -77,16 +87,19 @@ view:
           width: 100%
           height: 20%
         view:
-          background_color:
-            hex: "#0000FF"
-            alpha: 0.35
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
           type: label
-          alignment: center
           text: 20%
-          font_size: 12
+          background_color:
+            default:
+              hex: "#0000FF"
+              alpha: 0.35
+          text_appearance:
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            alignment: center
+            font_size: 12
       - position:
           horizontal: center
           vertical: center
@@ -94,14 +107,17 @@ view:
           width: 100%
           height: 40
         view:
-          background_color:
-            hex: "#FF00FF"
-            alpha: 0.35
-          foreground_color:
-            hex: "#000000"
-            alpha: 1
           type: label
-          alignment: center
           text: 40dp
-          font_size: 12
+          background_color:
+            default:
+              hex: "#FF00FF"
+              alpha: 0.35
+          text_appearance:
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            alignment: center
+            font_size: 12
 

@@ -4,6 +4,12 @@
 
 package com.urbanairship.android.layout.property;
 
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonValue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -28,6 +34,19 @@ public enum ButtonEnableBehaviorType {
             }
         }
         throw new IllegalArgumentException("Unknown ButtonEnableBehaviorType value: " + value);
+    }
+
+    @NonNull
+    public static List<ButtonEnableBehaviorType> fromList(@NonNull JsonList json) {
+        if (json.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ButtonEnableBehaviorType> enableTypes = new ArrayList<>(json.size());
+        for (JsonValue value : json) {
+            enableTypes.add(from(value.optString()));
+        }
+        return enableTypes;
     }
 
     @NonNull

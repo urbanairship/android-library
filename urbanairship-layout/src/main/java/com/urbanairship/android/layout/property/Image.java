@@ -3,26 +3,24 @@
 package com.urbanairship.android.layout.property;
 
 import com.urbanairship.android.layout.R;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import java.util.Locale;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 
-import static java.util.Objects.requireNonNull;
-
-public abstract class ButtonImage {
+public abstract class Image {
     @NonNull
     private final Type type;
 
-    private ButtonImage(@NonNull Type type) {
+    private Image(@NonNull Type type) {
         this.type = type;
     }
 
     @NonNull
-    public static ButtonImage fromJson(@NonNull JsonMap json) {
+    public static Image fromJson(@NonNull JsonMap json) throws JsonException {
         String typeString = json.opt("type").optString();
         switch (Type.from(typeString)) {
             case URL:
@@ -30,7 +28,7 @@ public abstract class ButtonImage {
             case ICON:
                 return Icon.fromJson(json);
         }
-        throw new IllegalArgumentException("Failed to parse button image! Unknown button image type value: " + typeString);
+        throw new IllegalArgumentException("Failed to parse image! Unknown button image type value: " + typeString);
     }
 
     public enum Type {
@@ -60,7 +58,7 @@ public abstract class ButtonImage {
         return type;
     }
 
-    public static final class Url extends ButtonImage {
+    public static final class Url extends Image {
         @NonNull private final String url;
 
         public Url(@NonNull String url) {
@@ -80,24 +78,32 @@ public abstract class ButtonImage {
         }
     }
 
-    public static final class Icon extends ButtonImage {
-        @NonNull private final DrawableResource drawable;
-        @ColorInt private final int tint;
+    public static final class Icon extends Image {
+        @NonNull
+        private final DrawableResource drawable;
+        @NonNull
+        private final Color tint;
+        @NonNull
+        private final float scale;
 
-        public Icon(@NonNull DrawableResource drawable, int tint) {
+        public Icon(@NonNull DrawableResource drawable, @NonNull Color tint, @NonNull float scale) {
             super(Type.ICON);
             this.drawable = drawable;
             this.tint = tint;
+            this.scale = scale;
         }
 
         @NonNull
-        public static Icon fromJson(@NonNull JsonMap json) {
+        public static Icon fromJson(@NonNull JsonMap json) throws JsonException {
             String iconString = json.opt( "icon").optString();
             DrawableResource icon = DrawableResource.from(iconString);
-            @ColorInt int tint =
-                requireNonNull(Color.fromJsonField(json, "tint"), "Failed to parse icon! Field 'tint' .");
+            Color tint = Color.fromJsonField(json, "color");
+            if (tint == null) {
+                throw new JsonException("Failed to parse icon! Field 'color' is required.");
+            }
+            float scale = json.opt("scale").getFloat(1);
 
-            return new Icon(icon, tint);
+            return new Icon(icon, tint, scale);
         }
 
         @DrawableRes
@@ -105,12 +111,20 @@ public abstract class ButtonImage {
             return drawable.resId;
         }
 
-        public int getTint() {
+        @NonNull
+        public Color getTint() {
             return tint;
         }
 
+        public float getScale() {
+            return scale;
+        }
+
         private enum DrawableResource {
-            CLOSE("close", R.drawable.ua_ic_close_white);
+            CLOSE("close", R.drawable.ua_ic_close_white),
+            CHECKMARK("checkmark", R.drawable.ua_ic_notification_button_accept),
+            ARROW_FORWARD("forward_arrow", R.drawable.ua_ic_arrow_forward),
+            ARROW_BACK("back_arrow", R.drawable.ua_ic_arrow_back);
 
             @NonNull
             private final String value;

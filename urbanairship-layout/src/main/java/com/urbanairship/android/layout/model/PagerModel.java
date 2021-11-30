@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.model;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -13,7 +14,6 @@ import com.urbanairship.json.JsonMap;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -25,7 +25,7 @@ public class PagerModel extends LayoutModel implements Identifiable {
     @Nullable
     private final Boolean disableSwipe;
 
-    public PagerModel(@NonNull String identifier, @NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+    public PagerModel(@NonNull String identifier, @NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
 
         this.identifier = identifier;
@@ -38,7 +38,7 @@ public class PagerModel extends LayoutModel implements Identifiable {
         String identifier = Identifiable.identifierFromJson(json);
         JsonList itemsJson = json.opt("items").optList();
         Boolean disableSwipe = json.opt("disable_swipe").getBoolean();
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         List<BaseModel> items = new ArrayList<>(itemsJson.size());

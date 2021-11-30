@@ -9,9 +9,9 @@ import com.google.android.material.shape.RoundedCornerTreatment;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,35 +22,35 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
  * Rectangle shape.
  */
 public class Rectangle extends Shape {
-    private final int width;
-    private final int height;
+    private final float aspectRatio;
+    private final float scale;
 
-    public Rectangle(int width, int height, @Nullable Border border, @Nullable @ColorInt Integer color) {
+    public Rectangle(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
         super(ShapeType.RECTANGLE, border, color);
 
-        this.width = width;
-        this.height = height;
+        this.aspectRatio = aspectRatio;
+        this.scale = scale;
     }
 
     @NonNull
-    public static Rectangle fromJson(@NonNull JsonMap json) {
-        int width = json.opt("width").getInt(-1);
-        int height = json.opt("height").getInt(-1);
+    public static Rectangle fromJson(@NonNull JsonMap json) throws JsonException {
+        float aspectRatio = json.opt("aspect_ratio").getFloat(1f);
+        float scale = json.opt("scale").getFloat(1f);
         JsonMap borderJson = json.opt("border").optMap();
         Border border = Border.fromJson(borderJson);
-        @ColorInt Integer color = Color.fromJsonField(json, "color");
+        Color color = Color.fromJsonField(json, "color");
 
-        return new Rectangle(width, height, border, color);
+        return new Rectangle(aspectRatio, scale, border, color);
     }
 
     @Override
-    public int getWidth() {
-        return width;
+    public float getAspectRatio() {
+        return aspectRatio;
     }
 
     @Override
-    public int getHeight() {
-        return height;
+    public float getScale() {
+        return scale;
     }
 
     @NonNull

@@ -3,12 +3,12 @@
 package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -27,15 +27,14 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     private final ScoreStyle style;
     @Nullable
     private final String contentDescription;
-    @Nullable
-    private final Boolean isRequired;
+    private final boolean isRequired;
 
     public ScoreModel(
         @NonNull String identifier,
         @NonNull ScoreStyle style,
         @Nullable String contentDescription,
-        @Nullable Boolean isRequired,
-        @Nullable @ColorInt Integer backgroundColor,
+        boolean isRequired,
+        @Nullable Color backgroundColor,
         @Nullable Border border) {
         super(ViewType.SCORE, backgroundColor, border);
 
@@ -51,8 +50,8 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
         JsonMap styleJson = json.opt("style").optMap();
         ScoreStyle style = ScoreStyle.fromJson(styleJson);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
-        Boolean required = Validatable.requiredFromJson(json);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        boolean required = Validatable.requiredFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new ScoreModel(identifier, style, contentDescription, required, backgroundColor, border);
@@ -71,8 +70,7 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     }
 
     @Override
-    @Nullable
-    public Boolean isRequired() {
+    public boolean isRequired() {
         return isRequired;
     }
 

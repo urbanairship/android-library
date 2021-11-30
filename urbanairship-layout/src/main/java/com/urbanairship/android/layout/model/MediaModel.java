@@ -5,12 +5,13 @@ package com.urbanairship.android.layout.model;
 import android.widget.ImageView;
 
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.MediaFit;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -29,7 +30,7 @@ public class MediaModel extends BaseModel implements Accessible {
         @NonNull MediaType mediaType,
         @NonNull ImageView.ScaleType scaleType,
         @Nullable String contentDescription,
-        @Nullable @ColorInt Integer backgroundColor,
+        @Nullable Color backgroundColor,
         @Nullable Border border
     ) {
         super(ViewType.MEDIA, backgroundColor, border);
@@ -41,12 +42,12 @@ public class MediaModel extends BaseModel implements Accessible {
     }
 
     @NonNull
-    public static MediaModel fromJson(@NonNull JsonMap json) {
+    public static MediaModel fromJson(@NonNull JsonMap json) throws JsonException {
         String url = json.opt("url").optString();
         String mediaTypeString = json.opt("media_type").optString();
         String mediaFitString = json.opt("media_fit").optString();
         String contentDescription = Accessible.contentDescriptionFromJson(json);
-        Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         MediaType mediaType = MediaType.from(mediaTypeString);

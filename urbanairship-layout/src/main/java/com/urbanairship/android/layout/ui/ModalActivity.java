@@ -62,7 +62,9 @@ public class ModalActivity extends AppCompatActivity {
                 Radiography.scan(ScanScopes.singleViewScope(modalView), ViewStateRenderers.DefaultsIncludingPii))
             );
 
-            modalView.setOnClickOutsideListener(v -> finish());
+            if (presentation.isDismissOnTouchOutside()) {
+                modalView.setOnClickOutsideListener(v -> finish());
+            }
 
         } catch (@NonNull JsonException | IOException e) {
             Log.e(getClass().getSimpleName(), "Failed to load modal!", e);

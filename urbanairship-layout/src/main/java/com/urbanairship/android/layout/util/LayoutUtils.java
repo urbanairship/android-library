@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.util;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.view.Gravity;
@@ -24,7 +23,8 @@ import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
-import com.urbanairship.android.layout.property.TextAlignment;
+import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.view.MediaView;
 import com.urbanairship.android.layout.widget.Clippable;
@@ -56,7 +56,7 @@ public final class LayoutUtils {
     public static void applyBorderAndBackground(
         @NonNull View view,
         @Nullable Border border,
-        @Nullable @ColorInt Integer backgroundColor
+        @Nullable Color backgroundColor
     ) {
         Context context = view.getContext();
 
@@ -77,37 +77,38 @@ public final class LayoutUtils {
             }
 
             if (border.getStrokeColor() != null) {
-                shapeDrawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor()));
+                shapeDrawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor().resolve(context)));
             }
 
-            @ColorInt int fillColor = backgroundColor != null ? backgroundColor : Color.TRANSPARENT;
+            @ColorInt int fillColor = backgroundColor != null ? backgroundColor.resolve(context) : Color.TRANSPARENT;
             shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
 
             view.setBackground(shapeDrawable);
         } else if (backgroundColor != null) {
-            view.setBackgroundColor(backgroundColor);
+            view.setBackgroundColor(backgroundColor.resolve(context));
         }
     }
 
     public static void applyButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
         applyLabelModel(button, model.getLabel());
 
-        int textColor = model.getLabel().getForegroundColor();
+        Context context = button.getContext();
+        TextAppearance textAppearance = model.getLabel().getTextAppearance();
+
+        int textColor = textAppearance.getColor().resolve(context);
         int backgroundColor = model.getBackgroundColor() == null
             ? Color.TRANSPARENT
-            : model.getBackgroundColor();
+            : model.getBackgroundColor().resolve(button.getContext());
         int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
         int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
             ? DEFAULT_STROKE_WIDTH_DPS
             : model.getBorder().getStrokeWidth();
         int strokeColor = model.getBorder() == null || model.getBorder().getStrokeColor() == null
             ? backgroundColor
-            : model.getBorder().getStrokeColor();
+            : model.getBorder().getStrokeColor().resolve(context);
         int borderRadius = model.getBorder() == null || model.getBorder().getRadius() == null
             ? DEFAULT_BORDER_RADIUS
             : model.getBorder().getRadius();
-
-        Context context = button.getContext();
 
         button.setTextColor(textColor);
         button.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
@@ -118,14 +119,17 @@ public final class LayoutUtils {
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
-        textView.setTextSize(label.getFontSize());
-        textView.setTextColor(label.getForegroundColor());
+        Context context = textView.getContext();
+        TextAppearance textAppearance = label.getTextAppearance();
+
+        textView.setTextSize(textAppearance.getFontSize());
+        textView.setTextColor(textAppearance.getColor().resolve(context));
         textView.setText(HtmlCompat.fromHtml(label.getText(), HtmlCompat.FROM_HTML_MODE_LEGACY));
 
         int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
         int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
-        for (TextStyle style : label.getTextStyles()) {
+        for (TextStyle style : textAppearance.getTextStyles()) {
             switch (style) {
                 case BOLD:
                     typefaceFlags |= Typeface.BOLD;
@@ -139,8 +143,7 @@ public final class LayoutUtils {
             }
         }
 
-        TextAlignment alignment = label.getAlignment() != null ? label.getAlignment() : TextAlignment.CENTER;
-        switch (alignment) {
+        switch (textAppearance.getAlignment()) {
             case CENTER:
                 textView.setGravity(Gravity.CENTER);
                 break;
@@ -152,7 +155,7 @@ public final class LayoutUtils {
                 break;
         }
 
-        Typeface typeface = getTypeFace(textView.getContext(), label.getFontFamilies());
+        Typeface typeface = getTypeFace(textView.getContext(), textAppearance.getFontFamilies());
         if (typeface == null) {
             typeface = textView.getTypeface();
         }
@@ -164,15 +167,18 @@ public final class LayoutUtils {
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
         LayoutUtils.applyBorderAndBackground(editText, textInput);
 
-        editText.setTextSize(textInput.getFontSize());
-        editText.setTextColor(textInput.getForegroundColor());
+        Context context = editText.getContext();
+        TextAppearance textAppearance = textInput.getTextAppearance();
+
+        editText.setTextSize(textAppearance.getFontSize());
+        editText.setTextColor(textAppearance.getColor().resolve(context));
         editText.setHint(textInput.getHintText());
         editText.setInputType(textInput.getInputType().getTypeMask());
 
         int typefaceFlags = editText.getTypeface() == null ? Typeface.NORMAL : editText.getTypeface().getStyle();
         int paintFlags = editText.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
-        for (TextStyle style : textInput.getTextStyles()) {
+        for (TextStyle style : textAppearance.getTextStyles()) {
             switch (style) {
                 case BOLD:
                     typefaceFlags |= Typeface.BOLD;
@@ -186,7 +192,7 @@ public final class LayoutUtils {
             }
         }
 
-        Typeface typeface = getTypeFace(editText.getContext(), textInput.getFontFamilies());
+        Typeface typeface = getTypeFace(editText.getContext(), textAppearance.getFontFamilies());
         if (typeface == null) {
             typeface = editText.getTypeface();
         }

@@ -2,51 +2,80 @@
 
 package com.urbanairship.android.layout.property;
 
+import android.content.Context;
+
 import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 
+import java.util.List;
+
 import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.graphics.ColorUtils;
 
-import static android.graphics.Color.parseColor;
+public class Color {
 
-public final class Color {
-
-    private Color() {}
-
-    @Nullable
     @ColorInt
-    public static Integer fromJson(@Nullable JsonMap json) {
-        if (json == null || json.isEmpty()) {
-            Logger.verbose("Ignoring json Color. Color is null or empty");
-            return null;
+    public static final int TRANSPARENT = android.graphics.Color.TRANSPARENT;
+    @ColorInt
+    public static final int BLACK = android.graphics.Color.BLACK;
+
+    private final int defaultColor;
+
+    @NonNull
+    private final List<ColorSelector> selectors;
+
+    public Color(int defaultColor, @NonNull List<ColorSelector> selectors) {
+        this.defaultColor = defaultColor;
+        this.selectors = selectors;
+    }
+
+    @NonNull
+    public static Color fromJson(@NonNull JsonMap json) throws JsonException {
+        JsonMap defaultColorJson = json.opt("default").optMap();
+        @ColorInt Integer defaultColor = HexColor.fromJson(defaultColorJson);
+        if (defaultColor == null) {
+            throw new JsonException("Failed to parse color. 'default' may not be null! json = " + json);
         }
+        JsonList selectorsJson = json.opt("selectors").optList();
+        List<ColorSelector> selectors = ColorSelector.fromJsonList(selectorsJson);
 
-        String hex = json.opt("hex").optString();
-        float alpha = json.opt("alpha").getFloat(1f);
-
-        if (hex.isEmpty() || alpha > 1f || alpha < 0) {
-            Logger.warn("Invalid Color json: %s", json.toString());
-            return null;
-        }
-
-        int color = parseColor(hex);
-        if (alpha != 1f) {
-            color = ColorUtils.setAlphaComponent(color, (int)(alpha * 255));
-        }
-
-        return color;
+        return new Color(defaultColor, selectors);
     }
 
     @Nullable
-    @ColorInt
-    public static Integer fromJsonField(JsonMap json, String fieldName) {
+    public static Color fromJsonField(@Nullable JsonMap json, @NonNull String fieldName) throws JsonException {
         if (json == null || json.isEmpty()) {
             Logger.verbose("Ignoring json Color from field! Map is null or empty.");
             return null;
         }
         JsonMap colorJson = json.opt(fieldName).optMap();
+        if (colorJson.isEmpty()) {
+            Logger.verbose("Ignoring json Color from field! Map is null or empty.");
+            return null;
+        }
         return fromJson(colorJson);
+    }
+
+    public static float alpha(@ColorInt int color) {
+        return android.graphics.Color.alpha(color);
+    }
+
+    @ColorInt
+    public int getDefaultColor() {
+        return defaultColor;
+    }
+
+    @NonNull
+    public List<ColorSelector> getSelectors() {
+        return selectors;
+    }
+
+    @ColorInt
+    public int resolve(@NonNull Context context) {
+        // TODO: resolve color from selectors
+        return defaultColor;
     }
 }

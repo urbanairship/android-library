@@ -9,48 +9,45 @@ import com.google.android.material.shape.RoundedCornerTreatment;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
  * Circle shape.
  */
-public class Circle extends Shape {
-    private final int radius;
+public class Ellipse extends Shape {
+    private final float aspectRatio;
+    private final float scale;
 
-    public Circle(int radius, @Nullable Border border, @Nullable @ColorInt Integer color) {
-        super(ShapeType.CIRCLE, border, color);
+    public Ellipse(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
+        super(ShapeType.ELLIPSE, border, color);
 
-        this.radius = radius;
+        this.aspectRatio = aspectRatio;
+        this.scale = scale;
     }
 
     @NonNull
-    public static Circle fromJson(@NonNull JsonMap json) {
-        int radius = json.opt("radius").getInt(-1);
+    public static Ellipse fromJson(@NonNull JsonMap json) throws JsonException {
+        float aspectRatio = json.opt("aspect_ratio").getFloat(1f);
+        float scale = json.opt("scale").getFloat(1f);
         JsonMap borderJson = json.opt("border").optMap();
         Border border = Border.fromJson(borderJson);
-        @ColorInt Integer color = Color.fromJsonField(json, "color");
+        Color color = Color.fromJsonField(json, "color");
 
-        return new Circle(radius, border, color);
+        return new Ellipse(aspectRatio, scale, border, color);
     }
 
     @Override
-    public int getWidth() {
-        return radius * 2;
+    public float getAspectRatio() {
+        return aspectRatio;
     }
 
     @Override
-    public int getHeight() {
-        return radius * 2;
-    }
-
-    @Dimension(unit = Dimension.DP)
-    public int getRadius() {
-        return radius;
+    public float getScale() {
+        return scale;
     }
 
     @NonNull

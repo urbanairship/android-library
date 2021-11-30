@@ -5,18 +5,17 @@ package com.urbanairship.android.layout.property;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 
 public class SwitchStyle extends ToggleStyle {
-    @ColorInt
-    private final int onColor;
-    @ColorInt
-    private final int offColor;
+    @NonNull
+    private final Color onColor;
+    @NonNull
+    private final Color offColor;
 
     public SwitchStyle(
-        @ColorInt int onColor,
-        @ColorInt int offColor
+        @NonNull Color onColor,
+        @NonNull Color offColor
     ) {
         super(ToggleType.SWITCH);
 
@@ -27,11 +26,11 @@ public class SwitchStyle extends ToggleStyle {
     @NonNull
     public static SwitchStyle fromJson(@NonNull JsonMap json) throws JsonException {
         JsonMap colors = json.opt("toggle_colors").optMap();
-        @ColorInt Integer onColor = Color.fromJsonField(colors, "on");
+        Color onColor = Color.fromJsonField(colors, "on");
         if (onColor == null) {
             throw new JsonException("Failed to parse SwitchStyle! Field 'toggle_colors.on' may not be null.");
         }
-        @ColorInt Integer offColor = Color.fromJsonField(colors, "off");
+        Color offColor = Color.fromJsonField(colors, "off");
         if (offColor == null) {
             throw new JsonException("Failed to parse SwitchStyle! Field 'toggle_colors.off' may not be null.");
         }
@@ -39,13 +38,13 @@ public class SwitchStyle extends ToggleStyle {
         return new SwitchStyle(onColor, offColor);
     }
 
-    @ColorInt
-    public int getOnColor() {
+    @NonNull
+    public Color getOnColor() {
         return onColor;
     }
 
-    @ColorInt
-    public int getOffColor() {
+    @NonNull
+    public Color getOffColor() {
         return offColor;
     }
 }

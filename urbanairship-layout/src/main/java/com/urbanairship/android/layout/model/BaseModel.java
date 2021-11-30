@@ -9,12 +9,12 @@ import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -25,13 +25,12 @@ public abstract class BaseModel implements EventSource, EventListener {
     private final ViewType viewType;
 
     @Nullable
-    @ColorInt
-    private final Integer backgroundColor;
+    private final Color backgroundColor;
 
     @Nullable
     private final Border border;
 
-    public BaseModel(@NonNull ViewType viewType, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+    public BaseModel(@NonNull ViewType viewType, @Nullable Color backgroundColor, @Nullable Border border) {
         this.viewType = viewType;
         this.backgroundColor = backgroundColor;
         this.border = border;
@@ -43,7 +42,7 @@ public abstract class BaseModel implements EventSource, EventListener {
     }
 
     @Nullable
-    public Integer getBackgroundColor() {
+    public Color getBackgroundColor() {
         return backgroundColor;
     }
 
@@ -53,13 +52,12 @@ public abstract class BaseModel implements EventSource, EventListener {
     }
 
     @Nullable
-    @ColorInt
-    public static Integer backgroundColorFromJson(@NonNull JsonMap json) {
+    public static Color backgroundColorFromJson(@NonNull JsonMap json) throws JsonException {
         return Color.fromJsonField(json, "background_color");
     }
 
     @Nullable
-    public static Border borderFromJson(@NonNull JsonMap json) {
+    public static Border borderFromJson(@NonNull JsonMap json) throws JsonException {
         JsonMap borderJson = json.opt("border").optMap();
         return borderJson.isEmpty() ? null : Border.fromJson(borderJson);
     }

@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Size;
@@ -15,7 +16,6 @@ import com.urbanairship.json.JsonMap;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -28,7 +28,7 @@ public class LinearLayoutModel extends LayoutModel {
     private final List<BaseModel> children = new ArrayList<>();
 
     public LinearLayoutModel(@NonNull Direction direction, @NonNull List<Item> items,
-                             @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+                             @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.LINEAR_LAYOUT, backgroundColor, border);
 
         this.direction = direction;
@@ -48,7 +48,7 @@ public class LinearLayoutModel extends LayoutModel {
         Direction direction = Direction.from(directionString);
         List<Item> items = Item.fromJsonList(itemsJson);
 
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new LinearLayoutModel(direction, items, backgroundColor, border);

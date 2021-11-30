@@ -4,17 +4,15 @@ package com.urbanairship.android.layout.shape;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -26,15 +24,15 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 public abstract class Shape {
     @NonNull
     private final ShapeType type;
-    @ColorInt
-    private final int color;
+    @Nullable
+    private final Color color;
     @Nullable
     private final Border border;
 
-    public Shape(@NonNull ShapeType type, @Nullable Border border, @Nullable Integer color) {
+    public Shape(@NonNull ShapeType type, @Nullable Border border, @Nullable Color color) {
         this.type = type;
         this.border = border;
-        this.color = color != null ? color : Color.BLACK;
+        this.color = color;
     }
 
     @NonNull
@@ -44,8 +42,8 @@ public abstract class Shape {
         switch (ShapeType.from(typeString)) {
             case RECTANGLE:
                 return Rectangle.fromJson(json);
-            case CIRCLE:
-                return Circle.fromJson(json);
+            case ELLIPSE:
+                return Ellipse.fromJson(json);
         }
 
         throw new JsonException("Failed to parse shape! Unknown type: " + typeString);
@@ -61,30 +59,34 @@ public abstract class Shape {
         return border;
     }
 
-    @ColorInt
-    public int getColor() {
+    @Nullable
+    public Color getColor() {
         return color;
     }
 
-    @Dimension(unit = Dimension.DP)
-    public abstract int getWidth();
+    public abstract float getAspectRatio();
 
-    @Dimension(unit = Dimension.DP)
-    public abstract int getHeight();
+    public abstract float getScale();
 
     @NonNull
     public Drawable getDrawable(@NonNull Context context) {
         MaterialShapeDrawable drawable = new MaterialShapeDrawable(buildShapeAppearanceModel(context));
 
-        drawable.setFillColor(ColorStateList.valueOf(getColor()));
+        if (getColor() != null) {
+            drawable.setFillColor(ColorStateList.valueOf(getColor().resolve(context)));
+        } else {
+            drawable.setFillColor(ColorStateList.valueOf(android.graphics.Color.BLACK));
+        }
 
         if (border != null && border.getStrokeWidth() != null) {
             drawable.setStrokeWidth(dpToPx(context, border.getStrokeWidth()));
         }
 
         if (border != null && border.getStrokeColor() != null) {
-            drawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor()));
+            drawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor().resolve(context)));
         }
+
+        drawable.setScale(getScale());
 
         return drawable;
     }

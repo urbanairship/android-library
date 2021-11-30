@@ -795,7 +795,7 @@ view:
                 color:
                   hex: "#AAAAAA"
                   alpha: 1
-              deselected:
+              unselected:
                 radius: 16
                 type: circle
                 color:

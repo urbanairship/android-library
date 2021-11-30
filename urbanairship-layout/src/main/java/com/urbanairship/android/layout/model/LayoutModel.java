@@ -5,19 +5,19 @@ package com.urbanairship.android.layout.model;
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import java.util.List;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public abstract class LayoutModel extends BaseModel {
 
-    public LayoutModel(@NonNull ViewType viewType, @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+    public LayoutModel(@NonNull ViewType viewType, @Nullable Color backgroundColor, @Nullable Border border) {
         super(viewType, backgroundColor, border);
     }
 

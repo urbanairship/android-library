@@ -3,13 +3,13 @@
 package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ToggleType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -20,7 +20,7 @@ public class CheckboxModel extends BaseModel implements Accessible {
     @NonNull
     private final String reportingValue;
     @NonNull
-    private final ToggleStyle toggleStyle;
+    private final ToggleStyle style;
     @Nullable
     private final String contentDescription;
 
@@ -28,26 +28,26 @@ public class CheckboxModel extends BaseModel implements Accessible {
         @NonNull String reportingValue,
         @NonNull ToggleStyle toggleStyle,
         @Nullable String contentDescription,
-        @Nullable @ColorInt Integer backgroundColor,
+        @Nullable Color backgroundColor,
         @Nullable Border border
     ) {
         super(ViewType.CHECKBOX, backgroundColor, border);
 
         this.reportingValue = reportingValue;
-        this.toggleStyle = toggleStyle;
+        this.style = toggleStyle;
         this.contentDescription = contentDescription;
     }
 
     @NonNull
     public static CheckboxModel fromJson(@NonNull JsonMap json) throws JsonException {
         String reportingValue = json.opt("value").optString();
-        JsonMap toggleStyleJson = json.opt("toggle_style").optMap();
-        ToggleStyle toggleStyle = ToggleStyle.fromJson(toggleStyleJson);
+        JsonMap styleJson = json.opt("style").optMap();
+        ToggleStyle style = ToggleStyle.fromJson(styleJson);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
-        return new CheckboxModel(reportingValue, toggleStyle, contentDescription, backgroundColor, border);
+        return new CheckboxModel(reportingValue, style, contentDescription, backgroundColor, border);
     }
 
     @NonNull
@@ -56,13 +56,13 @@ public class CheckboxModel extends BaseModel implements Accessible {
     }
 
     @NonNull
-    public ToggleStyle getToggleStyle() {
-        return toggleStyle;
+    public ToggleStyle getStyle() {
+        return style;
     }
 
     @NonNull
     public ToggleType getToggleType() {
-        return toggleStyle.getType();
+        return style.getType();
     }
 
     @Nullable

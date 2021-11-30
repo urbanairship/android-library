@@ -5,7 +5,6 @@ package com.urbanairship.android.layout.property;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -17,14 +16,13 @@ public class ModalPlacement {
     @Nullable
     private final Position position;
     @Nullable
-    @ColorInt
-    private final Integer shadeColor;
+    private final Color shadeColor;
 
     public ModalPlacement(
         @NonNull ConstrainedSize size,
         @Nullable Margin margin,
         @Nullable Position position,
-        @Nullable @ColorInt Integer shadeColor) {
+        @Nullable Color shadeColor) {
         this.size = size;
         this.margin = margin;
         this.position = position;
@@ -38,13 +36,12 @@ public class ModalPlacement {
             throw new JsonException("Failed to parse Modal Placement! Field 'size' is required.");
         }
         JsonMap positionJson = json.opt("position").optMap();
-        JsonMap backgroundColorJson = json.opt("shade_color").optMap();
         JsonMap marginJson = json.opt("margin").optMap();
 
         ConstrainedSize size = ConstrainedSize.fromJson(sizeJson);
         Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
         Position position = positionJson.isEmpty() ? null : Position.fromJson(positionJson);
-        @ColorInt Integer backgroundColor = backgroundColorJson.isEmpty() ? null : Color.fromJson(backgroundColorJson);
+        Color backgroundColor = Color.fromJsonField(json, "shade_color");
 
         return new ModalPlacement(size, margin, position, backgroundColor);
     }
@@ -65,8 +62,7 @@ public class ModalPlacement {
     }
 
     @Nullable
-    @ColorInt
-    public Integer getShadeColor() {
+    public Color getShadeColor() {
         return shadeColor;
     }
 }

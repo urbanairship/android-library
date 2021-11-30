@@ -4,12 +4,17 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
+import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.Image.Icon;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.shape.Shape;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 
-import androidx.annotation.ColorInt;
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,7 +33,7 @@ public class PagerIndicatorModel extends BaseModel {
     private Listener listener;
 
     public PagerIndicatorModel(@NonNull Bindings bindings, int indicatorSpacing,
-                               @Nullable @ColorInt Integer backgroundColor, @Nullable Border border) {
+                               @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER_INDICATOR, backgroundColor, border);
 
         this.bindings = bindings;
@@ -37,44 +42,82 @@ public class PagerIndicatorModel extends BaseModel {
 
     @NonNull
     public static PagerIndicatorModel fromJson(@NonNull JsonMap json) throws JsonException {
-        JsonMap bindingsJson = json.opt("indicator_bindings").optMap();
+        JsonMap bindingsJson = json.opt("bindings").optMap();
         Bindings bindings = Bindings.fromJson(bindingsJson);
-        int indicatorSpacing = json.opt("indicator_spacing").getInt(4);
+        int indicatorSpacing = json.opt("spacing").getInt(4);
         Border border = borderFromJson(json);
-        @ColorInt Integer backgroundColor = backgroundColorFromJson(json);
+        Color backgroundColor = backgroundColorFromJson(json);
 
         return new PagerIndicatorModel(bindings, indicatorSpacing, backgroundColor, border);
     }
 
     public static class Bindings {
         @NonNull
-        private final Shape selected;
+        private final Binding selected;
         @NonNull
-        private final Shape deselected;
+        private final Binding unselected;
 
-        Bindings(@NonNull Shape selected, @NonNull Shape deselected) {
+        Bindings(@NonNull Binding selected, @NonNull Binding unselected) {
             this.selected = selected;
-            this.deselected = deselected;
+            this.unselected = unselected;
         }
 
         public static Bindings fromJson(@NonNull JsonMap json) throws JsonException {
             JsonMap selectedJson = json.opt("selected").optMap();
-            JsonMap deselectedJson = json.opt("deselected").optMap();
+            JsonMap unselectedJson = json.opt("unselected").optMap();
 
-            Shape selected = Shape.fromJson(selectedJson);
-            Shape deselected = Shape.fromJson(deselectedJson);
+            Binding selected = Binding.fromJson(selectedJson);
+            Binding unselected = Binding.fromJson(unselectedJson);
 
-            return new Bindings(selected, deselected);
+            return new Bindings(selected, unselected);
         }
 
         @NonNull
-        public Shape getSelected() {
+        public Binding getSelected() {
             return selected;
         }
 
         @NonNull
-        public Shape getDeselected() {
-            return deselected;
+        public Binding getUnselected() {
+            return unselected;
+        }
+    }
+
+    public static class Binding {
+        @NonNull
+        private final List<Shape> shapes;
+        @Nullable
+        private final Icon icon;
+
+        public Binding(@NonNull List<Shape> shapes, @Nullable Icon icon) {
+            this.shapes = shapes;
+            this.icon = icon;
+        }
+
+        @NonNull
+        public static Binding fromJson(@NonNull JsonMap json) throws JsonException {
+            JsonList shapesJson = json.opt("shapes").optList();
+            JsonMap iconJson = json.opt("icon").optMap();
+
+            List<Shape> shapes = new ArrayList<>();
+            for (int i = 0; i < shapesJson.size(); i++) {
+                JsonMap shapeJson = shapesJson.get(i).optMap();
+                Shape shape = Shape.fromJson(shapeJson);
+                shapes.add(shape);
+            }
+            Icon icon = iconJson.isEmpty() ? null : Icon.fromJson(iconJson);
+
+            return new Binding(shapes, icon);
+        }
+
+        @NonNull
+        public List<Shape> getShapes() {
+            return shapes;
+        }
+
+        @Nullable
+        public Icon getIcon() {
+            return icon;
         }
     }
 

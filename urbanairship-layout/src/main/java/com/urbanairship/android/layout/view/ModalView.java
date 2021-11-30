@@ -82,8 +82,8 @@ public class ModalView extends ConstraintLayout {
         ConstrainedSize size = placement.getSize();
         Position position = placement.getPosition();
         Margin margin = placement.getMargin();
-        @ColorInt Integer shadeColor = placement.getShadeColor();
-
+        @ColorInt Integer shadeColor = placement.getShadeColor() != null
+            ? placement.getShadeColor().resolve(getContext()) : null;
         makeFrame(size);
 
         containerView = Thomas.view(getContext(), model);

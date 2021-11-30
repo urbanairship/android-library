@@ -95,7 +95,6 @@ public class ThomasTest {
         assertTrue(webViews.isEmpty());
     }
 
-        @SuppressWarnings("SameParameterValue")
     private JsonMap readJsonMapResource(String path) {
         ClassLoader classLoader = getClass().getClassLoader();
         assert classLoader != null;

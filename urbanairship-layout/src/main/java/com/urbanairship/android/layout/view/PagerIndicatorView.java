@@ -4,18 +4,20 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Checkable;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
-import com.urbanairship.android.layout.shape.Shape;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.android.layout.widget.ShapeImageButton;
 
 import androidx.annotation.NonNull;
+
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIndicatorModel> {
     private PagerIndicatorModel model;
@@ -83,20 +85,22 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
         }
 
         PagerIndicatorModel.Bindings bindings = model.getBindings();
-        Shape checked = bindings.getSelected();
-        Shape unchecked = bindings.getDeselected();
+        PagerIndicatorModel.Binding checked = bindings.getSelected();
+        PagerIndicatorModel.Binding unchecked = bindings.getUnselected();
 
         int spacing = (int) ResourceUtils.dpToPx(context, model.getIndicatorSpacing());
         int halfSpacing = (int) (spacing / 2f);
-        int maxWidth = (int) ResourceUtils.dpToPx(context, Math.max(checked.getWidth(), unchecked.getWidth()));
-        int maxHeight = (int) ResourceUtils.dpToPx(context, Math.max(checked.getHeight(), unchecked.getHeight()));
 
         for (int i = 0; i < count; i++) {
-            View view = new ShapeImageButton(getContext(), bindings.getSelected(), bindings.getDeselected());
+            // TODO: pass icon through and render it too
 
-            LayoutParams lp = new LayoutParams(maxWidth, maxHeight);
+            ImageView view = new ShapeImageButton(getContext(), checked.getShapes(), unchecked.getShapes());
+
+            LayoutParams lp = new LayoutParams(WRAP_CONTENT, MATCH_PARENT);
             lp.setMarginStart(i == 0 ? spacing : halfSpacing);
             lp.setMarginEnd(i == count - 1 ? spacing : halfSpacing);
+
+            view.setAdjustViewBounds(true);
 
             addView(view, lp);
         }

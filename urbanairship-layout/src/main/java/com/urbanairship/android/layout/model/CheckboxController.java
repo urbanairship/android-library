@@ -27,8 +27,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     private final Integer minSelection;
     @Nullable
     private final Integer maxSelection;
-    @Nullable
-    private final Boolean isRequired;
+    private final boolean isRequired;
     @Nullable
     private final String contentDescription;
 
@@ -40,7 +39,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         @NonNull BaseModel view,
         @Nullable Integer minSelection,
         @Nullable Integer maxSelection,
-        @Nullable Boolean isRequired,
+        boolean isRequired,
         @Nullable String contentDescription
     ) {
         super(ViewType.CHECKBOX_CONTROLLER, null, null);
@@ -69,9 +68,8 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         return identifier;
     }
 
-    @Nullable
     @Override
-    public Boolean isRequired() {
+    public boolean isRequired() {
         return isRequired;
     }
 

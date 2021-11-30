@@ -23,8 +23,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     private final String identifier;
     @NonNull
     private final BaseModel view;
-    @Nullable
-    private final Boolean isRequired;
+    private final boolean isRequired;
     @Nullable
     private final String contentDescription;
 
@@ -34,7 +33,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     public RadioInputController(
         @NonNull String identifier,
         @NonNull BaseModel view,
-        @Nullable Boolean isRequired,
+        boolean isRequired,
         @Nullable String contentDescription
     ) {
         super(ViewType.RADIO_INPUT_CONTROLLER, null, null);
@@ -53,7 +52,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     public static RadioInputController fromJson(@NonNull JsonMap json) throws JsonException {
         String identifier = Identifiable.identifierFromJson(json);
         JsonMap viewJson = json.opt("view").optMap();
-        Boolean isRequired = Validatable.requiredFromJson(json);
+        boolean isRequired = Validatable.requiredFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
 
         BaseModel view = Thomas.model(viewJson);
@@ -72,9 +71,8 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         return identifier;
     }
 
-    @Nullable
     @Override
-    public Boolean isRequired() {
+    public boolean isRequired() {
         return isRequired;
     }
 

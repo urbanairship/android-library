@@ -10,7 +10,7 @@ import android.util.AttributeSet;
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.model.ImageButtonModel;
-import com.urbanairship.android.layout.property.ButtonImage;
+import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
 
@@ -64,17 +64,17 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     public void configureButton() {
         LayoutUtils.applyBorderAndBackground(this, model);
 
-        ButtonImage image = model.getImage();
+        Image image = model.getImage();
         switch (image.getType()) {
             case URL:
-                String url = ((ButtonImage.Url) image).getUrl();
+                String url = ((Image.Url) image).getUrl();
                 UAirship.shared().getImageLoader()
                         .load(getContext(), this, ImageRequestOptions.newBuilder(url).build());
                 break;
             case ICON:
-                ButtonImage.Icon icon = ((ButtonImage.Icon) image);
+                Image.Icon icon = ((Image.Icon) image);
                 @DrawableRes int resId = icon.getDrawableRes();
-                @ColorInt int tint = icon.getTint();
+                @ColorInt int tint = icon.getTint().resolve(getContext());
 
                 setImageResource(resId);
                 setImageTintList(ColorStateList.valueOf(tint));
