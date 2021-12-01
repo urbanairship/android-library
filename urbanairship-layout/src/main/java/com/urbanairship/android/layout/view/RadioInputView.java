@@ -63,6 +63,7 @@ public class RadioInputView extends MaterialRadioButton implements BaseView<Radi
 
     private void configure() {
         LayoutUtils.applyBorderAndBackground(this, model.getBorder(), null);
+        model.setListener(modelListener);
 
         ToggleStyle style = model.getStyle();
         switch (style.getType()) {
@@ -73,6 +74,10 @@ public class RadioInputView extends MaterialRadioButton implements BaseView<Radi
                 configureCheckbox((CheckboxStyle) style);
                 break;
         }
+
+        setOnCheckedChangeListener(checkedChangeListener);
+
+        model.onInit();
     }
 
     private void configureSwitch(@NonNull SwitchStyle style) {
@@ -96,4 +101,14 @@ public class RadioInputView extends MaterialRadioButton implements BaseView<Radi
 
         return new ColorStateList(ENABLED_CHECKED_STATES, radioButtonColorList);
     }
+
+    private final OnCheckedChangeListener checkedChangeListener =
+        (buttonView, isChecked) -> model.onCheckedChange(isChecked);
+
+    private final RadioInputModel.Listener modelListener =
+        isChecked -> {
+            setOnCheckedChangeListener(null);
+            setChecked(isChecked);
+            setOnCheckedChangeListener(checkedChangeListener);
+        };
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
@@ -105,8 +104,6 @@ public abstract class BaseModel implements EventSource, EventListener {
      * @return {@code true} if the event was handled upstream, {@code false} otherwise.
      */
     protected boolean bubbleEvent(@NonNull Event event) {
-        Logger.verbose("%s - bubbleEvent: %s", getType(), event.getType().name());
-
         for (EventListener listener : listeners) {
             if (listener.onEvent(event)) { return true; }
         }
@@ -120,7 +117,6 @@ public abstract class BaseModel implements EventSource, EventListener {
      * @return {@code true} if the event was handled downstream, {@code false} otherwise.
      */
     protected boolean trickleEvent(@NonNull Event event) {
-        Logger.verbose("%s - trickleEvent: %s", getType(), event.getType().name());
         return onEvent(event);
     }
 }

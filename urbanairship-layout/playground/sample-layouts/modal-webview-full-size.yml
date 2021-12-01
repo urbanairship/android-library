@@ -9,13 +9,15 @@ presentation:
       width: 95%
       height: 90%
     shade_color:
-      hex: '#000000'
-      alpha: 0.6
+      default:
+        hex: '#000000'
+        alpha: 0.6
 view:
   type: container
   background_color:
-    hex: "#ffffff"
-    alpha: 1
+    default:
+      hex: "#ffffff"
+      alpha: 1
   items:
   - position:
       horizontal: center
@@ -27,5 +29,6 @@ view:
       type: web_view
       url: "https://docs.airship.com"
       background_color:
-        hex: "#000000"
-        alpha: 1
+        default:
+          hex: "#000000"
+          alpha: 1

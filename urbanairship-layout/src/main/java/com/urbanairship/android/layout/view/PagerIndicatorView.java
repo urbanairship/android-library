@@ -28,11 +28,6 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
         setId(generateViewId());
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER);
-        init();
-    }
-
-    private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -45,7 +40,6 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
     @Override
     public void setModel(@NonNull PagerIndicatorModel model) {
         this.model = model;
-        Logger.debug("set model!");
         configure();
     }
 
@@ -53,6 +47,8 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
         model.setListener(listener);
 
         LayoutUtils.applyBorderAndBackground(this, model);
+
+        model.onConfigured();
     }
 
     //

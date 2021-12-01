@@ -2,7 +2,9 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Image.Icon;
@@ -165,23 +167,33 @@ public class PagerIndicatorModel extends BaseModel {
     }
 
     //
+    // View Actions
+    //
+
+    public void onConfigured() {
+        bubbleEvent(new PagerEvent.IndicatorInit(this));
+    }
+
+    //
     // Events
     //
 
     @Override
     public boolean onEvent(@NonNull Event event) {
+        Logger.verbose("onEvent: %s", event.getType());
+
         switch (event.getType()) {
             case PAGER_INIT:
-                if (handleCarouselInit((Event.PagerInit) event)) { return true; }
+                if (onPagerInit((PagerEvent.Init) event)) { return true; }
                 break;
             case PAGER_SCROLL:
-                if (handleCarouselScroll((Event.PagerScroll) event)) { return true; }
+                if (onPagerScroll((PagerEvent.Scroll) event)) { return true; }
                 break;
         }
         return super.onEvent(event);
     }
 
-    private boolean handleCarouselInit(Event.PagerInit event) {
+    private boolean onPagerInit(PagerEvent.Init event) {
         // Set the size and current position from the event data.
         size = event.getSize();
         position = event.getPosition();
@@ -192,7 +204,7 @@ public class PagerIndicatorModel extends BaseModel {
         return true;
     }
 
-    private boolean handleCarouselScroll(Event.PagerScroll event) {
+    private boolean onPagerScroll(PagerEvent.Scroll event) {
         // Update the current position from the event data.
         position = event.getPosition();
 

@@ -17,15 +17,10 @@ import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ConstrainedSize;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.ModalPlacement;
-import com.urbanairship.android.layout.property.ModalPlacementSelector;
-import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.property.Position;
-import com.urbanairship.android.layout.property.WindowSize;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout;
-
-import java.util.List;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
@@ -77,7 +72,7 @@ public class ModalView extends ConstraintLayout {
     }
 
     public void configureModal() {
-        ModalPlacement placement = determinePlacement(presentation);
+        ModalPlacement placement = presentation.getResolvedPlacement(getContext());
 
         ConstrainedSize size = placement.getSize();
         Position position = placement.getPosition();
@@ -142,34 +137,6 @@ public class ModalView extends ConstraintLayout {
 
     public void setOnClickOutsideListener(OnClickListener listener) {
         clickOutsideListener = listener;
-    }
-
-    @NonNull
-    private ModalPlacement determinePlacement(@NonNull ModalPresentation presentation) {
-        List<ModalPlacementSelector> placementSelectors = presentation.getPlacementSelectors();
-        ModalPlacement defaultPlacement = presentation.getDefaultPlacement();
-
-        if (placementSelectors == null || placementSelectors.isEmpty()) {
-            return defaultPlacement;
-        }
-
-        Orientation orientation = ResourceUtils.getOrientation(getContext());
-        WindowSize windowSize = ResourceUtils.getWindowSize(getContext());
-
-        // Try to find a matching placement selector.
-        for (ModalPlacementSelector selector : placementSelectors) {
-            if (selector.getWindowSize() != null && selector.getWindowSize() != windowSize) {
-                continue;
-            }
-            if (selector.getOrientation() != null && selector.getOrientation() != orientation) {
-                continue;
-            }
-
-            return selector.getPlacement();
-        }
-
-        // Otherwise, return the default placement.
-        return defaultPlacement;
     }
 
     private boolean isTouchOutside(@NonNull MotionEvent event) {

@@ -2,11 +2,14 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.ToggleEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ToggleType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -24,6 +27,9 @@ public class ToggleModel extends BaseModel implements Identifiable, Accessible, 
     @Nullable
     private final String contentDescription;
     private final boolean isRequired;
+
+    @Nullable
+    private Boolean value = null;
 
     public ToggleModel(
         @NonNull String identifier,
@@ -84,5 +90,20 @@ public class ToggleModel extends BaseModel implements Identifiable, Accessible, 
     @NonNull
     public ToggleType getToggleType() {
         return toggleStyle.getType();
+    }
+
+    @Override
+    public boolean isValid() {
+        return value != null || !isRequired;
+    }
+
+    public void onInit() {
+        bubbleEvent(new ToggleEvent.Init(identifier, isValid()));
+    }
+
+    public void onCheckedChange(boolean isChecked) {
+        this.value = isChecked;
+
+        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.Toggle(isChecked), isValid()));
     }
 }

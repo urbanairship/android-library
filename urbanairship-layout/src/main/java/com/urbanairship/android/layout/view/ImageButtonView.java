@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -61,8 +62,9 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
         configureButton();
     }
 
-    public void configureButton() {
+    private void configureButton() {
         LayoutUtils.applyBorderAndBackground(this, model);
+        model.setViewListener(modelListener);
 
         Image image = model.getImage();
         switch (image.getType()) {
@@ -83,4 +85,11 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
 
         setOnClickListener(v -> model.onClick());
     }
+
+    private final ButtonModel.Listener modelListener = new ButtonModel.Listener() {
+        @Override
+        public void setEnabled(boolean isEnabled) {
+            ImageButtonView.this.setEnabled(isEnabled);
+        }
+    };
 }

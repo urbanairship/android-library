@@ -9,8 +9,9 @@ presentation:
       width: 70%
       height: 80%
     shade_color:
-      hex: '#000000'
-      alpha: 0.6
+      default:
+        hex: '#000000'
+        alpha: 0.6
 view:
   type: pager_controller
   view:
@@ -19,11 +20,13 @@ view:
       radius: 30
       stroke_width: 2
       stroke_color:
-        hex: "#333333"
-        alpha: 0.8
+        default:
+          hex: "#333333"
+          alpha: 0.8
     background_color:
-      hex: "#ffffff"
-      alpha: 1
+      default:
+        hex: "#ffffff"
+        alpha: 1
     items:
     - position:
         vertical: center
@@ -39,8 +42,9 @@ view:
         items:
         - type: container
           background_color:
-            hex: "#FF0000"
-            alpha: 0.5
+            default:
+              hex: "#FF0000"
+              alpha: 0.5
           items:
           - position:
               vertical: center
@@ -51,14 +55,18 @@ view:
             view:
               type: label
               text: This is the first page about stuff.
-              alignment: center
-              foreground_color:
-                hex: "#000000"
-                alpha: 1
+              text_appearance:
+                alignment: center
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+                text_size: 14
         - type: container
           background_color:
-            hex: "#00FF00"
-            alpha: 0.5
+            default:
+              hex: "#00FF00"
+              alpha: 0.5
           items:
           - position:
               vertical: center
@@ -69,14 +77,18 @@ view:
             view:
               type: label
               text: More stuff is here on the second page.
-              alignment: center
-              foreground_color:
-                hex: "#000000"
-                alpha: 1
+              text_appearance:
+                alignment: center
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+                text_size: 14
         - type: container
           background_color:
-            hex: "#0000FF"
-            alpha: 0.5
+            default:
+              hex: "#0000FF"
+              alpha: 0.5
           items:
           - position:
               vertical: center
@@ -87,10 +99,13 @@ view:
             view:
               type: label
               text: That's not all! There's a third page, too!
-              alignment: center
-              foreground_color:
-                hex: "#000000"
-                alpha: 1
+              text_appearance:
+                alignment: center
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+                text_size: 14
     - size:
         height: 16
         width: auto
@@ -103,35 +118,42 @@ view:
         type: pager_indicator
         carousel_identifier: CAROUSEL_ID
         background_color:
-          hex: "#333333"
-          alpha: 0.7
+          default:
+            hex: "#333333"
+            alpha: 0.7
         border:
           radius: 8
-        indicator_spacing: 8
-        indicator_bindings:
+        spacing: 8
+        bindings:
           selected:
-            type: rectangle
-            width: 12
-            height: 6
-            border:
-              radius: 3
-              stroke_width: 1
-              stroke_color:
-                hex: "#ffffff"
-                alpha: 0.7
-            color:
-              hex: "#ffffff"
-              alpha: 1
+            shapes:
+            - type: rectangle
+              aspect_ratio: 0.5
+              scale: 1
+              border:
+                radius: 3
+                stroke_width: 1
+                stroke_color:
+                  default:
+                    hex: "#ffffff"
+                    alpha: 0.7
+              color:
+                default:
+                  hex: "#ffffff"
+                  alpha: 1
           unselected:
-            type: rectangle
-            width: 12
-            height: 6
-            border:
-              radius: 3
-              stroke_width: 1
-              stroke_color:
-                hex: "#ffffff"
-                alpha: 0.7
-            color:
-              hex: "#ffffff"
-              alpha: 0
+            shapes:
+            - type: rectangle
+              aspect_ratio: 0.5
+              scale: 1
+              border:
+                radius: 3
+                stroke_width: 1
+                stroke_color:
+                  default:
+                    hex: "#ffffff"
+                    alpha: 0.7
+              color:
+                default:
+                  hex: "#000000"
+                  alpha: 0

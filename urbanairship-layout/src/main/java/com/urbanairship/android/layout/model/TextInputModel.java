@@ -94,6 +94,12 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         return isRequired;
     }
 
+    @Override
+    public boolean isValid() {
+        // TODO: update this once the model is accepting input changes from the view.
+        return true;
+    }
+
     @NonNull
     public FormInputType getInputType() {
         return inputType;

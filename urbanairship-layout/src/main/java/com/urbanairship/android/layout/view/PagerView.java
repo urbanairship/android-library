@@ -69,6 +69,8 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         adapter.setItems(model.getItems());
         addOnScrollListener(onScrollListener);
 
+        model.setListener(modelListener);
+
         // Emit an init event so that we can connect to the indicator view, if one exists.
         model.onConfigured(getDisplayedItemPosition());
     }
@@ -77,6 +79,28 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         View snapView = snapHelper.findSnapView(layoutManager);
         return snapView != null ? getChildAdapterPosition(snapView) : 0;
     }
+
+    private final PagerModel.Listener modelListener = new PagerModel.Listener() {
+        @Override
+        public void onScrollToNext() {
+            int position = getDisplayedItemPosition();
+            int nextPosition = position + 1;
+
+            if (position != NO_POSITION && nextPosition < adapter.getItemCount()) {
+                smoothScrollToPosition(nextPosition);
+            }
+        }
+
+        @Override
+        public void onScrollToPrevious() {
+            int position = getDisplayedItemPosition();
+            int previousPosition = position - 1;
+
+            if (position != NO_POSITION && previousPosition > -1) {
+                smoothScrollToPosition(previousPosition);
+            }
+        }
+    };
 
     private final OnScrollListener onScrollListener = new OnScrollListener() {
         private int previousPosition = NO_POSITION;

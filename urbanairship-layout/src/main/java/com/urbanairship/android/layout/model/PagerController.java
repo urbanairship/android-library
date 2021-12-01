@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Controller that manages communication between Pager and PagerIndicator children.
@@ -21,10 +20,6 @@ import androidx.annotation.Nullable;
 public class PagerController extends LayoutModel {
     @NonNull
     private final BaseModel view;
-    @Nullable
-    private final PagerModel pager;
-    @Nullable
-    private final PagerIndicatorModel pagerIndicator;
 
     public PagerController(@NonNull BaseModel view) {
         super(ViewType.PAGER_CONTROLLER, null, null);
@@ -32,9 +27,6 @@ public class PagerController extends LayoutModel {
         this.view = view;
 
         view.addListener(this);
-
-        pager = Thomas.findByType(PagerModel.class, view);
-        pagerIndicator = Thomas.findByType(PagerIndicatorModel.class, view);
     }
 
     @NonNull
@@ -57,20 +49,19 @@ public class PagerController extends LayoutModel {
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
+        Logger.debug("onEvent: %s", event.getType());
 
-        // If we have both a pager and indicator as children, pass events between them.
-        // We always return true because the controller should consume all pager events emitted by its children.
         switch (event.getType()) {
             case PAGER_INIT:
             case PAGER_SCROLL:
-                if (pagerIndicator != null) {
-                    pagerIndicator.onEvent(event);
-                }
+            case BUTTON_BEHAVIOR_PAGER_NEXT:
+            case BUTTON_BEHAVIOR_PAGER_PREVIOUS:
+                trickleEvent(event);
                 return true;
-        }
 
-        // Otherwise, pass the event along.
-        return super.onEvent(event);
+            default:
+                // Pass along any other events
+                return super.onEvent(event);
+        }
     }
 }

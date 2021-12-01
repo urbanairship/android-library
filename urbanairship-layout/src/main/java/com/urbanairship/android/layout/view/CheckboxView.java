@@ -4,7 +4,7 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
@@ -22,6 +22,9 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel> {
     private CheckboxModel model;
+
+    @Nullable
+    private CompoundButton view = null;
 
     public CheckboxView(@NonNull Context context) {
         super(context);
@@ -57,6 +60,7 @@ public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel>
 
     private void configure() {
         LayoutUtils.applyBorderAndBackground(this, model);
+        model.setListener(listener);
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             setContentDescription(model.getContentDescription());
@@ -70,10 +74,18 @@ public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel>
                 configureCheckbox((CheckboxStyle) model.getStyle());
                 break;
         }
+
+        model.onInit();
     }
 
     private void configureSwitch(SwitchStyle style) {
-        View view = new SwitchMaterial(getContext());
+        SwitchMaterial switchView = new SwitchMaterial(getContext()) {
+            @Override
+            public void toggle() {
+                model.onCheckedChange(!isChecked());
+            }
+        };
+        this.view = switchView;
 
         // TODO: build color state lists from style and apply to the thumb and track (in LayoutUtils so we can share with ToggleView).
 
@@ -83,12 +95,19 @@ public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel>
         // 'style.offColor' defines the color of the track when unchecked. It also defines the color of the thumb,
         //      similar to above.
 
-        addView(view, MATCH_PARENT, MATCH_PARENT);
+        switchView.setOnCheckedChangeListener(checkedChangeListener);
+
+        addView(switchView, MATCH_PARENT, MATCH_PARENT);
     }
 
     private void configureCheckbox(CheckboxStyle style) {
-        MaterialCheckBox view = new MaterialCheckBox(getContext());
-
+        MaterialCheckBox checkboxView = new MaterialCheckBox(getContext()) {
+            @Override
+            public void toggle() {
+                model.onCheckedChange(!isChecked());
+            }
+        };
+        this.view = checkboxView;
         // TODO: build color state lists from style and apply to the view (in LayoutUtils so we can share with ToggleView).
 
         // 'model.border' defines the shape and color around the check.
@@ -97,6 +116,18 @@ public class CheckboxView extends FrameLayout implements BaseView<CheckboxModel>
         // 'style.checkedBorderColor' is the border color override when checked.
         // 'style.checkedBackgroundColor' is the background color override when checked.
 
-        addView(view, MATCH_PARENT, MATCH_PARENT);
+        checkboxView.setOnCheckedChangeListener(checkedChangeListener);
+
+        addView(checkboxView, MATCH_PARENT, MATCH_PARENT);
     }
+
+    private final CompoundButton.OnCheckedChangeListener checkedChangeListener =
+        (buttonView, isChecked) -> model.onCheckedChange(isChecked);
+
+    private final CheckboxModel.Listener listener =
+        isChecked -> {
+            view.setOnCheckedChangeListener(null);
+            view.setChecked(isChecked);
+            view.setOnCheckedChangeListener(checkedChangeListener);
+        };
 }

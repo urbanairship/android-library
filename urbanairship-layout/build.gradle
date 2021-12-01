@@ -31,19 +31,18 @@ dependencies {
     api project(':urbanairship-core')
 
     // AndroidX
-    implementation "androidx.core:core:1.6.0"//$rootProject.androidxCoreVersion"
-    implementation "androidx.constraintlayout:constraintlayout:2.1.1"//$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.core:core:$rootProject.androidxCoreVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
 
-    // Support libraries
-    implementation "androidx.appcompat:appcompat:1.3.1"//$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:1.4.0"//$rootProject.materialVersion"
-
-    // TODO: remove or move to debugImplementation, for debugging
-    implementation 'com.squareup.radiography:radiography:2.4.1'
+    // Material
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
 
     // Unit Tests
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    testImplementation "androidx.test:runner:$rootProject.androidxTestCoreVersion"
+    testImplementation "androidx.test:rules:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
 }

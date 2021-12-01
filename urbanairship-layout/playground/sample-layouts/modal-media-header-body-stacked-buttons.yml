@@ -9,13 +9,15 @@ presentation:
       width: 90%
       height: 75%
     shade_color:
-      hex: '#000000'
-      alpha: 0.6
+      default:
+        hex: '#000000'
+        alpha: 0.6
 view:
   type: container
   background_color:
-    hex: "#ffffff"
-    alpha: 1
+    default:
+      hex: "#ffffff"
+      alpha: 1
   items:
   # TOP-LEVEL LINEAR LAYOUT
   - position:
@@ -67,18 +69,20 @@ view:
               view:
                 type: label
                 text: Lorem ipsum dolor sit amet
-                foreground_color:
-                  hex: "#FF00FF"
-                  alpha: 1
-                alignment: start
-                text_styles:
-                - bold
-                - underline
-                - italic
-                font_families:
-                - permanent_marker
-                - casual
-                font_size: 24
+                text_appearance:
+                  color:
+                    default:
+                      hex: "#FF00FF"
+                      alpha: 1
+                  alignment: start
+                  styles:
+                  - bold
+                  - underlined
+                  - italic
+                  font_families:
+                  - permanent_marker
+                  - casual
+                  font_size: 24
             # BODY
             - size:
                 width: 100%
@@ -96,12 +100,14 @@ view:
                   at augue eget arcu dictum. Imperdiet dui accumsan sit amet nulla.
                   Ultrices neque ornare aenean euismod elementum. Tincidunt id aliquet
                   risus feugiat in ante metus dictum.
-                foreground_color:
-                  hex: "#333333"
-                  alpha: 1
-                alignment: start
-                text_styles: [ italic ]
-                font_families: [ permanent_marker ]
+                text_appearance:
+                  color:
+                    default:
+                      hex: "#333333"
+                      alpha: 1
+                  alignment: start
+                  styles: [ italic ]
+                  font_families: [ permanent_marker ]
       # BOTTOM-PINNED BUTTON #1
       - position:
           horizontal: center
@@ -118,21 +124,24 @@ view:
           type: label_button
           identifier: BUTTON
           background_color:
-            hex: "#FF0000"
-            alpha: 1
+            default:
+              hex: "#FF0000"
+              alpha: 1
           label:
             type: label
-            font_size: 24
-            alignment: center
-            text_styles:
-            - bold
-            - italic
-            - underline
-            font_families:
-            - permanent_marker
-            foreground_color:
-              hex: "#00FF00"
-              alpha: 1
+            text_appearance:
+              font_size: 24
+              alignment: center
+              styles:
+              - bold
+              - italic
+              - underlined
+              font_families:
+              - permanent_marker
+              color:
+                default:
+                  hex: "#00FF00"
+                  alpha: 1
             text: 'NO'
       # BOTTOM-PINNED BUTTON #2
       - position:
@@ -150,21 +159,24 @@ view:
           type: label_button
           identifier: BUTTON
           background_color:
-            hex: "#00FF00"
-            alpha: 1
+            default:
+              hex: "#00FF00"
+              alpha: 1
           label:
             type: label
-            font_size: 24
-            alignment: center
-            text_styles:
-            - bold
-            - italic
-            - underline
-            font_families:
-            - permanent_marker
-            foreground_color:
-              hex: "#FF0000"
-              alpha: 1
+            text_appearance:
+              font_size: 24
+              alignment: center
+              styles:
+              - bold
+              - italic
+              - underlined
+              font_families:
+              - permanent_marker
+              color:
+                default:
+                  hex: "#FF0000"
+                  alpha: 1
             text: 'YES'
   # TOP-LEFT IMAGE BUTTON
   - position:
@@ -194,6 +206,7 @@ view:
       image:
         type: icon
         icon: close
-        tint:
-          hex: "#FF00FF"
-          alpha: 1
+        color:
+          default:
+            hex: "#FF00FF"
+            alpha: 1

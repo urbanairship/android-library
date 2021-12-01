@@ -1,10 +1,6 @@
 package com.urbanairship.android.layout;
 
 import com.urbanairship.android.layout.model.ContainerLayoutModel;
-import com.urbanairship.android.layout.model.LabelModel;
-import com.urbanairship.android.layout.model.PagerIndicatorModel;
-import com.urbanairship.android.layout.model.PagerModel;
-import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.property.HorizontalPosition;
 import com.urbanairship.android.layout.property.Position;
 import com.urbanairship.android.layout.property.VerticalPosition;
@@ -20,7 +16,6 @@ import org.robolectric.RobolectricTestRunner;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -59,42 +54,7 @@ public class ThomasTest {
         }
     }
 
-    @Test
-    public void findsViewsByType() throws JsonException {
-        JsonMap json = readJsonMapResource("pager-and-indicator.json");
-        BasePayload payload = BasePayload.fromJson(json);
-        assertNotNull(payload);
-
-        ContainerLayoutModel view = (ContainerLayoutModel) payload.getView();
-        assertNotNull(view);
-
-        PagerIndicatorModel indicator = Thomas.findByType(PagerIndicatorModel.class, view);
-        assertNotNull(indicator);
-
-        PagerModel pager = Thomas.findByType(PagerModel.class, view);
-        assertNotNull(pager);
-        assertEquals(3, pager.getItems().size());
-    }
-
-    @Test
-    public void findsAllViewsByType() throws JsonException {
-        JsonMap json = readJsonMapResource("pager-and-indicator.json");
-        BasePayload payload = BasePayload.fromJson(json);
-        assertNotNull(payload);
-
-        ContainerLayoutModel view = (ContainerLayoutModel) payload.getView();
-        assertNotNull(view);
-
-        List<LabelModel> labels = Thomas.findAllByType(LabelModel.class, view);
-        assertEquals(3, labels.size());
-
-        List<ContainerLayoutModel> containers = Thomas.findAllByType(ContainerLayoutModel.class, view);
-        assertEquals(4, containers.size());
-
-        List<WebViewModel> webViews = Thomas.findAllByType(WebViewModel.class, view);
-        assertTrue(webViews.isEmpty());
-    }
-
+    @SuppressWarnings("SameParameterValue")
     private JsonMap readJsonMapResource(String path) {
         ClassLoader classLoader = getClass().getClassLoader();
         assert classLoader != null;

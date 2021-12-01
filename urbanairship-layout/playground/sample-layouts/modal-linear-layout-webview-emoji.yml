@@ -9,13 +9,15 @@ presentation:
       width: 95%
       height: 90%
     shade_color:
-      hex: '#000000'
-      alpha: 0.7
+      default:
+        hex: '#000000'
+        alpha: 0.7
 view:
   type: container
   background_color:
-    hex: "#000000"
-    alpha: 1
+    default:
+      hex: "#000000"
+      alpha: 1
   items:
   - position:
       horizontal: center
@@ -50,15 +52,17 @@ view:
             view:
               type: label
               text: "Wikipedia <i>Push technology</i>"
-              foreground_color:
-                hex: "#ffffff"
-                alpha: 1
-              alignment: center
-              font_size: 18
-              text_styles:
-              - bold
-              font_families:
-              - monospace
+              text_appearance:
+                color:
+                  default:
+                    hex: "#ffffff"
+                    alpha: 1
+                alignment: center
+                font_size: 18
+                styles:
+                - bold
+                font_families:
+                - monospace
       - position:
           horizontal: center
           vertical: center
@@ -105,7 +109,9 @@ view:
             view:
               type: label
               text: "🆒 🆒 🆒"
-              font_size: 24
-              foreground_color:
-                hex: "#FFFFFF"
-                alpha: 1
+              text_appearance:
+                font_size: 24
+                color:
+                  default:
+                    hex: "#FFFFFF"
+                    alpha: 1

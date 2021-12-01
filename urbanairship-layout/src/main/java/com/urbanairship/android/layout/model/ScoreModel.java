@@ -2,10 +2,13 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.ScoreEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -25,23 +28,25 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     private final String identifier;
     @NonNull
     private final ScoreStyle style;
+    private final boolean isRequired;
     @Nullable
     private final String contentDescription;
-    private final boolean isRequired;
+
+    private int selectedScore = -1;
 
     public ScoreModel(
         @NonNull String identifier,
         @NonNull ScoreStyle style,
-        @Nullable String contentDescription,
         boolean isRequired,
+        @Nullable String contentDescription,
         @Nullable Color backgroundColor,
         @Nullable Border border) {
         super(ViewType.SCORE, backgroundColor, border);
 
         this.identifier = identifier;
         this.style = style;
-        this.contentDescription = contentDescription;
         this.isRequired = isRequired;
+        this.contentDescription = contentDescription;
     }
 
     @NonNull
@@ -49,12 +54,12 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
         String identifier = Identifiable.identifierFromJson(json);
         JsonMap styleJson = json.opt("style").optMap();
         ScoreStyle style = ScoreStyle.fromJson(styleJson);
-        String contentDescription = Accessible.contentDescriptionFromJson(json);
         boolean required = Validatable.requiredFromJson(json);
+        String contentDescription = Accessible.contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
-        return new ScoreModel(identifier, style, contentDescription, required, backgroundColor, border);
+        return new ScoreModel(identifier, style, required, contentDescription, backgroundColor, border);
     }
 
     @Override
@@ -77,5 +82,20 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     @NonNull
     public ScoreStyle getStyle() {
         return style;
+    }
+
+    @Override
+    public boolean isValid() {
+        return selectedScore > -1 || !isRequired;
+    }
+
+    public void onInit() {
+        bubbleEvent(new ScoreEvent.Init(identifier, isValid()));
+    }
+
+    public void onScoreChange(int score) {
+        selectedScore = score;
+
+        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.Score(score), isValid()));
     }
 }

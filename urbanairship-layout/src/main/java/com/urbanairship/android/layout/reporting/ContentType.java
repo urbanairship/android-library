@@ -39,7 +39,7 @@ public enum ContentType {
         List<ContentType> contentTypes = new ArrayList<>();
         for (int i = 0; i < json.size(); i++) {
             String typeString = json.get(i).optString();
-            ContentType type = ContentType.from(typeString);
+            contentTypes.add(ContentType.from(typeString));
         }
         return contentTypes;
     }

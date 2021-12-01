@@ -2,14 +2,21 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,7 +36,10 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private final FormBehaviorType submitBehavior;
 
     @NonNull
-    private final List<BaseModel> formInputs;
+    private final Map<String, FormData<?>> formData = new HashMap<>();
+
+    @NonNull
+    private final Map<String, Boolean> inputValidity = new HashMap<>();
 
     public BaseFormController(
         @NonNull ViewType viewType,
@@ -44,9 +54,6 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
         this.submitBehavior = submitBehavior;
 
         view.addListener(this);
-
-        // TODO: rework hierarchy so we can actually find all the form inputs instead of all child views...
-        formInputs = Thomas.findAllByType(BaseModel.class, view);
     }
 
     @NonNull
@@ -70,11 +77,6 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
         return Collections.singletonList(view);
     }
 
-    @NonNull
-    protected List<BaseModel> getFormInputs() {
-        return formInputs;
-    }
-
     protected static String identifierFromJson(@NonNull JsonMap json) throws JsonException {
         return Identifiable.identifierFromJson(json);
     }
@@ -89,4 +91,58 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
         return FormBehaviorType.from(submitString);
     }
 
+    @Override
+    public boolean onEvent(@NonNull Event event) {
+        Logger.verbose("onEvent: %s", event.getType());
+
+        switch (event.getType()) {
+            case FORM_INPUT_INIT:
+                reduceFormInputInit((FormEvent.InputInit) event);
+                return true;
+            case FORM_DATA_CHANGE:
+                reduceFormDataChange((FormEvent.DataChange) event);
+                return true;
+            case BUTTON_BEHAVIOR_FORM_SUBMIT:
+                submitForm();
+                return true;
+        }
+
+        return super.onEvent(event);
+    }
+
+    protected void submitForm() {
+        Logger.debug("FormData = %s", JsonValue.wrapOpt(formData).toString());
+    }
+
+    private void reduceFormInputInit(FormEvent.InputInit init) {
+        inputValidity.put(init.getIdentifier(), init.isValid());
+        trickleValidationUpdate();
+    }
+
+    private void reduceFormDataChange(FormEvent.DataChange data) {
+        String identifier = data.getIdentifier();
+        boolean isValid = data.isValid();
+        inputValidity.put(identifier, isValid);
+
+        if (isValid) {
+            formData.put(identifier, data.getValue());
+        } else {
+            formData.remove(identifier);
+        }
+
+        trickleValidationUpdate();
+    }
+
+    private void trickleValidationUpdate() {
+        trickleEvent(new FormEvent.ValidationUpdate(isFormValid()));
+    }
+
+    private boolean isFormValid() {
+        for (Map.Entry<String, Boolean> validity : inputValidity.entrySet()) {
+            if (!validity.getValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

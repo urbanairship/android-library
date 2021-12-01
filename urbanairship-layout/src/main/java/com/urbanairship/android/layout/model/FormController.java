@@ -2,8 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
-import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
@@ -35,12 +33,8 @@ public class FormController extends BaseFormController {
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
-
-        // TODO: switch on form events and consume any that should be internal to the controller and its children.
-
-        // Pass along any other non-form events.
-        return super.onEvent(event);
+    protected void submitForm() {
+        super.submitForm();
+        // TODO: submit form
     }
 }

@@ -30,17 +30,20 @@ presentation:
       width: 75%
       height: 50%
     shade_color:
-      hex: '#000000'
-      alpha: 0.75
+      default:
+        hex: '#000000'
+        alpha: 0.75
 view:
   type: container
   background_color:
-    hex: "#FFFFFF"
-    alpha: .25
+    default:
+      hex: "#FFFFFF"
+      alpha: .25
   border:
     stroke_color:
-      hex: "#FF0000"
-      alpha: 0.5
+      default:
+        hex: "#FF0000"
+        alpha: 0.5
     stroke_width: 2
     radius: 0
   items:
@@ -58,12 +61,14 @@ view:
     view:
       type: container
       background_color:
-        hex: "#FFFFFF"
-        alpha: 0.25
+        default:
+          hex: "#FFFFFF"
+          alpha: 0.25
       border:
         stroke_color:
-          hex: "#0000FF"
-          alpha: 0.5
+          default:
+            hex: "#0000FF"
+            alpha: 0.5
         stroke_width: 2
         radius: 0
       items:
@@ -81,10 +86,12 @@ view:
         view:
           type: label
           text: Lorem ipsum dolor sit amet
-          foreground_color:
-            hex: "#333333"
-            alpha: 1
-          alignment: center
-          font_size: 14
-          font_families:
-          - permanent_marker
+          text_appearance:
+            color:
+              default:
+                hex: "#333333"
+                alpha: 1
+            alignment: center
+            font_size: 14
+            font_families:
+            - permanent_marker

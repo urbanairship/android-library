@@ -34,6 +34,14 @@ public abstract class LayoutModel extends BaseModel {
                 return ScrollLayoutModel.fromJson(json);
             case PAGER_CONTROLLER:
                 return PagerController.fromJson(json);
+            case FORM_CONTROLLER:
+                return FormController.fromJson(json);
+            case NPS_FORM_CONTROLLER:
+                return NpsFormController.fromJson(json);
+            case CHECKBOX_CONTROLLER:
+                return CheckboxController.fromJson(json);
+            case RADIO_INPUT_CONTROLLER:
+                return RadioInputController.fromJson(json);
         }
 
         throw new JsonException("Error inflating layout! Unrecognized view type: " + typeString);

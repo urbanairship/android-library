@@ -14,8 +14,9 @@ presentation:
         horizontal: center
         vertical: center
       shade_color:
-        hex: "#000000"
-        alpha: 0.6
+        default:
+          hex: "#000000"
+          alpha: 0.6
   - orientation: landscape
     placement:
       size:
@@ -25,8 +26,9 @@ presentation:
         horizontal: center
         vertical: center
       shade_color:
-        hex: "#000000"
-        alpha: 0.6
+        default:
+          hex: "#000000"
+          alpha: 0.6
   default_placement:
     size:
       width: 100%
@@ -35,19 +37,22 @@ presentation:
       horizontal: center
       vertical: center
     shade_color:
-      hex: "#000000"
-      alpha: 1
+      default:
+        hex: "#000000"
+        alpha: 1
 view:
   type: container
   border:
     stroke_color:
-      hex: "#CED8F7"
-      alpha: 1
+      default:
+        hex: "#CED8F7"
+        alpha: 1
     stroke_width: 2
     radius: 15
   background_color:
-    hex: "#002082"
-    alpha: 1
+    default:
+      hex: "#002082"
+      alpha: 1
   items:
   - position:
       horizontal: center
@@ -63,10 +68,12 @@ view:
     view:
       type: label
       text: If the Placement Selectors for this modal are working correctly, the container should fill ~2/3 of the screen width in portrait orientation or ~1/3 of the width in landscape orientation.\n\nIf this modal is touching any edges of the screen, something ain't right and it was rendered with default placement!.
-      foreground_color:
-        hex: "#CED8F7"
-        alpha: 1
-      alignment: center
-      font_families:
-      - walter_turncoat
-      font_size: 14
+      text_appearance:
+        color:
+          default:
+            hex: "#CED8F7"
+            alpha: 1
+        alignment: center
+        font_families:
+        - walter_turncoat
+        font_size: 14

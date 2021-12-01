@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.property;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -23,7 +22,6 @@ public class Color {
     public static final int BLACK = android.graphics.Color.BLACK;
 
     private final int defaultColor;
-
     @NonNull
     private final List<ColorSelector> selectors;
 
@@ -48,12 +46,10 @@ public class Color {
     @Nullable
     public static Color fromJsonField(@Nullable JsonMap json, @NonNull String fieldName) throws JsonException {
         if (json == null || json.isEmpty()) {
-            Logger.verbose("Ignoring json Color from field! Map is null or empty.");
             return null;
         }
         JsonMap colorJson = json.opt(fieldName).optMap();
         if (colorJson.isEmpty()) {
-            Logger.verbose("Ignoring json Color from field! Map is null or empty.");
             return null;
         }
         return fromJson(colorJson);

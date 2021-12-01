@@ -2,12 +2,11 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
-import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -67,13 +66,5 @@ public class ImageButtonModel extends ButtonModel {
     @NonNull
     public Image getImage() {
         return image;
-    }
-
-    //
-    // View Actions
-    //
-
-    public void onClick() {
-        bubbleEvent(new Event.ButtonClick(this));
     }
 }

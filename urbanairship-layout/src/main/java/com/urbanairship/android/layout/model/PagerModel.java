@@ -2,8 +2,10 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
@@ -24,6 +26,9 @@ public class PagerModel extends LayoutModel implements Identifiable {
     private final List<BaseModel> items;
     @Nullable
     private final Boolean disableSwipe;
+
+    @Nullable
+    private Listener listener;
 
     public PagerModel(@NonNull String identifier, @NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
@@ -77,14 +82,64 @@ public class PagerModel extends LayoutModel implements Identifiable {
     }
 
     //
+    // View Listener
+    //
+
+    public interface Listener {
+        void onScrollToNext();
+        void onScrollToPrevious();
+    }
+
+    public void setListener(@Nullable Listener listener) {
+        this.listener = listener;
+    }
+
+    //
     // View Actions
     //
 
     public void onScrollTo(int position) {
-        bubbleEvent(new Event.PagerScroll(position));
+        bubbleEvent(new PagerEvent.Scroll(position));
     }
 
     public void onConfigured(int position) {
-        bubbleEvent(new Event.PagerInit(items.size(), position));
+        bubbleEvent(new PagerEvent.Init(this, position));
+    }
+
+    //
+    // Events
+    //
+
+    @Override
+    public boolean onEvent(@NonNull Event event) {
+        return onEvent(event, true);
+    }
+
+    private boolean onEvent(@NonNull Event event, boolean bubbleIfUnhandled) {
+        Logger.debug("onEvent: %s (bubble? %s)", event.getType(), bubbleIfUnhandled);
+
+        switch (event.getType()) {
+            case BUTTON_BEHAVIOR_PAGER_NEXT:
+                if (listener != null) {
+                    listener.onScrollToNext();
+                }
+                return true;
+            case BUTTON_BEHAVIOR_PAGER_PREVIOUS:
+                if (listener != null) {
+                    listener.onScrollToPrevious();
+                }
+                return true;
+        }
+
+        return bubbleIfUnhandled && super.onEvent(event);
+    }
+
+    @Override
+    public boolean trickleEvent(@NonNull Event event) {
+        if (onEvent(event, false)) {
+            return true;
+        }
+
+        return super.trickleEvent(event);
     }
 }

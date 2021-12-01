@@ -72,6 +72,8 @@ public class ToggleView extends FrameLayout implements BaseView<ToggleModel> {
                 configureCheckbox((CheckboxStyle) model.getToggleStyle());
                 break;
         }
+
+        model.onInit();
     }
 
     private void configureSwitch(SwitchStyle style) {
@@ -84,6 +86,8 @@ public class ToggleView extends FrameLayout implements BaseView<ToggleModel> {
         //      but we'll set an alpha or adjust the color to make it lighter.
         // 'style.offColor' defines the color of the track when unchecked. It also defines the color of the thumb,
         //      similar to above.
+
+        view.setOnCheckedChangeListener((v, isChecked) -> model.onCheckedChange(isChecked));
 
         addView(view, MATCH_PARENT, MATCH_PARENT);
     }
@@ -98,6 +102,8 @@ public class ToggleView extends FrameLayout implements BaseView<ToggleModel> {
         // 'style.checkMarkColor' is the color of the check mark.
         // 'style.checkedBorderColor' is the border color override when checked.
         // 'style.checkedBackgroundColor' is the background color override when checked.
+
+        view.setOnCheckedChangeListener((v, isChecked) -> model.onCheckedChange(isChecked));
 
         addView(view, MATCH_PARENT, MATCH_PARENT);
     }

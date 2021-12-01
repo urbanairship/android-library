@@ -6,9 +6,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ModalPresentation;
+import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.android.layout.view.ModalView;
@@ -22,9 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import radiography.Radiography;
-import radiography.ScanScopes;
-import radiography.ViewStateRenderers;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.urbanairship.android.layout.util.ResourceUtils.readJsonAsset;
@@ -57,14 +55,11 @@ public class ModalActivity extends AppCompatActivity {
             modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             setContentView(modalView);
 
-            // TODO: remove me! (for debugging)
-            modalView.getViewTreeObserver().addOnGlobalLayoutListener(() -> Logger.verbose(
-                Radiography.scan(ScanScopes.singleViewScope(modalView), ViewStateRenderers.DefaultsIncludingPii))
-            );
-
             if (presentation.isDismissOnTouchOutside()) {
                 modalView.setOnClickOutsideListener(v -> finish());
             }
+
+            view.addListener(eventListener);
 
         } catch (@NonNull JsonException | IOException e) {
             Log.e(getClass().getSimpleName(), "Failed to load modal!", e);
@@ -72,4 +67,21 @@ public class ModalActivity extends AppCompatActivity {
             finish();
         }
     }
+
+    private final EventListener eventListener = new EventListener() {
+        @Override
+        public boolean onEvent(@NonNull Event event) {
+            switch (event.getType()) {
+                case BUTTON_BEHAVIOR_CANCEL:
+                case BUTTON_BEHAVIOR_DISMISS:
+                    finish();
+                    return true;
+            }
+
+            throw new IllegalStateException("Unhandled event at top level! event type = " + event.getType().name());
+
+            // We're at the top level, so we should always consume events.
+            //return true;
+        }
+    };
 }

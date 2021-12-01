@@ -4,14 +4,23 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.event.CheckboxEvent;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Controller for checkbox inputs.
@@ -23,22 +32,22 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     private final String identifier;
     @NonNull
     private final BaseModel view;
-    @Nullable
-    private final Integer minSelection;
-    @Nullable
-    private final Integer maxSelection;
+    private final int minSelection;
+    private final int maxSelection;
     private final boolean isRequired;
     @Nullable
     private final String contentDescription;
 
     @NonNull
-    private final List<CheckboxModel> checkboxes;
+    private final List<CheckboxModel> checkboxes = new ArrayList<>();
+
+    private final Set<String> selectedValues = new HashSet<>();
 
     public CheckboxController(
         @NonNull String identifier,
         @NonNull BaseModel view,
-        @Nullable Integer minSelection,
-        @Nullable Integer maxSelection,
+        int minSelection,
+        int maxSelection,
         boolean isRequired,
         @Nullable String contentDescription
     ) {
@@ -52,15 +61,26 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         this.contentDescription = contentDescription;
 
         view.addListener(this);
+    }
 
-        checkboxes = Thomas.findAllByType(CheckboxModel.class, view);
+    @NonNull
+    public static CheckboxController fromJson(@NonNull JsonMap json) throws JsonException {
+        String identifier = Identifiable.identifierFromJson(json);
+        JsonMap viewJson = json.opt("view").optMap();
+        int minSelection = json.opt("min_selection").getInt(0);
+        int maxSelection = json.opt("max_selection").getInt(Integer.MAX_VALUE);
+        boolean isRequired = Validatable.requiredFromJson(json);
+        String contentDescription = Accessible.contentDescriptionFromJson(json);
+
+        BaseModel view = Thomas.model(viewJson);
+
+        return new CheckboxController(identifier, view, minSelection, maxSelection, isRequired, contentDescription);
     }
 
     @Override
     public List<BaseModel> getChildren() {
         return Collections.singletonList(view);
     }
-
 
     @NonNull
     @Override
@@ -94,18 +114,71 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         return maxSelection;
     }
 
-    @Nullable
-    public Boolean getRequired() {
-        return isRequired;
+    @Override
+    public boolean isValid() {
+        int count = selectedValues.size();
+        boolean isFilled = count>= minSelection && count <= maxSelection;
+        boolean isOptional = count == 0 && !isRequired;
+        return isFilled || isOptional;
+    }
+
+    @NonNull
+    @VisibleForTesting
+    public List<CheckboxModel> getCheckboxes() {
+        return checkboxes;
+    }
+
+    @NonNull
+    @VisibleForTesting
+    public Set<String> getSelectedValues() {
+        return selectedValues;
     }
 
     @Override
     public boolean onEvent(@NonNull Event event) {
         Logger.verbose("onEvent: %s", event.getType());
 
-        // TODO: switch on checkbox events and consume any that should be internal to the controller and its children.
+        switch (event.getType()) {
+            case VIEW_INIT:
+                return onViewInit((Event.ViewInit) event);
+            case CHECKBOX_INPUT_CHANGE:
+                return onCheckboxInputChange((CheckboxEvent.InputChange) event);
 
-        // Pass along any other events
-        return super.onEvent(event);
+            default:
+                // Pass along any other events
+                return super.onEvent(event);
+        }
+    }
+
+    private boolean onViewInit(Event.ViewInit event) {
+        if (event.getViewType() == ViewType.CHECKBOX) {
+            if (checkboxes.isEmpty()) {
+                bubbleEvent(new CheckboxEvent.ControllerInit(identifier, isValid()));
+            }
+            CheckboxModel model = (CheckboxModel) event.getModel();
+            checkboxes.add(model);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean onCheckboxInputChange(CheckboxEvent.InputChange event) {
+        if (event.isChecked() && selectedValues.size() + 1 > maxSelection) {
+            // Can't check any more boxes, so we'll ignore it and consume the event.
+            return true;
+        }
+
+        if (event.isChecked()) {
+            selectedValues.add(event.getValue());
+        } else {
+            selectedValues.remove(event.getValue());
+        }
+
+        trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()));
+
+        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.CheckboxController(selectedValues), isValid()));
+
+        return true;
     }
 }

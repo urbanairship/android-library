@@ -809,4 +809,3 @@ view:
             alignment: center
         click_behaviors: ["form_submit", "cancel"]
         enable_behaviors: ["form_validation"]
-

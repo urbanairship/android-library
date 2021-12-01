@@ -1,12 +1,15 @@
-/*
- Copyright Airship and Contributors
- */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.android.layout;
 
+import android.content.Context;
+
 import com.urbanairship.android.layout.property.ModalPlacement;
 import com.urbanairship.android.layout.property.ModalPlacementSelector;
+import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.property.PresentationType;
+import com.urbanairship.android.layout.property.WindowSize;
+import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -64,5 +67,30 @@ public class ModalPresentation extends BasePresentation {
 
     public boolean isDismissOnTouchOutside() {
         return dismissOnTouchOutside;
+    }
+
+    @NonNull
+    public ModalPlacement getResolvedPlacement(@NonNull Context context) {
+        if (placementSelectors == null || placementSelectors.isEmpty()) {
+            return defaultPlacement;
+        }
+
+        Orientation orientation = ResourceUtils.getOrientation(context);
+        WindowSize windowSize = ResourceUtils.getWindowSize(context);
+
+        // Try to find a matching placement selector.
+        for (ModalPlacementSelector selector : placementSelectors) {
+            if (selector.getWindowSize() != null && selector.getWindowSize() != windowSize) {
+                continue;
+            }
+            if (selector.getOrientation() != null && selector.getOrientation() != orientation) {
+                continue;
+            }
+
+            return selector.getPlacement();
+        }
+
+        // Otherwise, return the default placement.
+        return defaultPlacement;
     }
 }

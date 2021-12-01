@@ -2,6 +2,10 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
+import com.urbanairship.android.layout.event.ButtonEvent;
+import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
@@ -18,6 +22,8 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static com.urbanairship.android.layout.property.ButtonEnableBehaviorType.FORM_VALIDATION;
+
 public abstract class ButtonModel extends BaseModel implements Accessible, Identifiable {
     @NonNull
     private final String identifier;
@@ -29,6 +35,10 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     private final List<ButtonEnableBehaviorType> enableBehaviors;
     @Nullable
     private final String contentDescription;
+
+    @Nullable
+    private Listener viewListener = null;
+    private boolean isEnabled = true;
 
     protected ButtonModel(
         @NonNull ViewType type,
@@ -97,5 +107,59 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     @NonNull
     public List<ButtonEnableBehaviorType> getButtonEnableBehaviors() {
         return enableBehaviors;
+    }
+
+    public void setViewListener(@Nullable Listener viewListener) {
+        this.viewListener = viewListener;
+
+        if (viewListener != null) {
+            viewListener.setEnabled(isEnabled());
+        }
+    }
+
+    private boolean hasActions() {
+        return actions.size() > 0;
+    }
+
+    private boolean isEnabled() {
+        return !enableBehaviors.contains(FORM_VALIDATION) || isEnabled;
+    }
+
+    public void onClick() {
+        for (ButtonClickBehaviorType behavior : buttonClickBehaviors) {
+            bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
+        }
+
+        if (hasActions()) {
+            bubbleEvent(new ButtonEvent.Actions(this));
+        }
+    }
+
+    @Override
+    public boolean onEvent(@NonNull Event event) {
+        Logger.verbose("onEvent: %s", event.getType());
+        switch (event.getType()) {
+            case FORM_VALIDATION:
+               return handleFormSubmitUpdate((FormEvent.ValidationUpdate) event);
+
+            default:
+                return super.onEvent(event);
+        }
+    }
+
+    private boolean handleFormSubmitUpdate(FormEvent.ValidationUpdate update) {
+        if (enableBehaviors.contains(ButtonEnableBehaviorType.FORM_VALIDATION)) {
+            isEnabled = update.isValid();
+            if (viewListener != null) {
+                viewListener.setEnabled(update.isValid());
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    public interface Listener {
+        void setEnabled(boolean isEnabled);
     }
 }

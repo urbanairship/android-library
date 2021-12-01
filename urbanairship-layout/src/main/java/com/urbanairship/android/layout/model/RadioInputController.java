@@ -5,15 +5,20 @@ package com.urbanairship.android.layout.model;
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.RadioEvent;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Controller for radio inputs.
@@ -28,7 +33,10 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     private final String contentDescription;
 
     @NonNull
-    private final List<RadioInputModel> radioInputs;
+    private final List<RadioInputModel> radioInputs = new ArrayList<>();
+
+    @Nullable
+    private String selectedValue = null;
 
     public RadioInputController(
         @NonNull String identifier,
@@ -44,8 +52,6 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         this.contentDescription = contentDescription;
 
         view.addListener(this);
-
-        radioInputs = Thomas.findAllByType(RadioInputModel.class, view);
     }
 
     @NonNull
@@ -87,18 +93,60 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         return view;
     }
 
-    @Nullable
-    public Boolean getRequired() {
-        return isRequired;
+    public boolean isValid() {
+        return selectedValue != null || !isRequired;
     }
+
+
+    @NonNull
+    @VisibleForTesting
+    public List<RadioInputModel> getRadioInputs() {
+        return radioInputs;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    public String getSelectedValue() {
+        return selectedValue;
+    }
+
 
     @Override
     public boolean onEvent(@NonNull Event event) {
         Logger.verbose("onEvent: %s", event.getType());
 
-        // TODO: switch on radio events and consume any that should be internal to the controller and its children.
+        switch (event.getType()) {
+            case VIEW_INIT:
+                return onViewInit((Event.ViewInit) event);
+            case RADIO_INPUT_CHANGE:
+                return onInputChange((RadioEvent.InputChange) event);
 
-        // Pass along any other events
-        return super.onEvent(event);
+            default:
+                // Pass along any other events
+                return super.onEvent(event);
+        }
+    }
+
+    private boolean onViewInit(Event.ViewInit event) {
+        if (event.getViewType() == ViewType.RADIO_INPUT) {
+            if (radioInputs.isEmpty()) {
+                bubbleEvent(new RadioEvent.ControllerInit(identifier, isValid()));
+            }
+            RadioInputModel model = (RadioInputModel) event.getModel();
+            radioInputs.add(model);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean onInputChange(RadioEvent.InputChange event) {
+        if (event.isChecked() && !event.getValue().equals(selectedValue)) {
+            selectedValue = event.getValue();
+            trickleEvent(new RadioEvent.ViewUpdate(event.getValue(), event.isChecked()));
+            bubbleEvent(new FormEvent.DataChange(identifier, new FormData.RadioInputController(event.getValue()), isValid()));
+        }
+
+        return true;
     }
 }

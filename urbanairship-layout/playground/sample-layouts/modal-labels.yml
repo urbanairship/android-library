@@ -12,6 +12,7 @@ presentation:
       default:
         hex: '#000000'
         alpha: 0.75
+  dismiss_on_touch_outside: true
 view:
   type: container
   background_color:

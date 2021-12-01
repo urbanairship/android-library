@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
@@ -66,13 +65,5 @@ public class LabelButtonModel extends ButtonModel {
     @NonNull
     public LabelModel getLabel() {
         return label;
-    }
-
-    //
-    // View Actions
-    //
-
-    public void onClick() {
-        bubbleEvent(new Event.ButtonClick(this));
     }
 }

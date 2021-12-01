@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 
 import com.google.android.material.button.MaterialButton;
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
@@ -47,9 +48,17 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
         configureButton();
     }
 
-    public void configureButton() {
+    private void configureButton() {
         LayoutUtils.applyButtonModel(this, model);
+        model.setViewListener(modelListener);
 
         setOnClickListener(v -> model.onClick());
     }
+
+    private final ButtonModel.Listener modelListener = new ButtonModel.Listener() {
+        @Override
+        public void setEnabled(boolean isEnabled) {
+            LabelButtonView.this.setEnabled(isEnabled);
+        }
+    };
 }

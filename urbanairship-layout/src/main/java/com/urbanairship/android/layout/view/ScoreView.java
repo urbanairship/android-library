@@ -56,5 +56,9 @@ public class ScoreView extends LinearLayout implements BaseView<ScoreModel> {
         LayoutUtils.applyBorderAndBackground(getRootView(),model);
 
         // TODO: actually draw the score view
+
+        // TODO: wire up score clicks to call: model.onScoreChange(score);
+
+        model.onInit();
     }
 }

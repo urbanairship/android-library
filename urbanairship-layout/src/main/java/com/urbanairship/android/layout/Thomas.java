@@ -5,7 +5,6 @@ package com.urbanairship.android.layout;
 import android.content.Context;
 import android.view.View;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.CheckboxController;
 import com.urbanairship.android.layout.model.CheckboxModel;
@@ -50,11 +49,7 @@ import com.urbanairship.android.layout.view.WebViewView;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -66,7 +61,6 @@ public final class Thomas {
     @NonNull
     public static BaseModel model(@NonNull JsonMap json) throws JsonException {
         String typeString = json.opt("type").optString();
-        Logger.verbose("model => %s", typeString);
         switch (ViewType.from(typeString)) {
             case CONTAINER:
             case LINEAR_LAYOUT:
@@ -210,55 +204,6 @@ public final class Thomas {
                 break;
         }
         throw new IllegalArgumentException("Error creating empty view stub! Unrecognized view type: " + viewType);
-    }
-
-    @Nullable
-    public static <T extends BaseModel> T findByType(Class<T> type, BaseModel model) {
-        if (model.getClass().equals(type)) {
-            //noinspection unchecked
-            return (T) model;
-        }
-
-        if (model instanceof LayoutModel) {
-            for (BaseModel child : ((LayoutModel) model).getChildren()) {
-                if (child.getClass().equals(type)) {
-                    //noinspection unchecked
-                    return (T) child;
-                }
-                if (child instanceof LayoutModel) {
-                    T found = findByType(type, child);
-                    if (found != null) {
-                        return found;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    @NonNull
-    public static <T extends BaseModel> List<T> findAllByType(Class<T> type, BaseModel model) {
-        ArrayList<T> found = new ArrayList<>();
-        findAllByTypeTraversal(type, model, found);
-        return found;
-    }
-
-    private static <T extends BaseModel> void findAllByTypeTraversal(Class<T> type, BaseModel model, List<T> found) {
-        if (model.getClass().equals(type)) {
-            //noinspection unchecked,
-            found.add((T) model);
-        }
-        if (model instanceof LayoutModel) {
-            for (BaseModel child : ((LayoutModel) model).getChildren()) {
-                if (child instanceof LayoutModel) {
-                    findAllByTypeTraversal(type, child, found);
-                } else if (child.getClass().equals(type)) {
-                    //noinspection unchecked
-                    found.add((T) child);
-                }
-            }
-        }
     }
 
     public static class LayoutViewHolder<V extends View & BaseView<M>, M extends BaseModel> extends RecyclerView.ViewHolder {
