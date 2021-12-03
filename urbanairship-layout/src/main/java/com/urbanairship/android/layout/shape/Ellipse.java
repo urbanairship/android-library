@@ -19,14 +19,8 @@ import androidx.annotation.Nullable;
  * Circle shape.
  */
 public class Ellipse extends Shape {
-    private final float aspectRatio;
-    private final float scale;
-
     public Ellipse(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
-        super(ShapeType.ELLIPSE, border, color);
-
-        this.aspectRatio = aspectRatio;
-        this.scale = scale;
+        super(ShapeType.ELLIPSE, aspectRatio, scale, border, color);
     }
 
     @NonNull
@@ -38,16 +32,6 @@ public class Ellipse extends Shape {
         Color color = Color.fromJsonField(json, "color");
 
         return new Ellipse(aspectRatio, scale, border, color);
-    }
-
-    @Override
-    public float getAspectRatio() {
-        return aspectRatio;
-    }
-
-    @Override
-    public float getScale() {
-        return scale;
     }
 
     @NonNull

@@ -22,14 +22,8 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
  * Rectangle shape.
  */
 public class Rectangle extends Shape {
-    private final float aspectRatio;
-    private final float scale;
-
     public Rectangle(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
-        super(ShapeType.RECTANGLE, border, color);
-
-        this.aspectRatio = aspectRatio;
-        this.scale = scale;
+        super(ShapeType.RECTANGLE, aspectRatio, scale, border, color);
     }
 
     @NonNull
@@ -41,16 +35,6 @@ public class Rectangle extends Shape {
         Color color = Color.fromJsonField(json, "color");
 
         return new Rectangle(aspectRatio, scale, border, color);
-    }
-
-    @Override
-    public float getAspectRatio() {
-        return aspectRatio;
-    }
-
-    @Override
-    public float getScale() {
-        return scale;
     }
 
     @NonNull

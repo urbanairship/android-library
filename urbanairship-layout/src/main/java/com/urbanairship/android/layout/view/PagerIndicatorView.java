@@ -12,7 +12,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.util.ResourceUtils;
-import com.urbanairship.android.layout.widget.ShapeImageButton;
+import com.urbanairship.android.layout.widget.ShapeView;
 
 import androidx.annotation.NonNull;
 
@@ -90,7 +90,7 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
         for (int i = 0; i < count; i++) {
             // TODO: pass icon through and render it too
 
-            ImageView view = new ShapeImageButton(getContext(), checked.getShapes(), unchecked.getShapes());
+            ImageView view = new ShapeView(getContext(), checked.getShapes(), unchecked.getShapes());
 
             LayoutParams lp = new LayoutParams(WRAP_CONTENT, MATCH_PARENT);
             lp.setMarginStart(i == 0 ? spacing : halfSpacing);

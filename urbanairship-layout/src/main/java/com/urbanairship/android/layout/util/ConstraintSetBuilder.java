@@ -104,6 +104,38 @@ public final class ConstraintSetBuilder {
     }
 
     @NonNull
+    public ConstraintSetBuilder createHorizontalChainInParent(int[] viewIds, int verticalSpacing, int horizontalSpacing) {
+        for (int i = 0; i < viewIds.length; i++) {
+            int viewId = viewIds[i];
+            int halfHorizontalSpacing = horizontalSpacing / 2;
+
+            addToVerticalChain(viewId, PARENT_ID, PARENT_ID, verticalSpacing, verticalSpacing);
+
+            if (i == 0) {
+                addToHorizontalChain(viewId, PARENT_ID, viewIds[i + 1], 0, halfHorizontalSpacing);
+            } else if (i == viewIds.length - 1) {
+                addToHorizontalChain(viewId, viewIds[i - 1], PARENT_ID, halfHorizontalSpacing, 0);
+            } else {
+                addToHorizontalChain(viewId, viewIds[i - 1], viewIds[i + 1], halfHorizontalSpacing, halfHorizontalSpacing);
+            }
+        }
+
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder squareAspectRatio(int viewId) {
+        constraints.setDimensionRatio(viewId, "1");
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder minHeight(int viewId, int minHeight) {
+        constraints.constrainMinHeight(viewId, (int) dpToPx(context, minHeight));
+        return this;
+    }
+
+    @NonNull
     public ConstraintSetBuilder size(@Nullable Size size, @IdRes int viewId) {
         return size(size, viewId, ConstraintSet.WRAP_CONTENT);
     }

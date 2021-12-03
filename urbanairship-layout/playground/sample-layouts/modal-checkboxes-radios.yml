@@ -6,7 +6,7 @@ presentation:
   type: modal
   default_placement:
     size:
-      width: 80%
+      width: 100%
       height: auto
     shade_color:
       default:
@@ -429,7 +429,94 @@ view:
                                   type: hex
                                   hex: "#CCCCCC"
                                   alpha: 1
+        - size:
+            width: 100%
+            height: 48
+          margin:
+            start: 16
+            end: 16
+          view:
+            type: label
+            text: Choose a score!
+            text_appearance:
+              color:
+                default:
+                  hex: "#000000"
+                  alpha: 1
+              alignment: start
+              font_size: 18
 
+        - size:
+            width: 100%
+            height: auto
+          margin:
+            start: 16
+            end: 16
+          view:
+            type: score
+            identifier: "nps_rating"
+            required: true
+            background_color:
+              default:
+                hex: "#ff0000"
+                alpha: 1
+            style:
+              type: nps
+              spacing: 8
+              bindings:
+                selected:
+                  shapes:
+                  - type: rectangle
+                    aspect_ratio: 1
+                    scale: 1
+                    color:
+                      default:
+                        hex: "#000000"
+                        alpha: 1
+                  - type: ellipse
+                    aspect_ratio: 1.5
+                    scale: 1
+                    border:
+                      stroke_width: 2
+                      stroke_color:
+                        default:
+                          hex: "#999999"
+                          alpha: 1
+                    color:
+                      default:
+                        hex: "#FFFFFF"
+                        alpha: 0
+                  text_appearance:
+                    font_size: 14
+                    color:
+                      default:
+                        hex: "#FFFFFF"
+                        alpha: 1
+                    font_families:
+                    - permanent_marker
+                unselected:
+                  shapes:
+                  - type: ellipse
+                    aspect_ratio: 1.5
+                    scale: 1
+                    border:
+                      stroke_width: 2
+                      stroke_color:
+                        default:
+                          hex: "#999999"
+                          alpha: 1
+                    color:
+                      default:
+                        hex: "#FFFFFF"
+                        alpha: 1
+                  text_appearance:
+                    font_size: 14
+                    styles:
+                    - bold
+                    color:
+                      default:
+                        hex: "#333333"
+                        alpha: 1
         # BOTTOM-PINNED BUTTON
         - size:
             width: 100%

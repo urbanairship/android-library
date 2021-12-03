@@ -123,13 +123,13 @@ view:
             alpha: 0.7
         border:
           radius: 8
-        spacing: 8
+        spacing: 4
         bindings:
           selected:
             shapes:
             - type: rectangle
-              aspect_ratio: 0.5
-              scale: 1
+              aspect_ratio: 2.25
+              scale: 0.9
               border:
                 radius: 3
                 stroke_width: 1
@@ -144,8 +144,8 @@ view:
           unselected:
             shapes:
             - type: rectangle
-              aspect_ratio: 0.5
-              scale: 1
+              aspect_ratio: 2.25
+              scale: .9
               border:
                 radius: 3
                 stroke_width: 1

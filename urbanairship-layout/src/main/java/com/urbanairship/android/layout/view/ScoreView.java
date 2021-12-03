@@ -1,24 +1,34 @@
-/*
- Copyright Airship and Contributors
- */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.widget.LinearLayout;
+import android.view.View;
+import android.widget.Checkable;
 
 import com.urbanairship.android.layout.model.ScoreModel;
+import com.urbanairship.android.layout.property.ScoreStyle;
+import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.ShapeButton;
+
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 /**
  * Form input that presents a set of numeric options representing a score.
  */
-public class ScoreView extends LinearLayout implements BaseView<ScoreModel> {
+public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> {
+    private static final int NPS_SCORE_ITEMS = 10;
+
     private ScoreModel model;
+
+    @Nullable
+    private Integer selectedScore = null;
 
     public ScoreView(Context context) {
         super(context);
@@ -55,10 +65,61 @@ public class ScoreView extends LinearLayout implements BaseView<ScoreModel> {
     private void configure() {
         LayoutUtils.applyBorderAndBackground(getRootView(),model);
 
-        // TODO: actually draw the score view
+        ConstraintSetBuilder constraints = ConstraintSetBuilder.newBuilder(getContext());
 
-        // TODO: wire up score clicks to call: model.onScoreChange(score);
+        ScoreStyle style = model.getStyle();
+        switch (style.getType()) {
+            case NPS:
+                configureNpsScore(style, constraints);
+                break;
+        }
 
+        constraints.build().applyTo(this);
         model.onInit();
+    }
+
+    private void configureNpsScore(@NonNull ScoreStyle style, @NonNull ConstraintSetBuilder constraints) {
+        ScoreStyle.Bindings bindings = style.getBindings();
+
+        int[] viewIds = new int[NPS_SCORE_ITEMS + 1];
+        for (int i = 0; i <= NPS_SCORE_ITEMS; i++) {
+            int score = i;
+            ShapeButton button = new ShapeButton(
+                getContext(),
+                String.valueOf(score),
+                bindings.getSelected().getShapes(),
+                bindings.getUnselected().getShapes(),
+                bindings.getSelected().getTextAppearance(),
+                bindings.getUnselected().getTextAppearance()
+            );
+
+            int viewId = button.getId();
+            viewIds[i] = viewId;
+
+            button.setOnClickListener(v -> onScoreClick(v, score));
+
+            constraints.squareAspectRatio(viewId);
+            constraints.minHeight(viewId, 28);
+            addView(button, new LayoutParams(LayoutParams.MATCH_CONSTRAINT, LayoutParams.MATCH_CONSTRAINT));
+        }
+
+        constraints.createHorizontalChainInParent(viewIds, 0, style.getSpacing());
+    }
+
+    private void onScoreClick(@NonNull View view, int score) {
+        if (Objects.equals(score, selectedScore)) {
+            return;
+        }
+        selectedScore = score;
+
+        // Uncheck other items in the view
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            if (child instanceof Checkable) {
+                ((Checkable) child).setChecked(view.getId() == child.getId());
+            }
+        }
+        // Notify our model
+        model.onScoreChange(score);
     }
 }

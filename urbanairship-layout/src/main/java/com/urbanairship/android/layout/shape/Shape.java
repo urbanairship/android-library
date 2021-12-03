@@ -5,13 +5,19 @@ package com.urbanairship.android.layout.shape;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.util.StateSet;
 
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.widget.ShapeDrawableWrapper;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,15 +28,22 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
  * Base representation of a Shape.
  */
 public abstract class Shape {
+    private static final int[] CHECKED_STATE_SET = { android.R.attr.state_checked };
+    private static final int[] EMPTY_STATE_SET = StateSet.NOTHING;
+
     @NonNull
     private final ShapeType type;
     @Nullable
     private final Color color;
     @Nullable
     private final Border border;
+    private final float aspectRatio;
+    private final float scale;
 
-    public Shape(@NonNull ShapeType type, @Nullable Border border, @Nullable Color color) {
+    public Shape(@NonNull ShapeType type, float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
         this.type = type;
+        this.aspectRatio = aspectRatio;
+        this.scale = scale;
         this.border = border;
         this.color = color;
     }
@@ -50,6 +63,31 @@ public abstract class Shape {
     }
 
     @NonNull
+    public static StateListDrawable buildStateListDrawable(
+        @NonNull Context context,
+        @NonNull List<Shape> checkedShapes,
+        @NonNull List<Shape> uncheckedShapes
+    ) {
+        Drawable[] checkedLayers = new Drawable[checkedShapes.size()];
+        for (int i = 0; i < checkedShapes.size(); i++) {
+            checkedLayers[i] = checkedShapes.get(i).getDrawable(context);
+        }
+        LayerDrawable checkedDrawable = new LayerDrawable(checkedLayers);
+
+        Drawable[] uncheckedLayers = new Drawable[uncheckedShapes.size()];
+        for (int i = 0; i < uncheckedShapes.size(); i++) {
+            uncheckedLayers[i] = uncheckedShapes.get(i).getDrawable(context);
+        }
+        LayerDrawable uncheckedDrawable = new LayerDrawable(uncheckedLayers);
+
+        StateListDrawable drawable = new StateListDrawable();
+        drawable.addState(CHECKED_STATE_SET, checkedDrawable);
+        drawable.addState(EMPTY_STATE_SET, uncheckedDrawable);
+
+        return drawable;
+    }
+
+    @NonNull
     public ShapeType getType() {
         return type;
     }
@@ -64,9 +102,13 @@ public abstract class Shape {
         return color;
     }
 
-    public abstract float getAspectRatio();
+    public float getAspectRatio() {
+        return aspectRatio;
+    }
 
-    public abstract float getScale();
+    public float getScale() {
+        return scale;
+    }
 
     @NonNull
     public Drawable getDrawable(@NonNull Context context) {
@@ -86,9 +128,7 @@ public abstract class Shape {
             drawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor().resolve(context)));
         }
 
-        drawable.setScale(getScale());
-
-        return drawable;
+        return new ShapeDrawableWrapper(drawable, aspectRatio, scale);
     }
 
     @NonNull

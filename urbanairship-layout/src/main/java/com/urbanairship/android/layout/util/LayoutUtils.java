@@ -40,7 +40,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.core.graphics.ColorUtils;
-import androidx.core.text.HtmlCompat;
 
 public final class LayoutUtils {
     private static final float PRESSED_ALPHA_PERCENT = 0.2f;
@@ -119,15 +118,32 @@ public final class LayoutUtils {
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
+        applyTextAppearance(textView, label.getTextAppearance());
+
+        textView.setText(label.getText());
+    }
+
+    public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
+        applyBorderAndBackground(editText, textInput);
+        applyTextAppearance(editText, textInput.getTextAppearance());
+
+        editText.setHint(textInput.getHintText());
+        editText.setInputType(textInput.getInputType().getTypeMask());
+
+        if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
+            editText.setContentDescription(textInput.getContentDescription());
+        }
+    }
+
+
+    public static void applyTextAppearance(@NonNull TextView textView, @NonNull TextAppearance textAppearance) {
         Context context = textView.getContext();
-        TextAppearance textAppearance = label.getTextAppearance();
 
         textView.setTextSize(textAppearance.getFontSize());
         textView.setTextColor(textAppearance.getColor().resolve(context));
-        textView.setText(HtmlCompat.fromHtml(label.getText(), HtmlCompat.FROM_HTML_MODE_LEGACY));
 
-        int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
-        int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
+        int typefaceFlags = Typeface.NORMAL;
+        int paintFlags = Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
         for (TextStyle style : textAppearance.getTextStyles()) {
             switch (style) {
@@ -156,53 +172,9 @@ public final class LayoutUtils {
         }
 
         Typeface typeface = getTypeFace(textView.getContext(), textAppearance.getFontFamilies());
-        if (typeface == null) {
-            typeface = textView.getTypeface();
-        }
 
         textView.setTypeface(typeface, typefaceFlags);
         textView.setPaintFlags(paintFlags);
-    }
-
-    public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
-        LayoutUtils.applyBorderAndBackground(editText, textInput);
-
-        Context context = editText.getContext();
-        TextAppearance textAppearance = textInput.getTextAppearance();
-
-        editText.setTextSize(textAppearance.getFontSize());
-        editText.setTextColor(textAppearance.getColor().resolve(context));
-        editText.setHint(textInput.getHintText());
-        editText.setInputType(textInput.getInputType().getTypeMask());
-
-        int typefaceFlags = editText.getTypeface() == null ? Typeface.NORMAL : editText.getTypeface().getStyle();
-        int paintFlags = editText.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
-
-        for (TextStyle style : textAppearance.getTextStyles()) {
-            switch (style) {
-                case BOLD:
-                    typefaceFlags |= Typeface.BOLD;
-                    break;
-                case ITALIC:
-                    typefaceFlags |= Typeface.ITALIC;
-                    break;
-                case UNDERLINE:
-                    paintFlags |= Paint.UNDERLINE_TEXT_FLAG;
-                    break;
-            }
-        }
-
-        Typeface typeface = getTypeFace(editText.getContext(), textAppearance.getFontFamilies());
-        if (typeface == null) {
-            typeface = editText.getTypeface();
-        }
-
-        if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
-            editText.setContentDescription(textInput.getContentDescription());
-        }
-
-        editText.setTypeface(typeface, typefaceFlags);
-        editText.setPaintFlags(paintFlags);
     }
 
     /**
