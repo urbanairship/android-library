@@ -44,7 +44,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         private val preferenceCenterId: String
     ) : ViewModelProvider.Factory {
 
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(PreferenceCenterViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return PreferenceCenterViewModel(preferenceCenterId) as T

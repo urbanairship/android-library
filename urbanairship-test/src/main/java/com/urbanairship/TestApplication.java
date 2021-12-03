@@ -95,6 +95,14 @@ public class TestApplication extends Application implements TestLifecycleApplica
         Robolectric.buildContentProvider(UrbanAirshipProvider.class).create(info);
     }
 
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        if (UAirship.sharedAirship != null) {
+            UAirship.sharedAirship.preferenceDataStore.tearDown();
+        }
+    }
+
     public void setPlatform(int platform) {
         testRuntimeConfig.setPlatform(PlatformUtils.parsePlatform(platform));
     }

@@ -44,6 +44,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPackageManager;
@@ -75,13 +76,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link InAppAutomation}.
  */
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class InAppAutomationTest {
 
     private static List<TagGroupsMutation> EMPTY_TAG_OVERRIDES = Collections.emptyList();
@@ -428,7 +430,7 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
-        verifyZeroInteractions(callback);
+        verifyNoInteractions(callback);
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
@@ -457,7 +459,7 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
-        verifyZeroInteractions(callback);
+        verifyNoInteractions(callback);
         runLooperTasks();
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
@@ -496,7 +498,7 @@ public class InAppAutomationTest {
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
-        verifyZeroInteractions(callback);
+        verifyNoInteractions(callback);
 
         runLooperTasks();
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -513,7 +515,7 @@ public class InAppAutomationTest {
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
-        verifyZeroInteractions(callback);
+        verifyNoInteractions(callback);
     }
 
     @Test

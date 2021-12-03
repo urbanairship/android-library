@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @RunWith(AndroidJUnit4.class)
 public class AlarmOperationSchedulerTest {
@@ -71,7 +71,7 @@ public class AlarmOperationSchedulerTest {
         scheduler.onAlarmFired();
 
         verify(operation2).run();
-        verifyZeroInteractions(operation1, operation3);
+        verifyNoInteractions(operation1, operation3);
         verify(mockDelegate).onSchedule(eq(1000l), any(PendingIntent.class));
 
         testClock.elapsedRealtime = 100000;

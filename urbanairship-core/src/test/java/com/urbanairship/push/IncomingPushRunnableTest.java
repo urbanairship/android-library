@@ -45,11 +45,10 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class IncomingPushRunnableTest extends BaseTestCase {
@@ -199,7 +198,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verifyZeroInteractions(notificationManager);
+        verifyNoInteractions(notificationManager);
     }
 
     /**
@@ -221,7 +220,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verifyZeroInteractions(notificationManager);
+        verifyNoInteractions(notificationManager);
     }
 
     /**
@@ -567,7 +566,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
-        verifyZeroInteractions(notificationProvider);
+        verifyNoInteractions(notificationProvider);
         verify(pushManager).onPushReceived(message, false);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
     }
@@ -589,7 +588,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verifyZeroInteractions(mockChannelRegistry);
+        verifyNoInteractions(mockChannelRegistry);
         verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
 

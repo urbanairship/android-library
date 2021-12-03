@@ -26,11 +26,11 @@ import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class EnableFeatureActionTest extends BaseTestCase {
@@ -150,7 +150,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, EnableFeatureAction.FEATURE_LOCATION);
         ActionResult result = action.perform(args);
         assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
-        verifyZeroInteractions(mockLocation);
+        verifyNoInteractions(mockLocation);
         assertFalse(result.getValue().getBoolean(true));
     }
 
@@ -186,7 +186,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
 
         assertEquals(PrivacyManager.FEATURE_LOCATION, privacyManager.getEnabledFeatures());
 
-        verifyZeroInteractions(mockLocation);
+        verifyNoInteractions(mockLocation);
         assertFalse(result.getValue().getBoolean(true));
     }
 

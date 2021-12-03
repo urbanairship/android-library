@@ -23,6 +23,7 @@ import com.urbanairship.util.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.LooperMode;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.when;
  * {@link InAppRemoteDataObserver} tests.
  */
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class InAppRemoteDataObserverTest {
 
     private InAppRemoteDataObserver observer;

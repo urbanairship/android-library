@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.robolectric.annotation.LooperMode;
 
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -32,13 +33,14 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link LegacyInAppMessageManager}
  */
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class LegacyInAppMessageManagerTest {
 
     LegacyInAppMessageManager legacyInAppMessageManager;
@@ -201,7 +203,7 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppAutomation);
+        verifyNoInteractions(inAppAutomation);
     }
 
     @Test
@@ -218,6 +220,6 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(pushMessage, true);
 
         // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppAutomation);
+        verifyNoInteractions(inAppAutomation);
     }
 }

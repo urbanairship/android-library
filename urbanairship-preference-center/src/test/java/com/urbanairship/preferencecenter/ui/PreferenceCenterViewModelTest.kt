@@ -31,12 +31,14 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.robolectric.annotation.LooperMode
 
 @OptIn(
     ExperimentalCoroutinesApi::class,
     ExperimentalTime::class
 )
 @RunWith(AndroidJUnit4::class)
+@LooperMode(LooperMode.Mode.LEGACY)
 class PreferenceCenterViewModelTest {
     companion object {
         private const val PREF_CENTER_ID = "pref-center-id"

@@ -30,7 +30,7 @@ import static junit.framework.TestCase.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
@@ -108,7 +108,7 @@ public class AccengageTest {
         // Test migrate
         accengage.init();
 
-        verifyZeroInteractions(mockChannel);
+        verifyNoInteractions(mockChannel);
     }
 
     /**

@@ -17,7 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -84,7 +84,7 @@ public class AssetManagerTest {
             }
         });
 
-        verifyZeroInteractions(mockAssetsDelegate);
+        verifyNoInteractions(mockAssetsDelegate);
     }
 
     /**
@@ -118,7 +118,7 @@ public class AssetManagerTest {
     public void testPersistAfterDisplay() {
         when(mockCachePolicyDelegate.shouldPersistCacheAfterDisplay("some-id", MESSAGE)).thenReturn(true);
         assetManager.onDisplayFinished("some-id", MESSAGE);
-        verifyZeroInteractions(mockAssetsDelegate);
+        verifyNoInteractions(mockAssetsDelegate);
         verify(mockCache).releaseAssets("some-id", false);
     }
 

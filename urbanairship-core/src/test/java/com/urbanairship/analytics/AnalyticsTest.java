@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class AnalyticsTest extends BaseTestCase {
@@ -180,7 +180,7 @@ public class AnalyticsTest extends BaseTestCase {
         runtimeConfig.setConfigOptions(options);
 
         analytics.addEvent(new AppForegroundEvent(100));
-        verifyZeroInteractions(mockEventManager);
+        verifyNoInteractions(mockEventManager);
     }
 
     /**
@@ -199,7 +199,7 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddNullEvent() {
         analytics.addEvent(null);
-        verifyZeroInteractions(mockEventManager);
+        verifyNoInteractions(mockEventManager);
     }
 
     /**
@@ -218,7 +218,7 @@ public class AnalyticsTest extends BaseTestCase {
         when(event.isValid()).thenReturn(false);
 
         analytics.addEvent(event);
-        verifyZeroInteractions(mockJobDispatcher);
+        verifyNoInteractions(mockJobDispatcher);
     }
 
     /**
@@ -322,7 +322,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.trackScreen("test_screen_1");
 
         // Verify no jobs were created for the event
-        verifyZeroInteractions(mockJobDispatcher);
+        verifyNoInteractions(mockJobDispatcher);
     }
 
     @Test

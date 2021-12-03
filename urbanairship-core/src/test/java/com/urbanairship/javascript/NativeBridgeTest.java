@@ -33,14 +33,13 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class NativeBridgeTest extends BaseTestCase {
@@ -100,7 +99,7 @@ public class NativeBridgeTest extends BaseTestCase {
         verify(runRequestExtender).extend(actionRunRequest);
         verify(runRequestExtender).extend(anotherActionRunRequest);
 
-        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
+        verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -130,7 +129,7 @@ public class NativeBridgeTest extends BaseTestCase {
         verify(runRequestExtender).extend(removeTagRunRequest);
         verify(runRequestExtender).extend(addTagRunRequest);
 
-        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
+        verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -207,7 +206,7 @@ public class NativeBridgeTest extends BaseTestCase {
         verify(runRequestExtender).extend(actionRunRequest);
         verify(runRequestExtender).extend(anotherActionRunRequest);
 
-        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
+        verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -239,7 +238,7 @@ public class NativeBridgeTest extends BaseTestCase {
 
         verify(runRequestExtender).extend(actionRunRequest);
 
-        verifyZeroInteractions(javaScriptExecutor, commandDelegate);
+        verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
 
     /**
@@ -264,7 +263,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(addTagRunRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(addTagRunRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-basic-actions?addTag=what";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -306,7 +305,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -335,7 +334,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -363,7 +362,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -392,7 +391,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -429,7 +428,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 callback.onFinish(arguments, result);
                 return null;
             }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));

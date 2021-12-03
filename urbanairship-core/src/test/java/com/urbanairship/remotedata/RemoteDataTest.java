@@ -4,7 +4,6 @@ package com.urbanairship.remotedata;
 
 import android.net.Uri;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
@@ -48,6 +47,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;

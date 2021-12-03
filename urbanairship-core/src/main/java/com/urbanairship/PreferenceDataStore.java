@@ -65,7 +65,9 @@ public final class PreferenceDataStore {
     public static PreferenceDataStore loadDataStore(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         PreferenceDataDatabase db = PreferenceDataDatabase.createDatabase(context, configOptions);
         PreferenceDataStore dataStore = new PreferenceDataStore(db);
-        dataStore.init(context);
+        if (db.exists(context)) {
+            dataStore.loadPreferences();
+        };
         return dataStore;
     }
 
@@ -74,7 +76,6 @@ public final class PreferenceDataStore {
     public static PreferenceDataStore inMemoryStore(@NonNull Context context) {
         PreferenceDataDatabase db = PreferenceDataDatabase.createInMemoryDatabase(context);
         PreferenceDataStore dataStore = new PreferenceDataStore(db);
-        dataStore.init(context);
         return dataStore;
     }
 
@@ -103,15 +104,6 @@ public final class PreferenceDataStore {
     public void removeListener(@NonNull PreferenceChangeListener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
-        }
-    }
-
-    /**
-     * Initializes the preference data store.
-     */
-    private void init(@NonNull Context context) {
-        if (db.exists(context)) {
-            loadPreferences();
         }
     }
 

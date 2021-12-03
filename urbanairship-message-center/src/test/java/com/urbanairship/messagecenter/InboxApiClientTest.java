@@ -24,11 +24,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.when;

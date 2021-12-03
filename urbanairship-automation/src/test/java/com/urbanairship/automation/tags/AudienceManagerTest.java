@@ -41,7 +41,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -264,7 +264,7 @@ public class AudienceManagerTest {
         assertEquals(1, result.tagGroups.get("device").size());
         assertTrue(result.tagGroups.get("device").contains("local tag"));
 
-        verifyZeroInteractions(mockClient);
+        verifyNoInteractions(mockClient);
     }
 
     /**
@@ -278,7 +278,7 @@ public class AudienceManagerTest {
         assertTrue(result.success);
         assertTrue(result.tagGroups.isEmpty());
 
-        verifyZeroInteractions(mockClient);
+        verifyNoInteractions(mockClient);
     }
 
     /**
@@ -291,7 +291,7 @@ public class AudienceManagerTest {
         TagGroupResult result = manager.getTags(requestTags);
         assertFalse(result.success);
 
-        verifyZeroInteractions(mockClient);
+        verifyNoInteractions(mockClient);
     }
 
     /**
@@ -424,7 +424,7 @@ public class AudienceManagerTest {
         TagGroupResult result = manager.getTags(requestTags);
         assertFalse(result.success);
 
-        verifyZeroInteractions(mockClient);
+        verifyNoInteractions(mockClient);
     }
 
     private Map<String, Set<String>> getExpectedClientRequestTags() {

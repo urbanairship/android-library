@@ -35,6 +35,7 @@ import static org.robolectric.Shadows.shadowOf;
 import static org.robolectric.annotation.LooperMode.Mode.PAUSED;
 
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class AdapterWrapperTest {
 
     private DisplayCoordinator mockCoordinator;

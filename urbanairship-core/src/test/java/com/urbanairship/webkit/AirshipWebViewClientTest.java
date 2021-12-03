@@ -28,13 +28,13 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static junit.framework.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class AirshipWebViewClientTest extends BaseTestCase {
@@ -74,7 +74,7 @@ public class AirshipWebViewClientTest extends BaseTestCase {
 
         webViewUrl = null;
         assertFalse(client.shouldOverrideUrlLoading(webView, url));
-        verifyZeroInteractions(nativeBridge);
+        verifyNoInteractions(nativeBridge);
     }
 
     /**
@@ -104,7 +104,7 @@ public class AirshipWebViewClientTest extends BaseTestCase {
     public void testOnPageFinishedNotAllowed() {
         webViewUrl = "http://notallowed";
         client.onPageFinished(webView, webViewUrl);
-        verifyZeroInteractions(nativeBridge);
+        verifyNoInteractions(nativeBridge);
     }
 
     /**

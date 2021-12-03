@@ -12,10 +12,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 public class InstallReceiverTest extends BaseTestCase {
 
@@ -63,7 +63,7 @@ public class InstallReceiverTest extends BaseTestCase {
 
         receiver.onReceive(context, intent);
 
-        verifyZeroInteractions(mockAnalytics);
+        verifyNoInteractions(mockAnalytics);
     }
 
     /**
@@ -76,7 +76,7 @@ public class InstallReceiverTest extends BaseTestCase {
 
         receiver.onReceive(context, intent);
 
-        verifyZeroInteractions(mockAnalytics);
+        verifyNoInteractions(mockAnalytics);
     }
 
 }

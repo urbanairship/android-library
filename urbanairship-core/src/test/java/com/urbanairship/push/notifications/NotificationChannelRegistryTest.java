@@ -20,7 +20,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class NotificationChannelRegistryTest extends BaseTestCase {
@@ -90,7 +90,7 @@ public class NotificationChannelRegistryTest extends BaseTestCase {
     @Test
     public void testCreateDeferredChannel() {
         channelRegistry.createDeferredNotificationChannel(channelCompat);
-        verifyZeroInteractions(notificationManager);
+        verifyNoInteractions(notificationManager);
     }
 
     @Test

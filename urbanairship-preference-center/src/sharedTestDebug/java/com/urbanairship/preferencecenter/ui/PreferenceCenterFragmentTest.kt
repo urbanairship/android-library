@@ -48,9 +48,11 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.robolectric.annotation.LooperMode
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
+@LooperMode(LooperMode.Mode.LEGACY)
 internal class PreferenceCenterFragmentTest {
 
     companion object {

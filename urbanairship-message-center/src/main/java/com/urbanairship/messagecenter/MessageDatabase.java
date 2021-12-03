@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * Message database
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities =  {MessageEntity.class}, version = 2)
+@Database(entities = {MessageEntity.class}, version = 2)
 public abstract class MessageDatabase extends RoomDatabase {
 
     private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";

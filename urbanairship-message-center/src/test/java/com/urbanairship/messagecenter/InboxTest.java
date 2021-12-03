@@ -23,7 +23,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.robolectric.annotation.LooperMode;
+import org.robolectric.annotation.SQLiteMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,10 +50,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class InboxTest {
 
     private Inbox inbox;
@@ -425,7 +429,8 @@ public class InboxTest {
 
         inbox.onUpdateMessagesFinished(false);
 
-        verifyZeroInteractions(callback);
+
+        verifyNoInteractions(callback);
     }
 
     /**

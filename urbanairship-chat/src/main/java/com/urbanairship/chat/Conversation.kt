@@ -110,8 +110,8 @@ internal constructor(
      * The message data source to be used in a paging adapter.
      */
     val messageDataSourceFactory: DataSource.Factory<Int, ChatMessage> by lazy {
-        chatDao.getMessageDataSourceFactory().map { input: MessageEntity? ->
-            input?.toChatMessage()
+        chatDao.getMessageDataSourceFactory().map { input: MessageEntity ->
+            input.toChatMessage()
         }
     }
 

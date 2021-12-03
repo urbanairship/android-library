@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -42,13 +43,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link InAppMessageManager}.
  */
 @RunWith(AndroidJUnit4.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class InAppMessageManagerTest {
 
     private InAppMessageManager manager;
@@ -242,7 +244,7 @@ public class InAppMessageManagerTest {
         manager.onDisplayFinished(scheduleId, resolutionInfo, 100);
         verify(mockExecuteCallback).onFinish();
 
-        verifyZeroInteractions(mockAnalytics);
+        verifyNoInteractions(mockAnalytics);
     }
 
     @Test
@@ -301,7 +303,7 @@ public class InAppMessageManagerTest {
         // Verify it was called again
         verify(mockAdapter, times(2)).onPrepare(any(Context.class), any(Assets.class));
 
-        verifyZeroInteractions(mockPrepareCallback);
+        verifyNoInteractions(mockPrepareCallback);
     }
 
     @Test
@@ -322,7 +324,7 @@ public class InAppMessageManagerTest {
         // Verify it was called again
         verify(mockAssetManager, times(2)).onPrepare(scheduleId, message);
 
-        verifyZeroInteractions(mockPrepareCallback);
+        verifyNoInteractions(mockPrepareCallback);
     }
 
     @Test

@@ -10,7 +10,6 @@ import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.core.app.launchActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
-import com.squareup.spoon.SpoonRule
 import com.urbanairship.android.layout.ui.ModalActivity
 import com.urbanairship.android.layout.ui.ModalActivity.EXTRA_MODAL_ASSET
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -35,8 +34,6 @@ class ScreenshotsTest {
     }
 
     @get:Rule
-    val spoon = SpoonRule()
-    @get:Rule
     val grantPermissionsRule: GrantPermissionRule = GrantPermissionRule.grant(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE)
 
     @Test
@@ -52,7 +49,6 @@ class ScreenshotsTest {
             val scenario = launchActivity<ModalActivity>(intent)
             scenario.onActivity { activity ->
                 SystemClock.sleep(LAYOUT_DELAY_MS)
-                spoon.screenshot(activity, layoutName)
             }
             scenario.close()
         }

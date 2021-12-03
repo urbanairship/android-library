@@ -39,6 +39,7 @@ dependencies {
     implementation "com.google.android.material:material:$rootProject.materialVersion"
     implementation "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
     implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
     implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
@@ -90,7 +91,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
     androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
 
-    implementation "com.google.android.gms:play-services-instantapps:17.0.0"
+    implementation 'com.google.android.gms:play-services-instantapps:17.0.1'
 }
 
 

@@ -9,6 +9,7 @@ import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -16,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
         shadows = { ShadowNotificationManagerExtension.class },
         application = TestApplication.class
 )
+@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public abstract class BaseTestCase {
 
