@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout;
 
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;

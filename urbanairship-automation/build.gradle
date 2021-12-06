@@ -6,6 +6,8 @@ description = "Airship Android SDK Automation module"
 
 dependencies {
     api project(':urbanairship-core')
+    api project(':urbanairship-layout')
+
     implementation "androidx.customview:customview:$rootProject.androidxCustomViewVersion"
 
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"

@@ -15,6 +15,7 @@ import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
+import com.urbanairship.iam.layout.AirshipLayoutAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
@@ -127,7 +128,10 @@ public class InAppMessageManager {
         setAdapterFactory(InAppMessage.TYPE_FULLSCREEN, new FullScreenAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_MODAL, new ModalAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_HTML, new HtmlAdapterFactory());
+        setAdapterFactory(InAppMessage.TYPE_AIRSHIP_LAYOUT, new AirshipLayoutAdapterFactory());
+
     }
+
 
     /**
      * Sets a {@link InAppMessageAdapter} for a given display type.

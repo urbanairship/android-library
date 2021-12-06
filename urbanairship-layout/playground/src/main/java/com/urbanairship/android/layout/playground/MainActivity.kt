@@ -1,15 +1,18 @@
 package com.urbanairship.android.layout.playground
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import com.urbanairship.android.layout.BasePayload
+import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.event.EventListener
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
-import com.urbanairship.android.layout.ui.ModalActivity
 import com.urbanairship.android.layout.util.ResourceUtils
 
 class MainActivity : AppCompatActivity() {
@@ -18,6 +21,11 @@ class MainActivity : AppCompatActivity() {
         private const val PREF_NAME = "layout-playground"
         private const val PREF_KEY = "selected-layout"
         private const val SAMPLE_LAYOUTS_PATH = "sample_layouts"
+    }
+
+    private val eventListener = EventListener { event ->
+        Log.i("MainActivity", "Received event: $event")
+        true
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -69,8 +77,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.showModal.setOnClickListener {
-            startActivity(Intent(this, ModalActivity::class.java)
-                .putExtra(ModalActivity.EXTRA_MODAL_ASSET, binding.layoutSpinnerText.text.toString()))
+            displayLayout(binding.layoutSpinnerText.text.toString())
+        }
+    }
+
+    private fun displayLayout(fileName: String) {
+        try {
+            val jsonMap = ResourceUtils.readJsonAsset(this, "sample_layouts/$fileName")
+            if (jsonMap == null) {
+                Toast.makeText(this, "Not a valid JSON object", Toast.LENGTH_LONG).show()
+                return
+            }
+            val payload = BasePayload.fromJson(jsonMap)
+            Thomas.prepareDisplay(payload).setEventListener(eventListener).display(this)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
         }
     }
 }

@@ -51,7 +51,6 @@ public interface InAppMessageAdapter {
          */
         @NonNull
         InAppMessageAdapter createAdapter(@NonNull InAppMessage message);
-
     }
 
     /**

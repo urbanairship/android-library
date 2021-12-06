@@ -10,8 +10,10 @@ import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.core.app.launchActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
+import com.urbanairship.android.layout.BasePayload
+import com.urbanairship.android.layout.ui.DisplayArgs
+import com.urbanairship.android.layout.ui.DisplayArgsLoader
 import com.urbanairship.android.layout.ui.ModalActivity
-import com.urbanairship.android.layout.ui.ModalActivity.EXTRA_MODAL_ASSET
 import com.urbanairship.android.layout.util.ResourceUtils
 import org.junit.Rule
 import org.junit.Test
@@ -43,14 +45,20 @@ class ScreenshotsTest {
             // Skipping web views for now because they aren't loading currently...
             if (layout.contains("webview")) continue
 
-            val layoutName = layout.replace(".json", "")
-            val intent = Intent(getApplicationContext(), ModalActivity::class.java).putExtra(EXTRA_MODAL_ASSET, layout)
+            val intent = Intent(getApplicationContext(), ModalActivity::class.java)
+                    .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(createDisplayArgs()))
 
             val scenario = launchActivity<ModalActivity>(intent)
-            scenario.onActivity { activity ->
+            scenario.onActivity {
                 SystemClock.sleep(LAYOUT_DELAY_MS)
             }
             scenario.close()
         }
+    }
+
+    private fun createDisplayArgs(fileName: String): DisplayArgs {
+        val jsonMap = ResourceUtils.readJsonAsset(getApplicationContext(), "sample_layouts/$fileName")
+        val payload = BasePayload.fromJson(requireNotNull(jsonMap))
+        return DisplayArgs(payload, null)
     }
 }

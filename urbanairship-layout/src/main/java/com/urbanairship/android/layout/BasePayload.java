@@ -30,6 +30,7 @@ public class BasePayload {
         this.reportingContext = reportingContext;
     }
 
+
     @NonNull
     public static BasePayload fromJson(@NonNull JsonMap json) throws JsonException {
         int version = json.opt("version").getInt(-1);
@@ -45,6 +46,7 @@ public class BasePayload {
 
         return new BasePayload(version, presentation, view, context);
     }
+
 
     public static int versionFromJson(@NonNull JsonMap json) {
         return json.opt("version").getInt(-1);

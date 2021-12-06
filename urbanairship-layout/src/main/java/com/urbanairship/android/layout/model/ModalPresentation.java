@@ -1,9 +1,10 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.android.layout;
+package com.urbanairship.android.layout.model;
 
 import android.content.Context;
 
+import com.urbanairship.android.layout.BasePresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
 import com.urbanairship.android.layout.property.ModalPlacementSelector;
 import com.urbanairship.android.layout.property.Orientation;

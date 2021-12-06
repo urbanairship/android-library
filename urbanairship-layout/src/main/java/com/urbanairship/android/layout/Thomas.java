@@ -3,8 +3,11 @@
 package com.urbanairship.android.layout;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 
+import com.urbanairship.android.layout.event.EventListener;
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.CheckboxController;
 import com.urbanairship.android.layout.model.CheckboxModel;
@@ -29,6 +32,9 @@ import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.ui.DisplayArgs;
+import com.urbanairship.android.layout.ui.DisplayArgsLoader;
+import com.urbanairship.android.layout.ui.ModalActivity;
 import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.android.layout.view.CheckboxView;
 import com.urbanairship.android.layout.view.ContainerLayoutView;
@@ -50,13 +56,42 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Thomas {
+
+    private interface DisplayCallback {
+        void display(@NonNull Context context, @NonNull DisplayArgs args);
+    }
+
+    public static class DisplayException extends Exception {
+        public DisplayException(String message) {
+            super(message);
+        }
+    }
+
     private Thomas() {}
+
+    @NonNull
+    public static PendingDisplay prepareDisplay(@NonNull BasePayload payload) throws DisplayException {
+        if (payload.getPresentation() instanceof ModalPresentation) {
+            return new PendingDisplay(payload, (context, args) -> {
+                Intent intent = new Intent(context, ModalActivity.class)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(args));
+                context.startActivity(intent);
+            });
+        } else {
+            throw new DisplayException("Presentation not supported: " + payload.getPresentation());
+        }
+    }
 
     @NonNull
     public static BaseModel model(@NonNull JsonMap json) throws JsonException {
@@ -218,6 +253,29 @@ public final class Thomas {
         public void bind(@NonNull BaseModel item) {
             //noinspection unchecked
             view.setModel((M) item);
+        }
+    }
+
+    public static class PendingDisplay {
+        private final DisplayCallback displayCallback;
+        private final BasePayload payload;
+        private EventListener eventListener;
+
+        private PendingDisplay(@NonNull BasePayload payload,
+                               @NonNull DisplayCallback displayCallback) {
+            this.payload = payload;
+            this.displayCallback = displayCallback;
+        }
+
+        @NonNull
+        public PendingDisplay setEventListener(@Nullable EventListener eventListener) {
+            this.eventListener = eventListener;
+            return this;
+        }
+
+        public void display(@NonNull Context context) {
+            DisplayArgs args = new DisplayArgs(payload, eventListener);
+            displayCallback.display(context, args);
         }
     }
 }

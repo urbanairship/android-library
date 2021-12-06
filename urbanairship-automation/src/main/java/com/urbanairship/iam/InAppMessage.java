@@ -11,6 +11,7 @@ import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
 import com.urbanairship.iam.html.HtmlDisplayContent;
+import com.urbanairship.iam.layout.AirshipLayoutDisplayContent;
 import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -82,7 +83,7 @@ public class InAppMessage implements Parcelable, ScheduleData {
     @NonNull
     public static final String SOURCE_APP_DEFINED = "app-defined";
 
-    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULLSCREEN, TYPE_MODAL, TYPE_HTML })
+    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULLSCREEN, TYPE_MODAL, TYPE_HTML, TYPE_AIRSHIP_LAYOUT })
     @Retention(RetentionPolicy.SOURCE)
     public @interface DisplayType {}
 
@@ -115,6 +116,12 @@ public class InAppMessage implements Parcelable, ScheduleData {
      */
     @NonNull
     public static final String TYPE_HTML = "html";
+
+    /**
+     * An Airship layout type. These should be handled internally and not overridden.
+     */
+    @NonNull
+    public static final String TYPE_AIRSHIP_LAYOUT = "layout";
 
     @StringDef({ DISPLAY_BEHAVIOR_DEFAULT, DISPLAY_BEHAVIOR_IMMEDIATE })
     @Retention(RetentionPolicy.SOURCE)
@@ -185,6 +192,7 @@ public class InAppMessage implements Parcelable, ScheduleData {
      * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent},
      * {@link #TYPE_FULLSCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent},
      * {@link #TYPE_HTML}: a {@link com.urbanairship.iam.html.HtmlDisplayContent}
+     * {@link #TYPE_AIRSHIP_LAYOUT}: a {@link com.urbanairship.iam.html.HtmlDisplayContent}
      *
      * @return The display content.
      */
@@ -578,6 +586,10 @@ public class InAppMessage implements Parcelable, ScheduleData {
                 case TYPE_HTML:
                     this.setDisplayContent(HtmlDisplayContent.fromJson(content));
                     break;
+
+                case TYPE_AIRSHIP_LAYOUT:
+                    this.setDisplayContent(AirshipLayoutDisplayContent.fromJson(content));
+                    break;
             }
 
             return this;
@@ -592,6 +604,21 @@ public class InAppMessage implements Parcelable, ScheduleData {
         @NonNull
         public Builder setDisplayContent(@NonNull ModalDisplayContent displayContent) {
             this.type = TYPE_MODAL;
+            this.content = displayContent;
+            return this;
+        }
+
+        /**
+         * Sets the Airship layout display content and type.
+         *
+         * @param displayContent The modal display content.
+         * @return The builder.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setDisplayContent(@NonNull AirshipLayoutDisplayContent displayContent) {
+            this.type = TYPE_AIRSHIP_LAYOUT;
             this.content = displayContent;
             return this;
         }

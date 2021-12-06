@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout;
 
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.ContainerLayoutModel;
 import com.urbanairship.android.layout.property.HorizontalPosition;
 import com.urbanairship.android.layout.property.Position;
@@ -79,4 +80,6 @@ public class ThomasTest {
         }
         return JsonMap.EMPTY_MAP;
     }
+
+
 }

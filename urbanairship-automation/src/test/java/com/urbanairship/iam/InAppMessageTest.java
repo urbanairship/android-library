@@ -7,6 +7,7 @@ import android.os.Parcel;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
+import com.urbanairship.iam.layout.AirshipLayoutDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -121,6 +122,51 @@ public class InAppMessageTest {
         assertEquals(InAppMessage.TYPE_FULLSCREEN, message.getType());
         assertEquals(fullScreenDisplayContent, message.getDisplayContent());
         assertEquals("full screen message name", message.getName());
+
+        verifyParcelable(message);
+        verifyJsonSerialization(message);
+    }
+
+    @Test
+    public void testAirshipLayoutDisplayContent() throws JsonException {
+        String payloadString = "{\n" +
+                "    \"layout\": {\n" +
+                "        \"version\": 1,\n" +
+                "        \"presentation\": {\n" +
+                "          \"type\": \"modal\",\n" +
+                "          \"default_placement\": {\n" +
+                "            \"size\": {\n" +
+                "              \"width\": \"100%\",\n" +
+                "              \"height\": \"100%\"\n" +
+                "            },\n" +
+                "            \"position\": { \n" +
+                "                \"horizontal\": \"center\",\n" +
+                "                \"vertical\": \"center\" \n" +
+                "            },\n" +
+                "            \"shade_color\": {\n" +
+                "              \"default\": { \n" +
+                "                  \"type\": \"hex\", \n" +
+                "                  \"hex\": \"#000000\", \n" +
+                "                  \"alpha\": 0.2 }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        },\n" +
+                "        \"view\": {\n" +
+                "            \"type\": \"empty_view\"\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        JsonValue payload = JsonValue.parseString(payloadString);
+        AirshipLayoutDisplayContent displayContent = AirshipLayoutDisplayContent.fromJson(payload);
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(displayContent)
+                                           .setName("layout name")
+                                           .build();
+
+        assertEquals(InAppMessage.TYPE_AIRSHIP_LAYOUT, message.getType());
+        assertEquals(displayContent, message.getDisplayContent());
+        assertEquals("layout name", message.getName());
 
         verifyParcelable(message);
         verifyJsonSerialization(message);

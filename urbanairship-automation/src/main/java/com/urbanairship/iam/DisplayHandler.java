@@ -136,4 +136,12 @@ public class DisplayHandler implements Parcelable {
         return null;
     }
 
+    /**
+     * Gets the schedule ID.
+     * @return The schedule ID.
+     */
+    public String getScheduleId() {
+        return scheduleId;
+    }
+
 }
