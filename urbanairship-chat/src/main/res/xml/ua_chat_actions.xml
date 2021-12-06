@@ -3,4 +3,7 @@
     <ActionEntry class="com.urbanairship.chat.OpenChatAction">
         <name>open_chat_action</name>
     </ActionEntry>
+    <ActionEntry class="com.urbanairship.chat.SendChatAction">
+        <name>send_chat_action</name>
+    </ActionEntry>
 </resources>

@@ -1,11 +1,18 @@
 package com.urbanairship.push;
 
+import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
+import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
+
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -20,6 +27,7 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
@@ -30,14 +38,6 @@ import com.urbanairship.util.PendingIntentCompat;
 
 import java.util.Map;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
-import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
-import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
 
 /**
  * Runnable that processes an incoming push.
@@ -248,13 +248,17 @@ class IncomingPushRunnable implements Runnable {
 
     @Nullable
     private NotificationProvider getNotificationProvider(UAirship airship) {
-        if (message.isAccengageVisiblePush()) {
-            if (airship.getAccengageNotificationHandler() != null) {
-                return airship.getAccengageNotificationHandler().getNotificationProvider();
-            }
-        } else {
+        if (message.isAirshipPush()) {
             return airship.getPushManager().getNotificationProvider();
         }
+
+        if (message.isAccengageVisiblePush()) {
+            AccengageNotificationHandler notificationHandler = airship.getAccengageNotificationHandler();
+            if (notificationHandler != null) {
+                return notificationHandler.getNotificationProvider();
+            }
+        }
+
         return null;
     }
 

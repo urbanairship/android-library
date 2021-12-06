@@ -103,7 +103,10 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 else -> state
             }
             is Change.ShowError -> State.Error(error = change.error)
-            is Change.ShowLoading -> State.Loading
+            is Change.ShowLoading -> when (state) {
+                is State.Content -> state
+                else -> State.Loading
+            }
         }.let { flowOf(it) }
 
     private fun refresh(): Flow<Change> = flow {

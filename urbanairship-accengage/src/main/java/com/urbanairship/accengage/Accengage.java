@@ -6,6 +6,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -17,7 +21,6 @@ import com.urbanairship.accengage.notifications.AccengageNotificationProvider;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.OpenExternalUrlAction;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.iam.actions.LandingPageAction;
@@ -27,10 +30,6 @@ import com.urbanairship.push.NotificationActionButtonInfo;
 import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.notifications.NotificationProvider;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * Accengage module.
@@ -254,7 +253,7 @@ public class Accengage extends AirshipComponent {
     }
 
     private void onNotificationResponse(@NonNull NotificationInfo notificationInfo, @Nullable NotificationActionButtonInfo actionButtonInfo) {
-        if (!notificationInfo.getMessage().isAccengageVisiblePush()) {
+        if (notificationInfo.getMessage().isAirshipPush() || !notificationInfo.getMessage().isAccengageVisiblePush()) {
             return;
         }
 
