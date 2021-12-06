@@ -15,13 +15,12 @@ import com.urbanairship.json.JsonMap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class RadioInputModel extends BaseModel implements Accessible {
-    @NonNull
-    private final ToggleStyle style;
+import static com.urbanairship.android.layout.model.Accessible.contentDescriptionFromJson;
+
+public class RadioInputModel extends CheckableModel {
+
     @NonNull
     private final String reportingValue;
-    @Nullable
-    private final String contentDescription;
 
     @Nullable
     private Listener listener;
@@ -33,29 +32,20 @@ public class RadioInputModel extends BaseModel implements Accessible {
         @Nullable Color backgroundColor,
         @Nullable Border border
     ) {
-        super(ViewType.RADIO_INPUT, backgroundColor, border);
+        super(ViewType.RADIO_INPUT, style, contentDescription, backgroundColor, border);
 
-        this.style = style;
         this.reportingValue = reportingValue;
-        this.contentDescription = contentDescription;
     }
 
     @NonNull
     public static RadioInputModel fromJson(@NonNull JsonMap json) throws JsonException {
-        JsonMap styleJson = json.opt("style").optMap();
-        ToggleStyle style = ToggleStyle.fromJson(styleJson);
+        ToggleStyle style = toggleStyleFromJson(json);
         String reportingValue = json.opt("value").optString();
-
-        String contentDescription = Accessible.contentDescriptionFromJson(json);
+        String contentDescription = contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
         return new RadioInputModel(style, reportingValue, contentDescription, backgroundColor, border);
-    }
-
-    @NonNull
-    public ToggleStyle getStyle() {
-        return style;
     }
 
     /** Value for reports. */
@@ -64,32 +54,16 @@ public class RadioInputModel extends BaseModel implements Accessible {
         return reportingValue;
     }
 
+    @NonNull
     @Override
-    @Nullable
-    public String getContentDescription() {
-        return contentDescription;
+    public Event buildInputChangeEvent(boolean isChecked) {
+        return new RadioEvent.InputChange(reportingValue, isChecked);
     }
 
-    public void onInit() {
-        bubbleEvent(new Event.ViewInit(this));
-    }
-
-    public void onCheckedChange(boolean isChecked) {
-        bubbleEvent(new RadioEvent.InputChange(reportingValue, isChecked));
-    }
-
-    public void setChecked(boolean isChecked) {
-        if (listener != null) {
-            listener.onSetChecked(isChecked);
-        }
-    }
-
-    public void setListener(@Nullable Listener listener) {
-        this.listener = listener;
-    }
-
-    public interface Listener {
-        void onSetChecked(boolean isChecked);
+    @NonNull
+    @Override
+    public Event buildInitEvent() {
+        return new Event.ViewInit(this);
     }
 
     @Override

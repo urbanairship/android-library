@@ -5,7 +5,13 @@ package com.urbanairship.android.layout.shape;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
+/**
+ * Shape types.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public enum ShapeType {
     RECTANGLE("rectangle"),
     ELLIPSE("ellipse");

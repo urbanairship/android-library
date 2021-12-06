@@ -15,12 +15,15 @@ import com.urbanairship.json.JsonMap;
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
 /**
  * Rectangle shape.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Rectangle extends Shape {
     public Rectangle(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
         super(ShapeType.RECTANGLE, aspectRatio, scale, border, color);

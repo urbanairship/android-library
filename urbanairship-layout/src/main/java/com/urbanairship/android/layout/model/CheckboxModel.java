@@ -7,7 +7,6 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
-import com.urbanairship.android.layout.property.ToggleType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -15,40 +14,35 @@ import com.urbanairship.json.JsonMap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static com.urbanairship.android.layout.model.Accessible.contentDescriptionFromJson;
+
 /**
  * Checkbox input for use within a {@code CheckboxController}.
  */
-public class CheckboxModel extends BaseModel implements Accessible {
+public class CheckboxModel extends CheckableModel {
     @NonNull
     private final String reportingValue;
-    @NonNull
-    private final ToggleStyle style;
-    @Nullable
-    private final String contentDescription;
 
     @Nullable
     private Listener listener = null;
 
     public CheckboxModel(
         @NonNull String reportingValue,
-        @NonNull ToggleStyle toggleStyle,
+        @NonNull ToggleStyle style,
         @Nullable String contentDescription,
         @Nullable Color backgroundColor,
         @Nullable Border border
     ) {
-        super(ViewType.CHECKBOX, backgroundColor, border);
+        super(ViewType.CHECKBOX, style, contentDescription, backgroundColor, border);
 
         this.reportingValue = reportingValue;
-        this.style = toggleStyle;
-        this.contentDescription = contentDescription;
     }
 
     @NonNull
     public static CheckboxModel fromJson(@NonNull JsonMap json) throws JsonException {
         String reportingValue = json.opt("value").optString();
-        JsonMap styleJson = json.opt("style").optMap();
-        ToggleStyle style = ToggleStyle.fromJson(styleJson);
-        String contentDescription = Accessible.contentDescriptionFromJson(json);
+        ToggleStyle style = toggleStyleFromJson(json);
+        String contentDescription = contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
@@ -61,40 +55,15 @@ public class CheckboxModel extends BaseModel implements Accessible {
     }
 
     @NonNull
-    public ToggleStyle getStyle() {
-        return style;
+    @Override
+    public Event buildInputChangeEvent(boolean isChecked) {
+        return new CheckboxEvent.InputChange(reportingValue, isChecked);
     }
 
     @NonNull
-    public ToggleType getToggleType() {
-        return style.getType();
-    }
-
-    @Nullable
-    public String getContentDescription() {
-        return contentDescription;
-    }
-
-    public void onInit() {
-        bubbleEvent(new Event.ViewInit(this));
-    }
-
-    public void onCheckedChange(boolean isChecked) {
-        bubbleEvent(new CheckboxEvent.InputChange(reportingValue, isChecked));
-    }
-
-    public void setChecked(boolean isChecked) {
-        if (listener != null) {
-            listener.onSetChecked(isChecked);
-        }
-    }
-
-    public void setListener(@Nullable Listener listener) {
-        this.listener = listener;
-    }
-
-    public interface Listener {
-        void onSetChecked(boolean isChecked);
+    @Override
+    public Event buildInitEvent() {
+        return new Event.ViewInit(this);
     }
 
     @Override

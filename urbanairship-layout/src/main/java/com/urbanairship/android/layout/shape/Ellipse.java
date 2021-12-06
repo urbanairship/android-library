@@ -14,10 +14,13 @@ import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 /**
  * Circle shape.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Ellipse extends Shape {
     public Ellipse(float aspectRatio, float scale, @Nullable Border border, @Nullable Color color) {
         super(ShapeType.ELLIPSE, aspectRatio, scale, border, color);

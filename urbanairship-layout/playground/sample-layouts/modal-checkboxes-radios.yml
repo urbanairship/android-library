@@ -107,24 +107,50 @@ view:
                           bindings:
                             selected:
                               shapes:
-                              - type: ellipse
-                                scale: 1
+                              - type: rectangle
+                                scale: .5
                                 aspect_ratio: 1
                                 color:
                                   default:
-                                    type: hex
-                                    hex: "#000000"
+                                    hex: "#66FF66"
                                     alpha: 1
+                                border:
+                                  stroke_width: 2
+                                  radius: 5
+                                  stroke_color:
+                                    default:
+                                      hex: "#333333"
+                                      alpha: 1
+                              icon:
+                                icon: checkmark
+                                color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                                scale: .4
                             unselected:
                               shapes:
-                              - type: ellipse
-                                scale: 1
+                              - type: rectangle
+                                scale: .5
                                 aspect_ratio: 1
                                 color:
                                   default:
-                                    type: hex
-                                    hex: "#CCCCCC"
+                                    hex: "#FF6666"
                                     alpha: 1
+                                border:
+                                  stroke_width: 2
+                                  radius: 5
+                                  stroke_color:
+                                    default:
+                                      hex: "#333333"
+                                      alpha: 1
+                              icon:
+                                icon: close
+                                color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                                scale: .4
               - size:
                   width: 100%
                   height: 48
@@ -162,24 +188,50 @@ view:
                         bindings:
                           selected:
                             shapes:
-                            - type: ellipse
-                              scale: 1
+                            - type: rectangle
+                              scale: .5
                               aspect_ratio: 1
                               color:
                                 default:
-                                  type: hex
-                                  hex: "#000000"
+                                  hex: "#66FF66"
                                   alpha: 1
+                              border:
+                                stroke_width: 2
+                                radius: 5
+                                stroke_color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                            icon:
+                              icon: checkmark
+                              color:
+                                default:
+                                  hex: "#333333"
+                                  alpha: 1
+                              scale: .4
                           unselected:
                             shapes:
-                            - type: ellipse
-                              scale: 1
+                            - type: rectangle
+                              scale: .5
                               aspect_ratio: 1
                               color:
                                 default:
-                                  type: hex
-                                  hex: "#CCCCCC"
+                                  hex: "#FF6666"
                                   alpha: 1
+                              border:
+                                stroke_width: 2
+                                radius: 5
+                                stroke_color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                            icon:
+                              icon: close
+                              color:
+                                default:
+                                  hex: "#333333"
+                                  alpha: 1
+                              scale: .4
               - size:
                   width: 100%
                   height: 48
@@ -217,24 +269,50 @@ view:
                         bindings:
                           selected:
                             shapes:
-                            - type: ellipse
-                              scale: 1
+                            - type: rectangle
+                              scale: .5
                               aspect_ratio: 1
                               color:
                                 default:
-                                  type: hex
-                                  hex: "#000000"
+                                  hex: "#66FF66"
                                   alpha: 1
+                              border:
+                                stroke_width: 2
+                                radius: 5
+                                stroke_color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                            icon:
+                              icon: checkmark
+                              color:
+                                default:
+                                  hex: "#333333"
+                                  alpha: 1
+                              scale: .4
                           unselected:
                             shapes:
-                            - type: ellipse
-                              scale: 1
+                            - type: rectangle
+                              scale: .5
                               aspect_ratio: 1
                               color:
                                 default:
-                                  type: hex
-                                  hex: "#CCCCCC"
+                                  hex: "#FF6666"
                                   alpha: 1
+                              border:
+                                stroke_width: 2
+                                radius: 5
+                                stroke_color:
+                                  default:
+                                    hex: "#333333"
+                                    alpha: 1
+                            icon:
+                              icon: close
+                              color:
+                                default:
+                                  hex: "#333333"
+                                  alpha: 1
+                              scale: .4
         - size:
             width: 100%
             height: auto
@@ -300,7 +378,21 @@ view:
                           selected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
+                              aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                              color:
+                                default:
+                                  type: hex
+                                  hex: "#FFFFFF"
+                                  alpha: 1
+                            - type: ellipse
+                              scale: .3
                               aspect_ratio: 1
                               color:
                                 default:
@@ -310,12 +402,18 @@ view:
                           unselected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
                               aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
                               color:
                                 default:
                                   type: hex
-                                  hex: "#CCCCCC"
+                                  hex: "#FFFFFF"
                                   alpha: 1
 
               - size:
@@ -356,7 +454,21 @@ view:
                           selected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
+                              aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                              color:
+                                default:
+                                  type: hex
+                                  hex: "#FFFFFF"
+                                  alpha: 1
+                            - type: ellipse
+                              scale: .3
                               aspect_ratio: 1
                               color:
                                 default:
@@ -366,12 +478,18 @@ view:
                           unselected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
                               aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
                               color:
                                 default:
                                   type: hex
-                                  hex: "#CCCCCC"
+                                  hex: "#FFFFFF"
                                   alpha: 1
 
               - size:
@@ -412,7 +530,21 @@ view:
                           selected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
+                              aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                              color:
+                                default:
+                                  type: hex
+                                  hex: "#FFFFFF"
+                                  alpha: 1
+                            - type: ellipse
+                              scale: .3
                               aspect_ratio: 1
                               color:
                                 default:
@@ -422,13 +554,68 @@ view:
                           unselected:
                             shapes:
                             - type: ellipse
-                              scale: 1
+                              scale: .5
                               aspect_ratio: 1
+                              border:
+                                stroke_width: 2
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
                               color:
                                 default:
                                   type: hex
-                                  hex: "#CCCCCC"
+                                  hex: "#FFFFFF"
                                   alpha: 1
+
+        - size:
+            width: 100%
+            height: 48
+          margin:
+            start: 16
+            end: 16
+          view:
+            type: linear_layout
+            direction: horizontal
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              margin:
+                end: 16
+              view:
+                type: label
+                text: Toggle the switch!
+                text_appearance:
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+                  font_size: 18
+                  alignment: start
+            - size:
+                width: auto
+                height: auto
+              view:
+                type: toggle
+                identifier: toggle-switch
+                required: true
+                background_color:
+                  default:
+                    hex: "#000000"
+                    alpha: 0.25
+                style:
+                  type: switch
+                  toggle_colors:
+                    on:
+                      default:
+                        hex: "#00FF00"
+                        alpha: 1
+                    off:
+                      default:
+                        hex: "#FF0000"
+                        alpha: 1
+
         - size:
             width: 100%
             height: 48
@@ -445,7 +632,6 @@ view:
                   alpha: 1
               alignment: start
               font_size: 18
-
         - size:
             width: 100%
             height: auto
@@ -456,10 +642,6 @@ view:
             type: score
             identifier: "nps_rating"
             required: true
-            background_color:
-              default:
-                hex: "#ff0000"
-                alpha: 1
             style:
               type: nps
               spacing: 8
@@ -517,6 +699,7 @@ view:
                       default:
                         hex: "#333333"
                         alpha: 1
+
         # BOTTOM-PINNED BUTTON
         - size:
             width: 100%
@@ -537,7 +720,7 @@ view:
             enabled: ["form_validation"]
             label:
               type: label
-              text: 'Submit'
+              text: 'SEND IT!'
               text_appearance:
                 font_size: 14
                 alignment: center

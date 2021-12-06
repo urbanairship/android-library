@@ -3,49 +3,26 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 
-import com.google.android.material.color.MaterialColors;
-import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.urbanairship.android.layout.model.RadioInputModel;
-import com.urbanairship.android.layout.property.CheckboxStyle;
-import com.urbanairship.android.layout.property.SwitchStyle;
-import com.urbanairship.android.layout.property.ToggleStyle;
-import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.CheckableView;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class RadioInputView extends MaterialRadioButton implements BaseView<RadioInputModel> {
-    private static final int[][] ENABLED_CHECKED_STATES =
-        new int[][] {
-            new int[] {android.R.attr.state_enabled, android.R.attr.state_checked}, // [0]
-            new int[] {android.R.attr.state_enabled, -android.R.attr.state_checked}, // [1]
-            new int[] {-android.R.attr.state_enabled, android.R.attr.state_checked}, // [2]
-            new int[] {-android.R.attr.state_enabled, -android.R.attr.state_checked} // [3]
-        };
-
-    private RadioInputModel model;
+public class RadioInputView extends CheckableView<RadioInputModel> {
 
     public RadioInputView(@NonNull Context context) {
         super(context);
-        init();
     }
 
     public RadioInputView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
     public RadioInputView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -56,59 +33,10 @@ public class RadioInputView extends MaterialRadioButton implements BaseView<Radi
     }
 
     @Override
-    public void setModel(@NonNull RadioInputModel model) {
-        this.model = model;
-        configure();
+    protected void configure() {
+        super.configure();
+
+        getModel().setListener(this::setCheckedInternal);
+        getCheckableView().setOnCheckedChangeListener(checkedChangeListener);
     }
-
-    private void configure() {
-        LayoutUtils.applyBorderAndBackground(this, model.getBorder(), null);
-        model.setListener(modelListener);
-
-        ToggleStyle style = model.getStyle();
-        switch (style.getType()) {
-            case SWITCH:
-                configureSwitch((SwitchStyle) style);
-                break;
-            case CHECKBOX:
-                configureCheckbox((CheckboxStyle) style);
-                break;
-        }
-
-        setOnCheckedChangeListener(checkedChangeListener);
-
-        model.onInit();
-    }
-
-    private void configureSwitch(@NonNull SwitchStyle style) {
-        // TODO: draw switch
-    }
-
-    private void configureCheckbox(@NonNull CheckboxStyle style) {
-        // TODO: draw switch
-    }
-
-    private ColorStateList getTintList(@ColorInt int foregroundColor, @ColorInt int backgroundColor) {
-        int[] radioButtonColorList = new int[ENABLED_CHECKED_STATES.length];
-        radioButtonColorList[0] =
-            MaterialColors.layer(backgroundColor, foregroundColor, MaterialColors.ALPHA_FULL);
-        radioButtonColorList[1] =
-            MaterialColors.layer(backgroundColor, backgroundColor, MaterialColors.ALPHA_MEDIUM);
-        radioButtonColorList[2] =
-            MaterialColors.layer(backgroundColor, backgroundColor, MaterialColors.ALPHA_DISABLED);
-        radioButtonColorList[3] =
-            MaterialColors.layer(backgroundColor, backgroundColor, MaterialColors.ALPHA_DISABLED);
-
-        return new ColorStateList(ENABLED_CHECKED_STATES, radioButtonColorList);
-    }
-
-    private final OnCheckedChangeListener checkedChangeListener =
-        (buttonView, isChecked) -> model.onCheckedChange(isChecked);
-
-    private final RadioInputModel.Listener modelListener =
-        isChecked -> {
-            setOnCheckedChangeListener(null);
-            setChecked(isChecked);
-            setOnCheckedChangeListener(checkedChangeListener);
-        };
 }

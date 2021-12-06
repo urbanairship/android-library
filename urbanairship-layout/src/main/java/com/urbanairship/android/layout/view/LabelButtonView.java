@@ -34,6 +34,7 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
 
     private void init() {
         setId(generateViewId());
+        setAllCaps(false);
     }
 
     @NonNull

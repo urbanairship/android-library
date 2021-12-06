@@ -86,9 +86,9 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
             int score = i;
             ShapeButton button = new ShapeButton(
                 getContext(),
-                String.valueOf(score),
                 bindings.getSelected().getShapes(),
                 bindings.getUnselected().getShapes(),
+                String.valueOf(score),
                 bindings.getSelected().getTextAppearance(),
                 bindings.getUnselected().getTextAppearance()
             );

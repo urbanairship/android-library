@@ -2,7 +2,11 @@
 
 package com.urbanairship.android.layout.property;
 
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.widget.ShapeDrawableWrapper;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -10,6 +14,9 @@ import java.util.Locale;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 
 public abstract class Image {
     @NonNull
@@ -109,6 +116,17 @@ public abstract class Image {
         @DrawableRes
         public int getDrawableRes() {
             return drawable.resId;
+        }
+
+        @Nullable
+        public Drawable getDrawable(@NonNull Context context) {
+            Drawable d = ContextCompat.getDrawable(context, getDrawableRes());
+            if (d != null) {
+                DrawableCompat.setTint(d, tint.resolve(context));
+                return new ShapeDrawableWrapper(d, 1, scale);
+            } else {
+                return null;
+            }
         }
 
         @NonNull

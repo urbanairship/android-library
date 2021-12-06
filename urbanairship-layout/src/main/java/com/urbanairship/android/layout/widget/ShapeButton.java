@@ -1,6 +1,4 @@
-/*
- Copyright Airship and Contributors
- */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.android.layout.widget;
 
@@ -8,38 +6,72 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.SoundEffectConstants;
+import android.view.View;
 import android.widget.Checkable;
 
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.shape.Shape;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
 import java.util.List;
 
+import androidx.annotation.Dimension;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 
-public class ShapeButton extends AppCompatButton implements Checkable {
+public class ShapeButton extends AppCompatButton implements Checkable, Clippable {
 
     private static final int[] CHECKED_STATE_SET = { android.R.attr.state_checked };
 
-    @NonNull
+    @Nullable
     private final TextAppearance checkedTextAppearance;
-    @NonNull
+    @Nullable
     private final TextAppearance uncheckedTextAppearance;
+    @Nullable
     private final String text;
+
+    private final ClippableViewDelegate clippableViewDelegate;
 
     private boolean isChecked = false;
 
+    @Nullable
+    private OnCheckedChangeListener checkedChangeListener = null;
+
     public ShapeButton(
         @NonNull Context context,
-        @NonNull String text,
         @NonNull List<Shape> checkedShapes,
         @NonNull List<Shape> uncheckedShapes,
-        @NonNull TextAppearance checkedTextAppearance,
-        @NonNull TextAppearance uncheckedTextAppearance
+        @Nullable String text,
+        @Nullable TextAppearance checkedTextAppearance,
+        @Nullable TextAppearance uncheckedTextAppearance
+    ) {
+        this(context, checkedShapes, uncheckedShapes, null, null, text, checkedTextAppearance, uncheckedTextAppearance);
+    }
+
+    public ShapeButton(
+        @NonNull Context context,
+        @NonNull List<Shape> checkedShapes,
+        @NonNull List<Shape> uncheckedShapes,
+        @Nullable Image.Icon checkedIcon,
+        @Nullable Image.Icon uncheckedIcon
+    ) {
+        this(context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon, null, null, null);
+    }
+
+    public ShapeButton(
+        @NonNull Context context,
+        @NonNull List<Shape> checkedShapes,
+        @NonNull List<Shape> uncheckedShapes,
+        @Nullable Image.Icon checkedIcon,
+        @Nullable Image.Icon uncheckedIcon,
+        @Nullable String text,
+        @Nullable TextAppearance checkedTextAppearance,
+        @Nullable TextAppearance uncheckedTextAppearance
     ) {
         super(context);
 
@@ -49,7 +81,9 @@ public class ShapeButton extends AppCompatButton implements Checkable {
         this.uncheckedTextAppearance = uncheckedTextAppearance;
         this.text = text;
 
-        Drawable background = Shape.buildStateListDrawable(context, checkedShapes, uncheckedShapes);
+        clippableViewDelegate = new ClippableViewDelegate();
+
+        Drawable background = Shape.buildStateListDrawable(context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon);
         setBackground(background);
         setForeground(ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple));
 
@@ -66,6 +100,9 @@ public class ShapeButton extends AppCompatButton implements Checkable {
             isChecked = checked;
             refreshDrawableState();
             updateText();
+            if (checkedChangeListener != null) {
+                checkedChangeListener.onCheckedChanged(this, checked);
+            }
         }
     }
 
@@ -102,7 +139,32 @@ public class ShapeButton extends AppCompatButton implements Checkable {
         return handled;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @MainThread
+    public void setClipPathBorderRadius(@Dimension float borderRadius) {
+        clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
+    }
+
+    public void setOnCheckedChangeListener(@Nullable OnCheckedChangeListener listener) {
+        this.checkedChangeListener = listener;
+    }
+
     private void updateText() {
-        LayoutUtils.applyTextAppearance(this, isChecked() ? checkedTextAppearance : uncheckedTextAppearance);
+        if (text != null && checkedTextAppearance != null && uncheckedTextAppearance != null) {
+            LayoutUtils.applyTextAppearance(this, isChecked() ? checkedTextAppearance : uncheckedTextAppearance);
+        }
+    }
+
+    public interface OnCheckedChangeListener {
+        /**
+         * Called when the checked state has changed.
+         *
+         * @param view The button view whose state has changed.
+         * @param isChecked  The new checked state of button.
+         */
+        void onCheckedChanged(View view, boolean isChecked);
     }
 }

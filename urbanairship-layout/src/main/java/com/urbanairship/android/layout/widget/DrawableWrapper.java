@@ -43,8 +43,9 @@ import androidx.core.graphics.drawable.DrawableCompat;
  */
 public class DrawableWrapper extends Drawable implements Drawable.Callback {
 
+    private final DrawableWrapperState state;
+
     private Drawable drawable;
-    private DrawableWrapperState state;
 
     DrawableWrapper(@Nullable DrawableWrapperState state, @Nullable Resources res) {
         this.state = state;

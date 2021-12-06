@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +16,7 @@ import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
@@ -24,6 +28,7 @@ import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.view.MediaView;
@@ -39,12 +44,25 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.ColorUtils;
 
+/**
+ * Helpers for layout rendering.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class LayoutUtils {
     private static final float PRESSED_ALPHA_PERCENT = 0.2f;
     private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
     private static final int DEFAULT_BORDER_RADIUS = 0;
+
+    private static final float MATERIAL_ALPHA_FULL = 1.0f;
+    private static final float MATERIAL_ALPHA_LOW = 0.32f;
+    private static final float MATERIAL_ALPHA_DISABLED = 0.38f;
+
+    private static final int[] CHECKED_STATE_SET = new int[]{ android.R.attr.state_checked };
+    private static final int[] EMPTY_STATE_SET = new int[]{ };
 
     private LayoutUtils() {}
 
@@ -73,6 +91,8 @@ public final class LayoutUtils {
             if (border.getStrokeWidth() != null) {
                 float strokeWidth = ResourceUtils.dpToPx(context, border.getStrokeWidth());
                 shapeDrawable.setStrokeWidth(strokeWidth);
+                int padding = (int) strokeWidth;
+                view.setPadding(padding, padding, padding, padding);
             }
 
             if (border.getStrokeColor() != null) {
@@ -82,10 +102,18 @@ public final class LayoutUtils {
             @ColorInt int fillColor = backgroundColor != null ? backgroundColor.resolve(context) : Color.TRANSPARENT;
             shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
 
-            view.setBackground(shapeDrawable);
+            mergeBackground(view, shapeDrawable);
         } else if (backgroundColor != null) {
-            view.setBackgroundColor(backgroundColor.resolve(context));
+            mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
         }
+    }
+
+    private static void mergeBackground(@NonNull View view, @NonNull Drawable drawable) {
+        Drawable background = drawable;
+        if (view.getBackground() != null) {
+            background = new LayerDrawable(new Drawable[]{view.getBackground(), drawable});
+        }
+        view.setBackground(background);
     }
 
     public static void applyButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
@@ -134,7 +162,6 @@ public final class LayoutUtils {
             editText.setContentDescription(textInput.getContentDescription());
         }
     }
-
 
     public static void applyTextAppearance(@NonNull TextView textView, @NonNull TextAppearance textAppearance) {
         Context context = textView.getContext();
@@ -198,6 +225,26 @@ public final class LayoutUtils {
         }
 
         return null;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void applySwitchStyle(@NonNull SwitchCompat view, @NonNull SwitchStyle style) {
+        Context context = view.getContext();
+
+        int trackOn = style.getOnColor().resolve(context);
+        int trackOff = style.getOffColor().resolve(context);
+
+        int thumbOn = MaterialColors.layer(Color.WHITE, trackOn, MATERIAL_ALPHA_LOW);
+        int thumbOff = MaterialColors.layer(Color.WHITE, trackOff, MATERIAL_ALPHA_LOW);
+
+        view.setTrackTintList(checkedColorStateList(trackOn, trackOff));
+        view.setThumbTintList(checkedColorStateList(thumbOn, thumbOff));
+
+        view.setGravity(Gravity.CENTER);
+    }
+
+    private static ColorStateList checkedColorStateList(@ColorInt int checkedColor, @ColorInt int normalColor) {
+        return new ColorStateList(new int[][]{ CHECKED_STATE_SET, EMPTY_STATE_SET }, new int[]{ checkedColor, normalColor} );
     }
 
     /**
