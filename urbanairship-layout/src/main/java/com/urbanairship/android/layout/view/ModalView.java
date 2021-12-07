@@ -11,9 +11,10 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.ConstrainedSize;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.ModalPlacement;
@@ -31,6 +32,8 @@ import androidx.constraintlayout.widget.ConstraintSet;
 public class ModalView extends ConstraintLayout {
     private BaseModel model;
     private ModalPresentation presentation;
+    private Environment environment;
+
     private ConstrainedFrameLayout modalFrame;
     private View containerView;
     private int windowTouchSlop;
@@ -58,16 +61,26 @@ public class ModalView extends ConstraintLayout {
     }
 
     @NonNull
-    public static ModalView create(@NonNull Context context, @NonNull BaseModel model, @NonNull ModalPresentation presentation) {
+    public static ModalView create(
+        @NonNull Context context,
+        @NonNull BaseModel model,
+        @NonNull ModalPresentation presentation,
+        @NonNull Environment environment
+    ) {
         ModalView view = new ModalView(context);
 
-        view.setModal(model, presentation);
+        view.setModal(model, presentation, environment);
         return view;
     }
 
-    public void setModal(@NonNull BaseModel model, @NonNull ModalPresentation presentation) {
+    public void setModal(
+        @NonNull BaseModel model,
+        @NonNull ModalPresentation presentation,
+        @NonNull Environment environment
+    ) {
         this.model = model;
         this.presentation = presentation;
+        this.environment = environment;
         configureModal();
     }
 
@@ -81,7 +94,7 @@ public class ModalView extends ConstraintLayout {
             ? placement.getShadeColor().resolve(getContext()) : null;
         makeFrame(size);
 
-        containerView = Thomas.view(getContext(), model);
+        containerView = Thomas.view(getContext(), model, environment);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         lp.gravity = position != null ? position.getGravity() : Gravity.CENTER;
         if (margin != null) {

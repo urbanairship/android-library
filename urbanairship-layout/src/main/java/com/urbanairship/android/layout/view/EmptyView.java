@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.EmptyModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
@@ -42,14 +43,14 @@ public class EmptyView extends View implements BaseView<EmptyModel> {
     }
 
     @NonNull
-    public static EmptyView create(@NonNull Context context, @NonNull EmptyModel model) {
+    public static EmptyView create(@NonNull Context context, @NonNull EmptyModel model, @NonNull Environment environment) {
         EmptyView view = new EmptyView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull EmptyModel model) {
+    public void setModel(@NonNull EmptyModel model, @NonNull Environment environment) {
         this.model = model;
         configure();
     }

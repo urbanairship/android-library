@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.google.android.material.textview.MaterialTextView;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
@@ -35,14 +36,14 @@ public class LabelView extends MaterialTextView implements BaseView<LabelModel> 
     }
 
     @NonNull
-    public static LabelView create(@NonNull Context context, @NonNull LabelModel model) {
+    public static LabelView create(@NonNull Context context, @NonNull LabelModel model, @NonNull Environment environment) {
         LabelView view = new LabelView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull LabelModel model) {
+    public void setModel(@NonNull LabelModel model, @NonNull Environment environment) {
         this.model = model;
         LayoutUtils.applyLabelModel(this, model);
         LayoutUtils.applyBorderAndBackground(this, model);

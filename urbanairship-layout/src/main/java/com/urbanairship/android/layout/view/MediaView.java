@@ -20,21 +20,23 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.property.MediaType;
-import com.urbanairship.android.layout.util.ContextUtil;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
-import com.urbanairship.webkit.AirshipWebChromeClient;
 
 import java.lang.ref.WeakReference;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -46,6 +48,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  */
 public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     private MediaModel model;
+    private Environment environment;
 
     @Nullable
     private WebView webView;
@@ -64,7 +67,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      */
     public MediaView(@NonNull Context context) {
         this(context, null);
-        init(context);
+        init();
     }
 
     /**
@@ -75,7 +78,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      */
     public MediaView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
-        init(context);
+        init();
     }
 
     /**
@@ -87,19 +90,18 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      */
     public MediaView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(context);
+        init();
     }
 
-    private void init(@NonNull Context context) {
+    private void init() {
         setId(generateViewId());
-        // TODO: this probably shouldn't be happening here...
-        setChromeClient(new AirshipWebChromeClient(ContextUtil.getActivityContext(context)));
+        setChromeClient(environment.webChromeClientFactory().create());
     }
 
     @NonNull
-    public static MediaView create(@NonNull Context context, @NonNull MediaModel model) {
+    public static MediaView create(@NonNull Context context, @NonNull MediaModel model, @NonNull Environment environment) {
         MediaView view = new MediaView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
@@ -116,34 +118,15 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     }
 
     /**
-     * Call during activity pause to pause the media.
-     */
-    public void onPause() {
-        // TODO: if things stay as they are, we'll need to pull in lifecycle to handle this
-        if (this.webView != null) {
-            this.webView.onPause();
-        }
-    }
-
-    /**
-     * Call during activity resume to resume the media.
-     */
-    public void onResume() {
-        // TODO: if things stay as they are, we'll need to pull in lifecycle to handle this
-        if (this.webView != null) {
-            this.webView.onResume();
-        }
-    }
-
-    /**
      * Sets the media info.
-     *
-     * @param model The media info.
+     *  @param model The media info.
      * // TODO: @param cachedMediaUrl The cached media URL.
+     * @param environment
      */
     @Override
-    public void setModel(@NonNull MediaModel model) {
+    public void setModel(@NonNull MediaModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configure();
     }
 
@@ -235,6 +218,8 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
             setLayoutParams(params);
         });
+
+        environment.lifecycle().addObserver(lifecycleListener);
 
         this.webView = new WebView(getContext());
 
@@ -350,4 +335,20 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
         protected abstract void onPageFinished(WebView webView);
     }
+
+    private final LifecycleObserver lifecycleListener = new DefaultLifecycleObserver() {
+        @Override
+        public void onPause(@NonNull LifecycleOwner owner) {
+            if (webView != null) {
+                webView.onPause();
+            }
+        }
+
+        @Override
+        public void onResume(@NonNull LifecycleOwner owner) {
+            if (webView != null) {
+                webView.onResume();
+            }
+        }
+    };
 }

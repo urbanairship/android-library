@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 
 import com.google.android.material.button.MaterialButton;
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -38,13 +39,13 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
     }
 
     @NonNull
-    public static LabelButtonView create(@NonNull Context context, @NonNull LabelButtonModel model) {
+    public static LabelButtonView create(@NonNull Context context, @NonNull LabelButtonModel model, @NonNull Environment environment) {
         LabelButtonView view = new LabelButtonView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
-    public void setModel(@NonNull LabelButtonModel model) {
+    public void setModel(@NonNull LabelButtonModel model, @NonNull Environment environment) {
         this.model = model;
         configureButton();
     }

@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
@@ -50,14 +51,14 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     }
 
     @NonNull
-    public static ImageButtonView create(@NonNull Context context, @NonNull ImageButtonModel model) {
+    public static ImageButtonView create(@NonNull Context context, @NonNull ImageButtonModel model, @NonNull Environment environment) {
         ImageButtonView view = new ImageButtonView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull ImageButtonModel model) {
+    public void setModel(@NonNull ImageButtonModel model, @NonNull Environment environment) {
         this.model = model;
         configureButton();
     }

@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.view;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.widget.CheckableView;
 
@@ -29,9 +30,13 @@ public class ToggleView extends CheckableView<ToggleModel> {
     }
 
     @NonNull
-    public static ToggleView create(@NonNull Context context, @NonNull ToggleModel model) {
+    public static ToggleView create(
+        @NonNull Context context,
+        @NonNull ToggleModel model,
+        @NonNull Environment environment
+    ) {
         ToggleView view = new ToggleView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 

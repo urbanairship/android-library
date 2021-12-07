@@ -1,9 +1,11 @@
 package com.urbanairship.android.layout.playground
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.webkit.WebView
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
@@ -51,6 +53,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initViews(binding)
+
+        // Enable webview debugging via Chrome for debug builds.
+        if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
     }
 
     override fun onResume() {

@@ -5,9 +5,11 @@ package com.urbanairship.android.layout.ui;
 import android.os.Bundle;
 
 import com.urbanairship.Logger;
-import com.urbanairship.android.layout.model.ModalPresentation;
+import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.view.ModalView;
 
 import androidx.annotation.NonNull;
@@ -48,8 +50,8 @@ public class ModalActivity extends AppCompatActivity {
 
             ModalPresentation presentation = (ModalPresentation) args.getPayload().getPresentation();
             BaseModel view = args.getPayload().getView();
-
-            modalView = ModalView.create(this, view, presentation);
+            Environment environment = new ViewEnvironment(this);
+            modalView = ModalView.create(this, view, presentation, environment);
             modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             setContentView(modalView);
 

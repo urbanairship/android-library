@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Checkable;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ScoreModel;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
@@ -50,14 +51,14 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
     }
 
     @NonNull
-    public static ScoreView create(@NonNull Context context, @NonNull ScoreModel model) {
+    public static ScoreView create(@NonNull Context context, @NonNull ScoreModel model, Environment environment) {
         ScoreView view = new ScoreView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull ScoreModel model) {
+    public void setModel(@NonNull ScoreModel model, @NonNull Environment environment) {
         this.model = model;
         configure();
     }

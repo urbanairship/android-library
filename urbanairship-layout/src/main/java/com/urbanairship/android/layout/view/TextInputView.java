@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.view;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
@@ -37,14 +38,14 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
     }
 
     @NonNull
-    public static TextInputView create(@NonNull Context context, @NonNull TextInputModel model) {
+    public static TextInputView create(@NonNull Context context, @NonNull TextInputModel model, Environment environment) {
         TextInputView view = new TextInputView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull TextInputModel model) {
+    public void setModel(@NonNull TextInputModel model, @NonNull Environment environment) {
         this.model = model;
         LayoutUtils.applyTextInputModel(this, model);
     }

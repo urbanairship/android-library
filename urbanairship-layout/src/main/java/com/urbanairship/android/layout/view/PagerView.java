@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.PagerModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class PagerView extends RecyclerView implements BaseView<PagerModel> {
     private PagerModel model;
+    private Environment environment;
     private PagerAdapter adapter;
     private LinearLayoutManager layoutManager;
     private PagerSnapHelper snapHelper;
@@ -40,30 +42,32 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         setId(generateViewId());
 
         layoutManager = new LinearLayoutManager(context, HORIZONTAL, false);
-        adapter = new PagerAdapter();
         snapHelper = new PagerSnapHelper();
 
-        setHorizontalScrollBarEnabled(false);
-
         setLayoutManager(layoutManager);
-        setAdapter(adapter);
         snapHelper.attachToRecyclerView(this);
+
+        setHorizontalScrollBarEnabled(false);
     }
 
     @NonNull
-    public static PagerView create(@NonNull Context context, @NonNull PagerModel model) {
+    public static PagerView create(@NonNull Context context, @NonNull PagerModel model, @NonNull Environment environment) {
         PagerView view = new PagerView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull PagerModel model) {
+    public void setModel(@NonNull PagerModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configure();
     }
 
     private void configure() {
+        adapter = new PagerAdapter(environment);
+        setAdapter(adapter);
+
         LayoutUtils.applyBorderAndBackground(this, model);
 
         adapter.setItems(model.getItems());

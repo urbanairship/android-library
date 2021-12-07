@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.BaseModel;
@@ -139,54 +140,54 @@ public final class Thomas {
     }
 
     @NonNull
-    public static View view(@NonNull Context context, @NonNull BaseModel model) {
+    public static View view(@NonNull Context context, @NonNull BaseModel model, @NonNull Environment environment) {
         switch (model.getType()) {
             case CONTAINER:
-                return ContainerLayoutView.create(context, (ContainerLayoutModel) model);
+                return ContainerLayoutView.create(context, (ContainerLayoutModel) model, environment);
             case LINEAR_LAYOUT:
-                return LinearLayoutView.create(context, (LinearLayoutModel) model);
+                return LinearLayoutView.create(context, (LinearLayoutModel) model, environment);
             case SCROLL_LAYOUT:
-                return ScrollLayoutView.create(context, (ScrollLayoutModel) model);
+                return ScrollLayoutView.create(context, (ScrollLayoutModel) model, environment);
 
             // Controllers don't have views, so we skip over them and inflate their child view instead.
             case PAGER_CONTROLLER:
-                return view(context, ((PagerController) model).getView());
+                return view(context, ((PagerController) model).getView(), environment);
             case FORM_CONTROLLER:
-                return view(context, ((FormController) model).getView());
+                return view(context, ((FormController) model).getView(), environment);
             case NPS_FORM_CONTROLLER:
-                return view(context, ((NpsFormController) model).getView());
+                return view(context, ((NpsFormController) model).getView(), environment);
             case CHECKBOX_CONTROLLER:
-                return view(context, ((CheckboxController) model).getView());
+                return view(context, ((CheckboxController) model).getView(), environment);
             case RADIO_INPUT_CONTROLLER:
-                return view(context, ((RadioInputController) model).getView());
+                return view(context, ((RadioInputController) model).getView(), environment);
 
             case MEDIA:
-                return MediaView.create(context, (MediaModel) model);
+                return MediaView.create(context, (MediaModel) model, environment);
             case LABEL:
-                return LabelView.create(context, (LabelModel) model);
+                return LabelView.create(context, (LabelModel) model, environment);
             case LABEL_BUTTON:
-                return LabelButtonView.create(context, (LabelButtonModel) model);
+                return LabelButtonView.create(context, (LabelButtonModel) model, environment);
             case IMAGE_BUTTON:
-                return ImageButtonView.create(context, (ImageButtonModel) model);
+                return ImageButtonView.create(context, (ImageButtonModel) model, environment);
             case EMPTY_VIEW:
-                return EmptyView.create(context, (EmptyModel) model);
+                return EmptyView.create(context, (EmptyModel) model, environment);
             case WEB_VIEW:
-                return WebViewView.create(context, (WebViewModel) model);
+                return WebViewView.create(context, (WebViewModel) model, environment);
             case PAGER:
-                return PagerView.create(context, (PagerModel) model);
+                return PagerView.create(context, (PagerModel) model, environment);
             case PAGER_INDICATOR:
-                return PagerIndicatorView.create(context, (PagerIndicatorModel) model);
+                return PagerIndicatorView.create(context, (PagerIndicatorModel) model, environment);
 
             case CHECKBOX:
-                return CheckboxView.create(context, (CheckboxModel) model);
+                return CheckboxView.create(context, (CheckboxModel) model, environment);
             case TOGGLE:
-                return ToggleView.create(context, (ToggleModel) model);
+                return ToggleView.create(context, (ToggleModel) model, environment);
             case RADIO_INPUT:
-                return RadioInputView.create(context, (RadioInputModel) model);
+                return RadioInputView.create(context, (RadioInputModel) model, environment);
             case TEXT_INPUT:
-                return TextInputView.create(context, (TextInputModel) model);
+                return TextInputView.create(context, (TextInputModel) model, environment);
             case SCORE:
-                return ScoreView.create(context, (ScoreModel) model);
+                return ScoreView.create(context, (ScoreModel) model, environment);
         }
         throw new IllegalArgumentException("Error creating view! Unrecognized view type: " + model.getType());
     }
@@ -250,13 +251,13 @@ public final class Thomas {
             view = itemView;
         }
 
-        public void bind(@NonNull BaseModel item) {
+        public void bind(@NonNull BaseModel item, @NonNull Environment environment) {
             //noinspection unchecked
-            view.setModel((M) item);
+            view.setModel((M) item, environment);
         }
     }
 
-    public static class PendingDisplay {
+    public static final class PendingDisplay {
         private final DisplayCallback displayCallback;
         private final BasePayload payload;
         private EventListener eventListener;

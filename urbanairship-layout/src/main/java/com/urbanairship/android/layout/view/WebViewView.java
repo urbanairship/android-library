@@ -13,27 +13,31 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.WebViewModel;
-import com.urbanairship.android.layout.util.ContextUtil;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
-import com.urbanairship.webkit.AirshipWebChromeClient;
+import com.urbanairship.webkit.AirshipWebView;
+import com.urbanairship.webkit.AirshipWebViewClient;
 
 import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 /** Web view... view? */
 public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     private WebViewModel model;
+    private Environment environment;
 
     @Nullable
     private WebView webView;
@@ -42,30 +46,27 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
     public WebViewView(@NonNull Context context) {
         this(context, null);
-        init(context);
+        init();
     }
 
     public WebViewView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
-        init(context);
+        init();
     }
 
     public WebViewView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(context);
+        init();
     }
 
-    private void init(@NonNull Context context) {
+    private void init() {
         setId(generateViewId());
-
-        // TODO: This should probably happen elsewhere?
-        setChromeClient(new AirshipWebChromeClient(ContextUtil.getActivityContext(context)));
     }
 
     @NonNull
-    public static WebViewView create(@NonNull Context context, @NonNull WebViewModel model) {
+    public static WebViewView create(@NonNull Context context, @NonNull WebViewModel model, Environment environment) {
         WebViewView view = new WebViewView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
@@ -82,33 +83,14 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     }
 
     /**
-     * Call during activity pause to pause the media.
-     */
-    public void onPause() {
-        // TODO: if things stay as they are, we'll need to pull in lifecycle to handle this
-        if (this.webView != null) {
-            this.webView.onPause();
-        }
-    }
-
-    /**
-     * Call during activity resume to resume the media.
-     */
-    public void onResume() {
-        // TODO: if things stay as they are, we'll need to pull in lifecycle to handle this
-        if (this.webView != null) {
-            this.webView.onResume();
-        }
-    }
-
-    /**
      * Sets the media info.
-     *
-     * @param model The media info.
+     *  @param model The media info.
      * // TODO: @param cachedMediaUrl The cached media URL.
+     * @param environment
      */
-    public void setModel(@NonNull WebViewModel model) {
+    public void setModel(@NonNull WebViewModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configure();
     }
 
@@ -124,6 +106,9 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             this.webView = null;
         }
 
+        environment.lifecycle().addObserver(lifecycleListener);
+        setChromeClient(environment.webChromeClientFactory().create());
+
         LayoutUtils.applyBorderAndBackground(this, model);
 
         loadWebView(model);
@@ -131,7 +116,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void loadWebView(@NonNull WebViewModel model) {
-        this.webView = new WebView(getContext());
+        this.webView = new AirshipWebView(getContext());
 
         FrameLayout frameLayout = new FrameLayout(getContext());
         frameLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -187,7 +172,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         load.run();
     }
 
-    private abstract static class Client extends WebViewClient {
+    private abstract static class Client extends AirshipWebViewClient {
         static final long START_RETRY_DELAY = 1000;
 
         private final Runnable onRetry;
@@ -199,8 +184,12 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         }
 
         @Override
-        public void onPageFinished(@NonNull WebView view, String url) {
+        public void onPageFinished(@Nullable WebView view, String url) {
             super.onPageFinished(view, url);
+            if (view == null) {
+                return;
+            }
+
             if (error) {
                 view.postDelayed(onRetry, retryDelay);
                 retryDelay = retryDelay * 2;
@@ -220,4 +209,20 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
         protected abstract void onPageFinished(WebView webView);
     }
+
+    private final LifecycleObserver lifecycleListener = new DefaultLifecycleObserver() {
+        @Override
+        public void onPause(@NonNull LifecycleOwner owner) {
+            if (webView != null) {
+                webView.onPause();
+            }
+        }
+
+        @Override
+        public void onResume(@NonNull LifecycleOwner owner) {
+            if (webView != null) {
+                webView.onResume();
+            }
+        }
+    };
 }

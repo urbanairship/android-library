@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.urbanairship.Logger;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.util.ResourceUtils;
@@ -31,14 +32,18 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
     }
 
     @NonNull
-    public static PagerIndicatorView create(@NonNull Context context, @NonNull PagerIndicatorModel model) {
+    public static PagerIndicatorView create(
+        @NonNull Context context,
+        @NonNull PagerIndicatorModel model,
+        @NonNull Environment environment
+    ) {
         PagerIndicatorView view = new PagerIndicatorView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull PagerIndicatorModel model) {
+    public void setModel(@NonNull PagerIndicatorModel model, @NonNull Environment environment) {
         this.model = model;
         configure();
     }

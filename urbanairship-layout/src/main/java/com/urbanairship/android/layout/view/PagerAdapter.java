@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.Thomas.LayoutViewHolder;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ViewType;
 
@@ -16,7 +17,15 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
+    @NonNull
     private final List<BaseModel> items = new ArrayList<>();
+
+    @NonNull
+    private final Environment environment;
+
+    public PagerAdapter(@NonNull Environment environment) {
+        this.environment = environment;
+    }
 
     @NonNull
     @Override
@@ -26,7 +35,8 @@ public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
 
     @Override
     public void onBindViewHolder(@NonNull LayoutViewHolder holder, int position) {
-        holder.bind(getItemAtPosition(position));
+        BaseModel model = getItemAtPosition(position);
+        holder.bind(model, environment);
     }
 
     @Override

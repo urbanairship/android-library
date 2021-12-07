@@ -11,8 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -24,18 +22,15 @@ import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
-import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
-import com.urbanairship.android.layout.view.MediaView;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
@@ -245,75 +240,5 @@ public final class LayoutUtils {
 
     private static ColorStateList checkedColorStateList(@ColorInt int checkedColor, @ColorInt int normalColor) {
         return new ColorStateList(new int[][]{ CHECKED_STATE_SET, EMPTY_STATE_SET }, new int[]{ checkedColor, normalColor} );
-    }
-
-    /**
-     * Loads the media info into the media view and scales the media's views height to match the
-     * aspect ratio of the media. If the aspect ratio is unavailable in the cache, 16:9 will be used.
-     *
-     * @param mediaView The media view. //* @param media The media info. //* @param assets The cached
-     * assets.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void loadMediaInfo(@NonNull MediaView mediaView, @NonNull final MediaModel media) {
-        // TODO: @Nullable final Assets assets
-        if (mediaView.getWidth() == 0) {
-            final WeakReference<MediaView> weakReference = new WeakReference<>(mediaView);
-            mediaView.getViewTreeObserver().addOnPreDrawListener(
-                new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        MediaView mediaView = weakReference.get();
-                        if (mediaView != null) {
-                            loadMediaInfo(mediaView, media); // TODO: , assets);
-                            mediaView.getViewTreeObserver().removeOnPreDrawListener(this);
-                        }
-                        return false;
-                    }
-                });
-            return;
-        }
-
-        // Default to a 16:9 aspect ratio
-        int width = 16;
-        int height = 9;
-
-        // TODO: caching
-        // String cachedLocation = null;
-        //
-        //        if (assets != null) {
-        //            File cachedFile = assets.file(mediaInfo.getUrl());
-        //            if (cachedFile.exists()) {
-        //                JsonMap metadata = assets.getMetadata(mediaInfo.getUrl()).optMap();
-        //                width =
-        // metadata.opt(AirshipPrepareAssetsDelegate.IMAGE_WIDTH_CACHE_KEY).getInt(width);
-        //                height =
-        // metadata.opt(AirshipPrepareAssetsDelegate.IMAGE_HEIGHT_CACHE_KEY).getInt(height);
-        //                cachedLocation = Uri.fromFile(cachedFile).toString();
-        //            }
-        //        }
-
-        ViewGroup.LayoutParams params = mediaView.getLayoutParams();
-
-        // Check if we can grow the image horizontally to fit the width
-        if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
-            float scale = (float) mediaView.getWidth() / (float) width;
-            params.height = Math.round(scale * height);
-        } else {
-            float imageRatio = (float) width / (float) height;
-            float viewRatio = (float) mediaView.getWidth() / mediaView.getHeight();
-
-            if (imageRatio >= viewRatio) {
-                // Image is wider than the view
-                params.height = Math.round(mediaView.getWidth() / imageRatio);
-            } else {
-                // View is wider than the image
-                params.width = Math.round(mediaView.getHeight() * imageRatio);
-            }
-        }
-
-        mediaView.setLayoutParams(params);
-        mediaView.setModel(media); // TODO: , cachedLocation);
     }
 }

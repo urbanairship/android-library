@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.view;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.RadioInputModel;
 import com.urbanairship.android.layout.widget.CheckableView;
 
@@ -26,9 +27,13 @@ public class RadioInputView extends CheckableView<RadioInputModel> {
     }
 
     @NonNull
-    public static RadioInputView create(@NonNull Context context, @NonNull RadioInputModel model) {
+    public static RadioInputView create(
+        @NonNull Context context,
+        @NonNull RadioInputModel model,
+        @NonNull Environment environment
+    ) {
         RadioInputView view = new RadioInputView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 

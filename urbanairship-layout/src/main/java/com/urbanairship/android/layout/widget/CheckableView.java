@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
 import com.urbanairship.Logger;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.CheckableModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
 import com.urbanairship.android.layout.property.SwitchStyle;
@@ -29,6 +30,7 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
     private static final int NO_MIN_SIZE = -1;
 
     private M model;
+    private Environment environment;
     private CheckableViewAdapter<?> view = null;
 
     public CheckableView(@NonNull Context context) {
@@ -83,13 +85,18 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
     }
 
     @Override
-    public void setModel(@NonNull M model) {
+    public void setModel(@NonNull M model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configure();
     }
 
-    public M getModel() {
+    protected M getModel() {
         return model;
+    }
+
+    protected Environment environment() {
+        return environment;
     }
 
     public CheckableViewAdapter<?> getCheckableView() {

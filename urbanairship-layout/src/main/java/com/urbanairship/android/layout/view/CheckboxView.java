@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.view;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.CheckboxModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
 import com.urbanairship.android.layout.property.SwitchStyle;
@@ -30,9 +31,9 @@ public class CheckboxView extends CheckableView<CheckboxModel> {
     }
 
     @NonNull
-    public static CheckboxView create(@NonNull Context context, @NonNull CheckboxModel model) {
+    public static CheckboxView create(@NonNull Context context, @NonNull CheckboxModel model, @NonNull Environment environment) {
         CheckboxView view = new CheckboxView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 

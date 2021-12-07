@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ContainerLayoutModel;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -19,6 +20,7 @@ import androidx.annotation.Nullable;
 
 public class ContainerLayoutView extends ClippableConstraintLayout implements BaseView<ContainerLayoutModel> {
     private ContainerLayoutModel model;
+    private Environment environment;
 
     public ContainerLayoutView(@NonNull Context context) {
         super(context);
@@ -40,15 +42,16 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
     }
 
     @NonNull
-    public static ContainerLayoutView create(@NonNull Context context, @NonNull ContainerLayoutModel model) {
+    public static ContainerLayoutView create(@NonNull Context context, @NonNull ContainerLayoutModel model, @NonNull Environment environment) {
         ContainerLayoutView view = new ContainerLayoutView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull ContainerLayoutModel model) {
+    public void setModel(@NonNull ContainerLayoutModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configureContainer();
     }
 
@@ -70,7 +73,7 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
     }
 
     private void addItem(@NonNull ConstraintSetBuilder constraintBuilder, @NonNull ContainerLayoutModel.Item item) {
-        View itemView = Thomas.view(getContext(), item.getView());
+        View itemView = Thomas.view(getContext(), item.getView(), environment);
         addView(itemView);
 
         int viewId = itemView.getId();

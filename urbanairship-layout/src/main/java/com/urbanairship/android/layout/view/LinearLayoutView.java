@@ -8,6 +8,7 @@ import android.view.Gravity;
 import android.view.View;
 
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.LinearLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
@@ -25,6 +26,7 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 public class LinearLayoutView extends WeightlessLinearLayout implements BaseView<LinearLayoutModel> {
 
     private LinearLayoutModel model;
+    private Environment environment;
 
     public LinearLayoutView(@NonNull Context context) {
         super(context);
@@ -46,15 +48,16 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
     }
 
     @NonNull
-    public static LinearLayoutView create(@NonNull Context context, @NonNull LinearLayoutModel model) {
+    public static LinearLayoutView create(@NonNull Context context, @NonNull LinearLayoutModel model, @NonNull Environment environment) {
         LinearLayoutView view = new LinearLayoutView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull LinearLayoutModel model) {
+    public void setModel(@NonNull LinearLayoutModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configureLinearLayout();
     }
 
@@ -71,7 +74,7 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
             LinearLayoutModel.Item item = items.get(i);
             LayoutParams lp = generateItemLayoutParams(item);
 
-            View itemView = Thomas.view(getContext(), item.getView());
+            View itemView = Thomas.view(getContext(), item.getView(), environment);
             itemView.setLayoutParams(lp);
             // Add view after any existing children, without requesting a layout pass on the child.
             addViewInLayout(itemView, -1, lp, true);

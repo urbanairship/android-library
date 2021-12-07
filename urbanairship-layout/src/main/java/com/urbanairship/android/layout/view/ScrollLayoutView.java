@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -17,6 +18,7 @@ import androidx.core.widget.NestedScrollView;
 
 public class ScrollLayoutView extends NestedScrollView implements BaseView<ScrollLayoutModel> {
     private ScrollLayoutModel model;
+    private Environment environment;
 
     public ScrollLayoutView(@NonNull Context context) {
         super(context);
@@ -39,15 +41,20 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
     }
 
     @NonNull
-    public static ScrollLayoutView create(@NonNull Context context, @NonNull ScrollLayoutModel model) {
+    public static ScrollLayoutView create(
+        @NonNull Context context,
+        @NonNull ScrollLayoutModel model,
+        @NonNull Environment environment
+    ) {
         ScrollLayoutView view = new ScrollLayoutView(context);
-        view.setModel(model);
+        view.setModel(model, environment);
         return view;
     }
 
     @Override
-    public void setModel(@NonNull ScrollLayoutModel model) {
+    public void setModel(@NonNull ScrollLayoutModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configureScrollLayout();
     }
 
@@ -55,7 +62,7 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
         LayoutUtils.applyBorderAndBackground(this, model);
 
         Direction direction = model.getDirection();
-        View contentView = Thomas.view(getContext(), model.getView());
+        View contentView = Thomas.view(getContext(), model.getView(), environment);
 
         LayoutParams layoutParams;
         if (direction == Direction.VERTICAL) {
