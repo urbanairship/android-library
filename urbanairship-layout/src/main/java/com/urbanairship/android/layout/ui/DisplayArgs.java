@@ -1,6 +1,8 @@
 package com.urbanairship.android.layout.ui;
 
 import com.urbanairship.android.layout.BasePayload;
+import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.event.EventListener;
 
 import androidx.annotation.NonNull;
@@ -13,17 +15,17 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class DisplayArgs {
-    private final EventListener eventListener;
+    private final ThomasListener listener;
     private final BasePayload payload;
 
-    public DisplayArgs(@NonNull BasePayload payload, @Nullable EventListener eventListener) {
+    public DisplayArgs(@NonNull BasePayload payload, @Nullable ThomasListener listener) {
         this.payload = payload;
-        this.eventListener = eventListener;
+        this.listener = listener;
     }
 
     @Nullable
-    public EventListener getEventListener() {
-        return eventListener;
+    public ThomasListener getListener() {
+        return listener;
     }
 
     @NonNull

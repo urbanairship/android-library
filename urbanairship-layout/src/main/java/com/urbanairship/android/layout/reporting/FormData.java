@@ -10,7 +10,12 @@ import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class FormData<T> implements JsonSerializable {
 
     private static final String KEY_TYPE = "type";

@@ -14,6 +14,7 @@ import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -126,7 +127,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -142,7 +143,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -168,7 +169,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -190,7 +191,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, extended, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -204,9 +205,10 @@ public class InAppMessageManagerTest {
 
         // Finish displaying the message
         ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
-        manager.onDisplayFinished(scheduleId, resolutionInfo, 100);
+        manager.onResolution(scheduleId, resolutionInfo, 100);
+        manager.onDisplayFinished(scheduleId, resolutionInfo);
         verify(mockListener).onMessageFinished(scheduleId, extended, resolutionInfo);
-        verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.isResolution()));
         verify(mockCoordinator).onDisplayFinished(extended);
         verify(mockAdapter).onFinish(any(Context.class));
         verify(mockAssetManager).onDisplayFinished(scheduleId, extended);
@@ -214,6 +216,31 @@ public class InAppMessageManagerTest {
 
         // Verify the display actions ran
         verify(actionRunRequest).run();
+    }
+
+    @Test
+    public void testAddEvent() {
+        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
+
+        // Prepare the schedule
+        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
+        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        // Make sure it's ready
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, manager.onCheckExecutionReadiness(scheduleId));
+
+        // Display the message
+        AutomationDriver.ExecutionCallback mockExecuteCallback = mock(AutomationDriver.ExecutionCallback.class);
+        manager.onExecute(scheduleId, mockExecuteCallback);
+        verify(mockListener).onMessageDisplayed(scheduleId, message);
+
+        manager.onAddEvent(scheduleId, InAppReportingEvent.buttonTap(scheduleId, message, "button id"));
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.eventType(InAppReportingEvent.TYPE_BUTTON_TAP)));
     }
 
     @Test
@@ -228,7 +255,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, extended, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -241,7 +268,8 @@ public class InAppMessageManagerTest {
 
         // Finish displaying the in-app message
         ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
-        manager.onDisplayFinished(scheduleId, resolutionInfo, 100);
+        manager.onResolution(scheduleId, resolutionInfo, 100);
+        manager.onDisplayFinished(scheduleId, resolutionInfo);
         verify(mockExecuteCallback).onFinish();
 
         verifyNoInteractions(mockAnalytics);
@@ -255,7 +283,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -290,7 +318,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
@@ -312,7 +340,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -334,7 +362,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once
@@ -351,7 +379,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
 
         // Should call it once
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -376,7 +404,7 @@ public class InAppMessageManagerTest {
         // Prepare the message
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        manager.onPrepare(scheduleId, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
 
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
             @Override

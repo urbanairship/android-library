@@ -34,6 +34,7 @@ public class ScheduleEdits<T extends ScheduleData> {
     @Schedule.Type
     private final String type;
     private final JsonValue campaigns;
+    private final JsonValue reportingContext;
     private final List<String> frequencyConstraintIds;
 
     private ScheduleEdits(@NonNull Builder<T> builder) {
@@ -49,6 +50,7 @@ public class ScheduleEdits<T extends ScheduleData> {
         this.audience = builder.audience;
         this.frequencyConstraintIds = builder.frequencyConstraintIds;
         this.campaigns = builder.campaigns;
+        this.reportingContext = builder.reportingContext;
     }
 
     /**
@@ -155,7 +157,6 @@ public class ScheduleEdits<T extends ScheduleData> {
         return audience;
     }
 
-
     /**
      * The campaigns info.
      *
@@ -166,6 +167,18 @@ public class ScheduleEdits<T extends ScheduleData> {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getCampaigns() {
         return campaigns;
+    }
+
+    /**
+     * The reporting context.
+     *
+     * @return The reporting context.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getReportingContext() {
+        return reportingContext;
     }
 
     /**
@@ -251,6 +264,7 @@ public class ScheduleEdits<T extends ScheduleData> {
         private JsonMap metadata;
         private T data;
         private JsonValue campaigns;
+        private JsonValue reportingContext;
         private List<String> frequencyConstraintIds;
 
         @Schedule.Type
@@ -277,6 +291,7 @@ public class ScheduleEdits<T extends ScheduleData> {
             this.metadata = edits.metadata;
             this.campaigns = edits.campaigns;
             this.frequencyConstraintIds = edits.frequencyConstraintIds;
+            this.reportingContext = edits.reportingContext;
         }
 
         /**
@@ -387,6 +402,20 @@ public class ScheduleEdits<T extends ScheduleData> {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder<T> setCampaigns(@Nullable JsonValue campaigns) {
             this.campaigns = campaigns;
+            return this;
+        }
+
+        /**
+         * Sets the reporting context.
+         *
+         * @param reportingContext The reporting context.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setReportingContext(@Nullable JsonValue reportingContext) {
+            this.reportingContext = reportingContext;
             return this;
         }
 

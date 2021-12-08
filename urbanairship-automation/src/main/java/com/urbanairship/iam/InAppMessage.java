@@ -250,9 +250,12 @@ public class InAppMessage implements Parcelable, ScheduleData {
         return source;
     }
 
+    /**
+     * @hide
+     */
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    Map<String, JsonValue> getRenderedLocale() {
+    public Map<String, JsonValue> getRenderedLocale() {
         return renderedLocale;
     }
 

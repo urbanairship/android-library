@@ -25,8 +25,6 @@ import androidx.annotation.WorkerThread;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 final class AdapterWrapper {
 
-
-
     static class DisplayException extends Exception {
 
         /**
@@ -38,23 +36,26 @@ final class AdapterWrapper {
         DisplayException(String message, Exception e) {
             super(message, e);
         }
-
     }
 
     public final String scheduleId;
+    public final JsonValue campaigns;
+    public final JsonValue reportingContext;
     public final InAppMessage message;
     public final InAppMessageAdapter adapter;
     public final DisplayCoordinator coordinator;
+
     public boolean displayed = false;
-    public final JsonValue campaigns;
 
     AdapterWrapper(@NonNull String scheduleId,
                    @Nullable JsonValue campaigns,
+                   @Nullable JsonValue reportingContext,
                    @NonNull InAppMessage message,
                    @NonNull InAppMessageAdapter adapter,
                    @NonNull DisplayCoordinator coordinator) {
         this.scheduleId = scheduleId;
         this.campaigns = campaigns;
+        this.reportingContext = reportingContext;
         this.message = message;
         this.adapter = adapter;
         this.coordinator = coordinator;

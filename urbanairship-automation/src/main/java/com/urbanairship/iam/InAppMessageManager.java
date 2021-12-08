@@ -13,6 +13,7 @@ import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
+import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.layout.AirshipLayoutAdapterFactory;
@@ -235,9 +236,10 @@ public class InAppMessageManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onPrepare(final @NonNull String scheduleId,
                           final @Nullable JsonValue campaigns,
+                          final @Nullable JsonValue reportingContext,
                           final @NonNull InAppMessage inAppMessage,
                           final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, campaigns, inAppMessage);
+        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, campaigns, reportingContext, inAppMessage);
         if (adapter == null) {
             // Failed
             callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -353,7 +355,10 @@ public class InAppMessageManager {
         }
 
         if (adapterWrapper.message.isReportingEnabled()) {
-            analytics.addEvent(DisplayEvent.newEvent(scheduleId, adapterWrapper.message, adapterWrapper.campaigns));
+            InAppReportingEvent.display(scheduleId, adapterWrapper.message)
+                               .setCampaigns(adapterWrapper.campaigns)
+                               .setReportingContext(adapterWrapper.reportingContext)
+                               .record(analytics);
         }
 
         synchronized (listeners) {
@@ -390,33 +395,49 @@ public class InAppMessageManager {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onExecutionInterrupted(@NonNull final String scheduleId, @Nullable final JsonValue campaigns, @Nullable final InAppMessage message) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (message == null) {
-                    // Null message means it was deferred
-                    ResolutionEvent event = ResolutionEvent.newEvent(scheduleId, InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 0, campaigns);
-                    analytics.addEvent(event);
-                } else if (message.isReportingEnabled()) {
-                    ResolutionEvent event = ResolutionEvent.newEvent(scheduleId, InAppMessage.SOURCE_REMOTE_DATA, ResolutionInfo.dismissed(), 0, campaigns);
-                    analytics.addEvent(event);
-                }
+    public void onExecutionInterrupted(@NonNull final String scheduleId, @Nullable final JsonValue campaigns, @Nullable final JsonValue reportingContext, @Nullable final InAppMessage message) {
+        executor.execute(() -> {
+            // Null message must be deferred
+            if (message == null || message.isReportingEnabled()) {
+                String source = message != null ? message.getSource() : InAppMessage.SOURCE_REMOTE_DATA;
+                InAppReportingEvent.interrupted(scheduleId, source)
+                                   .setReportingContext(reportingContext)
+                                   .setCampaigns(campaigns)
+                                   .record(analytics);
             }
         });
     }
 
     /**
-     * Called by the display handler when an in-app message is finished.
+     * Called by the display handler to generate resolution event for standard adapters.
      *
      * @param scheduleId The schedule ID.
      * @param resolutionInfo Info on why the event is finished.
-     * @param displayMilliseconds The display time in milliseconds
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
-    void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayMilliseconds) {
+    void onResolution(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayTime) {
+        Logger.verbose("Message finished for schedule %s.", scheduleId);
+
+        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+
+        // No record
+        if (adapterWrapper == null) {
+            return;
+        }
+
+        if (adapterWrapper.message.isReportingEnabled()) {
+            InAppReportingEvent.resolution(scheduleId, adapterWrapper.message, displayTime, resolutionInfo)
+                               .setCampaigns(adapterWrapper.campaigns)
+                               .setReportingContext(adapterWrapper.reportingContext)
+                               .record(analytics);
+        }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @MainThread
+    void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo) {
         Logger.verbose("Message finished for schedule %s.", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
@@ -424,13 +445,6 @@ public class InAppMessageManager {
         // No record
         if (adapterWrapper == null) {
             return;
-        }
-
-        // Add resolution event
-        if (adapterWrapper.message.isReportingEnabled()) {
-            InAppMessageEvent event = ResolutionEvent.newEvent(scheduleId, adapterWrapper.message.getSource(),
-                    resolutionInfo, displayMilliseconds, adapterWrapper.campaigns);
-            analytics.addEvent(event);
         }
 
         // Run Actions
@@ -446,14 +460,36 @@ public class InAppMessageManager {
         // Finish the schedule
         callExecutionFinishedCallback(scheduleId);
         adapterWrapper.displayFinished();
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                adapterWrapper.adapterFinished(context);
-                // Notify the asset manager
-                assetManager.onDisplayFinished(adapterWrapper.scheduleId, adapterWrapper.message);
-            }
+        executor.execute(() -> {
+            adapterWrapper.adapterFinished(context);
+            // Notify the asset manager
+            assetManager.onDisplayFinished(adapterWrapper.scheduleId, adapterWrapper.message);
         });
+    }
+
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @MainThread
+    void onAddEvent(@NonNull String scheduleId, @NonNull InAppReportingEvent event) {
+        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        // No record
+        if (adapterWrapper == null) {
+            return;
+        }
+
+        if (adapterWrapper.message.isReportingEnabled()) {
+            event.setCampaigns(adapterWrapper.campaigns)
+                 .setReportingContext(adapterWrapper.reportingContext)
+                 .record(analytics);
+        }
+    }
+
+    private void addEvent(AdapterWrapper adapterWrapper, InAppReportingEvent event) {
+        if (adapterWrapper.message.isReportingEnabled()) {
+            event.setCampaigns(adapterWrapper.campaigns)
+                 .setReportingContext(adapterWrapper.reportingContext)
+                 .record(analytics);
+        }
     }
 
     /**
@@ -500,12 +536,14 @@ public class InAppMessageManager {
      *
      * @param scheduleId The schedule Id.
      * @param campaigns The campaign info.
+     * @param campaigns The reporting context.
      * @param message The message.
      * @return The adapter wrapper.
      */
     @Nullable
     private AdapterWrapper createAdapterWrapper(@NonNull String scheduleId,
                                                 @Nullable JsonValue campaigns,
+                                                @Nullable JsonValue reportingContext,
                                                 @NonNull InAppMessage message) {
         InAppMessageAdapter adapter = null;
         DisplayCoordinator coordinator = null;
@@ -552,7 +590,7 @@ public class InAppMessageManager {
         }
 
         coordinator.setDisplayReadyCallback(displayReadyCallback);
-        return new AdapterWrapper(scheduleId, campaigns, message, adapter, coordinator);
+        return new AdapterWrapper(scheduleId, campaigns, reportingContext, message, adapter, coordinator);
     }
 
     /**
@@ -585,5 +623,4 @@ public class InAppMessageManager {
             }
         }
     }
-
 }

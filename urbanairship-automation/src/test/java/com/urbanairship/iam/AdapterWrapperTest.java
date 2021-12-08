@@ -54,7 +54,7 @@ public class AdapterWrapperTest {
                                            .addAction("action_name", JsonValue.wrap("action_value"))
                                            .build();
 
-        adapterWrapper = new AdapterWrapper("schedule id", JsonValue.wrap("campaigns"), message, mockAdapter, mockCoordinator);
+        adapterWrapper = new AdapterWrapper("schedule id", JsonValue.wrap("campaigns"),  JsonValue.wrap("reporting"), message, mockAdapter, mockCoordinator);
 
         context = ApplicationProvider.getApplicationContext();
     }

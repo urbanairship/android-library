@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.playground
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.webkit.WebView
 import android.widget.ArrayAdapter
@@ -13,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
-import com.urbanairship.android.layout.event.EventListener
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.util.ResourceUtils
 
@@ -23,11 +21,6 @@ class MainActivity : AppCompatActivity() {
         private const val PREF_NAME = "layout-playground"
         private const val PREF_KEY = "selected-layout"
         private const val SAMPLE_LAYOUTS_PATH = "sample_layouts"
-    }
-
-    private val eventListener = EventListener { event ->
-        Log.i("MainActivity", "Received event: $event")
-        true
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -96,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = BasePayload.fromJson(jsonMap)
-            Thomas.prepareDisplay(payload).setEventListener(eventListener).display(this)
+            Thomas.prepareDisplay(payload).display(this)
         } catch (e: Exception) {
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
         }

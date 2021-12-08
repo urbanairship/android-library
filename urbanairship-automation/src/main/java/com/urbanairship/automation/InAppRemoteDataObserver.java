@@ -79,6 +79,7 @@ class InAppRemoteDataObserver {
     private static final String DEFERRED_KEY = "deferred";
     private static final String ACTIONS_KEY = "actions";
     private static final String CAMPAIGNS_KEY = "campaigns";
+    private static final String REPORTING_CONTEXT_KEY = "reporting_context";
     private static final String FREQUENCY_CONSTRAINT_IDS_KEY = "frequency_constraint_ids";
 
     // Data store keys
@@ -473,6 +474,7 @@ class InAppRemoteDataObserver {
                .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
                .setCampaigns(jsonMap.opt(CAMPAIGNS_KEY))
+               .setReportingContext(jsonMap.opt(REPORTING_CONTEXT_KEY))
                .setAudience(parseAudience(value))
                .setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD_KEY).getLong(0), TimeUnit.DAYS)
                .setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS)
@@ -537,6 +539,7 @@ class InAppRemoteDataObserver {
                .setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS)
                .setAudience(parseAudience(value))
                .setCampaigns(jsonMap.opt(CAMPAIGNS_KEY))
+               .setReportingContext(jsonMap.opt(REPORTING_CONTEXT_KEY))
                .setStart(parseTimeStamp(jsonMap.opt(START_KEY).getString()))
                .setEnd(parseTimeStamp(jsonMap.opt(END_KEY).getString()))
                .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()));

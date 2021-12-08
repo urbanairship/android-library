@@ -45,6 +45,8 @@ public class ScheduleEntity {
     public String regionId;
     public Audience audience;
     public JsonValue campaigns;
+    public JsonValue reportingContext;
+
     public List<String> frequencyConstraintIds;
 
     @Override
@@ -72,6 +74,7 @@ public class ScheduleEntity {
                 ", regionId='" + regionId + '\'' +
                 ", audience=" + audience +
                 ", campaigns=" + campaigns +
+                ", reportingContext=" + reportingContext +
                 ", frequencyConstraintIds=" + frequencyConstraintIds +
                 '}';
     }

@@ -3,7 +3,7 @@ package com.urbanairship.android.layout.ui;
 import android.os.Parcel;
 
 import com.urbanairship.android.layout.BasePayload;
-import com.urbanairship.android.layout.event.EventListener;
+import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -57,8 +57,8 @@ public class DisplayArgsLoaderTest extends TestCase {
 
     @Test
     public void testParcelable() throws DisplayArgsLoader.LoadException {
-        EventListener eventListener = mock(EventListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, eventListener);
+        ThomasListener listener = mock(ThomasListener.class);
+        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         // Write
@@ -72,13 +72,13 @@ public class DisplayArgsLoaderTest extends TestCase {
         DisplayArgsLoader fromParcel = DisplayArgsLoader.CREATOR.createFromParcel(parcel);
 
         assertEquals(loader.getLayoutArgs().getPayload(), fromParcel.getLayoutArgs().getPayload());
-        assertEquals(loader.getLayoutArgs().getEventListener(), fromParcel.getLayoutArgs().getEventListener());
+        assertEquals(loader.getLayoutArgs().getListener(), fromParcel.getLayoutArgs().getListener());
     }
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismiss() throws DisplayArgsLoader.LoadException {
-        EventListener eventListener = mock(EventListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, eventListener);
+        ThomasListener listener = mock(ThomasListener.class);
+        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
         loader.dispose();
         loader.getLayoutArgs();
@@ -86,8 +86,8 @@ public class DisplayArgsLoaderTest extends TestCase {
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismissParcel() throws DisplayArgsLoader.LoadException {
-        EventListener eventListener = mock(EventListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, eventListener);
+        ThomasListener listener = mock(ThomasListener.class);
+        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         Parcel parcel = Parcel.obtain();

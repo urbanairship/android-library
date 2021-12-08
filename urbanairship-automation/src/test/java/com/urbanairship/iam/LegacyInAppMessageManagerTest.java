@@ -9,6 +9,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.Event;
 import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.banner.BannerDisplayContent;
@@ -127,7 +128,7 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(otherPush, true);
 
         // Verify it added a resolution event for the previous message
-        verify(analytics).addEvent(any(ResolutionEvent.class));
+        verify(analytics).addEvent(argThat(EventMatchers.isResolution()));
     }
 
 
@@ -150,7 +151,7 @@ public class LegacyInAppMessageManagerTest {
         pushListener.onPushReceived(otherPush, true);
 
         // Verify it did not add a resolution event for the previous message
-        verify(analytics, never()).addEvent(any(ResolutionEvent.class));
+        verify(analytics, never()).addEvent(argThat(EventMatchers.isResolution()));
     }
 
     @Test
@@ -168,7 +169,7 @@ public class LegacyInAppMessageManagerTest {
         notificationListener.onNotificationResponse(info, null);
 
         // Verify it added a resolution event for the message
-        verify(analytics).addEvent(any(ResolutionEvent.class));
+        verify(analytics).addEvent(argThat(EventMatchers.isResolution()));
     }
 
     @Test
@@ -186,7 +187,7 @@ public class LegacyInAppMessageManagerTest {
         notificationListener.onNotificationResponse(info, null);
 
         // Verify it did not add a resolution event for the message
-        verify(analytics, never()).addEvent(any(ResolutionEvent.class));
+        verify(analytics, never()).addEvent(argThat(EventMatchers.isResolution()));
     }
 
     @Test

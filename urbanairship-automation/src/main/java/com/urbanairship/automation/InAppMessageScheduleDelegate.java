@@ -36,7 +36,7 @@ class InAppMessageScheduleDelegate implements ScheduleDelegate<InAppMessage> {
 
     @Override
     public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull InAppMessage message, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        messageManager.onPrepare(schedule.getId(), schedule.getCampaigns(), message, callback);
+        messageManager.onPrepare(schedule.getId(), schedule.getCampaigns(), schedule.getReportingContext(), message, callback);
     }
 
     @Override
@@ -47,7 +47,7 @@ class InAppMessageScheduleDelegate implements ScheduleDelegate<InAppMessage> {
     @Override
     public void onExecutionInterrupted(@NonNull Schedule<? extends ScheduleData> schedule) {
         InAppMessage message = Schedule.TYPE_IN_APP_MESSAGE.equals(schedule.getType()) ? (InAppMessage) schedule.coerceType() : null;
-        messageManager.onExecutionInterrupted(schedule.getId(), schedule.getCampaigns(), message);
+        messageManager.onExecutionInterrupted(schedule.getId(), schedule.getCampaigns(), schedule.getReportingContext(), message);
     }
 
     @Override

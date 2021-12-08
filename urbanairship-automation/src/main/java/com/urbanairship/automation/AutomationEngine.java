@@ -4,7 +4,6 @@ package com.urbanairship.automation;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -1756,6 +1755,7 @@ public class AutomationEngine {
         scheduleEntity.scheduleType = edits.getType() == null ? scheduleEntity.scheduleType : edits.getType();
         scheduleEntity.audience = edits.getAudience() == null ? scheduleEntity.audience : edits.getAudience();
         scheduleEntity.campaigns = edits.getCampaigns() == null ? scheduleEntity.campaigns : edits.getCampaigns();
+        scheduleEntity.reportingContext = edits.getReportingContext() == null ? scheduleEntity.reportingContext : edits.getReportingContext();
         scheduleEntity.frequencyConstraintIds = edits.getFrequencyConstraintIds() == null ? scheduleEntity.frequencyConstraintIds : edits.getFrequencyConstraintIds();
     }
 

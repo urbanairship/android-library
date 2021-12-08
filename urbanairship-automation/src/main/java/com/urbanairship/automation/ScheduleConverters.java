@@ -48,6 +48,7 @@ class ScheduleConverters {
                                          .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
                                          .setAudience(entry.schedule.audience)
                                          .setCampaigns(entry.schedule.campaigns)
+                                         .setReportingContext(entry.schedule.reportingContext)
                                          .setFrequencyConstraintIds(entry.schedule.frequencyConstraintIds);
 
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
@@ -90,6 +91,7 @@ class ScheduleConverters {
         entity.scheduleType = schedule.getType();
         entity.data = schedule.getDataAsJson();
         entity.campaigns = schedule.getCampaigns();
+        entity.reportingContext = schedule.getReportingContext();
         entity.frequencyConstraintIds = schedule.getFrequencyConstraintIds();
 
         for (Trigger trigger : schedule.getTriggers()) {

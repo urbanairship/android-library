@@ -257,10 +257,11 @@ public final class Thomas {
         }
     }
 
-    public static final class PendingDisplay {
+    public static class PendingDisplay {
+
         private final DisplayCallback displayCallback;
         private final BasePayload payload;
-        private EventListener eventListener;
+        private ThomasListener listener;
 
         private PendingDisplay(@NonNull BasePayload payload,
                                @NonNull DisplayCallback displayCallback) {
@@ -269,13 +270,13 @@ public final class Thomas {
         }
 
         @NonNull
-        public PendingDisplay setEventListener(@Nullable EventListener eventListener) {
-            this.eventListener = eventListener;
+        public PendingDisplay setListener(@Nullable ThomasListener listener) {
+            this.listener = listener;
             return this;
         }
 
         public void display(@NonNull Context context) {
-            DisplayArgs args = new DisplayArgs(payload, eventListener);
+            DisplayArgs args = new DisplayArgs(payload, listener);
             displayCallback.display(context, args);
         }
     }

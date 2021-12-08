@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Schedule.
@@ -84,6 +85,7 @@ public final class Schedule<T extends ScheduleData> {
     private final String group;
     private final Audience audience;
     private final JsonValue campaigns;
+    private final JsonValue reportingContext;
     private final List<String> frequencyConstraintIds;
 
     @Type
@@ -111,6 +113,7 @@ public final class Schedule<T extends ScheduleData> {
         this.group = builder.group;
         this.audience = builder.audience;
         this.campaigns = builder.campaigns == null ? JsonValue.NULL : builder.campaigns;
+        this.reportingContext = builder.reportingContext == null ? JsonValue.NULL : builder.reportingContext;
         this.frequencyConstraintIds = builder.frequencyConstraintIds == null ? Collections.<String>emptyList() : Collections.unmodifiableList(builder.frequencyConstraintIds);
     }
 
@@ -183,6 +186,18 @@ public final class Schedule<T extends ScheduleData> {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getCampaigns() {
         return campaigns;
+    }
+
+    /**
+     * The reporting context.
+     *
+     * @return The reporting context.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getReportingContext() {
+        return reportingContext;
     }
 
     /**
@@ -370,6 +385,11 @@ public final class Schedule<T extends ScheduleData> {
             return false;
         if (campaigns != null ? !campaigns.equals(schedule.campaigns) : schedule.campaigns != null)
             return false;
+
+        if (!ObjectsCompat.equals(reportingContext, schedule.reportingContext)) {
+            return false;
+        }
+
         if (frequencyConstraintIds != null ? !frequencyConstraintIds.equals(schedule.frequencyConstraintIds) : schedule.frequencyConstraintIds != null)
             return false;
         if (!type.equals(schedule.type)) return false;
@@ -394,6 +414,7 @@ public final class Schedule<T extends ScheduleData> {
         result = 31 * result + (frequencyConstraintIds != null ? frequencyConstraintIds.hashCode() : 0);
         result = 31 * result + type.hashCode();
         result = 31 * result + data.hashCode();
+        result = 31 * result + reportingContext.hashCode();
         return result;
     }
 
@@ -416,6 +437,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", type='" + type + '\'' +
                 ", data=" + data +
                 ", campaigns=" + campaigns +
+                ", reportingContext=" + reportingContext +
                 ", frequencyConstraintIds=" + frequencyConstraintIds +
                 '}';
     }
@@ -441,6 +463,7 @@ public final class Schedule<T extends ScheduleData> {
         private String id;
         private Audience audience;
         private JsonValue campaigns;
+        private JsonValue reportingContext;
         private List<String> frequencyConstraintIds;
 
         private Builder(@NonNull Schedule<T> info) {
@@ -460,6 +483,7 @@ public final class Schedule<T extends ScheduleData> {
             this.group = info.group;
             this.campaigns = info.campaigns;
             this.frequencyConstraintIds = info.frequencyConstraintIds;
+            this.reportingContext = info.reportingContext;
         }
 
         private Builder(@NonNull @Type String type, @NonNull T data) {
@@ -637,6 +661,20 @@ public final class Schedule<T extends ScheduleData> {
         @NonNull
         public Builder<T> setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the reporting context.
+         *
+         * @param reportingContext The reporting context.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setReportingContext(@Nullable JsonValue reportingContext) {
+            this.reportingContext = reportingContext;
             return this;
         }
 

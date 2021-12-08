@@ -131,6 +131,26 @@ public final class ResolutionInfo implements JsonSerializable {
         return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, buttonInfo);
     }
 
+
+    /**
+     * Factory method to create a resolution info for a button press.
+     *
+     * @param buttonId The button id.
+     * @param buttonDescription The button description.
+     * @param cancel If the button should cancel or not.
+     * @return The resolution info.
+     */
+    @NonNull
+    public static ResolutionInfo buttonPressed(@NonNull String buttonId, @Nullable String buttonDescription, boolean cancel) {
+        ButtonInfo buttonInfo = ButtonInfo.newBuilder()
+                                          .setBehavior(cancel ? ButtonInfo.BEHAVIOR_CANCEL : ButtonInfo.BEHAVIOR_DISMISS)
+                                          .setId(buttonId)
+                                          .setLabel(TextInfo.newBuilder()
+                                                            .setText(buttonDescription == null ? buttonId : buttonDescription)
+                                                            .build())
+                                          .build();
+        return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, buttonInfo);
+    }
     /**
      * Factory method to create a resolution info for when a clickable in-app message was clicked.
      *

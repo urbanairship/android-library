@@ -15,6 +15,7 @@ import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.banner.BannerDisplayContent;
+import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.push.InternalNotificationListener;
 import com.urbanairship.push.NotificationActionButtonInfo;
@@ -169,8 +170,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
                                 Logger.debug("Pending in-app message replaced.");
-                                InAppMessageEvent resolutionEvent = ResolutionEvent.newLegacyMessageReplacedEvent(pendingMessageId, messageId);
-                                analytics.addEvent(resolutionEvent);
+                                InAppReportingEvent.legacyReplaced(pendingMessageId, messageId)
+                                                   .record(analytics);
                             }
                         }
                     });
@@ -199,8 +200,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         if (result != null && result) {
                             Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
                             // Direct open event
-                            InAppMessageEvent resolutionEvent = ResolutionEvent.newLegacyMessagePushOpenedEvent(push.getSendId());
-                            analytics.addEvent(resolutionEvent);
+                            InAppReportingEvent.legacyPushOpened(push.getSendId())
+                                               .record(analytics);
                         }
                     }
                 });

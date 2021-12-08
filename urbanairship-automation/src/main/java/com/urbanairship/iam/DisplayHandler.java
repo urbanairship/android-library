@@ -10,6 +10,7 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.iam.events.InAppReportingEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -87,12 +88,51 @@ public class DisplayHandler implements Parcelable {
             return;
         }
 
-        inAppAutomation.getInAppMessageManager().onDisplayFinished(scheduleId, resolutionInfo, displayMilliseconds);
+        inAppAutomation.getInAppMessageManager().onResolution(scheduleId, resolutionInfo, displayMilliseconds);
+        notifyFinished(resolutionInfo);
 
         // Cancel the schedule if a cancel button was tapped
         if (resolutionInfo.getButtonInfo() != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.getButtonInfo().getBehavior())) {
             inAppAutomation.cancelSchedule(scheduleId);
         }
+    }
+
+    /**
+     * Called when the in-app message is finished displaying.
+     *
+     * This method differs from {@link #finished(ResolutionInfo, long)} by not inpsecting will not inspect the resolution info and cancel
+     * the IAA, while
+     *
+     * @param resolutionInfo Info on why the message has finished.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void notifyFinished(@NonNull ResolutionInfo resolutionInfo) {
+        InAppAutomation inAppAutomation = getInAppAutomation();
+        if (inAppAutomation == null) {
+            Logger.error("Takeoff not called. Unable to finish display for schedule: %s", scheduleId);
+            return;
+        }
+
+        inAppAutomation.getInAppMessageManager().onDisplayFinished(scheduleId, resolutionInfo);
+    }
+
+    /**
+     * Adds an event.
+     * @param event The event.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addEvent(InAppReportingEvent event) {
+        InAppAutomation inAppAutomation = getInAppAutomation();
+        if (inAppAutomation == null) {
+            Logger.error("Takeoff not called. Unable to finish display for schedule: %s", scheduleId);
+            return;
+        }
+
+        inAppAutomation.getInAppMessageManager().onAddEvent(scheduleId, event);
     }
 
     /**
