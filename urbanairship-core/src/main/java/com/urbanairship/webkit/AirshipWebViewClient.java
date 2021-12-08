@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -28,8 +29,10 @@ import com.urbanairship.js.UrlAllowList;
 
 import java.io.BufferedInputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
@@ -49,6 +52,18 @@ public class AirshipWebViewClient extends WebViewClient {
     private boolean faviconEnabled = false;
 
     /**
+     * WebView client listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public interface Listener {
+        void onPageFinished(@NonNull final WebView view, final @Nullable String url);
+        void onReceivedError(@NonNull WebView view, @NonNull WebResourceRequest request, @NonNull WebResourceError error);
+    }
+
+    private List<Listener> listeners = new CopyOnWriteArrayList<>();
+
+    /**
      * Default constructor.
      */
     public AirshipWebViewClient() {
@@ -65,6 +80,17 @@ public class AirshipWebViewClient extends WebViewClient {
     @VisibleForTesting
     protected AirshipWebViewClient(@NonNull NativeBridge nativeBridge) {
         this.nativeBridge = nativeBridge;
+    }
+
+    @Override
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        super.onReceivedError(view, request, error);
+
+        if (view != null && request != null && error != null) {
+            for (Listener listener : listeners) {
+                listener.onReceivedError(view, request, error);
+            }
+        }
     }
 
     /**
@@ -268,6 +294,10 @@ public class AirshipWebViewClient extends WebViewClient {
             return;
         }
 
+        for (Listener listener : listeners) {
+            listener.onPageFinished(view, url);
+        }
+
         if (!isAllowed(url)) {
             Logger.debug("%s is not an allowed URL. Airship Javascript interface will not be accessible.", url);
             return;
@@ -330,6 +360,26 @@ public class AirshipWebViewClient extends WebViewClient {
      */
     public void removeAuthRequestCredentials(@NonNull String expectedAuthHost) {
         authRequestCredentials.remove(expectedAuthHost);
+    }
+
+    /**
+     * Adds a listener.
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void addListener(@NonNull Listener listener) {
+        this.listeners.add(listener);
+    }
+
+    /**
+     * Removes a listener.
+     * @param listener The listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeListener(@NonNull Listener listener) {
+        this.listeners.remove(listener);
     }
 
     /**

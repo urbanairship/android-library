@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.view.View;
 
 import com.urbanairship.android.layout.environment.Environment;
-import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.CheckboxController;
@@ -36,6 +35,8 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.ui.DisplayArgs;
 import com.urbanairship.android.layout.ui.DisplayArgsLoader;
 import com.urbanairship.android.layout.ui.ModalActivity;
+import com.urbanairship.android.layout.util.Factory;
+import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.android.layout.view.CheckboxView;
 import com.urbanairship.android.layout.view.ContainerLayoutView;
@@ -55,6 +56,7 @@ import com.urbanairship.android.layout.view.ToggleView;
 import com.urbanairship.android.layout.view.WebViewView;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.webkit.AirshipWebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -63,19 +65,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Thomas {
 
     private interface DisplayCallback {
+
         void display(@NonNull Context context, @NonNull DisplayArgs args);
+
     }
 
     public static class DisplayException extends Exception {
+
         public DisplayException(String message) {
             super(message);
         }
+
     }
 
     private Thomas() {}
@@ -243,6 +250,7 @@ public final class Thomas {
     }
 
     public static class LayoutViewHolder<V extends View & BaseView<M>, M extends BaseModel> extends RecyclerView.ViewHolder {
+
         private final V view;
 
         public LayoutViewHolder(@NonNull V itemView) {
@@ -255,6 +263,7 @@ public final class Thomas {
             //noinspection unchecked
             view.setModel((M) item, environment);
         }
+
     }
 
     public static class PendingDisplay {
@@ -262,6 +271,8 @@ public final class Thomas {
         private final DisplayCallback displayCallback;
         private final BasePayload payload;
         private ThomasListener listener;
+        private ImageCache imageCache;
+        private Factory<AirshipWebViewClient> webViewClientFactory;
 
         private PendingDisplay(@NonNull BasePayload payload,
                                @NonNull DisplayCallback displayCallback) {
@@ -275,9 +286,23 @@ public final class Thomas {
             return this;
         }
 
+        @NonNull
+        public PendingDisplay setImageCache(@Nullable ImageCache imageCache) {
+            this.imageCache = imageCache;
+            return this;
+        }
+
+        @NonNull
+        public PendingDisplay setWebViewClientFactory(@Nullable Factory<AirshipWebViewClient> webViewClientFactory) {
+            this.webViewClientFactory = webViewClientFactory;
+            return this;
+        }
+
         public void display(@NonNull Context context) {
-            DisplayArgs args = new DisplayArgs(payload, listener);
+            DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache);
             displayCallback.display(context, args);
         }
+
     }
+
 }

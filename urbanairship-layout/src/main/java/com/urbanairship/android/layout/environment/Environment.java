@@ -5,6 +5,9 @@ package com.urbanairship.android.layout.environment;
 import android.webkit.WebChromeClient;
 
 import com.urbanairship.android.layout.util.Factory;
+import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.webkit.AirshipWebChromeClient;
+import com.urbanairship.webkit.AirshipWebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -21,4 +24,11 @@ public interface Environment {
 
     @NonNull
     Factory<WebChromeClient> webChromeClientFactory();
+
+    @NonNull
+    Factory<AirshipWebViewClient> webViewClientFactory();
+
+
+    @NonNull
+    ImageCache imageCache();
 }

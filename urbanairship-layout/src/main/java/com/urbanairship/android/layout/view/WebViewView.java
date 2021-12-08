@@ -142,25 +142,23 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             settings.setDatabaseEnabled(true);
         }
 
-        WeakReference<WebView> webViewWeakReference = new WeakReference<>(webView);
-
-        Runnable load = () -> {
-            WebView webView = webViewWeakReference.get();
-            if (webView == null) {
-                return;
-            }
-            webView.loadUrl(model.getUrl());
-        };
-
-        webView.setWebChromeClient(chromeClient);
-        webView.setVisibility(View.INVISIBLE);
-        webView.setWebViewClient(new Client(load) {
+        AirshipWebViewClient client = environment.webViewClientFactory().create();
+        client.addListener(new ClientListener() {
             @Override
             protected void onPageFinished(@NonNull WebView webView) {
                 webView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(GONE);
             }
+
+            @Override
+            protected void onRetry(@NonNull WebView webView) {
+                webView.loadUrl(model.getUrl());
+            }
         });
+
+        webView.setWebChromeClient(chromeClient);
+        webView.setVisibility(View.INVISIBLE);
+        webView.setWebViewClient(client);
 
         addView(frameLayout);
 
@@ -169,29 +167,26 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             return;
         }
 
-        load.run();
+        webView.loadUrl(model.getUrl());
     }
 
-    private abstract static class Client extends AirshipWebViewClient {
+    private abstract static class ClientListener implements AirshipWebViewClient.Listener {
         static final long START_RETRY_DELAY = 1000;
 
-        private final Runnable onRetry;
         boolean error = false;
         long retryDelay = START_RETRY_DELAY;
 
-        private Client(Runnable onRetry) {
-            this.onRetry = onRetry;
-        }
 
         @Override
-        public void onPageFinished(@Nullable WebView view, String url) {
-            super.onPageFinished(view, url);
-            if (view == null) {
-                return;
-            }
-
+        public void onPageFinished(@NonNull WebView view, @Nullable String url) {
             if (error) {
-                view.postDelayed(onRetry, retryDelay);
+                WeakReference<WebView> webViewWeakReference = new WeakReference<>(view);
+                view.postDelayed(() -> {
+                    WebView webView = webViewWeakReference.get();
+                    if (webView != null) {
+                        onRetry(webView);
+                    }
+                }, retryDelay);
                 retryDelay = retryDelay * 2;
             } else {
                 onPageFinished(view);
@@ -201,13 +196,15 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         }
 
         @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, @NonNull WebResourceError error) {
-            super.onReceivedError(view, request, error);
+        public void onReceivedError(@NonNull WebView view, @NonNull WebResourceRequest request, @NonNull WebResourceError error) {
             Logger.error("Error loading web view! %d - %s", error.getErrorCode(), error.getDescription());
             this.error = true;
         }
 
-        protected abstract void onPageFinished(WebView webView);
+        protected abstract void onPageFinished(@NonNull WebView webView);
+
+        protected abstract void onRetry(@NonNull WebView webView);
+
     }
 
     private final LifecycleObserver lifecycleListener = new DefaultLifecycleObserver() {

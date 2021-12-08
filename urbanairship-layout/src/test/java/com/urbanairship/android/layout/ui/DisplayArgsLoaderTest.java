@@ -4,8 +4,11 @@ import android.os.Parcel;
 
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.util.Factory;
+import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.webkit.AirshipWebViewClient;
 
 import junit.framework.TestCase;
 
@@ -58,7 +61,9 @@ public class DisplayArgsLoaderTest extends TestCase {
     @Test
     public void testParcelable() throws DisplayArgsLoader.LoadException {
         ThomasListener listener = mock(ThomasListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
+        ImageCache imageCache = url -> null;
+        Factory<AirshipWebViewClient> clientFactory = AirshipWebViewClient::new;
+        DisplayArgs displayArgs = new DisplayArgs(payload, listener, clientFactory, imageCache);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         // Write
@@ -71,23 +76,24 @@ public class DisplayArgsLoaderTest extends TestCase {
         // Read
         DisplayArgsLoader fromParcel = DisplayArgsLoader.CREATOR.createFromParcel(parcel);
 
-        assertEquals(loader.getLayoutArgs().getPayload(), fromParcel.getLayoutArgs().getPayload());
-        assertEquals(loader.getLayoutArgs().getListener(), fromParcel.getLayoutArgs().getListener());
+        assertEquals(loader.getDisplayArgs().getPayload(), fromParcel.getDisplayArgs().getPayload());
+        assertEquals(loader.getDisplayArgs().getListener(), fromParcel.getDisplayArgs().getListener());
+        assertEquals(loader.getDisplayArgs().getImageCache(), fromParcel.getDisplayArgs().getImageCache());
+        assertEquals(loader.getDisplayArgs().getWebViewClientFactory(), fromParcel.getDisplayArgs().getWebViewClientFactory());
+
     }
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismiss() throws DisplayArgsLoader.LoadException {
-        ThomasListener listener = mock(ThomasListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
+        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
         loader.dispose();
-        loader.getLayoutArgs();
+        loader.getDisplayArgs();
     }
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismissParcel() throws DisplayArgsLoader.LoadException {
-        ThomasListener listener = mock(ThomasListener.class);
-        DisplayArgs displayArgs = new DisplayArgs(payload, listener);
+        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         Parcel parcel = Parcel.obtain();
@@ -96,6 +102,6 @@ public class DisplayArgsLoaderTest extends TestCase {
         DisplayArgsLoader fromParcel = DisplayArgsLoader.CREATOR.createFromParcel(parcel);
 
         loader.dispose();
-        fromParcel.getLayoutArgs();
+        fromParcel.getDisplayArgs();
     }
 }

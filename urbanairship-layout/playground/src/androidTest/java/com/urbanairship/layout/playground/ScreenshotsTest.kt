@@ -46,7 +46,7 @@ class ScreenshotsTest {
             if (layout.contains("webview")) continue
 
             val intent = Intent(getApplicationContext(), ModalActivity::class.java)
-                    .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(createDisplayArgs()))
+                    .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(createDisplayArgs(layout)))
 
             val scenario = launchActivity<ModalActivity>(intent)
             scenario.onActivity {
@@ -59,6 +59,6 @@ class ScreenshotsTest {
     private fun createDisplayArgs(fileName: String): DisplayArgs {
         val jsonMap = ResourceUtils.readJsonAsset(getApplicationContext(), "sample_layouts/$fileName")
         val payload = BasePayload.fromJson(requireNotNull(jsonMap))
-        return DisplayArgs(payload, null)
+        return DisplayArgs(payload, null, null, null)
     }
 }

@@ -51,7 +51,7 @@ public class ModalActivity extends AppCompatActivity {
         }
 
         try {
-            DisplayArgs args = this.loader.getLayoutArgs();
+            DisplayArgs args = this.loader.getDisplayArgs();
             if (!(args.getPayload().getPresentation() instanceof ModalPresentation)) {
                 Logger.error("Not a modal presentation");
                 finish();
@@ -63,7 +63,7 @@ public class ModalActivity extends AppCompatActivity {
             ModalPresentation presentation = (ModalPresentation) args.getPayload().getPresentation();
             BaseModel view = args.getPayload().getView();
 
-            Environment environment = new ViewEnvironment(this);
+            Environment environment = new ViewEnvironment(this, args.getWebViewClientFactory(), args.getImageCache());
             this.modalView = ModalView.create(this, view, presentation, environment);
             this.modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             setContentView(this.modalView);

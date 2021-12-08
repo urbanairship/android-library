@@ -22,6 +22,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.MediaModel;
+import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
@@ -47,18 +48,17 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  * @hide
  */
 public class MediaView extends FrameLayout implements BaseView<MediaModel> {
+
     private MediaModel model;
     private Environment environment;
 
     @Nullable
     private WebView webView;
-    @Nullable
-    private WebChromeClient chromeClient;
 
     private static final String VIDEO_HTML_FORMAT =
-        "<body style=\"margin:0\"><video playsinline controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video></body>";
+            "<body style=\"margin:0\"><video playsinline controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video></body>";
     private static final String IMAGE_HTML_FORMAT =
-        "<body style=\"margin:0\"><img height=\"100%%\" width=\"100%%\" src=\"%s\"/></body>";
+            "<body style=\"margin:0\"><img height=\"100%%\" width=\"100%%\" src=\"%s\"/></body>";
 
     /**
      * Default constructor.
@@ -95,7 +95,6 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private void init() {
         setId(generateViewId());
-        setChromeClient(environment.webChromeClientFactory().create());
     }
 
     @NonNull
@@ -106,22 +105,10 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     }
 
     /**
-     * Sets the chrome client when loading videos.
-     *
-     * @param chromeClient The web chrome client.
-     */
-    public void setChromeClient(@Nullable WebChromeClient chromeClient) {
-        this.chromeClient = chromeClient;
-        if (webView != null) {
-            webView.setWebChromeClient(chromeClient);
-        }
-    }
-
-    /**
      * Sets the media info.
-     *  @param model The media info.
-     * // TODO: @param cachedMediaUrl The cached media URL.
-     * @param environment
+     *
+     * @param model The media info.
+     * @param environment The environment.
      */
     @Override
     public void setModel(@NonNull MediaModel model, @NonNull Environment environment) {
@@ -156,6 +143,11 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private void configureImage(@NonNull MediaModel model) {
         String url = model.getUrl();
+        String cachedImage = environment.imageCache().get(url);
+        if (cachedImage != null) {
+            url = cachedImage;
+        }
+
         if (url.endsWith(".svg")) {
             // Load SVGs in a webview because they won't work in an ImageView
             // TODO: this won't work if the url lacks an extension or if someone
@@ -222,6 +214,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         environment.lifecycle().addObserver(lifecycleListener);
 
         this.webView = new WebView(getContext());
+        this.webView.setWebChromeClient(environment.webChromeClientFactory().create());
 
         FrameLayout frameLayout = new FrameLayout(getContext());
         frameLayout.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
@@ -261,16 +254,16 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
                 case VIDEO:
                     Logger.debug("LOADING VIDEO");
                     webView.loadData(
-                        String.format(Locale.ROOT, VIDEO_HTML_FORMAT, model.getUrl()),
-                        "text/html",
-                        "UTF-8");
+                            String.format(Locale.ROOT, VIDEO_HTML_FORMAT, model.getUrl()),
+                            "text/html",
+                            "UTF-8");
                     break;
                 case IMAGE:
                     Logger.debug("LOADING IMAGE");
                     webView.loadData(
-                        String.format(Locale.ROOT, IMAGE_HTML_FORMAT, model.getUrl()),
-                        "text/html",
-                        "UTF-8");
+                            String.format(Locale.ROOT, IMAGE_HTML_FORMAT, model.getUrl()),
+                            "text/html",
+                            "UTF-8");
                     break;
                 default:
                     Logger.debug("LOADING SOMETHING ELSE");
@@ -279,7 +272,6 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             }
         };
 
-        webView.setWebChromeClient(chromeClient);
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             webView.setContentDescription(model.getContentDescription());
         }
@@ -303,6 +295,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     }
 
     private abstract static class MediaWebViewClient extends WebViewClient {
+
         static final long START_RETRY_DELAY = 1000;
 
         @NonNull
@@ -334,6 +327,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         }
 
         protected abstract void onPageFinished(WebView webView);
+
     }
 
     private final LifecycleObserver lifecycleListener = new DefaultLifecycleObserver() {
@@ -351,4 +345,5 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             }
         }
     };
+
 }

@@ -67,7 +67,7 @@ public class DisplayArgsLoader implements Parcelable {
     }
 
     @NonNull
-    public DisplayArgs getLayoutArgs() throws LoadException {
+    public DisplayArgs getDisplayArgs() throws LoadException {
         DisplayArgs args = cached.get(id);
         if (args == null) {
             throw new LoadException("Layout args no longer available");

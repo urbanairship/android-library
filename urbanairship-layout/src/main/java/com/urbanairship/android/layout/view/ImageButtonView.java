@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
+import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
 
@@ -22,9 +23,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.ObjectsCompat;
 
 public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel> {
     private ImageButtonModel model;
+    private Environment environment;
 
     public ImageButtonView(@NonNull Context context) {
         super(context);
@@ -60,6 +63,7 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     @Override
     public void setModel(@NonNull ImageButtonModel model, @NonNull Environment environment) {
         this.model = model;
+        this.environment = environment;
         configureButton();
     }
 
@@ -71,8 +75,13 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
         switch (image.getType()) {
             case URL:
                 String url = ((Image.Url) image).getUrl();
+                String cachedImage = environment.imageCache().get(url);
+                if (cachedImage != null) {
+                    url = cachedImage;
+                }
                 UAirship.shared().getImageLoader()
-                        .load(getContext(), this, ImageRequestOptions.newBuilder(url).build());
+                        .load(getContext(), this, ImageRequestOptions.newBuilder(url)
+                                                                     .build());
                 break;
             case ICON:
                 Image.Icon icon = ((Image.Icon) image);
