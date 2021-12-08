@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.provider.Settings;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
@@ -28,7 +29,6 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
-import com.urbanairship.contacts.Contact;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
@@ -80,6 +80,12 @@ public class UAirship {
 
     @NonNull
     public static final String EXTRA_AIRSHIP_DEEP_LINK_SCHEME = "uairship";
+
+    @NonNull
+    private static final String APP_SETTINGS_DEEP_LINK_HOST = "app_settings";
+
+    @NonNull
+    private static final String APP_STORE_DEEP_LINK_HOST = "app_store";
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM, UNKNOWN_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -1028,16 +1034,49 @@ public class UAirship {
     public boolean deepLink(@NonNull String deepLink) {
         Uri uri = Uri.parse(deepLink);
         if (EXTRA_AIRSHIP_DEEP_LINK_SCHEME.equals(uri.getScheme())) {
+            if (handleAirshipDeeplink(uri, getApplicationContext())) {
+                return true;
+            }
+
             for (AirshipComponent component : getComponents()) {
                 if (component.onAirshipDeepLink(uri)) {
                     return true;
                 }
             }
+
             Logger.debug("Airship deep link not handled: %s", deepLink);
             return true;
         } else {
             DeepLinkListener deepLinkListener = getDeepLinkListener();
             return deepLinkListener != null && deepLinkListener.onDeepLink(deepLink);
+        }
+    }
+
+    /**
+     * Handle the Airship deep links for app_settings and app_store.
+     * @param uri The deep link Uri.
+     * @param context The application context.
+     * @return {@code true} if the deep link was handled, otherwise {@code false}.
+     */
+    private boolean handleAirshipDeeplink(@NonNull Uri uri, @NonNull Context context) {
+        switch (uri.getEncodedAuthority()) {
+            case APP_SETTINGS_DEEP_LINK_HOST: {
+                Intent appSettingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", getPackageName(), null))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(appSettingsIntent);
+                return true;
+            }
+            case APP_STORE_DEEP_LINK_HOST: {
+                Intent appStoreIntent = new Intent(Intent.ACTION_VIEW)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .setData(Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))
+                        .setPackage("com.android.vending");
+                context.startActivity(appStoreIntent);
+                return true;
+            }
+            default:
+                return false;
         }
     }
 
