@@ -1,8 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.android.layout.ui;
-
-import android.webkit.WebViewClient;
+package com.urbanairship.android.layout.display;
 
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
@@ -54,5 +52,4 @@ public class DisplayArgs {
     public Factory<AirshipWebViewClient> getWebViewClientFactory() {
         return webViewClientFactory;
     }
-
 }

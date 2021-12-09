@@ -3,30 +3,40 @@
 package com.urbanairship.iam.layout;
 
 import android.content.Context;
+import android.net.Uri;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.display.DisplayException;
+import com.urbanairship.android.layout.display.DisplayRequest;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
-import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.android.layout.util.UrlInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
+import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.iam.ResolutionInfo;
-import com.urbanairship.iam.TextInfo;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.events.InAppReportingEvent;
+import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.util.Network;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.Supplier;
 
 /**
  * Airship layout display adapter.
@@ -36,26 +46,35 @@ import androidx.annotation.VisibleForTesting;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
-    private final InAppMessage message;
-    private final AirshipLayoutDisplayContent displayContent;
-    private final PrepareDisplayCallback prepareDisplayCallback;
-
-    private Thomas.PendingDisplay pendingDisplay;
-
     @VisibleForTesting
-    interface PrepareDisplayCallback {
-        Thomas.PendingDisplay prepareDisplay(@NonNull BasePayload basePayload) throws Thomas.DisplayException;
+    interface DisplayRequestCallback {
+
+        DisplayRequest prepareDisplay(@NonNull BasePayload basePayload) throws DisplayException;
+
     }
 
-    @VisibleForTesting
-    private static PrepareDisplayCallback DEFAULT_CALLBACK = Thomas::prepareDisplay;
+    private static DisplayRequestCallback DEFAULT_CALLBACK = Thomas::prepareDisplay;
 
+    private final InAppMessage message;
+    private final AirshipLayoutDisplayContent displayContent;
+    private final DisplayRequestCallback prepareDisplayCallback;
+    private final Supplier<Boolean> isConnectedSupplier;
+    private final UrlAllowList urlAllowList;
+
+    private DisplayRequest displayRequest;
+
+    @VisibleForTesting
     AirshipLayoutDisplayAdapter(@NonNull InAppMessage message,
                                 @NonNull AirshipLayoutDisplayContent displayContent,
-                                @NonNull PrepareDisplayCallback prepareDisplayCallback) {
+                                @NonNull DisplayRequestCallback prepareDisplayCallback,
+                                @NonNull UrlAllowList urlAllowList,
+                                @NonNull Supplier<Boolean> isConnectedSupplier) {
+
         this.message = message;
         this.displayContent = displayContent;
         this.prepareDisplayCallback = prepareDisplayCallback;
+        this.urlAllowList = urlAllowList;
+        this.isConnectedSupplier = isConnectedSupplier;
     }
 
     /**
@@ -71,18 +90,52 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
         }
 
-        return new AirshipLayoutDisplayAdapter(message, displayContent, DEFAULT_CALLBACK);
+        return new AirshipLayoutDisplayAdapter(
+                message,
+                displayContent,
+                DEFAULT_CALLBACK,
+                UAirship.shared().getUrlAllowList(),
+                Network::isConnected
+        );
     }
 
     @PrepareResult
     @Override
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
-        // TODO check allow list
-        //             return InAppMessageAdapter.CANCEL;
+        boolean isConnected = isConnectedSupplier.get();
+        Map<String, String> assetCacheMap = new HashMap<>();
+
+        for (UrlInfo urlInfo : UrlInfo.from(displayContent.getPayload().getView())) {
+            if (!urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
+                Logger.error("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
+                return CANCEL;
+            }
+
+            switch (urlInfo.getType()) {
+                case VIDEO:
+                case WEB_PAGE:
+                    if (!isConnected) {
+                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        return RETRY;
+                    }
+                    break;
+
+                case IMAGE:
+                    File file = assets.file(urlInfo.getUrl());
+                    if (file.exists()) {
+                        assetCacheMap.put(urlInfo.getUrl(), Uri.fromFile(file).toString());
+                    } else if (!isConnected) {
+                        Logger.error("Message not ready. Device is not connected and the message contains an image that is not cached.", urlInfo.getUrl(), message);
+                        return RETRY;
+                    }
+                    break;
+            }
+        }
 
         try {
-            this.pendingDisplay = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload());
-        } catch (Thomas.DisplayException e) {
+            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload())
+                                                             .setImageCache(new AssetImageCache(assetCacheMap));
+        } catch (DisplayException e) {
             Logger.error("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;
         }
@@ -91,12 +144,28 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
     @Override
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
-        this.pendingDisplay.setListener(new Listener(message, displayHandler))
+        this.displayRequest.setListener(new Listener(message, displayHandler))
+                           .setWebViewClientFactory(() -> new InAppMessageWebViewClient(message))
                            .display(context);
     }
 
     @Override
     public void onFinish(@NonNull Context context) {
+    }
+
+    private static class AssetImageCache implements ImageCache {
+
+        private final Map<String, String> assetCacheMap;
+
+        private AssetImageCache(Map<String, String> assetCacheMap) {
+            this.assetCacheMap = assetCacheMap;
+        }
+
+        @Nullable
+        @Override
+        public String get(@NonNull String url) {
+            return assetCacheMap.get(url);
+        }
 
     }
 
@@ -148,7 +217,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         public void onDismiss(@NonNull String buttonId, @Nullable String buttonDescription, boolean cancel, long displayTime, @Nullable LayoutData layoutData) {
             ResolutionInfo resolutionInfo = ResolutionInfo.buttonPressed(buttonId, buttonDescription, cancel);
             InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo)
-                    .setLayoutData(layoutData);
+                                                           .setLayoutData(layoutData);
 
             displayHandler.addEvent(event);
             displayHandler.notifyFinished(resolutionInfo);
@@ -173,6 +242,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
             displayHandler.addEvent(event);
         }
+
     }
 
 }

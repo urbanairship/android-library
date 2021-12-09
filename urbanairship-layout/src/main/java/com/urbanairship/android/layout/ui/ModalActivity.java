@@ -6,6 +6,8 @@ import android.os.Bundle;
 
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.display.DisplayArgs;
+import com.urbanairship.android.layout.display.DisplayArgsLoader;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.EventListener;

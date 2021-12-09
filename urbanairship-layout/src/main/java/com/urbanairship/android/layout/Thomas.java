@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
+import com.urbanairship.android.layout.display.DisplayException;
+import com.urbanairship.android.layout.display.DisplayRequest;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.BaseModel;
@@ -32,8 +34,8 @@ import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.property.ViewType;
-import com.urbanairship.android.layout.ui.DisplayArgs;
-import com.urbanairship.android.layout.ui.DisplayArgsLoader;
+import com.urbanairship.android.layout.display.DisplayArgs;
+import com.urbanairship.android.layout.display.DisplayArgsLoader;
 import com.urbanairship.android.layout.ui.ModalActivity;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
@@ -71,26 +73,12 @@ import androidx.recyclerview.widget.RecyclerView;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Thomas {
 
-    private interface DisplayCallback {
-
-        void display(@NonNull Context context, @NonNull DisplayArgs args);
-
-    }
-
-    public static class DisplayException extends Exception {
-
-        public DisplayException(String message) {
-            super(message);
-        }
-
-    }
-
     private Thomas() {}
 
     @NonNull
-    public static PendingDisplay prepareDisplay(@NonNull BasePayload payload) throws DisplayException {
+    public static DisplayRequest prepareDisplay(@NonNull BasePayload payload) throws DisplayException {
         if (payload.getPresentation() instanceof ModalPresentation) {
-            return new PendingDisplay(payload, (context, args) -> {
+            return new DisplayRequest(payload, (context, args) -> {
                 Intent intent = new Intent(context, ModalActivity.class)
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(args));
@@ -263,46 +251,5 @@ public final class Thomas {
             //noinspection unchecked
             view.setModel((M) item, environment);
         }
-
     }
-
-    public static class PendingDisplay {
-
-        private final DisplayCallback displayCallback;
-        private final BasePayload payload;
-        private ThomasListener listener;
-        private ImageCache imageCache;
-        private Factory<AirshipWebViewClient> webViewClientFactory;
-
-        private PendingDisplay(@NonNull BasePayload payload,
-                               @NonNull DisplayCallback displayCallback) {
-            this.payload = payload;
-            this.displayCallback = displayCallback;
-        }
-
-        @NonNull
-        public PendingDisplay setListener(@Nullable ThomasListener listener) {
-            this.listener = listener;
-            return this;
-        }
-
-        @NonNull
-        public PendingDisplay setImageCache(@Nullable ImageCache imageCache) {
-            this.imageCache = imageCache;
-            return this;
-        }
-
-        @NonNull
-        public PendingDisplay setWebViewClientFactory(@Nullable Factory<AirshipWebViewClient> webViewClientFactory) {
-            this.webViewClientFactory = webViewClientFactory;
-            return this;
-        }
-
-        public void display(@NonNull Context context) {
-            DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache);
-            displayCallback.display(context, args);
-        }
-
-    }
-
 }

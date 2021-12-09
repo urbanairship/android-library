@@ -5,10 +5,12 @@ package com.urbanairship.iam.assets;
 import android.graphics.BitmapFactory;
 
 import com.urbanairship.Logger;
+import com.urbanairship.android.layout.util.UrlInfo;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
+import com.urbanairship.iam.layout.AirshipLayoutDisplayContent;
 import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.FileUtils;
@@ -17,6 +19,9 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -52,23 +57,25 @@ public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
     @Override
     @AssetManager.PrepareResult
     public int onPrepare(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull Assets assets) {
-        MediaInfo mediaInfo = getMediaInfo(message);
-        if (mediaInfo == null || !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType()) || assets.file(mediaInfo.getUrl()).exists()) {
-            return AssetManager.PREPARE_RESULT_OK;
-        }
+        List<String> cacheableUrls = getCacheableUrls(message);
+        for (String url : cacheableUrls) {
+            if (assets.file(url).exists()) {
+                continue;
+            }
 
-        try {
-            FileUtils.DownloadResult result = cacheImage(assets, mediaInfo.getUrl());
-            if (!result.isSuccess) {
-                if (UAHttpStatusUtil.inClientErrorRange(result.statusCode)) {
-                    return AssetManager.PREPARE_RESULT_CANCEL;
+            try {
+                FileUtils.DownloadResult result = cacheImage(assets, url);
+                if (!result.isSuccess) {
+                    if (UAHttpStatusUtil.inClientErrorRange(result.statusCode)) {
+                        return AssetManager.PREPARE_RESULT_CANCEL;
+                    }
+
+                    return AssetManager.PREPARE_RESULT_RETRY;
                 }
-
+            } catch (IOException e) {
+                Logger.error(e, "Unable to download file: %s ", url);
                 return AssetManager.PREPARE_RESULT_RETRY;
             }
-        } catch (IOException e) {
-            Logger.error(e, "Unable to download file: %s ", mediaInfo.getUrl());
-            return AssetManager.PREPARE_RESULT_RETRY;
         }
 
         return AssetManager.PREPARE_RESULT_OK;
@@ -103,38 +110,68 @@ public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
     }
 
     /**
-     * Helper method that parses the media info from an {@link InAppMessage}
+     * Helper method that parses all the cachable urls.
      *
      * @param message The message.
-     * @return The media info if set, otherwise {@code null}.
+     * @return The list of cachable urls.
      */
-    @Nullable
-    private MediaInfo getMediaInfo(@NonNull InAppMessage message) {
+    @NonNull
+    private List<String> getCacheableUrls(@NonNull InAppMessage message) {
         switch (message.getType()) {
             case InAppMessage.TYPE_BANNER:
                 BannerDisplayContent bannerDisplayContent = message.getDisplayContent();
                 if (bannerDisplayContent != null) {
-                    return bannerDisplayContent.getMedia();
+                    String url = getCacheableUrl(bannerDisplayContent.getMedia());
+                    if (url != null) {
+                        return Collections.singletonList(url);
+                    }
                 }
                 break;
 
             case InAppMessage.TYPE_FULLSCREEN:
                 FullScreenDisplayContent fullScreenDisplayContent = message.getDisplayContent();
                 if (fullScreenDisplayContent != null) {
-                    return fullScreenDisplayContent.getMedia();
+                    String url = getCacheableUrl(fullScreenDisplayContent.getMedia());
+                    if (url != null) {
+                        return Collections.singletonList(url);
+                    }
                 }
                 break;
 
             case InAppMessage.TYPE_MODAL:
                 ModalDisplayContent modalDisplayContent = message.getDisplayContent();
                 if (modalDisplayContent != null) {
-                    return modalDisplayContent.getMedia();
+                    String url = getCacheableUrl(modalDisplayContent.getMedia());
+                    if (url != null) {
+                        return Collections.singletonList(url);
+                    }
                 }
                 break;
+
+            case InAppMessage.TYPE_AIRSHIP_LAYOUT:
+                AirshipLayoutDisplayContent layoutContent = message.getDisplayContent();
+                if (layoutContent != null) {
+
+                    List<String> cacheableUrls = new ArrayList<>();
+                    for (UrlInfo urlInfo : UrlInfo.from(layoutContent.getPayload().getView())) {
+                        if (urlInfo.getType() == UrlInfo.UrlType.IMAGE) {
+                            cacheableUrls.add(urlInfo.getUrl());
+                        }
+                    }
+                    return cacheableUrls;
+                }
         }
 
-        return null;
+        return Collections.emptyList();
+    }
 
+    @Nullable
+    public static String getCacheableUrl(@Nullable MediaInfo mediaInfo) {
+        if (mediaInfo != null && mediaInfo.getType().equals(MediaInfo.TYPE_IMAGE)) {
+            return mediaInfo.getUrl();
+        } else {
+            return null;
+        }
     }
 
 }

@@ -11,8 +11,8 @@ import androidx.test.core.app.launchActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.urbanairship.android.layout.BasePayload
-import com.urbanairship.android.layout.ui.DisplayArgs
-import com.urbanairship.android.layout.ui.DisplayArgsLoader
+import com.urbanairship.android.layout.display.DisplayArgs
+import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.ui.ModalActivity
 import com.urbanairship.android.layout.util.ResourceUtils
 import org.junit.Rule

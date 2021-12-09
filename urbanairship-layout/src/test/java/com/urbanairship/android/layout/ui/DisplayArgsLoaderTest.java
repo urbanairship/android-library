@@ -4,6 +4,8 @@ import android.os.Parcel;
 
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.display.DisplayArgs;
+import com.urbanairship.android.layout.display.DisplayArgsLoader;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.json.JsonException;

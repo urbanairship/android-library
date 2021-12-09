@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.android.layout.ui;
+package com.urbanairship.android.layout.display;
 
 import android.os.Parcel;
 import android.os.Parcelable;
