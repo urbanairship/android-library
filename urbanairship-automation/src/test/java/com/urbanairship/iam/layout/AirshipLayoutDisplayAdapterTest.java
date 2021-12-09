@@ -44,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -270,6 +271,30 @@ public class AirshipLayoutDisplayAdapterTest {
                                                           .setLayoutData(layoutData);
 
         verify(displayHandler).addEvent(eq(expected));
+    }
+
+    @Test
+    public void testDedupePageView() {
+        LayoutData layoutData = mock(LayoutData.class);
+        ThomasListener listener = prepareListenerTest();
+
+        PagerData firstPageData = new PagerData("some id", 0, 2, true);
+        PagerData secondPageData = new PagerData("some id", 1, 2, true);
+
+        listener.onPageView(firstPageData, layoutData);
+        listener.onPageView(secondPageData, layoutData);
+        listener.onPageView(firstPageData, layoutData);
+        listener.onPageView(secondPageData, layoutData);
+        listener.onPageView(secondPageData, layoutData);
+
+        InAppReportingEvent firstPageEvent = InAppReportingEvent.pageView(scheduleId, message, firstPageData)
+                                                                .setLayoutData(layoutData);
+
+        InAppReportingEvent secondPageEvent = InAppReportingEvent.pageView(scheduleId, message, secondPageData)
+                                                                .setLayoutData(layoutData);
+
+        verify(displayHandler, times(1)).addEvent(eq(firstPageEvent));
+        verify(displayHandler, times(1)).addEvent(eq(secondPageEvent));
     }
 
     @Test

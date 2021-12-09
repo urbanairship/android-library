@@ -30,7 +30,9 @@ import com.urbanairship.util.Network;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -174,6 +176,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         private final InAppMessage message;
         private final DisplayHandler displayHandler;
         private final String scheduleId;
+        private final Map<String, Set<Integer>> viewedPageIndex = new HashMap<>();
 
         private Listener(@NonNull InAppMessage message, @NonNull DisplayHandler displayHandler) {
             this.message = message;
@@ -183,6 +186,18 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
         @Override
         public void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData layoutData) {
+            Set<Integer> indexes = viewedPageIndex.get(pagerData.getIdentifier());
+            if (indexes == null) {
+                indexes = new HashSet<>();
+                viewedPageIndex.put(pagerData.getIdentifier(), indexes);
+            }
+
+            if (indexes.contains(pagerData.getIndex())) {
+                return;
+            }
+
+            indexes.add(pagerData.getIndex());
+
             InAppReportingEvent event = InAppReportingEvent.pageView(scheduleId, message, pagerData)
                                                            .setLayoutData(layoutData);
 
