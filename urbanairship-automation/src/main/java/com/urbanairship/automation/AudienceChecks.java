@@ -140,6 +140,13 @@ public abstract class AudienceChecks {
             }
         }
 
+        // Requires analytics
+        if (audience.getRequiresAnalytics() != null && audience.getRequiresAnalytics()) {
+            if (!airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+                return false;
+            }
+        }
+
         // Version
         return isAppVersionConditionMet(audience);
     }

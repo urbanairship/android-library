@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Audience conditions for an in-app message. Audiences are normally only validated at display time,
@@ -36,6 +37,7 @@ public class Audience implements JsonSerializable {
     private static final String TAGS_KEY = "tags";
     private static final String TEST_DEVICES_KEY = "test_devices";
     private static final String MISS_BEHAVIOR_KEY = "miss_behavior";
+    private static final String REQUIRES_ANALYTICS_KEY = "requires_analytics";
 
     @StringDef({ MISS_BEHAVIOR_CANCEL, MISS_BEHAVIOR_SKIP, MISS_BEHAVIOR_PENALIZE })
     @Retention(RetentionPolicy.SOURCE)
@@ -62,6 +64,7 @@ public class Audience implements JsonSerializable {
     private final Boolean newUser;
     private final Boolean notificationsOptIn;
     private final Boolean locationOptIn;
+    private final Boolean requiresAnalytics;
     private final List<String> languageTags;
     private final List<String> testDevices;
     private final TagSelector tagSelector;
@@ -77,6 +80,7 @@ public class Audience implements JsonSerializable {
         this.newUser = builder.newUser;
         this.notificationsOptIn = builder.notificationsOptIn;
         this.locationOptIn = builder.locationOptIn;
+        this.requiresAnalytics = builder.requiresAnalytics;
         this.languageTags = builder.languageTags;
         this.tagSelector = builder.tagSelector;
         this.versionPredicate = builder.versionPredicate;
@@ -91,6 +95,7 @@ public class Audience implements JsonSerializable {
                       .putOpt(NEW_USER_KEY, newUser)
                       .putOpt(NOTIFICATION_OPT_IN_KEY, notificationsOptIn)
                       .putOpt(LOCATION_OPT_IN_KEY, locationOptIn)
+                      .putOpt(REQUIRES_ANALYTICS_KEY, requiresAnalytics)
                       .put(LOCALE_KEY, languageTags.isEmpty() ? null : JsonValue.wrapOpt(languageTags))
                       .put(TEST_DEVICES_KEY, testDevices.isEmpty() ? null : JsonValue.wrapOpt(testDevices))
                       .put(TAGS_KEY, tagSelector)
@@ -134,6 +139,14 @@ public class Audience implements JsonSerializable {
                 throw new JsonException("location_opt_in must be a boolean: " + content.get(LOCATION_OPT_IN_KEY));
             }
             builder.setLocationOptIn(content.opt(LOCATION_OPT_IN_KEY).getBoolean(false));
+        }
+
+        // Requires analytics
+        if (content.containsKey(REQUIRES_ANALYTICS_KEY)) {
+            if (!content.opt(REQUIRES_ANALYTICS_KEY).isBoolean()) {
+                throw new JsonException("requires_analytics must be a boolean: " + content.get(REQUIRES_ANALYTICS_KEY));
+            }
+            builder.setRequiresAnalytics(content.opt(REQUIRES_ANALYTICS_KEY).getBoolean(false));
         }
 
         // Locale
@@ -247,6 +260,16 @@ public class Audience implements JsonSerializable {
     }
 
     /**
+     * Gets the requires analytics flag.
+     *
+     * @return The requires analytics flag.
+     */
+    @Nullable
+    public Boolean getRequiresAnalytics() {
+        return requiresAnalytics;
+    }
+
+    /**
      * Gets the new user status.
      *
      * @return The new user status.
@@ -315,6 +338,11 @@ public class Audience implements JsonSerializable {
         if (missBehavior != null ? !missBehavior.equals(audience.missBehavior) : audience.missBehavior != null) {
             return false;
         }
+
+        if (!ObjectsCompat.equals(requiresAnalytics, audience.requiresAnalytics)) {
+            return false;
+        }
+
         return versionPredicate != null ? versionPredicate.equals(audience.versionPredicate) : audience.versionPredicate == null;
     }
 
@@ -327,6 +355,7 @@ public class Audience implements JsonSerializable {
         result = 31 * result + (tagSelector != null ? tagSelector.hashCode() : 0);
         result = 31 * result + (versionPredicate != null ? versionPredicate.hashCode() : 0);
         result = 31 * result + (missBehavior != null ? missBehavior.hashCode() : 0);
+        result = 31 * result + (requiresAnalytics != null ? requiresAnalytics.hashCode() : 0);
         return result;
     }
 
@@ -348,6 +377,7 @@ public class Audience implements JsonSerializable {
         private Boolean newUser;
         private Boolean notificationsOptIn;
         private Boolean locationOptIn;
+        private Boolean requiresAnalytics;
         private final List<String> languageTags = new ArrayList<>();
         private final List<String> testDevices = new ArrayList<>();
         private String missBehavior = MISS_BEHAVIOR_PENALIZE;
@@ -398,6 +428,20 @@ public class Audience implements JsonSerializable {
             this.locationOptIn = optIn;
             return this;
         }
+
+        /**
+         * Sets the require analytics audience condition for the in-app message.
+         *
+         * @param requiresAnalytics {@code true} if analytics must be enabled, otherwise {@code false}.
+         * @return The builder.
+         * @hide
+         */
+        @NonNull
+        public Builder setRequiresAnalytics(boolean requiresAnalytics) {
+            this.requiresAnalytics = requiresAnalytics;
+            return this;
+        }
+
 
         /**
          * Sets the notification opt-in audience condition for the in-app message.

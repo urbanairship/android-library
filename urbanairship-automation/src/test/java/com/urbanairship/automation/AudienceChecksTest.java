@@ -114,6 +114,34 @@ public class AudienceChecksTest {
     }
 
     @Test
+    public void testRequiresAnalyticsTrue() {
+        Audience audience = Audience.newBuilder()
+                                    .setRequiresAnalytics(true)
+                                    .build();
+
+
+        privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
+        assertTrue(AudienceChecks.checkAudience(context, audience));
+
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
+        assertFalse(AudienceChecks.checkAudience(context, audience));
+    }
+
+    @Test
+    public void testRequiresAnalyticsFalse() {
+        Audience audience = Audience.newBuilder()
+                                    .setRequiresAnalytics(false)
+                                    .build();
+
+
+        privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
+        assertTrue(AudienceChecks.checkAudience(context, audience));
+
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
+        assertTrue(AudienceChecks.checkAudience(context, audience));
+    }
+
+    @Test
     public void testNewUser() {
         Audience requiresNewUser = Audience.newBuilder()
                                            .setNewUser(true)
