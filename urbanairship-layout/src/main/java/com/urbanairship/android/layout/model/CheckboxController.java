@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +42,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     @NonNull
     private final List<CheckboxModel> checkboxes = new ArrayList<>();
 
-    private final Set<String> selectedValues = new HashSet<>();
+    private final Set<JsonValue> selectedValues = new HashSet<>();
 
     public CheckboxController(
         @NonNull String identifier,
@@ -130,7 +131,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
 
     @NonNull
     @VisibleForTesting
-    public Set<String> getSelectedValues() {
+    public Set<JsonValue> getSelectedValues() {
         return selectedValues;
     }
 

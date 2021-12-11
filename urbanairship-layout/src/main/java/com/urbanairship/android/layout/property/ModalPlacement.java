@@ -2,13 +2,16 @@
 
 package com.urbanairship.android.layout.property;
 
+import com.urbanairship.android.layout.model.SafeAreaAware;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class ModalPlacement {
+import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
+
+public class ModalPlacement implements SafeAreaAware {
     @NonNull
     private final ConstrainedSize size;
     @Nullable
@@ -17,16 +20,20 @@ public class ModalPlacement {
     private final Position position;
     @Nullable
     private final Color shadeColor;
+    private final boolean ignoreSafeArea;
 
     public ModalPlacement(
         @NonNull ConstrainedSize size,
         @Nullable Margin margin,
         @Nullable Position position,
-        @Nullable Color shadeColor) {
+        @Nullable Color shadeColor,
+        boolean ignoreSafeArea
+    ) {
         this.size = size;
         this.margin = margin;
         this.position = position;
         this.shadeColor = shadeColor;
+        this.ignoreSafeArea = ignoreSafeArea;
     }
 
     @NonNull
@@ -42,8 +49,9 @@ public class ModalPlacement {
         Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
         Position position = positionJson.isEmpty() ? null : Position.fromJson(positionJson);
         Color backgroundColor = Color.fromJsonField(json, "shade_color");
+        boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
-        return new ModalPlacement(size, margin, position, backgroundColor);
+        return new ModalPlacement(size, margin, position, backgroundColor, ignoreSafeArea);
     }
 
     @Nullable
@@ -64,5 +72,10 @@ public class ModalPlacement {
     @Nullable
     public Color getShadeColor() {
         return shadeColor;
+    }
+
+    @Override
+    public boolean shouldIgnoreSafeArea() {
+        return ignoreSafeArea;
     }
 }

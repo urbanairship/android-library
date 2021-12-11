@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,6 +54,10 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
     private void configureButton() {
         LayoutUtils.applyButtonModel(this, model);
         model.setViewListener(modelListener);
+
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            setContentDescription(model.getContentDescription());
+        }
 
         setOnClickListener(v -> model.onClick());
     }

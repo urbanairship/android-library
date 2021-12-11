@@ -46,14 +46,12 @@ public class ColorSelector {
         for (int i = 0; i < json.size(); i++) {
             JsonMap selectorJson = json.get(i).optMap();
             ColorSelector selector = ColorSelector.fromJson(selectorJson);
-            selectors.add(selector);
+            // Ignore any non-android selectors.
+            if (selector.platform == Platform.ANDROID) {
+                selectors.add(selector);
+            }
         }
         return selectors;
-    }
-
-    @Nullable
-    public Platform getPlatform() {
-        return platform;
     }
 
     public boolean isDarkMode() {

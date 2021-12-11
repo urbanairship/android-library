@@ -21,8 +21,6 @@
 #0% — 00
 ---
 version: 1
-context:
-  content_types: []
 presentation:
   type: modal
   default_placement:

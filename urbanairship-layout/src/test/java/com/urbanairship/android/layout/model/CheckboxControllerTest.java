@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.event.EventType;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,7 +34,7 @@ public class CheckboxControllerTest {
     private static final int MAX_SELECTION = 2;
     private static final boolean IS_REQUIRED = true;
     private static final String CONTENT_DESCRIPTION = "content description";
-    private static final String SELECTED_VALUE = "foo";
+    private static final JsonValue SELECTED_VALUE = JsonValue.wrap("foo");
 
     private AutoCloseable mocksClosable;
 
@@ -128,14 +129,14 @@ public class CheckboxControllerTest {
 
         assertEquals(3, controller.getCheckboxes().size());
 
-        controller.onEvent(new CheckboxEvent.InputChange("one", true));
-        controller.onEvent(new CheckboxEvent.InputChange("two", true));
-        controller.onEvent(new CheckboxEvent.InputChange("three", true));
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("one"), true));
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("two"), true));
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("three"), true));
 
         // Verify that we didn't accept the third input change
-        Set<String> expected = new HashSet<String>() {{
-            add("one");
-            add("two");
+        Set<JsonValue> expected = new HashSet<JsonValue>() {{
+            add(JsonValue.wrap("one"));
+            add(JsonValue.wrap("two"));
         }};
         assertEquals(expected, controller.getSelectedValues());
     }

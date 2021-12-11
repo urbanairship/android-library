@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,13 +22,10 @@ import static com.urbanairship.android.layout.model.Accessible.contentDescriptio
  */
 public class CheckboxModel extends CheckableModel {
     @NonNull
-    private final String reportingValue;
-
-    @Nullable
-    private Listener listener = null;
+    private final JsonValue reportingValue;
 
     public CheckboxModel(
-        @NonNull String reportingValue,
+        @NonNull JsonValue reportingValue,
         @NonNull ToggleStyle style,
         @Nullable String contentDescription,
         @Nullable Color backgroundColor,
@@ -40,7 +38,7 @@ public class CheckboxModel extends CheckableModel {
 
     @NonNull
     public static CheckboxModel fromJson(@NonNull JsonMap json) throws JsonException {
-        String reportingValue = json.opt("value").optString();
+        JsonValue reportingValue = json.opt("reporting_value").toJsonValue();
         ToggleStyle style = toggleStyleFromJson(json);
         String contentDescription = contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
@@ -50,7 +48,7 @@ public class CheckboxModel extends CheckableModel {
     }
 
     @NonNull
-    public String getReportingValue() {
+    public JsonValue getReportingValue() {
         return reportingValue;
     }
 

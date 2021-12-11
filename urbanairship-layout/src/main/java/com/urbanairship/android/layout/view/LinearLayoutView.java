@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.View;
 
 import com.urbanairship.android.layout.Thomas;
@@ -20,6 +19,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.WindowInsetsCompat;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
@@ -67,6 +67,16 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
         setOrientation(model.getDirection() == Direction.VERTICAL ? VERTICAL : HORIZONTAL);
 
         addItems(model.getItems());
+
+        LayoutUtils.doOnApplyWindowInsets(this, (v, insets, padding) -> {
+            v.setPadding(
+                padding.getLeft() + insets.left,
+                padding.getTop() + insets.top,
+                padding.getRight() + insets.right,
+                padding.getBottom() + insets.bottom
+            );
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     private void addItems(List<LinearLayoutModel.Item> items) {
@@ -129,8 +139,6 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
             lp.setMarginStart((int) dpToPx(getContext(), margin.getStart()));
             lp.setMarginEnd((int) dpToPx(getContext(), margin.getEnd()));
         }
-
-        lp.gravity = Gravity.CENTER;
 
         return lp;
     }

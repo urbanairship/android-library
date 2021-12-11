@@ -6,7 +6,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.CheckableModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
@@ -67,7 +66,6 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         if (minSizeDp == NO_MIN_SIZE) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         } else {
-            Logger.debug("onMeasure: (w/ min size) w = %s, h = %s", MeasureSpec.toString(widthMeasureSpec), MeasureSpec.toString(heightMeasureSpec));
             int minSize = (int) ResourceUtils.dpToPx(getContext(), minSizeDp);
 
             int widthSpec = widthMeasureSpec;
@@ -125,7 +123,7 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         SwitchCompat switchView = createSwitchView(style);
         LayoutUtils.applySwitchStyle(switchView, style);
 
-        this.view = new CheckableViewAdapter.Switch(switchView);
+        view = new CheckableViewAdapter.Switch(switchView);
         addView(switchView, MATCH_PARENT, MATCH_PARENT);
     }
 

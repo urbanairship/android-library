@@ -91,14 +91,14 @@ public abstract class FormData<T> implements JsonSerializable {
         }
     }
 
-    public static class CheckboxController extends FormData<Set<String>> {
-        public CheckboxController(@NonNull Set<String> value) {
+    public static class CheckboxController extends FormData<Set<JsonValue>> {
+        public CheckboxController(@NonNull Set<JsonValue> value) {
             super(Type.MULTIPLE_CHOICE, value);
         }
     }
 
-    public static class RadioInputController extends FormData<String> {
-        public RadioInputController(@NonNull String value) {
+    public static class RadioInputController extends FormData<JsonValue> {
+        public RadioInputController(@NonNull JsonValue value) {
             super(Type.SINGLE_CHOICE, value);
         }
     }

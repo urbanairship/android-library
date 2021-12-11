@@ -10,6 +10,7 @@ import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import com.urbanairship.Logger
 import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
@@ -85,12 +86,14 @@ class MainActivity : AppCompatActivity() {
         try {
             val jsonMap = ResourceUtils.readJsonAsset(this, "sample_layouts/$fileName")
             if (jsonMap == null) {
+                Logger.error("Failed to display layout! Not a valid JSON object: '$fileName'")
                 Toast.makeText(this, "Not a valid JSON object", Toast.LENGTH_LONG).show()
                 return
             }
             val payload = BasePayload.fromJson(jsonMap)
             Thomas.prepareDisplay(payload).display(this)
         } catch (e: Exception) {
+            Logger.error(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
         }
     }

@@ -1,7 +1,5 @@
 ---
 version: 1
-context:
-  content_types: []
 presentation:
   type: modal
   default_placement:
@@ -14,6 +12,7 @@ presentation:
         alpha: 0.6
 view:
   type: pager_controller
+  identifier: "pager-controller-id"
   view:
     type: container
     border:
@@ -38,7 +37,6 @@ view:
         radius: 25
       view:
         type: pager
-        identifier: CAROUSEL_ID
         items:
         - type: container
           background_color:

@@ -9,6 +9,7 @@ import com.google.android.material.textview.MaterialTextView;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,5 +48,9 @@ public class LabelView extends MaterialTextView implements BaseView<LabelModel> 
         this.model = model;
         LayoutUtils.applyLabelModel(this, model);
         LayoutUtils.applyBorderAndBackground(this, model);
+
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            setContentDescription(model.getContentDescription());
+        }
     }
 }

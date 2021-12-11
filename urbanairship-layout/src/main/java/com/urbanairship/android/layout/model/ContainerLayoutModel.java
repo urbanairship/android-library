@@ -19,6 +19,8 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
+
 public class ContainerLayoutModel extends LayoutModel  {
     @NonNull
     private final List<Item> items;
@@ -57,7 +59,7 @@ public class ContainerLayoutModel extends LayoutModel  {
         return children;
     }
 
-    public static class Item {
+    public static class Item implements SafeAreaAware {
         @NonNull
         private final Position position;
         @NonNull
@@ -66,16 +68,20 @@ public class ContainerLayoutModel extends LayoutModel  {
         private final BaseModel view;
         @Nullable
         private final Margin margin;
+        private final boolean ignoreSafeArea;
 
         public Item(
             @NonNull Position position,
             @NonNull Size size,
             @NonNull BaseModel view,
-            @Nullable Margin margin) {
+            @Nullable Margin margin,
+            boolean ignoreSafeArea
+        ) {
             this.position = position;
             this.size = size;
             this.view = view;
             this.margin = margin;
+            this.ignoreSafeArea = ignoreSafeArea;
         }
 
         @NonNull
@@ -89,8 +95,9 @@ public class ContainerLayoutModel extends LayoutModel  {
             Size size = Size.fromJson(sizeJson);
             BaseModel view = Thomas.model(viewJson);
             Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
+            boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
-            return new Item(position, size, view, margin);
+            return new Item(position, size, view, margin, ignoreSafeArea);
         }
 
         @NonNull
@@ -122,6 +129,11 @@ public class ContainerLayoutModel extends LayoutModel  {
         @Nullable
         public Margin getMargin() {
             return margin;
+        }
+
+        @Override
+        public boolean shouldIgnoreSafeArea() {
+            return ignoreSafeArea;
         }
     }
 }

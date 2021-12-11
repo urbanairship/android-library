@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.RadioEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,8 +29,8 @@ public class RadioInputControllerTest {
     private static final String IDENTIFIER = "identifier";
     private static final boolean IS_REQUIRED = true;
     private static final String CONTENT_DESCRIPTION = "content description";
-    private static final String SELECTED_VALUE = "foo";
-    private static final String SELECTED_VALUE_2 = "bar";
+    private static final JsonValue SELECTED_VALUE = JsonValue.wrap("foo");
+    private static final JsonValue SELECTED_VALUE_2 = JsonValue.wrap("bar");
 
     private AutoCloseable mocksClosable;
 
@@ -43,7 +44,7 @@ public class RadioInputControllerTest {
     public void setUp() {
         mocksClosable = MockitoAnnotations.openMocks(this);
 
-        controller = new RadioInputController(IDENTIFIER, mockView, IS_REQUIRED, CONTENT_DESCRIPTION);
+        controller = new RadioInputController(IDENTIFIER, mockView, null, IS_REQUIRED, CONTENT_DESCRIPTION);
         testListener = new TestEventListener();
         controller.addListener(testListener);
     }

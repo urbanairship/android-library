@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.ui;
 import android.os.Bundle;
 
 import com.urbanairship.Logger;
+import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayArgs;
 import com.urbanairship.android.layout.display.DisplayArgsLoader;
@@ -13,6 +14,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.ModalPresentation;
+import com.urbanairship.android.layout.property.ModalPlacement;
 import com.urbanairship.android.layout.view.ModalView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.view.WindowCompat;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
@@ -31,9 +34,6 @@ public class ModalActivity extends AppCompatActivity {
 
     // Asset loader
     public static final String EXTRA_DISPLAY_ARGS_LOADER = "com.urbanairship.android.layout.ui.EXTRA_DISPLAY_ARGS_LOADER";
-
-    @Nullable
-    private ModalView modalView;
 
     @Nullable
     private DisplayArgsLoader loader;
@@ -66,12 +66,21 @@ public class ModalActivity extends AppCompatActivity {
             BaseModel view = args.getPayload().getView();
 
             Environment environment = new ViewEnvironment(this, args.getWebViewClientFactory(), args.getImageCache());
-            this.modalView = ModalView.create(this, view, presentation, environment);
-            this.modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
-            setContentView(this.modalView);
+
+            ModalView modalView = ModalView.create(this, view, presentation, environment);
+            modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+
+            ModalPlacement placement = presentation.getResolvedPlacement(this);
+            if (placement.shouldIgnoreSafeArea()) {
+                WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+                getWindow().setStatusBarColor(R.color.system_bar_scrim_dark);
+                getWindow().setNavigationBarColor(R.color.system_bar_scrim_dark);
+            }
+
+            setContentView(modalView);
 
             if (presentation.isDismissOnTouchOutside()) {
-                this.modalView.setOnClickOutsideListener(v -> finish());
+                modalView.setOnClickOutsideListener(v -> finish());
             }
             view.addListener(this.eventListener);
 
@@ -112,5 +121,4 @@ public class ModalActivity extends AppCompatActivity {
             loader.dispose();
         }
     }
-
 }

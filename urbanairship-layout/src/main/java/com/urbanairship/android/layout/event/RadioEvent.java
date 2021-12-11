@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
 
@@ -16,14 +17,14 @@ public abstract class RadioEvent {
 
     /** Event emitted by Radio Input views when selected. */
     public static final class InputChange extends FormEvent.CheckedChange {
-        public InputChange(@NonNull String value, boolean isChecked) {
+        public InputChange(@NonNull JsonValue value, boolean isChecked) {
             super(EventType.RADIO_INPUT_CHANGE, value, isChecked);
         }
     }
 
     /** Event emitted by Radio Input views when selected. */
     public static final class ViewUpdate extends FormEvent.CheckedChange {
-        public ViewUpdate(@NonNull String value, boolean isChecked) {
+        public ViewUpdate(@NonNull JsonValue value, boolean isChecked) {
             super(EventType.RADIO_VIEW_UPDATE, value, isChecked);
         }
     }

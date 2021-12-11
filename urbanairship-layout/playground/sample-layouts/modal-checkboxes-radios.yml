@@ -1,7 +1,5 @@
 ---
 version: 1
-context:
-  content_types: []
 presentation:
   type: modal
   default_placement:
@@ -101,7 +99,7 @@ view:
                         height: 48
                       view:
                         type: checkbox
-                        value: moving boxes
+                        reporting_reporting_value: moving boxes
                         style:
                           type: checkbox
                           bindings:
@@ -182,7 +180,7 @@ view:
                       height: 48
                     view:
                       type: checkbox
-                      value: bread boxes
+                      reporting_value: bread boxes
                       style:
                         type: checkbox
                         bindings:
@@ -263,7 +261,7 @@ view:
                       height: 48
                     view:
                       type: checkbox
-                      value: hat boxes
+                      reporting_value: hat boxes
                       style:
                         type: checkbox
                         bindings:
@@ -371,7 +369,7 @@ view:
                       height: 48
                     view:
                       type: radio_input
-                      value: am
+                      reporting_value: am
                       style:
                         type: checkbox
                         bindings:
@@ -447,7 +445,7 @@ view:
                       height: 48
                     view:
                       type: radio_input
-                      value: fm
+                      reporting_value: fm
                       style:
                         type: checkbox
                         bindings:
@@ -523,7 +521,7 @@ view:
                       height: 48
                     view:
                       type: radio_input
-                      value: ham
+                      reporting_value: ham
                       style:
                         type: checkbox
                         bindings:

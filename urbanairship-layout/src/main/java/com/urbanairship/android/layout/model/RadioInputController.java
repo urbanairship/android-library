@@ -8,9 +8,11 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.RadioEvent;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +22,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import static com.urbanairship.android.layout.model.Accessible.contentDescriptionFromJson;
+import static com.urbanairship.android.layout.model.Identifiable.identifierFromJson;
+import static com.urbanairship.android.layout.model.Validatable.requiredFromJson;
+import static com.urbanairship.android.layout.reporting.AttributeName.attributeNameFromJson;
+
 /**
  * Controller for radio inputs.
  */
@@ -28,6 +35,8 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     private final String identifier;
     @NonNull
     private final BaseModel view;
+    @Nullable
+    private final AttributeName attributeName;
     private final boolean isRequired;
     @Nullable
     private final String contentDescription;
@@ -36,11 +45,12 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
     private final List<RadioInputModel> radioInputs = new ArrayList<>();
 
     @Nullable
-    private String selectedValue = null;
+    private JsonValue selectedValue = null;
 
     public RadioInputController(
         @NonNull String identifier,
         @NonNull BaseModel view,
+        @Nullable AttributeName attributeName,
         boolean isRequired,
         @Nullable String contentDescription
     ) {
@@ -48,6 +58,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
 
         this.identifier = identifier;
         this.view = view;
+        this.attributeName = attributeName;
         this.isRequired = isRequired;
         this.contentDescription = contentDescription;
 
@@ -56,14 +67,15 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
 
     @NonNull
     public static RadioInputController fromJson(@NonNull JsonMap json) throws JsonException {
-        String identifier = Identifiable.identifierFromJson(json);
+        String identifier = identifierFromJson(json);
         JsonMap viewJson = json.opt("view").optMap();
-        boolean isRequired = Validatable.requiredFromJson(json);
-        String contentDescription = Accessible.contentDescriptionFromJson(json);
+        AttributeName attributeName = attributeNameFromJson(json);
+        boolean isRequired = requiredFromJson(json);
+        String contentDescription = contentDescriptionFromJson(json);
 
         BaseModel view = Thomas.model(viewJson);
 
-        return new RadioInputController(identifier, view, isRequired, contentDescription);
+        return new RadioInputController(identifier, view, attributeName, isRequired, contentDescription);
     }
 
     @Override
@@ -93,6 +105,11 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         return view;
     }
 
+    @Nullable
+    public AttributeName getAttributeName() {
+        return attributeName;
+    }
+
     public boolean isValid() {
         return selectedValue != null || !isRequired;
     }
@@ -106,7 +123,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
 
     @Nullable
     @VisibleForTesting
-    public String getSelectedValue() {
+    public JsonValue getSelectedValue() {
         return selectedValue;
     }
 

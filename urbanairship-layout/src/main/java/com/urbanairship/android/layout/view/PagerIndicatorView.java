@@ -93,9 +93,12 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
         int halfSpacing = (int) (spacing / 2f);
 
         for (int i = 0; i < count; i++) {
-            // TODO: pass icon through and render it too
-
-            ImageView view = new ShapeView(getContext(), checked.getShapes(), unchecked.getShapes());
+            ImageView view = new ShapeView(
+                getContext(),
+                checked.getShapes(),
+                unchecked.getShapes(),
+                checked.getIcon(),
+                unchecked.getIcon());
 
             LayoutParams lp = new LayoutParams(WRAP_CONTENT, MATCH_PARENT);
             lp.setMarginStart(i == 0 ? spacing : halfSpacing);

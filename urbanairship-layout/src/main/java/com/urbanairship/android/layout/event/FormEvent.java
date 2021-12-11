@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
 
@@ -61,10 +62,10 @@ public abstract class FormEvent extends Event {
         }
     }
 
-    public abstract static class CheckedChange extends InputChange<String> {
+    public abstract static class CheckedChange extends InputChange<JsonValue> {
         protected final boolean isChecked;
 
-        public CheckedChange(@NonNull EventType type, @NonNull String value, boolean isChecked) {
+        public CheckedChange(@NonNull EventType type, @NonNull JsonValue value, boolean isChecked) {
             super(type, value);
             this.isChecked = isChecked;
         }

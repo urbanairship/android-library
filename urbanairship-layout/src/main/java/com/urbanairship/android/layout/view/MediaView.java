@@ -8,7 +8,6 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -22,7 +21,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.MediaModel;
-import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
@@ -35,6 +33,7 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -47,6 +46,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private MediaModel model;
@@ -119,6 +119,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private void configure() {
         removeAllViewsInLayout();
+
         LayoutUtils.applyBorderAndBackground(this, model);
 
         // If we had a web view previously clear it

@@ -2,17 +2,23 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.TextInputEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class TextInputModel extends BaseModel implements Identifiable, Accessible, Validatable {
     @NonNull
     private final String identifier;
@@ -25,6 +31,9 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @Nullable
     private final String contentDescription;
     private final boolean isRequired;
+
+    @Nullable
+    private String value = null;
 
     public TextInputModel(
         @NonNull String identifier,
@@ -96,8 +105,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
 
     @Override
     public boolean isValid() {
-        // TODO: update this once the model is accepting input changes from the view.
-        return true;
+        return !isRequired || !UAStringUtil.isEmpty(value);
     }
 
     @NonNull
@@ -113,5 +121,14 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @Nullable
     public String getHintText() {
         return hintText;
+    }
+
+    public void onConfigured() {
+        bubbleEvent(new TextInputEvent.Init(identifier, isValid()));
+    }
+
+    public void onInputChange(@NonNull String value) {
+        this.value = value;
+        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.TextInput(value), isValid()));
     }
 }

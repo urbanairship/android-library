@@ -74,6 +74,12 @@ public final class ResourceUtils {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
     }
 
+    public static boolean isUiModeNight(@NonNull Context context) {
+        int mode = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        // If we're not in night mode, we're in light or unspecified mode, which we'll assume is not night.
+        return mode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
     @Nullable
     public static Orientation getOrientation(@NonNull Context context) {
         switch (context.getResources().getConfiguration().orientation) {

@@ -147,7 +147,6 @@ public final class ConstraintSetBuilder {
             switch (width.getType()) {
                 case AUTO:
                     constraints.constrainWidth(viewId, autoValue);
-                    constraints.constrainedWidth(viewId,true);
                     break;
                 case PERCENT:
                     if (width.getFloat() == 1f) {
@@ -165,7 +164,6 @@ public final class ConstraintSetBuilder {
             switch (height.getType()) {
                 case AUTO:
                     constraints.constrainHeight(viewId, autoValue);
-                    constraints.constrainedHeight(viewId,true);
                     break;
                 case PERCENT:
                     if (height.getFloat() == 1f) {

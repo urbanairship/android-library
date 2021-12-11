@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
@@ -19,9 +18,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class PagerModel extends LayoutModel implements Identifiable {
-    @NonNull
-    private final String identifier;
+public class PagerModel extends LayoutModel {
     @NonNull
     private final List<BaseModel> items;
     @Nullable
@@ -30,17 +27,15 @@ public class PagerModel extends LayoutModel implements Identifiable {
     @Nullable
     private Listener listener;
 
-    public PagerModel(@NonNull String identifier, @NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
+    public PagerModel(@NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
 
-        this.identifier = identifier;
         this.items = items;
         this.disableSwipe = disableSwipe;
     }
 
     @NonNull
     public static PagerModel fromJson(@NonNull JsonMap json) throws JsonException {
-        String identifier = Identifiable.identifierFromJson(json);
         JsonList itemsJson = json.opt("items").optList();
         Boolean disableSwipe = json.opt("disable_swipe").getBoolean();
         Color backgroundColor = backgroundColorFromJson(json);
@@ -53,7 +48,7 @@ public class PagerModel extends LayoutModel implements Identifiable {
             items.add(item);
         }
 
-        return new PagerModel(identifier, items, disableSwipe, backgroundColor, border);
+        return new PagerModel(items, disableSwipe, backgroundColor, border);
     }
 
     @Override
@@ -64,12 +59,6 @@ public class PagerModel extends LayoutModel implements Identifiable {
     //
     // Fields
     //
-
-    @Override
-    @NonNull
-    public String getIdentifier() {
-        return identifier;
-    }
 
     @NonNull
     public List<BaseModel> getItems() {
@@ -99,7 +88,7 @@ public class PagerModel extends LayoutModel implements Identifiable {
     //
 
     public void onScrollTo(int position) {
-        bubbleEvent(new PagerEvent.Scroll(position));
+        bubbleEvent(new PagerEvent.Scroll(this, position));
     }
 
     public void onConfigured(int position) {
@@ -116,8 +105,6 @@ public class PagerModel extends LayoutModel implements Identifiable {
     }
 
     private boolean onEvent(@NonNull Event event, boolean bubbleIfUnhandled) {
-        Logger.debug("onEvent: %s (bubble? %s)", event.getType(), bubbleIfUnhandled);
-
         switch (event.getType()) {
             case BUTTON_BEHAVIOR_PAGER_NEXT:
                 if (listener != null) {

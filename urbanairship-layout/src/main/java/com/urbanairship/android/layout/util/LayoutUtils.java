@@ -11,6 +11,8 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -19,12 +21,14 @@ import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
@@ -41,6 +45,14 @@ import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.Insets;
+import androidx.core.util.Consumer;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import kotlin.jvm.functions.Function3;
+import kotlin.jvm.functions.Function4;
+
+import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
 /**
  * Helpers for layout rendering.
@@ -73,7 +85,7 @@ public final class LayoutUtils {
         Context context = view.getContext();
 
         if (border != null) {
-            @Dimension float cornerRadius = border.getRadius() == null ? 0 : ResourceUtils.dpToPx(context, border.getRadius());
+            @Dimension float cornerRadius = border.getRadius() == null ? 0 : dpToPx(context, border.getRadius());
             ShapeAppearanceModel shapeModel = ShapeAppearanceModel.builder()
                                                                   .setAllCorners(CornerFamily.ROUNDED, cornerRadius)
                                                                   .build();
@@ -83,11 +95,11 @@ public final class LayoutUtils {
                 ((Clippable) view).setClipPathBorderRadius(cornerRadius);
             }
 
+            int borderPadding = -1;
             if (border.getStrokeWidth() != null) {
-                float strokeWidth = ResourceUtils.dpToPx(context, border.getStrokeWidth());
+                float strokeWidth = dpToPx(context, border.getStrokeWidth());
                 shapeDrawable.setStrokeWidth(strokeWidth);
-                int padding = (int) strokeWidth;
-                view.setPadding(padding, padding, padding, padding);
+                borderPadding = (int) strokeWidth;
             }
 
             if (border.getStrokeColor() != null) {
@@ -98,6 +110,10 @@ public final class LayoutUtils {
             shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
 
             mergeBackground(view, shapeDrawable);
+
+            if (borderPadding > -1) {
+                addPadding(view, borderPadding);
+            }
         } else if (backgroundColor != null) {
             mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
         }
@@ -135,9 +151,9 @@ public final class LayoutUtils {
         button.setTextColor(textColor);
         button.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
         button.setRippleColor(ColorStateList.valueOf(pressedColor));
-        button.setStrokeWidth((int) ResourceUtils.dpToPx(context, strokeWidth));
+        button.setStrokeWidth((int) dpToPx(context, strokeWidth));
         button.setStrokeColor(ColorStateList.valueOf(strokeColor));
-        button.setCornerRadius((int) ResourceUtils.dpToPx(context, borderRadius));
+        button.setCornerRadius((int) dpToPx(context, borderRadius));
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
@@ -149,9 +165,15 @@ public final class LayoutUtils {
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
         applyBorderAndBackground(editText, textInput);
         applyTextAppearance(editText, textInput.getTextAppearance());
+        addPadding(editText, (int) dpToPx(editText.getContext(), 4));
 
-        editText.setHint(textInput.getHintText());
         editText.setInputType(textInput.getInputType().getTypeMask());
+        editText.setSingleLine(textInput.getInputType() != FormInputType.TEXT_MULTILINE);
+        editText.setGravity(editText.getGravity() | Gravity.TOP);
+
+        if (!UAStringUtil.isEmpty(textInput.getHintText())) {
+            editText.setHint(textInput.getHintText());
+        }
 
         if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
             editText.setContentDescription(textInput.getContentDescription());
@@ -240,5 +262,68 @@ public final class LayoutUtils {
 
     private static ColorStateList checkedColorStateList(@ColorInt int checkedColor, @ColorInt int normalColor) {
         return new ColorStateList(new int[][]{ CHECKED_STATE_SET, EMPTY_STATE_SET }, new int[]{ checkedColor, normalColor} );
+    }
+
+    public static void updateLayoutParams(@NonNull View view, Consumer<MarginLayoutParams> block) {
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        if (params instanceof MarginLayoutParams) {
+            block.accept((MarginLayoutParams) params);
+            view.setLayoutParams(params);
+            view.invalidate();
+        } else {
+            Logger.error("Failed to set margin layout params! View '%s' does not use MarginLayoutParams.",
+                view.getClass().getSimpleName());
+        }
+    }
+
+    public static void requestApplyInsetsWhenAttached(@NonNull View view) {
+        if (view.isAttachedToWindow()) {
+            view.requestApplyInsets();
+        } else {
+            view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    v.removeOnAttachStateChangeListener(this);
+                    v.requestApplyInsets();
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) { /* no-op */ }
+            });
+        }
+    }
+
+    public static void doOnApplyWindowInsets(@NonNull View view, Function3<View, Insets, InitialPadding, WindowInsetsCompat> callback) {
+        InitialPadding initialPadding = new InitialPadding(view);
+
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) ->
+            callback.invoke(v, insets.getInsets(WindowInsetsCompat.Type.systemBars()), initialPadding)
+        );
+
+        requestApplyInsetsWhenAttached(view);
+    }
+
+    public static void doOnApplyWindowInsets(@NonNull View view, Function4<View, Insets, InitialMargins, InitialPadding, WindowInsetsCompat> callback) {
+        InitialPadding initialPadding = new InitialPadding(view);
+        InitialMargins initialMargins = new InitialMargins((MarginLayoutParams) view.getLayoutParams());
+
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) ->
+            callback.invoke(v, insets.getInsets(WindowInsetsCompat.Type.systemBars()), initialMargins, initialPadding)
+        );
+
+        requestApplyInsetsWhenAttached(view);
+    }
+
+    public static void addPadding(@NonNull View view, int padding) {
+        addPadding(view, padding, padding, padding, padding);
+    }
+
+    public static void addPadding(@NonNull View view, int left, int top, int right, int bottom) {
+        view.setPadding(
+            view.getPaddingLeft() + left,
+            view.getPaddingTop() + top,
+            view.getPaddingRight() + right,
+            view.getPaddingBottom() + bottom
+        );
     }
 }

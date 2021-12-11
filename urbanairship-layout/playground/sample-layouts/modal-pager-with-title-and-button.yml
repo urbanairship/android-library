@@ -16,6 +16,7 @@ presentation:
         alpha: .3
 view:
   type: pager_controller
+  identifier: "pager-controller-id"
   view:
     type: container
     background_color:
@@ -61,7 +62,6 @@ view:
             bottom: 16
           view:
             type: pager
-            identifier: "some-pager"
             items:
             - type: container
               background_color:
@@ -193,6 +193,13 @@ view:
                   color:
                     default:
                       hex: "#0000FF"
+                icon:
+                  icon: checkmark
+                  color:
+                    default:
+                      hex: "#ffffff"
+                      alpha: 1
+                  scale: .8
               unselected:
                 shapes:
                 - type: rectangle
@@ -206,4 +213,11 @@ view:
                   color:
                     default:
                       hex: "#FF0000"
+                icon:
+                  icon: close
+                  color:
+                    default:
+                      hex: "#ffffff"
+                      alpha: 1
+                  scale: .8
 

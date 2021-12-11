@@ -9,7 +9,6 @@ import android.view.View;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
 import com.urbanairship.android.layout.environment.Environment;
-import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.CheckboxController;
 import com.urbanairship.android.layout.model.CheckboxModel;
@@ -22,6 +21,7 @@ import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.LayoutModel;
 import com.urbanairship.android.layout.model.LinearLayoutModel;
 import com.urbanairship.android.layout.model.MediaModel;
+import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.NpsFormController;
 import com.urbanairship.android.layout.model.PagerController;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
@@ -39,6 +39,7 @@ import com.urbanairship.android.layout.display.DisplayArgsLoader;
 import com.urbanairship.android.layout.ui.ModalActivity;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.android.layout.view.CheckboxView;
 import com.urbanairship.android.layout.view.ContainerLayoutView;
@@ -63,7 +64,10 @@ import com.urbanairship.webkit.AirshipWebViewClient;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -243,8 +247,18 @@ public final class Thomas {
 
         public LayoutViewHolder(@NonNull V itemView) {
             super(itemView);
-            itemView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.MATCH_PARENT));
+            itemView.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             view = itemView;
+
+            LayoutUtils.doOnApplyWindowInsets(view, (v, insets, padding) -> {
+                v.setPadding(
+                    padding.getLeft() + insets.left,
+                    padding.getTop() + insets.top,
+                    padding.getRight() + insets.right,
+                    padding.getBottom() + insets.bottom
+                );
+                return WindowInsetsCompat.CONSUMED;
+            });
         }
 
         public void bind(@NonNull BaseModel item, @NonNull Environment environment) {

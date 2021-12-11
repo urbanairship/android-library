@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ShapeButton;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.Objects;
 
@@ -73,6 +74,10 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
             case NPS:
                 configureNpsScore(style, constraints);
                 break;
+        }
+
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            setContentDescription(model.getContentDescription());
         }
 
         constraints.build().applyTo(this);

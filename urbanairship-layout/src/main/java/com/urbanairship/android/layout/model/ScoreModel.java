@@ -8,12 +8,17 @@ import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import static com.urbanairship.android.layout.model.Accessible.contentDescriptionFromJson;
+import static com.urbanairship.android.layout.model.Validatable.requiredFromJson;
+import static com.urbanairship.android.layout.reporting.AttributeName.attributeNameFromJson;
 
 /**
  * Model for Score views.
@@ -28,6 +33,8 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     private final String identifier;
     @NonNull
     private final ScoreStyle style;
+    @Nullable
+    private final AttributeName attributeName;
     private final boolean isRequired;
     @Nullable
     private final String contentDescription;
@@ -37,6 +44,7 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     public ScoreModel(
         @NonNull String identifier,
         @NonNull ScoreStyle style,
+        @Nullable AttributeName attributeName,
         boolean isRequired,
         @Nullable String contentDescription,
         @Nullable Color backgroundColor,
@@ -45,6 +53,7 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
 
         this.identifier = identifier;
         this.style = style;
+        this.attributeName = attributeName;
         this.isRequired = isRequired;
         this.contentDescription = contentDescription;
     }
@@ -54,12 +63,13 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
         String identifier = Identifiable.identifierFromJson(json);
         JsonMap styleJson = json.opt("style").optMap();
         ScoreStyle style = ScoreStyle.fromJson(styleJson);
-        boolean required = Validatable.requiredFromJson(json);
-        String contentDescription = Accessible.contentDescriptionFromJson(json);
+        AttributeName attributeName = attributeNameFromJson(json);
+        boolean required = requiredFromJson(json);
+        String contentDescription = contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
-        return new ScoreModel(identifier, style, required, contentDescription, backgroundColor, border);
+        return new ScoreModel(identifier, style, attributeName, required, contentDescription, backgroundColor, border);
     }
 
     @Override
@@ -82,6 +92,11 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     @NonNull
     public ScoreStyle getStyle() {
         return style;
+    }
+
+    @Nullable
+    public AttributeName getAttributeName() {
+        return attributeName;
     }
 
     @Override

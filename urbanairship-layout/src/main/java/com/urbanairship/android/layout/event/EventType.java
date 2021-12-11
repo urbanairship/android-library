@@ -24,8 +24,6 @@ public enum EventType {
 
     /** Pager initialization event. */
     PAGER_INIT,
-    /** Pager indicator initialization event. */
-    PAGER_INDICATOR_INIT,
     /** Pager scroll events. */
     PAGER_SCROLL,
 

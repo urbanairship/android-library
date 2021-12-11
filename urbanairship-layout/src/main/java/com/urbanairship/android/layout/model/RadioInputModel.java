@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,14 +21,17 @@ import static com.urbanairship.android.layout.model.Accessible.contentDescriptio
 public class RadioInputModel extends CheckableModel {
 
     @NonNull
-    private final String reportingValue;
+    private final JsonValue reportingValue;
+    @NonNull
+    private final JsonValue attributeValue;
 
     @Nullable
     private Listener listener;
 
     public RadioInputModel(
         @NonNull ToggleStyle style,
-        @NonNull String reportingValue,
+        @NonNull JsonValue reportingValue,
+        @NonNull JsonValue attributeValue,
         @Nullable String contentDescription,
         @Nullable Color backgroundColor,
         @Nullable Border border
@@ -35,23 +39,30 @@ public class RadioInputModel extends CheckableModel {
         super(ViewType.RADIO_INPUT, style, contentDescription, backgroundColor, border);
 
         this.reportingValue = reportingValue;
+        this.attributeValue = attributeValue;
     }
 
     @NonNull
     public static RadioInputModel fromJson(@NonNull JsonMap json) throws JsonException {
         ToggleStyle style = toggleStyleFromJson(json);
-        String reportingValue = json.opt("value").optString();
+        JsonValue reportingValue = json.opt("reporting_value");
+        JsonValue attributeValue = json.opt("attribute_value");
         String contentDescription = contentDescriptionFromJson(json);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
 
-        return new RadioInputModel(style, reportingValue, contentDescription, backgroundColor, border);
+        return new RadioInputModel(style, reportingValue, attributeValue, contentDescription, backgroundColor, border);
     }
 
     /** Value for reports. */
     @NonNull
-    public String getReportingValue() {
+    public JsonValue getReportingValue() {
         return reportingValue;
+    }
+
+    @NonNull
+    public JsonValue getAttributeValue() {
+        return attributeValue;
     }
 
     @NonNull

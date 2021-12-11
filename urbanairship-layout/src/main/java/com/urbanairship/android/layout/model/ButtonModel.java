@@ -6,6 +6,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
@@ -21,8 +22,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import static com.urbanairship.android.layout.property.ButtonEnableBehaviorType.FORM_VALIDATION;
 
 public abstract class ButtonModel extends BaseModel implements Accessible, Identifiable {
     @NonNull
@@ -122,7 +121,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     }
 
     private boolean isEnabled() {
-        return !enableBehaviors.contains(FORM_VALIDATION) || isEnabled;
+        return enableBehaviors.isEmpty() || isEnabled;
     }
 
     public void onClick() {
@@ -141,7 +140,12 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         switch (event.getType()) {
             case FORM_VALIDATION:
                return handleFormSubmitUpdate((FormEvent.ValidationUpdate) event);
-
+            case PAGER_INIT:
+                PagerEvent.Init init = (PagerEvent.Init) event;
+                return handlePagerScroll(init.hasNext(), init.hasPrevious());
+            case PAGER_SCROLL:
+                PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
+                return handlePagerScroll(scroll.hasNext(), scroll.hasPrevious());
             default:
                 return super.onEvent(event);
         }
@@ -156,6 +160,24 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
             return true;
         }
 
+        return false;
+    }
+
+    private boolean handlePagerScroll(boolean hasNext, boolean hasPrevious) {
+        if (enableBehaviors.contains(ButtonEnableBehaviorType.PAGER_NEXT)) {
+            isEnabled = hasNext;
+            if (viewListener != null) {
+                viewListener.setEnabled(hasNext);
+            }
+        }
+        if (enableBehaviors.contains(ButtonEnableBehaviorType.PAGER_PREVIOUS)) {
+            isEnabled = hasPrevious;
+            if (viewListener != null) {
+                viewListener.setEnabled(hasPrevious);
+            }
+        }
+
+        // Always return false so other views can react to pager scroll events.
         return false;
     }
 

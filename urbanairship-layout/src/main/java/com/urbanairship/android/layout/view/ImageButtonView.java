@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
@@ -70,6 +71,10 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     private void configureButton() {
         LayoutUtils.applyBorderAndBackground(this, model);
         model.setViewListener(modelListener);
+
+        if (!UAStringUtil.isEmpty(model.getContentDescription())) {
+            setContentDescription(model.getContentDescription());
+        }
 
         Image image = model.getImage();
         switch (image.getType()) {

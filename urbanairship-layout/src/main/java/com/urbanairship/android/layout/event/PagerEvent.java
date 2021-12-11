@@ -17,6 +17,8 @@ public abstract class PagerEvent extends Event {
     public static final class Init extends Event {
         private final int size;
         private final int position;
+        private final boolean hasNext;
+        private final boolean hasPrev;
 
         /**
          * Constructs a {@code PagerInit} event.
@@ -27,6 +29,8 @@ public abstract class PagerEvent extends Event {
             super(EventType.PAGER_INIT);
             this.size = model.getItems().size();
             this.position = position;
+            this.hasNext = position < size - 1;
+            this.hasPrev = position > 0;
         }
 
         /**
@@ -46,6 +50,22 @@ public abstract class PagerEvent extends Event {
         public int getPosition() {
             return position;
         }
+
+        /**
+         * Returns whether or not the pager has a next page that can be scrolled to.
+         * @return {@code true} if the pager has a next page.
+         */
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        /**
+         * Returns whether or not the pager has a previous page that can be scrolled to.
+         * @return {@code true} if the pager has a previous page.
+         */
+        public boolean hasPrevious() {
+            return hasPrev;
+        }
     }
 
     /** Event emitted by Pager indicator views on init. */
@@ -58,15 +78,20 @@ public abstract class PagerEvent extends Event {
     /** Event emitted by Pager views on scroll to the next or previous page. */
     public static final class Scroll extends PagerEvent {
         private final int position;
+        private final boolean hasNext;
+        private final boolean hasPrev;
 
         /**
          * Constructs a {@code PagerScroll} event.
          *
+         * @param model The pager model.
          * @param position The position of the item being displayed.
          */
-        public Scroll(int position) {
+        public Scroll(@NonNull PagerModel model, int position) {
             super(EventType.PAGER_SCROLL);
             this.position = position;
+            this.hasNext = position < model.getItems().size() - 1;
+            this.hasPrev = position > 0;
         }
 
         /**
@@ -76,6 +101,22 @@ public abstract class PagerEvent extends Event {
          */
         public int getPosition() {
             return position;
+        }
+
+        /**
+         * Returns whether or not the pager has a next page that can be scrolled to.
+         * @return {@code true} if the pager has a next page.
+         */
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        /**
+         * Returns whether or not the pager has a previous page that can be scrolled to.
+         * @return {@code true} if the pager has a previous page.
+         */
+        public boolean hasPrevious() {
+            return hasPrev;
         }
     }
 }

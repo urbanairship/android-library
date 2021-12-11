@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.property;
 
 import android.content.Context;
 
+import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -18,8 +19,6 @@ public class Color {
 
     @ColorInt
     public static final int TRANSPARENT = android.graphics.Color.TRANSPARENT;
-    @ColorInt
-    public static final int BLACK = android.graphics.Color.BLACK;
     @ColorInt
     public static final int WHITE = android.graphics.Color.WHITE;
 
@@ -62,18 +61,15 @@ public class Color {
     }
 
     @ColorInt
-    public int getDefaultColor() {
-        return defaultColor;
-    }
-
-    @NonNull
-    public List<ColorSelector> getSelectors() {
-        return selectors;
-    }
-
-    @ColorInt
     public int resolve(@NonNull Context context) {
-        // TODO: resolve color from selectors
+        // Look for a selector that matches the current UI mode.
+        boolean isDarkMode = ResourceUtils.isUiModeNight(context);
+        for (ColorSelector selector : selectors) {
+            if (selector.isDarkMode() == isDarkMode) {
+                return selector.getColor();
+            }
+        }
+        // Fall back to default color if no match.
         return defaultColor;
     }
 }
